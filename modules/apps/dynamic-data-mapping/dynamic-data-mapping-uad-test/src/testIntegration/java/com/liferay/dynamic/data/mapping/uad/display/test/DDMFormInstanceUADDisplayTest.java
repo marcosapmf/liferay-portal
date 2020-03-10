@@ -18,7 +18,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
-import com.liferay.dynamic.data.mapping.uad.constants.DDMUADConstants;
+import com.liferay.dynamic.data.mapping.uad.constants.DDMFormInstanceUADConstants;
 import com.liferay.dynamic.data.mapping.uad.test.DDMFormInstanceRecordUADTestUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Group;
@@ -70,7 +70,8 @@ public class DDMFormInstanceUADDisplayTest
 
 		Assert.assertNull(
 			_uadDisplay.getTopLevelContainer(
-				DDMFormInstance.class, DDMUADConstants.DEFAULT_PARENT_ID,
+				DDMFormInstance.class,
+				DDMFormInstanceUADConstants.DEFAULT_DDM_FORM_INSTANCE_PARENT_ID,
 				ddmFormInstance));
 	}
 
