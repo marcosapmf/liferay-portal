@@ -75,9 +75,9 @@ public class DDMUADHelper {
 
 		Document document = toXMLDocument(ddmFormInstance.getName());
 
-		Node firstChild = document.getFirstChild();
+		Node firstChildNode = document.getFirstChild();
 
-		return firstChild.getTextContent();
+		return firstChildNode.getTextContent();
 	}
 
 	public Document toXMLDocument(String xml) {
@@ -85,10 +85,11 @@ public class DDMUADHelper {
 			DocumentBuilderFactory documentBuilderFactory =
 				SecureXMLFactoryProviderUtil.newDocumentBuilderFactory();
 
-			DocumentBuilder builder =
+			DocumentBuilder documentBuilder =
 				documentBuilderFactory.newDocumentBuilder();
 
-			return builder.parse(new InputSource(new StringReader(xml)));
+			return documentBuilder.parse(
+				new InputSource(new StringReader(xml)));
 		}
 		catch (IOException | ParserConfigurationException | SAXException
 					exception) {

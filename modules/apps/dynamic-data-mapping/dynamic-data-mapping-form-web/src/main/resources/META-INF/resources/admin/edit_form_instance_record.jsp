@@ -43,9 +43,9 @@ renderResponse.setTitle(GetterUtil.get(title, LanguageUtil.get(request, "view-fo
 	<portlet:actionURL name="editFormInstanceRecord" var="editFormInstanceRecordActionURL" />
 
 	<aui:form action="<%= editFormInstanceRecordActionURL %>" data-DDMFormInstanceId="<%= formInstanceRecordVersion.getFormInstanceId() %>" data-senna-off="true" method="post" name="fm">
+		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="formInstanceId" type="hidden" value="<%= formInstanceRecordVersion.getFormInstanceId() %>" />
 		<aui:input name="formInstanceRecordId" type="hidden" value="<%= formInstanceRecordVersion.getFormInstanceRecordId() %>" />
-		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<%= ddmFormAdminDisplayContext.getDDMFormHTML(renderRequest) %>
 	</aui:form>
 </div>
