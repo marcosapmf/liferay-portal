@@ -16,7 +16,7 @@ package com.liferay.dynamic.data.mapping.uad.util;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
-import com.liferay.dynamic.data.mapping.uad.constants.DDMUADConstants;
+import com.liferay.dynamic.data.mapping.uad.constants.DDMFormInstanceUADConstants;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -66,7 +66,8 @@ public class DDMUADHelper {
 			fieldValues.put(
 				"createDate",
 				Time.getSimpleDate(
-					createdDate, DDMUADConstants.DEFAULT_DATE_FORMAT));
+					createdDate,
+					DDMFormInstanceUADConstants.DEFAULT_DATE_FORMAT));
 		}
 	}
 
