@@ -71,7 +71,7 @@ public class DDMUADHelper {
 		}
 	}
 
-	public String getFormInstanceFormattedName(
+	public String getDDMFormInstanceFormattedName(
 		DDMFormInstance ddmFormInstance) {
 
 		Document document = toXMLDocument(ddmFormInstance.getName());

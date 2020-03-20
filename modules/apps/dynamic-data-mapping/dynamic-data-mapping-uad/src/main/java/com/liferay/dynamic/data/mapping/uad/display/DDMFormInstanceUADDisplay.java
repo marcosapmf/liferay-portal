@@ -60,7 +60,7 @@ public class DDMFormInstanceUADDisplay extends BaseDDMFormInstanceUADDisplay {
 
 	@Override
 	public String getName(DDMFormInstance ddmFormInstance, Locale locale) {
-		return _ddmUADHelper.getFormInstanceFormattedName(ddmFormInstance);
+		return _ddmUADHelper.getDDMFormInstanceFormattedName(ddmFormInstance);
 	}
 
 	@Override

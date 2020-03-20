@@ -32,11 +32,11 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class DDMFormInstanceRecordUADUserCacheHelper {
 
-	public int getFormInstanceRecordIndex(
+	public int getDDMFormInstanceRecordIndex(
 		DDMFormInstanceRecord ddmFormInstanceRecord) {
 
 		List<DDMFormInstanceRecord> ddmFormInstanceRecords =
-			_getFormInstanceRecords(
+			_getDDMFormInstanceRecords(
 				ddmFormInstanceRecord.getFormInstanceId(),
 				ddmFormInstanceRecord.getUserId());
 
@@ -57,7 +57,7 @@ public class DDMFormInstanceRecordUADUserCacheHelper {
 		return -1;
 	}
 
-	private List<DDMFormInstanceRecord> _getFormInstanceRecords(
+	private List<DDMFormInstanceRecord> _getDDMFormInstanceRecords(
 		long formInstanceId, long userId) {
 
 		DDMFormInstanceRecordUADUserCache cache = null;
@@ -66,14 +66,14 @@ public class DDMFormInstanceRecordUADUserCacheHelper {
 			cache = new DDMFormInstanceRecordUADUserCache(
 				_ddmFormInstanceRecordLocalService, formInstanceId);
 
-			cache.putFormInstanceRecords(userId);
+			cache.putDDMFormInstanceRecords(userId);
 
 			_ddmFormInstanceRecordMap.put(formInstanceId, cache);
 		}
 
 		cache = _ddmFormInstanceRecordMap.get(formInstanceId);
 
-		return cache.getFormInstanceRecords(userId);
+		return cache.getDDMFormInstanceRecords(userId);
 	}
 
 	@Reference

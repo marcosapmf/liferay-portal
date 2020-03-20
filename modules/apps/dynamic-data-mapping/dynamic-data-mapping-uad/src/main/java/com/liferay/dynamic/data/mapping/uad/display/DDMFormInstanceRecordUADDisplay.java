@@ -127,19 +127,19 @@ public class DDMFormInstanceRecordUADDisplay
 		DDMFormInstanceRecord ddmFormInstanceRecord, Locale locale) {
 
 		try {
-			int formInstanceRecordIndex =
-				_ddmFormInstanceRecordUADCacheHelper.getFormInstanceRecordIndex(
-					ddmFormInstanceRecord);
+			int ddmFormInstanceRecordIndex =
+				_ddmFormInstanceRecordUADCacheHelper.
+					getDDMFormInstanceRecordIndex(ddmFormInstanceRecord);
 
 			DDMFormInstance ddmFormInstance =
 				ddmFormInstanceRecord.getFormInstance();
 
-			String formInstanceName =
-				_ddmUADHelper.getFormInstanceFormattedName(ddmFormInstance);
+			String ddmFormInstanceName =
+				_ddmUADHelper.getDDMFormInstanceFormattedName(ddmFormInstance);
 
 			StringBundler sb = new StringBundler(6);
 
-			sb.append(formInstanceName);
+			sb.append(ddmFormInstanceName);
 
 			sb.append(StringPool.SPACE);
 
@@ -153,7 +153,7 @@ public class DDMFormInstanceRecordUADDisplay
 
 			sb.append(StringPool.POUND);
 
-			sb.append(formInstanceRecordIndex + 1);
+			sb.append(ddmFormInstanceRecordIndex + 1);
 
 			return sb.toString();
 		}
@@ -178,9 +178,9 @@ public class DDMFormInstanceRecordUADDisplay
 
 	@Override
 	public boolean isUserOwned(
-		DDMFormInstanceRecord formInstanceRecord, long userId) {
+		DDMFormInstanceRecord ddmFormInstanceRecord, long userId) {
 
-		if (formInstanceRecord.getUserId() == userId) {
+		if (ddmFormInstanceRecord.getUserId() == userId) {
 			return true;
 		}
 
