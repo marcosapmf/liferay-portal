@@ -40,6 +40,14 @@ public class BigDecimalUtil {
 
 		return resultBigDecimal.doubleValue();
 	}
+	
+	public static BigDecimal create(Object x) {
+			try {
+				return new BigDecimal(x.toString());
+			} catch(Exception exception) {
+				return new BigDecimal(0);
+			}
+		}
 
 	public static double divide(
 		Number x, Number y, int scale, RoundingMode roundingMode) {
