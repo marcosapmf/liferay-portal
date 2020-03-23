@@ -49,7 +49,6 @@ import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpression
 import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpressionParser.NumericVariableContext;
 import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpressionParser.SubtractionExpressionContext;
 import com.liferay.dynamic.data.mapping.expression.internal.parser.DDMExpressionParser.ToFloatingPointArrayContext;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.math.BigDecimal;
@@ -539,11 +538,13 @@ public class DDMExpressionEvaluatorVisitor
 
 		Object[] functionParameters = getFunctionParameters(
 			context.functionParameters());
-		
+
 		if (ddmExpressionFunction instanceof
 				DDMExpressionFunctionWithArrayParameter) {
 
-			if(functionParameters.length == 1 && functionParameters[0].getClass().isArray()) {
+			if ((functionParameters.length == 1) &&
+				functionParameters[0].getClass().isArray()) {
+
 				return functionParameters;
 			}
 
