@@ -164,10 +164,19 @@ public class DDMFormRuleConverter {
 	protected String convertOperands(
 		List<SPIDDMFormRuleCondition.Operand> operands) {
 
+		boolean hasNestedFunctionOperands = _hasNestedFunctionOperands(
+			operands);
+
 		StringBundler sb = new StringBundler(operands.size());
 
 		for (SPIDDMFormRuleCondition.Operand operand : operands) {
-			sb.append(convertOperand(operand));
+			if (hasNestedFunctionOperands) {
+				sb.append(operand.getValue());
+			}
+			else {
+				sb.append(convertOperand(operand));
+			}
+
 			sb.append(StringPool.COMMA_AND_SPACE);
 		}
 
@@ -290,12 +299,29 @@ public class DDMFormRuleConverter {
 	@Reference
 	protected DDMExpressionFactory ddmExpressionFactory;
 
+	private boolean _hasNestedFunctionOperands(
+		List<SPIDDMFormRuleCondition.Operand> operands) {
+
+		Stream<SPIDDMFormRuleCondition.Operand> operandStream =
+			operands.stream();
+
+		return operandStream.anyMatch(
+			operand -> _isNestedFunction(operand.getValue()));
+	}
+
+	private boolean _isNestedFunction(String operandValue) {
+		return operandValue.matches(_RULE_OPERAND_NESTED_FUNCTION_REGEX);
+	}
+
 	private static final String _COMPARISON_EXPRESSION_FORMAT = "%s %s %s";
 
 	private static final String _FUNCTION_CALL_UNARY_EXPRESSION_FORMAT =
 		"%s(%s)";
 
 	private static final String _NOT_EXPRESSION_FORMAT = "not(%s)";
+
+	private static final String _RULE_OPERAND_NESTED_FUNCTION_REGEX =
+		"[aA-zZ0-9]+[(].*[aA-zZ0-9]+[(].*[)].*[)]";
 
 	private static final Map<String, String> _operatorFunctionNameMap =
 		HashMapBuilder.put(

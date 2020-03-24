@@ -49,6 +49,18 @@ public class FunctionCallExpression extends Expression {
 		return _parameterExpressions;
 	}
 
+	public boolean hasNestedFunctions() {
+		for (Expression parameterExpression : _parameterExpressions) {
+			String parameterExpressionString = parameterExpression.toString();
+
+			if (parameterExpressionString.matches(_NESTED_FUNCTION_REGEX)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
@@ -69,6 +81,9 @@ public class FunctionCallExpression extends Expression {
 
 		return sb.toString();
 	}
+
+	private static final String _NESTED_FUNCTION_REGEX =
+		"[aA-zZ0-9]+[(].*[aA-zZ0-9]+[(].*[)].*[)]";
 
 	private final String _functionName;
 	private final List<Expression> _parameterExpressions;
