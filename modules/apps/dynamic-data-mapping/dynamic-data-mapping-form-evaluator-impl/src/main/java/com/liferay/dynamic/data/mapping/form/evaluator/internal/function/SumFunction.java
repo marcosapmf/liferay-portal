@@ -15,6 +15,8 @@
 package com.liferay.dynamic.data.mapping.form.evaluator.internal.function;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunction;
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunctionWithArrayParameter;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 
 import java.math.BigDecimal;
 
@@ -25,14 +27,17 @@ import java.util.stream.Stream;
  * @author Leonardo Barros
  */
 public class SumFunction
-	implements DDMExpressionFunction.Function1<BigDecimal[], BigDecimal> {
+	implements DDMExpressionFunction.Function1<Object[], BigDecimal>,
+			   DDMExpressionFunctionWithArrayParameter {
 
 	public static final String NAME = "sum";
 
 	@Override
-	public BigDecimal apply(BigDecimal[] values) {
+	public BigDecimal apply(Object[] values) {
 		return Stream.of(
 			values
+		).map(
+			num -> BigDecimalUtil.create(num)
 		).collect(
 			Collectors.reducing(BigDecimal.ZERO, (num1, num2) -> num1.add(num2))
 		);

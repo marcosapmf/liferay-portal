@@ -20,6 +20,7 @@ import com.liferay.dynamic.data.mapping.expression.DDMExpressionFieldAccessor;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFieldAccessorAware;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunction;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunctionFactory;
+import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunctionWithArrayParameter;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionObserver;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionObserverAware;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionParameterAccessor;
@@ -193,7 +194,8 @@ public class DDMExpressionEvaluatorVisitor
 				_ddmExpressionFieldAccessor);
 		}
 
-		Object[] params = getFunctionParameters(context.functionParameters());
+		Object[] params = _getFunctionParameters(
+			context, ddmExpressionFunction);
 
 		if (params.length == 0) {
 			DDMExpressionFunction.Function0 function0 =
@@ -528,6 +530,31 @@ public class DDMExpressionEvaluatorVisitor
 		ParseTree parseTree = parserRuleContext.getChild(childIndex);
 
 		return (T)parseTree.accept(this);
+	}
+
+	private Object[] _getFunctionParameters(
+		FunctionCallExpressionContext context,
+		DDMExpressionFunction ddmExpressionFunction) {
+
+		Object[] functionParameters = getFunctionParameters(
+			context.functionParameters());
+
+		if (ddmExpressionFunction instanceof
+				DDMExpressionFunctionWithArrayParameter) {
+
+			if (functionParameters.length == 1) {
+				Class<? extends Object> clazz =
+					functionParameters[0].getClass();
+
+				if (clazz.isArray()) {
+					return functionParameters;
+				}
+			}
+
+			return new Object[] {functionParameters};
+		}
+
+		return functionParameters;
 	}
 
 	private final DDMExpressionActionHandler _ddmExpressionActionHandler;

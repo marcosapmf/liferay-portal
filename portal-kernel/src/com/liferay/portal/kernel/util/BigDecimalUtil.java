@@ -17,6 +17,9 @@ package com.liferay.portal.kernel.util;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
 /**
  * @author Brian Wing Shun Chan
  * @author Wesley Gong
@@ -39,6 +42,16 @@ public class BigDecimalUtil {
 		BigDecimal resultBigDecimal = xBigDecimal.add(yBigDecimal);
 
 		return resultBigDecimal.doubleValue();
+	}
+	
+	public static BigDecimal create(Object x) {
+		try {
+			return new BigDecimal(x.toString());
+		} catch(Exception exception) {
+			_log.error(exception, exception);
+			
+			return new BigDecimal(0);
+		}
 	}
 
 	public static double divide(
@@ -106,5 +119,8 @@ public class BigDecimalUtil {
 
 		return resultBigDecimal.doubleValue();
 	}
+	
+	private static final Log _log = LogFactoryUtil.getLog(
+			BigDecimalUtil.class);
 
 }
