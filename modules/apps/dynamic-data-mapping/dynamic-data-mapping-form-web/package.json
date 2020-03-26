@@ -20,6 +20,9 @@
 		"modulePathIgnorePatterns": [
 			"/__mock__/"
 		],
+		"moduleNameMapper": {
+			"^dynamic-data-mapping-form-builder/(.*)": "<rootDir>../dynamic-data-mapping-form-builder/src/main/resources/META-INF/resources/$1"
+		},
 		"setupFilesAfterEnv": [
 			"<rootDir>jest-setup-after-env.config.js"
 		],
