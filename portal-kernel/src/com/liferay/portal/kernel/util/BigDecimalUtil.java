@@ -14,11 +14,11 @@
 
 package com.liferay.portal.kernel.util;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * @author Brian Wing Shun Chan
@@ -43,7 +43,7 @@ public class BigDecimalUtil {
 
 		return resultBigDecimal.doubleValue();
 	}
-	
+
 	public static BigDecimal create(Object x) {
 		try {
 			return new BigDecimal(x.toString());
@@ -123,7 +123,7 @@ public class BigDecimalUtil {
 
 		return resultBigDecimal.doubleValue();
 	}
-	
-	private static final Log _log = LogFactoryUtil.getLog(
-			BigDecimalUtil.class);
+
+	private static final Log _log = LogFactoryUtil.getLog(BigDecimalUtil.class);
+
 }

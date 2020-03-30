@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.expression.internal.functions;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFunction;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 
 import java.math.BigDecimal;
 
@@ -25,13 +26,17 @@ import java.util.stream.Stream;
  * @author Rafael Praxedes
  */
 public class MultiplyFunction
-	implements DDMExpressionFunction.Function1<BigDecimal[], BigDecimal> {
+	implements DDMExpressionFunction.Function1<Object[], BigDecimal> {
 
 	@Override
-	public BigDecimal apply(BigDecimal[] numbers) {
-		Stream<BigDecimal> stream = Arrays.stream(numbers);
+	public BigDecimal apply(Object[] numbers) {
+		Stream<Object> stream = Arrays.stream(numbers);
 
-		return stream.reduce(BigDecimal.ONE, (n1, n2) -> n1.multiply(n2));
+		Stream<BigDecimal> bigDecimalStream = stream.map(
+			n -> BigDecimalUtil.create(n));
+
+		return bigDecimalStream.reduce(
+			BigDecimal.ONE, (n1, n2) -> n1.multiply(n2));
 	}
 
 	@Override
