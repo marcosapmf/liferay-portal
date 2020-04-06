@@ -1,10 +1,10 @@
 {
 	"dependencies": {
 		"@clayui/button": "3.3.0",
-		"@clayui/drop-down": "3.4.0",
-		"@clayui/form": "3.6.0",
+		"@clayui/drop-down": "3.4.1",
+		"@clayui/form": "3.7.0",
 		"@clayui/icon": "3.0.4",
-		"@clayui/label": "3.1.1",
+		"@clayui/label": "3.2.0",
 		"clay-dropdown": "2.21.0",
 		"clay-label": "2.21.0",
 		"frontend-js-components-web": "*",

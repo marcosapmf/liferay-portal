@@ -23,7 +23,7 @@ import {PAGE_TYPES} from '../../config/constants/pageTypes';
 import {config} from '../../config/index';
 import InfoItemService from '../../services/InfoItemService';
 import {useDispatch, useSelector} from '../../store/index';
-import {useCollectionFields} from '../ControlsIdConverterContext';
+import {useCollectionFields} from '../CollectionItemContext';
 
 const MAPPING_SOURCE_TYPE_IDS = {
 	content: 'content',
@@ -152,7 +152,7 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 	const [fields, setFields] = useState([]);
 	const [selectedItem, setSelectedItem] = useState(mappedItem);
 	const [selectedSourceTypeId, setSelectedSourceTypeId] = useState(
-		mappedItem.mappedField
+		mappedItem.mappedField || config.pageType === PAGE_TYPES.display
 			? MAPPING_SOURCE_TYPE_IDS.structure
 			: MAPPING_SOURCE_TYPE_IDS.content
 	);

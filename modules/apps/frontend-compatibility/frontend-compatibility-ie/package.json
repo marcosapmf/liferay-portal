@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"@clayui/css": "3.8.0"
+		"@clayui/css": "3.9.0"
 	},
 	"name": "frontend-compatibility-ie",
 	"private": true,

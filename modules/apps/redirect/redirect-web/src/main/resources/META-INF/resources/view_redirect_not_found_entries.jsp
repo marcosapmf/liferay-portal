@@ -54,11 +54,30 @@ RedirectNotFountEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 						<%= HtmlUtil.escape(RedirectUtil.getGroupBaseURL(themeDisplay) + StringPool.SLASH + redirectNotFoundEntry.getUrl()) %>
 					</liferay-ui:search-container-column-text>
 
+					<c:if test='<%= StringUtil.equals("all", ParamUtil.getString(request, "filterType")) %>'>
+						<liferay-ui:search-container-column-text
+							cssClass="table-cell-minw-200 table-cell-smallest table-column-text-center"
+							name="ignored-urls"
+						>
+							<c:if test="<%= redirectNotFoundEntry.isIgnored() %>">
+								<clay:icon
+									symbol="hidden"
+								/>
+							</c:if>
+						</liferay-ui:search-container-column-text>
+					</c:if>
+
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand-smallest"
 						name="requests"
 					>
 						<%= redirectNotFoundEntry.getHits() %>
+					</liferay-ui:search-container-column-text>
+
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= redirectNotFoundEntriesDisplayContext.getActionDropdownItems(redirectNotFoundEntry) %>"
+						/>
 					</liferay-ui:search-container-column-text>
 				</liferay-ui:search-container-row>
 

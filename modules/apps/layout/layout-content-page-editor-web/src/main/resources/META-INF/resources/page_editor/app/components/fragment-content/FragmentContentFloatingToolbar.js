@@ -22,8 +22,9 @@ import selectEditableValue from '../../selectors/selectEditableValue';
 import {useSelector} from '../../store/index';
 import {useIsActive} from '../Controls';
 import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
-import {useEditableProcessorUniqueId} from './EditableProcessorContext';
+import {useIsProcessorEnabled} from './EditableProcessorContext';
 import getEditableUniqueId from './getEditableUniqueId';
+import isMapped from './isMapped';
 
 export default function FragmentContentFloatingToolbar({
 	editables,
@@ -31,7 +32,7 @@ export default function FragmentContentFloatingToolbar({
 	onButtonClick,
 }) {
 	const isActive = useIsActive();
-	const editableProcessorUniqueId = useEditableProcessorUniqueId();
+	const isProccessorEnabled = useIsProcessorEnabled();
 
 	const editable = useMemo(() => {
 		let activeEditable = {
@@ -65,22 +66,17 @@ export default function FragmentContentFloatingToolbar({
 		editable.editableValueNamespace
 	);
 
-	const editableHasActiveProcessor =
-		editableProcessorUniqueId !==
-		getEditableUniqueId(fragmentEntryLinkId, editable.editableId);
+	const editableHasActiveProcessor = !isProccessorEnabled(
+		getEditableUniqueId(fragmentEntryLinkId, editable.editableId)
+	);
 
 	const floatingToolbarButtons = useMemo(() => {
 		if (!editable.editableId) {
 			return [];
 		}
+		const {config = {}} = editableValue;
 
-		const {
-			classNameId,
-			classPK,
-			config = {},
-			fieldId,
-			mappedField,
-		} = editableValue;
+		const editableIsMapped = isMapped(editableValue);
 
 		const showLinkButton =
 			editable.type == EDITABLE_TYPES.text ||
@@ -91,9 +87,7 @@ export default function FragmentContentFloatingToolbar({
 
 		if (showLinkButton) {
 			EDITABLE_FLOATING_TOOLBAR_BUTTONS.link.className =
-				config.href ||
-				(config.classNameId && config.classPK && config.fieldId) ||
-				config.mappedField
+				config.href || isMapped(config)
 					? EDITABLE_FLOATING_TOOLBAR_CLASSNAMES.linked
 					: '';
 			buttons.push(EDITABLE_FLOATING_TOOLBAR_BUTTONS.link);
@@ -102,23 +96,20 @@ export default function FragmentContentFloatingToolbar({
 		if (
 			(editable.type === EDITABLE_TYPES.image ||
 				editable.type === EDITABLE_TYPES.backgroundImage) &&
-			!editableValue.mappedField &&
-			!editableValue.fieldId
+			!editableIsMapped
 		) {
 			buttons.push(EDITABLE_FLOATING_TOOLBAR_BUTTONS.imageProperties);
 		}
 		else {
-			EDITABLE_FLOATING_TOOLBAR_BUTTONS.edit.className =
-				(classNameId && classPK && fieldId) || mappedField
-					? EDITABLE_FLOATING_TOOLBAR_CLASSNAMES.disabled
-					: '';
+			EDITABLE_FLOATING_TOOLBAR_BUTTONS.edit.className = editableIsMapped
+				? EDITABLE_FLOATING_TOOLBAR_CLASSNAMES.disabled
+				: '';
 			buttons.push(EDITABLE_FLOATING_TOOLBAR_BUTTONS.edit);
 		}
 
-		EDITABLE_FLOATING_TOOLBAR_BUTTONS.map.className =
-			(classNameId && classPK && fieldId) || mappedField
-				? EDITABLE_FLOATING_TOOLBAR_CLASSNAMES.mapped
-				: '';
+		EDITABLE_FLOATING_TOOLBAR_BUTTONS.map.className = editableIsMapped
+			? EDITABLE_FLOATING_TOOLBAR_CLASSNAMES.mapped
+			: '';
 		buttons.push(EDITABLE_FLOATING_TOOLBAR_BUTTONS.map);
 
 		return buttons;

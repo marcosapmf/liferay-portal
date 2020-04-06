@@ -205,6 +205,17 @@ class LayoutProvider extends Component {
 		});
 	}
 
+	getPaginationMode() {
+		const {allowMultiplePages} = this.props;
+		const {paginationMode} = this.state;
+
+		if (allowMultiplePages) {
+			return paginationMode;
+		}
+
+		return 'single-page';
+	}
+
 	getRules() {
 		let {rules} = this.state;
 
@@ -239,40 +250,37 @@ class LayoutProvider extends Component {
 
 	render() {
 		const {
+			allowSuccessPage,
 			children,
 			defaultLanguageId,
 			editingLanguageId,
 			fieldActions,
 			spritemap,
 		} = this.props;
-		const {
-			activePage,
-			paginationMode,
-			rules,
-			successPageSettings,
-		} = this.state;
+		const {activePage, rules, successPageSettings} = this.state;
 
-		if (children.length) {
-			for (let index = 0; index < children.length; index++) {
-				const child = children[index];
-
-				Object.assign(child.props, {
-					...this.otherProps(),
-					activePage,
-					defaultLanguageId,
-					editingLanguageId,
-					fieldActions,
-					focusedField: this.getFocusedField(),
-					pages: this.getPages(),
-					paginationMode,
-					rules,
-					spritemap,
-					successPageSettings,
-				});
-			}
-		}
-
-		return <span>{children}</span>;
+		return (
+			<span>
+				{(children || []).map(child => ({
+					...child,
+					props: {
+						...child.props,
+						...this.otherProps(),
+						activePage,
+						allowSuccessPage,
+						defaultLanguageId,
+						editingLanguageId,
+						fieldActions,
+						focusedField: this.getFocusedField(),
+						pages: this.getPages(),
+						paginationMode: this.getPaginationMode(),
+						rules,
+						spritemap,
+						successPageSettings,
+					},
+				}))}
+			</span>
+		);
 	}
 
 	_fieldActionsValueFn() {
@@ -609,6 +617,22 @@ class LayoutProvider extends Component {
 }
 
 LayoutProvider.PROPS = {
+	/**
+	 * @instance
+	 * @memberof LayoutProvider
+	 * @type {boolean}
+	 */
+
+	allowMultiplePages: Config.bool().value(true),
+
+	/**
+	 * @instance
+	 * @memberof LayoutProvider
+	 * @type {boolean}
+	 */
+
+	allowSuccessPage: Config.bool().value(true),
+
 	/**
 	 * @default undefined
 	 * @instance

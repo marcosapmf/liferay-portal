@@ -18,6 +18,11 @@ import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
+import {
+	useCanElevate,
+	useFromControlsId,
+	useToControlsId,
+} from './../components/CollectionItemContext';
 
 const LAYOUT_DATA_ALLOWED_CHILDREN_TYPES = {
 	[LAYOUT_DATA_ITEM_TYPES.root]: [
@@ -60,6 +65,7 @@ export const TARGET_POSITION = {
 
 const RULES_TYPE = {
 	ELEVATE: 3,
+	INVALID_MOVE_WITH_FEEDBACK: 5,
 	MIDDLE: 1,
 	VALID_MOVE: 4,
 };
@@ -69,6 +75,7 @@ const RULES = {
 		isValidMoveToMiddle(args) && isMiddle(hoverClientY, hoverMiddleY),
 	[RULES_TYPE.ELEVATE]: checkElevate,
 	[RULES_TYPE.VALID_MOVE]: isValidMoveToTargetPosition,
+	[RULES_TYPE.INVALID_MOVE_WITH_FEEDBACK]: isInvalidMoveWithFeedback,
 };
 
 const initialDragDrop = {
@@ -82,11 +89,18 @@ const initialDragDrop = {
 	},
 };
 
-const getAncestorId = parent =>
-	parent.type === LAYOUT_DATA_ITEM_TYPES.column ||
-	parent.type === LAYOUT_DATA_ITEM_TYPES.collectionItem
-		? parent.parentId
-		: parent.itemId;
+const getAncestorId = (parent, toControlsId) => {
+	const ancestorId =
+		parent.type === LAYOUT_DATA_ITEM_TYPES.column ||
+		parent.type === LAYOUT_DATA_ITEM_TYPES.collectionItem
+			? parent.parentId
+			: parent.itemId;
+
+	return parent.type === LAYOUT_DATA_ITEM_TYPES.collectionItem ||
+		parent.type === LAYOUT_DATA_ITEM_TYPES.collection
+		? ancestorId
+		: toControlsId(ancestorId);
+};
 
 const dropTargetIsAncestor = (dropItem, layoutData, dropTargetId) => {
 	const dropTarget = layoutData.items[dropTargetId];
@@ -143,6 +157,10 @@ export default function useDragAndDrop({
 		targetPositionWithoutMiddle,
 	} = state;
 
+	const collectionItemCanElevate = useCanElevate();
+	const fromControlsId = useFromControlsId();
+	const toControlsId = useToControlsId();
+
 	const [dragOptions, drag, preview] = useDrag({
 		collect: _monitor => {
 			return {
@@ -189,7 +207,7 @@ export default function useDragAndDrop({
 			if (!_monitor.didDrop() && dropTargetItemId) {
 				const {parentId, position} = getParentItemIdAndPositon({
 					dropItem,
-					dropTargetItemId,
+					dropTargetItemId: fromControlsId(dropTargetItemId),
 					items: layoutData.items,
 					targetPositionWithMiddle,
 				});
@@ -252,6 +270,7 @@ export default function useDragAndDrop({
 
 			const result = checkRules(RULES, {
 				clientOffset,
+				collectionItemCanElevate,
 				dropItem,
 				dropTargetItem,
 				hoverBoundingRect,
@@ -260,57 +279,71 @@ export default function useDragAndDrop({
 				items: layoutData.items,
 				targetPositionWithMiddle: newTargetPositionWithMiddle,
 				targetPositionWithoutMiddle: newTargetPositionWithoutMiddle,
+				toControlsId,
 			});
 
 			switch (result) {
 				case RULES_TYPE.MIDDLE:
 					dispatch({
 						dropItem,
-						dropTargetItemId: dropTargetItem.itemId,
+						dropTargetItemId: toControlsId(dropTargetItem.itemId),
 						droppable: true,
 						targetPositionWithMiddle: TARGET_POSITION.MIDDLE,
 						targetPositionWithoutMiddle: newTargetPositionWithoutMiddle,
 					});
 					break;
-				case RULES_TYPE.ELEVATE:
+				case RULES_TYPE.ELEVATE: {
 					dispatch({
 						dropItem,
 						dropTargetItemId:
 							getAncestorId(
-								layoutData.items[dropTargetItem.parentId]
-							) || dropTargetItem.itemId,
+								layoutData.items[dropTargetItem.parentId],
+								toControlsId
+							) || toControlsId(dropTargetItem.itemId),
 						droppable: true,
 						targetPositionWithMiddle: newTargetPositionWithMiddle,
 						targetPositionWithoutMiddle: newTargetPositionWithoutMiddle,
 					});
 					break;
+				}
 				case RULES_TYPE.VALID_MOVE:
 					dispatch({
 						dropItem,
-						dropTargetItemId: dropTargetItem.itemId,
+						dropTargetItemId: toControlsId(dropTargetItem.itemId),
 						droppable: true,
 						targetPositionWithMiddle: newTargetPositionWithMiddle,
 						targetPositionWithoutMiddle: newTargetPositionWithoutMiddle,
 					});
 					break;
-				default: {
+				case RULES_TYPE.INVALID_MOVE_WITH_FEEDBACK:
 					dispatch({
 						dropItem,
 						dropTargetItemId:
 							dropTargetItem.type ===
 							LAYOUT_DATA_ITEM_TYPES.fragment
-								? dropTargetItem.parentId
+								? toControlsId(dropTargetItem.parentId)
 								: dropTargetItem.itemId !== dropItem.parentId &&
-								  dropTargetItem.itemId,
-						droppable: isNestingSupported(
-							dropItem.type,
-							dropTargetItem.type
-						),
+								  toControlsId(dropTargetItem.itemId),
+						droppable:
+							(dropItem.type !==
+								LAYOUT_DATA_ITEM_TYPES.container &&
+								dropItem.parentId ===
+									dropTargetItem.parentId) ||
+							(isNestingSupported(
+								dropItem.type,
+								dropTargetItem.type
+							) &&
+								!draggingCollectionInCollection(
+									dropItem,
+									dropTargetItem,
+									layoutData.items
+								)),
 						targetPositionWithMiddle: TARGET_POSITION.MIDDLE,
 						targetPositionWithoutMiddle: newTargetPositionWithoutMiddle,
 					});
 					break;
-				}
+				default:
+					break;
 			}
 		},
 	});
@@ -319,6 +352,7 @@ export default function useDragAndDrop({
 		if (!dropOptions.isOver) {
 			dispatch({
 				dropTargetItemId: null,
+				droppable: true,
 				targetPositionWithMiddle: null,
 				targetPositionWithoutMiddle: null,
 			});
@@ -365,16 +399,36 @@ function checkRules(rules, args) {
  */
 function checkElevate({
 	clientOffset,
+	collectionItemCanElevate,
 	dropItem,
 	dropTargetItem,
 	hoverBoundingRect,
 	items,
+	targetPositionWithoutMiddle,
+	toControlsId,
 }) {
 	const parent = items[dropTargetItem.parentId];
 
 	let isElevate = false;
 
 	if (parent) {
+		if (parent.type === LAYOUT_DATA_ITEM_TYPES.root) {
+			return false;
+		}
+
+		if (
+			!isValidCollectionItemElevate(
+				collectionItemCanElevate,
+				targetPositionWithoutMiddle
+			)
+		) {
+			return false;
+		}
+
+		if (draggingCollectionInCollection(dropItem, dropTargetItem, items)) {
+			return false;
+		}
+
 		const difference = Math.min(
 			hoverBoundingRect.height * DISTANCE,
 			MAX_DIFFERENCE
@@ -395,24 +449,41 @@ function checkElevate({
 		) {
 			isElevate = clientOffset.y > hoverBoundingRect.bottom - difference;
 		}
-	}
 
-	if (dropItem.type === LAYOUT_DATA_ITEM_TYPES.container) {
-		return (
-			isElevate &&
-			(parent.type === LAYOUT_DATA_ITEM_TYPES.root ||
-				(items[parent.parentId] &&
-					items[parent.parentId].type ===
-						LAYOUT_DATA_ITEM_TYPES.root))
-		);
+		if (dropItem.type === LAYOUT_DATA_ITEM_TYPES.container) {
+			const ancestor =
+				items[getAncestorId(parent, toControlsId)] || parent;
+
+			return (
+				isElevate &&
+				(ancestor.type === LAYOUT_DATA_ITEM_TYPES.root ||
+					(items[ancestor.parentId] &&
+						items[ancestor.parentId].type ===
+							LAYOUT_DATA_ITEM_TYPES.root))
+			);
+		}
 	}
 
 	return isElevate;
 }
 
-function isValidMoveToMiddle({dropItem, dropTargetItem}) {
+function isValidCollectionItemElevate(
+	collectionItemCanElevate,
+	targetPosition
+) {
+	return (
+		!collectionItemCanElevate ||
+		(collectionItemCanElevate.top &&
+			targetPosition === TARGET_POSITION.TOP) ||
+		(collectionItemCanElevate.bottom &&
+			targetPosition === TARGET_POSITION.BOTTOM)
+	);
+}
+
+function isValidMoveToMiddle({dropItem, dropTargetItem, items}) {
 	return (
 		!dropTargetItem.children.length &&
+		!draggingCollectionInCollection(dropItem, dropTargetItem, items) &&
 		isNestingSupported(dropItem.type, dropTargetItem.type)
 	);
 }
@@ -422,6 +493,8 @@ function isValidMoveToTargetPosition({
 	dropTargetItem,
 	items,
 	targetPositionWithMiddle,
+	targetPositionWithoutMiddle,
+	toControlsId,
 }) {
 	const {children} = items[
 		dropTargetItem.parentId !== ''
@@ -447,24 +520,72 @@ function isValidMoveToTargetPosition({
 	if (dropItem.type === LAYOUT_DATA_ITEM_TYPES.container) {
 		const parent = items[dropTargetItem.parentId];
 
-		if (!parent || parent.type !== LAYOUT_DATA_ITEM_TYPES.root) {
-			return false;
+		if (parent) {
+			const ancestor =
+				items[getAncestorId(parent, toControlsId)] || parent;
+
+			if (!ancestor || ancestor.type !== LAYOUT_DATA_ITEM_TYPES.root) {
+				return false;
+			}
 		}
 	}
 
+	if (draggingCollectionInCollection(dropItem, dropTargetItem, items)) {
+		return false;
+	}
+
 	if (children.includes(dropItem.itemId)) {
-		return !(
-			isSibling(
-				children,
-				dropItem,
-				targetPositionWithMiddle,
-				dropTargetItem.itemId
-			) ||
-			(isFirstItem(children, dropItem) &&
-				targetPositionWithMiddle === TARGET_POSITION.TOP) ||
-			(isLastItem(children, dropItem) &&
-				targetPositionWithMiddle === TARGET_POSITION.BOTTOM)
-		);
+		return !droppingInSamePosition({
+			children,
+			dropItem,
+			dropTargetItem,
+			targetPositionWithoutMiddle,
+		});
+	}
+
+	return true;
+}
+
+function droppingInSamePosition({
+	children,
+	dropItem,
+	dropTargetItem,
+	targetPositionWithoutMiddle,
+}) {
+	const itemIndex = children.findIndex(id => id === dropItem.itemId);
+	const hoverId = dropTargetItem.itemId;
+
+	return (
+		(children[itemIndex + 1] === hoverId &&
+			targetPositionWithoutMiddle === TARGET_POSITION.TOP) ||
+		(children[itemIndex - 1] === hoverId &&
+			targetPositionWithoutMiddle === TARGET_POSITION.BOTTOM) ||
+		(isFirstItem(children, dropItem) &&
+			targetPositionWithoutMiddle === TARGET_POSITION.TOP) ||
+		(isLastItem(children, dropItem) &&
+			targetPositionWithoutMiddle === TARGET_POSITION.BOTTOM)
+	);
+}
+
+function isInvalidMoveWithFeedback({
+	dropItem,
+	dropTargetItem,
+	items,
+	targetPositionWithoutMiddle,
+}) {
+	const {children} = items[
+		dropTargetItem.parentId !== ''
+			? dropTargetItem.parentId
+			: dropTargetItem.itemId
+	];
+
+	if (children.includes(dropItem.itemId)) {
+		return !droppingInSamePosition({
+			children,
+			dropItem,
+			dropTargetItem,
+			targetPositionWithoutMiddle,
+		});
 	}
 
 	return true;
@@ -501,17 +622,6 @@ function getTargetPosition(hoverClientY, hoverMiddleY) {
 	return [targetPositionWithMiddle, targetPositionWithoutMiddle];
 }
 
-function isSibling(children, item, targetPositionWithMiddle, hoverId) {
-	const itemIndex = children.findIndex(id => id === item.itemId);
-
-	return (
-		(children[itemIndex + 1] === hoverId &&
-			targetPositionWithMiddle === TARGET_POSITION.TOP) ||
-		(children[itemIndex - 1] === hoverId &&
-			targetPositionWithMiddle === TARGET_POSITION.BOTTOM)
-	);
-}
-
 function isLastItem(children, item) {
 	return item.itemId === children[children.length - 1];
 }
@@ -532,39 +642,41 @@ function getParentItemIdAndPositon({
 	items,
 	targetPositionWithMiddle,
 }) {
-	const siblingOrParent = items[dropTargetItemId];
+	const dropTargetItem = items[dropTargetItemId];
 
 	if (
-		siblingOrParent.type === LAYOUT_DATA_ITEM_TYPES.column &&
+		(dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.column ||
+			dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.collectionItem) &&
 		targetPositionWithMiddle !== TARGET_POSITION.MIDDLE
 	) {
 		targetPositionWithMiddle = TARGET_POSITION.MIDDLE;
 	}
 
 	if (
-		(siblingOrParent.type === LAYOUT_DATA_ITEM_TYPES.root ||
+		(dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.root ||
 			targetPositionWithMiddle === TARGET_POSITION.MIDDLE) &&
-		isNestingSupported(dropItem.type, siblingOrParent.type)
+		isNestingSupported(dropItem.type, dropTargetItem.type)
 	) {
 		return {
-			parentId: siblingOrParent.itemId,
+			parentId: dropTargetItem.itemId,
 			position:
 				targetPositionWithMiddle !== TARGET_POSITION.TOP
-					? siblingOrParent.children.length
+					? dropTargetItem.children.length
 					: 0,
 		};
 	}
 
-	const parent = items[siblingOrParent.parentId];
-	const sibling = siblingOrParent;
+	const parent = items[dropTargetItem.parentId];
 
 	if (parent) {
-		const siblingIndex = parent.children.indexOf(sibling.itemId);
+		const dropTargetItemIndex = parent.children.indexOf(
+			dropTargetItem.itemId
+		);
 
 		let position =
 			targetPositionWithMiddle === TARGET_POSITION.TOP
-				? siblingIndex
-				: siblingIndex + 1;
+				? dropTargetItemIndex
+				: dropTargetItemIndex + 1;
 
 		// Moving an item in the same parent
 		if (parent.children.includes(dropItem.itemId)) {
@@ -574,7 +686,8 @@ function getParentItemIdAndPositon({
 				position = 0;
 			}
 			else {
-				position = itemIndex < siblingIndex ? position - 1 : position;
+				position =
+					itemIndex < dropTargetItemIndex ? position - 1 : position;
 			}
 		}
 
@@ -587,4 +700,22 @@ function getParentItemIdAndPositon({
 
 function isNestingSupported(itemType, parentType) {
 	return LAYOUT_DATA_ALLOWED_CHILDREN_TYPES[parentType].includes(itemType);
+}
+
+function draggingCollectionInCollection(item, dropTargetItem, items) {
+	return (
+		item.type === LAYOUT_DATA_ITEM_TYPES.collection &&
+		hasCollectionItemAncestor(dropTargetItem, items)
+	);
+}
+
+function hasCollectionItemAncestor(parent, items) {
+	if (!parent) {
+		return false;
+	}
+
+	return (
+		parent.type === LAYOUT_DATA_ITEM_TYPES.collectionItem ||
+		hasCollectionItemAncestor(items[parent.parentId], items)
+	);
 }

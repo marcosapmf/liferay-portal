@@ -14,9 +14,9 @@
 
 import {ClayInput} from '@clayui/form';
 import {Editor} from 'frontend-editor-ckeditor-web';
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
+import getConnectedReactComponentAdapter from '../util/ReactComponentAdapterWithObserver.es';
 import templates from './RichTextAdapter.soy';
 
 const CKEDITOR_CONFIG = {
@@ -68,10 +68,41 @@ const CKEDITOR_CONFIG = {
 	],
 };
 
+/**
+ * Use Sync Value to synchronize the initial value with the current internal
+ * value, only update the internal value with the new initial value if the
+ * values are different and when the value is not changed for more than ms.
+ */
+const useSyncValue = newValue => {
+	// Maintains the reference of the last value to check in later renderings if the
+	// value is new or keeps the same, it covers cases where the value typed by
+	// the user is sent to LayoutProvider but it does not descend with the new changes.
+	const previousValueRef = useRef(newValue);
+
+	const [value, setValue] = useState(newValue);
+
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			if (value !== newValue && previousValueRef.current !== newValue) {
+				previousValueRef.current = newValue;
+				setValue(newValue);
+			}
+		}, 300);
+
+		return () => {
+			clearTimeout(handler);
+		};
+	}, [newValue, value]);
+
+	return [value, setValue];
+};
+
 const RichText = ({data, dispatch, name, readOnly}) => {
+	const [value, setValue] = useSyncValue(data);
+
 	const editorProps = {
 		config: CKEDITOR_CONFIG,
-		data,
+		data: value,
 	};
 
 	if (readOnly) {
@@ -80,6 +111,8 @@ const RichText = ({data, dispatch, name, readOnly}) => {
 	}
 	else {
 		editorProps.onChange = event => {
+			setValue(event.editor.getData());
+
 			dispatch({
 				payload: event.editor.getData(),
 				type: 'value',

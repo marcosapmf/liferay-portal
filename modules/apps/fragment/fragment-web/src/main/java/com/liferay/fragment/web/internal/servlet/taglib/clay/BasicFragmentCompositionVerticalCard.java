@@ -24,6 +24,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -65,8 +67,17 @@ public class BasicFragmentCompositionVerticalCard
 				new BasicFragmentCompositionActionDropdownItemsProvider(
 					_fragmentComposition, _renderRequest, _renderResponse);
 
-		return basicFragmentCompositionActionDropdownItemsProvider.
-			getActionDropdownItems();
+		try {
+			return basicFragmentCompositionActionDropdownItemsProvider.
+				getActionDropdownItems();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -129,6 +140,9 @@ public class BasicFragmentCompositionVerticalCard
 	public String getTitle() {
 		return HtmlUtil.escape(_fragmentComposition.getName());
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BasicFragmentCompositionVerticalCard.class);
 
 	private final FragmentComposition _fragmentComposition;
 	private final HttpServletRequest _httpServletRequest;

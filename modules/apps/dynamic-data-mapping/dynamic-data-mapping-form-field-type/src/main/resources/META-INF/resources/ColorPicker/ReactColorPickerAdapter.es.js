@@ -78,5 +78,5 @@ const ReactColorPickerAdapter = getConnectedReactComponentAdapter(
 	templates
 );
 
-export {ReactColorPickerAdapter};
+export {ClayColorPickerWithState, ReactColorPickerAdapter};
 export default ReactColorPickerAdapter;

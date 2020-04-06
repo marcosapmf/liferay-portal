@@ -33,6 +33,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMDataProviderInstanceLocalService;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -340,6 +342,11 @@ public class DDMStructureStagedModelDataHandler
 		DDMForm ddmForm = getImportDDMForm(
 			portletDataContext, structureElement);
 
+		long groupId = portletDataContext.getScopeGroupId();
+
+		updateDDMFormFieldsPredefinedValues(
+			ddmForm, groupId, portletDataContext.getSourceGroupId());
+
 		importDDMDataProviderInstances(
 			portletDataContext, structureElement, ddmForm);
 
@@ -350,8 +357,6 @@ public class DDMStructureStagedModelDataHandler
 			structure);
 
 		DDMStructure importedStructure = null;
-
-		long groupId = portletDataContext.getScopeGroupId();
 
 		if (structure.getGroupId() ==
 				portletDataContext.getSourceCompanyGroupId()) {
@@ -799,6 +804,32 @@ public class DDMStructureStagedModelDataHandler
 	@Reference(unbind = "-")
 	protected void setUserLocalService(UserLocalService userLocalService) {
 		_userLocalService = userLocalService;
+	}
+
+	protected void updateDDMFormFieldsPredefinedValues(
+		DDMForm ddmForm, long groupId, long sourceId) {
+
+		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+
+		Stream<DDMFormField> stream = ddmFormFields.stream();
+
+		stream.map(
+			DDMFormField::getPredefinedValue
+		).map(
+			LocalizedValue::getValues
+		).map(
+			Map::entrySet
+		).flatMap(
+			entries -> entries.stream()
+		).filter(
+			entry -> StringUtil.contains(
+				entry.getValue(), String.valueOf(sourceId))
+		).forEach(
+			entry -> entry.setValue(
+				StringUtil.replace(
+					entry.getValue(), String.valueOf(sourceId),
+					String.valueOf(groupId)))
+		);
 	}
 
 	@Reference

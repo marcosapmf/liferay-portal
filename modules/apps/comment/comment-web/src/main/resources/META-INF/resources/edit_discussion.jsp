@@ -80,7 +80,7 @@ if (comment instanceof WorkflowableComment) {
 				<aui:workflow-status model="<%= CommentConstants.getDiscussionClass() %>" status="<%= workflowableComment.getStatus() %>" />
 			</c:if>
 
-			<liferay-ui:input-editor
+			<liferay-editor:editor
 				configKey="commentEditor"
 				contents="<%= comment.getBody() %>"
 				editorName='<%= PropsUtil.get("editor.wysiwyg.portal-web.docroot.html.taglib.ui.discussion.jsp") %>'

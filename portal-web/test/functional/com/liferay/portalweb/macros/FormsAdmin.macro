@@ -84,6 +84,8 @@ definition {
 
 	macro saveDataProvider {
 		PortletEntry.save();
+
+		Pause(locator1 = "5000");
 	}
 
 	macro teardownForms {

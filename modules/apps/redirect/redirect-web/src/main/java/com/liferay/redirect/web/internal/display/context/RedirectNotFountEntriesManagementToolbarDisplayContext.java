@@ -25,6 +25,11 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.redirect.service.RedirectNotFoundEntryLocalService;
 
 import java.util.List;
 
@@ -47,6 +52,10 @@ public class RedirectNotFountEntriesManagementToolbarDisplayContext
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			searchContainer);
+
+		_redirectNotFoundEntryLocalService =
+			(RedirectNotFoundEntryLocalService)httpServletRequest.getAttribute(
+				RedirectNotFoundEntryLocalService.class.getName());
 	}
 
 	@Override
@@ -107,6 +116,18 @@ public class RedirectNotFountEntriesManagementToolbarDisplayContext
 	}
 
 	@Override
+	public Boolean isDisabled() {
+		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		int redirectNotFoundEntriesCount =
+			_redirectNotFoundEntryLocalService.getRedirectNotFoundEntriesCount(
+				themeDisplay.getScopeGroupId(), null, null);
+
+		return redirectNotFoundEntriesCount == 0;
+	}
+
+	@Override
 	public Boolean isSelectable() {
 		return false;
 	}
@@ -116,14 +137,19 @@ public class RedirectNotFountEntriesManagementToolbarDisplayContext
 		return LanguageUtil.get(request, "filter-by-type");
 	}
 
+	protected String getNavigation() {
+		return ParamUtil.getString(
+			liferayPortletRequest, getNavigationParam(), "active-urls");
+	}
+
 	@Override
 	protected String[] getNavigationKeys() {
-		return new String[] {"all"};
+		return new String[] {"all", "active-urls", "ignored-urls"};
 	}
 
 	@Override
 	protected String getNavigationParam() {
-		return "filter";
+		return "filterType";
 	}
 
 	@Override
@@ -133,29 +159,47 @@ public class RedirectNotFountEntriesManagementToolbarDisplayContext
 
 	private List<DropdownItem> _getFilterDateDropdownItems() {
 		return DropdownItemListBuilder.add(
-			_getNavigationDropdownItemUnsafeConsumer("day")
+			_getFilterDateDropdownItemUnsafeConsumer(0)
 		).add(
-			_getNavigationDropdownItemUnsafeConsumer("week")
+			_getFilterDateDropdownItemUnsafeConsumer(1)
 		).add(
-			_getNavigationDropdownItemUnsafeConsumer("month")
+			_getFilterDateDropdownItemUnsafeConsumer(7)
+		).add(
+			_getFilterDateDropdownItemUnsafeConsumer(30)
 		).build();
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
-		_getNavigationDropdownItemUnsafeConsumer(String key) {
+		_getFilterDateDropdownItemUnsafeConsumer(int days) {
 
 		return dropdownItem -> {
-			dropdownItem.setActive(key.equals(getNavigation()));
+			dropdownItem.setActive(
+				StringUtil.equals(
+					String.valueOf(days),
+					ParamUtil.getString(request, "filterDate", "0")));
 
 			PortletURL portletURL = PortletURLUtil.clone(
 				currentURLObj, liferayPortletResponse);
 
-			portletURL.setParameter(getNavigationParam(), key);
+			portletURL.setParameter("filterDate", String.valueOf(days));
 
 			dropdownItem.setHref(portletURL);
 
-			dropdownItem.setLabel(LanguageUtil.get(request, key));
+			if (days == 0) {
+				dropdownItem.setLabel(LanguageUtil.get(request, "all"));
+			}
+			else if (days == 1) {
+				dropdownItem.setLabel(
+					LanguageUtil.format(request, "x-day", days));
+			}
+			else {
+				dropdownItem.setLabel(
+					LanguageUtil.format(request, "x-days", days));
+			}
 		};
 	}
+
+	private final RedirectNotFoundEntryLocalService
+		_redirectNotFoundEntryLocalService;
 
 }

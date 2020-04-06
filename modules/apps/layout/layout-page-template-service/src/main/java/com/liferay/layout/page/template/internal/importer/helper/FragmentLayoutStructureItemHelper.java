@@ -16,6 +16,7 @@ package com.liferay.layout.page.template.internal.importer.helper;
 
 import com.liferay.document.library.util.DLURLHelperUtil;
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
+import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
@@ -52,10 +53,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
-
 /**
  * @author Jürgen Kappler
  */
@@ -83,51 +80,6 @@ public class FragmentLayoutStructureItemHelper
 
 		return layoutStructure.addFragmentLayoutStructureItem(
 			fragmentEntryLink.getFragmentEntryLinkId(), parentItemId, position);
-	}
-
-	private static Map<String, String> _getConfigurationTypes(
-			String configuration)
-		throws JSONException {
-
-		Map<String, String> configurationTypes = new HashMap<>();
-
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(configuration);
-
-		JSONArray fieldSetsJSONArray = jsonObject.getJSONArray("fieldSets");
-
-		if (fieldSetsJSONArray == null) {
-			return configurationTypes;
-		}
-
-		for (int i = 0; i < fieldSetsJSONArray.length(); i++) {
-			JSONObject fieldsJSONObject = fieldSetsJSONArray.getJSONObject(i);
-
-			JSONArray fieldsJSONArray = fieldsJSONObject.getJSONArray("fields");
-
-			for (int j = 0; j < fieldsJSONArray.length(); j++) {
-				JSONObject fieldJSONObject = fieldsJSONArray.getJSONObject(j);
-
-				configurationTypes.put(
-					fieldJSONObject.getString("name"),
-					fieldJSONObject.getString("type"));
-			}
-		}
-
-		return configurationTypes;
-	}
-
-	private static Map<String, String> _getEditableTypes(String html) {
-		Map<String, String> editableTypes = new HashMap<>();
-
-		Document document = Jsoup.parse(html);
-
-		Elements elements = document.getElementsByTag("lfr-editable");
-
-		elements.forEach(
-			element -> editableTypes.put(
-				element.attr("id"), element.attr("type")));
-
-		return editableTypes;
 	}
 
 	private FragmentEntryLink _addFragmentEntryLink(
@@ -175,7 +127,8 @@ public class FragmentLayoutStructureItemHelper
 			fragmentEntryProcessorRegistry.getDefaultEditableValuesJSONObject(
 				_replaceResources(fragmentCollection, html), configuration);
 
-		Map<String, String> editableTypes = _getEditableTypes(html);
+		Map<String, String> editableTypes =
+			EditableFragmentEntryProcessorUtil.getEditableTypes(html);
 
 		JSONObject fragmentEntryProcessorValuesJSONObject = JSONUtil.put(
 			"com.liferay.fragment.entry.processor.background.image." +
@@ -242,14 +195,14 @@ public class FragmentLayoutStructureItemHelper
 			return jsonObject;
 		}
 
-		jsonObject.put("target", fragmentLinkMap.get("target"));
+		Map<String, Object> hrefMap = (Map<String, Object>)fragmentLinkMap.get(
+			"href");
 
-		Map<String, Object> valueMap = (Map<String, Object>)fragmentLinkMap.get(
-			"value");
-
-		if (valueMap != null) {
-			jsonObject.put("href", valueMap.get("href"));
+		if (hrefMap != null) {
+			jsonObject.put("href", hrefMap.get("value"));
 		}
+
+		jsonObject.put("target", fragmentLinkMap.get("target"));
 
 		return jsonObject;
 	}
@@ -371,6 +324,36 @@ public class FragmentLayoutStructureItemHelper
 		}
 
 		return jsonObject;
+	}
+
+	private Map<String, String> _getConfigurationTypes(String configuration)
+		throws JSONException {
+
+		Map<String, String> configurationTypes = new HashMap<>();
+
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(configuration);
+
+		JSONArray fieldSetsJSONArray = jsonObject.getJSONArray("fieldSets");
+
+		if (fieldSetsJSONArray == null) {
+			return configurationTypes;
+		}
+
+		for (int i = 0; i < fieldSetsJSONArray.length(); i++) {
+			JSONObject fieldsJSONObject = fieldSetsJSONArray.getJSONObject(i);
+
+			JSONArray fieldsJSONArray = fieldsJSONObject.getJSONArray("fields");
+
+			for (int j = 0; j < fieldsJSONArray.length(); j++) {
+				JSONObject fieldJSONObject = fieldsJSONArray.getJSONObject(j);
+
+				configurationTypes.put(
+					fieldJSONObject.getString("name"),
+					fieldJSONObject.getString("type"));
+			}
+		}
+
+		return configurationTypes;
 	}
 
 	private FragmentEntry _getFragmentEntry(

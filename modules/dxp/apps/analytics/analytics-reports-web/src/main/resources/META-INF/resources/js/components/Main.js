@@ -29,7 +29,7 @@ export default function Main({
 	timeSpanOptions,
 	totalReadsDataProvider,
 	totalViewsDataProvider,
-	trafficSourcesDataProvider,
+	trafficSources,
 }) {
 	return (
 		<>
@@ -71,17 +71,19 @@ export default function Main({
 			/>
 
 			<h5 className="mt-3 sheet-subtitle text-secondary">
-				{Liferay.Language.get('traffic-sources')}
+				{Liferay.Language.get('search-engines-traffic')}
 				<Hint
-					message={Liferay.Language.get('traffic-sources-help')}
-					title={Liferay.Language.get('traffic-sources')}
+					message={Liferay.Language.get(
+						'search-engines-traffic-help'
+					)}
+					title={Liferay.Language.get('search-engines-traffic')}
 				/>
 			</h5>
 
 			<TrafficSources
-				dataProvider={trafficSourcesDataProvider}
 				languageTag={languageTag}
 				onTrafficSourceClick={onTrafficSourceClick}
+				trafficSources={trafficSources}
 			/>
 		</>
 	);
@@ -103,5 +105,5 @@ Main.proptypes = {
 	).isRequired,
 	totalReadsDataProvider: PropTypes.func.isRequired,
 	totalViewsDataProvider: PropTypes.func.isRequired,
-	trafficSourcesDataProvider: PropTypes.func.isRequired,
+	trafficSources: PropTypes.array.isRequired,
 };

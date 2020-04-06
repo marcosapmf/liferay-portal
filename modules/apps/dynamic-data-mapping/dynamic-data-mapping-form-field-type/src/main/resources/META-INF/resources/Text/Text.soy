@@ -10,7 +10,6 @@
 	{@param? _handleFieldBlurred: any}
 	{@param? _handleFieldChanged: any}
 	{@param? _handleFieldFocused: any}
-	{@param? _value: string}
 	{@param? autocompleteEnabled: bool}
 	{@param? displayErrors: bool}
 	{@param? displayStyle: string}
@@ -53,7 +52,7 @@
 				{param placeholder: $placeholder /}
 				{param predefinedValue: $predefinedValue /}
 				{param readOnly: $readOnly /}
-				{param value: isNonnull($_value) ? $_value : $value /}
+				{param value: $value /}
 			{/call}
 		{/param}
 		{param displayErrors: $displayErrors /}

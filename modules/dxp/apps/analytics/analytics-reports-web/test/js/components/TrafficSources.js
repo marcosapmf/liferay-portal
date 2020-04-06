@@ -10,7 +10,7 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {cleanup, render, wait} from '@testing-library/react';
+import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import TrafficSources from '../../../src/main/resources/META-INF/resources/js/components/TrafficSources';
@@ -18,42 +18,34 @@ import TrafficSources from '../../../src/main/resources/META-INF/resources/js/co
 describe('TrafficSources', () => {
 	afterEach(cleanup);
 
-	it('displays the sources accosding to API', async () => {
-		const mockedAPI = jest.fn(() =>
-			Promise.resolve({
-				analyticsReportsTrafficSources: [
-					{
-						helpMessage: 'Testing Help Message',
-						name: 'testing',
-						title: 'Testing',
-						value: 32178,
-					},
-					{
-						helpMessage: 'Second Testing Help Message',
-						name: 'second-testing',
-						title: 'Second Testing',
-						value: 278256,
-					},
-				],
-			})
-		);
+	it('displays the sources according to API', () => {
+		const mockTrafficSources = [
+			{
+				helpMessage: 'Testing Help Message',
+				name: 'testing',
+				title: 'Testing',
+				value: 32178,
+			},
+			{
+				helpMessage: 'Second Testing Help Message',
+				name: 'second-testing',
+				title: 'Second Testing',
+				value: 278256,
+			},
+		];
 
 		const {getByText} = render(
 			<TrafficSources
-				dataProvider={mockedAPI}
-				languageTag="en-EN"
+				languageTag="en-US"
 				onTrafficSourceClick={() => {}}
+				trafficSources={mockTrafficSources}
 			/>
 		);
-
-		await wait(() => expect(mockedAPI).toHaveBeenCalled());
 
 		expect(getByText('Testing')).toBeInTheDocument();
 		expect(getByText('32,178')).toBeInTheDocument();
 
 		expect(getByText('Second Testing')).toBeInTheDocument();
 		expect(getByText('278,256')).toBeInTheDocument();
-
-		expect(mockedAPI).toHaveBeenCalledTimes(1);
 	});
 });

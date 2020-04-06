@@ -48,15 +48,29 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 	public static final String PROPERTY_VALUE_COMPANY_ID_DEFAULT = "0";
 
 	public ConfigurationModel(
+		String bundleLocation, String bundleSymbolicName,
+		ClassLoader classLoader, Configuration configuration,
 		ExtendedObjectClassDefinition extendedObjectClassDefinition,
-		Configuration configuration, String bundleSymbolicName,
-		String bundleLocation, boolean factory) {
+		boolean factory) {
 
-		_extendedObjectClassDefinition = extendedObjectClassDefinition;
-		_configuration = configuration;
-		_bundleSymbolicName = bundleSymbolicName;
 		_bundleLocation = bundleLocation;
+		_bundleSymbolicName = bundleSymbolicName;
+		_classLoader = classLoader;
+		_configuration = configuration;
+		_extendedObjectClassDefinition = extendedObjectClassDefinition;
 		_factory = factory;
+	}
+
+	public ConfigurationModel(
+		String bundleLocation, String bundleSymbolicName,
+		Configuration configuration,
+		ExtendedObjectClassDefinition extendedObjectClassDefinition,
+		boolean factory) {
+
+		this(
+			bundleLocation, bundleSymbolicName,
+			ConfigurationModel.class.getClassLoader(), configuration,
+			extendedObjectClassDefinition, factory);
 	}
 
 	@Override
@@ -91,6 +105,10 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 
 		return GetterUtil.get(
 			extensionAttributes.get("category"), "third-party");
+	}
+
+	public ClassLoader getClassLoader() {
+		return _classLoader;
 	}
 
 	public Configuration getConfiguration() {
@@ -360,6 +378,7 @@ public class ConfigurationModel implements ExtendedObjectClassDefinition {
 
 	private final String _bundleLocation;
 	private final String _bundleSymbolicName;
+	private final ClassLoader _classLoader;
 	private final Configuration _configuration;
 	private final ExtendedObjectClassDefinition _extendedObjectClassDefinition;
 	private final boolean _factory;

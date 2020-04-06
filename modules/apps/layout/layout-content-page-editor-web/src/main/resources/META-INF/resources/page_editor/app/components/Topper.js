@@ -30,6 +30,7 @@ import {useDispatch, useSelector} from '../store/index';
 import deleteItem from '../thunks/deleteItem';
 import moveItem from '../thunks/moveItem';
 import useDragAndDrop, {TARGET_POSITION} from '../utils/useDragAndDrop';
+import {useToControlsId} from './CollectionItemContext';
 import {
 	useActiveItemId,
 	useHoverItem,
@@ -42,6 +43,10 @@ import getLabelName from './layout-data-items/getLabelName';
 import hasDropZoneChild from './layout-data-items/hasDropZoneChild';
 
 const TOPPER_BAR_HEIGHT = 24;
+
+const itemIsMappedCollection = item =>
+	item.type === LAYOUT_DATA_ITEM_TYPES.collection &&
+	'collection' in item.config;
 
 const TopperListItem = React.forwardRef(
 	({children, className, expand, ...props}, ref) => (
@@ -74,6 +79,7 @@ export default function Topper({children, item, itemRef, layoutData}) {
 	const isHovered = useIsHovered();
 	const isSelected = useIsSelected();
 	const selectItem = useSelectItem();
+	const toControlsId = useToControlsId();
 
 	const {
 		canDrop,
@@ -86,6 +92,7 @@ export default function Topper({children, item, itemRef, layoutData}) {
 			dropTargetItemId,
 			droppable,
 			targetPositionWithMiddle,
+			targetPositionWithoutMiddle,
 		},
 	} = useDragAndDrop({
 		containerRef,
@@ -99,6 +106,12 @@ export default function Topper({children, item, itemRef, layoutData}) {
 				})
 			),
 	});
+
+	const targetPosition =
+		item.type === LAYOUT_DATA_ITEM_TYPES.fragment ||
+		item.type === LAYOUT_DATA_ITEM_TYPES.collection
+			? targetPositionWithoutMiddle
+			: targetPositionWithMiddle;
 
 	const itemIsRemovable = useMemo(() => isRemovable(item, layoutData), [
 		item,
@@ -133,7 +146,7 @@ export default function Topper({children, item, itemRef, layoutData}) {
 
 		return (
 			item.type === LAYOUT_DATA_ITEM_TYPES.fragment &&
-			(hoveredItemId === item.itemId || (childIsActive && childIsHovered))
+			(isHovered(item.itemId) || (childIsActive && childIsHovered))
 		);
 	};
 
@@ -170,8 +183,8 @@ export default function Topper({children, item, itemRef, layoutData}) {
 	}, [itemRef, layoutData, windowScrollPosition]);
 
 	const isDraggableInPosition = position =>
-		targetPositionWithMiddle === position &&
-		dropTargetItemId === item.itemId;
+		targetPosition === position &&
+		dropTargetItemId === toControlsId(item.itemId);
 
 	const dataAdvice =
 		!droppable && isDraggableInPosition(TARGET_POSITION.MIDDLE)
@@ -186,7 +199,7 @@ export default function Topper({children, item, itemRef, layoutData}) {
 
 	return (
 		<div
-			className={classNames({
+			className={classNames('page-editor__topper', {
 				active: isSelected(item.itemId),
 				'drag-over-bottom': isDraggableInPosition(
 					TARGET_POSITION.BOTTOM
@@ -199,7 +212,7 @@ export default function Topper({children, item, itemRef, layoutData}) {
 				hovered: isHovered(item.itemId) || fragmentShouldBeHovered(),
 				'not-droppable':
 					!droppable && isDraggableInPosition(TARGET_POSITION.MIDDLE),
-				'page-editor__topper': true,
+				'page-editor__topper--mapped': itemIsMappedCollection(item),
 			})}
 			onClick={event => {
 				event.stopPropagation();
@@ -237,6 +250,9 @@ export default function Topper({children, item, itemRef, layoutData}) {
 			<div
 				className={classNames('page-editor__topper__bar', 'tbar', {
 					'page-editor__topper__bar--inset': isInset,
+					'page-editor__topper__bar--mapped': itemIsMappedCollection(
+						item
+					),
 				})}
 			>
 				<ul className="tbar-nav">
@@ -307,13 +323,9 @@ export default function Topper({children, item, itemRef, layoutData}) {
 
 			<div className="page-editor__topper__content" ref={drop}>
 				{dataAdvice
-					? {
-							...childrenElement,
-							props: {
-								...childrenElement.props,
-								'data-advice': dataAdvice,
-							},
-					  }
+					? React.cloneElement(childrenElement, {
+							data: {'data-advice': dataAdvice},
+					  })
 					: childrenElement}
 			</div>
 		</div>

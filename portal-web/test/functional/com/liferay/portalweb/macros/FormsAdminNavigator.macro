@@ -24,6 +24,8 @@ definition {
 				locator1 = "Checkbox#ENABLE_CHECKBOX_VIA_SPAN");
 
 			Button.clickSave();
+
+			Pause(locator1 = "5000");
 		}
 	}
 

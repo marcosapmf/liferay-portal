@@ -1,46 +1,45 @@
+@import './animations';
 @import 'atlas-variables';
 
-@keyframes fadeInDown {
-	from {
-		opacity: 0;
-		transform: translate3d(0, -1.5rem, 0);
+.ratings {
+	.btn {
+		overflow: hidden;
 	}
 
-	to {
-		opacity: 1;
-	}
-}
+	.animated-counter {
+		$animation-duration: 300ms;
 
-@keyframes fadeInUp {
-	from {
-		opacity: 0;
-		transform: translate3d(0, 1.5rem, 0);
-	}
+		display: inline-flex;
+		justify-content: center;
+		position: relative;
 
-	to {
-		opacity: 1;
-	}
-}
+		&.animating-down {
+			.current {
+				animation-duration: $animation-duration;
+				animation-name: fadeInDown;
+			}
 
-@keyframes fadeOutDown {
-	from {
-		opacity: 1;
-	}
+			.previous {
+				animation-duration: $animation-duration;
+				animation-name: fadeOutDown;
+			}
+		}
 
-	to {
-		opacity: 0;
-		transform: translate3d(0, 1.5rem, 0);
-	}
-}
+		&.animating-up {
+			.current {
+				animation-duration: $animation-duration;
+				animation-name: fadeInUp;
+			}
 
-@keyframes fadeOutUp {
-	from {
-		opacity: 1;
-	}
+			.previous {
+				animation-duration: $animation-duration;
+				animation-name: fadeOutUp;
+			}
+		}
 
-	to {
-		opacity: 0;
-		transform: translate3d(0, -1.5rem, 0);
+		.previous {
+			position: absolute;
+		}
 	}
 }
 
@@ -84,44 +83,22 @@
 	}
 }
 
-.ratings {
-	.btn {
-		overflow: hidden;
+.ratings-stars {
+	.btn[aria-pressed='true'] .lexicon-icon {
+		color: $primary;
 	}
 
-	.animated-counter {
-		$animation-duration: 300ms;
-
-		display: inline-flex;
-		justify-content: center;
-		position: relative;
-
-		&.animating-down {
-			.current {
-				animation-duration: $animation-duration;
-				animation-name: fadeInDown;
-			}
-
-			.previous {
-				animation-duration: $animation-duration;
-				animation-name: fadeOutDown;
-			}
-		}
-
-		&.animating-up {
-			.current {
-				animation-duration: $animation-duration;
-				animation-name: fadeInUp;
-			}
-
-			.previous {
-				animation-duration: $animation-duration;
-				animation-name: fadeOutUp;
-			}
-		}
-
-		.previous {
-			position: absolute;
-		}
+	.ratings-stars-average-text {
+		color: $secondary;
+		font-size: 0.875rem;
+		font-weight: 600;
 	}
+
+	.ratings-stars-average-icon {
+		color: $yellow;
+	}
+}
+
+.ratings-stars-dropdown {
+	min-width: auto;
 }

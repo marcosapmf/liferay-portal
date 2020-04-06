@@ -17,16 +17,33 @@ import {RuleEditor} from 'dynamic-data-mapping-form-builder';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 
 import AppContext from '../../AppContext.es';
+import DataLayoutBuilderContext from '../../data-layout-builder/DataLayoutBuilderContext.es';
 import {getItem} from '../../utils/client.es';
 import Button from '../button/Button.es';
 
-const RuleEditorModalBody = () => {
+class RuleEditorWrapper extends RuleEditor {
+	getChildContext() {
+		return {
+			store: {
+				editingLanguageId: 'en_US',
+			},
+		};
+	}
+}
+
+const RuleEditorModalContent = ({onClose}) => {
 	const ruleEditorRef = useRef();
+	const [ruleEditor, setRuleEditor] = useState(null);
+
 	const [
 		{
 			config: {ruleSettings},
+			spritemap,
 		},
 	] = useContext(AppContext);
+
+	const [dataLayoutBuilder] = useContext(DataLayoutBuilderContext);
+	const {pages} = dataLayoutBuilder.getStore();
 
 	const [state, setState] = useState({
 		isLoading: true,
@@ -36,12 +53,48 @@ const RuleEditorModalBody = () => {
 	useEffect(() => {
 		const {isLoading, roles} = state;
 
-		if (isLoading) {
+		if (isLoading || ruleEditor !== null) {
 			return;
 		}
 
-		RuleEditorWrapper.newInstance(ruleEditorRef, roles, ruleSettings);
-	}, [ruleEditorRef, ruleSettings, state]);
+		const ruleEditorWrapper = new RuleEditorWrapper(
+			{
+				...ruleSettings,
+				actions: [],
+				conditions: [],
+				events: {
+					ruleAdded: rule => {
+						dataLayoutBuilder.dispatch('ruleAdded', rule);
+						onClose();
+					},
+					ruleCancelled: () => {},
+					ruleDeleted: () => {},
+					ruleEdited: () => {},
+				},
+				key: 'create',
+				pages,
+				ref: 'RuleEditor',
+				roles,
+				spritemap,
+			},
+			ruleEditorRef.current
+		);
+
+		setRuleEditor(ruleEditorWrapper);
+	}, [
+		dataLayoutBuilder,
+		onClose,
+		pages,
+		ruleEditor,
+		ruleEditorRef,
+		ruleSettings,
+		spritemap,
+		state,
+	]);
+
+	useEffect(() => {
+		return () => ruleEditor && ruleEditor.dispose();
+	}, [ruleEditor]);
 
 	useEffect(() => {
 		getItem('/o/headless-admin-user/v1.0/roles').then(
@@ -63,9 +116,25 @@ const RuleEditorModalBody = () => {
 	}, []);
 
 	return (
-		<ClayModal.Body>
-			<div ref={ruleEditorRef}></div>
-		</ClayModal.Body>
+		<>
+			<ClayModal.Header>
+				{Liferay.Language.get('add-rule')}
+			</ClayModal.Header>
+			<ClayModal.Body>
+				<div ref={ruleEditorRef}></div>
+			</ClayModal.Body>
+			<ClayModal.Footer
+				last={
+					<Button
+						onClick={() => {
+							ruleEditor._handleRuleAdded();
+						}}
+					>
+						{Liferay.Language.get('save')}
+					</Button>
+				}
+			/>
+		</>
 	);
 };
 
@@ -79,72 +148,15 @@ const RuleEditorModal = ({isVisible, onClose}) => {
 	}
 
 	return (
-		<ClayModal observer={observer} size="lg" status="info">
-			<ClayModal.Header>{'Title'}</ClayModal.Header>
-			<RuleEditorModalBody />
-			<ClayModal.Footer
-				last={<Button onClick={onClose}>{'Primary'}</Button>}
-			/>
+		<ClayModal
+			className="data-layout-builder-rule-editor-modal"
+			observer={observer}
+			size="lg"
+			status="info"
+		>
+			<RuleEditorModalContent onClose={onClose} />
 		</ClayModal>
 	);
 };
-
-class RuleEditorWrapper extends RuleEditor {
-	getChildContext() {
-		return {
-			store: {
-				editingLanguageId: 'en_US',
-			},
-		};
-	}
-
-	static newInstance(ruleEditorRef, roles, {functionsMetadata = {}}) {
-		return new RuleEditorWrapper(
-			{
-				actions: [],
-				conditions: [],
-				dataProviderInstanceParameterSettingsURL:
-					'/o/dynamic-data-mapping-form-builder-provider-instance-parameter-settings/',
-				dataProviderInstancesURL:
-					'/o/dynamic-data-mapping-form-builder-data-provider-instances/',
-				events: {
-					ruleAdded: () => {},
-					ruleCancelled: () => {},
-					ruleDeleted: () => {},
-					ruleEdited: () => {},
-				},
-				functionsMetadata,
-				functionsURL: '/o/dynamic-data-mapping-form-builder-functions/',
-				key: 'create',
-				pages: [
-					{
-						description: '',
-						localizedDescription: {
-							en_US: '',
-						},
-						localizedTitle: {
-							en_US: '',
-						},
-						rows: [
-							{
-								columns: [
-									{
-										fields: [],
-										size: 12,
-									},
-								],
-							},
-						],
-						title: '',
-					},
-				],
-				ref: 'RuleEditor',
-				roles,
-				spritemap: `${Liferay.ThemeDisplay.getPathThemeImages()}/lexicon/icons.svg`,
-			},
-			ruleEditorRef.current
-		);
-	}
-}
 
 export default RuleEditorModal;

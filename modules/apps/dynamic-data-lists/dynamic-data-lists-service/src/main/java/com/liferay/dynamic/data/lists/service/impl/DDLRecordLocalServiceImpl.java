@@ -189,6 +189,18 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		return addRecord(
+			userId, groupId, ddmStorageId, ddlRecordSetId, null, 0,
+			serviceContext);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public DDLRecord addRecord(
+			long userId, long groupId, long ddmStorageId, long ddlRecordSetId,
+			String className, long classPK, ServiceContext serviceContext)
+		throws PortalException {
+
 		// Record
 
 		User user = userLocalService.getUser(userId);
@@ -212,6 +224,8 @@ public class DDLRecordLocalServiceImpl extends DDLRecordLocalServiceBaseImpl {
 		record.setDDMStorageId(ddmStorageId);
 		record.setRecordSetId(ddlRecordSetId);
 		record.setRecordSetVersion(ddlRecordSet.getVersion());
+		record.setClassName(className);
+		record.setClassPK(classPK);
 		record.setVersion(DDLRecordConstants.VERSION_DEFAULT);
 		record.setDisplayIndex(0);
 

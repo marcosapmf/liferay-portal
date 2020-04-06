@@ -233,7 +233,7 @@ public class FragmentEntryLinkRichTextEditorConfigContributor
 
 	protected JSONObject getToolbarsStylesSelectionsImageJSONObject() {
 		return JSONUtil.put(
-			"buttons", JSONUtil.putAll("imageLeft", "imageRight")
+			"buttons", JSONUtil.putAll("imageLeft", "imageCenter", "imageRight")
 		).put(
 			"name", "image"
 		).put(

@@ -80,8 +80,8 @@ public class LanguageExtension {
 				bundleCapability.getAttributes());
 
 			Object aggregate = attributes.get("resource.bundle.aggregate");
-
 			Object baseName = attributes.get("resource.bundle.base.name");
+			Object serviceRanking = attributes.get(Constants.SERVICE_RANKING);
 
 			if (aggregate instanceof String) {
 				int aggregateId = _atomicInteger.incrementAndGet();
@@ -89,7 +89,8 @@ public class LanguageExtension {
 				ServiceTrackerResourceBundleLoader
 					serviceTrackerResourceBundleLoader =
 						new ServiceTrackerResourceBundleLoader(
-							_bundleContext, (String)aggregate, aggregateId);
+							_bundleContext, (String)aggregate, aggregateId,
+							GetterUtil.getInteger(serviceRanking));
 
 				attributes.put("aggregateId", String.valueOf(aggregateId));
 
@@ -110,8 +111,6 @@ public class LanguageExtension {
 					bundleWiring.getClassLoader(), (String)baseName,
 					GetterUtil.getBoolean(excludePortalResources));
 			}
-
-			Object serviceRanking = attributes.get(Constants.SERVICE_RANKING);
 
 			if (Validator.isNotNull(serviceRanking)) {
 				attributes.put(

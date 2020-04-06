@@ -29,8 +29,16 @@ export default ({tagsChange, tags = [], ...props}) => {
 
 	useEffect(() => {
 		getAllTags(context.siteKey).then(data => {
+			const vocabulariesOfQuestions = data.items.filter(
+				vocabulary =>
+					vocabulary.assetTypes.filter(
+						assetType =>
+							assetType.type === context.defaultVocabulary
+					).length > 0
+			);
+
 			setSourceItems(
-				data.items
+				vocabulariesOfQuestions
 					.flatMap(vocabulary => vocabulary.taxonomyCategories.items)
 					.map(({id, name}) => ({
 						label: name,
@@ -38,7 +46,7 @@ export default ({tagsChange, tags = [], ...props}) => {
 					}))
 			);
 		});
-	}, [context.siteKey]);
+	}, [context.defaultVocabulary, context.siteKey]);
 
 	useEffect(() => {
 		if (tags.length) {

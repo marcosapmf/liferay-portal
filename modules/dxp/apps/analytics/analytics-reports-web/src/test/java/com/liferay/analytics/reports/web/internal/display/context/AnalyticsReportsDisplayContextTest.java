@@ -15,25 +15,34 @@
 package com.liferay.analytics.reports.web.internal.display.context;
 
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
+import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
+import com.liferay.analytics.reports.web.internal.model.TrafficSource;
+import com.liferay.portal.json.JSONFactoryImpl;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
+import java.util.ResourceBundle;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -46,119 +55,197 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class AnalyticsReportsDisplayContextTest {
 
-	@Before
-	public void setUp() {
+	@BeforeClass
+	public static void setUpClass() {
 		FastDateFormatFactoryUtil fastDateFormatFactoryUtil =
 			new FastDateFormatFactoryUtil();
 
 		fastDateFormatFactoryUtil.setFastDateFormatFactory(
 			new FastDateFormatFactoryImpl());
+
+		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
+
+		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
 	}
 
 	@Test
 	public void testGetProps() {
-		String authorName = RandomTestUtil.randomString();
-		Locale locale = LocaleUtil.getDefault();
-		String title = RandomTestUtil.randomString();
+		int organicTrafficAmount = RandomTestUtil.randomInt();
+		double organicTrafficShare = RandomTestUtil.randomDouble();
+
+		int paidTrafficAmount = RandomTestUtil.randomInt();
+		double paidTrafficShare = RandomTestUtil.randomDouble();
+
+		AnalyticsReportsDataProvider analyticsReportsDataProvider =
+			_getAnalyticsReportsDataProvider(
+				organicTrafficAmount, organicTrafficShare, paidTrafficAmount,
+				paidTrafficShare);
 
 		AnalyticsReportsInfoItem analyticsReportsInfoItem =
-			_getAnalyticsReportsItem(
-				authorName, locale, RandomTestUtil.nextDate(), title);
+			_getAnalyticsReportsItem();
 
-		Date layoutPublishDate = RandomTestUtil.nextDate();
-
-		HttpServletRequest httpServletRequest = _getHttpServletRequest(
-			locale, layoutPublishDate);
+		Layout layout = _getLayout();
 
 		AnalyticsReportsDisplayContext analyticsReportsDisplayContext =
 			new AnalyticsReportsDisplayContext(
-				analyticsReportsInfoItem, Mockito.mock(Object.class),
-				httpServletRequest, Mockito.mock(Portal.class),
-				Mockito.mock(RenderResponse.class));
+				analyticsReportsDataProvider, analyticsReportsInfoItem, null,
+				null, null, null, _getResourceBundle(),
+				_getThemeDisplay(layout));
 
 		Map<String, Object> props = analyticsReportsDisplayContext.getProps();
 
-		Assert.assertEquals(authorName, props.get("authorName"));
+		Assert.assertEquals(
+			analyticsReportsInfoItem.getAuthorName(null),
+			props.get("authorName"));
 
-		Assert.assertEquals(layoutPublishDate, props.get("publishDate"));
+		Assert.assertEquals(layout.getPublishDate(), props.get("publishDate"));
 
-		Assert.assertEquals(title, props.get("title"));
+		Assert.assertEquals(
+			analyticsReportsInfoItem.getTitle(null, LocaleUtil.US),
+			props.get("title"));
+
+		JSONArray trafficSourcesJSONArray = (JSONArray)props.get(
+			"trafficSources");
+
+		Assert.assertEquals(
+			JSONUtil.putAll(
+				JSONUtil.put(
+					"helpMessage", _titles.get(_MESSAGE_KEY_HELP)
+				).put(
+					"name", _TITLE_KEY_ORGANIC
+				).put(
+					"share", organicTrafficShare
+				).put(
+					"title", _titles.get(_TITLE_KEY_ORGANIC)
+				).put(
+					"value", organicTrafficAmount
+				),
+				JSONUtil.put(
+					"helpMessage", _titles.get(_MESSAGE_KEY_HELP)
+				).put(
+					"name", _TITLE_KEY_PAID
+				).put(
+					"share", paidTrafficShare
+				).put(
+					"title", _titles.get(_TITLE_KEY_PAID)
+				).put(
+					"value", paidTrafficAmount
+				)
+			).toJSONString(),
+			trafficSourcesJSONArray.toJSONString());
 	}
 
-	private AnalyticsReportsInfoItem _getAnalyticsReportsItem(
-		String authorName, Locale locale, Date publishDate, String title) {
+	private AnalyticsReportsDataProvider _getAnalyticsReportsDataProvider(
+		int organicTrafficAmount, double organicTrafficShare,
+		int paidTrafficAmount, double paidTrafficShare) {
 
-		AnalyticsReportsInfoItem analyticsReportsInfoItem = Mockito.mock(
-			AnalyticsReportsInfoItem.class);
+		return new AnalyticsReportsDataProvider() {
 
-		Mockito.doReturn(
-			authorName
-		).when(
-			analyticsReportsInfoItem
-		).getAuthorName(
-			Mockito.any()
-		);
+			@Override
+			public List<TrafficSource> getTrafficSources(
+				long companyId, String url) {
 
-		Mockito.doReturn(
-			publishDate
-		).when(
-			analyticsReportsInfoItem
-		).getPublishDate(
-			Mockito.any()
-		);
+				return Arrays.asList(
+					new TrafficSource(
+						"search", organicTrafficAmount, organicTrafficShare),
+					new TrafficSource(
+						_TITLE_KEY_PAID, paidTrafficAmount, paidTrafficShare));
+			}
 
-		Mockito.doReturn(
-			title
-		).when(
-			analyticsReportsInfoItem
-		).getTitle(
-			Mockito.any(), Mockito.eq(locale)
-		);
-
-		return analyticsReportsInfoItem;
+		};
 	}
 
-	private HttpServletRequest _getHttpServletRequest(
-		Locale locale, Date publishDate) {
+	private AnalyticsReportsInfoItem _getAnalyticsReportsItem() {
+		String authorName = StringUtil.randomString();
+		Date publishDate = RandomTestUtil.nextDate();
+		String title = StringUtil.randomString();
 
-		HttpServletRequest httpServletRequest = Mockito.mock(
-			HttpServletRequest.class);
+		return new AnalyticsReportsInfoItem() {
 
-		Mockito.doReturn(
-			_getThemeDisplay(locale, publishDate)
-		).when(
-			httpServletRequest
-		).getAttribute(
-			WebKeys.THEME_DISPLAY
-		);
+			@Override
+			public String getAuthorName(Object model) {
+				return authorName;
+			}
 
-		return httpServletRequest;
+			@Override
+			public Date getPublishDate(Object model) {
+				return publishDate;
+			}
+
+			@Override
+			public String getTitle(Object model, Locale locale) {
+				return title;
+			}
+
+		};
 	}
 
-	private ThemeDisplay _getThemeDisplay(Locale locale, Date publishDate) {
-		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
-
-		Mockito.doReturn(
-			locale
-		).when(
-			themeDisplay
-		).getLocale();
-
+	private Layout _getLayout() {
 		Layout layout = Mockito.mock(Layout.class);
 
+		Date date = RandomTestUtil.nextDate();
+
 		Mockito.doReturn(
-			publishDate
+			date
 		).when(
 			layout
 		).getPublishDate();
 
-		Mockito.doReturn(
-			layout
-		).when(
-			themeDisplay
-		).getLayout();
+		return layout;
+	}
+
+	private ResourceBundle _getResourceBundle() {
+		return new ResourceBundle() {
+
+			@Override
+			public Enumeration<String> getKeys() {
+				return Collections.enumeration(
+					Arrays.asList(
+						_TITLE_KEY_ORGANIC, _TITLE_KEY_PAID,
+						_MESSAGE_KEY_HELP));
+			}
+
+			@Override
+			protected Object handleGetObject(String key) {
+				return _titles.getOrDefault(key, key);
+			}
+
+		};
+	}
+
+	private ThemeDisplay _getThemeDisplay(Layout layout) {
+		ThemeDisplay themeDisplay = new ThemeDisplay();
+
+		Company company = Mockito.mock(Company.class);
+
+		try {
+			themeDisplay.setCompany(company);
+		}
+		catch (PortalException portalException) {
+			throw new AssertionError("Error found ", portalException);
+		}
+
+		themeDisplay.setLayout(layout);
+
+		themeDisplay.setLocale(LocaleUtil.US);
 
 		return themeDisplay;
 	}
+
+	private static final String _MESSAGE_KEY_HELP =
+		"this-number-refers-to-the-volume-of-people-that-find-your-page-" +
+			"through-a-search-engine";
+
+	private static final String _TITLE_KEY_ORGANIC = "organic";
+
+	private static final String _TITLE_KEY_PAID = "paid";
+
+	private final Map<String, String> _titles = HashMapBuilder.put(
+		_MESSAGE_KEY_HELP, "helpMessage"
+	).put(
+		_TITLE_KEY_ORGANIC, "organic"
+	).put(
+		_TITLE_KEY_PAID, "paid"
+	).build();
 
 }

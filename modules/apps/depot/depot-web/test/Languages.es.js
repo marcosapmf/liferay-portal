@@ -15,6 +15,7 @@
 import {
 	cleanup,
 	fireEvent,
+	queryAllByText,
 	render,
 	waitForElement,
 } from '@testing-library/react';
@@ -75,9 +76,7 @@ describe('Languages', () => {
 
 		const firstLanguageElement = container.querySelectorAll('tr')[1];
 
-		expect(
-			firstLanguageElement.querySelector('.label-info')
-		).not.toBeNull();
+		expect(firstLanguageElement.querySelector('.label-info')).toBeTruthy();
 	});
 
 	it('renders a "edit" button if custom option is checked', () => {
@@ -97,8 +96,8 @@ describe('Languages', () => {
 
 		expect(
 			getByDisplayValue(defaultProps.siteDefaultLocaleId)
-		).not.toBeNull();
-		expect(getByDisplayValue('b')).not.toBeNull();
+		).toBeTruthy();
+		expect(getByDisplayValue('b')).toBeTruthy();
 	});
 
 	it('changes the default language', () => {
@@ -119,8 +118,8 @@ describe('Languages', () => {
 
 		const firstElement = container.querySelectorAll('tbody > tr')[0];
 
-		expect(firstElement.querySelector('.label-info')).not.toBeNull();
-		expect(getByDisplayValue(availableLocales[0].localeId)).not.toBeNull();
+		expect(firstElement.querySelector('.label-info')).toBeTruthy();
+		expect(getByDisplayValue(availableLocales[0].localeId)).toBeTruthy();
 	});
 
 	it('fires default locale changed event', () => {
@@ -151,6 +150,76 @@ describe('Languages', () => {
 				'this-change-will-only-affect-the-newly-created-localized-content'
 			)
 		);
+	});
+
+	it('renders a list with move up actions in all elements except the first one', () => {
+		const result = renderLanguagesComponent({
+			...defaultProps,
+			inheritLocales: false,
+			siteAvailableLocales: availableLocales,
+		});
+
+		const dropdownTriggers = result.container.querySelectorAll('.dropdown');
+		const moveDownButtons = result.getAllByText('move-up');
+		const dropdownMenus = result.baseElement.querySelectorAll(
+			'.dropdown-menu'
+		);
+		const dropdownMenuFirst = dropdownMenus[0];
+
+		expect(dropdownTriggers).toHaveLength(4);
+		expect(moveDownButtons).toHaveLength(3);
+		expect(queryAllByText(dropdownMenuFirst, 'move-up')).toHaveLength(0);
+	});
+
+	it('renders a list with move down actions in all elements except the last one', () => {
+		const result = renderLanguagesComponent({
+			...defaultProps,
+			inheritLocales: false,
+			siteAvailableLocales: availableLocales,
+		});
+
+		const dropdownTriggers = result.container.querySelectorAll('.dropdown');
+		const moveDownButtons = result.getAllByText('move-down');
+		const dropdownMenus = result.baseElement.querySelectorAll(
+			'.dropdown-menu'
+		);
+		const dropdownMenuLast = dropdownMenus[dropdownMenus.length - 1];
+
+		expect(dropdownTriggers).toHaveLength(4);
+		expect(moveDownButtons).toHaveLength(3);
+		expect(queryAllByText(dropdownMenuLast, 'move-down')).toHaveLength(0);
+	});
+
+	it('move up the third element', () => {
+		const result = renderLanguagesComponent({
+			...defaultProps,
+			inheritLocales: false,
+			siteAvailableLocales: availableLocales,
+		});
+
+		expect(
+			result.container.querySelectorAll('tbody > tr')[2].textContent
+		).toBe('c');
+		fireEvent.click(result.getAllByText('move-up')[1]);
+		expect(
+			result.container.querySelectorAll('tbody > tr')[1].textContent
+		).toBe('c');
+	});
+
+	it('move down the first element', () => {
+		const result = renderLanguagesComponent({
+			...defaultProps,
+			inheritLocales: false,
+			siteAvailableLocales: availableLocales,
+		});
+
+		expect(
+			result.container.querySelectorAll('tbody > tr')[0].textContent
+		).toBe('a');
+		fireEvent.click(result.getAllByText('move-down')[0]);
+		expect(
+			result.container.querySelectorAll('tbody > tr')[1].textContent
+		).toBe('a');
 	});
 
 	describe('ManageLanguages', () => {
@@ -209,7 +278,7 @@ describe('Languages', () => {
 			);
 
 			expect(languagesList).toHaveLength(1);
-			expect(result.getAllByDisplayValue('b')).not.toBeNull();
+			expect(result.getAllByDisplayValue('b')).toBeTruthy();
 		});
 
 		it('add custom locale and save', async () => {
@@ -226,7 +295,7 @@ describe('Languages', () => {
 			);
 
 			expect(languagesList).toHaveLength(3);
-			expect(result.getByDisplayValue('a,b,c')).not.toBeNull();
+			expect(result.getByDisplayValue('a,b,c')).toBeTruthy();
 		});
 	});
 });

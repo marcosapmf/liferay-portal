@@ -27,6 +27,7 @@ String questionsRootElementId = renderResponse.getNamespace() + "-questions-root
 	<%
 	Map<String, Object> data = new HashMap<>();
 
+	data.put("defaultVocabulary", "AllAssetTypes");
 	data.put("isOmniAdmin", permissionChecker.isOmniadmin());
 	data.put("siteKey", String.valueOf(themeDisplay.getScopeGroupId()));
 	data.put("userId", String.valueOf(themeDisplay.getUserId()));

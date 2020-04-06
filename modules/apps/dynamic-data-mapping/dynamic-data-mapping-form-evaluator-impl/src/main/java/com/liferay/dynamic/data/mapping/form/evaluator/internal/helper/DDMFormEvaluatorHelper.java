@@ -36,6 +36,7 @@ import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
+import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormRule;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
@@ -82,6 +84,8 @@ public class DDMFormEvaluatorHelper {
 
 		createResourceBundle(_ddmFormEvaluatorEvaluateRequest.getLocale());
 
+		_ddmForm = ddmFormEvaluatorEvaluateRequest.getDDMForm();
+
 		_ddmFormEvaluatorFormValuesHelper =
 			new DDMFormEvaluatorFormValuesHelper(
 				_ddmFormEvaluatorEvaluateRequest.getDDMFormValues());
@@ -91,12 +95,12 @@ public class DDMFormEvaluatorHelper {
 				_ddmFormEvaluatorFormValuesHelper,
 				_ddmFormFieldsPropertyChanges);
 
-		ddmFormEvaluatorExpressionActionHandler =
-			new DDMFormEvaluatorExpressionActionHandler(_pageFlow);
-
-		_ddmForm = ddmFormEvaluatorEvaluateRequest.getDDMForm();
-
 		_ddmFormFieldsMap = _ddmForm.getDDMFormFieldsMap(true);
+
+		_ddmFormLayout = ddmFormEvaluatorEvaluateRequest.getDDMFormLayout();
+
+		_ddmFormRuleHelper = new DDMFormEvaluatorRuleHelper(
+			_ddmFormFieldsMap, ddmFormEvaluatorExpressionObserver);
 
 		ddmFormEvaluatorDDMExpressionFieldAccessor =
 			new DDMFormEvaluatorExpressionFieldAccessor(
@@ -104,18 +108,27 @@ public class DDMFormEvaluatorHelper {
 				_ddmFormFieldsPropertyChanges, _ddmFormFieldTypeServicesTracker,
 				ddmFormEvaluatorEvaluateRequest.getLocale());
 
+		ddmFormEvaluatorExpressionActionHandler =
+			new DDMFormEvaluatorExpressionActionHandler(_pageFlow);
+
 		ddmFormEvaluatorExpressionParameterAccessor =
 			new DDMFormEvaluatorExpressionParameterAccessor(
 				_ddmFormEvaluatorEvaluateRequest);
-
-		_ddmFormRuleHelper = new DDMFormEvaluatorRuleHelper(
-			_ddmFormFieldsMap, ddmFormEvaluatorExpressionObserver);
 	}
 
 	public DDMFormEvaluatorEvaluateResponse evaluate() {
 		evaluateVisibilityExpressions();
 
-		List<DDMFormRule> ddmFormRules = _ddmForm.getDDMFormRules();
+		List<DDMFormRule> ddmFormRules = null;
+
+		if ((_ddmFormLayout != null) &&
+			ListUtil.isNotEmpty(_ddmFormLayout.getDDMFormRules())) {
+
+			ddmFormRules = _ddmFormLayout.getDDMFormRules();
+		}
+		else {
+			ddmFormRules = _ddmForm.getDDMFormRules();
+		}
 
 		Stream<DDMFormRule> stream = ddmFormRules.stream();
 
@@ -694,6 +707,7 @@ public class DDMFormEvaluatorHelper {
 		_ddmFormFieldsPropertyChanges = new HashMap<>();
 	private final DDMFormFieldTypeServicesTracker
 		_ddmFormFieldTypeServicesTracker;
+	private final DDMFormLayout _ddmFormLayout;
 	private final DDMFormEvaluatorRuleHelper _ddmFormRuleHelper;
 	private final Map<Integer, Integer> _pageFlow = new HashMap<>();
 	private ResourceBundle _resourceBundle;

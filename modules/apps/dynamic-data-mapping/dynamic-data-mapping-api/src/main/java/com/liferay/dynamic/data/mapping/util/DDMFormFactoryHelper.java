@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeMap;
@@ -168,13 +169,15 @@ public class DDMFormFactoryHelper {
 
 	protected Locale getDefaultLocale() {
 		if (Validator.isNull(_ddmForm.defaultLanguageId())) {
-			Locale defaultLocale = LocaleThreadLocal.getSiteDefaultLocale();
-
-			if (defaultLocale == null) {
-				defaultLocale = LocaleUtil.getDefault();
-			}
-
-			return defaultLocale;
+			return Optional.ofNullable(
+				LocaleThreadLocal.getThemeDisplayLocale()
+			).orElse(
+				Optional.ofNullable(
+					LocaleThreadLocal.getSiteDefaultLocale()
+				).orElse(
+					LocaleUtil.getDefault()
+				)
+			);
 		}
 
 		return LocaleUtil.fromLanguageId(_ddmForm.defaultLanguageId());

@@ -4070,6 +4070,12 @@ AUI.add(
 					}
 				},
 
+				_onSubmitForm() {
+					var instance = this;
+
+					instance.updateDDMFormInputValue();
+				},
+
 				_valueFormNode() {
 					var instance = this;
 
@@ -4139,6 +4145,11 @@ AUI.add(
 
 						if (instance.get('synchronousFormSubmission')) {
 							instance.eventHandlers.push(
+								formNode.on(
+									'submit',
+									instance._onSubmitForm,
+									instance
+								),
 								Liferay.on(
 									'submitForm',
 									instance._onLiferaySubmitForm,

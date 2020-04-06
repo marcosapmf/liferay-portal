@@ -140,6 +140,12 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "javax.portlet.PortletException: java.lang.NullPointerException");
 	}
 
+	macro addCustomPublication {
+		Pause(locator1 = "3000");
+
+		LexiconEntry.gotoAdd();
+	}
+
 	macro addEventRepeatDaily {
 		Click(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
@@ -697,9 +703,7 @@ definition {
 	}
 
 	macro publishCustomPublication {
-		Pause(locator1 = "3000");
-
-		LexiconEntry.gotoAdd();
+		Staging.addCustomPublication();
 
 		if ("${rangeAll}" == "true") {
 			Click(locator1 = "Radio#CHOOSE_CONTENT_ALL_CHANGE");
@@ -754,11 +758,17 @@ definition {
 			Staging.viewValidationError(validateErrorMessage = "${validateErrorMessage}");
 		}
 
-		IFrame.closeFrame();
+		SelectFrameTop();
+
+		if (IsElementPresent(locator1 = "IFrame#DIALOG")) {
+			IFrame.closeFrame();
+		}
 	}
 
 	macro publishToLiveNowViaPortletCP {
 		LexiconEntry.gotoHeaderMenuItem(menuItem = "Staging");
+
+		Pause(locator1 = "3000");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
 
@@ -768,11 +778,9 @@ definition {
 			Click(locator1 = "Staging#REPLICATE_INDIVIDUAL_DELETIONS");
 		}
 
-		AssertClickNoError(
-			locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON",
-			value1 = "Publish to Live");
+		ClickNoError(locator1 = "Staging#STAGING_PUBLISH_TO_LIVE_BUTTON");
 
-		AssertConfirm(value1 = "Are you sure you want to publish to live and update the existing application data?");
+		Confirm(value1 = "Are you sure you want to publish to live and update the existing application data?");
 
 		Pause(locator1 = "5000");
 
@@ -1158,6 +1166,14 @@ definition {
 		AssertElementPresent(
 			key_dateRangeEndDate = "${dateRangeEndDate}",
 			locator1 = "Select#DATE_RANGE_END_DATE_VALUE");
+	}
+
+	macro viewDefaultConfiguration {
+		for (var configurationName : list "${configurationNameList}") {
+			var key_checkboxName = "${configurationName}";
+
+			AssertChecked(locator1 = "StagingPublishToLive#STAGING_CONFIGURATION_CHECKBOX");
+		}
 	}
 
 	macro viewEditedSitePagesVariationPG {

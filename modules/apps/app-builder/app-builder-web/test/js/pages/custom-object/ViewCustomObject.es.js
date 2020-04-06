@@ -22,15 +22,39 @@ import ViewCustomObject from '../../../../src/main/resources/META-INF/resources/
 import '@testing-library/jest-dom/extend-expect';
 
 describe('ViewCustomObject', () => {
+	const RESPONSE = {
+		name: {
+			en_US: 'Custom Object',
+		},
+	};
+
+	const ViewCustomObjectWithRouter = () => (
+		<>
+			<div className="tools-control-group">
+				<div className="control-menu-level-1-heading" />
+			</div>
+			<HashRouter>
+				<AppContextProvider value={{}}>
+					<ViewCustomObject
+						match={{
+							params: {
+								dataDefinitionId: 1,
+							},
+						}}
+					></ViewCustomObject>
+				</AppContextProvider>
+			</HashRouter>
+		</>
+	);
+
 	beforeEach(() => {
 		jest.useFakeTimers();
 	});
 
 	afterEach(() => {
 		cleanup();
-		jest.restoreAllMocks();
 		jest.clearAllTimers();
-		jest.clearAllMocks();
+		jest.restoreAllMocks();
 	});
 
 	afterAll(() => {
@@ -38,43 +62,30 @@ describe('ViewCustomObject', () => {
 	});
 
 	it('renders', async () => {
-		const match = {
-			params: {
-				dataDefinitionId: 123,
-			},
-		};
+		fetch.mockResponseOnce(JSON.stringify(RESPONSE));
 
-		const response = {
-			name: {
-				en_US: 'custom object',
-			},
-		};
-
-		fetch.mockResponse(JSON.stringify(response));
-
-		const {asFragment, queryByText} = render(
-			<>
-				<div className="tools-control-group">
-					<div className="control-menu-level-1-heading" />
-				</div>
-				<HashRouter>
-					<AppContextProvider value={{}}>
-						<ViewCustomObject match={match}></ViewCustomObject>
-					</AppContextProvider>
-				</HashRouter>
-			</>
-		);
+		const {asFragment} = render(<ViewCustomObjectWithRouter />);
 
 		await act(async () => {
 			jest.runAllTimers();
 		});
 
-		expect(queryByText(response.name.en_US)).toBeTruthy();
+		expect(asFragment()).toMatchSnapshot();
+	});
+
+	it('clicks on tabs and checks if they are active', async () => {
+		fetch.mockResponse(JSON.stringify(RESPONSE));
+
+		const {queryByText} = render(<ViewCustomObjectWithRouter />);
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
+
+		expect(queryByText(RESPONSE.name.en_US)).toBeTruthy();
 
 		const tableViewsTab = queryByText('table-views');
 		fireEvent.click(tableViewsTab);
 		expect(tableViewsTab.classList.contains('active')).toBeTruthy();
-
-		expect(asFragment()).toMatchSnapshot();
 	});
 });

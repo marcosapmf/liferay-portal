@@ -55,6 +55,7 @@ definition {
 
 		task ("Edit the Image fragment's image") {
 			PageEditor.editFragmentImage(
+				contributed = "false",
 				fileName = "Document_1.png",
 				fragmentName = "Image",
 				id = "image");
@@ -88,6 +89,7 @@ definition {
 
 		task ("Edit the Content fragment's editable text") {
 			PageEditor.editFragmentText(
+				contributed = "false",
 				fragmentName = "Content",
 				id = "content",
 				text = "Editing Finished");
@@ -95,6 +97,7 @@ definition {
 
 		task ("Assert the Content fragment's editable text was changed") {
 			PageEditor.viewFragmentEditableText(
+				contributed = "false",
 				editableText = "Editing Finished",
 				fragmentName = "Content",
 				id = "content");
@@ -120,10 +123,7 @@ definition {
 	@description = "Delete a page template."
 	@priority = "5"
 	test DeletePageTemplate {
-
-		// Ignore test from acceptance until LRQA-54483 resolved
-
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Add a content page template") {
 			PageTemplatesAdmin.addCollection(collectionName = "Page Template Collection");

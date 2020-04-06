@@ -15,6 +15,7 @@
 import * as FormSupport from 'dynamic-data-mapping-form-renderer/js/components/FormRenderer/FormSupport.es';
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer/js/util/visitors.es';
 
+import {FIELD_TYPE_FIELDSET} from '../../../util/constants.es';
 import {createField} from '../../../util/fieldSupport.es';
 import {updateField} from '../util/settingsContext.es';
 
@@ -116,7 +117,7 @@ const addNestedFields = ({field, indexes, nestedFields, props}) => {
 	};
 };
 
-export const createSection = (
+export const createFieldSet = (
 	props,
 	event,
 	nestedFields,
@@ -124,13 +125,13 @@ export const createSection = (
 ) => {
 	const {fieldTypes} = props;
 	const fieldType = fieldTypes.find(fieldType => {
-		return fieldType.name === 'section';
+		return fieldType.name === FIELD_TYPE_FIELDSET;
 	});
-	const sectionField = createField(props, {...event, fieldType});
+	const fieldSetField = createField(props, {...event, fieldType});
 
 	return addNestedFields({
 		field: {
-			...sectionField,
+			...fieldSetField,
 			rows,
 		},
 		indexes: {
@@ -150,7 +151,10 @@ const handleSectionAdded = (props, state, event) => {
 
 	const newField = event.newField || createField(props, event);
 	const existingField = FormSupport.findFieldByName(pages, fieldName);
-	const sectionField = createSection(props, event, [existingField, newField]);
+	const fieldSetField = createFieldSet(props, event, [
+		existingField,
+		newField,
+	]);
 
 	const visitor = new PagesVisitor(pages);
 
@@ -165,7 +169,7 @@ const handleSectionAdded = (props, state, event) => {
 				if (field.fieldName === fieldName && !modified) {
 					modified = true;
 
-					return sectionField;
+					return fieldSetField;
 				}
 				else if (field.fieldName === parentFieldName) {
 					const newParentField = removeNestedField({
@@ -177,7 +181,7 @@ const handleSectionAdded = (props, state, event) => {
 					return addNestedField({
 						field: newParentField,
 						indexes,
-						nestedField: sectionField,
+						nestedField: fieldSetField,
 						props,
 					});
 				}
@@ -187,7 +191,7 @@ const handleSectionAdded = (props, state, event) => {
 			true,
 			true
 		),
-		previousFocusedField: sectionField,
+		previousFocusedField: fieldSetField,
 	};
 
 	return newState;

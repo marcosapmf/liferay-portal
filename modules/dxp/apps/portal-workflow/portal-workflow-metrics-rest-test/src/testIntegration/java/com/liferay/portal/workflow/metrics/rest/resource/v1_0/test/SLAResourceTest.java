@@ -18,9 +18,6 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
-import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Node;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.NodeKey;
@@ -39,7 +36,6 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,14 +45,6 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class SLAResourceTest extends BaseSLAResourceTestCase {
-
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		BaseSLAResourceTestCase.setUpClass();
-
-		_workflowMetricsRESTTestHelper = new WorkflowMetricsRESTTestHelper(
-			_documentBuilderFactory, _queries, _searchEngineAdapter);
-	}
 
 	@Before
 	@Override
@@ -246,19 +234,11 @@ public class SLAResourceTest extends BaseSLAResourceTestCase {
 		unsafeTriConsumer.accept(sla1, sla2, page);
 	}
 
-	@Inject
-	private static DocumentBuilderFactory _documentBuilderFactory;
-
-	@Inject
-	private static Queries _queries;
-
-	@Inject(blocking = false, filter = "search.engine.impl=Elasticsearch")
-	private static SearchEngineAdapter _searchEngineAdapter;
-
-	private static WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;
-
 	private Node _node;
 	private Process _process;
 	private final List<SLA> _slas = new ArrayList<>();
+
+	@Inject
+	private WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;
 
 }

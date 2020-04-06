@@ -37,6 +37,7 @@
 		}
 
 		> .navbar-nav {
+			order: 2;
 			padding: 12px;
 
 			@include media-breakpoint-up(lg) {
@@ -45,7 +46,7 @@
 			}
 			&:first-child {
 				align-self: flex-start;
-				flex-grow: 1;
+				flex: 1;
 				order: 1;
 				padding-right: 0;
 

@@ -32,7 +32,7 @@ import {
 import Button from '../components/button/Button.es';
 import FieldSets from '../components/field-sets/FieldSets.es';
 import FieldTypeList from '../components/field-types/FieldTypeList.es';
-import RulesEditorModal from '../components/rules/RuleEditorModal.es';
+import RuleList from '../components/rules/RuleList.es';
 import Sidebar from '../components/sidebar/Sidebar.es';
 import {useSidebarContent} from '../hooks/index.es';
 import isClickOutside from '../utils/clickOutside.es';
@@ -43,7 +43,6 @@ import renderSettingsForm, {
 import DataLayoutBuilderContext from './DataLayoutBuilderContext.es';
 
 const DefaultSidebarBody = ({keywords}) => {
-	const [isRulesEditorVisible, setRulesEditorVisible] = useState(false);
 	const [dataLayoutBuilder] = useContext(DataLayoutBuilderContext);
 
 	const [
@@ -99,29 +98,11 @@ const DefaultSidebarBody = ({keywords}) => {
 	if (allowRules) {
 		tabs.push({
 			label: Liferay.Language.get('rules'),
-			render: () => (
-				<Button
-					displayType="primary"
-					monospaced={false}
-					onClick={() => setRulesEditorVisible(!isRulesEditorVisible)}
-				>
-					{Liferay.Language.get('add')}
-				</Button>
-			),
+			render: () => <RuleList />,
 		});
 	}
 
-	return (
-		<>
-			{allowRules && (
-				<RulesEditorModal
-					isVisible={isRulesEditorVisible}
-					onClose={() => setRulesEditorVisible(false)}
-				/>
-			)}
-			<Sidebar.Tabs tabs={tabs} />
-		</>
-	);
+	return <Sidebar.Tabs tabs={tabs} />;
 };
 
 const SettingsSidebarBody = () => {

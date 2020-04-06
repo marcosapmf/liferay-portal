@@ -192,6 +192,10 @@ public interface RedirectNotFoundEntryLocalService
 		long redirectNotFoundEntryId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public RedirectNotFoundEntry fetchRedirectNotFoundEntry(
+		long groupId, String url);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -229,6 +233,11 @@ public interface RedirectNotFoundEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
+		long groupId, Boolean ignored, Date minModifiedDate, int start, int end,
+		OrderByComparator<RedirectNotFoundEntry> obc);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, Date minModifiedDate, int start, int end,
 		OrderByComparator<RedirectNotFoundEntry> obc);
 
@@ -250,6 +259,10 @@ public interface RedirectNotFoundEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getRedirectNotFoundEntriesCount(
+		long groupId, Boolean ignored, Date minModifiedDate);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getRedirectNotFoundEntriesCount(
 		long groupId, Date minModifiedDate);
 
 	/**
@@ -262,6 +275,11 @@ public interface RedirectNotFoundEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public RedirectNotFoundEntry getRedirectNotFoundEntry(
 			long redirectNotFoundEntryId)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public RedirectNotFoundEntry updateRedirectNotFoundEntry(
+			long redirectNotFoundEntryId, boolean ignored)
 		throws PortalException;
 
 	/**

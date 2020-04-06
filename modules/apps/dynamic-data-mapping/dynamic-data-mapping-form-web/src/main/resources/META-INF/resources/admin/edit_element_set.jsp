@@ -83,7 +83,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 		<div class="ddm-form-basic-info">
 			<div class="container-fluid-1280">
 				<h1>
-					<liferay-ui:input-editor
+					<liferay-editor:editor
 						autoCreate="<%= false %>"
 						contents="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormName()) %>"
 						cssClass="ddm-form-name"
@@ -97,7 +97,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 				<aui:input name="name" type="hidden" />
 
 				<h5>
-					<liferay-ui:input-editor
+					<liferay-editor:editor
 						autoCreate="<%= false %>"
 						contents="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormDescription()) %>"
 						cssClass="ddm-form-description h5"
@@ -117,7 +117,7 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 </div>
 
 <div class="hide">
-	<%= ddmFormAdminDisplayContext.serializeSettingsForm() %>
+	<%= ddmFormAdminDisplayContext.serializeSettingsForm(pageContext) %>
 </div>
 
 <aui:script>

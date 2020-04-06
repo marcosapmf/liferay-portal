@@ -19,9 +19,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.odata.entity.EntityField;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
-import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Process;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Task;
@@ -39,7 +36,6 @@ import org.apache.commons.lang.time.DateUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -48,14 +44,6 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class TaskResourceTest extends BaseTaskResourceTestCase {
-
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		BaseTaskResourceTestCase.setUpClass();
-
-		_workflowMetricsRESTTestHelper = new WorkflowMetricsRESTTestHelper(
-			_documentBuilderFactory, _queries, _searchEngineAdapter);
-	}
 
 	@Before
 	@Override
@@ -433,18 +421,10 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		}
 	}
 
-	@Inject
-	private static DocumentBuilderFactory _documentBuilderFactory;
-
-	@Inject
-	private static Queries _queries;
-
-	@Inject(blocking = false, filter = "search.engine.impl=Elasticsearch")
-	private static SearchEngineAdapter _searchEngineAdapter;
-
-	private static WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;
-
 	private Process _process;
 	private final List<Task> _tasks = new ArrayList<>();
+
+	@Inject
+	private WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;
 
 }

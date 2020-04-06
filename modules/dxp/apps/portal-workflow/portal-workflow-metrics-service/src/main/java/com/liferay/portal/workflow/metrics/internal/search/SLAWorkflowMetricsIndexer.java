@@ -78,11 +78,11 @@ public class SLAWorkflowMetricsIndexer extends BaseIndexer<Object> {
 	protected void doReindex(String[] ids) throws Exception {
 		long companyId = GetterUtil.getLong(ids[0]);
 
-		_slaInstanceResultWorkflowMetricsIndexer.deleteIndex(companyId);
-		_slaTaskResultWorkflowMetricsIndexer.deleteIndex(companyId);
+		_slaInstanceResultWorkflowMetricsIndexer.clearIndex(companyId);
+		_slaTaskResultWorkflowMetricsIndexer.clearIndex(companyId);
 
-		_slaInstanceResultWorkflowMetricsIndexer.createIndex();
-		_slaTaskResultWorkflowMetricsIndexer.createIndex();
+		_slaInstanceResultWorkflowMetricsIndexer.createIndex(companyId);
+		_slaTaskResultWorkflowMetricsIndexer.createIndex(companyId);
 
 		_slaInstanceResultWorkflowMetricsIndexer.reindex(companyId);
 		_slaTaskResultWorkflowMetricsIndexer.reindex(companyId);

@@ -18,7 +18,6 @@ import './TextRegister.soy';
 
 import 'clay-autocomplete';
 import {normalizeFieldName} from 'dynamic-data-mapping-form-renderer';
-import {cancelDebounce, debounce} from 'frontend-js-web';
 import Component from 'metal-component';
 import dom from 'metal-dom';
 import Soy from 'metal-soy';
@@ -27,20 +26,6 @@ import {Config} from 'metal-state';
 import templates from './Text.soy';
 
 class Text extends Component {
-	created() {
-		this.debouncedUpdate = debounce(_value => {
-			if (this.animationFrameRequest) {
-				window.cancelAnimationFrame(this.animationFrameRequest);
-			}
-
-			this.animationFrameRequest = window.requestAnimationFrame(() => {
-				if (!this.isDisposed()) {
-					this.setState({_value});
-				}
-			});
-		}, 300);
-	}
-
 	attached() {
 		const portalElement = dom.toElement('#clay_dropdown_portal');
 
@@ -80,7 +65,7 @@ class Text extends Component {
 
 	shouldUpdate(changes) {
 		return Object.keys(changes || {}).some(key => {
-			if (key === 'events' || key === 'value') {
+			if (key === 'events') {
 				return false;
 			}
 
@@ -92,32 +77,19 @@ class Text extends Component {
 		});
 	}
 
-	willReceiveState(changes) {
-		if (changes.value) {
-			cancelDebounce(this.debouncedUpdate);
-			this.debouncedUpdate(changes.value.newVal);
-		}
+	_handleAutocompleteFieldChanged(event) {
+		const {value} = event.data;
+
+		this.setState(
+			{
+				value,
+			},
+			() => this.dispatchEvent(event, 'fieldEdited', value)
+		);
 	}
 
-	_handleAutocompleteFieldChanged() {
-		cancelDebounce(this.debouncedUpdate);
-		this.debouncedUpdate(function(event) {
-			const {value} = event.data;
-
-			this.setState(
-				{
-					value,
-				},
-				() => this.dispatchEvent(event, 'fieldEdited', value)
-			);
-		}, 300);
-	}
-
-	_handleAutocompleteFieldFocused() {
-		cancelDebounce(this.debouncedUpdate);
-		this.debouncedUpdate(function(event) {
-			this.dispatchEvent('fieldFocused', event, event.target.inputValue);
-		}, 300);
+	_handleAutocompleteFieldFocused(event) {
+		this.dispatchEvent('fieldFocused', event, event.target.inputValue);
 	}
 
 	_handleAutocompleteFilteredItemsChanged(filteredItemsReceived) {
@@ -170,26 +142,9 @@ class Text extends Component {
 	_handleFieldFocused(event) {
 		this.dispatchEvent(event, 'fieldFocused', event.target.value);
 	}
-
-	_internalValueFn() {
-		const {value} = this;
-
-		return value;
-	}
 }
 
 Text.STATE = {
-	/**
-	 * @default undefined
-	 * @instance
-	 * @memberof Text
-	 * @type {?(string|undefined)}
-	 */
-
-	_value: Config.string()
-		.internal()
-		.valueFn('_internalValueFn'),
-
 	/**
 	 * @default undefined
 	 * @instance

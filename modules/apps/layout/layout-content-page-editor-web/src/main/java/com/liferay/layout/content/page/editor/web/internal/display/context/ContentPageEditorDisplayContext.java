@@ -31,6 +31,7 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.fragment.service.FragmentEntryServiceUtil;
 import com.liferay.fragment.util.comparator.FragmentCollectionContributorNameComparator;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.info.display.contributor.InfoDisplayContributor;
 import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
 import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorCriterion;
@@ -52,6 +53,7 @@ import com.liferay.layout.content.page.editor.web.internal.comment.CommentUtil;
 import com.liferay.layout.content.page.editor.web.internal.configuration.LayoutContentPageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorActionKeys;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorConstants;
+import com.liferay.layout.content.page.editor.web.internal.constants.ViewportSize;
 import com.liferay.layout.content.page.editor.web.internal.util.ContentUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkItemSelectorUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -122,8 +124,11 @@ import com.liferay.segments.constants.SegmentsExperienceConstants;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -219,6 +224,10 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"availableLanguages", _getAvailableLanguages()
 			).put(
+				"availableViewportSizes", _getAvailableViewportSizes()
+			).put(
+				"collectionSelectorURL", _getCollectionSelectorURL()
+			).put(
 				"defaultEditorConfigurations", _getDefaultConfigurations()
 			).put(
 				"defaultLanguageId",
@@ -266,6 +275,12 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"getAvailableTemplatesURL",
 				getResourceURL("/content_layout/get_available_templates")
+			).put(
+				"getCollectionFieldURL",
+				getResourceURL("/content_layout/get_collection_field")
+			).put(
+				"getCollectionMappingFieldsURL",
+				getResourceURL("/content_layout/get_collection_mapping_fields")
 			).put(
 				"getExperienceUsedPortletsURL",
 				getResourceURL("/content_layout/get_experience_used_portlets")
@@ -572,6 +587,74 @@ public class ContentPageEditorDisplayContext {
 		}
 
 		return availableLanguages;
+	}
+
+	private Map<String, Map<String, Object>> _getAvailableViewportSizes() {
+		Map<String, Map<String, Object>> availableViewportSizesMap =
+			new LinkedHashMap<>();
+
+		EnumSet<ViewportSize> viewportSizes = EnumSet.allOf(ViewportSize.class);
+
+		Stream<ViewportSize> stream = viewportSizes.stream();
+
+		List<ViewportSize> viewportSizesList = stream.sorted(
+			Comparator.comparingInt(ViewportSize::getOrder)
+		).collect(
+			Collectors.toList()
+		);
+
+		for (ViewportSize viewportSize : viewportSizesList) {
+			availableViewportSizesMap.put(
+				viewportSize.getViewportSizeId(),
+				HashMapBuilder.<String, Object>put(
+					"icon", viewportSize.getIcon()
+				).put(
+					"label",
+					LanguageUtil.get(
+						httpServletRequest, viewportSize.getLabel())
+				).put(
+					"maxWidth", viewportSize.getMaxWidth()
+				).put(
+					"minWidth", viewportSize.getMinWidth()
+				).put(
+					"sizeId", viewportSize.getViewportSizeId()
+				).build());
+		}
+
+		return availableViewportSizesMap;
+	}
+
+	private String _getCollectionSelectorURL() {
+		InfoListItemSelectorCriterion infoListItemSelectorCriterion =
+			new InfoListItemSelectorCriterion();
+
+		infoListItemSelectorCriterion.setItemTypes(
+			_getInfoDisplayContributorsClassNames());
+
+		infoListItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoListItemSelectorReturnType());
+
+		InfoListProviderItemSelectorCriterion
+			infoListProviderItemSelectorCriterion =
+				new InfoListProviderItemSelectorCriterion();
+
+		infoListProviderItemSelectorCriterion.setItemTypes(
+			_getInfoDisplayContributorsClassNames());
+
+		infoListProviderItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoListProviderItemSelectorReturnType());
+
+		PortletURL infoListSelectorURL = _itemSelector.getItemSelectorURL(
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+			_renderResponse.getNamespace() + "selectInfoList",
+			infoListItemSelectorCriterion,
+			infoListProviderItemSelectorCriterion);
+
+		if (infoListSelectorURL == null) {
+			return StringPool.BLANK;
+		}
+
+		return infoListSelectorURL.toString();
 	}
 
 	private Map<String, Object> _getContributedFragmentEntry(
@@ -1208,6 +1291,19 @@ public class ContentPageEditorDisplayContext {
 		_imageItemSelectorCriterion = itemSelectorCriterion;
 
 		return _imageItemSelectorCriterion;
+	}
+
+	private List<String> _getInfoDisplayContributorsClassNames() {
+		List<String> infoDisplayContributorsClassNames = new ArrayList<>();
+
+		for (InfoDisplayContributor infoDisplayContributor :
+				infoDisplayContributorTracker.getInfoDisplayContributors()) {
+
+			infoDisplayContributorsClassNames.add(
+				infoDisplayContributor.getClassName());
+		}
+
+		return infoDisplayContributorsClassNames;
 	}
 
 	private String _getInfoItemSelectorURL() {

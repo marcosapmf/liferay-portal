@@ -17,6 +17,7 @@ import {createContext} from 'react';
 
 import {
 	ADD_CUSTOM_OBJECT_FIELD,
+	ADD_DATA_LAYOUT_RULE,
 	DELETE_DATA_DEFINITION_FIELD,
 	DELETE_DATA_LAYOUT_FIELD,
 	EDIT_CUSTOM_OBJECT_FIELD,
@@ -54,6 +55,7 @@ const initialState = {
 	dataDefinitionId: 0,
 	dataLayout: {
 		dataLayoutPages: [],
+		dataRules: [],
 		name: {},
 		paginationMode: 'wizard',
 	},
@@ -63,6 +65,7 @@ const initialState = {
 	fieldTypes: [],
 	focusedCustomObjectField: {},
 	focusedField: {},
+	spritemap: `${Liferay.ThemeDisplay.getPathThemeImages()}/lexicon/icons.svg`,
 };
 
 const addCustomObjectField = ({
@@ -209,6 +212,30 @@ const createReducer = dataLayoutBuilder => {
 						settingsContext: dataLayoutBuilder.getDDMFormFieldSettingsContext(
 							newCustomObjectField
 						),
+					},
+				};
+			}
+			case ADD_DATA_LAYOUT_RULE: {
+				const {dataRule} = action.payload;
+				const {
+					dataLayout: {dataRules},
+				} = state;
+
+				if (
+					Object.prototype.hasOwnProperty.call(
+						dataRule,
+						'logical-operator'
+					)
+				) {
+					dataRule['logicalOperator'] = dataRule['logical-operator'];
+					delete dataRule['logical-operator'];
+				}
+
+				return {
+					...state,
+					dataLayout: {
+						...state.dataLayout,
+						dataRules: dataRules.concat(dataRule),
 					},
 				};
 			}

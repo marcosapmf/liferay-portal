@@ -1135,13 +1135,14 @@ private String _downloadFile(File destinationDir, String... urls) {
 			return url
 		}
 
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 5; i++) {
 			try {
 				FileUtil.get(project, url, project.properties['systemProp.repository.private.username'], project.properties['systemProp.repository.private.password'], file, false, true)
 
 				return url
 			}
 			catch (Exception e) {
+				sleep(5000)
 			}
 		}
 	}
@@ -1556,7 +1557,13 @@ private List<File> _getPortalSourcesDependencies(List<File> relengPropertiesFile
 }
 
 private String _getReleaseInfoVersion() {
-	Properties releaseProperties = GUtil.loadProperties(file("../release.properties"))
+	File releasePropertiesFile = file("../release.profile-dxp.properties")
+
+	if (!releasePropertiesFile.exists()) {
+		releasePropertiesFile = file("../release.properties")
+	}
+
+	Properties releaseProperties = GUtil.loadProperties(releasePropertiesFile)
 
 	return releaseProperties.getProperty("release.info.version")
 }
@@ -1570,7 +1577,15 @@ private List<File> _getRelengPropertiesFiles() {
 
 	List<File> artifactPropertiesFiles = new ArrayList<>()
 
-	fileTree(dir: file(".releng"), excludes: ["/sdk/**", "**/test/**", "/third-party/**", "/util/**"], include: "**/*.properties").each {
+	List<String> excludes = ["/sdk/**", "**/test/**", "/third-party/**", "/util/**"]
+
+	File releasePropertiesFile = file("../release.profile-dxp.properties")
+
+	if (!releasePropertiesFile.exists()) {
+		excludes.add("/dxp/**")
+	}
+
+	fileTree(dir: file(".releng"), excludes: excludes, include: "**/*.properties").each {
 		File relengFile ->
 
 		Properties relengProperties = GUtil.loadProperties(relengFile)

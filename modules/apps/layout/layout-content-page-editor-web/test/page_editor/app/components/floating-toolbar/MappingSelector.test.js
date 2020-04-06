@@ -136,7 +136,6 @@ describe('MappingSelector', () => {
 			renderMappingSelector({});
 		});
 
-		expect(getByText(document.body, 'content')).toBeInTheDocument();
 		expect(getByText(document.body, 'field')).toBeInTheDocument();
 		expect(getByText(document.body, 'source')).toBeInTheDocument();
 	});
@@ -148,10 +147,10 @@ describe('MappingSelector', () => {
 			{}
 		);
 
-		const sourceTypeInput = getByLabelText('source');
+		const sourceTypeSelect = getByLabelText('source');
 
 		await act(async () => {
-			fireEvent.change(sourceTypeInput, {
+			fireEvent.change(sourceTypeSelect, {
 				target: {value: 'structure'},
 			});
 		});
@@ -163,6 +162,8 @@ describe('MappingSelector', () => {
 	});
 
 	it('calls onMappingSelect with correct params when mapping to content', async () => {
+		config.pageType = PAGE_TYPES.content;
+
 		const onMappingSelect = jest.fn();
 
 		await act(async () => {
@@ -198,10 +199,10 @@ describe('MappingSelector', () => {
 			});
 		});
 
-		const sourceTypeInput = getByLabelText(document.body, 'source');
+		const sourceTypeSelect = getByLabelText(document.body, 'source');
 
 		await act(async () => {
-			fireEvent.change(sourceTypeInput, {
+			fireEvent.change(sourceTypeSelect, {
 				target: {value: 'structure'},
 			});
 		});

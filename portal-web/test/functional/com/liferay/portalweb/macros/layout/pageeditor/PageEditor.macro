@@ -1,6 +1,8 @@
 definition {
 
 	macro addComment {
+		Pause(locator1 = "10000");
+
 		PageEditor.gotoTab(tabName = "Comments");
 
 		Pause(locator1 = "3000");
@@ -134,9 +136,7 @@ definition {
 	macro addFragment {
 		Pause(locator1 = "10000");
 
-		if (IsElementNotPresent(locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE", key_sidebarButton = "Fragments")) {
-			PageEditor.gotoTab(tabName = "Fragments");
-		}
+		PageEditor.gotoTab(tabName = "Fragments");
 
 		PageEditor.expandFragmentCollection(collectionName = "${collectionName}");
 
@@ -172,6 +172,8 @@ definition {
 	}
 
 	macro addLayoutRow {
+		Pause(locator1 = "10000");
+
 		PageEditor.gotoTab(tabName = "Fragments");
 
 		PageEditor.expandFragmentCollection(collectionName = "Layout Elements");
@@ -209,6 +211,8 @@ definition {
 	}
 
 	macro addLayoutSection {
+		Pause(locator1 = "10000");
+
 		PageEditor.gotoTab(tabName = "Fragments");
 
 		PageEditor.expandFragmentCollection(collectionName = "Layout Elements");
@@ -238,6 +242,8 @@ definition {
 	}
 
 	macro addWidget {
+		Pause(locator1 = "10000");
+
 		PageEditor.gotoTab(tabName = "Widgets");
 
 		Type.sendKeysApplicationSearch(
@@ -277,7 +283,7 @@ definition {
 	}
 
 	macro assertFragmentSidebarLoaded {
-		Pause(locator1 = "3000");
+		Pause(locator1 = "5000");
 
 		AssertVisible(locator1 = "PageEditor#FRAGMENT_SIDEBAR_LOADED");
 	}
@@ -319,7 +325,12 @@ definition {
 			Click.clickNoWaitForVisible(locator1 = "Fragment#FRAGMENT_HEADER");
 		}
 
-		Click(locator1 = "Fragment#EDITABLE_FIELD");
+		if ("${contributed}" == "false") {
+			Click(locator1 = "Fragment#EDITABLE_FIELD");
+		}
+		else {
+			Click(locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD");
+		}
 	}
 
 	macro clickPublish {
@@ -611,6 +622,7 @@ definition {
 
 	macro editFragmentImage {
 		PageEditor.gotoEditableFieldImageProperties(
+			contributed = "${contributed}",
 			fragmentName = "${fragmentName}",
 			id = "${id}");
 
@@ -626,8 +638,6 @@ definition {
 
 		Pause(locator1 = "3000");
 
-		// SelectFrame(locator1 = "IFrame#DIALOG");
-
 		Click(locator1 = "Button#ADD");
 
 		PageEditor.waitForAutoSave();
@@ -635,14 +645,24 @@ definition {
 
 	macro editFragmentText {
 		PageEditor.gotoEditableFieldEdit(
+			contributed = "${contributed}",
 			fragmentName = "${fragmentName}",
 			id = "${id}");
 
-		Type(
-			id = "${id}",
-			key_fragmentName = "${fragmentName}",
-			locator1 = "Fragment#EDITABLE_FIELD_CK_EDITOR",
-			value1 = "${text}");
+		if ("${contributed}" == "false") {
+			Type(
+				id = "${id}",
+				key_fragmentName = "${fragmentName}",
+				locator1 = "Fragment#EDITABLE_FIELD_CK_EDITOR",
+				value1 = "${text}");
+		}
+		else {
+			Type(
+				id = "${id}",
+				key_fragmentName = "${fragmentName}",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD_CK_EDITOR",
+				value1 = "${text}");
+		}
 
 		PageEditor.waitForAutoSave();
 	}
@@ -855,6 +875,7 @@ definition {
 
 	macro gotoEditableFieldEdit {
 		PageEditor.clickEditableField(
+			contributed = "${contributed}",
 			fragmentName = "${fragmentName}",
 			id = "${id}");
 
@@ -863,6 +884,7 @@ definition {
 
 	macro gotoEditableFieldImageProperties {
 		PageEditor.clickEditableField(
+			contributed = "${contributed}",
 			fragmentName = "${fragmentName}",
 			id = "${id}");
 
@@ -882,9 +904,16 @@ definition {
 	}
 
 	macro gotoTab {
-		Click.clickNoMouseOver(
-			key_tabName = "${tabName}",
-			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
+		if ("${tabName}" == "Look and Feel") {
+			Click.clickNoMouseOver(
+				key_tabName = "${tabName}",
+				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
+		}
+		else if (IsElementNotPresent(key_sidebarButton = "${tabName}", locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE")) {
+			Click.clickNoMouseOver(
+				key_tabName = "${tabName}",
+				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
+		}
 	}
 
 	macro removeFragment {
@@ -967,9 +996,7 @@ definition {
 	macro searchFragmentViaSidebar {
 		Pause(locator1 = "10000");
 
-		if (IsElementNotPresent(locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE", key_sidebarButton = "Fragments")) {
-			PageEditor.gotoTab(tabName = "Fragments");
-		}
+		PageEditor.gotoTab(tabName = "Fragments");
 
 		Type(
 			locator1 = "PageEditor#WIDGETS_APPLICATION_SEARCH_FIELD",
@@ -985,9 +1012,7 @@ definition {
 	macro viewCannotAddFragmentToOutsideOfDropZone {
 		Pause(locator1 = "10000");
 
-		if (IsElementNotPresent(locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE", key_sidebarButton = "Fragments")) {
-			PageEditor.gotoTab(tabName = "Fragments");
-		}
+		PageEditor.gotoTab(tabName = "Fragments");
 
 		PageEditor.expandFragmentCollection(collectionName = "${collectionName}");
 
@@ -1113,11 +1138,20 @@ definition {
 	}
 
 	macro viewFragmentEditableText {
-		AssertTextEquals(
-			id = "${id}",
-			key_fragmentName = "${fragmentName}",
-			locator1 = "Fragment#EDITABLE_FIELD",
-			value1 = "${editableText}");
+		if ("${contributed}" == "false") {
+			AssertTextEquals(
+				id = "${id}",
+				key_fragmentName = "${fragmentName}",
+				locator1 = "Fragment#EDITABLE_FIELD",
+				value1 = "${editableText}");
+		}
+		else {
+			AssertTextEquals(
+				id = "${id}",
+				key_fragmentName = "${fragmentName}",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD",
+				value1 = "${editableText}");
+		}
 	}
 
 	macro viewFragmentOrder {

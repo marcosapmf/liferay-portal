@@ -101,7 +101,6 @@ definition {
 		AssertElementNotPresent(locator1 = "Button#PLUS");
 	}
 
-	@ignore = "true"
 	@priority = "5"
 	test SearchPermissions {
 		property testray.component.names = "Training";
@@ -123,12 +122,7 @@ definition {
 			permissionDefinitionValue = "View Control Panel Menu",
 			roleTitle = "Roles Regrole Name");
 
-		ProductMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
@@ -260,7 +254,6 @@ definition {
 		Site.viewSiteAdminPermissionsCP(siteName = "Child SiteName");
 	}
 
-	@ignore = "true"
 	@priority = "4"
 	test ViewSiteManageChildSiteSiteRole {
 		Permissions.setUpSiteRoleLoginUserCP(

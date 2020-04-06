@@ -45,6 +45,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Activate;
@@ -209,9 +210,10 @@ public class ConfigurationModelRetrieverImpl
 
 		for (Configuration configuration : configurations) {
 			ConfigurationModel curConfigurationModel = new ConfigurationModel(
-				factoryConfigurationModel, configuration,
+				configuration.getBundleLocation(),
 				factoryConfigurationModel.getBundleSymbolicName(),
-				configuration.getBundleLocation(), false);
+				factoryConfigurationModel.getClassLoader(), configuration,
+				factoryConfigurationModel, false);
 
 			factoryInstances.add(curConfigurationModel);
 		}
@@ -314,10 +316,14 @@ public class ConfigurationModelRetrieverImpl
 		String pid, boolean factory, String locale,
 		ExtendedObjectClassDefinition.Scope scope, Serializable scopePK) {
 
+		BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+
 		ConfigurationModel configurationModel = new ConfigurationModel(
+			StringPool.QUESTION, bundle.getSymbolicName(),
+			bundleWiring.getClassLoader(),
+			getConfiguration(pid, scope, scopePK),
 			extendedMetaTypeInformation.getObjectClassDefinition(pid, locale),
-			getConfiguration(pid, scope, scopePK), bundle.getSymbolicName(),
-			StringPool.QUESTION, factory);
+			factory);
 
 		ConfigurationVisibilityController configurationVisibilityController =
 			_configurationVisibilityControllerServiceTrackerMap.getService(pid);
@@ -344,8 +350,9 @@ public class ConfigurationModelRetrieverImpl
 			Configuration configuration = getCompanyDefaultConfiguration(pid);
 
 			configurationModel = new ConfigurationModel(
+				StringPool.QUESTION, bundle.getSymbolicName(),
+				configurationModel.getClassLoader(), configuration,
 				configurationModel.getExtendedObjectClassDefinition(),
-				configuration, bundle.getSymbolicName(), StringPool.QUESTION,
 				configurationModel.isFactory());
 		}
 

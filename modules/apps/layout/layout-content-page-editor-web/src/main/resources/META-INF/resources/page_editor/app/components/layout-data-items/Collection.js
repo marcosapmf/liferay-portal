@@ -16,9 +16,8 @@ import React, {useEffect, useState} from 'react';
 
 import {COLLECTION_LIST_FORMATS} from '../../config/constants/collectionListFormats';
 import CollectionService from '../../services/CollectionService';
-import InfoItemService from '../../services/InfoItemService';
 import {useDispatch, useSelector} from '../../store/index';
-import {ControlsIdConverterContextProvider} from '../ControlsIdConverterContext';
+import {CollectionItemContextProvider} from '../CollectionItemContext';
 
 const COLLECTION_ID_DIVIDER = '$';
 
@@ -40,7 +39,7 @@ function getToControlsId(collectionId, index) {
 	};
 }
 
-function fromControlsId(controlsItemId) {
+export function fromControlsId(controlsItemId) {
 	if (!controlsItemId) {
 		return null;
 	}
@@ -50,9 +49,15 @@ function fromControlsId(controlsItemId) {
 	return itemId || controlsItemId;
 }
 
-const NotMappedMessage = () => (
-	<div className="page-editor__collection__not-mapped-message">
-		{Liferay.Language.get('not-mapped')}
+const NoItemsMessage = () => (
+	<div className="page-editor__collection__no-items-message">
+		{Liferay.Language.get('you-do-not-have-any-items-in-this-collection')}
+	</div>
+);
+
+const NotCollectionSelectedMessage = () => (
+	<div className="page-editor__collection__not-collection-selected-message">
+		{Liferay.Language.get('no-collection-selected-yet')}
 	</div>
 );
 
@@ -79,29 +84,44 @@ const Grid = ({
 				const itemCount = i * numberOfColumns + j;
 
 				columns.push(
-					<div className={`col col-${12 / numberOfColumns}`}>
+					<div
+						className={`col col-${12 / numberOfColumns}`}
+						key={index}
+					>
 						{itemCount < maxNumberOfItems && (
-							<ControlsIdConverterContextProvider
+							<CollectionItemContextProvider
 								key={index}
 								value={{
+									canElevate: {
+										bottom: i === numberOfRows - 1,
+										top: i === 0,
+									},
 									collectionFields,
 									collectionItem:
 										collection[i * numberOfColumns + j],
-									fromControlsId,
-									toControlsId: getToControlsId(
-										collectionId,
-										index
-									),
+									fromControlsId:
+										itemCount === 0 ? null : fromControlsId,
+									toControlsId:
+										itemCount === 0
+											? null
+											: getToControlsId(
+													collectionId,
+													index
+											  ),
 								}}
 							>
 								{React.cloneElement(child)}
-							</ControlsIdConverterContextProvider>
+							</CollectionItemContextProvider>
 						)}
 					</div>
 				);
 			}
 
-			rows.push(<div className="row">{columns}</div>);
+			rows.push(
+				<div className="row" key={i}>
+					{columns}
+				</div>
+			);
 		}
 
 		return rows;
@@ -121,17 +141,22 @@ const Stack = ({
 	const maxNumberOfItems = Math.min(collectionLength, numberOfItems);
 
 	return Array.from({length: maxNumberOfItems}).map((_element, idx) => (
-		<ControlsIdConverterContextProvider
+		<CollectionItemContextProvider
 			key={idx}
 			value={{
+				canElevate: {
+					bottom: idx === maxNumberOfItems - 1,
+					top: idx === 0,
+				},
 				collectionFields,
 				collectionItem: collection[idx],
-				fromControlsId,
-				toControlsId: getToControlsId(collectionId, idx),
+				fromControlsId: idx === 0 ? null : fromControlsId,
+				toControlsId:
+					idx === 0 ? null : getToControlsId(collectionId, idx),
 			}}
 		>
 			{React.cloneElement(child)}
-		</ControlsIdConverterContextProvider>
+		</CollectionItemContextProvider>
 	));
 };
 
@@ -183,13 +208,12 @@ const Collection = React.forwardRef(({children, item}, ref) => {
 
 	useEffect(() => {
 		if (collectionConfig.collection) {
-			InfoItemService.getAvailableStructureMappingFields({
-				classNameId: collectionConfig.collection.itemType,
-				classTypeId: collectionConfig.collection.itemSubtype,
+			CollectionService.getCollectionMappingFields({
+				itemType: collectionConfig.collection.itemType,
 				onNetworkStatus: dispatch,
 			})
-				.then(({infoDisplayFields}) => {
-					setCollectionFields(infoDisplayFields);
+				.then(response => {
+					setCollectionFields(response);
 				})
 				.catch(error => {
 					if (process.env.NODE_ENV === 'development') {
@@ -201,7 +225,8 @@ const Collection = React.forwardRef(({children, item}, ref) => {
 
 	return (
 		<div className="page-editor__collection" ref={ref}>
-			{collectionIsMapped(collectionConfig) ? (
+			{collectionIsMapped(collectionConfig) &&
+			collection.items.length > 0 ? (
 				<ContentComponent
 					child={child}
 					collection={collection.items}
@@ -211,8 +236,10 @@ const Collection = React.forwardRef(({children, item}, ref) => {
 					numberOfColumns={collectionConfig.numberOfColumns}
 					numberOfItems={collectionConfig.numberOfItems}
 				/>
+			) : collectionIsMapped(collectionConfig) ? (
+				<NoItemsMessage />
 			) : (
-				<NotMappedMessage />
+				<NotCollectionSelectedMessage />
 			)}
 		</div>
 	);

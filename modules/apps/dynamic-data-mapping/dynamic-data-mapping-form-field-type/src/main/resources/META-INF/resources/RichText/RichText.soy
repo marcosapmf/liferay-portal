@@ -25,12 +25,10 @@
 			{call RichTextAdapter.render}
 				{param events: ['dispatch': $_handleOnDispatch] /}
 				{param ref: $ref /}
-				{param store: [
-					'data': $value ?: $predefinedValue,
-					'name': $name,
-					'readOnly': $readOnly,
-					'spritemap': $spritemap
-				] /}
+				{param data: $value ?: $predefinedValue /}
+				{param name: $name /}
+				{param readOnly: $readOnly /}
+				{param spritemap: $spritemap /}
 			{/call}
 		{/param}
 		{param displayErrors: $displayErrors /}

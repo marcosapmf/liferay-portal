@@ -16,12 +16,13 @@ package com.liferay.data.engine.taglib.servlet.taglib.util;
 
 import com.liferay.data.engine.renderer.DataLayoutRenderer;
 import com.liferay.data.engine.renderer.DataLayoutRendererContext;
-import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinition;
-import com.liferay.data.engine.rest.client.dto.v2_0.DataLayout;
-import com.liferay.data.engine.rest.client.dto.v2_0.DataRecord;
-import com.liferay.data.engine.rest.client.resource.v2_0.DataDefinitionResource;
-import com.liferay.data.engine.rest.client.resource.v2_0.DataLayoutResource;
-import com.liferay.data.engine.rest.client.resource.v2_0.DataRecordResource;
+import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
+import com.liferay.data.engine.rest.dto.v2_0.DataLayout;
+import com.liferay.data.engine.rest.dto.v2_0.DataRecord;
+import com.liferay.data.engine.rest.dto.v2_0.DataRule;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.data.engine.rest.resource.v2_0.DataLayoutResource;
+import com.liferay.data.engine.rest.resource.v2_0.DataRecordResource;
 import com.liferay.data.engine.taglib.servlet.taglib.definition.DataLayoutBuilderDefinition;
 import com.liferay.dynamic.data.mapping.form.builder.context.DDMFormBuilderContextFactory;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldType;
@@ -64,8 +65,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
-import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -134,14 +133,17 @@ public class DataLayoutTaglibUtil {
 		JSONObject dataLayoutConfigJSONObject = JSONUtil.put(
 			"allowFieldSets", dataLayoutBuilderDefinition.allowFieldSets()
 		).put(
+			"allowMultiplePages",
+			dataLayoutBuilderDefinition.allowMultiplePages()
+		).put(
 			"allowRules", dataLayoutBuilderDefinition.allowRules()
+		).put(
+			"allowSuccessPage", dataLayoutBuilderDefinition.allowSuccessPage()
 		).put(
 			"disabledProperties",
 			dataLayoutBuilderDefinition.getDisabledProperties()
 		).put(
 			"disabledTabs", dataLayoutBuilderDefinition.getDisabledTabs()
-		).put(
-			"paginationMode", dataLayoutBuilderDefinition.getPaginationMode()
 		);
 
 		if (dataLayoutBuilderDefinition.allowRules()) {
@@ -149,9 +151,19 @@ public class DataLayoutTaglibUtil {
 				dataLayoutConfigJSONObject.put(
 					"ruleSettings",
 					JSONUtil.put(
+						"dataProviderInstanceParameterSettingsURL",
+						_dataLayoutTaglibUtil.
+							_getDDMDataProviderInstanceParameterSettingsURL()
+					).put(
+						"dataProviderInstancesURL",
+						_dataLayoutTaglibUtil._getDDMDataProviderInstancesURL()
+					).put(
 						"functionsMetadata",
 						_dataLayoutTaglibUtil._getFunctionsMetadataJSONObject(
-							locale)));
+							locale)
+					).put(
+						"functionsURL", _dataLayoutTaglibUtil._getFunctionsURL()
+					));
 			}
 			catch (JSONException jsonException) {
 				_log.error(jsonException, jsonException);
@@ -159,12 +171,8 @@ public class DataLayoutTaglibUtil {
 		}
 
 		dataLayoutConfigJSONObject.put(
-			"successPageSettings",
-			dataLayoutBuilderDefinition.getSuccessPageSettings()
-		).put(
 			"unimplementedProperties",
-			dataLayoutBuilderDefinition.getUnimplementedProperties()
-		);
+			dataLayoutBuilderDefinition.getUnimplementedProperties());
 
 		return dataLayoutConfigJSONObject;
 	}
@@ -188,7 +196,8 @@ public class DataLayoutTaglibUtil {
 	}
 
 	public static JSONArray getFieldTypesJSONArray(
-		HttpServletRequest httpServletRequest, Set<String> scopes) {
+			HttpServletRequest httpServletRequest, Set<String> scopes)
+		throws Exception {
 
 		return _dataLayoutTaglibUtil._getFieldTypesJSONArray(
 			httpServletRequest, scopes);
@@ -305,19 +314,12 @@ public class DataLayoutTaglibUtil {
 			Long dataDefinitionId, HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		String sessionId = CookieKeys.getCookie(
-			httpServletRequest, CookieKeys.JSESSIONID);
-
 		DataDefinitionResource dataDefinitionResource =
 			DataDefinitionResource.builder(
-			).endpoint(
-				_portal.getHost(httpServletRequest),
-				httpServletRequest.getServerPort(),
-				httpServletRequest.getScheme()
-			).header(
-				"Cookie", "JSESSIONID=" + sessionId
-			).parameter(
-				"p_auth", AuthTokenUtil.getToken(httpServletRequest)
+			).httpServletRequest(
+				httpServletRequest
+			).user(
+				_portal.getUser(httpServletRequest)
 			).build();
 
 		return dataDefinitionResource.getDataDefinition(dataDefinitionId);
@@ -328,15 +330,10 @@ public class DataLayoutTaglibUtil {
 		throws Exception {
 
 		DataLayoutResource dataLayoutResource = DataLayoutResource.builder(
-		).endpoint(
-			_portal.getHost(httpServletRequest),
-			httpServletRequest.getServerPort(), httpServletRequest.getScheme()
-		).header(
-			"Cookie",
-			"JSESSIONID=" +
-				CookieKeys.getCookie(httpServletRequest, CookieKeys.JSESSIONID)
-		).parameter(
-			"p_auth", AuthTokenUtil.getToken(httpServletRequest)
+		).httpServletRequest(
+			httpServletRequest
+		).user(
+			_portal.getUser(httpServletRequest)
 		).build();
 
 		return dataLayoutResource.getDataLayout(dataLayoutId);
@@ -391,15 +388,8 @@ public class DataLayoutTaglibUtil {
 		}
 
 		DataRecordResource dataRecordResource = DataRecordResource.builder(
-		).endpoint(
-			_portal.getHost(httpServletRequest),
-			httpServletRequest.getServerPort(), httpServletRequest.getScheme()
-		).header(
-			"Cookie",
-			"JSESSIONID=" +
-				CookieKeys.getCookie(httpServletRequest, CookieKeys.JSESSIONID)
-		).parameter(
-			"p_auth", AuthTokenUtil.getToken(httpServletRequest)
+		).user(
+			_portal.getUser(httpServletRequest)
 		).build();
 
 		DataRecord dataRecord = dataRecordResource.getDataRecord(dataRecordId);
@@ -407,24 +397,28 @@ public class DataLayoutTaglibUtil {
 		return dataRecord.getDataRecordValues();
 	}
 
+	private String _getDDMDataProviderInstanceParameterSettingsURL() {
+		return _ddmFormBuilderSettingsRetrieverHelper.
+			getDDMDataProviderInstanceParameterSettingsURL();
+	}
+
+	private String _getDDMDataProviderInstancesURL() {
+		return _ddmFormBuilderSettingsRetrieverHelper.
+			getDDMDataProviderInstancesURL();
+	}
+
 	private JSONArray _getFieldTypesJSONArray(
-		HttpServletRequest httpServletRequest, Set<String> scopes) {
+			HttpServletRequest httpServletRequest, Set<String> scopes)
+		throws Exception {
 
 		JSONArray fieldTypesJSONArray = _jsonFactory.createJSONArray();
 
-		String cookie = CookieKeys.getCookie(
-			httpServletRequest, CookieKeys.JSESSIONID);
-
 		DataDefinitionResource dataDefinitionResource =
 			DataDefinitionResource.builder(
-			).endpoint(
-				_portal.getHost(httpServletRequest),
-				httpServletRequest.getServerPort(),
-				httpServletRequest.getScheme()
-			).header(
-				"Cookie", "JSESSIONID=" + cookie
-			).parameter(
-				"p_auth", AuthTokenUtil.getToken(httpServletRequest)
+			).httpServletRequest(
+				httpServletRequest
+			).user(
+				_portal.getUser(httpServletRequest)
 			).build();
 
 		try {
@@ -464,6 +458,10 @@ public class DataLayoutTaglibUtil {
 		return JSONFactoryUtil.createJSONObject(
 			_ddmFormBuilderSettingsRetrieverHelper.
 				getSerializedDDMExpressionFunctionsMetadata(locale));
+	}
+
+	private String _getFunctionsURL() {
+		return _ddmFormBuilderSettingsRetrieverHelper.getDDMFunctionsURL();
 	}
 
 	private boolean _hasJavascriptModule(String name) {
@@ -586,6 +584,8 @@ public class DataLayoutTaglibUtil {
 
 			_populateDDMFormFieldSettingsContext(
 				ddmForm.getDDMFormFieldsMap(true), ddmFormTemplateContext);
+
+			ddmFormTemplateContext.put("rules", _getDataRulesJSONArray());
 
 			return _jsonFactory.createJSONObject(
 				_jsonFactory.looseSerializeDeep(ddmFormTemplateContext));
@@ -744,6 +744,40 @@ public class DataLayoutTaglibUtil {
 
 			return ddmFormLayoutDeserializerDeserializeResponse.
 				getDDMFormLayout();
+		}
+
+		private JSONArray _getDataRulesJSONArray() throws JSONException {
+			JSONArray dataRulesJSONArray = _jsonFactory.createJSONArray();
+
+			for (DataRule dataRule : _dataLayout.getDataRules()) {
+				JSONObject dataRuleJSONObject = _jsonFactory.createJSONObject();
+
+				JSONArray actionsJSONArray = _jsonFactory.createJSONArray();
+
+				for (Object action : dataRule.getActions()) {
+					actionsJSONArray.put(
+						_jsonFactory.createJSONObject((String)action));
+				}
+
+				dataRuleJSONObject.put("actions", actionsJSONArray);
+
+				JSONArray conditionsJSONArray = _jsonFactory.createJSONArray();
+
+				for (Object condition : dataRule.getConditions()) {
+					conditionsJSONArray.put(
+						_jsonFactory.createJSONObject((String)condition));
+				}
+
+				dataRuleJSONObject.put(
+					"conditions", conditionsJSONArray
+				).put(
+					"logical-operator", dataRule.getLogicalOperator()
+				);
+
+				dataRulesJSONArray.put(dataRuleJSONObject);
+			}
+
+			return dataRulesJSONArray;
 		}
 
 		private DDMForm _getDDMForm() throws Exception {

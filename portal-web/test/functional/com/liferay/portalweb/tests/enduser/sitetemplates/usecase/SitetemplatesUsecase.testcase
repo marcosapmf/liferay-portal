@@ -333,10 +333,14 @@ definition {
 			roleTitle = "Guest");
 	}
 
+	// Ignored because of the ticket LRQA-57518
+
 	@description = "This is a use case for LPS-75802"
+	@ignore = "true"
 	@priority = "5"
 	test PublishSiteCreatedBasedOnASiteTemplate {
 		property osgi.app.includes = "frontend-theme-porygon";
+		property portal.upstream = "quarantine";
 
 		ProductMenu.gotoPortlet(
 			category = "Sites",

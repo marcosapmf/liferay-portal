@@ -302,6 +302,10 @@ public class MasterLayoutActionDropdownItemsProvider {
 		_getMarkAsDefaulBlanktMasterLayoutActionUnsafeConsumer(
 			LayoutPageTemplateEntry defaultLayoutPageTemplateEntry) {
 
+		if (defaultLayoutPageTemplateEntry == null) {
+			return null;
+		}
+
 		PortletURL markAsDefaultMasterLayoutURL =
 			_renderResponse.createActionURL();
 

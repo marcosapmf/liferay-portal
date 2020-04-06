@@ -733,6 +733,92 @@ public class JenkinsResultsParserUtil {
 		return new File(buildProperties.getProperty("base.repository.dir"));
 	}
 
+	public static String getBatchTestSuiteProperty(
+		Properties properties, String basePropertyName, String batchName,
+		String testSuiteName) {
+
+		if ((batchName != null) && !batchName.isEmpty() &&
+			(testSuiteName != null) && !testSuiteName.isEmpty()) {
+
+			String propertyValue = getProperty(
+				properties,
+				combine(
+					basePropertyName, "[", batchName, "]", "[", testSuiteName,
+					"]"));
+
+			if (propertyValue != null) {
+				return propertyValue;
+			}
+
+			String batchTestSuitePropertyNameRegex = combine(
+				Pattern.quote(basePropertyName), "\\[([^\\]]+)\\]\\[",
+				Pattern.quote(testSuiteName), "\\]");
+
+			for (String propertyName : properties.stringPropertyNames()) {
+				if (!propertyName.matches(batchTestSuitePropertyNameRegex)) {
+					continue;
+				}
+
+				String batchNameRegex = propertyName.replaceAll(
+					batchTestSuitePropertyNameRegex, "$1");
+
+				batchNameRegex = batchNameRegex.replaceAll(
+					"[^\\*]+", "\\Q$0\\E");
+
+				batchNameRegex = batchNameRegex.replace("*", ".+");
+
+				if (!batchName.matches(batchNameRegex)) {
+					continue;
+				}
+
+				return getProperty(properties, propertyName);
+			}
+		}
+
+		if ((batchName != null) && !batchName.isEmpty()) {
+			String propertyValue = getProperty(
+				properties, combine(basePropertyName, "[", batchName, "]"));
+
+			if (propertyValue != null) {
+				return propertyValue;
+			}
+
+			String batchPropertyNameRegex =
+				Pattern.quote(basePropertyName) + "\\[([^\\]]+)\\]";
+
+			for (String propertyName : properties.stringPropertyNames()) {
+				if (!propertyName.matches(batchPropertyNameRegex)) {
+					continue;
+				}
+
+				String batchNameRegex = propertyName.replaceAll(
+					batchPropertyNameRegex, "$1");
+
+				batchNameRegex = batchNameRegex.replaceAll(
+					"[^\\*]+", "\\Q$0\\E");
+
+				batchNameRegex = batchNameRegex.replace("*", ".+");
+
+				if (!batchName.matches(batchNameRegex)) {
+					continue;
+				}
+
+				return getProperty(properties, propertyName);
+			}
+		}
+
+		if ((testSuiteName != null) && !testSuiteName.isEmpty()) {
+			String propertyValue = getProperty(
+				properties, combine(basePropertyName, "[", testSuiteName, "]"));
+
+			if (propertyValue != null) {
+				return propertyValue;
+			}
+		}
+
+		return getProperty(properties, basePropertyName);
+	}
+
 	public static String getBuildParameter(String buildURL, String key) {
 		Map<String, String> buildParameters = getBuildParameters(buildURL);
 
@@ -1054,6 +1140,11 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return "";
+	}
+
+	public static String getGitHubApiSearchUrl(List<String> filters) {
+		return combine(
+			"https://api.github.com/search/issues?q=", join("+", filters));
 	}
 
 	public static String getGitHubApiUrl(

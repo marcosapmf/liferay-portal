@@ -19,14 +19,18 @@ import {
 	LayoutDataPropTypes,
 	getLayoutDataItemPropTypes,
 } from '../../prop-types/index';
+import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import {useSelector} from '../store/index';
 import useDragAndDrop, {TARGET_POSITION} from '../utils/useDragAndDrop';
+import {useToControlsId} from './CollectionItemContext';
 import getLabelName from './layout-data-items/getLabelName';
 
 export default function TopperEmpty({children, item, layoutData}) {
 	const containerRef = useRef(null);
 	const store = useSelector(state => state);
 	const fragmentEntryLinks = store.fragmentEntryLinks;
+
+	const toControlsId = useToControlsId();
 
 	const {
 		canDrop,
@@ -38,12 +42,19 @@ export default function TopperEmpty({children, item, layoutData}) {
 			dropTargetItemId,
 			droppable,
 			targetPositionWithMiddle,
+			targetPositionWithoutMiddle,
 		},
 	} = useDragAndDrop({
 		containerRef,
 		dropTargetItem: item,
 		layoutData,
 	});
+
+	const targetPosition =
+		item.type === LAYOUT_DATA_ITEM_TYPES.fragment ||
+		item.type === LAYOUT_DATA_ITEM_TYPES.collection
+			? targetPositionWithoutMiddle
+			: targetPositionWithMiddle;
 
 	const childrenElement = children({canDrop, isOver});
 
@@ -53,8 +64,8 @@ export default function TopperEmpty({children, item, layoutData}) {
 		: childrenElement;
 
 	const isDraggableInPosition = position =>
-		targetPositionWithMiddle === position &&
-		dropTargetItemId === item.itemId;
+		targetPosition === position &&
+		dropTargetItemId === toControlsId(item.itemId);
 
 	const dataAdvice =
 		!droppable && isDraggableInPosition(TARGET_POSITION.MIDDLE)

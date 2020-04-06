@@ -1043,12 +1043,12 @@ components:
             type: object
         FragmentLink:
             properties:
+                href:
+                    oneOf:
+                        - $ref: "#/components/schemas/InlineValue"
                 target:
                     enum: [Blank, Parent, Self, Top]
                     type: string
-                value:
-                    oneOf:
-                        - $ref: "#/components/schemas/InlineLink"
         FragmentSettingsAllowed:
             properties:
                 allowedFragments:
@@ -1062,11 +1062,6 @@ components:
                     items:
                         $ref: "#/components/schemas/Fragment"
                     type: array
-            type: object
-        InlineLink:
-            properties:
-                href:
-                    type: string
             type: object
         InlineValue:
             properties:

@@ -212,6 +212,12 @@ public class RedirectNotFoundEntryLocalServiceUtil {
 		return getService().fetchRedirectNotFoundEntry(redirectNotFoundEntryId);
 	}
 
+	public static com.liferay.redirect.model.RedirectNotFoundEntry
+		fetchRedirectNotFoundEntry(long groupId, String url) {
+
+		return getService().fetchRedirectNotFoundEntry(groupId, url);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -265,6 +271,18 @@ public class RedirectNotFoundEntryLocalServiceUtil {
 	public static java.util.List
 		<com.liferay.redirect.model.RedirectNotFoundEntry>
 			getRedirectNotFoundEntries(
+				long groupId, Boolean ignored, java.util.Date minModifiedDate,
+				int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.redirect.model.RedirectNotFoundEntry> obc) {
+
+		return getService().getRedirectNotFoundEntries(
+			groupId, ignored, minModifiedDate, start, end, obc);
+	}
+
+	public static java.util.List
+		<com.liferay.redirect.model.RedirectNotFoundEntry>
+			getRedirectNotFoundEntries(
 				long groupId, java.util.Date minModifiedDate, int start,
 				int end,
 				com.liferay.portal.kernel.util.OrderByComparator
@@ -299,6 +317,13 @@ public class RedirectNotFoundEntryLocalServiceUtil {
 	}
 
 	public static int getRedirectNotFoundEntriesCount(
+		long groupId, Boolean ignored, java.util.Date minModifiedDate) {
+
+		return getService().getRedirectNotFoundEntriesCount(
+			groupId, ignored, minModifiedDate);
+	}
+
+	public static int getRedirectNotFoundEntriesCount(
 		long groupId, java.util.Date minModifiedDate) {
 
 		return getService().getRedirectNotFoundEntriesCount(
@@ -317,6 +342,15 @@ public class RedirectNotFoundEntryLocalServiceUtil {
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().getRedirectNotFoundEntry(redirectNotFoundEntryId);
+	}
+
+	public static com.liferay.redirect.model.RedirectNotFoundEntry
+			updateRedirectNotFoundEntry(
+				long redirectNotFoundEntryId, boolean ignored)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().updateRedirectNotFoundEntry(
+			redirectNotFoundEntryId, ignored);
 	}
 
 	/**

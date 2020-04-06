@@ -394,9 +394,13 @@ public class AssetBrowserDisplayContext {
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
+		boolean showBreadcrumb = ParamUtil.getBoolean(
+			_httpServletRequest, "showBreadcrumb");
+
 		if (Objects.equals(
 				ItemSelectorPortletKeys.ITEM_SELECTOR,
-				portletDisplay.getPortletName())) {
+				portletDisplay.getPortletName()) ||
+			showBreadcrumb) {
 
 			return true;
 		}

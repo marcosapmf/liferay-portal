@@ -120,6 +120,7 @@ public class ViewUsersManagementToolbarDisplayContext {
 	public String getClearResultsURL() {
 		PortletURL clearResultsURL = getPortletURL();
 
+		clearResultsURL.setParameter("domain", (String)null);
 		clearResultsURL.setParameter("keywords", StringPool.BLANK);
 		clearResultsURL.setParameter("navigation", (String)null);
 
@@ -165,6 +166,40 @@ public class ViewUsersManagementToolbarDisplayContext {
 
 	public List<LabelItem> getFilterLabelItems() {
 		return LabelItemListBuilder.add(
+			() -> _domain.equals("account-users"),
+			labelItem -> {
+				PortletURL removeLabelURL = getPortletURL();
+
+				removeLabelURL.setParameter("domain", (String)null);
+
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+
+				labelItem.setCloseable(true);
+
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(_httpServletRequest, "domain"),
+					LanguageUtil.get(_httpServletRequest, _domain));
+
+				labelItem.setLabel(label);
+			}
+		).add(
+			() -> _domain.equals("all"),
+			labelItem -> {
+				PortletURL removeLabelURL = getPortletURL();
+
+				removeLabelURL.setParameter("domain", (String)null);
+
+				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+
+				labelItem.setCloseable(true);
+
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(_httpServletRequest, "domain"),
+					LanguageUtil.get(_httpServletRequest, _domain));
+
+				labelItem.setLabel(label);
+			}
+		).add(
 			() -> !_navigation.equals("active"),
 			labelItem -> {
 				PortletURL removeLabelURL = getPortletURL();

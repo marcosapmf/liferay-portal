@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -40,6 +39,7 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -159,8 +159,7 @@ public class InfoListProviderItemSelectorView
 							WebKeys.THEME_DISPLAY);
 
 					return JSONUtil.put(
-						"itemType",
-						_portal.getClassNameId(_getClassName(infoListProvider))
+						"itemType", _getClassName(infoListProvider)
 					).put(
 						"key", infoListProvider.getKey()
 					).put(
@@ -210,16 +209,19 @@ public class InfoListProviderItemSelectorView
 			SearchContainer searchContainer = new SearchContainer<>(
 				portletRequest, _portletURL, null,
 				_language.get(
-					resourceBundle, "there-are-no-info-list-providers"));
+					resourceBundle, "there-are-no-content-set-providers"));
 
-			List<InfoListProvider> infoListProviders = null;
+			List<InfoListProvider> infoListProviders = new ArrayList<>();
 
-			String itemType =
-				_infoListProviderItemSelectorCriterion.getItemType();
+			List<String> itemTypes =
+				_infoListProviderItemSelectorCriterion.getItemTypes();
 
-			if (Validator.isNotNull(itemType)) {
-				infoListProviders =
-					_infoListProviderTracker.getInfoListProviders(itemType);
+			if (ListUtil.isNotEmpty(itemTypes)) {
+				for (String itemType : itemTypes) {
+					infoListProviders.addAll(
+						_infoListProviderTracker.getInfoListProviders(
+							itemType));
+				}
 			}
 			else {
 				infoListProviders =
@@ -261,10 +263,6 @@ public class InfoListProviderItemSelectorView
 		private final HttpServletRequest _httpServletRequest;
 		private final InfoListProviderItemSelectorCriterion
 			_infoListProviderItemSelectorCriterion;
-
-		@Reference
-		private Portal _portal;
-
 		private final PortletURL _portletURL;
 
 	}

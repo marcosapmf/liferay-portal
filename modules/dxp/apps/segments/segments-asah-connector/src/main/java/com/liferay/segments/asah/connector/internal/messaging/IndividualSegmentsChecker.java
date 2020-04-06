@@ -26,9 +26,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.segments.asah.connector.internal.cache.AsahSegmentsEntryCache;
 import com.liferay.segments.asah.connector.internal.client.AsahFaroBackendClient;
@@ -57,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author David Arques
  */
-@Component(immediate = true, service = IndividualSegmentsChecker.class)
+@Component(service = IndividualSegmentsChecker.class)
 public class IndividualSegmentsChecker {
 
 	public void checkIndividualSegments() {
@@ -128,10 +126,6 @@ public class IndividualSegmentsChecker {
 	}
 
 	private void _addSegmentsEntry(IndividualSegment individualSegment) {
-		Map<Locale, String> nameMap = HashMapBuilder.put(
-			LocaleUtil.getDefault(), individualSegment.getName()
-		).build();
-
 		try {
 			ServiceContext serviceContext = _getServiceContext();
 
@@ -139,6 +133,10 @@ public class IndividualSegmentsChecker {
 				_segmentsEntryLocalService.fetchSegmentsEntry(
 					serviceContext.getScopeGroupId(), individualSegment.getId(),
 					true);
+
+			Map<Locale, String> nameMap = Collections.singletonMap(
+				_portal.getSiteDefaultLocale(serviceContext.getScopeGroupId()),
+				individualSegment.getName());
 
 			if (segmentsEntry == null) {
 				_segmentsEntryLocalService.addSegmentsEntry(
@@ -351,7 +349,7 @@ public class IndividualSegmentsChecker {
 	private static final Log _log = LogFactoryUtil.getLog(
 		IndividualSegmentsChecker.class);
 
-	private AsahFaroBackendClient _asahFaroBackendClient;
+	private volatile AsahFaroBackendClient _asahFaroBackendClient;
 
 	@Reference
 	private AsahFaroBackendClientFactory _asahFaroBackendClientFactory;

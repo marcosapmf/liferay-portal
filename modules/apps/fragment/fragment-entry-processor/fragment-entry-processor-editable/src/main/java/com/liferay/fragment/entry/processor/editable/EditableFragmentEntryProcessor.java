@@ -18,6 +18,7 @@ import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.entry.processor.editable.mapper.EditableElementMapper;
 import com.liferay.fragment.entry.processor.editable.parser.EditableElementParser;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
+import com.liferay.fragment.entry.processor.util.EditableFragmentEntryProcessorUtil;
 import com.liferay.fragment.exception.FragmentEntryContentException;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
@@ -30,6 +31,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -103,6 +105,20 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 	}
 
 	@Override
+	public JSONArray getDataAttributesJSONArray() {
+		JSONArray jsonArray = JSONUtil.put("lfr-editable-id");
+
+		for (Map.Entry<String, EditableElementParser> editableElementParser :
+				_editableElementParsers.entrySet()) {
+
+			jsonArray.put(
+				"lfr-editable-type:" + editableElementParser.getKey());
+		}
+
+		return jsonArray;
+	}
+
+	@Override
 	public JSONObject getDefaultEditableValuesJSONObject(
 		String html, String configuration) {
 
@@ -143,7 +159,8 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 				continue;
 			}
 
-			String id = _getElementId(element);
+			String id = EditableFragmentEntryProcessorUtil.getElementId(
+				element);
 
 			Class<?> clazz = getClass();
 
@@ -209,6 +226,14 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 				else {
 					value = editableValueJSONObject.getString("defaultValue");
 				}
+			}
+			else if (_fragmentEntryProcessorHelper.isMappedCollection(
+						editableValueJSONObject)) {
+
+				value = GetterUtil.getString(
+					_fragmentEntryProcessorHelper.getMappedCollectionValue(
+						editableValueJSONObject,
+						fragmentEntryProcessorContext));
 			}
 			else {
 				value = _fragmentEntryProcessorHelper.getEditableValue(
@@ -351,7 +376,8 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 			);
 
 			defaultEditableValuesJSONObject.put(
-				_getElementId(element), defaultValueJSONObject);
+				EditableFragmentEntryProcessorUtil.getElementId(element),
+				defaultValueJSONObject);
 		}
 
 		return defaultEditableValuesJSONObject;
@@ -370,20 +396,10 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 	}
 
 	private EditableElementParser _getEditableElementParser(Element element) {
-		if (Objects.equals(element.tagName(), "lfr-editable")) {
-			return _editableElementParsers.get(element.attr("type"));
-		}
+		String type = EditableFragmentEntryProcessorUtil.getElementType(
+			element);
 
-		return _editableElementParsers.get(
-			element.attr("data-lfr-editable-type"));
-	}
-
-	private String _getElementId(Element element) {
-		if (Objects.equals(element.tagName(), "lfr-editable")) {
-			return element.attr("id");
-		}
-
-		return element.attr("data-lfr-editable-id");
+		return _editableElementParsers.get(type);
 	}
 
 	private void _validateAttribute(Element element, String attributeName)
@@ -420,6 +436,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 		for (Element element :
 				document.getElementsByAttribute("data-lfr-editable-id")) {
 
+			_validateAttribute(element, "data-lfr-editable-id");
 			_validateAttribute(element, "data-lfr-editable-type");
 
 			_validateType(element);
@@ -438,7 +455,9 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 
 		Map<String, Long> idsMap = uniqueNodesStream.collect(
 			Collectors.groupingBy(
-				element -> _getElementId(element), Collectors.counting()));
+				element -> EditableFragmentEntryProcessorUtil.getElementId(
+					element),
+				Collectors.counting()));
 
 		Collection<String> ids = idsMap.keySet();
 

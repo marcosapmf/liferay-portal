@@ -151,6 +151,10 @@ public class DDLRecordPersistenceTest {
 
 		newDDLRecord.setRecordSetVersion(RandomTestUtil.randomString());
 
+		newDDLRecord.setClassName(RandomTestUtil.randomString());
+
+		newDDLRecord.setClassPK(RandomTestUtil.nextLong());
+
 		newDDLRecord.setVersion(RandomTestUtil.randomString());
 
 		newDDLRecord.setDisplayIndex(RandomTestUtil.nextInt());
@@ -196,6 +200,10 @@ public class DDLRecordPersistenceTest {
 		Assert.assertEquals(
 			existingDDLRecord.getRecordSetVersion(),
 			newDDLRecord.getRecordSetVersion());
+		Assert.assertEquals(
+			existingDDLRecord.getClassName(), newDDLRecord.getClassName());
+		Assert.assertEquals(
+			existingDDLRecord.getClassPK(), newDDLRecord.getClassPK());
 		Assert.assertEquals(
 			existingDDLRecord.getVersion(), newDDLRecord.getVersion());
 		Assert.assertEquals(
@@ -265,6 +273,15 @@ public class DDLRecordPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_C() throws Exception {
+		_persistence.countByC_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByC_C("null", 0L);
+
+		_persistence.countByC_C((String)null, 0L);
+	}
+
+	@Test
 	public void testFindByPrimaryKeyExisting() throws Exception {
 		DDLRecord newDDLRecord = addDDLRecord();
 
@@ -293,8 +310,8 @@ public class DDLRecordPersistenceTest {
 			"groupId", true, "companyId", true, "userId", true, "userName",
 			true, "versionUserId", true, "versionUserName", true, "createDate",
 			true, "modifiedDate", true, "DDMStorageId", true, "recordSetId",
-			true, "recordSetVersion", true, "version", true, "displayIndex",
-			true, "lastPublishDate", true);
+			true, "recordSetVersion", true, "className", true, "classPK", true,
+			"version", true, "displayIndex", true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -551,6 +568,10 @@ public class DDLRecordPersistenceTest {
 		ddlRecord.setRecordSetId(RandomTestUtil.nextLong());
 
 		ddlRecord.setRecordSetVersion(RandomTestUtil.randomString());
+
+		ddlRecord.setClassName(RandomTestUtil.randomString());
+
+		ddlRecord.setClassPK(RandomTestUtil.nextLong());
 
 		ddlRecord.setVersion(RandomTestUtil.randomString());
 

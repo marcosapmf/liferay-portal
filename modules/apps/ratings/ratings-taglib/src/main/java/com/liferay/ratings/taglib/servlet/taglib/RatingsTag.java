@@ -19,7 +19,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.ratings.kernel.RatingsType;
@@ -46,6 +49,10 @@ public class RatingsTag extends IncludeTag {
 
 	public long getClassPK() {
 		return _classPK;
+	}
+
+	public int getNumberOfStars() {
+		return _numberOfStars;
 	}
 
 	public RatingsEntry getRatingsEntry() {
@@ -78,6 +85,10 @@ public class RatingsTag extends IncludeTag {
 
 	public void setInTrash(boolean inTrash) {
 		_inTrash = inTrash;
+	}
+
+	public void setNumberOfStars(int numberOfStars) {
+		_numberOfStars = numberOfStars;
 	}
 
 	@Override
@@ -114,6 +125,7 @@ public class RatingsTag extends IncludeTag {
 		_className = null;
 		_classPK = 0;
 		_inTrash = null;
+		_numberOfStars = _NUMBER_OF_STARS;
 		_ratingsEntry = null;
 		_ratingsStats = null;
 		_setRatingsEntry = false;
@@ -155,6 +167,8 @@ public class RatingsTag extends IncludeTag {
 				).put(
 					"enabled", _isEnabled(themeDisplay)
 				).put(
+					"initialAverageScore", _getInitialAverageScore(ratingsStats)
+				).put(
 					"initialLiked", _isThumbUp(_getUserScore(ratingsEntry))
 				).put(
 					"initialNegativeVotes",
@@ -162,7 +176,11 @@ public class RatingsTag extends IncludeTag {
 				).put(
 					"initialPositiveVotes", positiveVotes
 				).put(
+					"initialTotalEntries", _getTotalEntries(ratingsStats)
+				).put(
 					"inTrash", _isInTrash()
+				).put(
+					"numberOfStars", getNumberOfStars()
 				).put(
 					"positiveVotes", positiveVotes
 				).put(
@@ -173,6 +191,8 @@ public class RatingsTag extends IncludeTag {
 					"thumbUp", _isThumbUp(_getUserScore(ratingsEntry))
 				).put(
 					"url", _getURL(themeDisplay)
+				).put(
+					"userScore", _getUserScore(ratingsEntry)
 				).build());
 
 			httpServletRequest.setAttribute(
@@ -189,6 +209,14 @@ public class RatingsTag extends IncludeTag {
 		catch (Exception exception) {
 			_log.error(exception, exception);
 		}
+	}
+
+	private double _getInitialAverageScore(RatingsStats ratingsStats) {
+		if (ratingsStats != null) {
+			return ratingsStats.getAverageScore();
+		}
+
+		return 0;
 	}
 
 	private RatingsEntry _getRatingsEntry(
@@ -326,6 +354,9 @@ public class RatingsTag extends IncludeTag {
 		return false;
 	}
 
+	private static final int _NUMBER_OF_STARS = GetterUtil.getInteger(
+		PropsUtil.get(PropsKeys.RATINGS_DEFAULT_NUMBER_OF_STARS));
+
 	private static final String _PAGE = "/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(RatingsTag.class);
@@ -333,6 +364,7 @@ public class RatingsTag extends IncludeTag {
 	private String _className;
 	private long _classPK;
 	private Boolean _inTrash;
+	private int _numberOfStars = _NUMBER_OF_STARS;
 	private RatingsEntry _ratingsEntry;
 	private RatingsStats _ratingsStats;
 	private boolean _setRatingsEntry;

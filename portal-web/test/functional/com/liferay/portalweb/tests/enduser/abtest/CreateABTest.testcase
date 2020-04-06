@@ -1,13 +1,13 @@
 @component-name = "portal-ab-test"
 definition {
 
-	// Ignore test until AC connection is full automated
+	// Ignore test until Analytics Cloud connection is fully automated
 
 	property portal.release = "true";
 	property portal.upstream = "quarantine";
 	property testray.main.component.name = "A/B Test";
 
-	// User has to be connected to AC and logged in AC
+	// User has to be connected to Analytics Cloud
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -24,28 +24,19 @@ definition {
 
 		PageEditor.clickPublish();
 
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
-
-		task ("Sync Site with Analytics Cloud") {
-			Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_BUTTON");
-
-			Click(locator1 = "AnalyticsCloudConnection#SYNCED_SITES_BUTTON");
-
-			Click(locator1 = "AnalyticsCloudConnection#ADD_NEW_PROPERTY_BUTTON");
-
-			Click(locator1 = "AnalyticsCloudConnection#INPUT_LIFERAY_DXP_CHECKBOX");
-
-			Click(locator1 = "AnalyticsCloudConnection#DONE_BUTTON");
-		}
+		AnalyticsCloud.syncAnalyticsCloud();
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/guest/content-page");
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		Click(locator1 = "ABTest#AB_TEST_BUTTON");
+
+		SitePages.openPagesAdmin(siteURLKey = "guest");
+
+		SitePages.deletePage(pageName = "Content Page");
 
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
@@ -55,66 +46,53 @@ definition {
 	@description = "Validate if the user can create an A/B Test"
 	@priority = "5"
 	test CreateABTestByBounceRate {
+		ABTest.createABTestByBounceRate(testTitle = "Create A/B Test Title");
 
-		task ("Create the A/B Test by Bounce Rate") {
-			Click(locator1 = "ABTest#AB_TEST_BUTTON");
+		ABTest.createVariant(variantName = "Variant name");
 
-			Click(locator1 = "ABTest#CREATE_TEST_BUTTON");
+		ABTest.runTest();
 
-			Click(locator1 = "ABTest#AB_TEST_TITLE_FIELD");
+		ABTest.checkAnalyticsCloudInfo();
 
-			Type(
-				locator1 = "ABTest#AB_TEST_TITLE_FIELD",
-				value1 = "Create A/B Test Title");
+		AnalyticsCloud.loginAnalyticsCloud(
+			emailAddress = "test@liferay.com",
+			password = "test");
 
-			Click(locator1 = "ABTest#SAVE_AB_TEST_BUTTON");
-		}
+		AssertTextEquals(
+			locator1 = "ABTest#AB_TEST_TITLE_AC_SIDE",
+			value1 = "Create A/B Test Title");
 
-		task ("Create the Variant of the A/B Test") {
-			Click(locator1 = "ABTest#CREATE_VARIANT_BUTTON");
+		SelectWindow(locator1 = "title=Content Page - Liferay DXP");
 
-			Click(locator1 = "ABTest#VARIANT_NAME_FIELD");
+		ABTest.terminateTest();
+	}
 
-			Type(
-				locator1 = "ABTest#VARIANT_NAME_FIELD",
-				value1 = "Variant Name");
+	@description = "Validate if, in the AB Test, the sidebar informs the user that minimum one variant is mandatory to test against Control if the user add variants and remove all variants"
+	@priority = "5"
+	test CreateABTestRunWithDeletedVariants {
+		ABTest.createABTestByBounceRate(testTitle = "AB test title");
 
-			Click(locator1 = "ABTest#SAVE_VARIANT_NAME_BUTTON");
-		}
+		ABTest.createVariant(variantName = "Variant name");
 
-		task ("Run the A/B Test") {
-			Click(locator1 = "ABTest#REVIEW_AND_RUN_TEST_BUTTON");
+		ABTest.deleteVariant();
 
-			Click(locator1 = "ABTest#RUN_TEST_BUTTON");
+		ABTest.runTest();
 
-			Click(locator1 = "ABTest#OK_BUTTON");
-		}
+		AssertTextEquals(
+			locator1 = "ABTest#VARIANT_NEEDED_MESSAGE",
+			value1 = "A variant needs to be created.");
+	}
 
-		task ("Check it on Analytics Cloud") {
-			Click(locator1 = "ABTest#CONTROL_VARIANT");
+	@description = "Validate if, in the AB Test, the sidebar informs the user that minimum one variant is mandatory to test against Control"
+	@priority = "5"
+	test CreateABTestRunWithNoVariants {
+		ABTest.createABTestByBounceRate(testTitle = "AB test title");
 
-			Click(locator1 = "ABTest#VIEW_DATA_ANALYTICS_CLOUD_BUTTON");
+		ABTest.runTest();
 
-			SelectWindow(locator1 = "title=Analytics Cloud");
-
-			Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_USER_LOGIN_FIELD");
-
-			Type(
-				locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_USER_LOGIN_FIELD",
-				value1 = "test@liferay.com");
-
-			Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_PASSWORD_LOGIN_FIELD");
-
-			Type(
-				locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_PASSWORD_LOGIN_FIELD",
-				value1 = "test");
-
-			Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_LOGIN_BUTTON");
-
-			AssertTextEquals(
-				locator1 = "ABTest#AB_TEST_TITLE_AC_SIDE",
-				value1 = "Create A/B Test Title");
-		}
+		AssertTextEquals(
+			locator1 = "ABTest#VARIANT_NEEDED_MESSAGE",
+			value1 = "A variant needs to be created.");
 	}
 
 }

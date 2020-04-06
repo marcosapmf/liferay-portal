@@ -20,6 +20,7 @@ export {default as deleteFragmentEntryLinkComment} from './deleteFragmentEntryLi
 export {default as editFragmentEntryLinkComment} from './editFragmentEntryLinkComment';
 export {default as loadReducer} from './loadReducer';
 export {default as switchSidebarPanel} from './switchSidebarPanel';
+export {default as switchViewportSize} from './switchViewportSize';
 export {default as toggleShowResolvedComments} from './toggleShowResolvedComments';
 export {default as unloadReducer} from './unloadReducer';
 export {default as updateColSize} from './updateColSize';

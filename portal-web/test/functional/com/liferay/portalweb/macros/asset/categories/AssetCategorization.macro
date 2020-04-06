@@ -66,6 +66,8 @@ definition {
 			IFrame.selectCategoryFrame();
 		}
 
+		Pause(locator1 = "3000");
+
 		Portlet.expandTree();
 	}
 
@@ -83,6 +85,8 @@ definition {
 
 	macro selectCategory {
 		AssetCategorization.gotoSelectCategory();
+
+		Pause(locator1 = "3000");
 
 		Portlet.selectTreeNode(nodeName = "${categoryName}");
 

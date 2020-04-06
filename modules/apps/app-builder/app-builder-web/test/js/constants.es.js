@@ -20,7 +20,9 @@ const createItems = size => {
 			dateCreated: '2020-03-26T11:26:54.262Z',
 			dateModified: '2020-03-26T11:26:54.262Z',
 			id: i + 1,
-			name: `Name ${i + 1}`,
+			name: {
+				en_US: `Item ${i + 1}`,
+			},
 		});
 	}
 
@@ -34,17 +36,18 @@ export const ACTIONS = [
 	},
 ];
 
-export const BODY = item => item;
-
 export const COLUMNS = [
 	{
-		name: 'Name',
+		key: 'name',
+		value: 'Name',
 	},
 	{
-		dateCreated: 'Created Date',
+		key: 'dateCreated',
+		value: 'Created Date',
 	},
 	{
-		dateModified: 'Modified Date',
+		key: 'dateModified',
+		value: 'Modified Date',
 	},
 ];
 

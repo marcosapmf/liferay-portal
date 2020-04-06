@@ -54,6 +54,7 @@
 		animation-fill-mode: forwards;
 		opacity: 0;
 		padding: 0 $pageEditorSpacing;
+		position: fixed;
 		z-index: $floatingToolbarPanelZIndex;
 
 		& > .popover {

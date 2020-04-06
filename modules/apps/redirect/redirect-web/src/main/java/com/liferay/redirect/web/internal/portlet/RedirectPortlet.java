@@ -15,7 +15,9 @@
 package com.liferay.redirect.web.internal.portlet;
 
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.search.filter.FilterBuilders;
+import com.liferay.redirect.service.RedirectEntryLocalService;
+import com.liferay.redirect.service.RedirectEntryService;
+import com.liferay.redirect.service.RedirectNotFoundEntryLocalService;
 import com.liferay.redirect.web.internal.constants.RedirectPortletKeys;
 
 import java.io.IOException;
@@ -36,6 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"com.liferay.portlet.css-class-wrapper=portlet-redirect",
 		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.instanceable=false",
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Redirect",
@@ -56,12 +59,25 @@ public class RedirectPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		renderRequest.setAttribute(
-			FilterBuilders.class.getName(), _filterBuilders);
+			RedirectEntryLocalService.class.getName(),
+			_redirectEntryLocalService);
+		renderRequest.setAttribute(
+			RedirectEntryService.class.getName(), _redirectEntryService);
+		renderRequest.setAttribute(
+			RedirectNotFoundEntryLocalService.class.getName(),
+			_redirectNotFoundEntryLocalService);
 
 		super.render(renderRequest, renderResponse);
 	}
 
 	@Reference
-	private FilterBuilders _filterBuilders;
+	private RedirectEntryLocalService _redirectEntryLocalService;
+
+	@Reference
+	private RedirectEntryService _redirectEntryService;
+
+	@Reference
+	private RedirectNotFoundEntryLocalService
+		_redirectNotFoundEntryLocalService;
 
 }

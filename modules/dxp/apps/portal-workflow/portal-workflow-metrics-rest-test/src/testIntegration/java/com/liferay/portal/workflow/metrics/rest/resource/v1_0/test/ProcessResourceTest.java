@@ -19,9 +19,6 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.odata.entity.EntityField;
-import com.liferay.portal.search.document.DocumentBuilderFactory;
-import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
-import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Process;
 import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
@@ -35,7 +32,6 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,14 +41,6 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class ProcessResourceTest extends BaseProcessResourceTestCase {
-
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-		BaseProcessResourceTestCase.setUpClass();
-
-		_workflowMetricsRESTTestHelper = new WorkflowMetricsRESTTestHelper(
-			_documentBuilderFactory, _queries, _searchEngineAdapter);
-	}
 
 	@Before
 	@Override
@@ -241,19 +229,10 @@ public class ProcessResourceTest extends BaseProcessResourceTestCase {
 		unsafeBiConsumer.accept(postProcess, getProcess);
 	}
 
-	@Inject
-	private static DocumentBuilderFactory _documentBuilderFactory;
-
-	private static Document[] _documents;
-
-	@Inject
-	private static Queries _queries;
-
-	@Inject(blocking = false, filter = "search.engine.impl=Elasticsearch")
-	private static SearchEngineAdapter _searchEngineAdapter;
-
-	private static WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;
-
+	private Document[] _documents;
 	private final List<Process> _processes = new ArrayList<>();
+
+	@Inject
+	private WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;
 
 }

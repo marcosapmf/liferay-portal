@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"@clayui/drop-down": "3.4.0",
+		"@clayui/drop-down": "3.4.1",
 		"@clayui/icon": "3.0.4",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",

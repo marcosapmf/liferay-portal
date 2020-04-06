@@ -9,6 +9,7 @@ dependencies {
 	compileOnly group: "org.osgi", name: "osgi.core", version: "6.0.0"
 	compileOnly project(":apps:asset:asset-api")
 	compileOnly project(":apps:comment:comment-api")
+	compileOnly project(":apps:frontend-editor:frontend-editor-taglib")
 	compileOnly project(":apps:frontend-taglib:frontend-taglib")
 	compileOnly project(":apps:message-boards:message-boards-api")
 	compileOnly project(":core:petra:petra-lang")

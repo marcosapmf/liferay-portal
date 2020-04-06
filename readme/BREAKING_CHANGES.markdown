@@ -60,8 +60,8 @@ horizontal rule):
 #### Why was this change made?
 
 ---------------------------------------
-```
 
+```
 **80 Columns Rule:** Text should not exceed 80 columns. Keeping text within 80
 columns makes it easier to see the changes made between different versions of
 the document. Titles, links, and tables are exempt from this rule. Code samples
@@ -287,6 +287,7 @@ you would need to deploy it manually or using [`ant direct-deploy`](https://gith
 This feature has been deprecated since 7.1.
 
 ---------------------------------------
+
 ### Removed liferay-frontend:cards-treeview tag
 - **Date:** 2020-Jan-10
 - **JIRA Ticket:** [LPS-106899](https://issues.liferay.com/browse/LPS-106899)
@@ -446,6 +447,7 @@ This change was necessary for several reasons:
 visual glitches
 
 ---------------------------------------
+
 ### jQuery is no longer included by default
 - **Date:** 2020-Feb-04
 - **JIRA Ticket:** [LPS-95726](https://issues.liferay.com/browse/LPS-95726)
@@ -478,6 +480,7 @@ This change was made to avoid bundling and serving additional library code on
 every page that was mostly unused and redundant.
 
 ---------------------------------------
+
 ### Server-side parallel rendering is no longer supported
 - **Date:** 2020-Mar-16
 - **JIRA Ticket:** [LPS-110359](https://issues.liferay.com/browse/LPS-110359)
@@ -500,3 +503,63 @@ Remove those properties from your properties file.
 This feature has been deprecated.
 
 ---------------------------------------
+
+### Simple Editor is no longer bundled by default
+- **Date:** 2020-Mar-27
+- **JIRA Ticket:** [LPS-110734](https://issues.liferay.com/browse/LPS-110734)
+
+### What changed?
+
+As of 7.3, CKEditor is the default and only supported WYSIWYG editor.
+
+### Who is affected
+
+This affects anyone who uses the Liferay Frontend Editor Simple Web module.
+
+### How should I update my code?
+
+If you have configured liferay-portal to use the Simple Editor, you can remove these configurations.
+
+It's still possible to use the Simple Editor. For that you need to:
+
+- Keep your configurations.
+- Open https://repository.liferay.com/nexus/index.html in your browser.
+- Search for `com.liferay.frontend.editor.simple.web`.
+- Download a .jar file for the `com.liferay.frontend.editor.simple.web` module.
+- Deploy the .jar file you downloaded in your liferay-portal instalation.
+
+#### Why was this change made?
+
+To consolidate all our UX for writing Rich Text Content
+around a single Editor to provide a more cohesive and comprehensive experience.
+
+---------------------------------------
+
+### TinyMCE editor is no longer bundled by default
+- **Date:** 2020-Mar-27
+- **JIRA Ticket:** [LPS-110733](https://issues.liferay.com/browse/LPS-110733)
+
+### What changed?
+
+As of 7.3, CKEditor is the default and only supported WYSIWYG editor.
+
+### Who is affected
+
+This affects anyone who uses TinyMCE.
+
+### How should I update my code?
+
+If you have configured liferay-portal to use TinyMCE, you can remove these configurations.
+
+It's still possible to use TinyMCE. For that you need to:
+
+- Keep your configurations.
+- Open https://repository.liferay.com/nexus/index.html in your browser.
+- Search for `com.liferay.frontend.editor.tinymce.web`.
+- Download a .jar file for the `com.liferay.frontend.editor.tinymce.web` module.
+- Deploy the .jar file you downloaded in your liferay-portal instalation.
+
+#### Why was this change made?
+
+To consolidate all our UX for writing Rich Text Content
+around a single Editor to provide a more cohesive and comprehensive experience.

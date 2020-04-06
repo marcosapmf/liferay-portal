@@ -38,6 +38,7 @@ public class RedirectNotFoundEntryModelDocumentContributor
 
 		document.addText(Field.URL, redirectNotFoundEntry.getUrl());
 		document.addNumber("hits", redirectNotFoundEntry.getHits());
+		document.addKeyword("ignored", redirectNotFoundEntry.isIgnored());
 	}
 
 }

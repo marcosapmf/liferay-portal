@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
@@ -38,6 +39,7 @@ import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Instance;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Node;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Process;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Task;
+import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 
 import java.io.Serializable;
 
@@ -59,20 +61,17 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Inácio Nery
  */
+@Component(immediate = true, service = WorkflowMetricsRESTTestHelper.class)
 public class WorkflowMetricsRESTTestHelper {
-
-	public WorkflowMetricsRESTTestHelper(
-		DocumentBuilderFactory documentBuilderFactory, Queries queries,
-		SearchEngineAdapter searchEngineAdapter) {
-
-		_documentBuilderFactory = documentBuilderFactory;
-		_queries = queries;
-		_searchEngineAdapter = searchEngineAdapter;
-	}
 
 	public Instance addInstance(
 			long companyId, boolean completed, long processId)
@@ -121,9 +120,9 @@ public class WorkflowMetricsRESTTestHelper {
 				creatorUser.getName()));
 
 		_retryAssertCount(
-			"workflow-metrics-instances", "companyId", companyId, "deleted",
-			false, "instanceId", instance.getId(), "processId",
-			instance.getProcessId());
+			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", false, "instanceId",
+			instance.getId(), "processId", instance.getProcessId());
 
 		return instance;
 	}
@@ -150,8 +149,9 @@ public class WorkflowMetricsRESTTestHelper {
 				version));
 
 		_retryAssertCount(
-			"workflow-metrics-nodes", "companyId", companyId, "deleted", false,
-			"name", node.getName(), "processId", processId, "version", version);
+			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", false, "name", node.getName(),
+			"processId", processId, "version", version);
 
 		return node;
 	}
@@ -193,8 +193,9 @@ public class WorkflowMetricsRESTTestHelper {
 		}
 
 		_retryAssertCount(
-			"workflow-metrics-processes", "companyId", companyId, "deleted",
-			false, "processId", process.getId());
+			_processWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", false, "processId",
+			process.getId());
 
 		return process;
 	}
@@ -228,8 +229,9 @@ public class WorkflowMetricsRESTTestHelper {
 				slaDefinitionId));
 
 		_retryAssertCount(
-			"workflow-metrics-sla-instance-results", "companyId", companyId,
-			"deleted", false, "instanceCompleted",
+			_slaInstanceResultWorkflowMetricsIndexNameBuilder.getIndexName(
+				companyId),
+			"companyId", companyId, "deleted", false, "instanceCompleted",
 			Objects.nonNull(instance.getDateCompletion()), "instanceId",
 			instance.getId(), "onTime", onTime, "processId",
 			instance.getProcessId(), "slaDefinitionId", slaDefinitionId);
@@ -253,10 +255,12 @@ public class WorkflowMetricsRESTTestHelper {
 				taskId, taskName, tokenId));
 
 		_retryAssertCount(
-			"workflow-metrics-sla-task-results", "breached", breached,
-			"assigneeId", assigneeId, "companyId", companyId, "deleted", false,
-			"instanceCompleted", Objects.nonNull(instance.getDateCompletion()),
-			"instanceId", instance.getId(), "onTime", onTime, "processId",
+			_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
+				companyId),
+			"breached", breached, "assigneeId", assigneeId, "companyId",
+			companyId, "deleted", false, "instanceCompleted",
+			Objects.nonNull(instance.getDateCompletion()), "instanceId",
+			instance.getId(), "onTime", onTime, "processId",
 			instance.getProcessId(), "slaDefinitionId", slaDefinitionId,
 			"taskId", taskId, "taskName", taskName);
 	}
@@ -356,8 +360,9 @@ public class WorkflowMetricsRESTTestHelper {
 		}
 
 		_retryAssertCount(
-			"workflow-metrics-nodes", "companyId", companyId, "deleted", false,
-			"name", task.getKey(), "processId", processId);
+			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", false, "name", task.getKey(),
+			"processId", processId);
 
 		return task;
 	}
@@ -385,10 +390,11 @@ public class WorkflowMetricsRESTTestHelper {
 				instanceId, processId, taskId, taskName, tokenId, "1.0"));
 
 		_retryAssertCount(
-			"workflow-metrics-tokens", "assigneeId", assigneeId, "companyId",
-			companyId, "deleted", false, "instanceCompleted", instanceCompleted,
-			"instanceId", instanceId, "processId", processId, "taskId", taskId,
-			"taskName", taskName, "tokenId", tokenId);
+			_tokenWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"assigneeId", assigneeId, "companyId", companyId, "deleted", false,
+			"instanceCompleted", instanceCompleted, "instanceId", instanceId,
+			"processId", processId, "taskId", taskId, "taskName", taskName,
+			"tokenId", tokenId);
 	}
 
 	public void addToken(
@@ -417,9 +423,9 @@ public class WorkflowMetricsRESTTestHelper {
 				creatorUser.getName()));
 
 		_retryAssertCount(
-			"workflow-metrics-instances", "companyId", companyId, "deleted",
-			true, "instanceId", instance.getId(), "processId",
-			instance.getProcessId());
+			_instanceWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", true, "instanceId",
+			instance.getId(), "processId", instance.getProcessId());
 	}
 
 	public void deleteNode(long companyId, Node node, long processId)
@@ -432,8 +438,9 @@ public class WorkflowMetricsRESTTestHelper {
 				"1.0"));
 
 		_retryAssertCount(
-			"workflow-metrics-nodes", "companyId", companyId, "deleted", true,
-			"name", node.getName(), "processId", processId);
+			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", true, "name", node.getName(),
+			"processId", processId);
 	}
 
 	public void deleteProcess(Document document) throws Exception {
@@ -441,9 +448,10 @@ public class WorkflowMetricsRESTTestHelper {
 			_getIndexer(_CLASS_NAME_PROCESS_INDEXER), document);
 
 		_retryAssertCount(
-			"workflow-metrics-processes", "companyId",
-			document.get("companyId"), "deleted", true, "processId",
-			document.get("processId"));
+			_processWorkflowMetricsIndexNameBuilder.getIndexName(
+				GetterUtil.getLong(document.get("companyId"))),
+			"companyId", document.get("companyId"), "deleted", true,
+			"processId", document.get("processId"));
 	}
 
 	public void deleteProcess(long companyId, Process process)
@@ -458,7 +466,8 @@ public class WorkflowMetricsRESTTestHelper {
 		throws Exception {
 
 		_deleteDocuments(
-			"workflow-metrics-sla-task-results",
+			_slaTaskResultWorkflowMetricsIndexNameBuilder.getIndexName(
+				companyId),
 			"WorkflowMetricsSLATaskResultType", "companyId", companyId,
 			"processId", processId);
 	}
@@ -472,14 +481,16 @@ public class WorkflowMetricsRESTTestHelper {
 				companyId, task.getKey(), 0, processId, "TASK", "1.0"));
 
 		_retryAssertCount(
-			"workflow-metrics-nodes", "companyId", companyId, "deleted", true,
-			"name", task.getKey(), "processId", processId);
+			_nodeWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", true, "name", task.getKey(),
+			"processId", processId);
 	}
 
 	public void deleteTokens(long companyId, long processId) throws Exception {
 		_deleteDocuments(
-			"workflow-metrics-tokens", "WorkflowMetricsTokenType", "companyId",
-			companyId, "processId", processId);
+			_tokenWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"WorkflowMetricsTokenType", "companyId", companyId, "processId",
+			processId);
 	}
 
 	public Document[] getDocuments(long companyId) throws Exception {
@@ -489,7 +500,8 @@ public class WorkflowMetricsRESTTestHelper {
 
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
-		searchSearchRequest.setIndexNames("workflow-metrics-processes");
+		searchSearchRequest.setIndexNames(
+			_processWorkflowMetricsIndexNameBuilder.getIndexName(companyId));
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
@@ -514,9 +526,10 @@ public class WorkflowMetricsRESTTestHelper {
 		_invokeAddDocument(_getIndexer(_CLASS_NAME_PROCESS_INDEXER), document);
 
 		_retryAssertCount(
-			"workflow-metrics-processes", "companyId",
-			document.get("companyId"), "deleted", false, "processId",
-			document.get("processId"));
+			_processWorkflowMetricsIndexNameBuilder.getIndexName(
+				GetterUtil.getLong(document.get("companyId"))),
+			"companyId", document.get("companyId"), "deleted", false,
+			"processId", document.get("processId"));
 	}
 
 	public void updateProcess(long companyId, long processId, String version)
@@ -528,8 +541,9 @@ public class WorkflowMetricsRESTTestHelper {
 				companyId, processId, null, version));
 
 		_retryAssertCount(
-			"workflow-metrics-processes", "companyId", companyId, "deleted",
-			false, "processId", processId, "version", version);
+			_processWorkflowMetricsIndexNameBuilder.getIndexName(companyId),
+			"companyId", companyId, "deleted", false, "processId", processId,
+			"version", version);
 	}
 
 	private Map<Locale, String> _createLocalizationMap(String title) {
@@ -920,10 +934,46 @@ public class WorkflowMetricsRESTTestHelper {
 		"com.liferay.portal.workflow.metrics.internal.search.index." +
 			"TokenWorkflowMetricsIndexer";
 
-	private static Map<String, Object> _indexers = new HashMap<>();
+	@Reference
+	private DocumentBuilderFactory _documentBuilderFactory;
 
-	private final DocumentBuilderFactory _documentBuilderFactory;
-	private final Queries _queries;
-	private final SearchEngineAdapter _searchEngineAdapter;
+	private final Map<String, Object> _indexers = new HashMap<>();
+
+	@Reference(target = "(workflow.metrics.index.entity.name=instance)")
+	private WorkflowMetricsIndexNameBuilder
+		_instanceWorkflowMetricsIndexNameBuilder;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=node)")
+	private WorkflowMetricsIndexNameBuilder
+		_nodeWorkflowMetricsIndexNameBuilder;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=process)")
+	private WorkflowMetricsIndexNameBuilder
+		_processWorkflowMetricsIndexNameBuilder;
+
+	@Reference
+	private Queries _queries;
+
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY,
+		target = "(search.engine.impl=Elasticsearch)"
+	)
+	private volatile SearchEngineAdapter _searchEngineAdapter;
+
+	@Reference(
+		target = "(workflow.metrics.index.entity.name=sla-instance-result)"
+	)
+	private WorkflowMetricsIndexNameBuilder
+		_slaInstanceResultWorkflowMetricsIndexNameBuilder;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=sla-task-result)")
+	private WorkflowMetricsIndexNameBuilder
+		_slaTaskResultWorkflowMetricsIndexNameBuilder;
+
+	@Reference(target = "(workflow.metrics.index.entity.name=token)")
+	private WorkflowMetricsIndexNameBuilder
+		_tokenWorkflowMetricsIndexNameBuilder;
 
 }

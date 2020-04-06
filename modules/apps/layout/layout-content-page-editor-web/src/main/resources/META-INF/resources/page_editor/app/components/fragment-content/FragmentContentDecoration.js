@@ -21,12 +21,19 @@ import {config} from '../../config/index';
 import createSelectEditableValue from '../../selectors/selectEditableValue';
 import selectPrefixedSegmentsExperienceId from '../../selectors/selectPrefixedSegmentsExperienceId';
 import {useSelector} from '../../store/index';
-import {useHoveredItemId, useHoveredItemType, useIsActive} from '../Controls';
+import {useToControlsId} from '../CollectionItemContext';
+import {
+	useHoveredItemId,
+	useHoveredItemType,
+	useIsActive,
+	useIsHovered,
+} from '../Controls';
 import {useEditableDecoration} from './EditableDecorationContext';
 import {EDITABLE_DECORATION_CLASS_NAMES} from './EditableDecorationMask';
 import getAllEditables from './getAllEditables';
 import getEditableElementId from './getEditableElementId';
 import getEditableUniqueId from './getEditableUniqueId';
+import isMapped from './isMapped';
 
 export default function FragmentContentDecoration({
 	editableElement,
@@ -35,8 +42,10 @@ export default function FragmentContentDecoration({
 	itemId,
 }) {
 	const hoveredItemId = useHoveredItemId();
+	const isHovered = useIsHovered();
 	const hoveredItemType = useHoveredItemType();
 	const isActive = useIsActive();
+	const toControlsId = useToControlsId();
 	const languageId = useSelector(state => state.languageId);
 	const prefixedSegmentsExperienceId = useSelector(
 		selectPrefixedSegmentsExperienceId
@@ -46,6 +55,8 @@ export default function FragmentContentDecoration({
 		fragmentEntryLinkId,
 		getEditableElementId(editableElement)
 	);
+
+	const editableUniqueControlsId = toControlsId(editableUniqueId);
 
 	const editableValue = useSelector(state =>
 		createSelectEditableValue(
@@ -66,7 +77,7 @@ export default function FragmentContentDecoration({
 
 		[EDITABLE_DECORATION_CLASS_NAMES.hovered]: useMemo(() => {
 			if (hoveredItemType === ITEM_TYPES.editable) {
-				return editableUniqueId === hoveredItemId;
+				return isHovered(editableUniqueId);
 			}
 			else if (hoveredItemType === ITEM_TYPES.mappedContent) {
 				return (
@@ -76,15 +87,17 @@ export default function FragmentContentDecoration({
 			}
 
 			return false;
-		}, [editableUniqueId, editableValue, hoveredItemId, hoveredItemType]),
+		}, [
+			editableUniqueId,
+			editableValue.classNameId,
+			editableValue.classPK,
+			hoveredItemId,
+			hoveredItemType,
+			isHovered,
+		]),
 
 		[EDITABLE_DECORATION_CLASS_NAMES.mapped]: useMemo(
-			() =>
-				editableValue &&
-				((editableValue.classNameId &&
-					editableValue.classPK &&
-					editableValue.fieldId) ||
-					editableValue.mappedField),
+			() => isMapped(editableValue),
 			[editableValue]
 		),
 
@@ -116,16 +129,16 @@ export default function FragmentContentDecoration({
 
 	useLayoutEffect(() => {
 		if (className) {
-			registerElement(editableUniqueId, editableElement);
-			updateClassName(editableUniqueId, className);
+			registerElement(editableUniqueControlsId, editableElement);
+			updateClassName(editableUniqueControlsId, className);
 		}
 		else {
-			unregisterElement(editableUniqueId);
+			unregisterElement(editableUniqueControlsId);
 		}
 	}, [
 		className,
 		editableElement,
-		editableUniqueId,
+		editableUniqueControlsId,
 		registerElement,
 		unregisterElement,
 		updateClassName,
@@ -133,9 +146,9 @@ export default function FragmentContentDecoration({
 
 	useLayoutEffect(
 		() => () => {
-			unregisterElement(editableUniqueId);
+			unregisterElement(editableUniqueControlsId);
 		},
-		[editableUniqueId, unregisterElement]
+		[editableUniqueControlsId, unregisterElement]
 	);
 
 	return null;

@@ -692,6 +692,8 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		moveDependentsToTrash(
 			user, categoriesAndThreads, trashEntry.getEntryId());
 
+		_reindex(MBCategory.class, category);
+
 		return category;
 	}
 
@@ -807,6 +809,8 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		category.setExpandoBridgeAttributes(serviceContext);
 
 		category = mbCategoryPersistence.update(category);
+
+		_reindex(MBCategory.class, category);
 
 		// Mailing list
 
@@ -1007,12 +1011,7 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 
 				_mbMessageLocalService.updateMBMessage(message);
 
-				// Indexer
-
-				Indexer<MBMessage> indexer =
-					IndexerRegistryUtil.nullSafeGetIndexer(MBMessage.class);
-
-				indexer.reindex(message);
+				_reindex(MBMessage.class, message);
 			}
 		}
 
@@ -1063,12 +1062,7 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 				_mbThreadLocalService.moveDependentsToTrash(
 					thread.getGroupId(), thread.getThreadId(), trashEntryId);
 
-				// Indexer
-
-				Indexer<MBThread> indexer =
-					IndexerRegistryUtil.nullSafeGetIndexer(MBThread.class);
-
-				indexer.reindex(thread);
+				_reindex(MBThread.class, thread);
 			}
 			else if (object instanceof MBCategory) {
 
@@ -1145,12 +1139,7 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 					_trashVersionLocalService.deleteTrashVersion(trashVersion);
 				}
 
-				// Indexer
-
-				Indexer<MBThread> indexer =
-					IndexerRegistryUtil.nullSafeGetIndexer(MBThread.class);
-
-				indexer.reindex(thread);
+				_reindex(MBThread.class, thread);
 			}
 			else if (object instanceof MBCategory) {
 
@@ -1214,6 +1203,12 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		if (Validator.isNull(name)) {
 			throw new CategoryNameException("Name is null");
 		}
+	}
+
+	private <T> void _reindex(Class<T> clazz, T model) throws PortalException {
+		Indexer<T> indexer = IndexerRegistryUtil.nullSafeGetIndexer(clazz);
+
+		indexer.reindex(model);
 	}
 
 	@Reference
