@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.service.impl;
 
+import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
@@ -25,11 +26,17 @@ import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstancePersi
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -101,8 +108,58 @@ public class DDMFormInstanceReportLocalServiceImpl
 			ddmFormInstanceReportPersistence.findByFormInstanceId(
 				formInstanceRecordVersion.getFormInstanceId());
 
+		if (formInstanceRecordVersion.getStatus() !=
+				WorkflowConstants.STATUS_APPROVED) {
+
+			return formInstanceReport.getData();
+		}
+
 		JSONObject formInstanceReportDataJSONObject =
 			JSONFactoryUtil.createJSONObject(formInstanceReport.getData());
+
+		List<DDMFormInstanceRecordVersion> ddmFormInstanceRecordVersions =
+			_formInstanceRecordVersionLocalService.
+				getFormInstanceRecordVersions(
+					formInstanceRecordVersion.getFormInstanceRecordId(),
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		Stream<DDMFormInstanceRecordVersion>
+			ddmFormInstanceRecordVersionStream =
+				ddmFormInstanceRecordVersions.stream();
+
+		List<DDMFormInstanceRecordVersion> approvedFormInstanceRecordVersions =
+			ddmFormInstanceRecordVersionStream.filter(
+				ddmFormInstanceRecordVersion ->
+					ddmFormInstanceRecordVersion.getStatus() ==
+						WorkflowConstants.STATUS_APPROVED
+			).collect(
+				Collectors.toList()
+			);
+
+		Collections.sort(
+			approvedFormInstanceRecordVersions, Collections.reverseOrder());
+
+		if (DDMFormInstanceReportConstants.EVENT_ADD_RECORD_VERSION.equals(
+				formInstanceReportEvent) &&
+			(approvedFormInstanceRecordVersions.size() > 1)) {
+
+			formInstanceReportDataJSONObject = _processData(
+				DDMFormInstanceReportConstants.EVENT_DELETE_RECORD_VERSION,
+				approvedFormInstanceRecordVersions.get(1),
+				formInstanceReportDataJSONObject);
+		}
+
+		return _processData(
+			formInstanceReportEvent, formInstanceRecordVersion,
+			formInstanceReportDataJSONObject
+		).toString();
+	}
+
+	private JSONObject _processData(
+			String formInstanceReportEvent,
+			DDMFormInstanceRecordVersion formInstanceRecordVersion,
+			JSONObject formInstanceReportDataJSONObject)
+		throws PortalException {
 
 		DDMFormValues ddmFormValues =
 			formInstanceRecordVersion.getDDMFormValues();
@@ -111,7 +168,7 @@ public class DDMFormInstanceReportLocalServiceImpl
 				ddmFormValues.getDDMFormFieldValues()) {
 
 			DDMFormFieldTypeReportProcessor ddmFormFieldTypeReportProcessor =
-				_ddmFormFieldTypeReportProcessorTracker.
+				_formFieldTypeReportProcessorTracker.
 					getDDMFormFieldTypeReportProcessor(
 						ddmFormFieldValue.getType());
 
@@ -123,12 +180,12 @@ public class DDMFormInstanceReportLocalServiceImpl
 			}
 		}
 
-		return formInstanceReportDataJSONObject.toString();
+		return formInstanceReportDataJSONObject;
 	}
 
 	@Reference
 	private DDMFormFieldTypeReportProcessorTracker
-		_ddmFormFieldTypeReportProcessorTracker;
+		_formFieldTypeReportProcessorTracker;
 
 	@Reference
 	private DDMFormInstancePersistence _formInstancePersistence;

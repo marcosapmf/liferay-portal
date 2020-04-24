@@ -19,6 +19,7 @@ import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceReportExcept
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
+import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceReportPersistence;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -37,7 +38,7 @@ public class DDMFormInstanceRecordVersionModelListener
 	extends BaseModelListener<DDMFormInstanceRecordVersion> {
 
 	@Override
-	public void onAfterCreate(
+	public void onAfterUpdate(
 			DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion)
 		throws ModelListenerException {
 
@@ -107,5 +108,8 @@ public class DDMFormInstanceRecordVersionModelListener
 	@Reference
 	private DDMFormInstanceReportLocalService
 		_ddmFormInstanceReportLocalService;
+
+	@Reference
+	private DDMFormInstanceReportPersistence _ddmFormInstanceReportPersistence;
 
 }
