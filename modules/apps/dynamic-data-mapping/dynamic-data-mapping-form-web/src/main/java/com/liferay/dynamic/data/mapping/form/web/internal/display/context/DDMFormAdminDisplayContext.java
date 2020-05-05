@@ -45,12 +45,14 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -140,6 +142,7 @@ public class DDMFormAdminDisplayContext {
 		DDMFormInstanceLocalService ddmFormInstanceLocalService,
 		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService,
 		DDMFormInstanceRecordWriterTracker ddmFormInstanceRecordWriterTracker,
+		DDMFormInstanceReportLocalService ddmFormInstanceReportLocalService,
 		DDMFormInstanceService ddmFormInstanceService,
 		DDMFormInstanceVersionLocalService ddmFormInstanceVersionLocalService,
 		DDMFormRenderer ddmFormRenderer,
@@ -161,6 +164,7 @@ public class DDMFormAdminDisplayContext {
 		_ddmFormInstanceRecordLocalService = ddmFormInstanceRecordLocalService;
 		_ddmFormInstanceRecordWriterTracker =
 			ddmFormInstanceRecordWriterTracker;
+		_ddmFormInstanceReportLocalService = ddmFormInstanceReportLocalService;
 		_ddmFormInstanceService = ddmFormInstanceService;
 		_ddmFormInstanceVersionLocalService =
 			ddmFormInstanceVersionLocalService;
@@ -516,7 +520,7 @@ public class DDMFormAdminDisplayContext {
 				sb.append(LanguageUtil.get(httpServletRequest, "entries"));
 				sb.append(StringPool.SPACE);
 				sb.append(StringPool.OPEN_PARENTHESIS);
-				sb.append(getFormViewRecordsDisplayContext().getTotalItems());
+				sb.append(_getReportTotalItems());
 				sb.append(StringPool.CLOSE_PARENTHESIS);
 
 				navigationItem.setLabel(sb.toString());
@@ -1411,6 +1415,21 @@ public class DDMFormAdminDisplayContext {
 			languageId, HtmlUtil.escape(jsonObject.getString(languageId)));
 	}
 
+	private int _getReportTotalItems() throws PortalException {
+		try {
+			DDMFormInstanceReport ddmFormInstanceReport =
+				_ddmFormInstanceReportLocalService.getByFormInstanceId(
+					ParamUtil.getLong(renderRequest, "formInstanceId"));
+
+			return ddmFormInstanceReport.getTotalItems();
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
+
+			return 0;
+		}
+	}
+
 	private void _populateDDMDataProviderNavigationItem(
 		NavigationItem navigationItem) {
 
@@ -1487,6 +1506,8 @@ public class DDMFormAdminDisplayContext {
 		_ddmFormInstanceRecordLocalService;
 	private final DDMFormInstanceRecordWriterTracker
 		_ddmFormInstanceRecordWriterTracker;
+	private final DDMFormInstanceReportLocalService
+		_ddmFormInstanceReportLocalService;
 	private final DDMFormInstanceService _ddmFormInstanceService;
 	private final DDMFormInstanceVersionLocalService
 		_ddmFormInstanceVersionLocalService;

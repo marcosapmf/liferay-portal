@@ -28,6 +28,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -337,6 +338,7 @@ public class DDMFormAdminDisplayContextTest extends PowerMockito {
 			mock(DDMFormInstanceLocalService.class),
 			mock(DDMFormInstanceRecordLocalService.class),
 			mock(DDMFormInstanceRecordWriterTracker.class),
+			mock(DDMFormInstanceReportLocalService.class),
 			mockDDMFormInstanceService(),
 			mock(DDMFormInstanceVersionLocalService.class),
 			mock(DDMFormRenderer.class),

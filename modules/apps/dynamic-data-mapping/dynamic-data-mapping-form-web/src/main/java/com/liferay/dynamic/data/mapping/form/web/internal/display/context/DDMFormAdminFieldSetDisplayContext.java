@@ -35,6 +35,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -95,6 +96,7 @@ public class DDMFormAdminFieldSetDisplayContext
 		DDMFormInstanceLocalService ddmFormInstanceLocalService,
 		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService,
 		DDMFormInstanceRecordWriterTracker ddmFormInstanceRecordWriterTracker,
+		DDMFormInstanceReportLocalService ddmFormInstanceReportLocalService,
 		DDMFormInstanceService ddmFormInstanceService,
 		DDMFormInstanceVersionLocalService ddmFormInstanceVersionLocalService,
 		DDMFormRenderer ddmFormRenderer,
@@ -112,7 +114,8 @@ public class DDMFormAdminFieldSetDisplayContext
 			ddmFormBuilderContextFactory, ddmFormBuilderSettingsRetriever,
 			ddmFormFieldTypeServicesTracker, ddmFormFieldTypesSerializer,
 			ddmFormInstanceLocalService, ddmFormInstanceRecordLocalService,
-			ddmFormInstanceRecordWriterTracker, ddmFormInstanceService,
+			ddmFormInstanceRecordWriterTracker,
+			ddmFormInstanceReportLocalService, ddmFormInstanceService,
 			ddmFormInstanceVersionLocalService, ddmFormRenderer,
 			ddmFormTemplateContextFactory, ddmFormValuesFactory,
 			ddmFormValuesMerger, ddmFormWebConfiguration,
