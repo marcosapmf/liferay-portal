@@ -16,32 +16,14 @@ package com.liferay.dynamic.data.mapping.form.report.web.internal.portlet;
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.report.web.internal.constants.DDMFormReportWebKeys;
-import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
-import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Time;
-import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.IOException;
-
-import java.util.Date;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.TimeZone;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -91,15 +73,6 @@ public class DDMFormReportPortlet extends MVCPortlet {
 				DDMFormReportWebKeys.REPORT,
 				_ddmFormInstanceReportLocalService.
 					getFormInstanceReportByFormInstanceId(formInstanceId));
-
-			renderRequest.setAttribute(
-				DDMFormReportWebKeys.REPORT_LAST_MODIFIED_DATE,
-				_getLastModifiedDate(formInstanceId, renderRequest));
-
-			renderRequest.setAttribute(
-				DDMFormReportWebKeys.TOTAL_ITEMS,
-				_ddmFormInstanceRecordLocalService.getFormInstanceRecordsCount(
-					formInstanceId, WorkflowConstants.STATUS_APPROVED));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -110,58 +83,8 @@ public class DDMFormReportPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	private String _getLastModifiedDate(
-			long formInstanceId, RenderRequest renderRequest)
-		throws PortalException {
-
-		DDMFormInstanceReport ddmFormInstanceReport =
-			_ddmFormInstanceReportLocalService.
-				getFormInstanceReportByFormInstanceId(formInstanceId);
-
-		if (ddmFormInstanceReport == null) {
-			return StringPool.BLANK;
-		}
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		Date modifiedDate = ddmFormInstanceReport.getModifiedDate();
-
-		User user = themeDisplay.getUser();
-
-		Locale locale = user.getLocale();
-
-		TimeZone timeZone = user.getTimeZone();
-
-		int daysBetween = DateUtil.getDaysBetween(
-			new Date(modifiedDate.getTime()), new Date(), timeZone);
-
-		String relativeTimeDescription = StringUtil.removeSubstring(
-			Time.getRelativeTimeDescription(modifiedDate, locale, timeZone),
-			StringPool.PERIOD);
-
-		String languageKey = "report-was-last-modified-on-x";
-
-		if (daysBetween < 2) {
-			languageKey = "report-was-last-modified-x";
-
-			relativeTimeDescription = StringUtil.toLowerCase(
-				relativeTimeDescription);
-		}
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			locale, DDMFormReportPortlet.class);
-
-		return LanguageUtil.format(
-			resourceBundle, languageKey, relativeTimeDescription, false);
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormReportPortlet.class);
-
-	@Reference
-	private DDMFormInstanceRecordLocalService
-		_ddmFormInstanceRecordLocalService;
 
 	@Reference
 	private DDMFormInstanceReportLocalService

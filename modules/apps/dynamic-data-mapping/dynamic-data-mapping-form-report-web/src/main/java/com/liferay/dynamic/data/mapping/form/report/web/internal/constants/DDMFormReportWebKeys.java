@@ -21,9 +21,4 @@ public class DDMFormReportWebKeys {
 
 	public static final String REPORT = "REPORT";
 
-	public static final String REPORT_LAST_MODIFIED_DATE =
-		"REPORT_LAST_MODIFIED_DATE";
-
-	public static final String TOTAL_ITEMS = "TOTAL_ITEMS";
-
 }

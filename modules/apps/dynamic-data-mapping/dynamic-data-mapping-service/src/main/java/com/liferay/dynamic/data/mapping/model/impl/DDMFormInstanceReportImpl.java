@@ -14,12 +14,62 @@
 
 package com.liferay.dynamic.data.mapping.model.impl;
 
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
+
+import java.util.Date;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.TimeZone;
+
 /**
  * @author Marcos Martins
  */
 public class DDMFormInstanceReportImpl extends DDMFormInstanceReportBaseImpl {
 
 	public DDMFormInstanceReportImpl() {
+	}
+
+	@Override
+	public String getLastModifiedDate(Locale locale, TimeZone timeZone) {
+		Date modifiedDate = getModifiedDate();
+
+		int daysBetween = DateUtil.getDaysBetween(
+			new Date(modifiedDate.getTime()), new Date(), timeZone);
+
+		String languageKey = "report-was-last-modified-on-x";
+
+		String relativeTimeDescription = StringUtil.removeSubstring(
+			Time.getRelativeTimeDescription(modifiedDate, locale, timeZone),
+			StringPool.PERIOD);
+
+		if (daysBetween < 2) {
+			languageKey = "report-was-last-modified-x";
+
+			relativeTimeDescription = StringUtil.toLowerCase(
+				relativeTimeDescription);
+		}
+
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			locale, DDMFormInstanceReportImpl.class);
+
+		return LanguageUtil.format(
+			resourceBundle, languageKey, relativeTimeDescription, false);
+	}
+
+	@Override
+	public int getTotalItems() throws PortalException {
+		return JSONFactoryUtil.createJSONObject(
+			getData()
+		).getInt(
+			"totalItems"
+		);
 	}
 
 }
