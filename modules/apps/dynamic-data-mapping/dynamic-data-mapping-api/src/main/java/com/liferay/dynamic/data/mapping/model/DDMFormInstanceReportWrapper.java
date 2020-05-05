@@ -168,6 +168,13 @@ public class DDMFormInstanceReportWrapper
 		return model.getGroupId();
 	}
 
+	@Override
+	public String getLastModifiedDate(
+		java.util.Locale locale, java.util.TimeZone timeZone) {
+
+		return model.getLastModifiedDate(locale, timeZone);
+	}
+
 	/**
 	 * Returns the modified date of this ddm form instance report.
 	 *
@@ -196,6 +203,13 @@ public class DDMFormInstanceReportWrapper
 	@Override
 	public long getPrimaryKey() {
 		return model.getPrimaryKey();
+	}
+
+	@Override
+	public int getTotalItems()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getTotalItems();
 	}
 
 	@Override

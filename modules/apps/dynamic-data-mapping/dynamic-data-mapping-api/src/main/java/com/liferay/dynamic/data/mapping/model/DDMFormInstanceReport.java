@@ -60,4 +60,10 @@ public interface DDMFormInstanceReport
 
 			};
 
+	public String getLastModifiedDate(
+		java.util.Locale locale, java.util.TimeZone timeZone);
+
+	public int getTotalItems()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
 }
