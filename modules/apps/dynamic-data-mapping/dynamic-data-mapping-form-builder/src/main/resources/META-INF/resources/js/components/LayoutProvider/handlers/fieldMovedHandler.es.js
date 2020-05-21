@@ -26,7 +26,9 @@ export default (props, state, event) => {
 		targetIndexes,
 		targetParentFieldName,
 	} = event;
+	const activePage = targetIndexes.pageIndex;
 	const deletedState = handleFieldDeleted(props, state, {
+		activePage,
 		fieldName: sourceFieldName,
 	});
 	const sourceField = FormSupport.findFieldByFieldName(

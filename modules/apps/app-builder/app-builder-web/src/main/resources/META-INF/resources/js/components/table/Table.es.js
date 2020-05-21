@@ -51,14 +51,15 @@ const Table = ({
 					</Row>
 				</Head>
 				<Body>
-					{items.map((item) => (
-						<Row key={item.id}>
+					{items.map((item, index) => (
+						<Row key={index}>
 							{checkable && (
 								<Cell>
 									<ClayCheckbox
 										checked={false}
 										disabled={false}
 										indeterminate={false}
+										onChange={() => {}}
 									/>
 								</Cell>
 							)}

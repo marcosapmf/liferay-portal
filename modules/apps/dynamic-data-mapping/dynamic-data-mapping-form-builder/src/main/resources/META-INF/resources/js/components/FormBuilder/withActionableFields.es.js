@@ -92,7 +92,7 @@ const withActionableFields = (ChildComponent) => {
 		}
 
 		render() {
-			const {hoveredFieldActionsVisible} = this.state;
+			const {activePage, hoveredFieldActionsVisible} = this.state;
 			const {fieldActions, fieldTypes, pages, spritemap} = this.props;
 
 			return (
@@ -100,6 +100,7 @@ const withActionableFields = (ChildComponent) => {
 					<ChildComponent {...this.props} />
 
 					<FieldActionsDropDown
+						activePage={activePage}
 						disabled={!this.isActionsEnabled()}
 						events={{
 							mouseLeave: this._handleMouseLeaveActions.bind(
@@ -116,6 +117,7 @@ const withActionableFields = (ChildComponent) => {
 					/>
 
 					<FieldActionsDropDown
+						activePage={activePage}
 						disabled={!this.isActionsEnabled()}
 						events={{
 							mouseLeave: this._handleMouseLeaveActions.bind(
@@ -187,6 +189,12 @@ const withActionableFields = (ChildComponent) => {
 			const {delegateTarget} = event;
 			const {fieldName} = delegateTarget.dataset;
 			const {hoveredFieldActions, selectedFieldActions} = this.refs;
+			const activePage = parseInt(
+				dom.closest(event.delegateTarget, '[data-ddm-page]').dataset
+					.ddmPage,
+				10
+			);
+			this.setState({activePage});
 
 			if (
 				selectedFieldActions.state.fieldName === fieldName ||
@@ -281,6 +289,7 @@ const withActionableFields = (ChildComponent) => {
 	};
 
 	ActionableFields.STATE = {
+		activePage: Config.number(),
 		hoveredFieldActionsVisible: Config.bool().value(false),
 	};
 

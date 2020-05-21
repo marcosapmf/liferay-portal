@@ -14,7 +14,8 @@
 
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import React, {useMemo, useRef, useState} from 'react';
+import {usePrevious} from 'frontend-js-react-web';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {DndProvider} from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
@@ -66,6 +67,23 @@ const Option = React.forwardRef(
 	)
 );
 
+const refreshFields = (defaultLanguageId, editingLanguageId, options) =>
+	[
+		...options.map((option) => ({
+			...option,
+			generateKeyword: isOptionValueGenerated(
+				defaultLanguageId,
+				editingLanguageId,
+				options,
+				option
+			),
+			id: random(),
+		})),
+		defaultLanguageId === editingLanguageId
+			? {...defaultOption, generateKeyword: true, id: random()}
+			: false,
+	].filter((field) => field && Object.keys(field).length > 0);
+
 const Options = ({
 	children,
 	defaultLanguageId,
@@ -74,6 +92,8 @@ const Options = ({
 	onChange,
 	value = {},
 }) => {
+	const prevEditingLanguageId = usePrevious(editingLanguageId);
+
 	const normalizedValue = useMemo(() => {
 		const formattedValue = {...value};
 
@@ -94,22 +114,26 @@ const Options = ({
 			normalizedValue[defaultLanguageId] ||
 			[];
 
-		return [
-			...options.map((option) => ({
-				...option,
-				generateKeyword: isOptionValueGenerated(
-					defaultLanguageId,
-					editingLanguageId,
-					options,
-					option
-				),
-				id: random(),
-			})),
-			defaultLanguageId === editingLanguageId
-				? {...defaultOption, generateKeyword: true, id: random()}
-				: false,
-		].filter(Boolean);
+		return refreshFields(defaultLanguageId, editingLanguageId, options);
 	});
+
+	useEffect(() => {
+		if (prevEditingLanguageId !== editingLanguageId) {
+			const options =
+				normalizedValue[editingLanguageId] ||
+				normalizedValue[defaultLanguageId] ||
+				[];
+
+			setFields(
+				refreshFields(defaultLanguageId, editingLanguageId, options)
+			);
+		}
+	}, [
+		defaultLanguageId,
+		editingLanguageId,
+		normalizedValue,
+		prevEditingLanguageId,
+	]);
 
 	const defaultOptionRef = useRef(
 		fields.length === 2 &&
@@ -122,9 +146,39 @@ const Options = ({
 
 		if (defaultLanguageId === editingLanguageId) {
 			_fields.splice(_fields.length - 1, 1);
+
+			let _normalizedValue = {...normalizedValue};
+
+			const availableLanguageIds = Object.getOwnPropertyNames(
+				normalizedValue
+			);
+
+			availableLanguageIds.forEach((languageId) => {
+				_normalizedValue = {
+					..._normalizedValue,
+					[languageId]: synchroniseValue(_fields, languageId),
+				};
+			});
+
+			return _normalizedValue;
 		}
 
 		return {...normalizedValue, [editingLanguageId]: _fields};
+	};
+
+	const synchroniseValue = (fields, languageId) => {
+		const _values = [];
+
+		fields.forEach((localizedValue) => {
+			_values.push(
+				normalizedValue[languageId].find(
+					(_localizedValue) =>
+						_localizedValue.value == localizedValue.value
+				) || localizedValue
+			);
+		});
+
+		return _values;
 	};
 
 	const clone = (...args) => {

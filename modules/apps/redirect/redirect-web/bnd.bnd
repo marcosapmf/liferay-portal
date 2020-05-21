@@ -1,5 +1,5 @@
 Bundle-Name: Liferay Redirect Web
 Bundle-SymbolicName: com.liferay.redirect.web
-Bundle-Version: 1.0.9
+Bundle-Version: 1.0.12
 Web-ContextPath: /redirect-web
 -dsannotations-options: inherit

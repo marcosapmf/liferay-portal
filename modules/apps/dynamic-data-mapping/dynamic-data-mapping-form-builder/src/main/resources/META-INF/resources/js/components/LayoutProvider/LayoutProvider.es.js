@@ -297,13 +297,13 @@ class LayoutProvider extends Component {
 	_fieldActionsValueFn() {
 		return [
 			{
-				action: (fieldName) =>
-					this.dispatch('fieldDuplicated', {fieldName}),
+				action: ({activePage, fieldName}) =>
+					this.dispatch('fieldDuplicated', {activePage, fieldName}),
 				label: Liferay.Language.get('duplicate'),
 			},
 			{
-				action: (fieldName) =>
-					this.dispatch('fieldDeleted', {fieldName}),
+				action: ({activePage, fieldName}) =>
+					this.dispatch('fieldDeleted', {activePage, fieldName}),
 				label: Liferay.Language.get('delete'),
 			},
 		];

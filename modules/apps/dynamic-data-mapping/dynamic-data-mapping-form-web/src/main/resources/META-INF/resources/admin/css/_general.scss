@@ -152,6 +152,10 @@ td.lfr-name-column {
 
 .editing-form-entry {
 	background-color: white;
+	.ddm-form-basic-info {
+		padding-left: 20px;
+		padding-top: 15px;
+	}
 }
 
 .form-builder-page-manager-popover-header {
@@ -233,6 +237,10 @@ td.lfr-name-column {
 .lfr-ddm-field-settings-yes {
 	padding-left: 21px;
 	padding-right: 21px;
+}
+
+.lfr-ddm-form-container .lfr-ddm-form-pagination-controls {
+	overflow: hidden;
 }
 
 .portal-popup,
@@ -416,4 +424,8 @@ td.lfr-name-column {
 		right: 0;
 		width: 12px;
 	}
+}
+
+.taglib-empty-result-message {
+	margin-top: 104px;
 }

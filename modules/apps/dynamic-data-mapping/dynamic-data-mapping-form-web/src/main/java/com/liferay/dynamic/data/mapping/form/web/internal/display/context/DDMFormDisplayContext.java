@@ -25,6 +25,7 @@ import com.liferay.dynamic.data.mapping.form.web.internal.security.permission.re
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
@@ -36,6 +37,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormSuccessPageSettings;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
@@ -93,6 +95,7 @@ public class DDMFormDisplayContext {
 		RenderRequest renderRequest, RenderResponse renderResponse,
 		DDMFormFieldTypeServicesTracker ddmFormFieldTypeServicesTracker,
 		DDMFormInstanceLocalService ddmFormInstanceLocalService,
+		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService,
 		DDMFormInstanceRecordVersionLocalService
 			ddmFormInstanceRecordVersionLocalService,
 		DDMFormInstanceService ddmFormInstanceService,
@@ -109,6 +112,7 @@ public class DDMFormDisplayContext {
 		_renderResponse = renderResponse;
 		_ddmFormFieldTypeServicesTracker = ddmFormFieldTypeServicesTracker;
 		_ddmFormInstanceLocalService = ddmFormInstanceLocalService;
+		_ddmFormInstanceRecordLocalService = ddmFormInstanceRecordLocalService;
 		_ddmFormInstanceRecordVersionLocalService =
 			ddmFormInstanceRecordVersionLocalService;
 		_ddmFormInstanceService = ddmFormInstanceService;
@@ -188,11 +192,22 @@ public class DDMFormDisplayContext {
 
 		ddmFormRenderingContext.setGroupId(ddmFormInstance.getGroupId());
 
-		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
-			_ddmFormInstanceRecordVersionLocalService.
-				fetchLatestFormInstanceRecordVersion(
-					getUserId(), getFormInstanceId(), getFormInstanceVersion(),
-					WorkflowConstants.STATUS_DRAFT);
+		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion = null;
+
+		DDMFormInstanceRecord formInstanceRecord = getFormInstanceRecord();
+
+		if (formInstanceRecord != null) {
+			ddmFormInstanceRecordVersion =
+				formInstanceRecord.getLatestFormInstanceRecordVersion();
+		}
+		else {
+			ddmFormInstanceRecordVersion =
+				_ddmFormInstanceRecordVersionLocalService.
+					fetchLatestFormInstanceRecordVersion(
+						getUserId(), getFormInstanceId(),
+						getFormInstanceVersion(),
+						WorkflowConstants.STATUS_DRAFT);
+		}
 
 		if (ddmFormInstanceRecordVersion != null) {
 			DDMFormValues mergedDDMFormValues = _ddmFormValuesMerger.merge(
@@ -276,6 +291,28 @@ public class DDMFormDisplayContext {
 		return _ddmFormInstanceId;
 	}
 
+	public DDMFormInstanceRecord getFormInstanceRecord() {
+		if (_ddmFormInstanceRecord != null) {
+			return _ddmFormInstanceRecord;
+		}
+
+		_ddmFormInstanceRecord =
+			_ddmFormInstanceRecordLocalService.fetchDDMFormInstanceRecord(
+				getFormInstanceRecordId());
+
+		return _ddmFormInstanceRecord;
+	}
+
+	public long getFormInstanceRecordId() {
+		if (_ddmFormInstanceRecordId != 0) {
+			return _ddmFormInstanceRecordId;
+		}
+
+		return PrefsParamUtil.getLong(
+			_renderRequest.getPreferences(), _renderRequest,
+			"formInstanceRecordId");
+	}
+
 	public String getRedirectURL() throws PortalException {
 		DDMFormInstance ddmFormInstance = getFormInstance();
 
@@ -296,6 +333,20 @@ public class DDMFormDisplayContext {
 				getDDMForm()));
 
 		if (hasWorkflowEnabled(getFormInstance(), getThemeDisplay())) {
+			DDMFormInstanceRecord ddmFormInstanceRecord =
+				getFormInstanceRecord();
+
+			if (ddmFormInstanceRecord != null) {
+				DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
+					ddmFormInstanceRecord.getLatestFormInstanceRecordVersion();
+
+				if (ddmFormInstanceRecordVersion.getStatus() ==
+						WorkflowConstants.STATUS_PENDING) {
+
+					return LanguageUtil.get(resourceBundle, "save");
+				}
+			}
+
 			return LanguageUtil.get(resourceBundle, "submit-for-publication");
 		}
 
@@ -513,6 +564,13 @@ public class DDMFormDisplayContext {
 		DDMFormRenderingContext ddmFormRenderingContext =
 			new DDMFormRenderingContext();
 
+		String redirectURL = ParamUtil.getString(_renderRequest, "redirect");
+
+		if (Validator.isNotNull(redirectURL)) {
+			ddmFormRenderingContext.setCancelLabel(
+				LanguageUtil.get(ddmForm.getDefaultLocale(), "cancel"));
+		}
+
 		ddmFormRenderingContext.setContainerId(_containerId);
 		ddmFormRenderingContext.setDDMFormValues(
 			_ddmFormValuesFactory.create(_renderRequest, ddmForm));
@@ -528,7 +586,17 @@ public class DDMFormDisplayContext {
 			getLocale(httpServletRequest, ddmForm));
 		ddmFormRenderingContext.setPortletNamespace(
 			_renderResponse.getNamespace());
+
+		if (Validator.isNotNull(redirectURL)) {
+			ddmFormRenderingContext.setRedirectURL(redirectURL);
+		}
+
 		ddmFormRenderingContext.setSharedURL(isSharedURL());
+
+		if (Validator.isNull(redirectURL)) {
+			ddmFormRenderingContext.setShowCancelButton(false);
+		}
+
 		ddmFormRenderingContext.setViewMode(true);
 
 		return ddmFormRenderingContext;
@@ -775,6 +843,10 @@ public class DDMFormDisplayContext {
 	private DDMFormInstance _ddmFormInstance;
 	private long _ddmFormInstanceId;
 	private final DDMFormInstanceLocalService _ddmFormInstanceLocalService;
+	private DDMFormInstanceRecord _ddmFormInstanceRecord;
+	private long _ddmFormInstanceRecordId;
+	private final DDMFormInstanceRecordLocalService
+		_ddmFormInstanceRecordLocalService;
 	private final DDMFormInstanceRecordVersionLocalService
 		_ddmFormInstanceRecordVersionLocalService;
 	private final DDMFormInstanceService _ddmFormInstanceService;

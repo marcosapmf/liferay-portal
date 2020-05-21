@@ -69,6 +69,7 @@ export const getValidation = (originalField) => {
 };
 
 export const duplicateField = (
+	activePage,
 	props,
 	pages,
 	originalField,
@@ -107,7 +108,12 @@ export const duplicateField = (
 						duplicatedField.fieldName,
 					]);
 
-					pages = FormSupport.addRow(pages, rowIndex + 1, 0, newRow);
+					pages = FormSupport.addRow(
+						pages,
+						rowIndex + 1,
+						activePage,
+						newRow
+					);
 
 					return updateField(props, field, 'rows', pages[0].rows);
 				}
@@ -126,11 +132,10 @@ export const duplicateField = (
 
 	const newRow = FormSupport.implAddRow(12, [duplicatedField]);
 
-	return FormSupport.addRow(pages, rowIndex + 1, 0, newRow);
+	return FormSupport.addRow(pages, rowIndex + 1, activePage, newRow);
 };
 
-const handleFieldDuplicated = (props, state, event) => {
-	const {fieldName} = event;
+const handleFieldDuplicated = (props, state, {activePage, fieldName}) => {
 	const {pages} = state;
 
 	const originalField = JSON.parse(
@@ -143,7 +148,13 @@ const handleFieldDuplicated = (props, state, event) => {
 		focusedField: {
 			...duplicatedField,
 		},
-		pages: duplicateField(props, pages, originalField, duplicatedField),
+		pages: duplicateField(
+			activePage,
+			props,
+			pages,
+			originalField,
+			duplicatedField
+		),
 	};
 };
 

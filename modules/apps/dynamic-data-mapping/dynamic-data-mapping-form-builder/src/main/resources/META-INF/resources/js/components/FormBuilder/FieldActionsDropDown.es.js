@@ -184,13 +184,23 @@ class FieldActionsDropDown extends Component {
 	}) {
 		const {fieldName} = this.state;
 
-		action(fieldName);
+		const {activePage} = this.props;
 
+		action({activePage, fieldName});
 		this.close();
 	}
 }
 
 FieldActionsDropDown.PROPS = {
+
+	/**
+	 * @default undefined
+	 * @instance
+	 * @memberof FieldActionsDropDown
+	 * @type {number}
+	 */
+
+	activePage: Config.number(),
 
 	/**
 	 * @default false

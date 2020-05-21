@@ -116,8 +116,8 @@ export const removeField = (props, pages, fieldName) => {
 	}));
 };
 
-export const handleFieldDeleted = (props, state, {fieldName}) => {
-	const {activePage, pages} = state;
+export const handleFieldDeleted = (props, state, {activePage, fieldName}) => {
+	const {pages} = state;
 	const newPages = pages.map((page, pageIndex) => {
 		if (activePage === pageIndex) {
 			return {

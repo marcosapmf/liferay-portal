@@ -415,6 +415,7 @@ describe('LayoutProvider', () => {
 				).toEqual(2);
 
 				const mockEvent = {
+					activePage: 0,
 					fieldName: 'text1',
 				};
 
@@ -437,6 +438,7 @@ describe('LayoutProvider', () => {
 
 				const {child, provider} = component.refs;
 				const mockEvent = {
+					activePage: 0,
 					fieldName: 'radio',
 				};
 

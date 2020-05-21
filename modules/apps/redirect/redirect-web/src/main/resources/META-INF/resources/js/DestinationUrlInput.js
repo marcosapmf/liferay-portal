@@ -18,6 +18,8 @@ import ClayIcon from '@clayui/icon';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
+const REGEX_URL = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(https?:\/\/|www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))((.*):(\d*)\/?(.*))?)/;
+
 const STR_BLANK = '';
 
 const DestinationUrlInput = ({
@@ -26,6 +28,7 @@ const DestinationUrlInput = ({
 	namespace,
 }) => {
 	const [requiredError, setRequiredError] = useState(false);
+	const [urlError, setUrlError] = useState(false);
 	const [destinationUrl, setDestinationUrl] = useState(initialDestinationUrl);
 
 	const handleTryRedirection = () => {
@@ -38,8 +41,14 @@ const DestinationUrlInput = ({
 		window.open(testUrl, '_blank');
 	};
 
+	const isAbsoluteUrl = (url) => {
+		return REGEX_URL && REGEX_URL.test(url);
+	};
+
 	return (
-		<ClayForm.Group className={requiredError ? 'has-error' : STR_BLANK}>
+		<ClayForm.Group
+			className={requiredError || urlError ? 'has-error' : STR_BLANK}
+		>
 			<label htmlFor={`${namespace}destinationURL`}>
 				{Liferay.Language.get('destination-url')}
 
@@ -59,9 +68,10 @@ const DestinationUrlInput = ({
 						autoFocus={autofocus}
 						id={`${namespace}destinationURL`}
 						name={`${namespace}destinationURL`}
-						onBlur={({currentTarget}) =>
-							setRequiredError(!currentTarget.value)
-						}
+						onBlur={({currentTarget}) => {
+							setRequiredError(!currentTarget.value);
+							setUrlError(!isAbsoluteUrl(currentTarget.value));
+						}}
 						onChange={({currentTarget}) =>
 							setDestinationUrl(currentTarget.value)
 						}
@@ -71,7 +81,10 @@ const DestinationUrlInput = ({
 				</ClayInput.GroupItem>
 				<ClayInput.GroupItem append shrink>
 					<ClayButtonWithIcon
-						disabled={destinationUrl === STR_BLANK}
+						disabled={
+							destinationUrl === STR_BLANK ||
+							!isAbsoluteUrl(destinationUrl)
+						}
 						displayType="secondary"
 						onClick={handleTryRedirection}
 						symbol="shortcut"
@@ -85,6 +98,25 @@ const DestinationUrlInput = ({
 					<ClayForm.FeedbackItem>
 						{Liferay.Language.get('this-field-is-required')}
 					</ClayForm.FeedbackItem>
+				</ClayForm.FeedbackGroup>
+			)}
+
+			{!requiredError && urlError && (
+				<ClayForm.FeedbackGroup>
+					<ClayForm.FeedbackItem>
+						<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+						{Liferay.Language.get('this-url-is-not-supported')}
+					</ClayForm.FeedbackItem>
+					<div
+						className="small"
+						dangerouslySetInnerHTML={{
+							__html: Liferay.Util.sub(
+								Liferay.Language.get('enter-an-absolute-url'),
+								'<em>',
+								'</em>'
+							),
+						}}
+					/>
 				</ClayForm.FeedbackGroup>
 			)}
 		</ClayForm.Group>

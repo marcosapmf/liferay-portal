@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.search.elasticsearch6.internal.ElasticsearchIndexWriter;
 import com.liferay.portal.search.elasticsearch6.internal.LiferayElasticsearchIndexingFixtureFactory;
 import com.liferay.portal.search.elasticsearch6.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.elasticsearch6.internal.search.engine.adapter.document.BulkDocumentRequestExecutorImpl;
@@ -33,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+
+import org.hamcrest.CoreMatchers;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,7 +120,29 @@ public class ElasticsearchIndexWriterLogExceptionsOnlyTest
 
 	@Test
 	public void testDeleteDocument() {
-		expectedLogTestRule.expectMessage("no such index");
+		expectedLogTestRule.expectMessage(
+			CoreMatchers.not(CoreMatchers.containsString("no such index")));
+
+		SearchContext searchContext = new SearchContext();
+
+		searchContext.setCompanyId(1);
+
+		IndexWriter indexWriter = getIndexWriter();
+
+		try {
+			indexWriter.deleteDocument(searchContext, "1");
+		}
+		catch (SearchException searchException) {
+		}
+	}
+
+	@Test
+	public void testDeleteDocumentInfoLevel() {
+		expectedLogTestRule.configure(
+			ElasticsearchIndexWriter.class, Level.INFO);
+
+		expectedLogTestRule.expectMessage(
+			CoreMatchers.containsString("no such index"));
 
 		SearchContext searchContext = new SearchContext();
 
@@ -344,7 +369,8 @@ public class ElasticsearchIndexWriterLogExceptionsOnlyTest
 	}
 
 	@Rule
-	public ExpectedLogTestRule expectedLogTestRule = ExpectedLogTestRule.none();
+	public ExpectedLogTestRule expectedLogTestRule = ExpectedLogTestRule.with(
+		ElasticsearchIndexWriter.class, Level.WARNING);
 
 	protected ElasticsearchFixture createElasticsearchFixture() {
 		Map<String, Object> elasticsearchConfigurationProperties =

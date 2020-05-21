@@ -54,7 +54,7 @@ const EditTableView = withRouter(({history}) => {
 		history.goBack();
 	};
 
-	const onInput = (event) => {
+	const onChange = (event) => {
 		const name = event.target.value;
 
 		dispatch({payload: {name}, type: UPDATE_DATA_LIST_VIEW_NAME});
@@ -62,10 +62,6 @@ const EditTableView = withRouter(({history}) => {
 
 	const validate = () => {
 		const name = dataListView.name.en_US.trim();
-
-		if (!name) {
-			return null;
-		}
 
 		return {
 			...dataListView,
@@ -77,10 +73,6 @@ const EditTableView = withRouter(({history}) => {
 
 	const handleSubmit = () => {
 		const dataListView = validate();
-
-		if (dataListView === null) {
-			return;
-		}
 
 		if (dataListView.id) {
 			updateItem(
@@ -108,7 +100,7 @@ const EditTableView = withRouter(({history}) => {
 
 	const {
 		fieldNames,
-		name: {en_US: dataListViewName},
+		name: {[Liferay.ThemeDisplay.getLanguageId()]: dataListViewName = ''},
 	} = dataListView;
 
 	const [isSidebarClosed, setSidebarClosed] = useState(false);
@@ -119,8 +111,6 @@ const EditTableView = withRouter(({history}) => {
 			type: ADD_DATA_LIST_VIEW_FIELD,
 		});
 	};
-
-	const onCloseSidebar = (closed) => setSidebarClosed(closed);
 
 	const onRemoveFieldName = (fieldName) => {
 		dispatch({payload: {fieldName}, type: REMOVE_DATA_LIST_VIEW_FIELD});
@@ -142,7 +132,7 @@ const EditTableView = withRouter(({history}) => {
 				>
 					<UpperToolbar>
 						<UpperToolbar.Input
-							onInput={onInput}
+							onChange={onChange}
 							placeholder={Liferay.Language.get(
 								'untitled-table-view'
 							)}
@@ -167,17 +157,17 @@ const EditTableView = withRouter(({history}) => {
 				</form>
 
 				<TableViewSidebar
+					className={classNames('app-builder-table-view__sidebar', {
+						'app-builder-table-view__sidebar--closed': isSidebarClosed,
+					})}
 					onAddFieldName={onAddFieldName}
-					onClose={onCloseSidebar}
+					onToggle={() => setSidebarClosed(!isSidebarClosed)}
 				/>
 
 				<div
-					className={classNames(
-						'data-layout-builder-sidebar-content',
-						{
-							closed: isSidebarClosed,
-						}
-					)}
+					className={classNames('app-builder-table-view__content', {
+						'app-builder-table-view__content--sidebar-closed': isSidebarClosed,
+					})}
 				>
 					<div className="container table-view-container">
 						<DropZone
