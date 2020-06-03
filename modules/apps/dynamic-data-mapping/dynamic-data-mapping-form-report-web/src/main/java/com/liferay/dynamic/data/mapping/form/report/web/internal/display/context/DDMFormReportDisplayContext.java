@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.DateUtil;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -96,7 +97,7 @@ public class DDMFormReportDisplayContext {
 
 		resourceURL.setResourceID("/form-report/get_records_field_values");
 
-		return resourceURL.toString();
+		return HttpUtil.removeDomain(resourceURL.toString());
 	}
 
 	public String getLastModifiedDate() {
