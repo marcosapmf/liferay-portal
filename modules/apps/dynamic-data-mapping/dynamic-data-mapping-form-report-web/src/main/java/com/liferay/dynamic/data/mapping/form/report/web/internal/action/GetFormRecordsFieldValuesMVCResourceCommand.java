@@ -14,10 +14,21 @@
 
 package com.liferay.dynamic.data.mapping.form.report.web.internal.action;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.Value;
-import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -36,18 +47,6 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-
-import java.util.List;
-import java.util.Map;
-
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Marcos André
@@ -111,7 +110,7 @@ public class GetFormRecordsFieldValuesMVCResourceCommand
 				start + _DEFAULT_DELTA;
 
 		BaseModelSearchResult<DDMFormInstanceRecord> baseModelSearchResult =
-			_ddmFormInstanceRecordLocalService.searchFormInstanceRecords(
+			_ddmFormInstanceRecordService.searchFormInstanceRecords(
 				formInstanceId, new String[] {fieldName},
 				WorkflowConstants.STATUS_APPROVED, start, end,
 				new Sort(Field.MODIFIED_DATE, Sort.LONG_TYPE, true));
@@ -142,8 +141,8 @@ public class GetFormRecordsFieldValuesMVCResourceCommand
 	private static final int _DEFAULT_DELTA = 20;
 
 	@Reference
-	private DDMFormInstanceRecordLocalService
-		_ddmFormInstanceRecordLocalService;
+	private DDMFormInstanceRecordService
+		_ddmFormInstanceRecordService;
 
 	@Reference
 	private Portal _portal;
