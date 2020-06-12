@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
 import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceReportException;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
@@ -125,6 +126,42 @@ public class DDMFormInstanceReportLocalServiceTest
 			getFormInstanceReportByFormInstanceId(
 				_ddmFormInstance.getFormInstanceId());
 	}
+
+	@Test
+	public void testProcessNonexistingFormInstanceRecordVersion()
+		throws Exception {
+
+		DDMStructure ddmStructure = addStructure(
+			0, _classNameId, null, "Test Structure", null,
+			read("ddm-structure-radio-field.xsd"), StorageType.JSON.getValue(),
+			DDMStructureConstants.TYPE_DEFAULT);
+
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("radio");
+
+		_ddmFormInstance = DDMFormInstanceLocalServiceUtil.addFormInstance(
+			ddmStructure.getUserId(), ddmStructure.getGroupId(),
+			ddmStructure.getStructureId(), ddmStructure.getNameMap(),
+			ddmStructure.getNameMap(),
+			DDMFormValuesTestUtil.createDDMFormValues(ddmForm),
+			getServiceContext());
+
+		DDMFormInstanceReport ddmFormInstanceReport =
+			_ddmFormInstanceReportLocalService.
+				getFormInstanceReportByFormInstanceId(
+					_ddmFormInstance.getFormInstanceId());
+
+		_ddmFormInstanceReportLocalService.processFormInstanceReportEvent(
+			ddmFormInstanceReport.getFormInstanceReportId(), 0,
+			DDMFormInstanceReportConstants.EVENT_ADD_RECORD_VERSION);
+
+		ddmFormInstanceReport =
+			_ddmFormInstanceReportLocalService.
+				getFormInstanceReportByFormInstanceId(
+					_ddmFormInstance.getFormInstanceId());
+
+		Assert.assertEquals(StringPool.BLANK, ddmFormInstanceReport.getData());
+	}
+
 	@Test
 	public void testUpdateFormInstanceReport() throws Exception {
 		DDMFormInstanceRecord ddmFormInstanceRecord =
