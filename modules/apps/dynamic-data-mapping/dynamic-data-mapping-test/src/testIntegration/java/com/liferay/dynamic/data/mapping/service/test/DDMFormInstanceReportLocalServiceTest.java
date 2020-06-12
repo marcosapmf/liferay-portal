@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceReportException;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
@@ -93,6 +94,37 @@ public class DDMFormInstanceReportLocalServiceTest
 		Assert.assertNotNull(ddmFormInstanceReport);
 	}
 
+	@Test(expected = NoSuchFormInstanceReportException.class)
+	public void testDeleteFormInstanceReport() throws Exception {
+		DDMStructure ddmStructure = addStructure(
+			0, _classNameId, null, "Test Structure", null,
+			read("ddm-structure-radio-field.xsd"), StorageType.JSON.getValue(),
+			DDMStructureConstants.TYPE_DEFAULT);
+
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("radio");
+
+		_ddmFormInstance = DDMFormInstanceLocalServiceUtil.addFormInstance(
+			ddmStructure.getUserId(), ddmStructure.getGroupId(),
+			ddmStructure.getStructureId(), ddmStructure.getNameMap(),
+			ddmStructure.getNameMap(),
+			DDMFormValuesTestUtil.createDDMFormValues(ddmForm),
+			getServiceContext());
+
+		DDMFormInstanceReport ddmFormInstanceReport =
+			_ddmFormInstanceReportLocalService.
+				getFormInstanceReportByFormInstanceId(
+					_ddmFormInstance.getFormInstanceId());
+
+		Assert.assertNotNull(ddmFormInstanceReport);
+
+		_ddmFormInstance =
+			DDMFormInstanceLocalServiceUtil.deleteDDMFormInstance(
+				_ddmFormInstance);
+
+		_ddmFormInstanceReportLocalService.
+			getFormInstanceReportByFormInstanceId(
+				_ddmFormInstance.getFormInstanceId());
+	}
 	@Test
 	public void testUpdateFormInstanceReport() throws Exception {
 		DDMFormInstanceRecord ddmFormInstanceRecord =
