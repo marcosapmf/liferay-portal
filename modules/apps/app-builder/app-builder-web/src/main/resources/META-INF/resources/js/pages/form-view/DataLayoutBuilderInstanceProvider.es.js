@@ -106,8 +106,7 @@ export default ({children, dataLayoutBuilder}) => {
 
 		provider.props = {
 			...provider.props,
-			fieldActions,
-			shouldAutoGenerateName: () => false,
+			fieldActions
 		};
 
 		provider.getEvents().fieldHovered(fieldHovered);
