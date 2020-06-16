@@ -56,6 +56,13 @@ import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
+import com.liferay.dynamic.data.mapping.service.DDMContentLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalService;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
@@ -312,6 +319,17 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 			"3.6.0", "3.7.0",
 			new com.liferay.dynamic.data.mapping.internal.upgrade.v3_7_0.
 				UpgradeDDMDataProviderInstance());
+
+		registry.register(
+			"3.7.0", "3.7.1",
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v3_7_1.
+				UpgradeDDMFormInstanceReport(
+					_ddmContentLocalService, _ddmFormInstanceLocalService,
+					_ddmFormInstanceRecordLocalService,
+					_ddmFormInstanceRecordVersionLocalService,
+					_ddmFormInstanceReportLocalService,
+					_ddmFormInstanceVersionLocalService,
+					_ddmStructureVersionLocalService));
 	}
 
 	@Activate
@@ -363,6 +381,9 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 	@Reference
 	private DDM _ddm;
 
+	@Reference
+	private DDMContentLocalService _ddmContentLocalService;
+
 	private ServiceTrackerMap<String, DDMDataProviderSettingsProvider>
 		_ddmDataProviderSettingsProviderServiceTracker;
 
@@ -370,7 +391,29 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 	private DDMDataProviderTracker _ddmDataProviderTracker;
 
 	@Reference
+	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
+
+	@Reference
+	private DDMFormInstanceRecordLocalService
+		_ddmFormInstanceRecordLocalService;
+
+	@Reference
+	private DDMFormInstanceRecordVersionLocalService
+		_ddmFormInstanceRecordVersionLocalService;
+
+	@Reference
+	private DDMFormInstanceReportLocalService
+		_ddmFormInstanceReportLocalService;
+
+	@Reference
+	private DDMFormInstanceVersionLocalService
+		_ddmFormInstanceVersionLocalService;
+
+	@Reference
 	private DDMFormLayoutDeserializer _ddmFormLayoutDeserializer;
+
+	@Reference
+	private DDMStructureVersionLocalService _ddmStructureVersionLocalService;
 
 	@Reference
 	private DLFileEntryLocalService _dlFileEntryLocalService;
