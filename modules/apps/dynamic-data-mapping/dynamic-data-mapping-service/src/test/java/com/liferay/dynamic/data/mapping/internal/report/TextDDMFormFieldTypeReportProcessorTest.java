@@ -57,8 +57,9 @@ public class TextDDMFormFieldTypeReportProcessorTest extends PowerMockito {
 	public void setUp() {
 		_setUpJSONFactoryUtil();
 
-		_textDDMFormFieldTypeReportProcessor.ddmFormInstanceRecordLocalService =
-			_ddmFormInstanceRecordLocalService;
+		_textDDMFormFieldTypeReportProcessor.
+			setDDMFormInstanceRecordLocalService(
+				_ddmFormInstanceRecordLocalService);
 	}
 
 	@Test
