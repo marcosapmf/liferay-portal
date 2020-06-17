@@ -59,7 +59,7 @@ public class TextDDMFormFieldTypeReportProcessor
 			long formInstanceRecordId, String formInstanceReportEvent)
 		throws Exception {
 
-		boolean nullValue = Validator.isNull(_getValue(ddmFormFieldValue));
+		boolean nullValue = Validator.isNull(getValue(ddmFormFieldValue));
 
 		JSONArray valuesJSONArray = JSONFactoryUtil.createJSONArray();
 
@@ -76,7 +76,7 @@ public class TextDDMFormFieldTypeReportProcessor
 				JSONUtil.put(
 					"formInstanceRecordId", formInstanceRecordId
 				).put(
-					"value", _getValue(ddmFormFieldValue)
+					"value", getValue(ddmFormFieldValue)
 				));
 
 			JSONArray jsonArray = fieldJSONObject.getJSONArray("values");
@@ -146,7 +146,7 @@ public class TextDDMFormFieldTypeReportProcessor
 									ddmFormInstanceRecord.
 										getFormInstanceRecordId()
 								).put(
-									"value", _getValue(formFieldValue)
+									"value", getValue(formFieldValue)
 								)));
 					}
 					catch (PortalException portalException) {
@@ -171,15 +171,15 @@ public class TextDDMFormFieldTypeReportProcessor
 		return fieldJSONObject;
 	}
 
-	@Reference
-	protected DDMFormInstanceRecordLocalService
-		ddmFormInstanceRecordLocalService;
-
-	private String _getValue(DDMFormFieldValue ddmFormFieldValue) {
+	protected String getValue(DDMFormFieldValue ddmFormFieldValue) {
 		Value value = ddmFormFieldValue.getValue();
 
 		return value.getString(value.getDefaultLocale());
 	}
+
+	@Reference
+	protected DDMFormInstanceRecordLocalService
+		ddmFormInstanceRecordLocalService;
 
 	private static final int _VALUES_MAX_LENGTH = 5;
 
