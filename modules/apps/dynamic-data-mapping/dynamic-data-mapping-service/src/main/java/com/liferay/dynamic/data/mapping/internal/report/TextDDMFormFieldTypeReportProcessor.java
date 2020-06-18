@@ -133,7 +133,7 @@ public class TextDDMFormFieldTypeReportProcessor
 
 						Map<String, List<DDMFormFieldValue>>
 							ddmFormFieldValuesMap =
-								ddmFormValues.getDDMFormFieldValuesMap();
+								ddmFormValues.getDDMFormFieldValuesMap(false);
 
 						List<DDMFormFieldValue> formFieldValues =
 							ddmFormFieldValuesMap.get(
