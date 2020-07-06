@@ -63,6 +63,11 @@ class Form extends Component {
 			published,
 			showPublishAlert,
 		} = this.props;
+
+		if (this.isFormBuilderView()) {
+			this.syncActiveNavItem(this.state.activeNavItem);
+		}
+
 		const {paginationMode} = this.state;
 
 		this._eventHandler = new EventHandler();
@@ -204,7 +209,10 @@ class Form extends Component {
 			}
 		}
 
-		if (!this._pageHasFields(store.getPages(), store.state.activePage)) {
+		if (
+			this.state.activeNavItem == NAV_ITEMS.FORM &&
+			!this._pageHasFields(store.getPages(), store.state.activePage)
+		) {
 			this.openSidebar();
 		}
 
@@ -582,6 +590,12 @@ class Form extends Component {
 		}
 	}
 
+	_activeNavItemValueFn() {
+		const {context} = this.props;
+
+		return context.activeNavItem || NAV_ITEMS.FORM;
+	}
+
 	_handleAddFieldButtonClicked() {
 		if (this.isShowRuleBuilder()) {
 			this.refs.ruleBuilder.showRuleCreation();
@@ -931,6 +945,13 @@ class Form extends Component {
 		};
 	}
 
+	_setSearchParamsWithoutPageReload(key, value) {
+		const url = new URL(location.toString());
+		url.searchParams.set(key, value);
+
+		window.history.replaceState({path: url.toString()}, '', url.toString());
+	}
+
 	_showPublishedAlert(publishURL) {
 		const message = Liferay.Language.get(
 			'the-form-was-published-successfully-access-it-with-this-url-x'
@@ -966,6 +987,11 @@ class Form extends Component {
 		);
 
 		if (show) {
+			this._setSearchParamsWithoutPageReload(
+				`${namespace}activeNavItem`,
+				NAV_ITEMS.FORM
+			);
+
 			managementToolbar.classList.remove('hide');
 			formBasicInfo.classList.remove('hide');
 
@@ -1011,6 +1037,13 @@ class Form extends Component {
 		}
 
 		if (show) {
+			const {namespace} = this.props;
+
+			this._setSearchParamsWithoutPageReload(
+				`${namespace}activeNavItem`,
+				NAV_ITEMS.REPORT
+			);
+
 			formReport.classList.remove('hide');
 		}
 		else {
@@ -1026,6 +1059,11 @@ class Form extends Component {
 		);
 
 		if (show) {
+			this._setSearchParamsWithoutPageReload(
+				`${namespace}activeNavItem`,
+				NAV_ITEMS.RULES
+			);
+
 			managementToolbar.classList.remove('hide');
 		}
 		else {
@@ -1328,13 +1366,13 @@ Form.STATE = {
 
 	/**
 	 * Current active tab index.
-	 * @default
+	 * @default _activeNavItemValueFn
 	 * @instance
 	 * @memberof Form
 	 * @type {!number}
 	 */
 
-	activeNavItem: Config.number().value(NAV_ITEMS.FORM),
+	activeNavItem: Config.number().valueFn('_activeNavItemValueFn'),
 
 	/**
 	 * Internal mirror of the pages state

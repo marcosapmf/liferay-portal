@@ -537,16 +537,28 @@ public class DDMFormAdminDisplayContext {
 		HttpServletRequest httpServletRequest =
 			formAdminRequestHelper.getRequest();
 
+		int activeNavItem = ParamUtil.getInteger(
+			httpServletRequest, "activeNavItem");
+
 		return NavigationItemListBuilder.add(
 			navigationItem -> {
 				navigationItem.putData("action", "showForm");
-				navigationItem.setActive(true);
+
+				if (activeNavItem == _FORM_NAV_ITEM) {
+					navigationItem.setActive(true);
+				}
+
 				navigationItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "form"));
 			}
 		).add(
 			navigationItem -> {
 				navigationItem.putData("action", "showRules");
+
+				if (activeNavItem == _RULES_NAV_ITEM) {
+					navigationItem.setActive(true);
+				}
+
 				navigationItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "rules"));
 			}
@@ -554,6 +566,11 @@ public class DDMFormAdminDisplayContext {
 			this::isShowReport,
 			navigationItem -> {
 				navigationItem.putData("action", "showReport");
+
+				if (activeNavItem == _REPORT_NAV_ITEM) {
+					navigationItem.setActive(true);
+				}
+
 				navigationItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "entries"));
 			}
@@ -928,8 +945,14 @@ public class DDMFormAdminDisplayContext {
 		DDMFormBuilderContextResponse ddmFormBuilderContextResponse =
 			_ddmFormBuilderContextFactory.create(ddmFormBuilderContextRequest);
 
-		return jsonSerializer.serializeDeep(
-			ddmFormBuilderContextResponse.getContext());
+		Map<String, Object> context =
+			ddmFormBuilderContextResponse.getContext();
+
+		context.put(
+			"activeNavItem",
+			ParamUtil.getInteger(renderRequest, "activeNavItem"));
+
+		return jsonSerializer.serializeDeep(context);
 	}
 
 	public String getSharedFormURL() {
@@ -1550,6 +1573,12 @@ public class DDMFormAdminDisplayContext {
 	}
 
 	private static final String[] _DISPLAY_VIEWS = {"descriptive", "list"};
+
+	private static final int _FORM_NAV_ITEM = 0;
+
+	private static final int _REPORT_NAV_ITEM = 2;
+
+	private static final int _RULES_NAV_ITEM = 1;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormAdminDisplayContext.class);

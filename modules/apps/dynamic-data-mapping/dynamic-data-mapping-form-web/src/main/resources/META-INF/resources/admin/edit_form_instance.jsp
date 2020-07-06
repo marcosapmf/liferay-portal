@@ -178,6 +178,11 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 </c:if>
 
 <aui:script>
+	document
+		.querySelector('#<portlet:namespace />managementToolbar')
+		.classList.add('hide');
+	document.querySelector('.ddm-translation-manager').classList.add('hide');
+
 	Liferay.namespace('DDM').FormSettings = {
 		autosaveInterval: <%= ddmFormAdminDisplayContext.getAutosaveInterval() %>,
 		autosaveURL: '<%= autoSaveFormInstanceURL.toString() %>',
