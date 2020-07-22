@@ -21,6 +21,8 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLoca
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import java.util.Date;
+
 /**
  * @author Brian Wing Shun Chan
  */
@@ -70,6 +72,22 @@ public class DDMFormInstanceRecordImpl extends DDMFormInstanceRecordBaseImpl {
 			getFormInstanceRecordVersion();
 
 		return ddmFormInstanceRecordVersion.getStatus();
+	}
+
+	@Override
+	public long getStatusByUserId() throws PortalException {
+		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
+			getFormInstanceRecordVersion();
+
+		return ddmFormInstanceRecordVersion.getStatusByUserId();
+	}
+
+	@Override
+	public Date getStatusDate() throws PortalException {
+		DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion =
+			getFormInstanceRecordVersion();
+
+		return ddmFormInstanceRecordVersion.getStatusDate();
 	}
 
 	@Override
