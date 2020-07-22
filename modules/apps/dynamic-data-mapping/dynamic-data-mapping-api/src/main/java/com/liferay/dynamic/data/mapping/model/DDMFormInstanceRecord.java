@@ -80,6 +80,12 @@ public interface DDMFormInstanceRecord
 	public int getStatus()
 		throws com.liferay.portal.kernel.exception.PortalException;
 
+	public long getStatusByUserId()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public java.util.Date getStatusDate()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
 	public String getStorageType()
 		throws com.liferay.portal.kernel.exception.PortalException;
 

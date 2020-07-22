@@ -329,6 +329,20 @@ public class DDMFormInstanceRecordWrapper
 		return model.getStatus();
 	}
 
+	@Override
+	public long getStatusByUserId()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getStatusByUserId();
+	}
+
+	@Override
+	public Date getStatusDate()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getStatusDate();
+	}
+
 	/**
 	 * Returns the storage ID of this ddm form instance record.
 	 *
