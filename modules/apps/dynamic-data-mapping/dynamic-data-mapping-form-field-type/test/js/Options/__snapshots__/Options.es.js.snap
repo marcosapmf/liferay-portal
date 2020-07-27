@@ -200,7 +200,7 @@ exports[`Options shows the options 1`] = `
               <input
                 class="key-value-input"
                 type="text"
-                value=""
+                value="Any<String>"
               />
             </div>
           </div>
