@@ -24,8 +24,9 @@ import com.liferay.petra.string.StringPool;
 public abstract class BaseCardsClayDataSetDisplayView
 	implements ClayDataSetDisplayView {
 
+	@Override
 	public String getContentRenderer() {
-		return ClayDataSetConstants.CONTENT_RENDERER_CARDS;
+		return ClayDataSetConstants.CARDS;
 	}
 
 	public abstract String getDescription();
@@ -34,12 +35,17 @@ public abstract class BaseCardsClayDataSetDisplayView
 		return StringPool.BLANK;
 	}
 
+	@Override
 	public String getLabel() {
-		return ClayDataSetConstants.CONTENT_RENDERER_CARDS;
+		return ClayDataSetConstants.CARDS;
 	}
 
 	public String getLink() {
 		return StringPool.BLANK;
+	}
+
+	public String getName() {
+		return ClayDataSetConstants.CARDS;
 	}
 
 	public String getSticker() {
@@ -50,6 +56,7 @@ public abstract class BaseCardsClayDataSetDisplayView
 		return StringPool.BLANK;
 	}
 
+	@Override
 	public String getThumbnail() {
 		return "cards2";
 	}

@@ -14,8 +14,10 @@
 
 import React, {useCallback, useContext, useReducer} from 'react';
 
+import switchSidebarPanel from '../actions/switchSidebarPanel';
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../config/constants/itemTypes';
+import {useDispatch, useSelector} from '../store/index';
 import {useFromControlsId, useToControlsId} from './CollectionItemContext';
 
 const ACTIVE_INITIAL_STATE = {
@@ -152,7 +154,11 @@ const useIsHovered = () => {
 };
 
 const useSelectItem = () => {
-	const dispatch = useContext(ActiveDispatchContext);
+	const activeDispatch = useContext(ActiveDispatchContext);
+	const sidebarPanelId = useSelector((state) =>
+		state.sidebar?.open ? state.sidebar?.panelId : null
+	);
+	const storeDispatch = useDispatch();
 	const toControlsId = useToControlsId();
 
 	return useCallback(
@@ -164,14 +170,27 @@ const useSelectItem = () => {
 			} = {
 				itemType: ITEM_TYPES.layoutDataItem,
 			}
-		) =>
-			dispatch({
+		) => {
+			activeDispatch({
 				itemId: toControlsId(itemId),
 				itemType,
 				origin,
 				type: SELECT_ITEM,
-			}),
-		[dispatch, toControlsId]
+			});
+
+			if (
+				itemId &&
+				!['page-structure', 'comments'].includes(sidebarPanelId)
+			) {
+				storeDispatch(
+					switchSidebarPanel({
+						sidebarOpen: true,
+						sidebarPanelId: 'page-structure',
+					})
+				);
+			}
+		},
+		[activeDispatch, sidebarPanelId, storeDispatch, toControlsId]
 	);
 };
 

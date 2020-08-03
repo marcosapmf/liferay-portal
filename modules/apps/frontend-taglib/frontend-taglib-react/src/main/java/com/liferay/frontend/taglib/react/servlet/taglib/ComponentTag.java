@@ -16,6 +16,7 @@ package com.liferay.frontend.taglib.react.servlet.taglib;
 
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
 import com.liferay.frontend.taglib.react.internal.util.ReactRendererProvider;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -78,21 +79,13 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 		if (_setServletContext) {
 			String namespace = NPMResolvedPackageNameUtil.get(servletContext);
 
-			return namespace.concat(
-				"/"
-			).concat(
-				_module
-			);
+			return StringBundler.concat(namespace, "/", _module);
 		}
 
 		String namespace = NPMResolvedPackageNameUtil.get(
 			pageContext.getServletContext());
 
-		return namespace.concat(
-			"/"
-		).concat(
-			_module
-		);
+		return StringBundler.concat(namespace, "/", _module);
 	}
 
 	@Override
@@ -107,8 +100,7 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setProps(Map)}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #setProps(Map)}
 	 */
 	@Deprecated
 	public void setData(Map<String, Object> data) {
@@ -138,8 +130,7 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getProps()}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getProps()}
 	 */
 	@Deprecated
 	protected Map<String, Object> getData() {

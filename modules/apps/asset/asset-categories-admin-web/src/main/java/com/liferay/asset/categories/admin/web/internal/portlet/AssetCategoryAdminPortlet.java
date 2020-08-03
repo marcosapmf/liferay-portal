@@ -36,6 +36,7 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
@@ -245,7 +246,12 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 			actionRequest, "title");
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(actionRequest, "description");
-		boolean system = ParamUtil.getBoolean(actionRequest, "system");
+
+		int visibilityType = AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC;
+
+		if (ParamUtil.getBoolean(actionRequest, "internalUse")) {
+			visibilityType = AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL;
+		}
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			AssetVocabulary.class.getName(), actionRequest);
@@ -258,7 +264,7 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 
 			vocabulary = _assetVocabularyService.addVocabulary(
 				serviceContext.getScopeGroupId(), StringPool.BLANK, titleMap,
-				descriptionMap, getSettings(actionRequest), system,
+				descriptionMap, getSettings(actionRequest), visibilityType,
 				serviceContext);
 		}
 		else {
@@ -267,7 +273,7 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 
 			vocabulary = _assetVocabularyService.updateVocabulary(
 				vocabularyId, titleMap, descriptionMap,
-				getSettings(actionRequest), system);
+				getSettings(actionRequest), visibilityType);
 		}
 
 		actionRequest.setAttribute(
@@ -441,20 +447,20 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 	}
 
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof AssetCategoryNameException ||
-			cause instanceof CategoryPropertyKeyException ||
-			cause instanceof CategoryPropertyValueException ||
-			cause instanceof DuplicateCategoryException ||
-			cause instanceof DuplicateCategoryPropertyException ||
-			cause instanceof DuplicateVocabularyException ||
-			cause instanceof InvalidAssetCategoryException ||
-			cause instanceof NoSuchCategoryException ||
-			cause instanceof NoSuchClassTypeException ||
-			cause instanceof NoSuchEntryException ||
-			cause instanceof NoSuchVocabularyException ||
-			cause instanceof PrincipalException ||
-			cause instanceof VocabularyNameException) {
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof AssetCategoryNameException ||
+			throwable instanceof CategoryPropertyKeyException ||
+			throwable instanceof CategoryPropertyValueException ||
+			throwable instanceof DuplicateCategoryException ||
+			throwable instanceof DuplicateCategoryPropertyException ||
+			throwable instanceof DuplicateVocabularyException ||
+			throwable instanceof InvalidAssetCategoryException ||
+			throwable instanceof NoSuchCategoryException ||
+			throwable instanceof NoSuchClassTypeException ||
+			throwable instanceof NoSuchEntryException ||
+			throwable instanceof NoSuchVocabularyException ||
+			throwable instanceof PrincipalException ||
+			throwable instanceof VocabularyNameException) {
 
 			return true;
 		}

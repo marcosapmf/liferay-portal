@@ -146,7 +146,47 @@ export const deleteMessageBoardThreadQuery = gql`
 	}
 `;
 
-export const getTagsQuery = gql`
+export const getTags = (
+	orderBy,
+	page = 1,
+	pageSize = 30,
+	search = '',
+	siteKey
+) => {
+	if (orderBy === 'latest-created') {
+		return client
+			.query({
+				query: getTagsOrderByDateCreatedQuery,
+				variables: {
+					page,
+					pageSize,
+					search,
+					siteKey,
+				},
+			})
+			.then((result) => ({
+				...result,
+				data: result.data.keywords,
+			}));
+	}
+
+	return client
+		.query({
+			query: getTagsOrderByNumberOfUsagesQuery,
+			variables: {
+				page,
+				pageSize,
+				search,
+				siteKey,
+			},
+		})
+		.then((result) => ({
+			...result,
+			data: result.data.keywordsRanked,
+		}));
+};
+
+export const getTagsOrderByNumberOfUsagesQuery = gql`
 	query keywordsRanked(
 		$page: Int!
 		$pageSize: Int!
@@ -162,6 +202,33 @@ export const getTagsQuery = gql`
 			items {
 				id
 				keywordUsageCount
+				name
+			}
+			lastPage
+			page
+			pageSize
+			totalCount
+		}
+	}
+`;
+
+export const getTagsOrderByDateCreatedQuery = gql`
+	query keywords(
+		$page: Int!
+		$pageSize: Int!
+		$search: String
+		$siteKey: String!
+	) {
+		keywords(
+			page: $page
+			pageSize: $pageSize
+			search: $search
+			siteKey: $siteKey
+			sort: "dateCreated:desc"
+		) {
+			items {
+				id
+				dateCreated
 				name
 			}
 			lastPage
@@ -383,8 +450,7 @@ export const getQuestionThreads = (
 		pageSize,
 		search,
 		section,
-		siteKey,
-		'dateCreated:desc'
+		siteKey
 	);
 };
 
@@ -396,12 +462,13 @@ export const getThreads = (
 	search = '',
 	section,
 	siteKey,
-	sort = 'dateCreated:desc'
+	sort
 ) => {
 	if (
-		!filter &&
+		!search &&
 		!keywords &&
 		!creatorId &&
+		!sort &&
 		!section.messageBoardSections.items.length
 	) {
 		return client
@@ -439,6 +506,8 @@ export const getThreads = (
 	else if (creatorId) {
 		filter += ` and creator/id eq ${creatorId}`;
 	}
+
+	sort = sort || 'dateCreated:desc';
 
 	return client
 		.query({

@@ -445,23 +445,22 @@ public class SocialActivityLocalServiceWrapper
 	}
 
 	/**
-	 * Returns a range of all the activities done on assets identified by the
-	 * class name ID.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end -
-	 * start</code> instances. <code>start</code> and <code>end</code> are not
-	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
-	 * refers to the first result in the set. Setting both <code>start</code>
-	 * and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full
-	 * result set.
-	 * </p>
-	 *
 	 * @param classNameId the target asset's class name ID
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
 	 * @return the range of matching activities
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getActivities(long, String, int, int)}  Returns a range of
+	 all the activities done on assets identified by the class
+	 name ID.  <p> Useful when paginating results. Returns a
+	 maximum of <code>end - start</code> instances.
+	 <code>start</code> and <code>end</code> are not primary keys,
+	 they are indexes in the result set. Thus, <code>0</code>
+	 refers to the first result in the set. Setting both
+	 <code>start</code> and <code>end</code> to {@link
+	 QueryUtil#ALL_POS} will return the full result set.</p>
 	 */
+	@Deprecated
 	@Override
 	public java.util.List<SocialActivity> getActivities(
 		long classNameId, int start, int end) {
@@ -501,6 +500,33 @@ public class SocialActivityLocalServiceWrapper
 	}
 
 	/**
+	 * Returns a range of all the activities done on assets identified by the
+	 * company ID and class name.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end -
+	 * start</code> instances. <code>start</code> and <code>end</code> are not
+	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
+	 * refers to the first result in the set. Setting both <code>start</code>
+	 * and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full
+	 * result set.
+	 * </p>
+	 *
+	 * @param companyId the primary key of the company
+	 * @param className the target asset's class name
+	 * @param start the lower bound of the range of results
+	 * @param end the upper bound of the range of results (not inclusive)
+	 * @return the range of matching activities
+	 */
+	@Override
+	public java.util.List<SocialActivity> getActivities(
+		long companyId, String className, int start, int end) {
+
+		return _socialActivityLocalService.getActivities(
+			companyId, className, start, end);
+	}
+
+	/**
 	 * Returns a range of all the activities done on the asset identified by the
 	 * class name and the class primary key that are mirrors of the activity
 	 * identified by the mirror activity ID.
@@ -531,23 +557,22 @@ public class SocialActivityLocalServiceWrapper
 	}
 
 	/**
-	 * Returns a range of all the activities done on assets identified by the
-	 * class name.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end -
-	 * start</code> instances. <code>start</code> and <code>end</code> are not
-	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
-	 * refers to the first result in the set. Setting both <code>start</code>
-	 * and <code>end</code> to {@link QueryUtil#ALL_POS} will return the full
-	 * result set.
-	 * </p>
-	 *
 	 * @param className the target asset's class name
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
 	 * @return the range of matching activities
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getActivities(long, String, int, int)}  Returns a range of
+	 all the activities done on assets identified by the class
+	 name.  <p> Useful when paginating results. Returns a maximum
+	 of <code>end - start</code> instances. <code>start</code> and
+	 <code>end</code> are not primary keys, they are indexes in
+	 the result set. Thus, <code>0</code> refers to the first
+	 result in the set. Setting both <code>start</code> and
+	 <code>end</code> to {@link QueryUtil#ALL_POS} will return the
+	 full result set.</p>
 	 */
+	@Deprecated
 	@Override
 	public java.util.List<SocialActivity> getActivities(
 		String className, int start, int end) {
@@ -556,12 +581,12 @@ public class SocialActivityLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the number of activities done on assets identified by the class
-	 * name ID.
-	 *
 	 * @param classNameId the target asset's class name ID
 	 * @return the number of matching activities
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getActivitiesCount(long, String)}
 	 */
+	@Deprecated
 	@Override
 	public int getActivitiesCount(long classNameId) {
 		return _socialActivityLocalService.getActivitiesCount(classNameId);
@@ -596,6 +621,20 @@ public class SocialActivityLocalServiceWrapper
 	}
 
 	/**
+	 * Returns the number of activities done on assets identified by company ID
+	 * and class name.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param className the target asset's class name
+	 * @return the number of matching activities
+	 */
+	@Override
+	public int getActivitiesCount(long companyId, String className) {
+		return _socialActivityLocalService.getActivitiesCount(
+			companyId, className);
+	}
+
+	/**
 	 * Returns the number of activities done on the asset identified by the
 	 * class name and class primary key that are mirrors of the activity
 	 * identified by the mirror activity ID.
@@ -614,11 +653,12 @@ public class SocialActivityLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the number of activities done on assets identified by class name.
-	 *
 	 * @param className the target asset's class name
 	 * @return the number of matching activities
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getActivitiesCount(long, String)}
 	 */
+	@Deprecated
 	@Override
 	public int getActivitiesCount(String className) {
 		return _socialActivityLocalService.getActivitiesCount(className);

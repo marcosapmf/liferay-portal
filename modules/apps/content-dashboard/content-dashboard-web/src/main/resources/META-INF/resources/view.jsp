@@ -62,6 +62,7 @@ ContentDashboardAdminManagementToolbarDisplayContext contentDashboardAdminManage
 
 				<div class="sheet-section">
 					<liferay-ui:search-container
+						cssClass="table-hover"
 						id="content"
 						searchContainer="<%= contentDashboardAdminDisplayContext.getSearchContainer() %>"
 					>
@@ -69,7 +70,15 @@ ContentDashboardAdminManagementToolbarDisplayContext contentDashboardAdminManage
 							className="com.liferay.content.dashboard.web.internal.item.ContentDashboardItem"
 							keyProperty="id"
 							modelVar="contentDashboardItem"
+							rowIdProperty="classPK"
 						>
+
+							<%
+							row.setData(HashMapBuilder.<String, Object>put(
+								"rowId", row.getRowId()
+							).build());
+							%>
+
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand table-title"
 								name="title"
@@ -83,7 +92,7 @@ ContentDashboardAdminManagementToolbarDisplayContext contentDashboardAdminManage
 								cssClass="text-center"
 								name=""
 							>
-								<c:if test="<%= contentDashboardItem.isViewURLEnabled(request) %>">
+								<c:if test="<%= contentDashboardItem.isViewable(request) %>">
 									<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "this-content-has-a-display-page") %>">
 										<clay:icon
 											cssClass="text-secondary"
@@ -151,20 +160,34 @@ ContentDashboardAdminManagementToolbarDisplayContext contentDashboardAdminManage
 								>
 
 									<%
-									for (AssetCategory assetCategory : (List<AssetCategory>)contentDashboardItem.getAssetCategories(assetVocabulary.getVocabularyId())) {
+									List<String> assetCategories = contentDashboardAdminDisplayContext.getAssetCategoryTitles(contentDashboardItem, assetVocabulary.getVocabularyId());
 									%>
 
+									<c:if test="<%= !assetCategories.isEmpty() %>">
 										<clay:label
 											displayType="secondary"
 											large="<%= true %>"
 										>
-											<clay:label-item-expand><%= assetCategory.getTitle(locale) %></clay:label-item-expand>
+											<clay:label-item-expand><%= assetCategories.get(0) %></clay:label-item-expand>
 										</clay:label>
+									</c:if>
 
-									<%
-									}
-									%>
+									<c:if test="<%= assetCategories.size() > 1 %>">
 
+										<%
+										String assetCategoriesSummary = StringUtil.merge(assetCategories.subList(1, assetCategories.size()), "\n");
+										%>
+
+										<span class="lfr-portal-tooltip" title="<%= assetCategoriesSummary %>">
+											<clay:label
+												aria-title="<%= assetCategoriesSummary %>"
+												displayType="secondary"
+												large="<%= true %>"
+											>
+												<span>...</span>
+											</clay:label>
+										</span>
+									</c:if>
 								</liferay-ui:search-container-column-text>
 
 							<%
@@ -177,17 +200,7 @@ ContentDashboardAdminManagementToolbarDisplayContext contentDashboardAdminManage
 							/>
 
 							<liferay-ui:search-container-column-text>
-
-								<%
-								Map<String, Object> additionalProps = HashMapBuilder.<String, Object>put(
-									"namespace", liferayPortletResponse.getNamespace()
-								).put(
-									"sidebarContainerSelector", ".sidebar-container"
-								).build();
-								%>
-
 								<clay:dropdown-actions
-									additionalProps="<%= additionalProps %>"
 									dropdownItems="<%= contentDashboardAdminDisplayContext.getDropdownItems(contentDashboardItem) %>"
 									propsTransformer="js/transformers/ActionsComponentPropsTransformer"
 								/>

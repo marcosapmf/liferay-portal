@@ -15,7 +15,6 @@
 package com.liferay.portal.file.install.internal.properties;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
 import java.util.HashMap;
@@ -39,7 +38,7 @@ public class InterpolationUtil {
 
 	public static void performSubstitution(
 		Map<String, String> properties,
-		SubstitutionCallback substitutionCallback) {
+		SubstitutionalCallback substitutionCallback) {
 
 		Map<String, String> map = new HashMap<>(properties);
 
@@ -50,30 +49,28 @@ public class InterpolationUtil {
 				name,
 				substVars(
 					entry.getValue(), name, null, map, substitutionCallback,
-					true, true, true));
+					true));
 		}
 	}
 
 	public static String substVars(
 			String value, String currentKey, Map<String, String> cycleMap,
-			Map<String, String> configProps, SubstitutionCallback callback,
-			boolean substituteFromConfig,
-			boolean substituteFromSystemProperties,
-			boolean defaultsToEmptyString)
+			Map<String, String> configProps,
+			SubstitutionalCallback substitutionalCallback,
+			boolean substituteFromConfig)
 		throws IllegalArgumentException {
 
 		return _unescape(
 			_substVars(
-				value, currentKey, cycleMap, configProps, callback,
-				substituteFromConfig, substituteFromSystemProperties,
-				defaultsToEmptyString));
+				value, currentKey, cycleMap, configProps,
+				substitutionalCallback, substituteFromConfig));
 	}
 
 	public static class BundleContextSubstitutionCallback
-		implements SubstitutionCallback {
+		implements SubstitutionalCallback {
 
-		public BundleContextSubstitutionCallback(BundleContext context) {
-			_bundleContext = context;
+		public BundleContextSubstitutionCallback(BundleContext bundleContext) {
+			_bundleContext = bundleContext;
 		}
 
 		@Override
@@ -97,12 +94,6 @@ public class InterpolationUtil {
 		}
 
 		private final BundleContext _bundleContext;
-
-	}
-
-	public interface SubstitutionCallback {
-
-		public String getValue(String key);
 
 	}
 
@@ -139,10 +130,9 @@ public class InterpolationUtil {
 
 	private static String _substVars(
 			String value, String currentKey, Map<String, String> cycleMap,
-			Map<String, String> configProps, SubstitutionCallback callback,
-			boolean substituteFromConfig,
-			boolean substituteFromSystemProperties,
-			boolean defaultsToEmptyString)
+			Map<String, String> configProps,
+			SubstitutionalCallback substitutionalCallback,
+			boolean substituteFromConfig)
 		throws IllegalArgumentException {
 
 		if (cycleMap == null) {
@@ -253,11 +243,11 @@ public class InterpolationUtil {
 		}
 
 		if ((substValue == null) && (variable.length() > 0)) {
-			if (callback != null) {
-				substValue = callback.getValue(variable);
+			if (substitutionalCallback != null) {
+				substValue = substitutionalCallback.getValue(variable);
 			}
 
-			if ((substValue == null) && substituteFromSystemProperties) {
+			if (substValue == null) {
 				substValue = System.getProperty(variable);
 			}
 		}
@@ -281,18 +271,7 @@ public class InterpolationUtil {
 		}
 
 		if (substValue == null) {
-			if (defaultsToEmptyString) {
-				substValue = "";
-			}
-			else {
-
-				// Alter the original token to avoid infinite recursion
-				// altered tokens are reverted in #substVarsPreserveUnresolved
-
-				substValue = StringBundler.concat(
-					_MARKER, StringPool.OPEN_CURLY_BRACE, variable,
-					StringPool.CLOSE_CURLY_BRACE);
-			}
+			substValue = "";
 		}
 
 		// Remove the found variable from the cycle map since it may appear more
@@ -312,9 +291,8 @@ public class InterpolationUtil {
 		// substitutions to make
 
 		value = _substVars(
-			value, currentKey, cycleMap, configProps, callback,
-			substituteFromConfig, substituteFromSystemProperties,
-			defaultsToEmptyString);
+			value, currentKey, cycleMap, configProps, substitutionalCallback,
+			substituteFromConfig);
 
 		cycleMap.remove(currentKey);
 

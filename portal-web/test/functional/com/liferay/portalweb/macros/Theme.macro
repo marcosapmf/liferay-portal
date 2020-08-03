@@ -1,5 +1,12 @@
 definition {
 
+	macro configureLookAndFeelCustomCSS {
+		Type(
+			key_text = "regularCss",
+			locator1 = "TextArea#ANY",
+			value1 = "${cssText}");
+	}
+
 	macro configureLookAndFeelShowFooter {
 		if ("${showFooter}" == "true") {
 			Check.checkToggleSwitch(
@@ -66,6 +73,29 @@ definition {
 			Uncheck.uncheckToggleSwitch(
 				key_toggleSwitchLabel = "Wrap Widget Page Content",
 				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+		}
+	}
+
+	macro deployThemeWar {
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "deploy-dependency-war -Dliferay.dependency.war=${themeName}.war");
+
+		AntCommand(
+			locator1 = "build-test.xml",
+			value1 = "copy-log-file");
+
+		var projectDir = PropsUtil.get("project.dir");
+		var logContent = FileUtil.read("${projectDir}/log");
+
+		while (!(contains("${logContent}", "STARTED ${themeName}"))) {
+			Pause(locator1 = "3000");
+
+			AntCommand(
+				locator1 = "build-test.xml",
+				value1 = "copy-log-file");
+
+			var logContent = FileUtil.read("${projectDir}/log");
 		}
 	}
 

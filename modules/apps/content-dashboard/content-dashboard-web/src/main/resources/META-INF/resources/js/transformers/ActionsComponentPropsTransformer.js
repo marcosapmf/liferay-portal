@@ -18,47 +18,82 @@ import SidebarPanel from '../SidebarPanel';
 import SidebarPanelInfoView from '../components/SidebarPanelInfoView';
 import SidebarPanelMetricsView from '../components/SidebarPanelMetricsView';
 
-export default function propsTransformer({items, namespace, ...otherProps}) {
-	const actions = {
-		showInfo(fetchURL) {
-			showSidebar(fetchURL, SidebarPanelInfoView);
-		},
-		showMetrics(fetchURL) {
-			showSidebar(fetchURL, SidebarPanelMetricsView);
-		},
-	};
+const actions = {
+	showInfo({fetchURL, portletNamespace, rowId}) {
+		selectRow(portletNamespace, rowId);
+		showSidebar({
+			View: SidebarPanelInfoView,
+			fetchURL,
+			portletNamespace,
+		});
+	},
+	showMetrics({fetchURL, portletNamespace, rowId}) {
+		selectRow(portletNamespace, rowId);
+		showSidebar({
+			View: SidebarPanelMetricsView,
+			fetchURL,
+			portletNamespace,
+		});
+	},
+};
 
-	const showSidebar = (fetchURL, View) => {
-		const sidebarPanel = _getSidebarPanel();
+const deselectAllRows = (portletNamespace) => {
+	const activeRows = document.querySelectorAll(
+		`[data-searchcontainerid="${portletNamespace}content"] tr.active`
+	);
 
-		if (!sidebarPanel) {
-			const container = document.body.appendChild(
-				document.createElement('div')
-			);
+	activeRows.forEach((row) => row.classList.remove('active'));
+};
 
-			render(
-				SidebarPanel,
-				{
-					fetchURL,
-					ref: _setSidebarPanel,
-					viewComponent: View,
+const getRow = (portletNamespace, rowId) =>
+	document.querySelector(
+		`[data-searchcontainerid="${portletNamespace}content"] [data-rowid="${rowId}"]`
+	);
+
+const selectRow = (portletNamespace, rowId) => {
+	deselectAllRows(portletNamespace);
+
+	const currentRow = getRow(portletNamespace, rowId);
+	currentRow.classList.add('active');
+};
+
+const showSidebar = ({View, fetchURL, portletNamespace}) => {
+	const id = `${portletNamespace}sidebar`;
+
+	const sidebarPanel = Liferay.component(id);
+
+	if (!sidebarPanel) {
+		const container = document.body.appendChild(
+			document.createElement('div')
+		);
+
+		render(
+			SidebarPanel,
+			{
+				fetchURL,
+				onClose: () => {
+					Liferay.component(id).close();
+
+					deselectAllRows(portletNamespace);
 				},
-				container
-			);
-		}
-		else {
-			sidebarPanel.open(fetchURL, View);
-		}
-	};
+				ref: (element) => {
+					Liferay.component(id, element);
+				},
+				viewComponent: View,
+			},
+			container
+		);
+	}
+	else {
+		sidebarPanel.open(fetchURL, View);
+	}
+};
 
-	const _getSidebarPanel = () => {
-		return Liferay.component(`${namespace}sidebar`);
-	};
-
-	const _setSidebarPanel = (element) => {
-		Liferay.component(`${namespace}sidebar`, element);
-	};
-
+export default function propsTransformer({
+	items,
+	portletNamespace,
+	...otherProps
+}) {
 	return {
 		...otherProps,
 		items: items.map((item) => {
@@ -70,7 +105,11 @@ export default function propsTransformer({items, namespace, ...otherProps}) {
 					if (action) {
 						event.preventDefault();
 
-						actions[action](item.data.fetchURL);
+						actions[action]({
+							fetchURL: item.data.fetchURL,
+							portletNamespace,
+							rowId: item.data.classPK,
+						});
 					}
 				},
 			};

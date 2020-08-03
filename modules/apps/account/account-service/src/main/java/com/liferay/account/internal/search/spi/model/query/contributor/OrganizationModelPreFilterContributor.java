@@ -65,21 +65,16 @@ public class OrganizationModelPreFilterContributor
 			if ((accountEntryIds.length == 1) &&
 				(accountEntryIds[0] == AccountConstants.ACCOUNT_ENTRY_ID_ANY)) {
 
-				ExistsFilter accountEntryIdsExistsFilter = new ExistsFilter(
-					"accountEntryIds");
+				ExistsFilter existsFilter = new ExistsFilter("accountEntryIds");
 
-				booleanFilter.add(
-					accountEntryIdsExistsFilter, BooleanClauseOccur.MUST);
+				booleanFilter.add(existsFilter, BooleanClauseOccur.MUST);
 			}
 			else {
-				TermsFilter accountEntryTermsFilter = new TermsFilter(
-					"accountEntryIds");
+				TermsFilter termsFilter = new TermsFilter("accountEntryIds");
 
-				accountEntryTermsFilter.addValues(
-					ArrayUtil.toStringArray(accountEntryIds));
+				termsFilter.addValues(ArrayUtil.toStringArray(accountEntryIds));
 
-				booleanFilter.add(
-					accountEntryTermsFilter, BooleanClauseOccur.MUST);
+				booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
 			}
 		}
 

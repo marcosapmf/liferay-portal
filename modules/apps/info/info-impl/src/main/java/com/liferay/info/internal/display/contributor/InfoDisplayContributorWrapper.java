@@ -29,16 +29,21 @@ import com.liferay.info.field.type.URLInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemClassPKReference;
+import com.liferay.info.item.InfoItemDetails;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.info.item.provider.InfoItemClassDetailsProvider;
+import com.liferay.info.item.capability.InfoItemCapability;
+import com.liferay.info.item.provider.InfoItemCapabilitiesProvider;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
+import com.liferay.layout.page.template.info.item.capability.DisplayPageInfoItemCapability;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
@@ -54,7 +59,8 @@ import java.util.Set;
  * @author Jorge Ferrer
  */
 public class InfoDisplayContributorWrapper
-	implements InfoItemClassDetailsProvider<Object>,
+	implements InfoItemCapabilitiesProvider<Object>,
+			   InfoItemDetailsProvider<Object>,
 			   InfoItemFieldValuesProvider<Object>,
 			   InfoItemFormProvider<Object>,
 			   InfoItemFormVariationsProvider<Object>,
@@ -137,11 +143,25 @@ public class InfoDisplayContributorWrapper
 	}
 
 	@Override
+	public List<InfoItemCapability> getInfoItemCapabilities() {
+		return ListUtil.fromArray(DisplayPageInfoItemCapability.INSTANCE);
+	}
+
+	@Override
 	public InfoItemClassDetails getInfoItemClassDetails() {
 		return new InfoItemClassDetails(
 			_infoDisplayContributor.getClassName(),
 			(InfoLocalizedValue<String>)InfoLocalizedValue.function(
 				locale -> _infoDisplayContributor.getLabel(locale)));
+	}
+
+	@Override
+	public InfoItemDetails getInfoItemDetails(Object itemObject) {
+		return new InfoItemDetails(
+			getInfoItemClassDetails(),
+			new InfoItemReference(
+				_infoDisplayContributor.getInfoDisplayObjectClassPK(
+					itemObject)));
 	}
 
 	@Override

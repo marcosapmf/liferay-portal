@@ -32,21 +32,11 @@ import {
 	STATUSES,
 } from './constants.es';
 
-export default ({
-	editPath = [
-		`/:objectType/:dataDefinitionId(\\d+)/apps/deploy`,
-		`/:objectType/:dataDefinitionId(\\d+)/apps/:appId(\\d+)`,
-	],
-	listViewProps = {},
-	match: {
-		params: {dataDefinitionId, objectType},
-	},
-}) => {
+export const Actions = () => {
 	const {getStandaloneURL} = useContext(AppContext);
 	const {deployApp, undeployApp} = useDeployApp();
-	const withBackUrl = useBackUrl();
 
-	const ACTIONS = [
+	return [
 		{
 			action: (app) => (app.active ? undeployApp(app) : deployApp(app)),
 			name: ({active}) =>
@@ -57,7 +47,8 @@ export default ({
 			action: ({id}) =>
 				Promise.resolve(window.open(getStandaloneURL(id), '_blank')),
 			name: Liferay.Language.get('open-standalone-app'),
-			show: ({appDeployments}) =>
+			show: ({active, appDeployments}) =>
+				active &&
 				appDeployments.some(({type}) => type === 'standalone'),
 		},
 		{
@@ -65,6 +56,19 @@ export default ({
 			name: Liferay.Language.get('delete'),
 		},
 	];
+};
+
+export default ({
+	editPath = [
+		`/:objectType/:dataDefinitionId(\\d+)/apps/deploy`,
+		`/:objectType/:dataDefinitionId(\\d+)/apps/:appId(\\d+)`,
+	],
+	listViewProps = {},
+	match: {
+		params: {dataDefinitionId, objectType},
+	},
+}) => {
+	const withBackUrl = useBackUrl();
 
 	const newAppLink = compile(editPath[0])({dataDefinitionId, objectType});
 
@@ -103,7 +107,7 @@ export default ({
 
 	return (
 		<ListView
-			actions={ACTIONS}
+			actions={Actions()}
 			addButton={ADD_BUTTON}
 			columns={COLUMNS}
 			emptyState={EMPTY_STATE}

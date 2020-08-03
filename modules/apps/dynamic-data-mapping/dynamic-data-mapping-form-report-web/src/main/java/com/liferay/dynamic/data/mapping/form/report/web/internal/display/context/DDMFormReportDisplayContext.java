@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.Set;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -77,8 +76,8 @@ public class DDMFormReportDisplayContext {
 		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
 
 		ddmFormFields.forEach(
-			ddmFormField -> {
-				JSONObject fieldJSONObject = JSONUtil.put(
+			ddmFormField -> fieldsJSONArray.put(
+				JSONUtil.put(
 					"columns", _getPropertyLabels(ddmFormField, "columns")
 				).put(
 					"label", _getValue(ddmFormField.getLabel())
@@ -92,10 +91,7 @@ public class DDMFormReportDisplayContext {
 					"rows", _getPropertyLabels(ddmFormField, "rows")
 				).put(
 					"type", ddmFormField.getType()
-				);
-
-				fieldsJSONArray.put(fieldJSONObject);
-			});
+				)));
 
 		return fieldsJSONArray;
 	}
@@ -162,12 +158,18 @@ public class DDMFormReportDisplayContext {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		Set<String> optionsValues = ddmFormFieldOptions.getOptionsValues();
+		int index = 0;
 
-		optionsValues.forEach(
-			optionValue -> jsonObject.put(
+		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
+			jsonObject.put(
 				optionValue,
-				_getValue(ddmFormFieldOptions.getOptionLabels(optionValue))));
+				JSONUtil.put(
+					"index", index++
+				).put(
+					"value",
+					_getValue(ddmFormFieldOptions.getOptionLabels(optionValue))
+				));
+		}
 
 		return jsonObject;
 	}

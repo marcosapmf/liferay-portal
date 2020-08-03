@@ -29,6 +29,348 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-116034. The custom ddmfields of content are available for mapping in editable field."
+	@priority = "4"
+	test MapCustomDDMFieldToFragment {
+		task ("Add a custom Web Content structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(
+				structureDescription = "WC Structure Description",
+				structureName = "WC Structure Name");
+
+			DynamicDataMapping.addField(
+				field = "Text",
+				fieldFieldLabel = "Text",
+				fieldName = "Text");
+
+			WebContentStructures.saveCP(structureName = "WC Structure Name");
+		}
+
+		task ("Add a template for new structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoTemplates();
+
+			WebContentTemplates.addCP(
+				structureName = "WC Structure Name",
+				templateDescription = "WC Template Description",
+				templateFieldNames = "Text",
+				templateName = "WC Template Name");
+		}
+
+		task ("Add a web content based on new structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+			PortletEntry.inputTitle(title = "Web Content Title");
+
+			Type(
+				key_fieldName = "Text",
+				locator1 = "TextInput#DDM",
+				value1 = "Web Content Content");
+
+			PortletEntry.publish();
+		}
+
+		task ("Add a custom Document type") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+			DMNavigator.gotoDocumentType();
+
+			DMDocumentType.add(
+				dmDocumentTypeDescription = "DM Document Type Description",
+				dmDocumentTypeFieldNames = "Text",
+				dmDocumentTypeName = "DM Document Type Name");
+		}
+
+		task ("Add a document based on new document type") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "DM Document Title",
+				dmDocumentTypeName = "DM Document Type Name",
+				textField = "DM Document Text");
+		}
+
+		task ("Map custom ddmfield of web content structure to Heading fragment") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Heading",
+				id = "element-text");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Text");
+
+			Pause(locator1 = "3000");
+
+			PageEditor.waitForAutoSave();
+
+			AssertTextEquals(
+				id = "element-text",
+				key_fragmentName = "Heading",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD",
+				value1 = "Web Content Content");
+		}
+
+		task ("Map custom ddmfield of document type to Paragraph fragment") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph",
+				targetFragmentName = "Heading");
+
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Paragraph",
+				id = "element-text");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "DM Document Title",
+				navItem = "Documents and Media");
+
+			Select(
+				key_fieldLabel = "Field",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Text");
+
+			Pause(locator1 = "3000");
+
+			PageEditor.waitForAutoSave();
+
+			AssertTextEquals(
+				id = "element-text",
+				key_fragmentName = "Paragraph",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD",
+				value1 = "DM Document Text");
+		}
+
+		task ("Assert mapped content in view mode") {
+			PageEditor.clickPublish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			AssertTextEquals(
+				key_fragmentName = "heading",
+				locator1 = "Fragment#FRAGMENT_BASIC_COMPONENT",
+				value1 = "Web Content Content");
+
+			AssertTextEquals(
+				key_fragmentName = "paragraph",
+				locator1 = "Fragment#FRAGMENT_BASIC_COMPONENT",
+				value1 = "DM Document Text");
+		}
+	}
+
+	@description = "This is a test for LPS-116034. The custom ddmfields of single type collection items are available for mapping in editable field."
+	@priority = "4"
+	test MapCustomDDMFieldToFragmentInCollectionDisplayBasedOnSingleTypeCollection {
+		task ("Add a custom Web Content structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(
+				structureDescription = "WC Structure Description",
+				structureName = "WC Structure Name");
+
+			DynamicDataMapping.addField(
+				field = "Text",
+				fieldFieldLabel = "Text",
+				fieldName = "Text");
+
+			WebContentStructures.saveCP(structureName = "WC Structure Name");
+		}
+
+		task ("Add a template for new structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			NavItem.gotoTemplates();
+
+			WebContentTemplates.addCP(
+				structureName = "WC Structure Name",
+				templateDescription = "WC Template Description",
+				templateFieldNames = "Text",
+				templateName = "WC Template Name");
+		}
+
+		task ("Add a web content based on new structure") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+			AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+			PortletEntry.inputTitle(title = "Web Content Title");
+
+			Type(
+				key_fieldName = "Text",
+				locator1 = "TextInput#DDM",
+				value1 = "Web Content Content");
+
+			PortletEntry.publish();
+		}
+
+		task ("Add a custom Document type") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+			DMNavigator.gotoDocumentType();
+
+			DMDocumentType.add(
+				dmDocumentTypeDescription = "DM Document Type Description",
+				dmDocumentTypeFieldNames = "Text",
+				dmDocumentTypeName = "DM Document Type Name");
+		}
+
+		task ("Add a document based on new document type") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentTitle = "DM Document Title",
+				dmDocumentTypeName = "DM Document Type Name",
+				textField = "DM Document Text");
+		}
+
+		task ("Add a dynamic collection with Web Content Article and new web content structure") {
+			JSONAssetlist.addDynamicAssetListEntry(
+				groupName = "Test Site Name",
+				title = "Dynamic Collection");
+
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+
+			AssetListsAdmin.editAssetList(assetListTitle = "Dynamic Collection");
+
+			AssetListsAdmin.configureAssetEntryType(selectedAsset = "Web Content Article");
+
+			AssetListsAdmin.configureAssetEntrySubtype(selectedSubtype = "WC Structure Name");
+		}
+
+		task ("Add a manual collection with new document entry") {
+			JSONAssetlist.addManualAssetListEntry(
+				groupName = "Test Site Name",
+				title = "Manual Collection");
+
+			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+
+			AssetListsAdmin.selectAsset(
+				assetListName = "Manual Collection",
+				assetName = "DM Document Title",
+				assetType = "DM Document Type Name",
+				itemSubtype = "DM Document Type Name",
+				itemType = "Document");
+		}
+
+		task ("Map custom ddmfield of web content structure to Heading fragment in Collection Display based on the dynamic collection") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Content Display",
+				fragmentName = "Collection Display");
+
+			PageEditor.editCollectionDisplay(
+				assetListName = "Dynamic Collection",
+				fragmentName = "Collection Display");
+
+			PageEditor.addFragmentToCollectionDisplay(
+				collectionName = "Basic Components",
+				entryTitle = "Web Content Title",
+				fragmentName = "Heading");
+
+			PageEditorMapping.mapEditableFieldToCollectionItems(
+				field = "Text",
+				fragmentName = "Heading",
+				id = "element-text");
+
+			AssertTextEquals(
+				key_colPosition = "1",
+				key_element = "//div[contains(@class,'page-editor__topper') and contains(.,'Heading')]//*[contains(@data-lfr-editable-id,'element-text')]",
+				key_fragmentName = "Collection Display",
+				key_rowPosition = "1",
+				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT",
+				value1 = "Web Content Content");
+
+			PageEditor.clickPublish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			AssertTextEquals(
+				key_colPosition = "1",
+				key_fragmentName = "heading",
+				key_rowPosition = "1",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_INLINE_CONTENT_IN_COLLECTION_DISPLAY",
+				value1 = "Web Content Content");
+		}
+
+		task ("Map custom ddmfield of document type to Paragraph fragment in Collection Display based on the manual collection") {
+			ContentPages.clickPencil();
+
+			PageEditor.removeFragment(fragmentName = "Collection Display");
+
+			PageEditor.addFragment(
+				collectionName = "Content Display",
+				fragmentName = "Collection Display");
+
+			PageEditor.editCollectionDisplay(
+				assetListName = "Manual Collection",
+				fragmentName = "Collection Display");
+
+			PageEditor.addFragmentToCollectionDisplay(
+				collectionName = "Basic Components",
+				entryTitle = "DM Document Title",
+				fragmentName = "Paragraph");
+
+			PageEditorMapping.mapEditableFieldToCollectionItems(
+				field = "Text",
+				fragmentName = "Paragraph",
+				id = "element-text");
+
+			AssertTextEquals(
+				key_colPosition = "1",
+				key_element = "//div[contains(@class,'page-editor__topper') and contains(.,'Paragraph')]//*[contains(@data-lfr-editable-id,'element-text')]",
+				key_fragmentName = "Collection Display",
+				key_rowPosition = "1",
+				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT",
+				value1 = "DM Document Text");
+
+			PageEditor.clickPublish();
+
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = "Test Site Name");
+
+			AssertTextEquals(
+				key_colPosition = "1",
+				key_fragmentName = "paragraph",
+				key_rowPosition = "1",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_INLINE_CONTENT_IN_COLLECTION_DISPLAY",
+				value1 = "DM Document Text");
+		}
+	}
+
 	@description = "This is a test for LPS-98031."
 	@priority = "5"
 	test MapManualURLToLinkFragment {
@@ -84,7 +426,7 @@ definition {
 			Alert.viewSuccessMessage();
 		}
 
-		task("Assert mapped URL work in view mode") {
+		task ("Assert mapped URL work in view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Content Page Name",
 				siteName = "Test Site Name");

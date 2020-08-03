@@ -49,6 +49,7 @@ export const TranslationManagerLabel = ({
 };
 
 export default ({
+	availableLanguageIds = Liferay.Language.available,
 	defaultLanguageId,
 	editingLanguageId,
 	onActiveChange = () => {},
@@ -60,7 +61,7 @@ export default ({
 	const availableLanguages = [
 		...new Set([
 			defaultLanguageId,
-			...Object.keys(Liferay.Language.available).sort(),
+			...Object.keys(availableLanguageIds).sort(),
 		]),
 	];
 
@@ -92,7 +93,10 @@ export default ({
 			<ClayDropDown.ItemList className="localizable-dropdown-ul">
 				{availableLanguages.map((languageId, index) => (
 					<ClayDropDown.Item
-						className="autofit-row"
+						className={classNames('autofit-row', {
+							['localizable-item-default']:
+								languageId === defaultLanguageId,
+						})}
 						key={index}
 						onClick={() => {
 							onEditingLanguageIdChange(languageId);

@@ -54,7 +54,7 @@ public class ChainingCheck extends BaseCheck {
 	public int[] getDefaultTokens() {
 		return new int[] {
 			TokenTypes.CLASS_DEF, TokenTypes.ENUM_DEF, TokenTypes.INTERFACE_DEF,
-			TokenTypes.LITERAL_NEW, TokenTypes.TYPECAST
+			TokenTypes.LITERAL_NEW, TokenTypes.RPAREN
 		};
 	}
 
@@ -66,12 +66,8 @@ public class ChainingCheck extends BaseCheck {
 			return;
 		}
 
-		if ((detailAST.getType() == TokenTypes.TYPECAST) &&
-			isAttributeValue(_APPLY_TO_TYPE_CAST_KEY)) {
-
-			_checkChainingOnTypeCast(detailAST);
-
-			return;
+		if (detailAST.getType() == TokenTypes.RPAREN) {
+			_checkChainingOnParentheses(detailAST);
 		}
 
 		DetailAST parentDetailAST = detailAST.getParent();
@@ -202,10 +198,11 @@ public class ChainingCheck extends BaseCheck {
 				_checkMethodName(
 					chainedMethodNames, "getClass", methodCallDetailAST);
 
-				String name1 = chainedMethodNames.get(0);
-				String name2 = chainedMethodNames.get(1);
+				if ((isAttributeValue(_ALLOW_CONCAT_CHAIN_KEY) ||
+					 isExcludedPath(RUN_OUTSIDE_PORTAL_EXCLUDES)) &&
+					Objects.equals(chainedMethodNames.get(0), "concat") &&
+					Objects.equals(chainedMethodNames.get(1), "concat")) {
 
-				if (name1.equals("concat") && name2.equals("concat")) {
 					continue;
 				}
 			}
@@ -223,19 +220,22 @@ public class ChainingCheck extends BaseCheck {
 			int concatsCount = Collections.frequency(
 				chainedMethodNames, "concat");
 
-			if (concatsCount > 2) {
+			if ((chainSize == 3) && (concatsCount == 2) &&
+				isAttributeValue(_ALLOW_CONCAT_CHAIN_KEY)) {
+
+				continue;
+			}
+
+			if ((concatsCount > 1) &&
+				!isExcludedPath(RUN_OUTSIDE_PORTAL_EXCLUDES)) {
+
 				log(methodCallDetailAST, _MSG_AVOID_TOO_MANY_CONCAT);
-
-				continue;
 			}
-
-			if ((chainSize == 3) && (concatsCount == 2)) {
-				continue;
+			else {
+				log(
+					methodCallDetailAST, _MSG_AVOID_METHOD_CHAINING,
+					getMethodName(methodCallDetailAST));
 			}
-
-			log(
-				methodCallDetailAST, _MSG_AVOID_METHOD_CHAINING,
-				getMethodName(methodCallDetailAST));
 		}
 	}
 
@@ -270,7 +270,7 @@ public class ChainingCheck extends BaseCheck {
 		log(methodCallDetailAST, _MSG_AVOID_NEW_INSTANCE_CHAINING);
 	}
 
-	private void _checkChainingOnTypeCast(DetailAST detailAST) {
+	private void _checkChainingOnParentheses(DetailAST detailAST) {
 		if (_isInsideConstructorThisCall(detailAST) ||
 			hasParentWithTokenType(detailAST, TokenTypes.SUPER_CTOR_CALL)) {
 
@@ -279,7 +279,16 @@ public class ChainingCheck extends BaseCheck {
 
 		DetailAST parentDetailAST = detailAST.getParent();
 
-		if (parentDetailAST.getType() == TokenTypes.DOT) {
+		if (parentDetailAST.getType() != TokenTypes.DOT) {
+			return;
+		}
+
+		DetailAST previousSiblingDetailAST = detailAST.getPreviousSibling();
+
+		if (previousSiblingDetailAST.getType() != TokenTypes.TYPECAST) {
+			log(detailAST, _MSG_AVOID_PARENTHESES_CHAINING);
+		}
+		else if (isAttributeValue(_APPLY_TO_TYPE_CAST_KEY)) {
 			log(detailAST, _MSG_AVOID_TYPE_CAST_CHAINING);
 		}
 	}
@@ -913,6 +922,8 @@ public class ChainingCheck extends BaseCheck {
 		return false;
 	}
 
+	private static final String _ALLOW_CONCAT_CHAIN_KEY = "allowConcatChain";
+
 	private static final String _ALLOWED_CLASS_NAMES_KEY = "allowedClassNames";
 
 	private static final String _ALLOWED_METHOD_NAMES_KEY =
@@ -933,6 +944,9 @@ public class ChainingCheck extends BaseCheck {
 
 	private static final String _MSG_AVOID_NEW_INSTANCE_CHAINING =
 		"chaining.avoid.new.instance";
+
+	private static final String _MSG_AVOID_PARENTHESES_CHAINING =
+		"chaining.avoid.parentheses";
 
 	private static final String _MSG_AVOID_TOO_MANY_CONCAT =
 		"concat.avoid.too.many";

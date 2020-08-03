@@ -31,12 +31,13 @@ import org.osgi.service.component.annotations.Component;
  * @author Marco Leo
  */
 @Component(
-	property = "clay.data.set.content.renderer.name=" + ClayDataSetConstants.CONTENT_RENDERER_TIMELINE,
+	property = "clay.data.set.content.renderer.name=" + ClayDataSetConstants.TIMELINE,
 	service = ClayDataSetContentRendererContextContributor.class
 )
 public class TimelineClayDataSetContentRendererContextContributor
 	implements ClayDataSetContentRendererContextContributor {
 
+	@Override
 	public Map<String, Object> getContentRendererContext(
 		ClayDataSetDisplayView clayDataSetDisplayView, Locale locale) {
 

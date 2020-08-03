@@ -20,6 +20,10 @@
 }
 
 .lfr-search-container-wrapper {
+	.quick-action-menu {
+		padding-left: 20px;
+	}
+
 	.taglib-search-iterator-page-iterator-bottom {
 		margin-top: 24px;
 	}
@@ -52,12 +56,23 @@
 
 // Sidebar
 
-.has-control-menu .sidebar {
-	top: $controlMenuHeight;
+.has-control-menu {
+	.loading-indicator-wrapper {
+		height: calc(100% - #{$controlMenuHeight});
+	}
+
+	.sidebar {
+		top: $controlMenuHeight;
+	}
+}
+
+.loading-indicator-wrapper {
+	height: 100%;
 }
 
 .sidebar {
 	bottom: 0;
+	height: auto;
 	left: 100%;
 	position: fixed;
 	width: $sidebarWidth;

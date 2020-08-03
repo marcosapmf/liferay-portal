@@ -14,6 +14,8 @@
 
 package com.liferay.portal.file.install.internal;
 
+import com.liferay.petra.concurrent.DefaultNoticeableFuture;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -63,11 +65,13 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
 import org.osgi.framework.startlevel.BundleStartLevel;
 import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
  * @author Matthew Tambara
@@ -336,6 +340,7 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 		}
 	}
 
+	@Override
 	public void start() {
 		if (_noInitialDelay) {
 			_initializeCurrentManagedBundles();
@@ -659,9 +664,9 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 	}
 
 	private FileInstaller _findFileInstaller(
-		File artifact, List<FileInstaller> fileInstallers) {
+		File artifact, Iterable<FileInstaller> iterable) {
 
-		for (FileInstaller fileInstaller : fileInstallers) {
+		for (FileInstaller fileInstaller : iterable) {
 			if (fileInstaller.canTransformURL(artifact)) {
 				return fileInstaller;
 			}
@@ -1046,7 +1051,26 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 	private void _refresh(Collection<Bundle> bundles)
 		throws InterruptedException {
 
-		FileInstallImplBundleActivator.refresh(_systemBundle, bundles);
+		FrameworkWiring frameworkWiring = _systemBundle.adapt(
+			FrameworkWiring.class);
+
+		DefaultNoticeableFuture<FrameworkEvent> defaultNoticeableFuture =
+			new DefaultNoticeableFuture<>();
+
+		frameworkWiring.refreshBundles(
+			bundles,
+			frameworkEvent -> defaultNoticeableFuture.set(frameworkEvent));
+
+		try {
+			FrameworkEvent frameworkEvent = defaultNoticeableFuture.get();
+
+			if (frameworkEvent.getType() != FrameworkEvent.PACKAGES_REFRESHED) {
+				throw frameworkEvent.getThrowable();
+			}
+		}
+		catch (Throwable throwable) {
+			ReflectionUtil.throwException(throwable);
+		}
 	}
 
 	private void _removeArtifact(File file) {

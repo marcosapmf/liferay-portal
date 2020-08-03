@@ -28,20 +28,27 @@ import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.aggregation.FacetUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.portlet.asset.util.AssetSearcher;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -67,33 +74,37 @@ public class ContentElementResourceImpl extends BaseContentElementResourceImpl {
 
 	@Override
 	public Page<ContentElement> getSiteContentElementsPage(
-			Long siteId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		SearchContext searchContext = _getAssetSearchContext(
-			filter, search, siteId, sorts, pagination);
+			siteId, search, aggregation, filter, pagination, sorts);
+
+		Map<String, Facet> facets = searchContext.getFacets();
 
 		AssetSearcher assetSearcher =
 			(AssetSearcher)AssetSearcher.getInstance();
 
 		assetSearcher.setAssetEntryQuery(new AssetEntryQuery());
 
+		List<AssetEntry> assetEntries = _assetHelper.getAssetEntries(
+			assetSearcher.search(searchContext));
+
 		return Page.of(
 			new HashMap<>(),
-			transform(
-				_assetHelper.getAssetEntries(
-					assetSearcher.search(searchContext)),
-				this::_toContentElement),
-			pagination,
+			TransformUtil.transform(facets.values(), FacetUtil::toFacet),
+			transform(assetEntries, this::_toContentElement), pagination,
 			_assetHelper.searchCount(searchContext, new AssetEntryQuery()));
 	}
 
 	private SearchContext _getAssetSearchContext(
-		Filter filter, String search, Long siteId, Sort[] sorts,
-		Pagination pagination) {
+		Long siteId, String search, Aggregation aggregation, Filter filter,
+		Pagination pagination, Sort[] sorts) {
 
-		SearchContext searchContext = new SearchContext();
+		SearchUtil.SearchContext searchContext = new SearchUtil.SearchContext();
+
+		searchContext.addVulcanAggregation(aggregation);
 
 		BooleanQuery booleanQuery = new BooleanQueryImpl() {
 			{

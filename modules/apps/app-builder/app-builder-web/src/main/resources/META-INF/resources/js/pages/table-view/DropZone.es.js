@@ -70,6 +70,7 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 		{
 			dataDefinition: {defaultLanguageId},
 			dataListView: {appliedFilters},
+			editingLanguageId,
 		},
 	] = useContext(EditTableViewContext);
 
@@ -94,6 +95,9 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 		);
 	}
 
+	const getLocalizableValue = (label) =>
+		label[editingLanguageId] || label[defaultLanguageId];
+
 	return (
 		<div ref={containerRef}>
 			<Table
@@ -105,7 +109,7 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 						<ClayLayout.ContainerFluid className="p-0">
 							<ClayLayout.ContentRow verticalAlign="center">
 								<ClayLayout.ContentCol expand>
-									{label ? label[defaultLanguageId] : ''}
+									{getLocalizableValue(label)}
 								</ClayLayout.ContentCol>
 
 								{Object.prototype.hasOwnProperty.call(
@@ -130,9 +134,7 @@ const DropZone = ({fields, onAddFieldName, onRemoveFieldName}) => {
 					),
 				}))}
 				items={generateItems(
-					fields.map(({label}) =>
-						label ? label[defaultLanguageId] : ''
-					)
+					fields.map(({label}) => getLocalizableValue(label))
 				)}
 				ref={drop}
 			/>

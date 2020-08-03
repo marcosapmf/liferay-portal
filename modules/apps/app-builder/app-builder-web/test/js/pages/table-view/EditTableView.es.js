@@ -22,7 +22,7 @@ import {Route, Router} from 'react-router-dom';
 
 import EditTableView from '../../../../src/main/resources/META-INF/resources/js/pages/table-view/EditTableView.es';
 import * as toast from '../../../../src/main/resources/META-INF/resources/js/utils/toast.es';
-import AppContextProviderWrapper from '../../AppContextProviderWrapper.es';
+import AppContextProvider from '../../AppContextProviderWrapper.es';
 import {DATA_DEFINITION_RESPONSES} from '../../constants.es';
 
 const fieldTypes = [
@@ -76,6 +76,13 @@ const fieldTypes = [
 	},
 ];
 
+const AppContextProviderWrapper = (props) => (
+	<AppContextProvider
+		appContext={{showTranslationManager: true}}
+		{...props}
+	/>
+);
+
 const fieldTypeResponse = fieldTypes.map((fieldType, index) => ({
 	...fieldType,
 	displayOrder: index,
@@ -125,7 +132,9 @@ describe('EditTableView', () => {
 	it('renders', async () => {
 		fetch
 			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
-			.mockResponseOnce(JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM));
+			.mockResponseOnce(
+				JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
+			);
 
 		const {asFragment} = render(
 			<DndProvider backend={HTML5Backend}>
@@ -146,7 +155,9 @@ describe('EditTableView', () => {
 	it('renders with two fields in the sidebar and saves successfully', async () => {
 		fetch
 			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
-			.mockResponseOnce(JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS))
+			.mockResponseOnce(
+				JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS)
+			)
 			.mockResponseOnce();
 
 		const {queryAllByText, queryByPlaceholderText, queryByText} = render(
@@ -205,7 +216,9 @@ describe('EditTableView', () => {
 	it('renders with two fields in the sidebar and does not save successfully', async () => {
 		fetch
 			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
-			.mockResponseOnce(JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS))
+			.mockResponseOnce(
+				JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS)
+			)
 			.mockRejectOnce(() =>
 				Promise.reject(
 					JSON.stringify({
@@ -252,7 +265,9 @@ describe('EditTableView', () => {
 	it('renders with two fields in the sidebar and make actions', async () => {
 		fetch
 			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
-			.mockResponseOnce(JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS));
+			.mockResponseOnce(
+				JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS)
+			);
 
 		const {
 			container,
@@ -307,7 +322,9 @@ describe('EditTableView', () => {
 	it('renders with one field already inside the table and saves', async () => {
 		fetch
 			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
-			.mockResponseOnce(JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS))
+			.mockResponseOnce(
+				JSON.stringify(DATA_DEFINITION_RESPONSES.TWO_ITEMS)
+			)
 			.mockResponseOnce(JSON.stringify(tableViewWithId))
 			.mockResponseOnce(JSON.stringify({}));
 
@@ -355,7 +372,9 @@ describe('EditTableView', () => {
 	it('renders and toggle sidebar by clicking in the toggle button', async () => {
 		fetch
 			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
-			.mockResponseOnce(JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM));
+			.mockResponseOnce(
+				JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
+			);
 
 		render(
 			<DndProvider backend={HTML5Backend}>
@@ -395,5 +414,42 @@ describe('EditTableView', () => {
 		expect(
 			document.querySelector('.app-builder-table-view__sidebar--closed')
 		).toBeFalsy();
+	});
+
+	it('renders with defaultLanguageId from the dataDefinition instead of Liferay Object', async () => {
+		fetch
+			.mockResponseOnce(JSON.stringify(fieldTypeResponse))
+			.mockResponseOnce(
+				JSON.stringify({
+					...DATA_DEFINITION_RESPONSES.ONE_ITEM,
+					defaultLanguageId: 'pt_BR',
+				})
+			);
+
+		render(
+			<DndProvider backend={HTML5Backend}>
+				<EditTableView />
+			</DndProvider>,
+			{
+				wrapper: AppContextProviderWrapper,
+			}
+		);
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
+
+		const localizableDropdown = document.querySelector(
+			'.localizable-dropdown'
+		);
+
+		expect(localizableDropdown.textContent).toEqual('pt-BR');
+
+		userEvent.click(localizableDropdown);
+
+		expect(
+			document.querySelector('.localizable-item-default .autofit-section')
+				.textContent
+		).toEqual('pt-BR');
 	});
 });

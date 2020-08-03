@@ -53,7 +53,8 @@ definition {
 		AssetListsAdmin.selectAsset(
 			assetListName = "Depot Manual Asset List",
 			assetName = "Document_2.jpeg",
-			assetType = "Basic Document");
+			assetType = "Basic Document",
+			itemType = "All Types");
 
 		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-depot-name");
 
@@ -129,9 +130,17 @@ definition {
 
 		DepotNavigator.openDepotAdmin();
 
-		Depot.viewApplication(
-			applicationList = "Collections,Documents and Media,Web Content",
-			depotName = "Test Depot Name");
+		DepotNavigator.gotoDepotPortlet(
+			depotName = "Test Depot Name",
+			portlet = "Web Content");
+
+		DepotNavigator.gotoDepotPortletViaBreadcrumb(
+			depotName = "Test Depot Name",
+			portlet = "Documents and Media");
+
+		DepotNavigator.gotoDepotPortletViaBreadcrumb(
+			otherDepotName = "Test Depot Name",
+			portlet = "Collections");
 	}
 
 	@description = "This ensures that the Collections application can be viewed after reactivating in a depot."

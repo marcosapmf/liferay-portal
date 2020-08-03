@@ -86,8 +86,14 @@ public class DepotAdminSitesDisplayContext {
 						!depotEntryGroupRel.isDdmStructuresAvailable(),
 						_currentURL.toString(), _liferayPortletResponse);
 
-				dropdownItem.setHref(
-					updateDDMStructuresAvailableActionURL.toString());
+				dropdownItem.setData(
+					HashMapBuilder.<String, Object>put(
+						"action", "shareWebContentStructures"
+					).put(
+						"shared", depotEntryGroupRel.isDdmStructuresAvailable()
+					).put(
+						"url", updateDDMStructuresAvailableActionURL.toString()
+					).build());
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(
@@ -107,8 +113,7 @@ public class DepotAdminSitesDisplayContext {
 					HashMapBuilder.<String, Object>put(
 						"action", "disconnect"
 					).put(
-						"disconnectSiteActionURL",
-						disconnectSiteActionURL.toString()
+						"url", disconnectSiteActionURL.toString()
 					).build());
 
 				dropdownItem.setDisabled(

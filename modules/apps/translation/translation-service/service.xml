@@ -28,6 +28,10 @@
 		<column name="content" type="String" />
 		<column name="contentType" type="String" />
 		<column name="languageId" type="String" />
+		<column name="status" type="int" />
+		<column name="statusByUserId" type="long" />
+		<column name="statusByUserName" type="String" />
+		<column name="statusDate" type="Date" />
 
 		<!-- Finder methods -->
 

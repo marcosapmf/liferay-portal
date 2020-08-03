@@ -12,18 +12,20 @@
 import {AppContext} from 'app-builder-web/js/AppContext.es';
 import ControlMenu from 'app-builder-web/js/components/control-menu/ControlMenu.es';
 import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
-import useDataLayout from 'app-builder-web/js/hooks/useDataLayout.es';
 import useQuery from 'app-builder-web/js/hooks/useQuery.es';
 import {ViewDataLayoutPageValues} from 'app-builder-web/js/pages/entry/ViewEntry.es';
 import ViewEntryUpperToolbar from 'app-builder-web/js/pages/entry/ViewEntryUpperToolbar.es';
-import {getItem} from 'app-builder-web/js/utils/client.es';
+import {addItem, getItem} from 'app-builder-web/js/utils/client.es';
 import {errorToast} from 'app-builder-web/js/utils/toast.es';
-import {isEqualObjects} from 'app-builder-web/js/utils/utils.es';
+import {
+	getTranslatedValue,
+	isEqualObjects,
+} from 'app-builder-web/js/utils/utils.es';
 import {usePrevious} from 'frontend-js-react-web';
 import React, {useContext, useEffect, useState} from 'react';
 
 import WorkflowInfoBar from '../../components/workflow-info-bar/WorkflowInfoBar.es';
-import useAppWorkflow from '../../hooks/useAppWorkflow.es';
+import useDataLayouts from '../../hooks/useDataLayouts.es';
 
 export default function ViewEntry({
 	history,
@@ -32,16 +34,28 @@ export default function ViewEntry({
 	},
 }) {
 	const {appId, dataDefinitionId, dataLayoutId} = useContext(AppContext);
-	const {
-		appVersion,
-		appWorkflowDefinitionId,
-		appWorkflowTasks,
-	} = useAppWorkflow(appId);
-	const {
-		dataDefinition,
-		dataLayout: {dataLayoutPages},
-		isLoading,
-	} = useDataLayout(dataLayoutId, dataDefinitionId);
+	const [dataLayoutIds, setDataLayoutIds] = useState([]);
+
+	const getDataLayoutIds = (tasks) => {
+		return tasks.reduce(
+			(dataLayoutIds, {appWorkflowDataLayoutLinks}) => [
+				...dataLayoutIds,
+				...appWorkflowDataLayoutLinks?.reduce(
+					(stepDataLayoutIds, {dataLayoutId}) =>
+						dataLayoutIds.includes(dataLayoutId)
+							? stepDataLayoutIds
+							: [...stepDataLayoutIds, dataLayoutId],
+					[]
+				),
+			],
+			[Number(dataLayoutId)]
+		);
+	};
+
+	const {dataDefinition, dataLayouts, isLoading} = useDataLayouts(
+		dataDefinitionId,
+		dataLayoutIds
+	);
 
 	const [
 		{dataRecord, isFetching, page, totalCount, workflowInfo},
@@ -65,69 +79,85 @@ export default function ViewEntry({
 	const previousQuery = usePrevious(query);
 	const previousIndex = usePrevious(entryIndex);
 
-	const doFetch = (appWorkflowDefinitionId) => {
-		if (appWorkflowDefinitionId) {
-			getItem(
-				`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-records`,
-				{...query, page: entryIndex, pageSize: 1}
-			)
-				.then(({items = [], ...response}) => {
-					if (items.length > 0) {
-						const state = {
-							dataRecord: items.pop(),
-							isFetching: false,
-							workflowInfo: null,
-							...response,
-						};
-
-						return getItem(
-							`/o/portal-workflow-metrics/v1.0/processes/${appWorkflowDefinitionId}/instances`,
-							{classPKs: [state.dataRecord.id]}
-						)
-							.then((workflowResponse) => {
-								if (workflowResponse.totalCount > 0) {
-									state.workflowInfo = {
-										...workflowResponse.items.pop(),
-										appVersion,
-										tasks: appWorkflowTasks,
-									};
-								}
-
-								setState((prevState) => ({
-									...prevState,
-									...state,
-								}));
-							})
-							.catch(() => {
-								setState((prevState) => ({
-									...prevState,
-									...state,
-								}));
-							});
-					}
-				})
-				.catch(() => {
-					setState((prevState) => ({
-						...prevState,
+	const doFetch = () => {
+		getItem(
+			`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-records`,
+			{...query, page: entryIndex, pageSize: 1}
+		)
+			.then(({items = [], ...response}) => {
+				if (items.length > 0) {
+					const state = {
+						dataRecord: items.pop(),
 						isFetching: false,
-					}));
+						workflowInfo: null,
+						...response,
+					};
 
-					errorToast();
-				});
-		}
+					const dataRecordIds = [state.dataRecord.id];
+
+					addItem(
+						`/o/app-builder-workflow/v1.0/apps/${appId}/app-workflows/data-record-links`,
+						{dataRecordIds}
+					)
+						.then(({items}) => {
+							if (items.length > 0) {
+								const {
+									appWorkflow: {
+										appVersion,
+										appWorkflowDefinitionId,
+										appWorkflowTasks: tasks,
+									},
+								} = items.pop();
+
+								setDataLayoutIds(getDataLayoutIds(tasks));
+
+								return getItem(
+									`/o/portal-workflow-metrics/v1.0/processes/${appWorkflowDefinitionId}/instances`,
+									{classPKs: dataRecordIds}
+								).then((workflowResponse) => {
+									if (workflowResponse.totalCount > 0) {
+										state.workflowInfo = {
+											...workflowResponse.items.pop(),
+											appVersion,
+											tasks,
+										};
+									}
+
+									setState((prevState) => ({
+										...prevState,
+										...state,
+									}));
+								});
+							}
+						})
+						.catch(() => {
+							setState((prevState) => ({
+								...prevState,
+								...state,
+							}));
+						});
+				}
+			})
+			.catch(() => {
+				setState((prevState) => ({
+					...prevState,
+					isFetching: false,
+				}));
+
+				errorToast();
+			});
 	};
 
 	useEffect(() => {
 		if (!isEqualObjects(query, previousQuery) || !previousIndex) {
-			doFetch(appWorkflowDefinitionId);
+			doFetch();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [entryIndex, query]);
 
-	useEffect(() => {
-		doFetch(appWorkflowDefinitionId);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [appWorkflowDefinitionId]);
+	const showButtons = {
+		update: !workflowInfo?.completed,
+	};
 
 	return (
 		<div className="view-entry">
@@ -139,6 +169,7 @@ export default function ViewEntry({
 			<ViewEntryUpperToolbar
 				dataRecordId={dataRecordId}
 				page={page}
+				showButtons={showButtons}
 				totalCount={totalCount}
 			>
 				{workflowInfo && <WorkflowInfoBar {...workflowInfo} />}
@@ -148,18 +179,41 @@ export default function ViewEntry({
 				<div className="container">
 					<div className="justify-content-center row">
 						<div className="col-lg-8">
-							{dataLayoutPages &&
-								dataRecordValues &&
-								dataLayoutPages.map((dataLayoutPage, index) => (
-									<div className="sheet" key={index}>
-										<ViewDataLayoutPageValues
-											dataDefinition={dataDefinition}
-											dataLayoutPage={dataLayoutPage}
-											dataRecordValues={dataRecordValues}
-											key={index}
-										/>
-									</div>
-								))}
+							{dataRecordValues &&
+								dataLayouts.map(
+									({dataLayoutPages = [], ...dataLayout}) => (
+										<>
+											<h3>
+												{getTranslatedValue(
+													dataLayout,
+													'name'
+												)}
+											</h3>
+
+											{dataLayoutPages.map(
+												(dataLayoutPage, index) => (
+													<div
+														className="sheet"
+														key={index}
+													>
+														<ViewDataLayoutPageValues
+															dataDefinition={
+																dataDefinition
+															}
+															dataLayoutPage={
+																dataLayoutPage
+															}
+															dataRecordValues={
+																dataRecordValues
+															}
+															key={index}
+														/>
+													</div>
+												)
+											)}
+										</>
+									)
+								)}
 						</div>
 					</div>
 				</div>

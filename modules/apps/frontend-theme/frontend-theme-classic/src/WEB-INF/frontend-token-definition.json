@@ -5,7 +5,7 @@
 				{
 					"frontendTokens": [
 						{
-							"defaultValue": "#FFF",
+							"defaultValue": "#FFFFFF",
 							"editorType": "ColorPicker",
 							"label": "white",
 							"mappings": [
@@ -18,7 +18,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#f7f8f9",
+							"defaultValue": "#F7F8F9",
 							"editorType": "ColorPicker",
 							"label": "gray-100",
 							"mappings": [
@@ -31,7 +31,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#f1f2f5",
+							"defaultValue": "#F1F2F5",
 							"editorType": "ColorPicker",
 							"label": "gray-200",
 							"mappings": [
@@ -44,7 +44,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#e7e7ed",
+							"defaultValue": "#E7E7ED",
 							"editorType": "ColorPicker",
 							"label": "gray-300",
 							"mappings": [
@@ -57,7 +57,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#cdced9",
+							"defaultValue": "#CDCED9",
 							"editorType": "ColorPicker",
 							"label": "gray-400",
 							"mappings": [
@@ -70,7 +70,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#a7a9bc",
+							"defaultValue": "#A7A9BC",
 							"editorType": "ColorPicker",
 							"label": "gray-500",
 							"mappings": [
@@ -83,7 +83,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#6b6c7e",
+							"defaultValue": "#6B6C7E",
 							"editorType": "ColorPicker",
 							"label": "gray-600",
 							"mappings": [
@@ -109,7 +109,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#393a4a",
+							"defaultValue": "#393A4A",
 							"editorType": "ColorPicker",
 							"label": "gray-800",
 							"mappings": [
@@ -135,7 +135,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#000",
+							"defaultValue": "#000000",
 							"editorType": "ColorPicker",
 							"label": "black",
 							"mappings": [
@@ -148,13 +148,13 @@
 							"type": "String"
 						}
 					],
-					"label": "Grays",
+					"label": "grays",
 					"name": "grays"
 				},
 				{
 					"frontendTokens": [
 						{
-							"defaultValue": "#0b5fff",
+							"defaultValue": "#0B5FFF",
 							"editorType": "ColorPicker",
 							"label": "primary",
 							"mappings": [
@@ -167,7 +167,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#6b6c7e",
+							"defaultValue": "#6B6C7E",
 							"editorType": "ColorPicker",
 							"label": "secondary",
 							"mappings": [
@@ -180,7 +180,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#287d3c",
+							"defaultValue": "#287D3C",
 							"editorType": "ColorPicker",
 							"label": "success",
 							"mappings": [
@@ -193,7 +193,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#2e5aac",
+							"defaultValue": "#2E5AAC",
 							"editorType": "ColorPicker",
 							"label": "info",
 							"mappings": [
@@ -206,7 +206,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#b95000",
+							"defaultValue": "#B95000",
 							"editorType": "ColorPicker",
 							"label": "warning",
 							"mappings": [
@@ -219,7 +219,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#da1414",
+							"defaultValue": "#DA1414",
 							"editorType": "ColorPicker",
 							"label": "danger",
 							"mappings": [
@@ -245,7 +245,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "#f1f2f5",
+							"defaultValue": "#F1F2F5",
 							"editorType": "ColorPicker",
 							"label": "light",
 							"mappings": [
@@ -258,11 +258,11 @@
 							"type": "String"
 						}
 					],
-					"label": "Theme Colors",
+					"label": "theme-colors",
 					"name": "themeColors"
 				}
 			],
-			"label": "Color System",
+			"label": "color-system",
 			"name": "colorSystem"
 		},
 		{
@@ -279,12 +279,12 @@
 								}
 							],
 							"name": "spacer",
-							"type": "Number"
+							"type": "String"
 						}
 					]
 				}
 			],
-			"label": "Spacing",
+			"label": "spacing",
 			"name": "spacing"
 		},
 		{
@@ -292,7 +292,7 @@
 				{
 					"frontendTokens": [
 						{
-							"defaultValue": "#f1f2f5",
+							"defaultValue": "#F1F2F5",
 							"editorType": "ColorPicker",
 							"label": "body-bg",
 							"mappings": [
@@ -318,7 +318,7 @@
 							"type": "String"
 						}
 					],
-					"label": "Body",
+					"label": "body",
 					"name": "body"
 				},
 				{
@@ -333,7 +333,7 @@
 								}
 							],
 							"name": "borderRadius",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "0.1875rem",
@@ -345,7 +345,7 @@
 								}
 							],
 							"name": "borderRadiusSm",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "0.375rem",
@@ -357,7 +357,7 @@
 								}
 							],
 							"name": "borderRadiusLg",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "50%",
@@ -369,7 +369,7 @@
 								}
 							],
 							"name": "borderRadiusCircle",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "50rem",
@@ -381,16 +381,16 @@
 								}
 							],
 							"name": "roundedPill",
-							"type": "Number"
+							"type": "String"
 						}
 					],
-					"label": "Borders",
+					"label": "borders",
 					"name": "borders"
 				},
 				{
 					"frontendTokens": [
 						{
-							"defaultValue": "0 .5rem 1rem rgba(#000, .15)",
+							"defaultValue": "0 .5rem 1rem rgba(#000000, .15)",
 							"label": "box-shadow",
 							"mappings": [
 								{
@@ -402,7 +402,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "0 .125rem .25rem rgba(#000, .075)",
+							"defaultValue": "0 .125rem .25rem rgba(#000000, .075)",
 							"label": "box-shadow-sm",
 							"mappings": [
 								{
@@ -414,7 +414,7 @@
 							"type": "String"
 						},
 						{
-							"defaultValue": "0 1rem 3rem rgba(#000, .175)",
+							"defaultValue": "0 1rem 3rem rgba(#000000, .175)",
 							"label": "box-shadow-lg",
 							"mappings": [
 								{
@@ -426,11 +426,11 @@
 							"type": "String"
 						}
 					],
-					"label": "Box Shadows",
+					"label": "box-shadows",
 					"name": "boxShadows"
 				}
 			],
-			"label": "Global",
+			"label": "global",
 			"name": "global"
 		},
 		{
@@ -439,7 +439,7 @@
 					"frontendTokens": [
 						{
 							"defaultValue": "576px",
-							"label": "container-max-sm",
+							"label": "small",
 							"mappings": [
 								{
 									"type": "cssVariable",
@@ -447,11 +447,11 @@
 								}
 							],
 							"name": "containerMaxSm",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "768px",
-							"label": "container-max-md",
+							"label": "medium",
 							"mappings": [
 								{
 									"type": "cssVariable",
@@ -459,11 +459,11 @@
 								}
 							],
 							"name": "containerMaxMd",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "992px",
-							"label": "container-max-lg",
+							"label": "large",
 							"mappings": [
 								{
 									"type": "cssVariable",
@@ -471,11 +471,11 @@
 								}
 							],
 							"name": "containerMaxLg",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "1280px",
-							"label": "container-max-xl",
+							"label": "extra-large",
 							"mappings": [
 								{
 									"type": "cssVariable",
@@ -483,14 +483,14 @@
 								}
 							],
 							"name": "containerMaxXl",
-							"type": "Number"
+							"type": "String"
 						}
 					],
-					"label": "Grid Containers",
-					"name": "gridContainers"
+					"label": "container-max-widths",
+					"name": "containerMaxWidths"
 				}
 			],
-			"label": "Layout",
+			"label": "layout",
 			"name": "layout"
 		},
 		{
@@ -534,23 +534,11 @@
 							"type": "String"
 						}
 					],
-					"label": "Font Family",
+					"label": "font-family",
 					"name": "fontFamily"
 				},
 				{
 					"frontendTokens": [
-						{
-							"defaultValue": "0.875rem",
-							"label": "font-size-sm",
-							"mappings": [
-								{
-									"type": "cssVariable",
-									"value": "font-size-sm"
-								}
-							],
-							"name": "fontSizeSm",
-							"type": "Number"
-						},
 						{
 							"defaultValue": "0.875rem",
 							"label": "font-size-base",
@@ -561,7 +549,19 @@
 								}
 							],
 							"name": "fontSizeBase",
-							"type": "Number"
+							"type": "String"
+						},
+						{
+							"defaultValue": "0.875rem",
+							"label": "font-size-sm",
+							"mappings": [
+								{
+									"type": "cssVariable",
+									"value": "font-size-sm"
+								}
+							],
+							"name": "fontSizeSm",
+							"type": "String"
 						},
 						{
 							"defaultValue": "1.125rem",
@@ -573,10 +573,10 @@
 								}
 							],
 							"name": "fontSizeLg",
-							"type": "Number"
+							"type": "String"
 						}
 					],
-					"label": "Font Size",
+					"label": "font-size",
 					"name": "fontSize"
 				},
 				{
@@ -642,7 +642,7 @@
 							"type": "String"
 						}
 					],
-					"label": "Font Weight",
+					"label": "font-weight",
 					"name": "fontWeight"
 				},
 				{
@@ -657,7 +657,7 @@
 								}
 							],
 							"name": "h1FontSize",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "1.375rem",
@@ -669,7 +669,7 @@
 								}
 							],
 							"name": "h2FontSize",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "1.1875rem",
@@ -681,7 +681,7 @@
 								}
 							],
 							"name": "h3FontSize",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "1rem",
@@ -693,7 +693,7 @@
 								}
 							],
 							"name": "h4FontSize",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "0.875rem",
@@ -705,7 +705,7 @@
 								}
 							],
 							"name": "h5FontSize",
-							"type": "Number"
+							"type": "String"
 						},
 						{
 							"defaultValue": "0.8125rem",
@@ -717,14 +717,14 @@
 								}
 							],
 							"name": "h6FontSize",
-							"type": "Number"
+							"type": "String"
 						}
 					],
-					"label": "Headings",
+					"label": "headings",
 					"name": "headings"
 				}
 			],
-			"label": "Typography",
+			"label": "typography",
 			"name": "typography"
 		}
 	]

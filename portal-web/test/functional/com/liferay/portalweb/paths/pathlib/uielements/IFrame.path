@@ -14,6 +14,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ADD_DOMAIN</td>
+	<td>//iframe[@title='Add Domain']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ADD_USERS_TO_ASSET_LIBRARY</td>
 	<td>//iframe[@title='Assign Users to This Asset Library']</td>
 	<td></td>
@@ -21,6 +26,11 @@
 <tr>
 	<td>ADD_USERS_TO_SITE</td>
 	<td>//iframe[@title='Assign Users to This Site']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSIGN_USER</td>
+	<td>//div[contains(.,'Assign User')]//iframe</td>
 	<td></td>
 </tr>
 <tr>
@@ -156,6 +166,11 @@
 <tr>
 	<td>SELECT_ACCOUNT</td>
 	<td>//iframe[@title='Select an Account']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_ACCOUNTS</td>
+	<td>//iframe[@title='Select Accounts']</td>
 	<td></td>
 </tr>
 <tr>

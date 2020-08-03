@@ -24,6 +24,21 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CHOOSE_ACCOUNT_USER</td>
+	<td>//tr[contains(.,'${key_accountUserName}')]/td[4]//button[contains(.,'Choose')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>USER_SELECT</td>
+	<td>//span[normalize-space(text())='User']//../following-sibling::span//*[normalize-space(text())='Select']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>USER_TABLE_NAME</td>
+	<td>//tr[contains(.,'${key_userName}')]/td[1]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DOMAIN_REMOVE_DOMAIN</td>
 	<td>//tr[contains(.,'${key_domainName}')]//span[contains(@class,' lfr-portal-tooltip')]</td>
 	<td></td>

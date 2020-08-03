@@ -18,17 +18,16 @@ import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceTracker;
-import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.info.item.capability.DisplayPageInfoItemCapability;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -64,22 +63,21 @@ public class SelectDisplayPageMasterLayoutDisplayContext {
 
 		for (InfoItemClassDetails infoItemClassDetails :
 				_infoItemServiceTracker.getInfoItemClassDetails(
-					InfoItemFormProvider.class)) {
+					DisplayPageInfoItemCapability.INSTANCE)) {
 
-			JSONObject jsonObject = JSONUtil.put(
-				"id",
-				String.valueOf(
-					PortalUtil.getClassNameId(
-						infoItemClassDetails.getClassName()))
-			).put(
-				"label",
-				infoItemClassDetails.getLabel(_themeDisplay.getLocale())
-			).put(
-				"subtypes",
-				_getMappingFormVariationsJSONArray(infoItemClassDetails)
-			);
-
-			mappingTypesJSONArray.put(jsonObject);
+			mappingTypesJSONArray.put(
+				JSONUtil.put(
+					"id",
+					String.valueOf(
+						PortalUtil.getClassNameId(
+							infoItemClassDetails.getClassName()))
+				).put(
+					"label",
+					infoItemClassDetails.getLabel(_themeDisplay.getLocale())
+				).put(
+					"subtypes",
+					_getMappingFormVariationsJSONArray(infoItemClassDetails)
+				));
 		}
 
 		return mappingTypesJSONArray;
@@ -133,14 +131,13 @@ public class SelectDisplayPageMasterLayoutDisplayContext {
 			InfoLocalizedValue<String> labelInfoLocalizedValue =
 				infoItemFormVariation.getLabelInfoLocalizedValue();
 
-			JSONObject jsonObject = JSONUtil.put(
-				"id", String.valueOf(infoItemFormVariation.getKey())
-			).put(
-				"label",
-				labelInfoLocalizedValue.getValue(_themeDisplay.getLocale())
-			);
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"id", String.valueOf(infoItemFormVariation.getKey())
+				).put(
+					"label",
+					labelInfoLocalizedValue.getValue(_themeDisplay.getLocale())
+				));
 		}
 
 		return jsonArray;

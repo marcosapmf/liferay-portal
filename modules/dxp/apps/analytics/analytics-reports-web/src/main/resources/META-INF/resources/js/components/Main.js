@@ -19,6 +19,8 @@ import TrafficSources from './TrafficSources';
 
 export default function Main({
 	authorName,
+	authorPortraitURL,
+	authorUserId,
 	chartDataProviders,
 	defaultTimeRange,
 	defaultTimeSpanOption,
@@ -32,9 +34,11 @@ export default function Main({
 	trafficSources,
 }) {
 	return (
-		<>
+		<div className="c-p-3">
 			<BasicInformation
 				authorName={authorName}
+				authorPortraitURL={authorPortraitURL}
+				authorUserId={authorUserId}
 				languageTag={languageTag}
 				publishDate={pagePublishDate}
 				title={pageTitle}
@@ -81,12 +85,14 @@ export default function Main({
 					trafficSources={trafficSources}
 				/>
 			)}
-		</>
+		</div>
 	);
 }
 
 Main.proptypes = {
 	authorName: PropTypes.string.isRequired,
+	authorPortraitURL: PropTypes.string.isRequired,
+	authorUserId: PropTypes.number.isRequired,
 	chartDataProviders: PropTypes.arrayOf(PropTypes.func.isRequired).isRequired,
 	defaultTimeRange: PropTypes.object.isRequired,
 	defaultTimeSpanOption: PropTypes.string.isRequired,

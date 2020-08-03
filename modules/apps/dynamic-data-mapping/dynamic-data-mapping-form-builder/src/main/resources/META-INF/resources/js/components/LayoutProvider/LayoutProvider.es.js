@@ -43,7 +43,6 @@ import handleFieldSetAdded from './handlers/fieldSetAddedHandler.es';
 import handleFocusedFieldEvaluationEnded from './handlers/focusedFieldEvaluationEndedHandler.es';
 import handleLanguageIdDeleted from './handlers/languageIdDeletedHandler.es';
 import handleSectionAdded from './handlers/sectionAddedHandler.es';
-import {shouldAutoGenerateName} from './util/defaults.es';
 import {generateFieldName} from './util/fields.es';
 
 /**
@@ -168,9 +167,16 @@ class LayoutProvider extends Component {
 			(field) => {
 				const {options, settingsContext} = field;
 
+				const newSettingsContext = {
+					...settingsContext,
+					availableLanguageIds,
+					defaultLanguageId,
+					pages: this.getLocalizedPages(settingsContext.pages),
+				};
+
 				return {
 					...getFieldProperties(
-						settingsContext,
+						newSettingsContext,
 						defaultLanguageId,
 						editingLanguageId
 					),
@@ -180,12 +186,7 @@ class LayoutProvider extends Component {
 					}),
 					options,
 					selected: focusedField.fieldName === field.fieldName,
-					settingsContext: {
-						...settingsContext,
-						availableLanguageIds,
-						defaultLanguageId,
-						pages: this.getLocalizedPages(settingsContext.pages),
-					},
+					settingsContext: newSettingsContext,
 				};
 			},
 			true,
@@ -321,12 +322,14 @@ class LayoutProvider extends Component {
 	_fieldNameGeneratorValueFn() {
 		return (desiredName, currentName, blacklist = []) => {
 			const {pages} = this.state;
+			const {generateFieldNameUsingFieldLabel} = this.props;
 
 			return generateFieldName(
 				pages,
 				desiredName,
 				currentName,
-				blacklist
+				blacklist,
+				generateFieldNameUsingFieldLabel
 			);
 		};
 	}
@@ -435,6 +438,7 @@ class LayoutProvider extends Component {
 	}
 
 	_handleFocusedFieldEvaluationEnded({
+		changedEditingLanguage,
 		changedFieldType,
 		instanceId,
 		settingsContext,
@@ -443,6 +447,7 @@ class LayoutProvider extends Component {
 			handleFocusedFieldEvaluationEnded(
 				this.props,
 				this.state,
+				changedEditingLanguage,
 				changedFieldType,
 				instanceId,
 				settingsContext
@@ -678,10 +683,6 @@ class LayoutProvider extends Component {
 		});
 	}
 
-	_shouldAutoGenerateNameValueFn() {
-		return shouldAutoGenerateName;
-	}
-
 	_successPageSettingsValueFn() {
 		const {defaultLanguageId, initialSuccessPageSettings} = this.props;
 
@@ -798,6 +799,15 @@ LayoutProvider.PROPS = {
 	fieldSets: Config.array().value([]),
 
 	/**
+	 * @default false
+	 * @instance
+	 * @memberof LayoutProvider
+	 * @type {?bool}
+	 */
+
+	generateFieldNameUsingFieldLabel: Config.bool().value(false),
+
+	/**
 	 * @default undefined
 	 * @instance
 	 * @memberof LayoutProvider
@@ -837,17 +847,6 @@ LayoutProvider.PROPS = {
 	 */
 
 	rules: Config.arrayOf(ruleStructure),
-
-	/**
-	 * @default _shouldAutoGenerateNameValueFn
-	 * @instance
-	 * @memberof LayoutProvider
-	 * @type {?function}
-	 */
-
-	shouldAutoGenerateName: Config.func().valueFn(
-		'_shouldAutoGenerateNameValueFn'
-	),
 
 	/**
 	 * @default undefined

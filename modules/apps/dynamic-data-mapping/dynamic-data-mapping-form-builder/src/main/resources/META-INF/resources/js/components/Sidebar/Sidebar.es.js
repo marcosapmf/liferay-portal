@@ -65,6 +65,7 @@ class Sidebar extends Component {
 			...newFieldType.settingsContext,
 			pages: normalizeSettingsContextPages(
 				newFieldType.settingsContext.pages,
+				defaultLanguageId,
 				editingLanguageId,
 				newFieldType,
 				focusedField.fieldName
@@ -333,14 +334,15 @@ class Sidebar extends Component {
 	syncEditingLanguageId() {
 		const {dispatch} = this.context;
 		const {evaluableForm} = this.refs;
-		const {focusedField} = this.props;
+		const {editingLanguageId, focusedField} = this.props;
 
 		if (evaluableForm && evaluableForm.reactComponentRef.current) {
 			evaluableForm.reactComponentRef.current
-				.evaluate()
+				.evaluate(editingLanguageId)
 				.then((pages) => {
 					dispatch('focusedFieldEvaluationEnded', {
 						...focusedField,
+						changedEditingLanguage: true,
 						settingsContext: {
 							...focusedField.settingsContext,
 							pages,
@@ -729,9 +731,10 @@ class Sidebar extends Component {
 
 	_handleSettingsFormAttached() {
 		const reactForm = this.refs.evaluableForm.reactComponentRef.current;
+		const {editingLanguageId} = this.props;
 
 		if (reactForm) {
-			reactForm.evaluate();
+			reactForm.evaluate(editingLanguageId);
 		}
 	}
 

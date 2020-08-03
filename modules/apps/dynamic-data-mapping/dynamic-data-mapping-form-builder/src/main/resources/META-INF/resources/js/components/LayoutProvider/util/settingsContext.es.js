@@ -17,6 +17,7 @@ import {
 	normalizeFieldName,
 } from 'dynamic-data-mapping-form-renderer';
 
+import {getDefaultFieldName} from '../../../util/fieldSupport.es';
 import {updateFieldValidationProperty} from './fields.es';
 
 export const getSettingsContextProperty = (settingsContext, propertyName) => {
@@ -68,7 +69,7 @@ export const updateFieldName = (
 	focusedField,
 	value
 ) => {
-	const {fieldName, label} = focusedField;
+	const {fieldName} = focusedField;
 	const normalizedFieldName = normalizeFieldName(value);
 
 	let newFieldName;
@@ -77,7 +78,7 @@ export const updateFieldName = (
 		newFieldName = fieldNameGenerator(value, fieldName);
 	}
 	else {
-		newFieldName = fieldNameGenerator(label, fieldName);
+		newFieldName = fieldNameGenerator(getDefaultFieldName(), fieldName);
 	}
 
 	if (newFieldName) {
@@ -139,17 +140,14 @@ export const updateFieldLabel = (
 	editingLanguageId,
 	fieldNameGenerator,
 	focusedField,
-	shouldAutoGenerateName,
+	generateFieldNameUsingFieldLabel,
 	value
 ) => {
 	let {fieldName, settingsContext} = focusedField;
 
 	if (
-		shouldAutoGenerateName(
-			defaultLanguageId,
-			editingLanguageId,
-			focusedField
-		)
+		generateFieldNameUsingFieldLabel &&
+		defaultLanguageId === editingLanguageId
 	) {
 		const updates = updateFieldName(
 			editingLanguageId,
@@ -213,7 +211,7 @@ export const updateField = (
 		defaultLanguageId,
 		editingLanguageId,
 		fieldNameGenerator,
-		shouldAutoGenerateName,
+		generateFieldNameUsingFieldLabel,
 	},
 	field,
 	propertyName,
@@ -233,7 +231,7 @@ export const updateField = (
 				editingLanguageId,
 				fieldNameGenerator,
 				field,
-				shouldAutoGenerateName,
+				generateFieldNameUsingFieldLabel,
 				propertyValue
 			),
 		};

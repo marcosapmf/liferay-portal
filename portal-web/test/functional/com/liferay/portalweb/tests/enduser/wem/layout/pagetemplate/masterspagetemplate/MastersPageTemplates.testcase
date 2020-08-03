@@ -125,6 +125,8 @@ definition {
 			key_position = "5",
 			locator1 = "Fragment#PAGE_EDITOR_NO_FRAGMENTS_MESSAGE");
 
+		PageEditor.gotoTab(tabName = "Fragments and Widgets");
+
 		Navigator.gotoNavTab(navTab = "Widgets");
 
 		DragAndDrop.javaScriptDragAndDropToObject(
@@ -271,7 +273,9 @@ definition {
 		}
 
 		task ("Assert can change master from Blank to custom master") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
@@ -326,7 +330,9 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
@@ -427,7 +433,9 @@ definition {
 
 			PageEditor.assertFragmentSidebarLoaded();
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
@@ -492,7 +500,9 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
@@ -575,7 +585,9 @@ definition {
 		}
 
 		task ("Assert can change master from Blank to custom master") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
@@ -635,7 +647,9 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
@@ -1008,7 +1022,9 @@ definition {
 
 		PageEditor.viewFragment(fragmentName = "Heading");
 
-		PageEditor.gotoTab(tabName = "Look and Feel");
+		PageEditor.gotoTab(tabName = "Page Design Options");
+
+		Click(locator1 = "PageEditor#MORE_LINK");
 
 		AssertClick(
 			key_text = "Change Master",
@@ -1269,7 +1285,9 @@ definition {
 		}
 
 		task ("Change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertClick(
 				key_text = "Change Master",
@@ -1417,7 +1435,9 @@ definition {
 
 		PageEditor.viewFragment(fragmentName = "Heading");
 
-		PageEditor.gotoTab(tabName = "Look and Feel");
+		PageEditor.gotoTab(tabName = "Page Design Options");
+
+		Click(locator1 = "PageEditor#MORE_LINK");
 
 		Click(
 			key_text = "Edit Master",
@@ -1498,7 +1518,9 @@ definition {
 			masterLayoutName = "Custom Masters Page Template",
 			pageName = "Test Content Page Name");
 
-		PageEditor.gotoTab(tabName = "Look and Feel");
+		PageEditor.gotoTab(tabName = "Page Design Options");
+
+		Click(locator1 = "PageEditor#MORE_LINK");
 
 		Click(
 			key_text = "Edit Master",

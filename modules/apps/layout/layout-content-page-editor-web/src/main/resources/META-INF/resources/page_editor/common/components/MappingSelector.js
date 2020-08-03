@@ -60,9 +60,10 @@ function loadFields({
 		selectedItem.classNameId &&
 		selectedItem.classPK
 	) {
-		promise = InfoItemService.getAvailableAssetMappingFields({
+		promise = InfoItemService.getAvailableInfoItemMappingFields({
 			classNameId: selectedItem.classNameId,
 			classPK: selectedItem.classPK,
+			fieldType,
 			onNetworkStatus: dispatch,
 		});
 	}
@@ -70,10 +71,7 @@ function loadFields({
 	if (promise) {
 		return promise.then((response) => {
 			if (Array.isArray(response)) {
-				return response.filter(
-					(field) =>
-						COMPATIBLE_TYPES[fieldType].indexOf(field.type) !== -1
-				);
+				return response;
 			}
 
 			return [];

@@ -10,17 +10,34 @@ definition {
 			key_assigneeType = "${assigneeType}",
 			locator1 = "IFrame#ADD_ASSIGNEE_TO_ACCOUNT");
 
-		Search.searchCP(searchTerm = "${assigneeName}");
+		if (isSet(addNewAssignee)) {
+			LexiconEntry.gotoAdd();
 
-		Check(
-			key_tableEntry = "${assigneeName}",
-			locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+			AccountUsers.addUserInfos(
+				accountName = "${accountName}",
+				blockedDomainName = "${blockedDomainName}",
+				domainValidation = "${domainValidation}",
+				invalidDomainName = "${invalidDomainName}",
+				userEmailAddress = "${userEmailAddress}",
+				userFirstName = "${userFirstName}",
+				userLastName = "${userLastName}",
+				userScreenName = "${userScreenName}");
 
-		SelectFrameTop();
+			Button.clickSave();
+		}
+		else {
+			Search.searchCP(searchTerm = "${assigneeName}");
 
-		Button.clickAssign();
+			Check(
+				key_tableEntry = "${assigneeName}",
+				locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
 
-		Alert.viewSuccessMessage();
+			SelectFrameTop();
+
+			Button.clickAssign();
+
+			Alert.viewSuccessMessage();
+		}
 
 		Refresh();
 
@@ -52,6 +69,14 @@ definition {
 				selectFieldLabel = "Type",
 				selectFieldValue = "${accountType}");
 		}
+		else {
+			AssertTextEquals(
+				key_typeName = "Business",
+				locator1 = "Select#TYPE_SELECTED",
+				value1 = "Business");
+		}
+
+		AssertElementNotPresent(locator1 = "Account#USER_SELECT");
 
 		if (isSet(accountTaxID)) {
 			PortletEntry.inputText(
@@ -79,7 +104,7 @@ definition {
 			locator1 = "Account#ACCOUNT_DOMAIN_ADD_Link",
 			value1 = "Add");
 
-		IFrame.selectConfigurationFrame();
+		SelectFrame(locator1 = "IFrame#ADD_DOMAIN");
 
 		PortletEntry.inputText(
 			fieldLabel = "Domain",
@@ -131,13 +156,7 @@ definition {
 	}
 
 	macro editCP {
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Edit",
-			rowEntry = "${accountName}");
-
-		AssertTextEquals(
-			locator1 = "Portlet#HEADER",
-			value1 = "Edit ${accountName}");
+		Accounts.gotoEdit(accountName = "${accountName}");
 
 		PortletEntry.inputName(name = "${accountNameEdit}");
 
@@ -166,7 +185,24 @@ definition {
 	}
 
 	macro gotoAssigneeTab {
-		Navigator.gotoNavItem(navItem = "${assigneeTab}");
+		Navigator.gotoNavTab(navTab = "${assigneeTab}");
+	}
+
+	macro gotoEdit {
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Search.searchCP(searchTerm = "${accountName}");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "${accountName}");
+
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER",
+			value1 = "Edit ${accountName}");
 	}
 
 	macro inactiveAccount {
@@ -217,6 +253,41 @@ definition {
 		AssertElementNotPresent(
 			key_domainName = "${domainName}",
 			locator1 = "Account#DOMAIN_REMOVE_DOMAIN");
+	}
+
+	macro selectUser {
+		AssertElementPresent(locator1 = "Account#USER_SELECT");
+
+		if (!(IsElementPresent(locator1 = "Message#EMPTY_INFO_DEPOT_HIDE"))) {
+			Alert.viewMutedMessage(muteMessage = "Assign a user to this person account.");
+		}
+
+		AssertClick(
+			locator1 = "Account#USER_SELECT",
+			value1 = "Select");
+
+		SelectFrame(locator1 = "IFrame#ASSIGN_USER");
+
+		Search.searchCP(searchTerm = "${accountUserName}");
+
+		AssertClick(
+			key_accountUserName = "${accountUserName}",
+			locator1 = "Account#CHOOSE_ACCOUNT_USER",
+			value1 = "Choose");
+
+		SelectFrame(value1 = "relative=top");
+
+		AssertElementPresent(
+			key_userName = "${accountUserName}",
+			locator1 = "Account#USER_TABLE_NAME");
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+
+		AssertElementPresent(
+			key_userName = "${accountUserName}",
+			locator1 = "Account#USER_TABLE_NAME");
 	}
 
 	macro tearDownCP {
@@ -307,6 +378,12 @@ definition {
 			value1 = "${assigneeName}");
 	}
 
+	macro viewAssigneeTab {
+		AssertElementPresent(
+			key_tab = "${navTab}",
+			locator1 = "NavTab#TAB_LINK");
+	}
+
 	macro viewInactiveAccount {
 		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
 
@@ -327,6 +404,12 @@ definition {
 		AssertTextEquals(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no ${assigneeType} associated with this account.");
+	}
+
+	macro viewNoAssigneeTab {
+		AssertElementNotPresent(
+			key_tab = "${navTab}",
+			locator1 = "NavTab#TAB_LINK");
 	}
 
 }

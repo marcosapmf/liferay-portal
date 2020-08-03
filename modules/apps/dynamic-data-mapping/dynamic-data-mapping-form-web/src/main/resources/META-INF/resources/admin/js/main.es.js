@@ -582,12 +582,6 @@ class Form extends Component {
 		return this._savePublished(event, false);
 	}
 
-	willReceiveProps({published = {}}) {
-		if (published.newVal != null) {
-			this._updateShareFormIcon(published.newVal);
-		}
-	}
-
 	_activeNavItemValueFn() {
 		const {context} = this.props;
 
@@ -655,7 +649,7 @@ class Form extends Component {
 
 		let requireAuthentication = false;
 
-		if (settingsDDMForm) {
+		if (settingsDDMForm && settingsDDMForm.reactComponentRef.current) {
 			const settingsPageVisitor = new PagesVisitor(
 				settingsDDMForm.reactComponentRef.current.get('pages')
 			);

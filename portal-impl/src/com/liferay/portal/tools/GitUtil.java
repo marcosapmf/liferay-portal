@@ -45,8 +45,9 @@ public class GitUtil {
 			String baseDirName, String gitWorkingBranchName)
 		throws Exception {
 
-		String gitWorkingBranchLatestCommitId = getCurrentBranchCommitId(
-			gitWorkingBranchName);
+		String gitWorkingBranchLatestCommitId = _getLatestCommitId(
+			gitWorkingBranchName, "origin/" + gitWorkingBranchName,
+			"upstream/" + gitWorkingBranchName);
 
 		List<String> commitMessages = new ArrayList<>();
 
@@ -57,7 +58,7 @@ public class GitUtil {
 		String line = null;
 
 		while ((line = unsyncBufferedReader.readLine()) != null) {
-			commitMessages.add(line);
+			commitMessages.add(StringUtil.trim(line));
 		}
 
 		return commitMessages;
@@ -83,8 +84,9 @@ public class GitUtil {
 			boolean includeDeletedFileNames)
 		throws Exception {
 
-		String gitWorkingBranchLatestCommitId = getCurrentBranchCommitId(
-			gitWorkingBranchName);
+		String gitWorkingBranchLatestCommitId = _getLatestCommitId(
+			gitWorkingBranchName, "origin/" + gitWorkingBranchName,
+			"upstream/" + gitWorkingBranchName);
 
 		List<String> fileNames = getFileNames(
 			baseDirName, gitWorkingBranchLatestCommitId);
@@ -511,6 +513,10 @@ public class GitUtil {
 					" --pretty=format:%H:%cd --date=unix");
 
 			String line = unsyncBufferedReader.readLine();
+
+			if (line == null) {
+				continue;
+			}
 
 			String[] parts = line.split(StringPool.COLON);
 

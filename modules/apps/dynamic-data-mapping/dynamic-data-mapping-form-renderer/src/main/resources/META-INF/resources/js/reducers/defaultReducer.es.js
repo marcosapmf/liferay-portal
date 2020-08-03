@@ -25,7 +25,7 @@ export default (state, action) => {
 				editingLanguageId &&
 				state.editingLanguageId !== editingLanguageId
 			) {
-				const visitor = new PagesVisitor(pages ?? action.pages);
+				const visitor = new PagesVisitor(pages ?? state.pages);
 
 				return {
 					...action.payload,
@@ -34,11 +34,8 @@ export default (state, action) => {
 							let value;
 
 							if (localizedValue) {
-								if (localizedValue[editingLanguageId.newVal]) {
-									value =
-										localizedValue[
-											editingLanguageId.newVal
-										];
+								if (localizedValue[editingLanguageId]) {
+									value = localizedValue[editingLanguageId];
 								}
 								else if (localizedValue[defaultLanguageId]) {
 									value = localizedValue[defaultLanguageId];

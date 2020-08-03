@@ -38,7 +38,8 @@ definition {
 	@description = "This is a use case for LPS-70446."
 	@priority = "5"
 	test ConfigureAutofillRule {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "FormRules#ConfigureAutofillRule";
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -80,6 +81,8 @@ definition {
 
 		Form.addTextField(fieldPositionNumber = "1");
 
+		var fieldNameTextField = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Text Field");
 
 		Form.closeSidebar();
@@ -88,7 +91,18 @@ definition {
 			fieldPositionNumber = "2",
 			fieldType = "Select from List");
 
+		var fieldNameCountries = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Countries");
+
+		FormFields.editOptionsRow(
+			optionName = "Select1",
+			optionValue = "Select 1");
+
+		FormFields.editOptionsRow(
+			optionName = "Select2",
+			optionValue = "Select 2",
+			rowNumber = "2");
 
 		Form.closeSidebar();
 
@@ -122,22 +136,22 @@ definition {
 
 		FormFields.viewTextLabel(
 			fieldLabel = "Text Field",
-			fieldName = "TextField");
+			fieldName = "${fieldNameTextField}");
 
 		FormFields.editText(
-			fieldName = "TextField",
+			fieldName = "${fieldNameTextField}",
 			fieldValue = "test");
 
 		FormFields.viewSelectOptionsList(
-			fieldName = "Countries",
+			fieldName = "${fieldNameCountries}",
 			selectOption = "Option");
 
 		FormFields.editText(
-			fieldName = "TextField",
+			fieldName = "${fieldNameTextField}",
 			fieldValue = "country");
 
 		FormFields.viewSelectOptionsList(
-			fieldName = "Countries",
+			fieldName = "${fieldNameCountries}",
 			selectOption = "Afghanistan");
 	}
 
@@ -145,7 +159,7 @@ definition {
 	@priority = "5"
 	test ConfigureCalculateRule {
 		property test.name.skip.portal.instance = "FormRules#ConfigureCalculateRule";
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		var portalURL = PropsUtil.get("portal.url");
 
 		Navigator.openURL();
@@ -162,6 +176,8 @@ definition {
 			fieldPositionNumber = "1",
 			fieldType = "Numeric");
 
+		var fieldNameQuantity = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Quantity");
 
 		Form.closeSidebar();
@@ -170,6 +186,8 @@ definition {
 			fieldPositionNumber = "2",
 			fieldType = "Numeric");
 
+		var fieldNameValue = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Value");
 
 		Form.closeSidebar();
@@ -177,6 +195,8 @@ definition {
 		Form.gotoAddField(
 			fieldPositionNumber = "3",
 			fieldType = "Numeric");
+
+		var fieldNameTotal = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Total");
 
@@ -235,15 +255,15 @@ definition {
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.editText(
-			fieldName = "Value",
+			fieldName = "${fieldNameValue}",
 			fieldValue = "5");
 
 		FormFields.editText(
-			fieldName = "Quantity",
+			fieldName = "${fieldNameQuantity}",
 			fieldValue = "10");
 
 		FormFields.viewTextValue(
-			fieldName = "Total",
+			fieldName = "${fieldNameTotal}",
 			fieldValue = "50");
 	}
 
@@ -264,6 +284,8 @@ definition {
 		Form.editName();
 
 		Form.addTextField(fieldPositionNumber = "1");
+
+		var fieldNameTextField = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field");
 
@@ -324,7 +346,7 @@ definition {
 		FormFields.viewRequiredAsteriskNotPresent();
 
 		FormFields.editText(
-			fieldName = "TextField",
+			fieldName = "${fieldNameTextField}",
 			fieldValue = "test");
 
 		FormFields.viewRequiredAsterisk();
@@ -351,11 +373,15 @@ definition {
 
 		Form.addTextField(fieldPositionNumber = "1");
 
+		var fieldNameTextField1 = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Text Field 1");
 
 		Form.closeSidebar();
 
 		Form.addTextField(fieldPositionNumber = "2");
+
+		var fieldNameTextField2 = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 2");
 
@@ -364,6 +390,8 @@ definition {
 		Form.gotoAddField(
 			fieldPositionNumber = "3",
 			fieldType = "Date");
+
+		var fieldNameDateField = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Date Field");
 
@@ -433,20 +461,20 @@ definition {
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.editText(
-			fieldName = "TextField1",
+			fieldName = "${fieldNameTextField1}",
 			fieldValue = "test");
 
 		FormFields.viewDateFieldNotPresent(
 			fieldLabel = "Date Field",
-			fieldName = "Date");
+			fieldName = "${fieldNameDateField}");
 
 		FormFields.editText(
-			fieldName = "TextField2",
+			fieldName = "${fieldNameTextField2}",
 			fieldValue = "test");
 
 		FormFields.viewDateField(
 			fieldLabel = "Date Field",
-			fieldName = "Date");
+			fieldName = "${fieldNameDateField}");
 	}
 
 	@priority = "4"
@@ -475,11 +503,15 @@ definition {
 
 		Form.addTextField(fieldPositionNumber = "1");
 
+		var fieldNamePublic = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Public");
 
 		Form.closeSidebar();
 
 		Form.addTextField(fieldPositionNumber = "1");
+
+		var fieldNameManager = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Manager");
 
@@ -553,11 +585,11 @@ definition {
 
 		FormFields.viewTextField(
 			fieldLabel = "Public",
-			fieldName = "Public");
+			fieldName = "${fieldNamePublic}");
 
 		FormFields.viewTextFieldNotVisible(
 			fieldLabel = "Manager",
-			fieldName = "Manager");
+			fieldName = "${fieldNameManager}");
 
 		Navigator.openURL();
 
@@ -578,23 +610,23 @@ definition {
 
 		FormFields.viewTextField(
 			fieldLabel = "Public",
-			fieldName = "Public");
+			fieldName = "${fieldNamePublic}");
 
 		FormFields.viewTextField(
 			fieldLabel = "Manager",
-			fieldName = "Manager");
+			fieldName = "${fieldNameManager}");
 
 		FormFields.editText(
-			fieldName = "Public",
+			fieldName = "${fieldNamePublic}",
 			fieldValue = "Message");
 
 		FormFields.editText(
-			fieldName = "Manager",
+			fieldName = "${fieldNameManager}",
 			fieldValue = "Admin Comments");
 
 		FormFields.viewTextField(
 			fieldLabel = "Manager",
-			fieldName = "Manager");
+			fieldName = "${fieldNameManager}");
 
 		FormPortlet.submitSuccessfully();
 
@@ -713,6 +745,8 @@ definition {
 
 		Form.addTextField(fieldPositionNumber = "1");
 
+		var fieldNameTextField = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Text Field");
 
 		Form.closeSidebar();
@@ -720,6 +754,8 @@ definition {
 		Form.gotoAddField(
 			fieldPositionNumber = "2",
 			fieldType = "Date");
+
+		var fieldNameDateField = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Date Field");
 
@@ -759,37 +795,37 @@ definition {
 
 		FormFields.viewDateFieldNotPresent(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 
 		FormFields.editText(
-			fieldName = "TextField",
+			fieldName = "${fieldNameTextField}",
 			fieldValue = "1");
 
 		FormFields.viewDateField(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 
 		FormFields.editText(
-			fieldName = "TextField",
+			fieldName = "${fieldNameTextField}",
 			fieldValue = "Test");
 
 		FormFields.viewDateField(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 
 		FormFields.editText(
-			fieldName = "TextField",
+			fieldName = "${fieldNameTextField}",
 			fieldValue = "%");
 
 		FormFields.viewDateField(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 
-		FormFields.editTextWithBackspace(fieldName = "TextField");
+		FormFields.editTextWithBackspace(fieldName = "${fieldNameTextField}");
 
 		FormFields.viewDateFieldNotPresent(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 	}
 
 	@description = "This is a use case for LPS-73332."
@@ -869,6 +905,8 @@ definition {
 
 		Form.addTextField(fieldPositionNumber = "1");
 
+		var fieldNameTextField1 = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Text Field 1");
 
 		Form.gotoAdvancedTab();
@@ -880,6 +918,8 @@ definition {
 		Form.closeSidebar();
 
 		Form.addTextField(fieldPositionNumber = "2");
+
+		var fieldNameTextField2 = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 2");
 
@@ -924,13 +964,13 @@ definition {
 		FormPortlet.submit();
 
 		FormFields.viewFieldValidationErrorMessage(
-			fieldName = "TextField2",
+			fieldName = "${fieldNameTextField2}",
 			fieldValidationErrorMessage = "This field is required.");
 
 		Refresh();
 
 		FormFields.editText(
-			fieldName = "TextField1",
+			fieldName = "${fieldNameTextField1}",
 			fieldValue = "testing");
 
 		FormFields.viewRequiredAsteriskNotPresent();
@@ -1059,11 +1099,15 @@ definition {
 
 		Form.addTextField(fieldPositionNumber = "1");
 
+		var fieldNameTextField1 = FormFields.getFieldName();
+
 		Form.editFieldLabelMetal(fieldValue = "Text Field 1");
 
 		Form.closeSidebar();
 
 		Form.addTextField(fieldPositionNumber = "2");
+
+		var fieldNameTextField2 = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field 2");
 
@@ -1072,6 +1116,8 @@ definition {
 		Form.gotoAddField(
 			fieldPositionNumber = "3",
 			fieldType = "Date");
+
+		var fieldNameDateField = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Date Field");
 
@@ -1114,20 +1160,20 @@ definition {
 		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.editText(
-			fieldName = "TextField2",
+			fieldName = "${fieldNameTextField2}",
 			fieldValue = "testing");
 
 		FormFields.viewDateFieldNotPresent(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 
 		FormFields.editText(
-			fieldName = "TextField1",
+			fieldName = "${fieldNameTextField1}",
 			fieldValue = "test");
 
 		FormFields.viewDateField(
 			fieldLabel = "Date Field",
-			fieldName = "DateField");
+			fieldName = "${fieldNameDateField}");
 	}
 
 }

@@ -38,8 +38,8 @@ PortletURL redirectURL = layoutsAdminDisplayContext.getRedirectURL();
 <aui:model-context bean="<%= selLayout %>" model="<%= Layout.class %>" />
 
 <aui:input name="devices" type="hidden" value="regular" />
-
 <aui:input name="masterLayoutPlid" type="hidden" />
+<aui:input name="styleBookEntryId" type="hidden" />
 
 <%
 LayoutPageTemplateEntry layoutPageTemplateEntry = LayoutPageTemplateEntryLocalServiceUtil.fetchLayoutPageTemplateEntryByPlid(selLayout.getPlid());
@@ -91,6 +91,35 @@ if ((layoutPageTemplateEntry == null) || !Objects.equals(layoutPageTemplateEntry
 	</clay:sheet-section>
 </c:if>
 
+<%
+StyleBookEntry styleBookEntry = null;
+
+int styleBookEntriesCount = StyleBookEntryLocalServiceUtil.getStyleBookEntriesCount(group.getGroupId());
+
+boolean hasStyleBooks = styleBookEntriesCount > 0;
+
+if (hasStyleBooks && (selLayout.getStyleBookEntryId() > 0)) {
+	styleBookEntry = StyleBookEntryLocalServiceUtil.fetchStyleBookEntry(selLayout.getStyleBookEntryId());
+}
+%>
+
+<clay:sheet-section>
+	<h3 class="sheet-subtitle"><liferay-ui:message key="style-book" /></h3>
+
+	<p>
+		<b><liferay-ui:message key="style-book-name" />:</b> <span id="<portlet:namespace />styleBookName"><%= (styleBookEntry != null) ? styleBookEntry.getName() : LanguageUtil.get(request, "default") %></span>
+	</p>
+
+	<div class="button-holder">
+		<clay:button
+			displaytype="secondary"
+			id='<%= liferayPortletResponse.getNamespace() + "changeStyleBookButton" %>'
+			label="change-style-book"
+			small="<%= true %>"
+		/>
+	</div>
+</clay:sheet-section>
+
 <liferay-util:buffer
 	var="rootNodeNameLink"
 >
@@ -120,6 +149,15 @@ else {
 	id='<%= liferayPortletResponse.getNamespace() + "themeContainer" %>'
 >
 	<h3 class="sheet-subtitle"><liferay-ui:message key="theme" /></h3>
+
+	<c:if test="<%= hasStyleBooks %>">
+		<clay:alert
+			displayType="warning"
+			elementClasses="hide"
+			id='<%= liferayPortletResponse.getNamespace() + "styleBookWarning" %>'
+			message="style-book-may-not-work-as-expected-if-the-theme-is-changed"
+		/>
+	</c:if>
 
 	<aui:input checked="<%= selLayout.isInheritLookAndFeel() %>" id="regularInheritLookAndFeel" label="<%= taglibLabel %>" name="regularInheritLookAndFeel" type="radio" value="<%= true %>" />
 
@@ -152,6 +190,34 @@ else {
 		'<portlet:namespace />inheritThemeOptions'
 	);
 </aui:script>
+
+<c:if test="<%= hasStyleBooks %>">
+	<aui:script>
+		var regularInheritLookAndFeel = document.getElementById(
+			'<portlet:namespace />regularInheritLookAndFeel'
+		);
+
+		var regularUniqueLookAndFeelCheckbox = document.getElementById(
+			'<portlet:namespace />regularUniqueLookAndFeel'
+		);
+
+		var styleBookWarning = document.getElementById(
+			'<portlet:namespace />styleBookWarning'
+		);
+
+		regularInheritLookAndFeel.addEventListener('change', function (event) {
+			if (event.target.checked) {
+				styleBookWarning.classList.add('hide');
+			}
+		});
+
+		regularUniqueLookAndFeelCheckbox.addEventListener('change', function (event) {
+			if (event.target.checked) {
+				styleBookWarning.classList.remove('hide');
+			}
+		});
+	</aui:script>
+</c:if>
 
 <c:if test="<%= editableMasterLayout %>">
 	<aui:script require="frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
@@ -239,3 +305,42 @@ else {
 		);
 	</aui:script>
 </c:if>
+
+<aui:script require="frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+	var changeStyleBookButton = document.getElementById(
+		'<portlet:namespace />changeStyleBookButton'
+	);
+
+	var changeStyleBookButtonEventListener = changeStyleBookButton.addEventListener(
+		'click',
+		function (event) {
+			var itemSelectorDialog = new ItemSelectorDialog.default({
+				buttonAddLabel: '<liferay-ui:message key="done" />',
+				eventName: '<portlet:namespace />selectStyleBook',
+				title: '<liferay-ui:message key="select-style-book" />',
+				url:
+					'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcPath" value="/select_style_book.jsp" /></portlet:renderURL>',
+			});
+
+			itemSelectorDialog.open();
+
+			itemSelectorDialog.on('selectedItemChange', function (event) {
+				var selectedItem = event.selectedItem;
+
+				if (selectedItem) {
+					var styleBookName = document.getElementById(
+						'<portlet:namespace />styleBookName'
+					);
+
+					styleBookName.innerHTML = selectedItem.name;
+
+					var styleBookEntryId = document.getElementById(
+						'<portlet:namespace />styleBookEntryId'
+					);
+
+					styleBookEntryId.value = selectedItem.stylebookentryid;
+				}
+			});
+		}
+	);
+</aui:script>

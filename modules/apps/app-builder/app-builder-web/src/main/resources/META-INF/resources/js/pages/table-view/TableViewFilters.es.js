@@ -25,14 +25,16 @@ import EditTableViewContext, {
 } from './EditTableViewContext.es';
 
 export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
-	const [{dataListView}, dispatch] = useContext(EditTableViewContext);
+	const [{dataListView, editingLanguageId}, dispatch] = useContext(
+		EditTableViewContext
+	);
 
 	const {
 		customProperties: {options = {}},
 		label: fieldLabel,
 		name: fieldName,
 	} = dataDefinitionField;
-	const localizedOptions = options[themeDisplay.getLanguageId()] || [];
+	const localizedOptions = options[editingLanguageId] || [];
 
 	const values = dataListView.appliedFilters[fieldName] || [];
 
@@ -88,9 +90,7 @@ export const MultipleSelectFilter = ({dataDefinitionField, useFieldLabel}) => {
 	return (
 		<div className="multiple-select-filter table-view-filter">
 			{useFieldLabel ? (
-				<label>
-					{fieldLabel[themeDisplay.getLanguageId()] || fieldName}
-				</label>
+				<label>{fieldLabel[editingLanguageId] || fieldName}</label>
 			) : (
 				<label>
 					{Liferay.Language.get('filter-entries')}

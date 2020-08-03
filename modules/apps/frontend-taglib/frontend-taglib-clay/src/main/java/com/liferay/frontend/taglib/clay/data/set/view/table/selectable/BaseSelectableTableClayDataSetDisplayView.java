@@ -26,18 +26,25 @@ import java.util.Locale;
 public abstract class BaseSelectableTableClayDataSetDisplayView
 	implements ClayDataSetDisplayView {
 
+	@Override
 	public String getContentRenderer() {
-		return ClayDataSetConstants.CONTENT_RENDERER_SELECTABLE_TABLE;
+		return ClayDataSetConstants.SELECTABLE_TABLE;
 	}
 
 	public abstract String getFirstColumnLabel(Locale locale);
 
 	public abstract String getFirstColumnName();
 
+	@Override
 	public String getLabel() {
-		return ClayDataSetConstants.CONTENT_RENDERER_SELECTABLE_TABLE;
+		return ClayDataSetConstants.SELECTABLE_TABLE;
 	}
 
+	public String getName() {
+		return ClayDataSetConstants.SELECTABLE_TABLE;
+	}
+
+	@Override
 	public String getThumbnail() {
 		return StringPool.BLANK;
 	}

@@ -137,9 +137,9 @@ public interface ${entity.name}${sessionTypeName}Service
 	 * NOTE FOR DEVELOPERS:
 	 *
 <#if stringUtil.equals(sessionTypeName, "Local")>
-	 * Never modify or reference this interface directly. Always use {@link ${entity.name}LocalServiceUtil} to access the ${entity.humanName} local service. Add custom service methods to <code>${packagePath}.service.impl.${entity.name}LocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>${packagePath}.service.impl.${entity.name}LocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ${entity.humanName} local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ${entity.name}LocalServiceUtil} if injection and service tracking are not available.
 <#else>
-	 * Never modify or reference this interface directly. Always use {@link ${entity.name}ServiceUtil} to access the ${entity.humanName} remote service. Add custom service methods to <code>${packagePath}.service.impl.${entity.name}ServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>${packagePath}.service.impl.${entity.name}ServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ${entity.humanName} remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ${entity.name}ServiceUtil} if injection and service tracking are not available.
 </#if>
 	 */
 

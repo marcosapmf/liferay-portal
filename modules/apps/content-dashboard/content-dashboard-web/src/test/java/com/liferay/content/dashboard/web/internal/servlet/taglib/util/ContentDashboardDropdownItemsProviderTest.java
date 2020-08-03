@@ -14,6 +14,7 @@
 
 package com.liferay.content.dashboard.web.internal.servlet.taglib.util;
 
+import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.petra.string.StringPool;
@@ -37,6 +38,7 @@ import com.liferay.portal.util.PortalImpl;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -103,17 +105,13 @@ public class ContentDashboardDropdownItemsProviderTest {
 			ContentDashboardItem.class);
 
 		Mockito.when(
-			contentDashboardItem.isEditURLEnabled(
-				Mockito.any(HttpServletRequest.class))
+			contentDashboardItem.getContentDashboardItemActions(
+				Mockito.any(HttpServletRequest.class),
+				Mockito.eq(ContentDashboardItemAction.Type.VIEW),
+				Mockito.eq(ContentDashboardItemAction.Type.EDIT))
 		).thenReturn(
-			true
-		);
-
-		Mockito.when(
-			contentDashboardItem.getEditURL(
-				Mockito.any(HttpServletRequest.class))
-		).thenReturn(
-			"validURL"
+			Collections.singletonList(
+				_getEditContentDashboardItemAction("validURL"))
 		);
 
 		List<DropdownItem> dropdownItems =
@@ -157,17 +155,13 @@ public class ContentDashboardDropdownItemsProviderTest {
 			ContentDashboardItem.class);
 
 		Mockito.when(
-			contentDashboardItem.isViewURLEnabled(
-				Mockito.any(HttpServletRequest.class))
+			contentDashboardItem.getContentDashboardItemActions(
+				Mockito.any(HttpServletRequest.class),
+				Mockito.eq(ContentDashboardItemAction.Type.VIEW),
+				Mockito.eq(ContentDashboardItemAction.Type.EDIT))
 		).thenReturn(
-			true
-		);
-
-		Mockito.when(
-			contentDashboardItem.getViewURL(
-				Mockito.any(HttpServletRequest.class))
-		).thenReturn(
-			"validURL"
+			Collections.singletonList(
+				_getViewContentDashboardItemAction("validURL"))
 		);
 
 		List<DropdownItem> dropdownItems =
@@ -213,17 +207,13 @@ public class ContentDashboardDropdownItemsProviderTest {
 			ContentDashboardItem.class);
 
 		Mockito.when(
-			contentDashboardItem.isViewURLEnabled(
-				Mockito.any(HttpServletRequest.class))
+			contentDashboardItem.getContentDashboardItemActions(
+				Mockito.any(HttpServletRequest.class),
+				Mockito.eq(ContentDashboardItemAction.Type.VIEW),
+				Mockito.eq(ContentDashboardItemAction.Type.EDIT))
 		).thenReturn(
-			true
-		);
-
-		Mockito.when(
-			contentDashboardItem.getViewURL(
-				Mockito.any(HttpServletRequest.class))
-		).thenReturn(
-			"validURL"
+			Collections.singletonList(
+				_getViewContentDashboardItemAction("validURL"))
 		);
 
 		List<DropdownItem> dropdownItems =
@@ -271,17 +261,13 @@ public class ContentDashboardDropdownItemsProviderTest {
 			ContentDashboardItem.class);
 
 		Mockito.when(
-			contentDashboardItem.isViewURLEnabled(
-				Mockito.any(HttpServletRequest.class))
+			contentDashboardItem.getContentDashboardItemActions(
+				Mockito.any(HttpServletRequest.class),
+				Mockito.eq(ContentDashboardItemAction.Type.VIEW),
+				Mockito.eq(ContentDashboardItemAction.Type.EDIT))
 		).thenReturn(
-			true
-		);
-
-		Mockito.when(
-			contentDashboardItem.getViewURL(
-				Mockito.any(HttpServletRequest.class))
-		).thenReturn(
-			"validURL"
+			Collections.singletonList(
+				_getViewContentDashboardItemAction("validURL"))
 		);
 
 		List<DropdownItem> dropdownItems =
@@ -301,6 +287,82 @@ public class ContentDashboardDropdownItemsProviderTest {
 		Assert.assertEquals(
 			"validURL",
 			_http.getPath(String.valueOf(viewDropdownItem.get("href"))));
+	}
+
+	private ContentDashboardItemAction _getEditContentDashboardItemAction(
+		String url) {
+
+		return new ContentDashboardItemAction() {
+
+			@Override
+			public String getIcon() {
+				return null;
+			}
+
+			@Override
+			public String getLabel(Locale locale) {
+				return "edit";
+			}
+
+			@Override
+			public String getName() {
+				return null;
+			}
+
+			@Override
+			public Type getType() {
+				return ContentDashboardItemAction.Type.EDIT;
+			}
+
+			@Override
+			public String getURL() {
+				return url;
+			}
+
+			@Override
+			public String getURL(Locale locale) {
+				return getURL();
+			}
+
+		};
+	}
+
+	private ContentDashboardItemAction _getViewContentDashboardItemAction(
+		String url) {
+
+		return new ContentDashboardItemAction() {
+
+			@Override
+			public String getIcon() {
+				return null;
+			}
+
+			@Override
+			public String getLabel(Locale locale) {
+				return "view";
+			}
+
+			@Override
+			public String getName() {
+				return null;
+			}
+
+			@Override
+			public Type getType() {
+				return ContentDashboardItemAction.Type.VIEW;
+			}
+
+			@Override
+			public String getURL() {
+				return url;
+			}
+
+			@Override
+			public String getURL(Locale locale) {
+				return getURL();
+			}
+
+		};
 	}
 
 	private static Http _http;

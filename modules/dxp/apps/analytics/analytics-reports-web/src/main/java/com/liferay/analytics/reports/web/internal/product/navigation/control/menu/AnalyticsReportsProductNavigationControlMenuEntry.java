@@ -14,32 +14,19 @@
 
 package com.liferay.analytics.reports.web.internal.product.navigation.control.menu;
 
-import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItemTracker;
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
 import com.liferay.asset.display.page.constants.AssetDisplayPageWebKeys;
-import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRenderer;
-import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.portlet.LiferayWindowState;
-import com.liferay.portal.kernel.portlet.PortalPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Html;
-import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SessionClicks;
@@ -61,8 +48,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
 import javax.portlet.WindowStateException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -134,32 +119,21 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			values.put("cssClass", "active");
 		}
 		else {
-			PortletURL portletURL = _portletURLFactory.create(
-				httpServletRequest,
-				AnalyticsReportsPortletKeys.ANALYTICS_REPORTS,
-				RenderRequest.RENDER_PHASE);
-
-			portletURL.setParameter("mvcPath", "/analytics_reports_panel.jsp");
-
-			try {
-				portletURL.setWindowState(LiferayWindowState.EXCLUSIVE);
-			}
-			catch (WindowStateException windowStateException) {
-				ReflectionUtil.throwException(windowStateException);
-			}
-
 			InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
 				(InfoDisplayObjectProvider<?>)httpServletRequest.getAttribute(
 					AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER);
 
-			portletURL.setParameter(
-				"classNameId",
-				String.valueOf(infoDisplayObjectProvider.getClassNameId()));
-			portletURL.setParameter(
-				"classPK",
-				String.valueOf(infoDisplayObjectProvider.getClassPK()));
-
-			values.put("analyticsReportsPanelURL", portletURL.toString());
+			try {
+				values.put(
+					"analyticsReportsPanelURL",
+					AnalyticsReportsUtil.getAnalyticsReportsPanelURL(
+						infoDisplayObjectProvider.getClassNameId(),
+						infoDisplayObjectProvider.getClassPK(),
+						httpServletRequest, _portletURLFactory));
+			}
+			catch (WindowStateException windowStateException) {
+				ReflectionUtil.throwException(windowStateException);
+			}
 
 			values.put("cssClass", StringPool.BLANK);
 		}
@@ -215,43 +189,16 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Layout layout = themeDisplay.getLayout();
+		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
+			(InfoDisplayObjectProvider<?>)httpServletRequest.getAttribute(
+				AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER);
 
-		if (!layout.isTypeAssetDisplay()) {
-			return false;
-		}
+		if (!AnalyticsReportsUtil.isShowAnalyticsReportsPanel(
+				_analyticsReportsInfoItemTracker, themeDisplay.getCompanyId(),
+				httpServletRequest, infoDisplayObjectProvider,
+				themeDisplay.getLayout(), themeDisplay.getPermissionChecker(),
+				_portal)) {
 
-		if (!_hasAnalyticsReportsInfoItem(httpServletRequest)) {
-			return false;
-		}
-
-		if (isEmbeddedPersonalApplicationLayout(layout)) {
-			return false;
-		}
-
-		String layoutMode = ParamUtil.getString(
-			httpServletRequest, "p_l_mode", Constants.VIEW);
-
-		if (layoutMode.equals(Constants.EDIT)) {
-			return false;
-		}
-
-		PortalPreferences portalPreferences =
-			PortletPreferencesFactoryUtil.getPortalPreferences(
-				httpServletRequest);
-
-		boolean hidePanel = GetterUtil.getBoolean(
-			portalPreferences.getValue(
-				AnalyticsReportsPortletKeys.ANALYTICS_REPORTS, "hide-panel"));
-
-		if (!AnalyticsReportsUtil.isAnalyticsConnected(
-				themeDisplay.getCompanyId()) &&
-			hidePanel) {
-
-			return false;
-		}
-
-		if (!_hasEditPermission(httpServletRequest, layout)) {
 			return false;
 		}
 
@@ -262,72 +209,6 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 	protected void activate() {
 		_portletNamespace = _portal.getPortletNamespace(
 			AnalyticsReportsPortletKeys.ANALYTICS_REPORTS);
-	}
-
-	private boolean _hasAnalyticsReportsInfoItem(
-		HttpServletRequest httpServletRequest) {
-
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
-			(InfoDisplayObjectProvider<?>)httpServletRequest.getAttribute(
-				AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER);
-
-		if (infoDisplayObjectProvider == null) {
-			return false;
-		}
-
-		AnalyticsReportsInfoItem<?> analyticsReportsInfoItem =
-			_analyticsReportsInfoItemTracker.getAnalyticsReportsInfoItem(
-				_portal.getClassName(
-					infoDisplayObjectProvider.getClassNameId()));
-
-		if ((analyticsReportsInfoItem == null) ||
-			(infoDisplayObjectProvider.getDisplayObject() == null)) {
-
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean _hasEditPermission(
-			HttpServletRequest httpServletRequest, Layout layout)
-		throws PortalException {
-
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
-			(InfoDisplayObjectProvider<?>)httpServletRequest.getAttribute(
-				AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER);
-
-		if (infoDisplayObjectProvider == null) {
-			return false;
-		}
-
-		AssetRendererFactory<?> assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.
-				getAssetRendererFactoryByClassNameId(
-					infoDisplayObjectProvider.getClassNameId());
-
-		AssetRenderer<?> assetRenderer = null;
-
-		if (assetRendererFactory != null) {
-			assetRenderer = assetRendererFactory.getAssetRenderer(
-				infoDisplayObjectProvider.getClassPK());
-		}
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		if (((assetRenderer == null) ||
-			 !assetRenderer.hasEditPermission(
-				 themeDisplay.getPermissionChecker())) &&
-			!LayoutPermissionUtil.contains(
-				themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.UPDATE)) {
-
-			return false;
-		}
-
-		return true;
 	}
 
 	private void _processBodyBottomTagBody(PageContext pageContext) {

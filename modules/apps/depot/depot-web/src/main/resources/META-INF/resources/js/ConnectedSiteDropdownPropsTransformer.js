@@ -12,8 +12,10 @@
  * details.
  */
 
+import {navigate} from 'frontend-js-web';
+
 const ACTIONS = {
-	disconnect(itemData) {
+	disconnect({url: disconnectSiteActionURL}) {
 		if (
 			confirm(
 				Liferay.Language.get(
@@ -21,7 +23,23 @@ const ACTIONS = {
 				)
 			)
 		) {
-			submitForm(document.hrefFm, itemData.disconnectSiteActionURL);
+			submitForm(document.hrefFm, disconnectSiteActionURL);
+		}
+	},
+	shareWebContentStructures({
+		shared,
+		url: updateDDMStructuresAvailableActionURL,
+	}) {
+		const message = shared
+			? Liferay.Language.get(
+					'after-disabling-structure-sharing,-any-site-content-that-uses-the-structures-will-be-invalid.-do-you-want-to-disable-structure-sharing'
+			  )
+			: Liferay.Language.get(
+					'you-will-not-be-able-to-disconnect-this-site-when-structure-sharing-is-enabled.-in-order-to-disconnect-this-site-from-this-asset-library,-you-must-disable-structure-sharing-first'
+			  );
+
+		if (confirm(message)) {
+			navigate(updateDDMStructuresAvailableActionURL);
 		}
 	},
 };

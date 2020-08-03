@@ -48,7 +48,7 @@ definition {
 	@priority = "4"
 	test AddSiteTemplateApplySiteTemplateChangesToSite {
 		property portal.acceptance = "quarantine";
-		property portal.release = "false";
+		property portal.release = "quarantine";
 
 		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
@@ -288,8 +288,6 @@ definition {
 		SiteTemplatesNavigator.openSiteTemplatesAdmin(baseURL = "http://www.able.com:8080");
 
 		LAR.importPortlet(larFileName = "site-template-name.lar");
-
-		Refresh();
 
 		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
 

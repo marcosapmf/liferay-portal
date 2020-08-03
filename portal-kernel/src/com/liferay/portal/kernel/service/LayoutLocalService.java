@@ -72,7 +72,7 @@ public interface LayoutLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutLocalServiceUtil} to access the layout local service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -753,8 +753,7 @@ public interface LayoutLocalService
 	 * @param privateLayout whether the layout is private to the group
 	 * @param type the type of the layouts (optiona.lly {@link
 	 LayoutConstants#TYPE_PORTLET})
-	 * @return the matching layouts, or an empty list if no matches were
-	 found
+	 * @return the matching layouts, or an empty list if no matches were found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Layout> getAllLayouts(
@@ -1433,6 +1432,7 @@ public interface LayoutLocalService
 	 * @param hasIconImage whether the icon image will be updated
 	 * @param iconBytes the byte array of the layout's new icon image
 	 * @param masterLayoutPlid the primary key of the master layout
+	 * @param styleBookEntryId the primary key of the style book entrys
 	 * @param serviceContext the service context to be applied. Can set the
 	 modification date and expando bridge attributes for the layout.
 	 For layouts that are linked to a layout prototype, attributes
@@ -1445,6 +1445,62 @@ public interface LayoutLocalService
 	 * @return the updated layout
 	 * @throws PortalException if a portal exception occurred
 	 */
+	public Layout updateLayout(
+			long groupId, boolean privateLayout, long layoutId,
+			long parentLayoutId, Map<Locale, String> nameMap,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			Map<Locale, String> keywordsMap, Map<Locale, String> robotsMap,
+			String type, boolean hidden, Map<Locale, String> friendlyURLMap,
+			boolean hasIconImage, byte[] iconBytes, long masterLayoutPlid,
+			long styleBookEntryId, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Updates the layout.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param privateLayout whether the layout is private to the group
+	 * @param layoutId the layout ID of the layout
+	 * @param parentLayoutId the layout ID of the layout's new parent
+	 layout
+	 * @param nameMap the locales and localized names to merge (optionally
+	 <code>null</code>)
+	 * @param titleMap the locales and localized titles to merge
+	 (optionally <code>null</code>)
+	 * @param descriptionMap the locales and localized descriptions to
+	 merge (optionally <code>null</code>)
+	 * @param keywordsMap the locales and localized keywords to merge
+	 (optionally <code>null</code>)
+	 * @param robotsMap the locales and localized robots to merge
+	 (optionally <code>null</code>)
+	 * @param type the layout's new type (optionally {@link
+	 LayoutConstants#TYPE_PORTLET})
+	 * @param hidden whether the layout is hidden
+	 * @param friendlyURLMap the layout's locales and localized friendly
+	 URLs. To see how the URL is normalized when accessed, see
+	 {@link
+	 com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil#normalize(
+	 String)}.
+	 * @param hasIconImage whether the icon image will be updated
+	 * @param iconBytes the byte array of the layout's new icon image
+	 * @param masterLayoutPlid the primary key of the master layout
+	 * @param serviceContext the service context to be applied. Can set the
+	 modification date and expando bridge attributes for the
+	 layout. For layouts that are linked to a layout prototype,
+	 attributes named <code>layoutPrototypeUuid</code> and
+	 <code>layoutPrototypeLinkedEnabled</code> can be specified to
+	 provide the unique identifier of the source prototype and a
+	 boolean to determine whether a link to it should be enabled
+	 to activate propagation of changes made to the linked page in
+	 the prototype.
+	 * @return the updated layout
+	 * @throws PortalException if a portal exception occurred
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateLayout(long, boolean, long, long, Map, Map, Map, Map,
+	 Map, String, boolean, Map, boolean, byte[], long, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public Layout updateLayout(
 			long groupId, boolean privateLayout, long layoutId,
 			long parentLayoutId, Map<Locale, String> nameMap,
@@ -1713,6 +1769,21 @@ public interface LayoutLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public Layout updateStatus(
 			long userId, long plid, int status, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Updates the layout replacing its style book entry ID.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param privateLayout whether the layout is private to the group
+	 * @param layoutId the layout ID of the layout
+	 * @param styleBookEntryId the primary key of the style book entry
+	 * @return the updated layout
+	 * @throws PortalException if a portal exception occurred
+	 */
+	public Layout updateStyleBookEntryId(
+			long groupId, boolean privateLayout, long layoutId,
+			long styleBookEntryId)
 		throws PortalException;
 
 	public Layout updateType(long plid, String type) throws PortalException;

@@ -148,7 +148,7 @@ definition {
 			collectionName = "Basic Components",
 			fragmentName = "Tabs");
 
-		PageEditor.expandFragmentCollection(collectionName = "Layout Elements");
+		PageEditor.expandFragmentCollection(collectionName = "Basic Components");
 
 		DragAndDrop.javaScriptDragAndDropToObject(
 			key_collectionName = "Basic Components",
@@ -301,10 +301,12 @@ definition {
 			collectionName = "Layout Elements",
 			fragmentName = "Container");
 
-		Click(
+		Click.clickNoWaitForVisible(
 			key_elementType = "Container",
 			key_position = "1",
 			locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+		PageEditor.expandFragmentCollection(collectionName = "Layout Elements");
 
 		DragAndDrop.javaScriptDragAndDropToObject(
 			key_collectionName = "Layout Elements",
@@ -402,8 +404,6 @@ definition {
 		PageEditor.gotoStyle(fragmentName = "Tabs");
 
 		PageEditor.configureFragment(numberOfTabs = "2");
-
-		Click(locator1 = "PageEditor#MANAGEMENT_BAR");
 
 		AssertVisible(
 			key_navItem = "Tab 2",
@@ -505,8 +505,6 @@ definition {
 	@description = "This is a use case for for LPS-111548. Undo can make the page editor come back to previous state up to 100 last states when the page has more than 100 states."
 	@priority = "5"
 	test UndoPagechangeHundredTimes {
-		property portal.acceptance = "quarantine";
-
 		ContentPagesNavigator.openEditContentPage(
 			pageName = "Test Content Page Name",
 			siteName = "Test Site Name");
@@ -519,8 +517,6 @@ definition {
 			PageEditor.gotoStyle(fragmentName = "Tabs");
 
 			PageEditor.configureFragment(numberOfTabs = "${i}");
-
-			Click(locator1 = "PageEditor#MANAGEMENT_BAR");
 		}
 
 		PageEditor.removeFragment(fragmentName = "Tabs");
@@ -533,8 +529,6 @@ definition {
 			PageEditor.gotoStyle(fragmentName = "Tabs");
 
 			PageEditor.configureFragment(numberOfTabs = "${i}");
-
-			Click(locator1 = "PageEditor#MANAGEMENT_BAR");
 		}
 
 		PageEditor.removeFragment(fragmentName = "Tabs");
@@ -547,8 +541,6 @@ definition {
 			PageEditor.gotoStyle(fragmentName = "Tabs");
 
 			PageEditor.configureFragment(numberOfTabs = "${i}");
-
-			Click(locator1 = "PageEditor#MANAGEMENT_BAR");
 		}
 
 		PageEditor.removeFragment(fragmentName = "Tabs");
@@ -561,8 +553,6 @@ definition {
 			PageEditor.gotoStyle(fragmentName = "Tabs");
 
 			PageEditor.configureFragment(numberOfTabs = "${i}");
-
-			Click(locator1 = "PageEditor#MANAGEMENT_BAR");
 		}
 
 		PageEditor.removeFragment(fragmentName = "Tabs");
@@ -575,8 +565,6 @@ definition {
 			PageEditor.gotoStyle(fragmentName = "Tabs");
 
 			PageEditor.configureFragment(numberOfTabs = "${i}");
-
-			Click(locator1 = "PageEditor#MANAGEMENT_BAR");
 		}
 
 		var count = "0";
@@ -585,6 +573,10 @@ definition {
 			Click(
 				key_text = "undo",
 				locator1 = "Icon#ANY");
+
+			AssertTextEquals(
+				locator1 = "PageEditor#AUTOSAVE_MESSAGE",
+				value1 = "Saved");
 
 			var count = ${count} + 1;
 		}

@@ -2,6 +2,11 @@ definition {
 
 	macro assertDescriptions {
 		AssertTextEquals(
+			key_fieldName = "enabled",
+			locator1 = "MultiFactorAuthentication#EMAIL_OTP_CONFIG_TEXT",
+			value1 = "Enabling multi-factor authentication implies enabling Email One-Time Password. It is strongly advised that other forms of user authentication that only support a single factor are disabled (e.g. Basic, Digest, WEBDAV).");
+
+		AssertTextEquals(
 			key_fieldName = "otpSize",
 			locator1 = "MultiFactorAuthentication#EMAIL_OTP_CONFIG_TEXT",
 			value1 = "Set the length of a one-time password.");
@@ -163,13 +168,13 @@ definition {
 		}
 		else {
 			var bodySpecificText = MockMock.getBodySpecificText(
-				asset = "${portalURL}: Your One-Time Password",
+				asset = "${portalURL}",
 				content = "Your one-time password is:",
 				enableOTP = "true",
 				recipient = "${recipient}",
 				sender = "Joe Bloggs",
 				specificText = "Your one-time password is: <pre>",
-				subject = "${portalURL}: Your One-Time Password");
+				subject = "${portalURL}");
 
 			if (isSet(specificURL)) {
 				Navigator.openSpecificURL(url = "${specificURL}");

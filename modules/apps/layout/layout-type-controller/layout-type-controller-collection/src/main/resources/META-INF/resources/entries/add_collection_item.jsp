@@ -32,7 +32,7 @@ Map<String, Object> data = HashMapBuilder.<String, Object>put(
 ).build();
 %>
 
-<li class="control-menu-nav-item">
+<li class="control-menu-nav-item control-menu-nav-item-content">
 	<a aria-label="<%= label %>" data-title="<%= label %>">
 		<c:choose>
 			<c:when test="<%= assetPublisherAddItemHolders.size() == 1 %>">

@@ -47,14 +47,14 @@ export default function DeployAppModal({onSave}) {
 	};
 
 	return (
-		<ClayModal observer={observer} size="md">
+		<ClayModal center observer={observer} size="md">
 			<ClayModal.Header>
 				{Liferay.Language.get('deploy')}
 			</ClayModal.Header>
 
-			<div className="modal-body px-0">
+			<ClayModal.Body>
 				<DeploySettings />
-			</div>
+			</ClayModal.Body>
 
 			<ClayModal.Footer
 				last={

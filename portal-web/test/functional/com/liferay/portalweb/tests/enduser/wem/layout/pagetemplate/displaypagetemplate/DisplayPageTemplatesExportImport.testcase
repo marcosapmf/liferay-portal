@@ -125,7 +125,9 @@ definition {
 				key_type = "dark",
 				locator1 = "PageEditor#FOOTERS");
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
@@ -225,7 +227,7 @@ definition {
 		task ("Assert the Collection Display containing mapping content is imported") {
 			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
-			AssertElementPresent(
+			Click.clickNoWaitForVisible(
 				key_fragmentName = "Collection Display",
 				locator1 = "Fragment#FRAGMENT_HEADER");
 

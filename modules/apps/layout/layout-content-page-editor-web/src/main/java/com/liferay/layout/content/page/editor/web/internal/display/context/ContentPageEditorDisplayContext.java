@@ -80,6 +80,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -148,6 +149,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -246,6 +248,14 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"availableViewportSizes", _getAvailableViewportSizes()
 			).put(
+				"changeMasterLayoutURL",
+				getFragmentEntryActionURL(
+					"/content_layout/change_master_layout")
+			).put(
+				"changeStyleBookEntryURL",
+				getFragmentEntryActionURL(
+					"/content_layout/change_style_book_entry")
+			).put(
 				"collectionSelectorURL", _getCollectionSelectorURL()
 			).put(
 				"containerItemFlexEnabled",
@@ -256,6 +266,20 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"defaultLanguageId",
 				LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale())
+			).put(
+				"defaultStyleBookEntryId",
+				() -> {
+					StyleBookEntry styleBookEntry =
+						StyleBookEntryLocalServiceUtil.
+							fetchDefaultStyleBookEntry(
+								themeDisplay.getScopeGroupId());
+
+					if (styleBookEntry == null) {
+						return 0;
+					}
+
+					return styleBookEntry.getStyleBookEntryId();
+				}
 			).put(
 				"deleteFragmentEntryLinkCommentURL",
 				getFragmentEntryActionURL(
@@ -286,12 +310,6 @@ public class ContentPageEditorDisplayContext {
 				"editFragmentEntryLinkURL",
 				getFragmentEntryActionURL(
 					"/content_layout/edit_fragment_entry_link")
-			).put(
-				"getAssetFieldValueURL",
-				getResourceURL("/content_layout/get_asset_field_value")
-			).put(
-				"getAssetMappingFieldsURL",
-				getResourceURL("/content_layout/get_asset_mapping_fields")
 			).put(
 				"getAvailableListItemRenderersURL",
 				getResourceURL(
@@ -328,6 +346,12 @@ public class ContentPageEditorDisplayContext {
 						layoutURL, "p_l_mode", Constants.PREVIEW);
 				}
 			).put(
+				"getInfoItemFieldValueURL",
+				getResourceURL("/content_layout/get_info_item_field_value")
+			).put(
+				"getInfoItemMappingFieldsURL",
+				getResourceURL("/content_layout/get_info_item_mapping_fields")
+			).put(
 				"getPageContentsURL",
 				getResourceURL("/content_layout/get_page_contents")
 			).put(
@@ -344,6 +368,8 @@ public class ContentPageEditorDisplayContext {
 					_portletRequest, "layoutConversionWarningMessages")
 			).put(
 				"layoutType", String.valueOf(_getLayoutType())
+			).put(
+				"lookAndFeelURL", _getLookAndFeelURL()
 			).put(
 				"mappingFieldsURL",
 				getResourceURL("/content_layout/get_mapping_fields")
@@ -410,6 +436,13 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"sidebarPanels", getSidebarPanels()
 			).put(
+				"styleBookEntryId",
+				() -> {
+					Layout layout = themeDisplay.getLayout();
+
+					return layout.getStyleBookEntryId();
+				}
+			).put(
 				"styleBooks", _getStyleBooks()
 			).put(
 				"themeColorsCssClasses", _getThemeColorsCssClasses()
@@ -463,17 +496,7 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"mappedInfoItems", _getMappedInfoItems()
 			).put(
-				"masterLayoutData",
-				() -> {
-					LayoutStructure masterLayoutStructure =
-						_getMasterLayoutStructure();
-
-					if (masterLayoutStructure == null) {
-						return StringPool.BLANK;
-					}
-
-					return masterLayoutStructure.toJSONObject();
-				}
+				"masterLayout", _getMasterLayoutJSONObject()
 			).put(
 				"pageContents",
 				ContentUtil.getPageContentsJSONArray(
@@ -1528,6 +1551,38 @@ public class ContentPageEditorDisplayContext {
 		return _layoutType;
 	}
 
+	private Object _getLookAndFeelURL() {
+		PortletURL lookAndFeelURL = PortalUtil.getControlPanelPortletURL(
+			httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+			PortletRequest.RENDER_PHASE);
+
+		lookAndFeelURL.setParameter(
+			"mvcRenderCommandName", "/layout/edit_layout");
+
+		lookAndFeelURL.setParameter(
+			"redirect",
+			ParamUtil.getString(
+				PortalUtil.getOriginalServletRequest(httpServletRequest),
+				"p_l_back_url"));
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		lookAndFeelURL.setParameter("backURL", themeDisplay.getURLCurrent());
+
+		Layout layout = themeDisplay.getLayout();
+
+		lookAndFeelURL.setParameter(
+			"groupId", String.valueOf(layout.getGroupId()));
+		lookAndFeelURL.setParameter(
+			"selPlid", String.valueOf(layout.getPlid()));
+		lookAndFeelURL.setParameter(
+			"privateLayout", String.valueOf(layout.isPrivateLayout()));
+
+		return lookAndFeelURL.toString();
+	}
+
 	private Set<Map<String, Object>> _getMappedInfoItems() throws Exception {
 		Set<Map<String, Object>> mappedInfoItems = new HashSet<>();
 
@@ -1552,6 +1607,25 @@ public class ContentPageEditorDisplayContext {
 		return mappedInfoItems;
 	}
 
+	private JSONObject _getMasterLayoutJSONObject() {
+		Layout layout = themeDisplay.getLayout();
+
+		LayoutStructure masterLayoutStructure = _getMasterLayoutStructure();
+
+		return JSONUtil.put(
+			"masterLayoutData",
+			Optional.ofNullable(
+				masterLayoutStructure
+			).map(
+				LayoutStructure::toJSONObject
+			).orElse(
+				null
+			)
+		).put(
+			"masterLayoutPlid", layout.getMasterLayoutPlid()
+		);
+	}
+
 	private List<Map<String, Object>> _getMasterLayouts() {
 		ArrayList<Map<String, Object>> masterLayouts = new ArrayList<>();
 
@@ -1559,7 +1633,7 @@ public class ContentPageEditorDisplayContext {
 			HashMapBuilder.<String, Object>put(
 				"imagePreviewURL", StringPool.BLANK
 			).put(
-				"masterLayoutPlid", 0
+				"masterLayoutPlid", "0"
 			).put(
 				"name", LanguageUtil.get(httpServletRequest, "blank")
 			).build());
@@ -1580,7 +1654,8 @@ public class ContentPageEditorDisplayContext {
 					"imagePreviewURL",
 					layoutPageTemplateEntry.getImagePreviewURL(themeDisplay)
 				).put(
-					"masterLayoutPlid", layoutPageTemplateEntry.getPlid()
+					"masterLayoutPlid",
+					String.valueOf(layoutPageTemplateEntry.getPlid())
 				).put(
 					"name", layoutPageTemplateEntry.getName()
 				).build());

@@ -109,8 +109,6 @@ definition {
 	}
 
 	test AddAndEditOAuthSAPEntries {
-		property test.name.skip.portal.instance = "OAuth2#AddAndEditOAuthSAPEntries";
-
 		ApplicationsMenu.gotoPortlet(
 			category = "Security",
 			panel = "Control Panel",
@@ -326,7 +324,6 @@ definition {
 	@priority = "4"
 	test AssertClientCredentialsIsUserScoped {
 		property portal.upstream = "quarantine";
-		property test.name.skip.portal.instance = "OAuth2#AssertClientCredentialsIsUserScoped";
 
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
@@ -516,6 +513,99 @@ definition {
 			value1 = "test@liferay.com");
 	}
 
+	@description = "This is a use case for LPS-105158."
+	@priority = "4"
+	test ConfigureOnSystemLevelWillApplyToInstanceLevel {
+		property test.name.skip.portal.instance = "OAuth2#ConfigureOnSystemLevelWillApplyToInstanceLevel";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "System Settings");
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "OAuth 2",
+			configurationName = "Bundle PrefixHandlerFactory",
+			configurationScope = "System Scope");
+
+		SystemSettings.gotoConfigurationEntry(configurationEntry = "Default");
+
+		SystemSettings.deleteConfiguration();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
+			panel = "Control Panel",
+			portlet = "OAuth 2 Administration");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Analytics Cloud");
+
+		AssertClick(
+			key_navItem = "Scopes",
+			locator1 = "NavBar#NAV_ITEM_LINK",
+			value1 = "Scopes");
+
+		AssertElementPresent(
+			key_navUnderline = "Resource scopes",
+			locator1 = "NavUnderline#NAV_UNDERLINE_LINK");
+
+		AssertElementPresent(
+			key_navUnderline = "Global scopes",
+			locator1 = "NavUnderline#NAV_UNDERLINE_LINK");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
+			panel = "Control Panel",
+			portlet = "Virtual Instances");
+
+		PortalInstances.addCP(
+			mailDomain = "www.able.com",
+			virtualHost = "www.able.com",
+			webId = "www.able.com");
+
+		PortalInstances.viewCP(virtualHost = "www.able.com");
+
+		User.firstLoginPG(
+			password = "test",
+			userEmailAddress = "test@www.able.com",
+			virtualHostsURL = "http://www.able.com:8080");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.unassignRegularRoleCP(
+			regularRoleName = "Power User",
+			userScreenName = "test");
+
+		Navigator.openSpecificURL(url = "http://www.able.com:8080");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
+			panel = "Control Panel",
+			portlet = "OAuth 2 Administration");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Analytics Cloud");
+
+		AssertClick(
+			key_navItem = "Scopes",
+			locator1 = "NavBar#NAV_ITEM_LINK",
+			value1 = "Scopes");
+
+		AssertElementNotPresent(
+			key_navUnderline = "Resource scopes",
+			locator1 = "NavUnderline#NAV_UNDERLINE_LINK");
+
+		for (var resourcePanel : list "Bulk Processing,Content Delivery,Dynamic Data Lists,Forms,Portal Services,Taxonomy Administration,User Administration,Workflow Administration") {
+
+			AssertHTMLSourceTextNotPresent(value1 = "${resourcePanel}");
+		}
+	}
+
 	test EditApplicationScopesAndViewLanguageKeys {
 		property liferay.dependency.jars = "com.liferay.oauth2.provider.scope.sample.qa.jar";
 		property osgi.module.configuration.file.names = "com.liferay.oauth2.provider.scope.internal.configuration.ConfigurableScopeMapperConfiguration-default.config";
@@ -676,9 +766,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-105156."
+	@priority = "5"
 	test RemoveExpiredAuthorization {
 		property osgi.module.configuration.file.names = "com.liferay.oauth2.provider.rest.internal.spi.bearer.token.provider.configuration.DefaultBearerTokenProviderConfiguration.config:com.liferay.oauth2.provider.configuration.OAuth2ProviderConfiguration.config";
-		property osgi.module.configurations = "access.token.expires.in=&quot;5&quot;${line.separator}refresh.token.expires.in=&quot;10&quot;:oauth2.expired.authorizations.afterlife.duration=&quot;5&quot;${line.separator}oauth2.expired.authorizations.check.interval=&quot;1&quot;";
+		property osgi.module.configurations = "access.token.expires.in=&quot;30&quot;${line.separator}refresh.token.expires.in=&quot;60&quot;:oauth2.expired.authorizations.afterlife.duration=&quot;30&quot;${line.separator}oauth2.expired.authorizations.check.interval=&quot;30&quot;";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Security",
@@ -728,7 +819,23 @@ definition {
 			key_activity = "Last Access",
 			locator1 = "OAuth2#USER_CONNECTED_APP_ACTIVITY");
 
-		Pause(locator1 = "17000");
+		Pause(locator1 = "20000");
+
+		Refresh();
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "OAuth2#USER_CONNECTED_APP_EXPIRATION_VALUE",
+			value1 = "Within");
+
+		Pause(locator1 = "30000");
+
+		Refresh();
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "OAuth2#USER_CONNECTED_APP_EXPIRATION_VALUE",
+			value1 = "Seconds Ago");
+
+		Pause(locator1 = "30000");
 
 		Refresh();
 
@@ -737,6 +844,58 @@ definition {
 		AssertElementNotPresent(
 			key_appName = "Test Expired Application",
 			locator1 = "OAuth2#USER_CONNECTED_APP_TABLE_NAME");
+	}
+
+	@description = "This is a use case for LPS-105158."
+	@priority = "4"
+	test ScopesDisplayAsListOnInstanceLevel {
+		property test.name.skip.portal.instance = "OAuth2#ScopesDisplayAsListOnInstanceLevel";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
+			panel = "Control Panel",
+			portlet = "Virtual Instances");
+
+		PortalInstances.addCP(
+			mailDomain = "www.able.com",
+			virtualHost = "www.able.com",
+			webId = "www.able.com");
+
+		PortalInstances.viewCP(virtualHost = "www.able.com");
+
+		User.firstLoginPG(
+			password = "test",
+			userEmailAddress = "test@www.able.com",
+			virtualHostsURL = "http://www.able.com:8080");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.unassignRegularRoleCP(
+			regularRoleName = "Power User",
+			userScreenName = "test");
+
+		Navigator.openSpecificURL(url = "http://www.able.com:8080");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
+			panel = "Control Panel",
+			portlet = "OAuth 2 Administration");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Analytics Cloud");
+
+		AssertClick(
+			key_navItem = "Scopes",
+			locator1 = "NavBar#NAV_ITEM_LINK",
+			value1 = "Scopes");
+
+		AssertElementNotPresent(
+			key_panel = "Analytics",
+			locator1 = "OAuth2#ADMIN_RESOURCE_PANEL_COLLAPSED");
 	}
 
 	test UpdateScopeBundlePrefixes {
@@ -909,7 +1068,6 @@ definition {
 		property custom.properties = "virtual.hosts.default.site.name=Guest";
 		property osgi.module.configuration.file.names = "com.liferay.oauth2.provider.scope.internal.configuration.BundlePrefixHandlerFactoryConfiguration-default.config";
 		property osgi.module.configurations = "include.bundle.symbolic.name=&quot;false&quot;${line.separator}osgi.jaxrs.name=&quot;Default&quot;${line.separator}separator=&quot;&quot;${line.separator}service.properties=&quot;&quot;";
-		property test.name.skip.portal.instance = "OAuth2#ViewAuthPromptRequestedScopes";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Security",

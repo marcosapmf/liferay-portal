@@ -23,7 +23,13 @@ export default function ({context, props}) {
 	const {defaultTimeRange, defaultTimeSpanKey, timeSpans} = context;
 	const {validAnalyticsConnection} = context;
 
-	const {authorName, publishDate, title} = props;
+	const {
+		authorName,
+		authorPortraitURL,
+		authorUserId,
+		publishDate,
+		title,
+	} = props;
 	const {trafficSources} = props;
 
 	const {
@@ -58,6 +64,8 @@ export default function ({context, props}) {
 					<Navigation
 						api={api}
 						authorName={authorName}
+						authorPortraitURL={authorPortraitURL}
+						authorUserId={authorUserId}
 						defaultTimeRange={defaultTimeRange}
 						defaultTimeSpanKey={defaultTimeSpanKey}
 						languageTag={languageTag}

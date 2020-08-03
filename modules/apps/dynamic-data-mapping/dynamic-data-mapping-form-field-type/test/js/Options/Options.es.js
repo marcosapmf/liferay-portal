@@ -13,11 +13,15 @@
  */
 
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {PageProvider} from 'dynamic-data-mapping-form-renderer';
 import React from 'react';
 
 import Options from '../../../src/main/resources/META-INF/resources/Options/Options.es';
 
+const DEFAULT_OPTION_NAME_REGEX = /^Option[0-9]{8}$/;
+
+let liferayLanguageSpy;
 const spritemap = 'icons.svg';
 
 const OptionsWithProvider = (props) => (
@@ -37,6 +41,22 @@ const optionsValue = {
 			value: 'Option2',
 		},
 	],
+};
+
+const mockLiferayLanguage = () => {
+	liferayLanguageSpy = jest.spyOn(Liferay.Language, 'get');
+
+	liferayLanguageSpy.mockImplementation((key) => {
+		if (key === 'option') {
+			return 'Option';
+		}
+
+		return key;
+	});
+};
+
+const unmockLiferayLanguage = () => {
+	liferayLanguageSpy.mockRestore();
 };
 
 describe('Options', () => {
@@ -66,6 +86,8 @@ describe('Options', () => {
 	});
 
 	it('shows the options', () => {
+		mockLiferayLanguage();
+
 		const {container} = render(
 			<OptionsWithProvider
 				name="options"
@@ -78,10 +100,89 @@ describe('Options', () => {
 			jest.runAllTimers();
 		});
 
+		const valueInputs = container.querySelectorAll('.key-value-input');
+
+		expect(valueInputs[2].value).toEqual(
+			expect.stringMatching(DEFAULT_OPTION_NAME_REGEX)
+		);
+
+		valueInputs[2].setAttribute('value', 'Any<String>');
+
 		expect(container).toMatchSnapshot();
+
+		unmockLiferayLanguage();
+	});
+
+	it('shows the options with not editable value', () => {
+		mockLiferayLanguage();
+
+		const {container} = render(
+			<OptionsWithProvider
+				keywordReadOnly={true}
+				name="options"
+				spritemap={spritemap}
+				value={{
+					[themeDisplay.getLanguageId()]: [
+						{
+							label: 'Option 1',
+							value: 'Option1',
+						},
+					],
+				}}
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		const valueInputs = container.querySelectorAll('.key-value-input');
+
+		expect(valueInputs[0].value).toEqual('Option1');
+
+		expect(valueInputs[0].readOnly).toBeTruthy();
+
+		unmockLiferayLanguage();
+	});
+
+	it('shows the options with editable value', () => {
+		mockLiferayLanguage();
+
+		const {container, getByDisplayValue} = render(
+			<OptionsWithProvider
+				keywordReadOnly={false}
+				name="options"
+				onChange={jest.fn()}
+				spritemap={spritemap}
+				value={{
+					[themeDisplay.getLanguageId()]: [
+						{
+							label: 'Option 1',
+							value: 'Option1',
+						},
+					],
+				}}
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		userEvent.type(getByDisplayValue('Option1'), 'Option2');
+
+		const valueInputs = container.querySelectorAll('.key-value-input');
+
+		expect(valueInputs[0].readOnly).toBeFalsy();
+
+		expect(valueInputs[0].value).toEqual('Option2');
+
+		unmockLiferayLanguage();
 	});
 
 	it('shows an empty option when value is an array of size 1', () => {
+		mockLiferayLanguage();
+
 		const {container} = render(
 			<OptionsWithProvider
 				name="options"
@@ -112,7 +213,11 @@ describe('Options', () => {
 
 		expect(valueInputs.length).toEqual(2);
 		expect(valueInputs[0].value).toEqual('Option');
-		expect(valueInputs[1].value).toEqual('');
+		expect(valueInputs[1].value).toEqual(
+			expect.stringMatching(DEFAULT_OPTION_NAME_REGEX)
+		);
+
+		unmockLiferayLanguage();
 	});
 
 	it('does show an empty option when translating', () => {
@@ -147,6 +252,40 @@ describe('Options', () => {
 		const labelInputs = container.querySelectorAll('.ddm-field-text');
 
 		expect(labelInputs.length).toEqual(2);
+	});
+
+	it('does not changes the option value when the option label changes', () => {
+		mockLiferayLanguage();
+
+		const {container, getByDisplayValue} = render(
+			<OptionsWithProvider
+				name="options"
+				onChange={jest.fn()}
+				spritemap={spritemap}
+				value={{
+					[themeDisplay.getLanguageId()]: [
+						{
+							label: 'Option 1',
+							value: 'Option1',
+						},
+					],
+				}}
+			/>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		userEvent.type(getByDisplayValue('Option 1'), 'Option 2');
+
+		const labelInputs = container.querySelectorAll('.ddm-field-text');
+		expect(labelInputs[0].value).toEqual('Option 2');
+
+		const valueInputs = container.querySelectorAll('.key-value-input');
+		expect(valueInputs[0].value).toEqual('Option1');
+
+		unmockLiferayLanguage();
 	});
 
 	it('edits the value of an option based on the label', () => {
@@ -184,7 +323,7 @@ describe('Options', () => {
 
 		const valueInputs = container.querySelectorAll('.key-value-input');
 
-		expect(valueInputs[0].value).toEqual('Hello');
+		expect(valueInputs[0].value).toEqual('Option');
 	});
 
 	it('inserts a new empty option when editing the last option', () => {
@@ -268,6 +407,8 @@ describe('Options', () => {
 	});
 
 	it('deduplication of value when adding a new option', () => {
+		mockLiferayLanguage();
+
 		const {container} = render(
 			<OptionsWithProvider
 				name="options"
@@ -298,7 +439,11 @@ describe('Options', () => {
 
 		const valueInputs = container.querySelectorAll('.key-value-input');
 
-		expect(valueInputs[1].value).toEqual('Foo1');
+		expect(valueInputs[1].value).toEqual(
+			expect.stringMatching(DEFAULT_OPTION_NAME_REGEX)
+		);
+
+		unmockLiferayLanguage();
 	});
 
 	it('deduplication of the value when editing the value', () => {
@@ -336,7 +481,7 @@ describe('Options', () => {
 
 		const valueInputs = container.querySelectorAll('.key-value-input');
 
-		expect(valueInputs[1].value).toEqual('Bar1');
+		expect(valueInputs[1].value).toEqual('Foo');
 	});
 
 	it('adds a value to the value property when the label is empty', () => {
@@ -370,6 +515,6 @@ describe('Options', () => {
 
 		const valueInput = container.querySelector('.key-value-input');
 
-		expect(valueInput.value).toBe('option');
+		expect(valueInput.value).toBe('Bar');
 	});
 });

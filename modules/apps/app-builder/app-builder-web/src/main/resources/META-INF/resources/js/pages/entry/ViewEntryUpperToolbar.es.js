@@ -23,7 +23,6 @@ import UpperToolbar from '../../components/upper-toolbar/UpperToolbar.es';
 import usePermissions from '../../hooks/usePermissions.es';
 import {confirmDelete} from '../../utils/client.es';
 import {sub} from '../../utils/lang.es';
-import {successToast} from '../../utils/toast.es';
 import {navigateToEditPage} from './utils.es';
 
 function ViewEntryUpperToolbar({
@@ -31,6 +30,7 @@ function ViewEntryUpperToolbar({
 	dataRecordId,
 	history,
 	page,
+	showButtons,
 	totalCount,
 }) {
 	const {appDeploymentType, basePortletURL, showFormView} = useContext(
@@ -43,11 +43,12 @@ function ViewEntryUpperToolbar({
 	};
 
 	const onDelete = () => {
-		confirmDelete('/o/data-engine/v2.0/data-records/')({
+		confirmDelete('/o/data-engine/v2.0/data-records/', {
+			successMessage: Liferay.Language.get('an-entry-was-deleted'),
+		})({
 			id: dataRecordId,
 		}).then((confirmed) => {
 			if (confirmed) {
-				successToast(Liferay.Language.get('an-entry-was-deleted'));
 				history.push('/');
 			}
 		});
@@ -70,15 +71,20 @@ function ViewEntryUpperToolbar({
 		changeEntryIndex(prevIndex);
 	};
 
+	const showDeleteButton = showButtons?.delete ?? true;
+	const showUpdateButton = showButtons?.update ?? true;
+
 	return (
 		<UpperToolbar className={appDeploymentType}>
 			<UpperToolbar.Item className="ml-2 text-left">
 				<label>
 					{totalCount > 0 &&
-						sub(Liferay.Language.get('x-of-x-entries'), [
-							page,
-							totalCount,
-						])}
+						sub(
+							totalCount == 1
+								? Liferay.Language.get('x-of-x-entry')
+								: Liferay.Language.get('x-of-x-entries'),
+							[page, totalCount]
+						)}
 				</label>
 			</UpperToolbar.Item>
 
@@ -114,7 +120,7 @@ function ViewEntryUpperToolbar({
 
 			{showFormView && (
 				<UpperToolbar.Group>
-					{permissions.delete && (
+					{permissions.delete && showDeleteButton && (
 						<ClayTooltipProvider>
 							<ClayButtonWithIcon
 								className="ml-2"
@@ -129,7 +135,7 @@ function ViewEntryUpperToolbar({
 						</ClayTooltipProvider>
 					)}
 
-					{permissions.update && (
+					{permissions.update && showUpdateButton && (
 						<ClayTooltipProvider>
 							<ClayButtonWithIcon
 								className="mx-2"

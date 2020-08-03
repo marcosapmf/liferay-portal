@@ -65,7 +65,7 @@ public interface DDMTemplateLinkLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DDMTemplateLinkLocalServiceUtil} to access the ddm template link local service. Add custom service methods to <code>com.liferay.dynamic.data.mapping.service.impl.DDMTemplateLinkLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.dynamic.data.mapping.service.impl.DDMTemplateLinkLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ddm template link local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DDMTemplateLinkLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -278,6 +278,10 @@ public interface DDMTemplateLinkLocalService
 	public DDMTemplateLink getTemplateLink(long classNameId, long classPK)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DDMTemplateLink> getTemplateLinks(long classNameId);
 

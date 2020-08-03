@@ -34,6 +34,7 @@ import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -52,6 +53,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
@@ -60,6 +62,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -94,10 +97,12 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER,
 			infoDisplayObjectProvider);
 
+		String infoItemClassName = portal.getClassName(
+			infoDisplayObjectProvider.getClassNameId());
+
 		InfoEditURLProvider<?> infoEditURLProvider =
 			infoEditURLProviderTracker.getInfoEditURLProvider(
-				portal.getClassName(
-					infoDisplayObjectProvider.getClassNameId()));
+				infoItemClassName);
 
 		httpServletRequest.setAttribute(
 			AssetDisplayPageWebKeys.INFO_EDIT_URL_PROVIDER,
@@ -107,15 +112,25 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 		httpServletRequest.setAttribute(InfoDisplayWebKeys.INFO_ITEM, infoItem);
 
+		InfoItemDetailsProvider infoItemDetailsProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemDetailsProvider.class, infoItemClassName);
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_DETAILS,
+			infoItemDetailsProvider.getInfoItemDetails(infoItem));
+
 		InfoItemFieldValuesProvider<?> infoItemFieldValuesProvider =
 			infoItemServiceTracker.getFirstInfoItemService(
-				InfoItemFieldValuesProvider.class,
-				portal.getClassName(
-					infoDisplayObjectProvider.getClassNameId()));
+				InfoItemFieldValuesProvider.class, infoItemClassName);
 
 		httpServletRequest.setAttribute(
 			InfoDisplayWebKeys.INFO_ITEM_FIELD_VALUES_PROVIDER,
 			infoItemFieldValuesProvider);
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_SERVICE_TRACKER,
+			infoItemServiceTracker);
 
 		Locale locale = portal.getLocale(httpServletRequest);
 		Layout layout = _getInfoDisplayObjectProviderLayout(
@@ -166,6 +181,21 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 		Layout layout = _getInfoDisplayObjectProviderLayout(
 			infoDisplayObjectProvider);
+
+		HttpServletRequest httpServletRequest =
+			(HttpServletRequest)requestContext.get("request");
+
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		Locale locale = (Locale)httpSession.getAttribute(WebKeys.LOCALE);
+
+		if (locale != null) {
+			String urlTitle = infoDisplayObjectProvider.getURLTitle(locale);
+
+			if (Validator.isNotNull(urlTitle)) {
+				friendlyURL = getURLSeparator() + urlTitle;
+			}
+		}
 
 		return new LayoutFriendlyURLComposite(layout, friendlyURL);
 	}

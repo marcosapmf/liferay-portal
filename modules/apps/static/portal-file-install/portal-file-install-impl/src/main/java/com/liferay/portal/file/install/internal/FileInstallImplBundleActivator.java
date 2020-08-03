@@ -14,101 +14,46 @@
 
 package com.liferay.portal.file.install.internal;
 
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
+import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.file.install.FileInstaller;
 import com.liferay.portal.file.install.internal.properties.InterpolationUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.File;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.wiring.FrameworkWiring;
 import org.osgi.service.cm.ConfigurationAdmin;
-import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Matthew Tambara
  */
-public class FileInstallImplBundleActivator
-	implements BundleActivator,
-			   ServiceTrackerCustomizer<FileInstaller, FileInstaller> {
+public class FileInstallImplBundleActivator implements BundleActivator {
 
-	public static void refresh(Bundle systemBundle, Collection<Bundle> bundles)
-		throws InterruptedException {
+	public FileInstallImplBundleActivator() {
+		ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
-		CountDownLatch countDownLatch = new CountDownLatch(1);
-
-		FrameworkWiring frameworkWiring = systemBundle.adapt(
-			FrameworkWiring.class);
-
-		frameworkWiring.refreshBundles(
-			bundles, event -> countDownLatch.countDown());
-
-		countDownLatch.await();
+		_readLock = readWriteLock.readLock();
+		_writeLock = readWriteLock.writeLock();
 	}
 
-	@Override
-	public FileInstaller addingService(
-		ServiceReference<FileInstaller> serviceReference) {
-
-		FileInstaller fileInstaller = _bundleContext.getService(
-			serviceReference);
-
-		_addFileInstaller(serviceReference, fileInstaller);
-
-		return fileInstaller;
-	}
-
-	public void deleted(String pid) {
-		DirectoryWatcher directoryWatcher = null;
-
-		synchronized (_watchers) {
-			directoryWatcher = _watchers.remove(pid);
-		}
-
-		if (directoryWatcher != null) {
-			directoryWatcher.close();
-		}
-	}
-
-	public List<FileInstaller> getFileInstallers() {
-		synchronized (_fileInstallers) {
-			List<FileInstaller> fileInstallers = new ArrayList<>(
-				_fileInstallers.values());
-
-			Collections.reverse(fileInstallers);
-
-			fileInstallers.add(_bundleTransformer);
-
-			return fileInstallers;
-		}
+	public Iterable<FileInstaller> getFileInstallers() {
+		return _fileInstallers;
 	}
 
 	public Lock getReadLock() {
@@ -116,35 +61,58 @@ public class FileInstallImplBundleActivator
 	}
 
 	@Override
-	public void modifiedService(
-		ServiceReference<FileInstaller> serviceReference,
-		FileInstaller fileInstaller) {
-
-		_removeFileInstaller(serviceReference, fileInstaller);
-
-		_addFileInstaller(serviceReference, fileInstaller);
-	}
-
-	@Override
-	public void removedService(
-		ServiceReference<FileInstaller> serviceReference,
-		FileInstaller fileInstaller) {
-
-		_removeFileInstaller(serviceReference, fileInstaller);
-	}
-
 	public void start(BundleContext bundleContext) throws Exception {
 		_bundleContext = bundleContext;
+
+		_jarFileInstallerServiceRegistration = _bundleContext.registerService(
+			FileInstaller.class, new DefaultJarInstaller(), null);
+
+		_fileInstallers = ServiceTrackerListFactory.open(
+			_bundleContext, FileInstaller.class, null,
+			new ServiceTrackerCustomizer<FileInstaller, FileInstaller>() {
+
+				@Override
+				public FileInstaller addingService(
+					ServiceReference<FileInstaller> serviceReference) {
+
+					return _bundleContext.getService(serviceReference);
+				}
+
+				@Override
+				public void modifiedService(
+					ServiceReference<FileInstaller> serviceReference,
+					FileInstaller fileInstaller) {
+				}
+
+				@Override
+				public void removedService(
+					ServiceReference<FileInstaller> serviceReference,
+					FileInstaller fileInstaller) {
+
+					_bundleContext.ungetService(serviceReference);
+
+					List<DirectoryWatcher> directoryWatchers =
+						new ArrayList<>();
+
+					synchronized (_directoryWatchers) {
+						directoryWatchers.addAll(_directoryWatchers.values());
+					}
+
+					for (DirectoryWatcher directoryWatcher :
+							directoryWatchers) {
+
+						directoryWatcher.removeFileInstaller(fileInstaller);
+					}
+				}
+
+			});
 
 		_writeLock.lock();
 
 		try {
-			_fileInstallersTracker = new ServiceTracker(
-				bundleContext, FileInstaller.class, this);
+			_tracker = new Tracker(bundleContext, this);
 
-			_fileInstallersTracker.open();
-
-			_cmSupport = new ConfigAdminSupport(bundleContext, this);
+			_tracker.open();
 
 			Map<String, String> map = new HashMap<>();
 
@@ -181,13 +149,13 @@ public class FileInstallImplBundleActivator
 						name = name + index;
 					}
 
-					updated(name, new HashMap<>(map));
+					_updated(name, new HashMap<>(map));
 
 					index++;
 				}
 			}
 			else {
-				updated("initial", map);
+				_updated("initial", map);
 			}
 		}
 		finally {
@@ -202,10 +170,10 @@ public class FileInstallImplBundleActivator
 		try {
 			List<DirectoryWatcher> watchers = new ArrayList<>();
 
-			synchronized (_watchers) {
-				watchers.addAll(_watchers.values());
+			synchronized (_directoryWatchers) {
+				watchers.addAll(_directoryWatchers.values());
 
-				_watchers.clear();
+				_directoryWatchers.clear();
 			}
 
 			for (DirectoryWatcher directoryWatcher : watchers) {
@@ -216,26 +184,22 @@ public class FileInstallImplBundleActivator
 				}
 			}
 
-			if (_fileInstallersTracker != null) {
-				_fileInstallersTracker.close();
-			}
-
-			if (_cmSupport != null) {
-				_cmSupport.run();
-			}
+			_tracker.close();
 		}
 		finally {
-			_stopped = true;
-
 			_writeLock.unlock();
 		}
+
+		_fileInstallers.close();
+
+		_jarFileInstallerServiceRegistration.unregister();
 	}
 
 	public void updateChecksum(File file) {
 		List<DirectoryWatcher> toUpdate = new ArrayList<>();
 
-		synchronized (_watchers) {
-			toUpdate.addAll(_watchers.values());
+		synchronized (_directoryWatchers) {
+			toUpdate.addAll(_directoryWatchers.values());
 		}
 
 		for (DirectoryWatcher directoryWatcher : toUpdate) {
@@ -245,13 +209,23 @@ public class FileInstallImplBundleActivator
 		}
 	}
 
-	public void updated(String pid, Map<String, String> properties) {
+	private void _set(Map<String, String> map, String key) {
+		String property = _bundleContext.getProperty(key);
+
+		if (property == null) {
+			return;
+		}
+
+		map.put(key, property);
+	}
+
+	private void _updated(String pid, Map<String, String> properties) {
 		InterpolationUtil.performSubstitution(properties, _bundleContext);
 
 		DirectoryWatcher directoryWatcher = null;
 
-		synchronized (_watchers) {
-			directoryWatcher = _watchers.get(pid);
+		synchronized (_directoryWatchers) {
+			directoryWatcher = _directoryWatchers.get(pid);
 
 			if ((directoryWatcher != null) &&
 				Objects.equals(directoryWatcher.getProperties(), properties)) {
@@ -269,221 +243,61 @@ public class FileInstallImplBundleActivator
 
 		directoryWatcher.setDaemon(true);
 
-		synchronized (_watchers) {
-			_watchers.put(pid, directoryWatcher);
+		synchronized (_directoryWatchers) {
+			_directoryWatchers.put(pid, directoryWatcher);
 		}
 
 		directoryWatcher.start();
 	}
 
-	private void _addFileInstaller(
-		ServiceReference<FileInstaller> serviceReference,
-		FileInstaller fileInstaller) {
-
-		synchronized (_fileInstallers) {
-			_fileInstallers.put(serviceReference, fileInstaller);
-		}
-	}
-
-	private void _removeFileInstaller(
-		ServiceReference<FileInstaller> serviceReference,
-		FileInstaller fileInstaller) {
-
-		synchronized (_fileInstallers) {
-			_fileInstallers.remove(serviceReference);
-		}
-
-		List<DirectoryWatcher> toNotify = new ArrayList<>();
-
-		synchronized (_watchers) {
-			toNotify.addAll(_watchers.values());
-		}
-
-		for (DirectoryWatcher directoryWatcher : toNotify) {
-			directoryWatcher.removeFileInstaller(fileInstaller);
-		}
-	}
-
-	private void _set(Map<String, String> map, String key) {
-		String property = _bundleContext.getProperty(key);
-
-		if (property == null) {
-			key = StringUtil.toUpperCase(key);
-
-			property = System.getProperty(
-				StringUtil.replace(key, CharPool.PERIOD, CharPool.UNDERLINE));
-
-			if (property == null) {
-				return;
-			}
-		}
-
-		map.put(key, property);
-	}
-
 	private BundleContext _bundleContext;
-	private final DefaultJarInstaller _bundleTransformer =
-		new DefaultJarInstaller();
-	private Runnable _cmSupport;
-	private final Map<ServiceReference<FileInstaller>, FileInstaller>
-		_fileInstallers = new TreeMap<>();
-	private ServiceTracker<FileInstaller, FileInstaller> _fileInstallersTracker;
-	private final ReadWriteLock _lock = new ReentrantReadWriteLock();
-	private final Lock _readLock = _lock.readLock();
-	private volatile boolean _stopped;
-	private final Map<String, DirectoryWatcher> _watchers = new HashMap<>();
-	private final Lock _writeLock = _lock.writeLock();
+	private final Map<String, DirectoryWatcher> _directoryWatchers =
+		new HashMap<>();
+	private ServiceTrackerList<FileInstaller, FileInstaller> _fileInstallers;
+	private ServiceRegistration<FileInstaller>
+		_jarFileInstallerServiceRegistration;
+	private final Lock _readLock;
+	private Tracker _tracker;
+	private final Lock _writeLock;
 
-	private class ConfigAdminSupport implements Runnable {
+	private class Tracker
+		extends ServiceTracker<ConfigurationAdmin, ConfigInstaller> {
 
 		@Override
-		public void run() {
-			_tracker.close();
-			_serviceRegistration.unregister();
+		public ConfigInstaller addingService(
+			ServiceReference<ConfigurationAdmin> serviceReference) {
+
+			ConfigurationAdmin configurationAdmin = context.getService(
+				serviceReference);
+
+			ConfigInstaller configInstaller = new ConfigInstaller(
+				context, configurationAdmin, _fileInstall);
+
+			configInstaller.init();
+
+			return configInstaller;
 		}
 
-		private ConfigAdminSupport(
+		@Override
+		public void removedService(
+			ServiceReference<ConfigurationAdmin> serviceReference,
+			ConfigInstaller configInstaller) {
+
+			configInstaller.destroy();
+
+			context.ungetService(serviceReference);
+		}
+
+		private Tracker(
 			BundleContext bundleContext,
 			FileInstallImplBundleActivator fileInstall) {
 
-			_tracker = new Tracker(bundleContext, fileInstall);
+			super(bundleContext, ConfigurationAdmin.class.getName(), null);
 
-			Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-			properties.put(Constants.SERVICE_PID, _tracker.getName());
-
-			_serviceRegistration = bundleContext.registerService(
-				ManagedServiceFactory.class.getName(), _tracker, properties);
-
-			_tracker.open();
+			_fileInstall = fileInstall;
 		}
 
-		private final ServiceRegistration<?> _serviceRegistration;
-		private final Tracker _tracker;
-
-		private class Tracker
-			extends ServiceTracker<ConfigurationAdmin, ConfigurationAdmin>
-			implements ManagedServiceFactory {
-
-			@Override
-			public ConfigurationAdmin addingService(
-				ServiceReference<ConfigurationAdmin> serviceReference) {
-
-				_writeLock.lock();
-
-				try {
-					if (_stopped) {
-						return null;
-					}
-
-					ConfigurationAdmin configurationAdmin = super.addingService(
-						serviceReference);
-
-					long id = (Long)serviceReference.getProperty(
-						Constants.SERVICE_ID);
-
-					ConfigInstaller configInstaller = new ConfigInstaller(
-						context, configurationAdmin, _fileInstall);
-
-					configInstaller.init();
-
-					_configInstallers.put(id, configInstaller);
-
-					return configurationAdmin;
-				}
-				finally {
-					_writeLock.unlock();
-				}
-			}
-
-			@Override
-			public void deleted(String string) {
-				_configs.remove(string);
-
-				_fileInstall.deleted(string);
-			}
-
-			@Override
-			public String getName() {
-				return "com.liferay.portal.file.install";
-			}
-
-			@Override
-			public void removedService(
-				ServiceReference<ConfigurationAdmin> serviceReference,
-				ConfigurationAdmin configurationAdmin) {
-
-				_writeLock.lock();
-
-				try {
-					if (_stopped) {
-						return;
-					}
-
-					Iterator<String> iterator = _configs.iterator();
-
-					while (iterator.hasNext()) {
-						String string = iterator.next();
-
-						_fileInstall.deleted(string);
-
-						iterator.remove();
-					}
-
-					long id = (Long)serviceReference.getProperty(
-						Constants.SERVICE_ID);
-
-					ConfigInstaller configInstaller = _configInstallers.remove(
-						id);
-
-					if (configInstaller != null) {
-						configInstaller.destroy();
-					}
-
-					super.removedService(serviceReference, configurationAdmin);
-				}
-				finally {
-					_writeLock.unlock();
-				}
-			}
-
-			@Override
-			public void updated(String string, Dictionary<String, ?> dictionary)
-				throws ConfigurationException {
-
-				_configs.add(string);
-
-				Map<String, String> props = new HashMap<>();
-
-				Enumeration<String> enumeration = dictionary.keys();
-
-				while (enumeration.hasMoreElements()) {
-					String key = enumeration.nextElement();
-
-					Object value = dictionary.get(key);
-
-					props.put(key, value.toString());
-				}
-
-				_fileInstall.updated(string, props);
-			}
-
-			private Tracker(
-				BundleContext bundleContext,
-				FileInstallImplBundleActivator fileInstall) {
-
-				super(bundleContext, ConfigurationAdmin.class.getName(), null);
-
-				_fileInstall = fileInstall;
-			}
-
-			private final Map<Long, ConfigInstaller> _configInstallers =
-				new HashMap<>();
-			private final Set<String> _configs = Collections.synchronizedSet(
-				new HashSet<>());
-			private final FileInstallImplBundleActivator _fileInstall;
-
-		}
+		private final FileInstallImplBundleActivator _fileInstall;
 
 	}
 

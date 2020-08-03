@@ -18,10 +18,9 @@ import {__RouterContext as RouterContext} from 'react-router-dom';
 import {AppContext} from '../AppContext.es';
 import {navigateToEditPage} from '../pages/entry/utils.es';
 import {confirmDelete} from '../utils/client.es';
-import {successToast} from '../utils/toast.es';
 import usePermissions from './usePermissions.es';
 
-export default function useEntriesActions(refetch) {
+export default function useEntriesActions(showOptions) {
 	const actions = [];
 	const {basePortletURL, showFormView} = useContext(AppContext);
 	const {history} = useContext(RouterContext);
@@ -32,6 +31,7 @@ export default function useEntriesActions(refetch) {
 			actions.push({
 				action: ({viewURL}) => Promise.resolve(history.push(viewURL)),
 				name: Liferay.Language.get('view'),
+				show: showOptions?.view,
 			});
 		}
 
@@ -42,33 +42,19 @@ export default function useEntriesActions(refetch) {
 						navigateToEditPage(basePortletURL, {dataRecordId: id})
 					),
 				name: Liferay.Language.get('edit'),
+				show: showOptions?.update,
 			});
 		}
 
 		if (permissions.delete) {
 			actions.push({
-				action: (item) => {
-					return confirmDelete('/o/data-engine/v2.0/data-records/')(
-						item
-					).then((confirmed) => {
-						const refetchDelay = 500;
-
-						if (confirmed) {
-							successToast(
-								Liferay.Language.get('an-entry-was-deleted')
-							);
-
-							if (refetch) {
-								setTimeout(refetch, refetchDelay);
-							}
-						}
-
-						return new Promise((resolve) =>
-							setTimeout(() => resolve(confirmed), refetchDelay)
-						);
-					});
-				},
+				action: confirmDelete('/o/data-engine/v2.0/data-records/', {
+					successMessage: Liferay.Language.get(
+						'an-entry-was-deleted'
+					),
+				}),
 				name: Liferay.Language.get('delete'),
+				show: showOptions?.delete,
 			});
 		}
 	}

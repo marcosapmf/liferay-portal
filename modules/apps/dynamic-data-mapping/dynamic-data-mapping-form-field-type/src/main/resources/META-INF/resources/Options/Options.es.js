@@ -14,7 +14,7 @@
 
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {DndProvider} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
 
@@ -25,12 +25,11 @@ import DragPreview from './DragPreview.es';
 import {
 	compose,
 	dedupValue,
+	getDefaultOptionValue,
 	isOptionValueGenerated,
 	normalizeFields,
 	random,
 } from './util.es';
-
-const defaultOption = {label: '', value: ''};
 
 const Option = React.forwardRef(
 	({children, className, disabled, onClick, showCloseButton, style}, ref) => (
@@ -64,30 +63,74 @@ const Option = React.forwardRef(
 	)
 );
 
-const refreshFields = (defaultLanguageId, editingLanguageId, options) =>
-	[
+const getInitialOption = (generateOptionValueUsingOptionLabel) => {
+	return generateOptionValueUsingOptionLabel
+		? {
+				id: random(),
+				label: '',
+				value: '',
+		  }
+		: {
+				id: random(),
+				label: '',
+				value: getDefaultOptionValue(
+					generateOptionValueUsingOptionLabel,
+					''
+				),
+		  };
+};
+
+const refreshFields = (
+	defaultLanguageId,
+	editingLanguageId,
+	generateOptionValueUsingOptionLabel,
+	initialOption,
+	options
+) => {
+	const refreshedFields = [
 		...options.map((option) => ({
-			generateKeyword: isOptionValueGenerated(
-				defaultLanguageId,
-				editingLanguageId,
-				options,
-				option
-			),
-			id: random(),
+			generateKeyword: generateOptionValueUsingOptionLabel
+				? isOptionValueGenerated(
+						defaultLanguageId,
+						editingLanguageId,
+						options,
+						option
+				  )
+				: false,
 			...option,
+			value: option.value
+				? option.value
+				: getDefaultOptionValue(
+						generateOptionValueUsingOptionLabel,
+						option.label
+				  ),
 		})),
-		{...defaultOption, generateKeyword: true, id: random()},
+		{
+			generateKeyword: generateOptionValueUsingOptionLabel,
+			...initialOption,
+		},
 	].filter((field) => field && Object.keys(field).length > 0);
+
+	return normalizeFields(
+		refreshedFields,
+		generateOptionValueUsingOptionLabel
+	);
+};
 
 const Options = ({
 	children,
 	defaultLanguageId,
 	disabled,
 	editingLanguageId,
+	generateOptionValueUsingOptionLabel,
 	onChange,
 	value = {},
 }) => {
-	const normalizedValue = useMemo(() => {
+	const initialOptionRef = useRef(
+		getInitialOption(generateOptionValueUsingOptionLabel)
+	);
+
+	const [normalizedValue, setNormalizedValue] = useState(() => {
 		const formattedValue = {...value};
 
 		Object.keys(value).forEach((languageId) => {
@@ -96,10 +139,28 @@ const Options = ({
 					({value}) => !!value
 				);
 			}
+
+			formattedValue[languageId] = formattedValue[languageId].map(
+				(option) => {
+					return {
+						id: random(),
+						...option,
+						value:
+							!option.value &&
+							option.label.toLowerCase() ===
+								Liferay.Language.get('option').toLowerCase()
+								? getDefaultOptionValue(
+										generateOptionValueUsingOptionLabel,
+										option.label
+								  )
+								: option.value,
+					};
+				}
+			);
 		});
 
 		return formattedValue;
-	}, [defaultLanguageId, value]);
+	});
 
 	const [fields, setFields] = useState(() => {
 		const options =
@@ -107,7 +168,13 @@ const Options = ({
 			normalizedValue[defaultLanguageId] ||
 			[];
 
-		return refreshFields(defaultLanguageId, editingLanguageId, options);
+		return refreshFields(
+			defaultLanguageId,
+			editingLanguageId,
+			generateOptionValueUsingOptionLabel,
+			initialOptionRef.current,
+			options
+		);
 	});
 
 	useEffect(() => {
@@ -116,8 +183,21 @@ const Options = ({
 			normalizedValue[defaultLanguageId] ||
 			[];
 
-		setFields(refreshFields(defaultLanguageId, editingLanguageId, options));
-	}, [defaultLanguageId, editingLanguageId, normalizedValue]);
+		setFields(
+			refreshFields(
+				defaultLanguageId,
+				editingLanguageId,
+				generateOptionValueUsingOptionLabel,
+				initialOptionRef.current,
+				options
+			)
+		);
+	}, [
+		defaultLanguageId,
+		editingLanguageId,
+		generateOptionValueUsingOptionLabel,
+		normalizedValue,
+	]);
 
 	const defaultOptionRef = useRef(
 		fields.length === 2 &&
@@ -184,7 +264,8 @@ const Options = ({
 			value = dedupValue(
 				fields,
 				value ? value : Liferay.Language.get('option'),
-				id
+				id,
+				generateOptionValueUsingOptionLabel
 			);
 		}
 
@@ -193,17 +274,26 @@ const Options = ({
 
 	const set = (fields) => {
 		setFields(fields);
-		onChange(fieldsFilter(fields));
+
+		const synchronizedNormalizedValue = fieldsFilter(fields);
+
+		setNormalizedValue(synchronizedNormalizedValue);
+		onChange(synchronizedNormalizedValue);
 	};
 
 	const add = (fields, index, property, value) => {
 		fields[index][property] = value;
 
+		const initialOption = getInitialOption(
+			generateOptionValueUsingOptionLabel
+		);
+
 		fields.push({
-			...defaultOption,
-			generateKeyword: true,
-			id: random(),
+			generateKeyword: generateOptionValueUsingOptionLabel,
+			...initialOption,
 		});
+
+		initialOptionRef.current = initialOption;
 
 		return [fields, index, property, value];
 	};
@@ -219,7 +309,7 @@ const Options = ({
 	};
 
 	const normalize = (fields) => {
-		return [normalizeFields(fields)];
+		return [normalizeFields(fields, generateOptionValueUsingOptionLabel)];
 	};
 
 	const handleDelete = (fields, index) => {
@@ -287,6 +377,7 @@ const Options = ({
 const Main = ({
 	defaultLanguageId = themeDisplay.getLanguageId(),
 	editingLanguageId = themeDisplay.getLanguageId(),
+	generateOptionValueUsingOptionLabel = false,
 	onChange,
 	keywordReadOnly,
 	placeholder = Liferay.Language.get('enter-an-option'),
@@ -302,6 +393,9 @@ const Main = ({
 				defaultLanguageId={defaultLanguageId}
 				disabled={readOnly}
 				editingLanguageId={editingLanguageId}
+				generateOptionValueUsingOptionLabel={
+					generateOptionValueUsingOptionLabel
+				}
 				onChange={(value) => onChange({}, value)}
 				value={value}
 			>

@@ -22,6 +22,7 @@ import com.liferay.app.builder.workflow.rest.dto.v1_0.AppWorkflowTask;
 import com.liferay.app.builder.workflow.rest.dto.v1_0.AppWorkflowTransition;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
@@ -31,6 +32,7 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowDefinitionManager;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.workflow.kaleo.definition.Action;
 import com.liferay.portal.workflow.kaleo.definition.AssigneesRecipient;
 import com.liferay.portal.workflow.kaleo.definition.Definition;
@@ -69,38 +71,49 @@ import org.osgi.service.component.annotations.Reference;
 public class AppWorkflowResourceHelper {
 
 	public WorkflowDefinition deployWorkflowDefinition(
-			AppBuilderApp appBuilderApp, long companyId, Definition definition,
-			long userId)
+			AppBuilderApp appBuilderApp, Definition definition, long userId)
 		throws PortalException {
 
 		String content = _definitionExporter.export(definition);
 
 		return _workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, appBuilderApp.getName(), appBuilderApp.getUuid(),
+			appBuilderApp.getCompanyId(), userId, appBuilderApp.getName(),
+			String.valueOf(appBuilderApp.getAppBuilderAppId()),
 			AppBuilderApp.class.getSimpleName(), content.getBytes());
 	}
 
-	public Definition getDefinition(AppBuilderApp appBuilderApp)
+	public Definition getDefinition(long appId, long companyId)
 		throws PortalException {
 
 		WorkflowDefinitionLink workflowDefinitionLink =
 			_workflowDefinitionLinkLocalService.getWorkflowDefinitionLink(
-				appBuilderApp.getCompanyId(), 0,
+				companyId, 0,
 				ResourceActionsUtil.getCompositeModelName(
 					AppBuilderApp.class.getName(), DDLRecord.class.getName()),
-				appBuilderApp.getAppBuilderAppId(), 0);
+				appId, 0);
 
 		return _definitionBuilder.buildDefinition(
-			appBuilderApp.getCompanyId(),
-			workflowDefinitionLink.getWorkflowDefinitionName(),
+			companyId, workflowDefinitionLink.getWorkflowDefinitionName(),
 			workflowDefinitionLink.getWorkflowDefinitionVersion());
 	}
 
-	public WorkflowDefinition getWorkflowDefinition(AppBuilderApp appBuilderApp)
+	public WorkflowDefinition getLatestWorkflowDefinition(
+			long appId, long companyId)
 		throws PortalException {
 
-		return _workflowDefinitionManager.getLatestWorkflowDefinition(
-			appBuilderApp.getCompanyId(), appBuilderApp.getUuid());
+		try {
+			return _workflowDefinitionManager.getLatestWorkflowDefinition(
+				companyId, String.valueOf(appId));
+		}
+		catch (WorkflowException workflowException) {
+			Throwable cause = workflowException.getCause();
+
+			if (cause instanceof NoSuchModelException) {
+				throw (NoSuchModelException)cause;
+			}
+
+			throw workflowException;
+		}
 	}
 
 	public Definition toDefinition(
@@ -108,7 +121,8 @@ public class AppWorkflowResourceHelper {
 		throws KaleoDefinitionValidationException {
 
 		Definition definition = new Definition(
-			appBuilderApp.getUuid(), StringPool.BLANK, StringPool.BLANK, 0);
+			String.valueOf(appBuilderApp.getAppBuilderAppId()),
+			StringPool.BLANK, StringPool.BLANK, 0);
 
 		for (AppWorkflowState appWorkflowState :
 				appWorkflow.getAppWorkflowStates()) {
@@ -175,6 +189,23 @@ public class AppWorkflowResourceHelper {
 		}
 
 		return definition;
+	}
+
+	public void undeployWorkflowDefinition(
+			long appId, long companyId, long userId)
+		throws PortalException {
+
+		WorkflowDefinition workflowDefinition = getLatestWorkflowDefinition(
+			appId, companyId);
+
+		_workflowDefinitionManager.updateActive(
+			workflowDefinition.getCompanyId(), userId,
+			workflowDefinition.getName(), workflowDefinition.getVersion(),
+			false);
+
+		_workflowDefinitionManager.undeployWorkflowDefinition(
+			workflowDefinition.getCompanyId(), userId,
+			workflowDefinition.getName(), workflowDefinition.getVersion());
 	}
 
 	private void _addTransition(

@@ -34,6 +34,7 @@ import {usePrevious} from 'frontend-js-react-web';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import useAppWorkflow from '../../hooks/useAppWorkflow.es';
+import useDataRecordApps from '../../hooks/useDataRecordApps.es';
 
 const WORKFLOW_COLUMNS = [
 	{key: 'status', value: Liferay.Language.get('status')},
@@ -51,9 +52,14 @@ export default function ListEntries({history}) {
 		showFormView,
 	} = useContext(AppContext);
 
-	const {appWorkflowDefinitionId, appWorkflowTasks = []} = useAppWorkflow(
-		appId
-	);
+	const actions = useEntriesActions({
+		update: ({completed}) => !completed,
+	});
+
+	const [dataRecordIds, setDataRecordIds] = useState([]);
+
+	const {appWorkflowDefinitionId} = useAppWorkflow(appId);
+	const dataRecordApps = useDataRecordApps(appId, dataRecordIds);
 
 	const {
 		columns,
@@ -97,12 +103,14 @@ export default function ListEntries({history}) {
 			)
 				.then((response) => {
 					setFetchState({
-						isFetching: response.totalCount !== 0,
+						isFetching: response.items.length !== 0,
 						...response,
 					});
 
-					if (response.totalCount > 0) {
+					if (response.items.length > 0) {
 						const classPKs = response.items.map(({id}) => id);
+
+						setDataRecordIds(classPKs);
 
 						getItem(
 							`/o/portal-workflow-metrics/v1.0/processes/${workflowDefinitionId}/instances`,
@@ -136,7 +144,7 @@ export default function ListEntries({history}) {
 				})
 				.catch(() => {
 					errorToast();
-
+					setDataRecordIds([]);
 					setFetchState((prevState) => ({
 						...prevState,
 						isFetching: false,
@@ -161,6 +169,9 @@ export default function ListEntries({history}) {
 							const {name = emptyValue, id} = assignees[0];
 
 							if (id === -1) {
+								const {appWorkflowTasks = []} =
+									dataRecordApps[entry.id] || {};
+
 								const {appWorkflowRoleAssignments = []} =
 									appWorkflowTasks.find(
 										({name}) => name === taskNames[0]
@@ -229,8 +240,18 @@ export default function ListEntries({history}) {
 
 	const COLUMNS = [...columns, ...WORKFLOW_COLUMNS];
 
-	const isEmpty = totalCount === 0;
+	const isEmpty = items.length === 0;
 	const showAddButton = showFormView && permissions.add;
+
+	const refetchActions = actions.map((action = {}) => ({
+		...action,
+		action: (entry) =>
+			action?.action(entry).then((isRefetch) => {
+				if (isRefetch) {
+					refetch();
+				}
+			}),
+	}));
 
 	return (
 		<Loading isLoading={isLoading}>
@@ -257,7 +278,7 @@ export default function ListEntries({history}) {
 				/>
 
 				<TableWithPagination
-					actions={useEntriesActions(refetch)}
+					actions={refetchActions}
 					columns={COLUMNS}
 					emptyState={{
 						button: () =>

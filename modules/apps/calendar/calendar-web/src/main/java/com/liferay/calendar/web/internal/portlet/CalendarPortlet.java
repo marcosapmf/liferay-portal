@@ -1222,16 +1222,16 @@ public class CalendarPortlet extends MVCPortlet {
 	}
 
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof AssetCategoryException ||
-			cause instanceof AssetTagException ||
-			cause instanceof CalendarBookingDurationException ||
-			cause instanceof CalendarBookingRecurrenceException ||
-			cause instanceof CalendarNameException ||
-			cause instanceof CalendarResourceCodeException ||
-			cause instanceof CalendarResourceNameException ||
-			cause instanceof DuplicateCalendarResourceException ||
-			cause instanceof PrincipalException) {
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof AssetCategoryException ||
+			throwable instanceof AssetTagException ||
+			throwable instanceof CalendarBookingDurationException ||
+			throwable instanceof CalendarBookingRecurrenceException ||
+			throwable instanceof CalendarNameException ||
+			throwable instanceof CalendarResourceCodeException ||
+			throwable instanceof CalendarResourceNameException ||
+			throwable instanceof DuplicateCalendarResourceException ||
+			throwable instanceof PrincipalException) {
 
 			return true;
 		}
@@ -1574,19 +1574,19 @@ public class CalendarPortlet extends MVCPortlet {
 		java.util.Calendar nowCalendar = CalendarFactoryUtil.getCalendar(
 			TimeZone.getTimeZone(timeZoneId));
 
-		JSONObject jsonObject = JSONUtil.put(
-			"day", nowCalendar.get(java.util.Calendar.DAY_OF_MONTH)
-		).put(
-			"hour", nowCalendar.get(java.util.Calendar.HOUR_OF_DAY)
-		).put(
-			"minute", nowCalendar.get(java.util.Calendar.MINUTE)
-		).put(
-			"month", nowCalendar.get(java.util.Calendar.MONTH)
-		).put(
-			"year", nowCalendar.get(java.util.Calendar.YEAR)
-		);
-
-		writeJSON(resourceRequest, resourceResponse, jsonObject);
+		writeJSON(
+			resourceRequest, resourceResponse,
+			JSONUtil.put(
+				"day", nowCalendar.get(java.util.Calendar.DAY_OF_MONTH)
+			).put(
+				"hour", nowCalendar.get(java.util.Calendar.HOUR_OF_DAY)
+			).put(
+				"minute", nowCalendar.get(java.util.Calendar.MINUTE)
+			).put(
+				"month", nowCalendar.get(java.util.Calendar.MONTH)
+			).put(
+				"year", nowCalendar.get(java.util.Calendar.YEAR)
+			));
 	}
 
 	protected void serveExportCalendar(
@@ -1677,13 +1677,13 @@ public class CalendarPortlet extends MVCPortlet {
 			_log.warn(message);
 		}
 
-		JSONObject jsonObject = JSONUtil.put(
-			"error", message
-		).put(
-			"success", false
-		);
-
-		writeJSON(resourceRequest, resourceResponse, jsonObject);
+		writeJSON(
+			resourceRequest, resourceResponse,
+			JSONUtil.put(
+				"error", message
+			).put(
+				"success", false
+			));
 	}
 
 	protected void setRenderRequestAttributes(

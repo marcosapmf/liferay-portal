@@ -23,6 +23,7 @@ import React, {
 	useRef,
 } from 'react';
 
+import {EVENT_TYPES} from '../actions/eventTypes.es';
 import Pages from '../components/Pages.es';
 import {FormProvider, useForm} from '../hooks/useForm.es';
 import formValidate from '../thunks/formValidate.es';
@@ -98,7 +99,7 @@ const Form = React.forwardRef(
 		);
 
 		useImperativeHandle(ref, () => ({
-			evaluate: () =>
+			evaluate: (editingLanguageId) =>
 				evaluate(null, {
 					defaultLanguageId,
 					editingLanguageId,
@@ -136,6 +137,11 @@ const Form = React.forwardRef(
 				rules,
 				successPageSettings,
 			}),
+			updateEditingLanguageId: ({editingLanguageId}) =>
+				dispatch({
+					payload: {editingLanguageId},
+					type: EVENT_TYPES.ALL,
+				}),
 			validate,
 		}));
 

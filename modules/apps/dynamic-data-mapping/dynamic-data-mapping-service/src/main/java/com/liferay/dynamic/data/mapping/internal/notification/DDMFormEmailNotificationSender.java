@@ -428,7 +428,9 @@ public class DDMFormEmailNotificationSender {
 			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN);
 
 		return _portal.getSiteAdminURL(
-			themeDisplay, DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
+			themeDisplay.getPortalURL(),
+			_groupLocalService.getGroup(ddmFormInstance.getGroupId()),
+			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
 			HashMapBuilder.put(
 				portletNamespace.concat("mvcPath"),
 				new String[] {"/admin/view_form_instance_records.jsp"}
@@ -450,7 +452,9 @@ public class DDMFormEmailNotificationSender {
 			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN);
 
 		return _portal.getSiteAdminURL(
-			themeDisplay, DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
+			themeDisplay.getPortalURL(),
+			_groupLocalService.getGroup(ddmFormInstance.getGroupId()),
+			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
 			HashMapBuilder.put(
 				portletNamespace.concat("mvcPath"),
 				new String[] {"/admin/view_form_instance_record.jsp"}

@@ -45,12 +45,28 @@ public class AccountEntryModelPreFilterContributor
 		BooleanFilter booleanFilter, ModelSearchSettings modelSearchSettings,
 		SearchContext searchContext) {
 
+		_filterByAccountGroupIds(booleanFilter, searchContext);
 		_filterByAccountUserIds(booleanFilter, searchContext);
 		_filterByDomains(booleanFilter, searchContext);
 		_filterByOrganizationIds(booleanFilter, searchContext);
 		_filterByParentAccountEntryId(booleanFilter, searchContext);
 		_filterByStatus(booleanFilter, searchContext);
 		_filterByType(booleanFilter, searchContext);
+	}
+
+	private void _filterByAccountGroupIds(
+		BooleanFilter booleanFilter, SearchContext searchContext) {
+
+		long[] accountGroupIds = (long[])searchContext.getAttribute(
+			"accountGroupIds");
+
+		if (ArrayUtil.isNotEmpty(accountGroupIds)) {
+			TermsFilter termsFilter = new TermsFilter("accountGroupIds");
+
+			termsFilter.addValues(ArrayUtil.toStringArray(accountGroupIds));
+
+			booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
+		}
 	}
 
 	private void _filterByAccountUserIds(
@@ -60,13 +76,11 @@ public class AccountEntryModelPreFilterContributor
 			"accountUserIds");
 
 		if (ArrayUtil.isNotEmpty(accountUserIds)) {
-			TermsFilter accountEntryTermsFilter = new TermsFilter(
-				"accountUserIds");
+			TermsFilter termsFilter = new TermsFilter("accountUserIds");
 
-			accountEntryTermsFilter.addValues(
-				ArrayUtil.toStringArray(accountUserIds));
+			termsFilter.addValues(ArrayUtil.toStringArray(accountUserIds));
 
-			booleanFilter.add(accountEntryTermsFilter, BooleanClauseOccur.MUST);
+			booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
 		}
 	}
 
@@ -76,11 +90,11 @@ public class AccountEntryModelPreFilterContributor
 		String[] domains = (String[])searchContext.getAttribute("domains");
 
 		if (ArrayUtil.isNotEmpty(domains)) {
-			TermsFilter domainTermsFilter = new TermsFilter("domains");
+			TermsFilter termsFilter = new TermsFilter("domains");
 
-			domainTermsFilter.addValues(domains);
+			termsFilter.addValues(domains);
 
-			booleanFilter.add(domainTermsFilter, BooleanClauseOccur.MUST);
+			booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
 		}
 	}
 
@@ -91,13 +105,11 @@ public class AccountEntryModelPreFilterContributor
 			"organizationIds");
 
 		if (ArrayUtil.isNotEmpty(organizationIds)) {
-			TermsFilter accountEntryTermsFilter = new TermsFilter(
-				"organizationIds");
+			TermsFilter termsFilter = new TermsFilter("organizationIds");
 
-			accountEntryTermsFilter.addValues(
-				ArrayUtil.toStringArray(organizationIds));
+			termsFilter.addValues(ArrayUtil.toStringArray(organizationIds));
 
-			booleanFilter.add(accountEntryTermsFilter, BooleanClauseOccur.MUST);
+			booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
 		}
 	}
 

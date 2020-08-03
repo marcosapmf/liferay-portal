@@ -15,6 +15,7 @@
 package com.liferay.content.dashboard.web.internal.display.context;
 
 import com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration;
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemTypeItemSelectorCriterion;
@@ -48,10 +49,13 @@ import com.liferay.users.admin.item.selector.UserItemSelectorCriterion;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -103,15 +107,33 @@ public class ContentDashboardAdminDisplayContext {
 		return _assetCategoryIds;
 	}
 
-	public List<String> getAssetTagIds() {
+	public List<String> getAssetCategoryTitles(
+		ContentDashboardItem contentDashboardItem, long assetVocabularyId) {
+
+		List<AssetCategory> assetCategories =
+			contentDashboardItem.getAssetCategories(assetVocabularyId);
+
+		Stream<AssetCategory> stream = assetCategories.stream();
+
+		Locale locale = _portal.getLocale(_liferayPortletRequest);
+
+		return stream.map(
+			assetCategory -> assetCategory.getTitle(locale)
+		).collect(
+			Collectors.toList()
+		);
+	}
+
+	public Set<String> getAssetTagIds() {
 		if (_assetTagIds != null) {
 			return _assetTagIds;
 		}
 
-		_assetTagIds = Arrays.asList(
-			ArrayUtil.toStringArray(
-				ParamUtil.getStringValues(
-					_liferayPortletRequest, "assetTagId")));
+		_assetTagIds = new HashSet(
+			Arrays.asList(
+				ArrayUtil.toStringArray(
+					ParamUtil.getStringValues(
+						_liferayPortletRequest, "assetTagId"))));
 
 		return _assetTagIds;
 	}
@@ -346,7 +368,7 @@ public class ContentDashboardAdminDisplayContext {
 	}
 
 	private List<Long> _assetCategoryIds;
-	private List<String> _assetTagIds;
+	private Set<String> _assetTagIds;
 	private final List<AssetVocabulary> _assetVocabularies;
 	private final AssetVocabularyMetric _assetVocabularyMetric;
 	private List<Long> _authorIds;

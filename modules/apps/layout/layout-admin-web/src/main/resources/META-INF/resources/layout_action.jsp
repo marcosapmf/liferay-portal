@@ -61,7 +61,7 @@ Layout curLayout = (Layout)row.getObject();
 
 	<c:if test="<%= layoutsAdminDisplayContext.isShowCopyLayoutAction(curLayout) %>">
 		<liferay-ui:icon
-			cssClass="copy-layout-action-option"
+			cssClass='<%= liferayPortletResponse.getNamespace() + "copy-layout-action-option" %>'
 			message="copy-page"
 			url="javascript:;"
 		/>
@@ -105,7 +105,7 @@ Layout curLayout = (Layout)row.getObject();
 
 	<c:if test="<%= layoutsAdminDisplayContext.isShowViewCollectionItemsAction(curLayout) %>">
 		<liferay-ui:icon
-			cssClass="view-collection-items-action-option"
+			cssClass='<%= liferayPortletResponse.getNamespace() + "view-collection-items-action-option" %>'
 			message="view-collection-items"
 			url="javascript:;"
 		/>
@@ -113,16 +113,16 @@ Layout curLayout = (Layout)row.getObject();
 </liferay-ui:icon-menu>
 
 <aui:script require="metal-dom/src/all/dom as dom">
-	var addLayoutPrototypeActionOptionQueryClickHandler = dom.delegate(
+	var copyLayoutActionOptionQueryClickHandler = dom.delegate(
 		document.body,
 		'click',
 		'.<portlet:namespace />copy-layout-action-option',
 		function (event) {
 			Liferay.Util.openModal({
-				id: '<portlet:namespace />copyLayoutDialog',
+				id: '<portlet:namespace />addLayoutDialog',
 				title: '<liferay-ui:message key="copy-page" />',
 				url:
-					'<%= layoutsAdminDisplayContext.getCopyLayoutRenderURL(layout) %>',
+					'<%= layoutsAdminDisplayContext.getCopyLayoutRenderURL(curLayout) %>',
 			});
 		}
 	);
@@ -136,13 +136,13 @@ Layout curLayout = (Layout)row.getObject();
 				id: '<portlet:namespace />viewCollectionItemsDialog',
 				title: '<liferay-ui:message key="collection-items" />',
 				url:
-					'<%= layoutsAdminDisplayContext.getViewCollectionItemsURL(layout) %>',
+					'<%= layoutsAdminDisplayContext.getViewCollectionItemsURL(curLayout) %>',
 			});
 		}
 	);
 
 	function handleDestroyPortlet() {
-		addLayoutPrototypeActionOptionQueryClickHandler.removeListener();
+		copyLayoutActionOptionQueryClickHandler.removeListener();
 		viewCollectionItemsActionOptionQueryClickHandler.removeListener();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);

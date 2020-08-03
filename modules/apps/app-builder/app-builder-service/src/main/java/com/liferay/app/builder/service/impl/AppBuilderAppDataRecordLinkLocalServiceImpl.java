@@ -39,7 +39,8 @@ public class AppBuilderAppDataRecordLinkLocalServiceImpl
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #addAppBuilderAppDataRecordLink(long, long, long, long, long)}
+	 *             #addAppBuilderAppDataRecordLink(long, long, long, long,
+	 *             long)}
 	 */
 	@Deprecated
 	@Override
@@ -89,6 +90,14 @@ public class AppBuilderAppDataRecordLinkLocalServiceImpl
 
 		return appBuilderAppDataRecordLinkPersistence.findByAppBuilderAppId(
 			appBuilderAppId);
+	}
+
+	@Override
+	public List<AppBuilderAppDataRecordLink> getAppBuilderAppDataRecordLinks(
+		long appBuilderAppId, long[] ddlRecordIds) {
+
+		return appBuilderAppDataRecordLinkPersistence.findByA_D(
+			appBuilderAppId, ddlRecordIds);
 	}
 
 	@Override

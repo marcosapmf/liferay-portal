@@ -24,8 +24,10 @@ import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.CategoriesInfoFieldType;
+import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.ImageInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
+import com.liferay.info.field.type.TagsInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.field.type.URLInfoFieldType;
 import com.liferay.info.form.InfoForm;
@@ -106,19 +108,11 @@ public class JournalArticleInfoItemFormProviderTest {
 			Comparator.comparing(
 				InfoField::getName, String::compareToIgnoreCase));
 
-		Assert.assertEquals(infoFields.toString(), 20, infoFields.size());
+		Assert.assertEquals(infoFields.toString(), 18, infoFields.size());
 
 		Iterator<InfoField> iterator = infoFields.iterator();
 
 		InfoField infoField = iterator.next();
-
-		Assert.assertEquals(
-			"audience", StringUtil.toLowerCase(infoField.getName()));
-		Assert.assertFalse(infoField.isLocalizable());
-		Assert.assertEquals(
-			TextInfoFieldType.INSTANCE, infoField.getInfoFieldType());
-
-		infoField = iterator.next();
 
 		Assert.assertEquals("authorName", infoField.getName());
 		Assert.assertFalse(infoField.isLocalizable());
@@ -222,7 +216,7 @@ public class JournalArticleInfoItemFormProviderTest {
 		Assert.assertEquals("publishDate", infoField.getName());
 		Assert.assertFalse(infoField.isLocalizable());
 		Assert.assertEquals(
-			TextInfoFieldType.INSTANCE, infoField.getInfoFieldType());
+			DateInfoFieldType.INSTANCE, infoField.getInfoFieldType());
 
 		infoField = iterator.next();
 
@@ -233,18 +227,10 @@ public class JournalArticleInfoItemFormProviderTest {
 
 		infoField = iterator.next();
 
-		Assert.assertEquals(
-			"stage", StringUtil.toLowerCase(infoField.getName()));
-		Assert.assertFalse(infoField.isLocalizable());
-		Assert.assertEquals(
-			TextInfoFieldType.INSTANCE, infoField.getInfoFieldType());
-
-		infoField = iterator.next();
-
 		Assert.assertEquals("tagNames", infoField.getName());
 		Assert.assertFalse(infoField.isLocalizable());
 		Assert.assertEquals(
-			TextInfoFieldType.INSTANCE, infoField.getInfoFieldType());
+			TagsInfoFieldType.INSTANCE, infoField.getInfoFieldType());
 
 		infoField = iterator.next();
 
@@ -308,7 +294,7 @@ public class JournalArticleInfoItemFormProviderTest {
 			infoItemFieldValues.getInfoFieldValues();
 
 		Assert.assertEquals(
-			infoFieldValues.toString(), 17, infoFieldValues.size());
+			infoFieldValues.toString(), 15, infoFieldValues.size());
 
 		InfoFieldValue<Object> descriptionInfoFieldValue =
 			infoItemFieldValues.getInfoFieldValue("description");

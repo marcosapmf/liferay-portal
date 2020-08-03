@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.internal.util;
 
+import com.liferay.dynamic.data.mapping.configuration.DDMIndexerConfiguration;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -25,6 +26,7 @@ import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -33,8 +35,11 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.DocumentImpl;
+import com.liferay.portal.kernel.search.FieldArray;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
+import com.liferay.portal.kernel.search.generic.NestedQuery;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -44,6 +49,7 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 
 import java.io.Serializable;
 
@@ -53,21 +59,38 @@ import java.text.Format;
 
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alexander Chow
  */
-@Component(immediate = true, service = DDMIndexer.class)
+@Component(
+	configurationPid = "com.liferay.dynamic.data.mapping.configuration.DDMIndexerConfiguration",
+	immediate = true, service = DDMIndexer.class
+)
 public class DDMIndexerImpl implements DDMIndexer {
 
 	@Override
 	public void addAttributes(
 		Document document, DDMStructure ddmStructure,
 		DDMFormValues ddmFormValues) {
+
+		boolean legacyDDMIndexFieldsEnabled = isLegacyDDMIndexFieldsEnabled();
+
+		FieldArray fieldArray = (FieldArray)document.getField(DDM_FIELD_ARRAY);
+
+		if ((fieldArray == null) && !legacyDDMIndexFieldsEnabled) {
+			fieldArray = new FieldArray(DDM_FIELD_ARRAY);
+
+			document.add(fieldArray);
+		}
 
 		Set<Locale> locales = ddmFormValues.getAvailableLocales();
 
@@ -95,7 +118,15 @@ public class DDMIndexerImpl implements DDMIndexer {
 							locale, indexType);
 						value = field.getValue(locale);
 
-						addToDocument(document, field, name, value, indexType);
+						if (legacyDDMIndexFieldsEnabled) {
+							addToDocument(
+								document, field, name, value, indexType);
+						}
+						else {
+							fieldArray.addField(
+								createField(
+									field, name, value, indexType, locale));
+						}
 					}
 				}
 				else {
@@ -104,7 +135,13 @@ public class DDMIndexerImpl implements DDMIndexer {
 						indexType);
 					value = field.getValue(ddmFormValues.getDefaultLocale());
 
-					addToDocument(document, field, name, value, indexType);
+					if (legacyDDMIndexFieldsEnabled) {
+						addToDocument(document, field, name, value, indexType);
+					}
+					else {
+						fieldArray.addField(
+							createField(field, name, value, indexType, null));
+					}
 				}
 			}
 			catch (Exception exception) {
@@ -124,7 +161,7 @@ public class DDMIndexerImpl implements DDMIndexer {
 		BooleanQuery booleanQuery = new BooleanQueryImpl();
 
 		String[] ddmStructureFieldNameParts = StringUtil.split(
-			ddmStructureFieldName, DDMIndexer.DDM_FIELD_SEPARATOR);
+			ddmStructureFieldName, DDM_FIELD_SEPARATOR);
 
 		DDMStructure structure = _ddmStructureLocalService.getStructure(
 			GetterUtil.getLong(ddmStructureFieldNameParts[2]));
@@ -146,19 +183,22 @@ public class DDMIndexerImpl implements DDMIndexer {
 			for (String ddmStructureFieldValueString :
 					ddmStructureFieldValueArray) {
 
-				booleanQuery.addRequiredTerm(
-					ddmStructureFieldName,
-					StringPool.QUOTE + ddmStructureFieldValueString +
-						StringPool.QUOTE);
+				addFieldValueRequiredTerm(
+					booleanQuery, ddmStructureFieldName,
+					ddmStructureFieldValueString, locale);
 			}
 		}
 		else {
-			booleanQuery.addRequiredTerm(
-				ddmStructureFieldName,
-				StringPool.QUOTE + ddmStructureFieldValue + StringPool.QUOTE);
+			addFieldValueRequiredTerm(
+				booleanQuery, ddmStructureFieldName,
+				String.valueOf(ddmStructureFieldValue), locale);
 		}
 
-		return new QueryFilter(booleanQuery);
+		if (isLegacyDDMIndexFieldsEnabled()) {
+			return new QueryFilter(booleanQuery);
+		}
+
+		return new QueryFilter(new NestedQuery(DDM_FIELD_ARRAY, booleanQuery));
 	}
 
 	@Override
@@ -284,6 +324,73 @@ public class DDMIndexerImpl implements DDMIndexer {
 		return sb.toString();
 	}
 
+	@Override
+	public String getValueFieldName(String indexType) {
+		return getValueFieldName(indexType, null);
+	}
+
+	@Override
+	public String getValueFieldName(String indexType, Locale locale) {
+		String valueFieldName = DDM_VALUE_FIELD_NAME_PREFIX;
+
+		if (indexType != null) {
+			valueFieldName = valueFieldName.concat(
+				StringUtil.upperCaseFirstLetter(indexType));
+		}
+
+		if (locale != null) {
+			valueFieldName = StringBundler.concat(
+				valueFieldName, StringPool.UNDERLINE,
+				LocaleUtil.toLanguageId(locale));
+		}
+
+		return valueFieldName;
+	}
+
+	@Override
+	public boolean isLegacyDDMIndexFieldsEnabled() {
+		if (Objects.equals(searchEngineInformation.getVendorString(), "Solr")) {
+			return true;
+		}
+
+		return _ddmIndexerConfiguration.enableLegacyDDMIndexFields();
+	}
+
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_ddmIndexerConfiguration = ConfigurableUtil.createConfigurable(
+			DDMIndexerConfiguration.class, properties);
+	}
+
+	protected void addFieldValueRequiredTerm(
+		BooleanQuery booleanQuery, String ddmStructureFieldName,
+		String ddmStructureFieldValue, Locale locale) {
+
+		if (isLegacyDDMIndexFieldsEnabled()) {
+			booleanQuery.addRequiredTerm(
+				ddmStructureFieldName,
+				StringPool.QUOTE + ddmStructureFieldValue + StringPool.QUOTE);
+
+			return;
+		}
+
+		String[] ddmStructureFieldNameParts = StringUtil.split(
+			ddmStructureFieldName, DDM_FIELD_SEPARATOR);
+
+		String valueFieldName = getValueFieldName(
+			ddmStructureFieldNameParts[1], locale);
+
+		booleanQuery.addRequiredTerm(
+			StringBundler.concat(
+				DDM_FIELD_ARRAY, StringPool.PERIOD, DDM_FIELD_NAME),
+			ddmStructureFieldName);
+		booleanQuery.addRequiredTerm(
+			StringBundler.concat(
+				DDM_FIELD_ARRAY, StringPool.PERIOD, valueFieldName),
+			StringPool.QUOTE + ddmStructureFieldValue + StringPool.QUOTE);
+	}
+
 	protected void addToDocument(
 			Document document, Field field, String name, Serializable value,
 			String indexType)
@@ -390,6 +497,38 @@ public class DDMIndexerImpl implements DDMIndexer {
 		}
 	}
 
+	protected com.liferay.portal.kernel.search.Field createField(
+			Field ddmStructureField, String name, Serializable value,
+			String indexType, Locale locale)
+		throws PortalException {
+
+		Document document = new DocumentImpl();
+
+		String valueFieldName = getValueFieldName(indexType, locale);
+
+		addToDocument(
+			document, ddmStructureField, valueFieldName, value, indexType);
+
+		Map<String, com.liferay.portal.kernel.search.Field> fields =
+			document.getFields();
+
+		com.liferay.portal.kernel.search.Field ddmField =
+			new com.liferay.portal.kernel.search.Field("");
+
+		ddmField.addField(
+			new com.liferay.portal.kernel.search.Field(DDM_FIELD_NAME, name));
+
+		ddmField.addField(
+			new com.liferay.portal.kernel.search.Field(
+				DDM_VALUE_FIELD_NAME, valueFieldName));
+
+		for (com.liferay.portal.kernel.search.Field field : fields.values()) {
+			ddmField.addField(field);
+		}
+
+		return ddmField;
+	}
+
 	protected String encodeName(
 		long ddmStructureId, String fieldName, Locale locale,
 		String indexType) {
@@ -449,10 +588,14 @@ public class DDMIndexerImpl implements DDMIndexer {
 		return new Fields();
 	}
 
+	@Reference
+	protected SearchEngineInformation searchEngineInformation;
+
 	private static final Log _log = LogFactoryUtil.getLog(DDMIndexerImpl.class);
 
 	private DDM _ddm;
 	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+	private volatile DDMIndexerConfiguration _ddmIndexerConfiguration;
 	private DDMStructureLocalService _ddmStructureLocalService;
 
 }

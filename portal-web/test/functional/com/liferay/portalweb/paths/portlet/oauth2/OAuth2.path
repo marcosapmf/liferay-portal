@@ -193,6 +193,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>USER_CONNECTED_APP_EXPIRATION_VALUE</td>
+	<td>//p[contains(.,'Expiration')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>USER_CONNECTED_APP_REMOVE_ACCESS_BUTTON</td>
 	<td>//button[contains(@id,'removeAccess')]</td>
 	<td></td>

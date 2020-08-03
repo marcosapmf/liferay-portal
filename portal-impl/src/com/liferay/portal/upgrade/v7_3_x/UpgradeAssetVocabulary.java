@@ -14,6 +14,7 @@
 
 package com.liferay.portal.upgrade.v7_3_x;
 
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.upgrade.v7_3_x.util.AssetVocabularyTable;
 
@@ -26,7 +27,11 @@ public class UpgradeAssetVocabulary extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 		alter(
 			AssetVocabularyTable.class,
-			new AlterTableAddColumn("system_", "BOOLEAN"));
+			new AlterTableAddColumn("visibilityType", "INT"));
+
+		runSQL(
+			"update AssetVocabulary set visibilityType = " +
+				AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC);
 	}
 
 }

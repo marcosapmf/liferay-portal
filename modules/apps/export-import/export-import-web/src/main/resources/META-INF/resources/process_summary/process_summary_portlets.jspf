@@ -37,7 +37,9 @@
 			String changesetPortletName = StringBundler.concat(PortletDataHandlerKeys.PORTLET_DATA, StringPool.UNDERLINE, ChangesetPortletKeys.CHANGESET);
 
 			if (key.startsWith(PortletDataHandlerKeys.PORTLET_DATA + "_com") && MapUtil.getBoolean(parameterMap, key) && !key.equals(changesetPortletName)) {
-				portletIds.add(key.substring((PortletDataHandlerKeys.PORTLET_DATA + "_").length()));
+				String s = PortletDataHandlerKeys.PORTLET_DATA + "_";
+
+				portletIds.add(key.substring(s.length()));
 			}
 		}
 
@@ -94,7 +96,9 @@
 				String controlClass = control.getClassName();
 
 				if (modelAdditionCounters.containsKey(controlClass)) {
-					Long value = modelAdditionCounters.get(controlClass).getValue();
+					LongWrapper modelAdditionCounter = modelAdditionCounters.get(controlClass);
+
+					Long value = modelAdditionCounter.getValue();
 
 					currentAdditions.put(controlLabel, value);
 
@@ -102,7 +106,9 @@
 				}
 
 				if (modelDeletionCounters.containsKey(controlClass)) {
-					Long value = modelDeletionCounters.get(controlClass).getValue();
+					LongWrapper modelDeletionCounter = modelDeletionCounters.get(controlClass);
+
+					Long value = modelDeletionCounter.getValue();
 
 					currentDeletions.put(controlLabel, value);
 
@@ -170,7 +176,9 @@
 
 								if (mainLabel.equals("total"))continue;
 
-								String additionsString = "(" + additionEntry.getValue().toString() + ")";
+								Long addition = additionEntry.getValue();
+
+								String additionsString = "(" + addition.toString() + ")";
 
 								if (currentAdditions.size() != i) {
 									additionsString += ", ";

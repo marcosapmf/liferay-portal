@@ -51,7 +51,7 @@ function SidebarContent() {
 							small
 							type="button"
 						>
-							{selectedCategory.name}
+							{selectedCategory.label}
 						</ClayButton>
 					}
 				>
@@ -67,7 +67,7 @@ function SidebarContent() {
 										setActive(false);
 									}}
 								>
-									{frontendTokenCategory.name}
+									{frontendTokenCategory.label}
 								</ClayDropDown.Item>
 							)
 						)}
@@ -76,10 +76,11 @@ function SidebarContent() {
 			)}
 
 			{selectedCategory?.frontendTokenSets.map(
-				({frontendTokens, name}) => (
+				({frontendTokens, label, name}) => (
 					<FrontendTokenSet
 						frontendTokens={frontendTokens}
 						key={name}
+						label={label}
 						name={name}
 					/>
 				)

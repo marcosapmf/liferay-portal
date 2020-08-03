@@ -117,6 +117,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
@@ -5679,6 +5680,46 @@ public class ServiceBuilder {
 		return Version.getInstance(version);
 	}
 
+	private boolean _hasFinderThatIsNotUniqueByCompany(
+		List<Element> columnElements, List<Element> finderColumnElements) {
+
+		if (!isVersionGTE_7_3_0()) {
+			return false;
+		}
+
+		boolean hasCompanyId = Stream.of(
+			columnElements.toArray(new Element[0])
+		).map(
+			columnElement -> columnElement.attributeValue("name")
+		).anyMatch(
+			columnName -> columnName.equals("companyId")
+		);
+
+		if (!hasCompanyId) {
+			return false;
+		}
+
+		String[] finderColumnNames = Stream.of(
+			finderColumnElements.toArray(new Element[0])
+		).map(
+			finderColumnElement -> finderColumnElement.attributeValue("name")
+		).filter(
+			finderColumnName ->
+				finderColumnName.endsWith("Id") ||
+				finderColumnName.endsWith("PK")
+		).toArray(
+			String[]::new
+		);
+
+		if ((finderColumnNames.length == 1) &&
+			finderColumnNames[0].equals("classNameId")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private boolean _hasHttpMethods(JavaClass javaClass) {
 		for (JavaMethod javaMethod : _getMethods(javaClass)) {
 			if (javaMethod.isPublic() && isCustomMethod(javaMethod)) {
@@ -6523,6 +6564,16 @@ public class ServiceBuilder {
 				entityColumn.validate();
 
 				finderEntityColumns.add(entityColumn);
+			}
+
+			if (_hasFinderThatIsNotUniqueByCompany(
+					columnElements, finderColumnElements)) {
+
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Finder ", finderName, " for entity ", entityName,
+						" needs an additional ID column to make it unique by ",
+						"company"));
 			}
 
 			entityFinders.add(

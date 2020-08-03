@@ -16,6 +16,9 @@ package com.liferay.subscription.service.impl;
 
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -355,27 +358,45 @@ public class SubscriptionLocalServiceImpl
 	}
 
 	/**
-	 * Returns all the subscriptions to the class name.
-	 *
-	 * @param  className the entity's class name
-	 * @return the subscriptions to the class name
+	 * @param      className the entity's class name
+	 * @return     the subscriptions to the class name
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	@Override
 	public List<Subscription> getSubscriptions(String className) {
-		return subscriptionPersistence.findByClassNameId(
-			classNameLocalService.getClassNameId(className));
+		DynamicQuery dynamicQuery = dynamicQuery();
+
+		Property classNameIdProperty = PropertyFactoryUtil.forName(
+			"classNameId");
+
+		dynamicQuery.add(
+			classNameIdProperty.eq(
+				classNameLocalService.getClassNameId(className)));
+
+		return dynamicQuery(dynamicQuery);
 	}
 
 	/**
-	 * Returns the number of the subscriptions to the class name.
-	 *
-	 * @param  className the entity's class name
-	 * @return the subscriptions to the class name
+	 * @param      className the entity's class name
+	 * @return     the subscriptions to the class name
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	@Override
 	public int getSubscriptionsCount(String className) {
-		return subscriptionPersistence.countByClassNameId(
-			classNameLocalService.getClassNameId(className));
+		DynamicQuery dynamicQuery = dynamicQuery();
+
+		Property classNameIdProperty = PropertyFactoryUtil.forName(
+			"classNameId");
+
+		dynamicQuery.add(
+			classNameIdProperty.eq(
+				classNameLocalService.getClassNameId(className)));
+
+		Long count = dynamicQueryCount(dynamicQuery);
+
+		return count.intValue();
 	}
 
 	/**

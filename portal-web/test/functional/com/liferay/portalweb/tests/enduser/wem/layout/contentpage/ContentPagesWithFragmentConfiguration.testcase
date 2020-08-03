@@ -47,9 +47,17 @@ definition {
 			collectionName = "Basic Components",
 			fragmentName = "Button");
 
+		Click.clickNoWaitForVisible(
+			key_fragmentName = "Button",
+			locator1 = "Fragment#FRAGMENT_HEADER");
+
+		Pause(locator1 = "3000");
+
+		var key_navItem = "Configuration";
+
 		AssertVisible(
-			key_elementType = "Fragment",
-			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
+			locator1 = "PageEditor#NAV_ITEM_BUTTON",
+			value1 = "Configuration");
 	}
 
 	@description = "This is a test for LPS-99377. User can change checkbox fragment configuration."
@@ -188,11 +196,13 @@ definition {
 			collectionName = "Collection Name",
 			fragmentName = "Text Fragment Example");
 
-		Click.clickNoMouseOver(
-			key_elementType = "Fragment",
-			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
-
 		task ("Assert placeholder is exist") {
+			Click.clickNoWaitForVisible(
+				key_fragmentName = "Text Fragment Example",
+				locator1 = "Fragment#FRAGMENT_HEADER");
+
+			Pause(locator1 = "3000");
+
 			AssertVisible(locator1 = "FragmentEditor#FRAGMENTS_EDITOR_FLOATING_CONFIGURATION_PANEL");
 		}
 	}

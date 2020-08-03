@@ -16,6 +16,7 @@ package com.liferay.content.dashboard.web.internal.item;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemType;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -38,9 +39,15 @@ public interface ContentDashboardItem<T> {
 
 	public List<AssetTag> getAssetTags();
 
+	public List<Locale> getAvailableLocales();
+
 	public String getClassName();
 
 	public Long getClassPK();
+
+	public List<ContentDashboardItemAction> getContentDashboardItemActions(
+		HttpServletRequest httpServletRequest,
+		ContentDashboardItemAction.Type... types);
 
 	public ContentDashboardItemType getContentDashboardItemType();
 
@@ -49,8 +56,6 @@ public interface ContentDashboardItem<T> {
 	public Map<String, Object> getData(Locale locale);
 
 	public Locale getDefaultLocale();
-
-	public String getEditURL(HttpServletRequest httpServletRequest);
 
 	public Date getExpirationDate();
 
@@ -70,14 +75,7 @@ public interface ContentDashboardItem<T> {
 
 	public List<Version> getVersions(Locale locale);
 
-	public String getViewURL(HttpServletRequest httpServletRequest);
-
-	public Map<Locale, String> getViewURLs(
-		HttpServletRequest httpServletRequest);
-
-	public boolean isEditURLEnabled(HttpServletRequest httpServletRequest);
-
-	public boolean isViewURLEnabled(HttpServletRequest httpServletRequest);
+	public boolean isViewable(HttpServletRequest httpServletRequest);
 
 	public static class Version {
 

@@ -58,7 +58,7 @@ function FieldBase({
 	valid,
 	visible,
 }) {
-	const {editingLanguageId = {}} = usePage();
+	const {editingLanguageId = themeDisplay.getLanguageId()} = usePage();
 	const dispatch = useForm();
 
 	const localizedValueArray = useMemo(() => {
@@ -132,7 +132,7 @@ function FieldBase({
 					<p
 						className={classNames({
 							'ddm-empty': !showLabel && !required,
-							'ddm-label': showLabel,
+							'ddm-label': showLabel || required,
 						})}
 					>
 						{label && showLabel && label}
@@ -157,8 +157,6 @@ function FieldBase({
 
 				{children}
 
-				{nestedFields && <Layout rows={getDefaultRows(nestedFields)} />}
-
 				{localizedValueArray.length > 0 &&
 					localizedValueArray.map((language) => (
 						<input
@@ -176,6 +174,8 @@ function FieldBase({
 						<div className="form-feedback-item">{errorMessage}</div>
 					</span>
 				)}
+
+				{nestedFields && <Layout rows={getDefaultRows(nestedFields)} />}
 			</div>
 		</ClayTooltipProvider>
 	);

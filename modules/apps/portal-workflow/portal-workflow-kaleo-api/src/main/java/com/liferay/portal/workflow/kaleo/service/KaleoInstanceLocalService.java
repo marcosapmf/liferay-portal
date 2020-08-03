@@ -62,7 +62,7 @@ public interface KaleoInstanceLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link KaleoInstanceLocalServiceUtil} to access the kaleo instance local service. Add custom service methods to <code>com.liferay.portal.workflow.kaleo.service.impl.KaleoInstanceLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.workflow.kaleo.service.impl.KaleoInstanceLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the kaleo instance local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link KaleoInstanceLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -226,6 +226,10 @@ public interface KaleoInstanceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getKaleoDefinitionKaleoInstancesCount(
+		long kaleoDefinitionId, boolean completed);
 
 	/**
 	 * Returns the kaleo instance with the primary key.

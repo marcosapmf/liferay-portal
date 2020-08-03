@@ -126,6 +126,249 @@ definition {
 		SitePages.viewCheckboxChecked(pageName = "Test Content Page");
 	}
 
+	@description = "This is a test for LPS-110183. Can access to display page in Collection Items modal when the collection item has associated display page template."
+	@priority = "5"
+	test GoToCollectionItemDisplayPage {
+		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+			contentType = "Web Content Article",
+			displayPageTemplateEntryName = "Display Page Name",
+			groupName = "Test Site Name",
+			subType = "Basic Web Content");
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+		PageEditor.addFragment(
+			collectionName = "Content Display",
+			fragmentName = "Display Page Content");
+
+		PageEditor.clickPublish();
+
+		for (var i : list "1,2,3") {
+			JSONWebcontent.addWebContent(
+				content = "WC WebContent Content ${i}",
+				groupName = "Test Site Name",
+				title = "WC WebContent Title ${i}");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title ${i}");
+
+			WebContent.editDisplayPage(
+				pageName = "Display Page Name",
+				pageType = "Display Page Templates");
+
+			PortletEntry.publish();
+		}
+
+		JSONAssetlist.addManualAssetListEntry(
+			groupName = "Test Site Name",
+			title = "Manual Collection");
+
+		AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
+
+		AssetListsAdmin.selectAsset(
+			assetListName = "Manual Collection",
+			assetType = "Basic Web Content",
+			entryList = "WC WebContent Title 1,WC WebContent Title 2,WC WebContent Title 3",
+			itemSubtype = "Basic Web Content",
+			itemType = "Web Content Article");
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		ContentPages.addPublicCollectionPage(
+			collectionName = "Manual Collection",
+			pageName = "Content Collection Page Name",
+			tabName = "Collections");
+
+		PageEditor.clickPublish();
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		for (var i : list "1,2,3") {
+			SitePages.gotoPageMenuItem(
+				menuItem = "View Collection Items",
+				pageName = "Content Collection Page Name");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+			Page.gotoCollectionEntryEllipsisItem(
+				item = "View Display Page",
+				tableEntry = "WC WebContent Title ${i}");
+
+			AssertVisible(
+				key_content = "WC WebContent Content ${i}",
+				locator1 = "Fragment#FRAGMENT_SECTION_CONTENT");
+
+			Navigator.gotoBack();
+		}
+
+		AssertVisible(
+			key_pageName = "Content Collection Page Name",
+			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+
+		Navigator.openSiteURL(
+			pageName = "Content Collection Page Name",
+			siteName = "Test Site Name");
+
+		PagesFinder.goToFindAPage();
+
+		for (var i : list "1,2,3") {
+			PagesFinder.gotoPageEllipsisItem(
+				item = "View Collection Items",
+				pageName = "Content Collection Page Name");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+			Page.gotoCollectionEntryEllipsisItem(
+				item = "View Display Page",
+				tableEntry = "WC WebContent Title ${i}");
+
+			AssertVisible(
+				key_content = "WC WebContent Content ${i}",
+				locator1 = "Fragment#FRAGMENT_SECTION_CONTENT",
+				pageName = "Content Collection Page Name");
+
+			Navigator.gotoBack();
+		}
+	}
+
+	@description = "This is a test for LPS-110183. Can access to edition of collection items in Collection Items modal."
+	@priority = "4"
+	test GoToCollectionItemEditMode {
+		JSONWebcontent.addWebContent(
+			content = "Webcontent Content",
+			groupName = "Test Site Name",
+			title = "Webcontent Title");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title",
+			groupName = "Test Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "Document Title",
+			groupName = "Test Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		ContentPages.addPublicCollectionPage(
+			collectionName = "Recent Content",
+			pageName = "Content Collection Page Name",
+			tabName = "Collection Providers");
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		SitePages.gotoPageMenuItem(
+			menuItem = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Page.gotoCollectionEntryEllipsisItem(
+			item = "Edit Content",
+			tableEntry = "Webcontent Title");
+
+		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+
+		SitePages.gotoPageMenuItem(
+			menuItem = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Page.gotoCollectionEntryEllipsisItem(
+			item = "Edit Content",
+			tableEntry = "Blogs Entry Title");
+
+		AssertTextEquals(
+			key_text = "Title",
+			locator1 = "TextArea#ANY",
+			value1 = "Blogs Entry Title");
+
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+
+		SitePages.gotoPageMenuItem(
+			menuItem = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Page.gotoCollectionEntryEllipsisItem(
+			item = "Edit Content",
+			tableEntry = "Document Title");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Document Title");
+
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+
+		AssertVisible(
+			key_pageName = "Content Collection Page Name",
+			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+
+		Navigator.openSiteURL(
+			pageName = "Content Collection Page Name",
+			siteName = "Test Site Name");
+
+		PagesFinder.goToFindAPage();
+
+		PagesFinder.gotoPageEllipsisItem(
+			item = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Page.gotoCollectionEntryEllipsisItem(
+			item = "Edit Content",
+			tableEntry = "Webcontent Title");
+
+		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
+
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+
+		PagesFinder.gotoPageEllipsisItem(
+			item = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Page.gotoCollectionEntryEllipsisItem(
+			item = "Edit Content",
+			tableEntry = "Blogs Entry Title");
+
+		AssertTextEquals(
+			key_text = "Title",
+			locator1 = "TextArea#ANY",
+			value1 = "Blogs Entry Title");
+
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+
+		PagesFinder.gotoPageEllipsisItem(
+			item = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		Page.gotoCollectionEntryEllipsisItem(
+			item = "Edit Content",
+			tableEntry = "Document Title");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Document Title");
+
+		Click(locator1 = "Icon#ANGLE_LEFT_BACK");
+
+		PagesFinder.viewPageNameInPagesFinder(pageName = "Content Collection Page Name");
+	}
+
 	@description = "This is for LPS-110108. The hovered item shows Add Page quick action and a Kebab menu with the actions available for that item. Clicking on item title navigates to the content."
 	@priority = "5"
 	test MouseOverNonRootPageAndViewPage {
@@ -621,6 +864,144 @@ definition {
 			pageName = "Child Content Page Name");
 
 		AssertVisible(locator1 = "Icon#EDIT_PENCIL");
+	}
+
+	@description = "This is a test for LPS-110183. Can view information about collection items of collection page."
+	@priority = "5"
+	test ViewCollectionItemViaPageFinderAndPageAdmin {
+		JSONWebcontent.addWebContent(
+			content = "Webcontent Content",
+			groupName = "Test Site Name",
+			title = "Webcontent Title");
+
+		JSONBlog.addEntry(
+			entryContent = "Blogs Entry Content",
+			entryTitle = "Blogs Entry Title",
+			groupName = "Test Site Name");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentTitle = "Document Title",
+			groupName = "Test Site Name",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_1.jpg");
+
+		JSONAssetlist.addDynamicAssetListEntryWithItemType(
+			groupName = "Test Site Name",
+			itemType = "All Types",
+			title = "Dynamic Collection");
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		ContentPages.addPublicCollectionPage(
+			collectionName = "Dynamic Collection",
+			pageName = "Content Collection Page Name",
+			tabName = "Collections");
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		PagesFinder.goToFindAPage();
+
+		PagesFinder.viewPageNameInPagesFinder(pageName = "Content Collection Page Name");
+
+		PagesFinder.gotoPageEllipsisItem(
+			item = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		for (var tableHeader : list "Title,Type,Author,Modified Date,Create Date") {
+			AssertElementPresent(
+				key_tableHeader = "${tableHeader}",
+				locator1 = "LexiconTable#TABLE_HEADER");
+		}
+
+		Page.viewCollectionItem(itemName = "Document Title");
+
+		Page.viewCollectionItem(
+			itemName = "Blogs Entry Title",
+			key_rowNumber = "2");
+
+		Page.viewCollectionItem(
+			itemName = "Webcontent Title",
+			key_rowNumber = "3");
+
+		IFrame.closeFrame();
+
+		ProductMenuHelper.openProductMenu();
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		SitePages.gotoPageMenuItem(
+			menuItem = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		for (var tableHeader : list "Title,Type,Author,Modified Date,Create Date") {
+			AssertElementPresent(
+				key_tableHeader = "${tableHeader}",
+				locator1 = "LexiconTable#TABLE_HEADER");
+		}
+
+		Page.viewCollectionItem(itemName = "Document Title");
+
+		Page.viewCollectionItem(
+			itemName = "Blogs Entry Title",
+			key_rowNumber = "2");
+
+		Page.viewCollectionItem(
+			itemName = "Webcontent Title",
+			key_rowNumber = "3");
+	}
+
+	@description = "This is a test for LPS-110183. Can view more collection items use pagination in Collection Items modal."
+	@priority = "4"
+	test ViewCollectionItemWithPagination {
+		for (var entryTitle : list "5,4,3,2,1") {
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = "Test Site Name",
+				title = "Web Content Title ${entryTitle}");
+		}
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		ContentPages.addPublicCollectionPage(
+			collectionName = "Highest Rated Assets",
+			pageName = "Content Collection Page Name",
+			tabName = "Collection Providers");
+
+		PageEditor.clickPublish();
+
+		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+
+		SitePages.gotoPageMenuItem(
+			menuItem = "View Collection Items",
+			pageName = "Content Collection Page Name");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		for (var rowNumber : list "1,2,3,4,5") {
+			Page.viewCollectionItem(
+				itemName = "Web Content Title ${rowNumber}",
+				key_rowNumber = "${rowNumber}");
+		}
+
+		Pagination.changePagination(itemsPerPage = "4");
+
+		for (var rowNumber : list "1,2,3,4") {
+			Page.viewCollectionItem(
+				itemName = "Web Content Title ${rowNumber}",
+				key_rowNumber = "${rowNumber}");
+		}
+
+		AssertElementNotPresent(
+			key_rowNumber = "5",
+			locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER");
+
+		Click(locator1 = "Pagination#NEXT_LINK");
+
+		Page.viewCollectionItem(itemName = "Web Content Title 5");
 	}
 
 }

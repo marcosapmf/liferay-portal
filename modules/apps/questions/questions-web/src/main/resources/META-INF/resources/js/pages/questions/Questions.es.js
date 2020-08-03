@@ -17,7 +17,6 @@ import ClayEmptyState from '@clayui/empty-state';
 import {ClayInput, ClaySelect} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {ClayResultsBar} from '@clayui/management-toolbar';
 import React, {useContext, useEffect, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
@@ -26,10 +25,10 @@ import Alert from '../../components/Alert.es';
 import Breadcrumb from '../../components/Breadcrumb.es';
 import PaginatedList from '../../components/PaginatedList.es';
 import QuestionRow from '../../components/QuestionRow.es';
+import ResultsMessage from '../../components/ResultsMessage.es';
 import SectionSubscription from '../../components/SectionSubscription.es';
 import useQueryParams from '../../hooks/useQueryParams.es';
 import {getQuestionThreads, getSections} from '../../utils/client.es';
-import lang from '../../utils/lang.es';
 import {
 	getBasePath,
 	historyPushWithSlug,
@@ -70,6 +69,7 @@ export default withRouter(
 			params: {creatorId, sectionTitle, tag},
 		},
 	}) => {
+		const MAX_NUMBER_OF_QUESTIONS = 500;
 		const [currentTag, setCurrentTag] = useState('');
 		const [error, setError] = useState({});
 		const [filter, setFilter] = useState();
@@ -79,6 +79,7 @@ export default withRouter(
 		const [questions, setQuestions] = useState([]);
 		const [search, setSearch] = useState('');
 		const [section, setSection] = useState({});
+		const [totalCount, setTotalCount] = useState(0);
 
 		const queryParams = useQueryParams(location);
 
@@ -104,6 +105,15 @@ export default withRouter(
 		useEffect(() => {
 			setSearch(queryParams.get('search') || '');
 		}, [queryParams]);
+
+		useEffect(() => {
+			setTotalCount(
+				(filter === 'latest-edited' || !!search) &&
+					questions.totalCount > MAX_NUMBER_OF_QUESTIONS
+					? MAX_NUMBER_OF_QUESTIONS
+					: questions.totalCount
+			);
+		}, [filter, questions.totalCount, search]);
 
 		useEffect(() => {
 			if (section.id == null && !currentTag) {
@@ -214,38 +224,13 @@ export default withRouter(
 						</div>
 
 						{!!search && !loading && (
-							<div className="c-mt-5 c-mx-auto c-px-0 col-xl-12">
-								<ClayResultsBar className="c-mt-5">
-									<ClayResultsBar.Item expand>
-										<span className="component-text text-truncate-inline">
-											<span className="text-truncate">
-												{lang.sub(
-													Liferay.Language.get(
-														'x-results-for-x'
-													),
-													[
-														questions.totalCount,
-														slugToText(search),
-													]
-												)}
-											</span>
-										</span>
-									</ClayResultsBar.Item>
-									<ClayResultsBar.Item>
-										<ClayButton
-											className="component-link tbar-link"
-											displayType="unstyled"
-											onClick={() => {
-												historyPushParser(
-													`/questions/${sectionTitle}`
-												);
-											}}
-										>
-											{Liferay.Language.get('clear')}
-										</ClayButton>
-									</ClayResultsBar.Item>
-								</ClayResultsBar>
-							</div>
+							<ResultsMessage
+								maxNumberOfSearchResults={
+									MAX_NUMBER_OF_QUESTIONS
+								}
+								searchCriteria={search}
+								totalCount={totalCount}
+							/>
 						)}
 
 						<div className="c-mx-auto c-px-0 col-xl-10">
@@ -260,15 +245,15 @@ export default withRouter(
 								}
 								data={questions}
 								emptyState={
-									<ClayEmptyState
-										description="There are no questions inside this topic, be the first to ask something!"
-										imgSrc={
-											context.includeContextPath +
-											'/assets/empty_questions_list.png'
-										}
-										title="This topic is empty."
-									>
-										{sectionTitle && (
+									!search && !filter ? (
+										<ClayEmptyState
+											description="There are no questions inside this topic, be the first to ask something!"
+											imgSrc={
+												context.includeContextPath +
+												'/assets/empty_questions_list.png'
+											}
+											title="This topic is empty."
+										>
 											<ClayButton
 												displayType="primary"
 												onClick={navigateToNewQuestion}
@@ -277,10 +262,17 @@ export default withRouter(
 													'ask-question'
 												)}
 											</ClayButton>
-										)}
-									</ClayEmptyState>
+										</ClayEmptyState>
+									) : (
+										<ClayEmptyState
+											title={Liferay.Language.get(
+												'there-are-no-results'
+											)}
+										/>
+									)
 								}
 								loading={loading}
+								totalCount={totalCount}
 							>
 								{(question) => (
 									<QuestionRow
@@ -314,120 +306,126 @@ export default withRouter(
 							)}
 					</div>
 
-					<div className="c-mt-3 c-mt-xl-0 d-flex flex-column flex-grow-1 flex-md-row">
-						<ClayInput.Group className="justify-content-xl-end">
-							<ClayInput.GroupItem shrink>
-								<label
-									className="align-items-center d-inline-flex m-0 text-secondary"
-									htmlFor="questionsFilter"
-								>
-									{Liferay.Language.get('filter-by')}
-								</label>
-							</ClayInput.GroupItem>
+					{((questions && questions.totalCount > 0) ||
+						search ||
+						filter) && (
+						<div className="c-mt-3 c-mt-xl-0 d-flex flex-column flex-grow-1 flex-md-row">
+							<ClayInput.Group className="justify-content-xl-end">
+								<ClayInput.GroupItem shrink>
+									<label
+										className="align-items-center d-inline-flex m-0 text-secondary"
+										htmlFor="questionsFilter"
+									>
+										{Liferay.Language.get('filter-by')}
+									</label>
+								</ClayInput.GroupItem>
 
-							<ClayInput.GroupItem shrink>
-								<ClaySelect
-									className="bg-transparent border-0"
-									disabled={loading}
-									id="questionsFilter"
-									onChange={(event) => {
-										setLoading(true);
-										setFilter(event.target.value);
-									}}
-									value={filter}
-								>
-									{filterOptions.map((option) => (
-										<ClaySelect.Option
-											key={option.value}
-											label={option.label}
-											value={option.value}
-										/>
-									))}
-								</ClaySelect>
-							</ClayInput.GroupItem>
-						</ClayInput.Group>
-
-						<ClayInput.Group className="c-mt-3 c-mt-md-0">
-							<ClayInput.GroupItem>
-								<ClayInput
-									className="bg-transparent form-control input-group-inset input-group-inset-after"
-									defaultValue={
-										(search && slugToText(search)) || ''
-									}
-									disabled={
-										!search &&
-										questions &&
-										questions.items &&
-										!questions.items.length
-									}
-									onChange={(event) =>
-										debounceCallback(event.target.value)
-									}
-									placeholder={Liferay.Language.get('search')}
-									type="text"
-								/>
-
-								<ClayInput.GroupInsetItem
-									after
-									className="bg-transparent"
-									tag="span"
-								>
-									{loading && (
-										<button
-											className="btn btn-monospaced btn-unstyled"
-											type="submit"
-										>
-											<ClayLoadingIndicator
-												className="mb-0 mt-0"
-												small
+								<ClayInput.GroupItem shrink>
+									<ClaySelect
+										className="bg-transparent border-0"
+										disabled={loading}
+										id="questionsFilter"
+										onChange={(event) => {
+											setLoading(true);
+											setFilter(event.target.value);
+										}}
+										value={filter}
+									>
+										{filterOptions.map((option) => (
+											<ClaySelect.Option
+												key={option.value}
+												label={option.label}
+												value={option.value}
 											/>
-										</button>
-									)}
-									{!loading && (
-										<ClayButtonWithIcon
-											displayType="unstyled"
-											symbol="search"
-											type="submit"
-										/>
-									)}
-								</ClayInput.GroupInsetItem>
-							</ClayInput.GroupItem>
+										))}
+									</ClaySelect>
+								</ClayInput.GroupItem>
+							</ClayInput.Group>
 
-							{sectionTitle &&
-								questions &&
-								questions.totalCount > 0 &&
-								(context.redirectToLogin ||
-									(section &&
-										section.actions &&
-										section.actions['add-thread'])) && (
-									<ClayInput.GroupItem shrink>
-										<ClayButton
-											className="c-ml-3 d-none d-sm-block text-nowrap"
-											displayType="primary"
-											onClick={navigateToNewQuestion}
-										>
-											{Liferay.Language.get(
-												'ask-question'
-											)}
-										</ClayButton>
+							<ClayInput.Group className="c-mt-3 c-mt-md-0">
+								<ClayInput.GroupItem>
+									<ClayInput
+										className="bg-transparent form-control input-group-inset input-group-inset-after"
+										defaultValue={
+											(search && slugToText(search)) || ''
+										}
+										disabled={
+											!search &&
+											questions &&
+											questions.items &&
+											!questions.items.length
+										}
+										onChange={(event) =>
+											debounceCallback(event.target.value)
+										}
+										placeholder={Liferay.Language.get(
+											'search'
+										)}
+										type="text"
+									/>
 
-										<ClayButton
-											className="btn-monospaced d-block d-sm-none position-fixed questions-button shadow"
-											displayType="primary"
-											onClick={navigateToNewQuestion}
-										>
-											<ClayIcon symbol="pencil" />
+									<ClayInput.GroupInsetItem
+										after
+										className="bg-transparent"
+										tag="span"
+									>
+										{loading && (
+											<button
+												className="btn btn-monospaced btn-unstyled"
+												type="submit"
+											>
+												<ClayLoadingIndicator
+													className="mb-0 mt-0"
+													small
+												/>
+											</button>
+										)}
+										{!loading && (
+											<ClayButtonWithIcon
+												displayType="unstyled"
+												symbol="search"
+												type="submit"
+											/>
+										)}
+									</ClayInput.GroupInsetItem>
+								</ClayInput.GroupItem>
 
-											<span className="sr-only">
+								{sectionTitle &&
+									questions &&
+									questions.totalCount > 0 &&
+									(context.redirectToLogin ||
+										(section &&
+											section.actions &&
+											section.actions['add-thread'])) && (
+										<ClayInput.GroupItem shrink>
+											<ClayButton
+												className="c-ml-3 d-none d-sm-block text-nowrap"
+												displayType="primary"
+												onClick={navigateToNewQuestion}
+											>
 												{Liferay.Language.get(
 													'ask-question'
 												)}
-											</span>
-										</ClayButton>
-									</ClayInput.GroupItem>
-								)}
-						</ClayInput.Group>
-					</div>
+											</ClayButton>
+
+											<ClayButton
+												className="btn-monospaced d-block d-sm-none position-fixed questions-button shadow"
+												displayType="primary"
+												onClick={navigateToNewQuestion}
+											>
+												<ClayIcon symbol="pencil" />
+
+												<span className="sr-only">
+													{Liferay.Language.get(
+														'ask-question'
+													)}
+												</span>
+											</ClayButton>
+										</ClayInput.GroupItem>
+									)}
+							</ClayInput.Group>
+						</div>
+					)}
 				</div>
 			);
 		}

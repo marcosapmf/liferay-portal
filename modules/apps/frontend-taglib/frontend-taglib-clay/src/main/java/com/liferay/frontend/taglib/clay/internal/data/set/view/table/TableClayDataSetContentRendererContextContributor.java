@@ -42,12 +42,13 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marco Leo
  */
 @Component(
-	property = "clay.data.set.content.renderer.name=" + ClayDataSetConstants.CONTENT_RENDERER_TABLE,
+	property = "clay.data.set.content.renderer.name=" + ClayDataSetConstants.TABLE,
 	service = ClayDataSetContentRendererContextContributor.class
 )
 public class TableClayDataSetContentRendererContextContributor
 	implements ClayDataSetContentRendererContextContributor {
 
+	@Override
 	public Map<String, Object> getContentRendererContext(
 		ClayDataSetDisplayView clayDataSetDisplayView, Locale locale) {
 

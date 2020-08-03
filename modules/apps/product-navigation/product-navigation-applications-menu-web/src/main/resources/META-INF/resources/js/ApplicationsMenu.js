@@ -19,32 +19,93 @@ import classNames from 'classnames';
 
 import '../css/ApplicationsMenu.scss';
 
+import ClayLabel from '@clayui/label';
 import ClaySticker from '@clayui/sticker';
 import ClayTabs from '@clayui/tabs';
 import {fetch} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useRef, useState} from 'react';
 
-const Sites = ({label, sites}) => {
+const Site = ({current, label, logoURL, url}) => {
+	return (
+		<li className="c-mt-3">
+			<a className="applications-menu-nav-link" href={url}>
+				<ClayLayout.ContentRow verticalAlign="center">
+					<ClayLayout.ContentCol>
+						<ClaySticker size="sm">
+							<img alt="" height="20px" src={logoURL} />
+						</ClaySticker>
+					</ClayLayout.ContentCol>
+
+					<ClayLayout.ContentCol className="applications-menu-shrink c-ml-2">
+						<span className="text-truncate">{label}</span>
+					</ClayLayout.ContentCol>
+
+					{current && (
+						<ClayLayout.ContentCol className="c-ml-2">
+							<ClayLabel displayType="info">
+								{Liferay.Language.get('current')}
+							</ClayLabel>
+						</ClayLayout.ContentCol>
+					)}
+				</ClayLayout.ContentRow>
+			</a>
+		</li>
+	);
+};
+
+const SitesPanel = ({mySites, portletNamespace, recentSites, viewAllURL}) => {
 	return (
 		<>
-			<li className="applications-menu-nav-subheader">{label}</li>
+			{recentSites?.length > 0 &&
+				recentSites.map(({current, key, label, logoURL, url}) => (
+					<Site
+						current={current}
+						key={key}
+						label={label}
+						logoURL={logoURL}
+						url={url}
+					/>
+				))}
 
-			{sites.map(({key, label, logoURL, url}) => (
-				<li className="applications-menu-nav-item" key={key}>
-					<a className="applications-menu-nav-link" href={url}>
-						<ClaySticker
-							className="inline-item-before"
-							inline={true}
-							size="sm"
-						>
-							<img className="sticker-img" src={logoURL} />
-						</ClaySticker>
+			{recentSites?.length > 0 && mySites?.length > 0 && (
+				<li className="applications-menu-nav-divider c-mt-3"></li>
+			)}
 
-						{label}
-					</a>
+			{mySites?.length > 0 &&
+				mySites.map(({current, key, label, logoURL, url}) => (
+					<Site
+						current={current}
+						key={key}
+						label={label}
+						logoURL={logoURL}
+						url={url}
+					/>
+				))}
+
+			{viewAllURL && (
+				<li className="c-mt-3">
+					<ClayButton
+						className="applications-menu-btn btn-unstyled c-mb-0 c-mt-3"
+						displayType="link"
+						onClick={() => {
+							Liferay.Util.openModal({
+								id: `${portletNamespace}selectSite`,
+								onSelect: (selectedItem) => {
+									Liferay.Util.navigate(selectedItem.url);
+								},
+								selectEventName: `${portletNamespace}selectSite`,
+								title: Liferay.Language.get(
+									'select-site-or-asset-library'
+								),
+								url: viewAllURL,
+							});
+						}}
+					>
+						{Liferay.Language.get('view-all')}
+					</ClayButton>
 				</li>
-			))}
+			)}
 		</>
 	);
 };
@@ -73,170 +134,199 @@ const AppsPanel = ({
 	const [activeTab, setActiveTab] = useState(index);
 
 	return (
-		<>
-			<div className="border-bottom applications-menu-header">
+		<div className="applications-menu-wrapper">
+			<div className="applications-menu-header">
 				<ClayLayout.ContainerFluid>
-					<ClayLayout.ContentRow verticalAlign="center">
-						<ClayLayout.ContentCol>
-							<ClaySticker>
-								<img alt="" height="32px" src={logoURL} />
-							</ClaySticker>
-						</ClayLayout.ContentCol>
-						<ClayLayout.ContentCol className="c-mr-3 c-pl-1 c-pr-3 control-menu-level-1-heading">
-							{companyName}
-						</ClayLayout.ContentCol>
-						<ClayLayout.ContentCol
-							className="applications-menu-tabs"
-							expand
-						>
-							<ClayTabs modern>
-								{categories.map(({key, label}, index) => (
-									<ClayTabs.Item
-										active={activeTab === index}
-										id={`${portletNamespace}tab_${index}`}
-										key={key}
-										onClick={() => setActiveTab(index)}
-									>
-										<span className="c-inner" tabIndex="-1">
-											{label}
-										</span>
-									</ClayTabs.Item>
-								))}
-							</ClayTabs>
-						</ClayLayout.ContentCol>
+					<ClayLayout.Row>
+						<ClayLayout.Col>
+							<ClayLayout.ContentRow verticalAlign="center">
+								<ClayLayout.ContentCol expand>
+									<ClayTabs modern>
+										{categories.map(
+											({key, label}, index) => (
+												<ClayTabs.Item
+													active={activeTab === index}
+													id={`${portletNamespace}tab_${index}`}
+													key={key}
+													onClick={() =>
+														setActiveTab(index)
+													}
+												>
+													<span
+														className="c-inner"
+														tabIndex="-1"
+													>
+														{label}
+													</span>
+												</ClayTabs.Item>
+											)
+										)}
+									</ClayTabs>
+								</ClayLayout.ContentCol>
 
-						<ClayLayout.ContentCol>
-							<ClayButtonWithIcon
-								className="text-secondary"
-								displayType="unstyled"
-								onClick={handleCloseButtonClick}
-								small
-								symbol="times"
-								title={Liferay.Language.get('close')}
-							/>
-						</ClayLayout.ContentCol>
-					</ClayLayout.ContentRow>
+								<ClayLayout.ContentCol>
+									<ClayButtonWithIcon
+										displayType="unstyled"
+										onClick={handleCloseButtonClick}
+										small
+										symbol="times"
+										title={Liferay.Language.get('close')}
+									/>
+								</ClayLayout.ContentCol>
+							</ClayLayout.ContentRow>
+						</ClayLayout.Col>
+					</ClayLayout.Row>
 				</ClayLayout.ContainerFluid>
 			</div>
 
-			<ClayTabs.Content activeIndex={activeTab}>
-				{categories.map(({childCategories}, index) => (
-					<ClayTabs.TabPane
-						aria-labelledby={`${portletNamespace}tab_${index}`}
-						key={`tabPane-${index}`}
-					>
-						<ClayLayout.Row className="applications-menu-nav">
-							<ClayLayout.Col className="c-p-0" md>
-								<div className="applications-menu-nav-columns">
-									{childCategories.map(
-										({key, label, panelApps}) => (
-											<ClayLayout.Col key={key} md>
-												<ul className="list-unstyled">
-													<li className="applications-menu-nav-header">
-														{label}
-													</li>
-
-													{panelApps.map(
-														({
-															label,
-															portletId,
-															url,
-														}) => (
-															<li
-																className="applications-menu-nav-item"
-																key={portletId}
-															>
-																<a
-																	className={classNames(
-																		'component-link applications-menu-nav-link',
-																		{
-																			active:
-																				portletId ===
-																				selectedPortletId,
-																		}
-																	)}
-																	href={url}
-																>
-																	<span
-																		className="c-inner"
-																		tabIndex="-1"
-																	>
-																		{label}
-																	</span>
-																</a>
+			<div className="applications-menu-bg applications-menu-border-top applications-menu-content">
+				<ClayLayout.ContainerFluid>
+					<ClayLayout.Row>
+						<ClayLayout.Col lg="9" md="8">
+							<ClayTabs.Content activeIndex={activeTab}>
+								{categories.map(({childCategories}, index) => (
+									<ClayTabs.TabPane
+										aria-labelledby={`${portletNamespace}tab_${index}`}
+										key={`tabPane-${index}`}
+									>
+										<div className="applications-menu-nav-columns c-mt-md-3 c-my-2">
+											{childCategories.map(
+												({key, label, panelApps}) => (
+													<ClayLayout.Col
+														key={key}
+														md
+													>
+														<ul className="list-unstyled">
+															<li className="c-my-3">
+																<h3 className="applications-menu-nav-header">
+																	{label}
+																</h3>
 															</li>
-														)
-													)}
-												</ul>
-											</ClayLayout.Col>
-										)
-									)}
-								</div>
-							</ClayLayout.Col>
 
-							<div className="applications-menu-sites">
-								<ul className="bg-light list-unstyled rounded">
-									<li className="applications-menu-nav-header">
-										{Liferay.Language.get('sites')}
-									</li>
+															{panelApps.map(
+																({
+																	label,
+																	portletId,
+																	url,
+																}) => (
+																	<li
+																		className="c-mt-2"
+																		key={
+																			portletId
+																		}
+																	>
+																		<a
+																			className={classNames(
+																				'component-link applications-menu-nav-link',
+																				{
+																					active:
+																						portletId ===
+																						selectedPortletId,
+																				}
+																			)}
+																			href={
+																				url
+																			}
+																		>
+																			<span
+																				className="c-inner"
+																				tabIndex="-1"
+																			>
+																				{
+																					label
+																				}
+																			</span>
+																		</a>
+																	</li>
+																)
+															)}
+														</ul>
+													</ClayLayout.Col>
+												)
+											)}
+										</div>
+									</ClayTabs.TabPane>
+								))}
+							</ClayTabs.Content>
+						</ClayLayout.Col>
 
-									{sites.recentSites &&
-										sites.recentSites.length > 0 && (
-											<Sites
-												label={Liferay.Language.get(
-													'recently-visited'
-												)}
-												sites={sites.recentSites}
-											/>
-										)}
+						<ClayLayout.Col
+							className="c-pl-md-2 c-px-0"
+							lg="3"
+							md="4"
+						>
+							<div className="applications-menu-sites c-p-3 c-px-md-4">
+								<h2 className="applications-menu-sites-label c-mt-2 c-mt-md-0">
+									{Liferay.Language.get('sites')}
+								</h2>
 
-									{sites.mySites &&
-										sites.mySites.length > 0 && (
-											<Sites
-												label={Liferay.Language.get(
-													'my-sites'
-												)}
-												sites={sites.mySites}
-											/>
-										)}
-
-									{sites.viewAllURL && (
-										<li>
-											<ClayButton
-												className="c-pl-0"
-												displayType="link"
-												onClick={() => {
-													Liferay.Util.openModal({
-														id: `${portletNamespace}selectSite`,
-														onSelect: (
-															selectedItem
-														) => {
-															Liferay.Util.navigate(
-																selectedItem.url
-															);
-														},
-														selectEventName: `${portletNamespace}selectSite`,
-														title: Liferay.Language.get(
-															'select-site-or-asset-library'
-														),
-														url: sites.viewAllURL,
-													});
-												}}
-												small
-											>
-												{Liferay.Language.get(
-													'view-all'
-												)}
-											</ClayButton>
-										</li>
+								<ul className="c-mb-2 list-unstyled">
+									{sites && (
+										<SitesPanel
+											mySites={sites.mySites}
+											portletNamespace={portletNamespace}
+											recentSites={sites.recentSites}
+											viewAllURL={sites.viewAllURL}
+										/>
 									)}
 								</ul>
 							</div>
-						</ClayLayout.Row>
-					</ClayTabs.TabPane>
-				))}
-			</ClayTabs.Content>
-		</>
+						</ClayLayout.Col>
+					</ClayLayout.Row>
+				</ClayLayout.ContainerFluid>
+			</div>
+
+			<div className="applications-menu-bg applications-menu-footer">
+				<ClayLayout.ContainerFluid>
+					<ClayLayout.Row>
+						<ClayLayout.Col lg="9" md="8">
+							<ClayLayout.ContentRow
+								className="applications-menu-border-top c-py-3"
+								verticalAlign="center"
+							>
+								<ClayLayout.ContentCol expand>
+									<ClayLayout.ContentRow verticalAlign="center">
+										<ClayLayout.ContentCol>
+											<ClaySticker>
+												<img
+													alt=""
+													height="32px"
+													src={logoURL}
+												/>
+											</ClaySticker>
+										</ClayLayout.ContentCol>
+
+										<ClayLayout.ContentCol className="c-ml-2">
+											<h1 className="applications-menu-company c-mb-0">
+												{companyName}
+											</h1>
+										</ClayLayout.ContentCol>
+									</ClayLayout.ContentRow>
+								</ClayLayout.ContentCol>
+
+								<ClayLayout.ContentCol expand>
+									<p className="applications-menu-powered c-mb-0">
+										Powered by
+									</p>
+
+									<p className="applications-menu-copyright c-mb-0 c-mt-n1">
+										Liferay DXP
+									</p>
+								</ClayLayout.ContentCol>
+							</ClayLayout.ContentRow>
+						</ClayLayout.Col>
+
+						<ClayLayout.Col
+							className="c-pl-md-2 c-px-0 d-md-block d-none"
+							lg="3"
+							md="4"
+						>
+							<div className="applications-menu-sites"></div>
+						</ClayLayout.Col>
+					</ClayLayout.Row>
+				</ClayLayout.ContainerFluid>
+			</div>
+		</div>
 	);
 };
 

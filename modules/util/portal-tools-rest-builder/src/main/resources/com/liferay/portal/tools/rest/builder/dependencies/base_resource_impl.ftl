@@ -311,7 +311,9 @@ public abstract class Base${schemaName}ResourceImpl
 			<#if getBatchJavaMethodSignature??>
 				return get${getBatchJavaMethodSignature.parentSchemaName!}${schemaName}sPage(
 					<#list getBatchJavaMethodSignature.javaMethodParameters as javaMethodParameter>
-						<#if stringUtil.equals(javaMethodParameter.parameterName, "filter") || stringUtil.equals(javaMethodParameter.parameterName, "pagination") || stringUtil.equals(javaMethodParameter.parameterName, "search") || stringUtil.equals(javaMethodParameter.parameterName, "sorts") || stringUtil.equals(javaMethodParameter.parameterName, "user")>
+						<#if stringUtil.equals(javaMethodParameter.parameterName, "aggregation")>
+							null
+						<#elseif stringUtil.equals(javaMethodParameter.parameterName, "filter") || stringUtil.equals(javaMethodParameter.parameterName, "pagination") || stringUtil.equals(javaMethodParameter.parameterName, "search") || stringUtil.equals(javaMethodParameter.parameterName, "sorts") || stringUtil.equals(javaMethodParameter.parameterName, "user")>
 							${javaMethodParameter.parameterName}
 						<#else>
 							<#if javaMethodParameter.parameterType?contains("java.lang.Boolean")>

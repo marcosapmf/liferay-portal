@@ -65,7 +65,7 @@ public interface SubscriptionLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SubscriptionLocalServiceUtil} to access the subscription local service. Add custom service methods to <code>com.liferay.subscription.service.impl.SubscriptionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.subscription.service.impl.SubscriptionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the subscription local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SubscriptionLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -380,11 +380,11 @@ public interface SubscriptionLocalService
 		long companyId, String className, long classPK);
 
 	/**
-	 * Returns all the subscriptions to the class name.
-	 *
 	 * @param className the entity's class name
 	 * @return the subscriptions to the class name
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Subscription> getSubscriptions(String className);
 
@@ -397,11 +397,11 @@ public interface SubscriptionLocalService
 	public int getSubscriptionsCount();
 
 	/**
-	 * Returns the number of the subscriptions to the class name.
-	 *
 	 * @param className the entity's class name
 	 * @return the subscriptions to the class name
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getSubscriptionsCount(String className);
 

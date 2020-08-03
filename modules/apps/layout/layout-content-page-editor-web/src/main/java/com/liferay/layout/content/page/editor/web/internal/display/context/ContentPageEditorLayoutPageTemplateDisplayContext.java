@@ -21,7 +21,7 @@ import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceTracker;
-import com.liferay.info.item.provider.InfoItemClassDetailsProvider;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.item.selector.ItemSelector;
@@ -181,17 +181,17 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 			return null;
 		}
 
-		InfoItemClassDetailsProvider<?> infoItemClassDetailsProvider =
+		InfoItemDetailsProvider<?> infoItemDetailsProvider =
 			infoItemServiceTracker.getFirstInfoItemService(
-				InfoItemClassDetailsProvider.class,
+				InfoItemDetailsProvider.class,
 				layoutPageTemplateEntry.getClassName());
 
-		if (infoItemClassDetailsProvider == null) {
+		if (infoItemDetailsProvider == null) {
 			return null;
 		}
 
 		InfoItemClassDetails infoItemClassDetails =
-			infoItemClassDetailsProvider.getInfoItemClassDetails();
+			infoItemDetailsProvider.getInfoItemClassDetails();
 
 		return infoItemClassDetails.getLabel(themeDisplay.getLocale());
 	}
@@ -207,8 +207,16 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		}
 
 		return HashMapBuilder.<String, Object>put(
+			"mappingDescription",
+			LanguageUtil.get(
+				httpServletRequest,
+				"content-source-selected-for-this-display-page-template")
+		).put(
 			"type",
 			HashMapBuilder.<String, Object>put(
+				"groupTypeTitle",
+				LanguageUtil.get(httpServletRequest, "content-type")
+			).put(
 				"id", layoutPageTemplateEntry.getClassNameId()
 			).put(
 				"label", _getMappingTypeLabel()
@@ -223,6 +231,9 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 				}
 
 				return HashMapBuilder.<String, Object>put(
+					"groupSubtypeTitle",
+					LanguageUtil.get(httpServletRequest, "subtype")
+				).put(
 					"id", layoutPageTemplateEntry.getClassTypeId()
 				).put(
 					"label", subtypeLabel

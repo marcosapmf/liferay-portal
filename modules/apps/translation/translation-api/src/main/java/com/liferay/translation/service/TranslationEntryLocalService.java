@@ -40,6 +40,7 @@ import com.liferay.translation.model.TranslationEntry;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -64,7 +65,7 @@ public interface TranslationEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link TranslationEntryLocalServiceUtil} to access the translation entry local service. Add custom service methods to <code>com.liferay.translation.service.impl.TranslationEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.translation.service.impl.TranslationEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the translation entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link TranslationEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public TranslationEntry addOrUpdateTranslationEntry(
 			long groupId, String languageId,
@@ -74,8 +75,10 @@ public interface TranslationEntryLocalService
 		throws PortalException;
 
 	public TranslationEntry addOrUpdateTranslationEntry(
-		long groupId, String className, long classPK, String content,
-		String contentType, String languageId, ServiceContext serviceContext);
+			long groupId, String className, long classPK, String content,
+			String contentType, String languageId,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * Adds the translation entry to the database. Also notifies the appropriate model listeners.
@@ -329,6 +332,12 @@ public interface TranslationEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public TranslationEntry getTranslationEntryByUuidAndGroupId(
 			String uuid, long groupId)
+		throws PortalException;
+
+	public TranslationEntry updateStatus(
+			long userId, long translationEntryId, int status,
+			ServiceContext serviceContext,
+			Map<String, Serializable> workflowContext)
 		throws PortalException;
 
 	/**

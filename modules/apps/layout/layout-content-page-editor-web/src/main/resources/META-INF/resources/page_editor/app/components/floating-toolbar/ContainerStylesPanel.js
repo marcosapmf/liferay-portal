@@ -69,7 +69,7 @@ export const ContainerStylesPanel = ({item}) => {
 
 	const Section = ({children, label}) => (
 		<>
-			<div className="align-items-center d-flex justify-content-between page-editor__floating-toolbar__label pt-3">
+			<div className="align-items-center d-flex justify-content-between page-editor__container-styles-panel__label pt-3">
 				<p className="mb-3 text-uppercase">{label}</p>
 			</div>
 			{children}
@@ -82,10 +82,6 @@ export const ContainerStylesPanel = ({item}) => {
 				<h1 className="sr-only">
 					{Liferay.Language.get('container-styles')}
 				</h1>
-
-				<div className="page-editor__floating-toolbar__panel-header">
-					<p>{Liferay.Language.get('styles')}</p>
-				</div>
 
 				{config.containerItemFlexEnabled && (
 					<SelectField

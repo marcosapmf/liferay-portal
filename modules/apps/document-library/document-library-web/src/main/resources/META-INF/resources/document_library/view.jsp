@@ -171,7 +171,7 @@ String navigation = ParamUtil.getString(request, "navigation");
 			uploadable = false;
 		}
 		else {
-			List<AssetVocabulary> assetVocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(scopeGroupId);
+			List<AssetVocabulary> assetVocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId));
 
 			if (!assetVocabularies.isEmpty()) {
 				long classNameId = ClassNameLocalServiceUtil.getClassNameId(DLFileEntryConstants.getClassName());

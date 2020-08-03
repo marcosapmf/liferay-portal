@@ -267,6 +267,8 @@ definition {
 			key_position = "5",
 			locator1 = "Fragment#PAGE_EDITOR_NO_FRAGMENTS_MESSAGE");
 
+		PageEditor.gotoTab(tabName = "Fragments and Widgets");
+
 		Navigator.gotoNavTab(navTab = "Widgets");
 
 		DragAndDrop.javaScriptDragAndDropToObject(
@@ -436,7 +438,7 @@ definition {
 			collectionName = "Basic Components",
 			fragmentName = "Tabs");
 
-		AssertVisible(
+		AssertElementPresent(
 			key_fragmentName = "Tabs",
 			locator1 = "Fragment#FRAGMENT_HEADER");
 
@@ -783,6 +785,8 @@ definition {
 		}
 
 		task ("Add a Paragraph below Heading in Collection Display and Map View Count of collection items to editable field") {
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
 			DragAndDrop.javaScriptDragAndDropToBottom(
 				key_collectionName = "Basic Components",
 				key_fragmentName = "Paragraph",
@@ -1279,7 +1283,8 @@ definition {
 			AssetListsAdmin.selectAsset(
 				assetListName = "Manual Collection",
 				assetName = "Web Content Title",
-				assetType = "Basic Web Content");
+				assetType = "Basic Web Content",
+				itemType = "All Types");
 
 			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
 
@@ -1822,7 +1827,12 @@ definition {
 				key_rowPosition = "1",
 				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
 
-			Click(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_EDIT_BUTTON");
+			DoubleClick(
+				key_colPosition = "1",
+				key_element = "//div[contains(@class,'page-editor__topper') and contains(.,'Heading')]//*[contains(@data-lfr-editable-id,'element-text')]",
+				key_fragmentName = "Collection Display",
+				key_rowPosition = "1",
+				locator1 = "PageEditor#COLLECTION_CELL_NESTED_ELEMENT");
 
 			Type(
 				id = "element-text",
@@ -1940,7 +1950,8 @@ definition {
 			AssetListsAdmin.selectAsset(
 				assetListName = "Manual Collection",
 				assetType = "Blogs Entry",
-				entryList = "First Blogs Entry,Second Blogs Entry,Third Blogs Entry");
+				entryList = "First Blogs Entry,Second Blogs Entry,Third Blogs Entry",
+				itemType = "Blogs Entry");
 		}
 
 		task ("Add a Collection Display to page") {
@@ -2244,9 +2255,7 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Content Display");
 
-		Click.clickNoMouseOver(
-			key_elementType = "Fragment",
-			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
+		PageEditor.gotoTab(tabName = "Page Structure");
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Template",
@@ -2318,9 +2327,7 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Content Display");
 
-		Click.clickNoMouseOver(
-			key_elementType = "Fragment",
-			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
+		PageEditor.gotoTab(tabName = "Page Structure");
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Template",
@@ -2648,9 +2655,7 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Content Display");
 
-		Click.clickNoMouseOver(
-			key_elementType = "Fragment",
-			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
+		PageEditor.gotoTab(tabName = "Page Structure");
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Template",
@@ -2764,9 +2769,7 @@ definition {
 
 		PageEditor.clickConfigurableField(fragmentName = "Content Display");
 
-		Click.clickNoMouseOver(
-			key_elementType = "Fragment",
-			locator1 = "PageEditor#FRAGMENT_BODY_TOOLBAR_CONFIGURATION_BUTTON");
+		PageEditor.gotoTab(tabName = "Page Structure");
 
 		AssertSelectedLabel(
 			key_fieldLabel = "Template",

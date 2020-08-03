@@ -15,7 +15,9 @@
 package com.liferay.source.formatter.checkstyle.checks;
 
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.tools.ToolsUtil;
 
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.FullIdent;
@@ -23,7 +25,6 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author Hugo Huijser
@@ -134,6 +135,10 @@ public class VariableDeclarationAsUsedCheck extends BaseCheck {
 
 			DetailAST parentDetailAST = identDetailAST.getParent();
 
+			if (parentDetailAST.getType() == TokenTypes.LNOT) {
+				parentDetailAST = parentDetailAST.getParent();
+			}
+
 			if (parentDetailAST.getType() != TokenTypes.EXPR) {
 				return;
 			}
@@ -146,7 +151,7 @@ public class VariableDeclarationAsUsedCheck extends BaseCheck {
 			return;
 		}
 
-		if (_isBuildMethodCall(assignMethodCallDetailAST)) {
+		if (_hasChainStyle(assignMethodCallDetailAST, "build", "map", "put")) {
 			if (_isInsideStatementClause(identDetailAST)) {
 				return;
 			}
@@ -201,7 +206,7 @@ public class VariableDeclarationAsUsedCheck extends BaseCheck {
 		}
 
 		log(
-			variableDefinitionDetailAST, _MSG_VARIABLE_DECLARTION_NOT_NEEDED,
+			variableDefinitionDetailAST, _MSG_VARIABLE_DECLARATION_NOT_NEEDED,
 			variableName, identDetailAST.getLineNo());
 	}
 
@@ -426,45 +431,38 @@ public class VariableDeclarationAsUsedCheck extends BaseCheck {
 		return lastBranchingStatementDetailAST;
 	}
 
-	private boolean _isBuildMethodCall(DetailAST methodCallDetailAST) {
-		DetailAST firstChildDetailAST = methodCallDetailAST.getFirstChild();
+	private boolean _hasChainStyle(
+		DetailAST methodCallDetailAST, String... methodNames) {
 
-		if (firstChildDetailAST.getType() != TokenTypes.DOT) {
+		int startLineNumber = getStartLineNumber(methodCallDetailAST);
+
+		String line = getLine(startLineNumber - 1);
+
+		if (!line.endsWith("(") || (ToolsUtil.getLevel(line) != 1)) {
 			return false;
 		}
 
-		DetailAST lastChildDetailAST = firstChildDetailAST.getLastChild();
-
-		if ((lastChildDetailAST.getType() != TokenTypes.IDENT) ||
-			!Objects.equals(lastChildDetailAST.getText(), "build")) {
-
-			return false;
-		}
-
-		while (true) {
-			firstChildDetailAST = firstChildDetailAST.getFirstChild();
-
-			if (firstChildDetailAST == null) {
-				return false;
-			}
-
-			if ((firstChildDetailAST.getType() == TokenTypes.DOT) ||
-				(firstChildDetailAST.getType() == TokenTypes.METHOD_CALL)) {
-
+		for (String methodName : methodNames) {
+			if (!line.endsWith("." + methodName + "(")) {
 				continue;
 			}
 
-			FullIdent fullIdent = FullIdent.createFullIdent(
-				firstChildDetailAST.getParent());
+			int level = 1;
 
-			String methodName = fullIdent.getText();
+			for (int i = startLineNumber + 1;
+				 i <= getEndLineNumber(methodCallDetailAST); i++) {
 
-			if (methodName.matches(".*Builder\\..*")) {
-				return true;
+				line = StringUtil.trim(getLine(i - 1));
+
+				if (line.startsWith(").") && (level == 1)) {
+					return true;
+				}
+
+				level += ToolsUtil.getLevel(line);
 			}
-
-			return false;
 		}
+
+		return false;
 	}
 
 	private boolean _isInsideStatementClause(DetailAST detailAST) {
@@ -489,20 +487,18 @@ public class VariableDeclarationAsUsedCheck extends BaseCheck {
 				return false;
 			}
 
-			if ((grandParentDetailAST.getType() == TokenTypes.LITERAL_IF) ||
-				(grandParentDetailAST.getType() == TokenTypes.LITERAL_WHILE)) {
+			if (grandParentDetailAST.getType() == TokenTypes.LITERAL_TRY) {
+				if (parentDetailAST.getType() ==
+						TokenTypes.RESOURCE_SPECIFICATION) {
 
-				if (parentDetailAST.getType() == TokenTypes.EXPR) {
 					return true;
 				}
 
 				return false;
 			}
 
-			if (grandParentDetailAST.getType() == TokenTypes.LITERAL_TRY) {
-				if (parentDetailAST.getType() ==
-						TokenTypes.RESOURCE_SPECIFICATION) {
-
+			if (grandParentDetailAST.getType() == TokenTypes.LITERAL_WHILE) {
+				if (parentDetailAST.getType() == TokenTypes.EXPR) {
 					return true;
 				}
 
@@ -516,7 +512,7 @@ public class VariableDeclarationAsUsedCheck extends BaseCheck {
 	private static final String _MSG_DECLARE_VARIABLE_AS_USED =
 		"variable.declare.as.used";
 
-	private static final String _MSG_VARIABLE_DECLARTION_NOT_NEEDED =
+	private static final String _MSG_VARIABLE_DECLARATION_NOT_NEEDED =
 		"variable.declaration.not.needed";
 
 }

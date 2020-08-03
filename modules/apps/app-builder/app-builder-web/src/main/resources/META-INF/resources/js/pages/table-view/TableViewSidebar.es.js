@@ -28,35 +28,22 @@ import EditTableViewContext, {
 	UPDATE_FOCUSED_COLUMN,
 } from './EditTableViewContext.es';
 import TableViewFiltersList from './TableViewFilters.es';
-import {getFieldTypeLabel} from './utils.es';
+import {getFieldLabel, getFieldTypeLabel} from './utils.es';
 
 const BtnAction = ({angle = 'left', className, onClick}) => (
 	<Button
 		className={className}
 		displayType="secondary"
-		monospaced={false}
 		onClick={onClick}
 		symbol={`angle-${angle}`}
 	/>
 );
 
-const getFieldLabel = (dataDefinition, fieldName) => {
-	const field = DataDefinitionUtils.getDataDefinitionField(
-		dataDefinition,
-		fieldName
-	);
-
-	if (field) {
-		return field.label[dataDefinition.defaultLanguageId];
-	}
-
-	return fieldName;
-};
-
 const FiltersSidebarHeader = () => {
-	const [{dataDefinition, fieldTypes, focusedColumn}, dispatch] = useContext(
-		EditTableViewContext
-	);
+	const [
+		{dataDefinition, editingLanguageId, fieldTypes, focusedColumn},
+		dispatch,
+	] = useContext(EditTableViewContext);
 
 	const onClickBack = () => {
 		dispatch({payload: {fieldName: null}, type: UPDATE_FOCUSED_COLUMN});
@@ -80,7 +67,11 @@ const FiltersSidebarHeader = () => {
 						dragAlignment="none"
 						draggable={false}
 						icon={fieldType}
-						label={getFieldLabel(dataDefinition, focusedColumn)}
+						label={getFieldLabel(
+							dataDefinition,
+							editingLanguageId,
+							focusedColumn
+						)}
 						name={focusedColumn}
 					/>
 				</ClayLayout.ContentCol>
@@ -92,23 +83,20 @@ const FiltersSidebarHeader = () => {
 const FieldsTabContent = ({keywords, onAddFieldName}) => {
 	const [
 		{
-			dataDefinition: {defaultLanguageId, dataDefinitionFields = []},
+			dataDefinition: {dataDefinitionFields = [], defaultLanguageId},
 			dataListView: {fieldNames},
+			editingLanguageId,
 			fieldTypes,
 		},
 	] = useContext(EditTableViewContext);
 
 	const fieldTypesItems = [];
 
-	const fieldTypeModel = ({
-		fieldType,
-		label: {[defaultLanguageId]: label},
-		name,
-	}) => ({
+	const fieldTypeModel = ({fieldType, label, name}) => ({
 		description: getFieldTypeLabel(fieldTypes, fieldType),
 		disabled: fieldNames.some((fieldName) => fieldName === name),
 		icon: fieldType,
-		label,
+		label: label[editingLanguageId] || label[defaultLanguageId],
 		name,
 	});
 

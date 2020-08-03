@@ -31,12 +31,13 @@ import org.osgi.service.component.annotations.Component;
  * @author Alessio Antonio Rendina
  */
 @Component(
-	property = "clay.data.set.content.renderer.name=" + ClayDataSetConstants.CONTENT_RENDERER_SELECTABLE_TABLE,
+	property = "clay.data.set.content.renderer.name=" + ClayDataSetConstants.SELECTABLE_TABLE,
 	service = ClayDataSetContentRendererContextContributor.class
 )
 public class SelectableTableClayDataSetContentRendererContextContributor
 	implements ClayDataSetContentRendererContextContributor {
 
+	@Override
 	public Map<String, Object> getContentRendererContext(
 		ClayDataSetDisplayView clayDataSetDisplayView, Locale locale) {
 

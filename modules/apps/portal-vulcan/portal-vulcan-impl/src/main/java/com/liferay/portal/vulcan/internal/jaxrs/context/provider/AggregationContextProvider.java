@@ -46,11 +46,28 @@ public class AggregationContextProvider
 		_portal = portal;
 	}
 
-	public Aggregation createContext(
-		AcceptLanguage acceptLanguage, EntityModel entityModel,
-		String[] terms) {
+	@Override
+	public Aggregation createContext(Message message) {
+		try {
+			HttpServletRequest httpServletRequest =
+				ContextProviderUtil.getHttpServletRequest(message);
 
-		if ((entityModel == null) || (terms == null)) {
+			return _createContext(
+				new AcceptLanguageImpl(httpServletRequest, _language, _portal),
+				ParamUtil.getStringValues(
+					httpServletRequest, "aggregationTerms"),
+				ContextProviderUtil.getEntityModel(message));
+		}
+		catch (Exception exception) {
+			throw new ServerErrorException(500, exception);
+		}
+	}
+
+	private Aggregation _createContext(
+		AcceptLanguage acceptLanguage, String[] aggregationTermsArray,
+		EntityModel entityModel) {
+
+		if ((aggregationTermsArray == null) || (entityModel == null)) {
 			return null;
 		}
 
@@ -59,11 +76,12 @@ public class AggregationContextProvider
 
 		Aggregation aggregation = new Aggregation();
 
-		Map<String, String> termsMap = aggregation.getTerms();
+		Map<String, String> aggregationTerms =
+			aggregation.getAggregationTerms();
 
-		for (String term : terms) {
-			if (entityFieldsMap.containsKey(term)) {
-				EntityField entityField = entityFieldsMap.get(term);
+		for (String aggregationTerm : aggregationTermsArray) {
+			if (entityFieldsMap.containsKey(aggregationTerm)) {
+				EntityField entityField = entityFieldsMap.get(aggregationTerm);
 
 				if (EntityField.Type.COLLECTION.equals(entityField.getType())) {
 					CollectionEntityField collectionEntityField =
@@ -72,33 +90,17 @@ public class AggregationContextProvider
 					entityField = collectionEntityField.getEntityField();
 				}
 
-				termsMap.put(
-					term,
+				aggregationTerms.put(
+					aggregationTerm,
 					entityField.getFilterableName(
 						acceptLanguage.getPreferredLocale()));
 			}
 			else {
-				termsMap.put(term, term);
+				aggregationTerms.put(aggregationTerm, aggregationTerm);
 			}
 		}
 
 		return aggregation;
-	}
-
-	@Override
-	public Aggregation createContext(Message message) {
-		try {
-			HttpServletRequest httpServletRequest =
-				ContextProviderUtil.getHttpServletRequest(message);
-
-			return createContext(
-				new AcceptLanguageImpl(httpServletRequest, _language, _portal),
-				ContextProviderUtil.getEntityModel(message),
-				ParamUtil.getStringValues(httpServletRequest, "terms"));
-		}
-		catch (Exception exception) {
-			throw new ServerErrorException(500, exception);
-		}
 	}
 
 	private final Language _language;

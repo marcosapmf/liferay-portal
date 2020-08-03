@@ -667,6 +667,9 @@ mariadb.executable=${mariadb.executable}]]></echo>
 					<equals arg1="${app.server.type}" arg2="tomcat" />
 					<equals arg1="${test.batch.code.coverage}" arg2="true" />
 					<not>
+						<contains string="${test.batch.name}" substring="functional" />
+					</not>
+					<not>
 						<os family="windows" />
 					</not>
 				</and>
@@ -3717,6 +3720,10 @@ log.sanitizer.enabled=false</echo>
 		<run-empty-temp-dir-test />
 	</target>
 
+	<target name="functional-alpine3-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-bundle-jboss-db2111-jdk8">
 		<run-functional-test
 			app.server.type="jboss"
@@ -4200,7 +4207,23 @@ log.sanitizer.enabled=false</echo>
 		/>
 	</target>
 
+	<target name="functional-centos6-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
+	</target>
+
 	<target name="functional-centos8-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-debian7-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-debian8-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-debian9-tomcat90-mysql57-jdk8">
 		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
 	</target>
 
@@ -4380,6 +4403,10 @@ log.sanitizer.enabled=false</echo>
 		<set-app-server-version-number app.server.type="wildfly" app.server.version="17.0.0" />
 
 		<run-functional-test app.server.type="wildfly" app.server.version="17.0.0" database.type="mariadb" test.portal.log.assert="true" />
+	</target>
+
+	<target name="functional-suse15-tomcat90-mysql57-jdk8">
+		<run-functional-test app.server.type="tomcat" database.type="mysql" database.version="5.7" test.portal.log.assert="true" />
 	</target>
 
 	<target name="functional-tomcat90-db2111-jdk8">
