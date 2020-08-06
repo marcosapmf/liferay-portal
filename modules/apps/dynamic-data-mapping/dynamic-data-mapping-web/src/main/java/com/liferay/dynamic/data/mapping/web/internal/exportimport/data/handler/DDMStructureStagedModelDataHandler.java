@@ -414,7 +414,8 @@ public class DDMStructureStagedModelDataHandler
 					userId, groupId, parentStructureId,
 					structure.getClassNameId(), structureKey,
 					structure.getNameMap(), structure.getDescriptionMap(),
-					ddmForm, null, structure.getStorageType(), serviceContext);
+					ddmForm, null, structure.getStorageType(),
+					DDMStructureConstants.TYPE_DEFAULT, serviceContext);
 
 				DDMStructureVersion structureVersion =
 					importedStructure.getLatestStructureVersion();
