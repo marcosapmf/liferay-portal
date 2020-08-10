@@ -36,5 +36,7 @@
 		</requiredProperty>
 		<requiredProperty key="liferayVersion">
 		</requiredProperty>
+		<requiredProperty key="reactTemplate">
+		</requiredProperty>
 	</requiredProperties>
 </archetype-descriptor>
