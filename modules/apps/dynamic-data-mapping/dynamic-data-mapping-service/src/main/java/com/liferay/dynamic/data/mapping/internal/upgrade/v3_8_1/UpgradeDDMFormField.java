@@ -33,9 +33,9 @@ import java.util.Iterator;
 /**
  * @author Rodrigo Paulino
  */
-public class UpgradeDDMFormFieldDataSourceType extends UpgradeProcess {
+public class UpgradeDDMFormField extends UpgradeProcess {
 
-	public UpgradeDDMFormFieldDataSourceType(JSONFactory jsonFactory) {
+	public UpgradeDDMFormField(JSONFactory jsonFactory) {
 		_jsonFactory = jsonFactory;
 	}
 
