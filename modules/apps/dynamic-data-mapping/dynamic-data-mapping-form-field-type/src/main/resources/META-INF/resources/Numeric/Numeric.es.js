@@ -115,6 +115,7 @@ const Main = ({
 	onBlur,
 	onChange,
 	onFocus,
+	localizedValue = {},
 	placeholder,
 	predefinedValue = '',
 	readOnly,
@@ -122,11 +123,18 @@ const Main = ({
 	value,
 	...otherProps
 }) => (
-	<FieldBase {...otherProps} id={id} name={name} readOnly={readOnly}>
+	<FieldBase
+		{...otherProps}
+		id={id}
+		localizedValue={localizedValue}
+		name={name}
+		readOnly={readOnly}
+	>
 		<Numeric
 			dataType={dataType}
 			disabled={readOnly}
 			id={id ? id : name}
+			localizedValue={localizedValue}
 			name={name}
 			onBlur={onBlur}
 			onChange={onChange}
