@@ -19,14 +19,15 @@ import React, {useEffect, useState} from 'react';
 
 import {addMappedInfoItem} from '../../app/actions/index';
 import {useCollectionConfig} from '../../app/components/CollectionItemContext';
-import isMapped from '../../app/components/fragment-content/isMapped';
 import {EDITABLE_TYPES} from '../../app/config/constants/editableTypes';
 import {LAYOUT_TYPES} from '../../app/config/constants/layoutTypes';
 import {config} from '../../app/config/index';
 import CollectionService from '../../app/services/CollectionService';
 import InfoItemService from '../../app/services/InfoItemService';
 import {useDispatch, useSelector} from '../../app/store/index';
+import isMapped from '../../app/utils/isMapped';
 import {useId} from '../../app/utils/useId';
+import useControlledState from '../../core/hooks/useControlledState';
 import ItemSelector from './ItemSelector';
 
 const MAPPING_SOURCE_TYPE_IDS = {
@@ -169,8 +170,9 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 	const {selectedMappingTypes} = config;
 
 	const [fieldSets, setFieldSets] = useState(null);
-	const [selectedItem, setSelectedItem] = useState(mappedItem);
-	const [selectedSourceTypeId, setSelectedSourceTypeId] = useState(
+	const [selectedItem, setSelectedItem] = useControlledState(mappedItem);
+
+	const [selectedSourceTypeId, setSelectedSourceTypeId] = useControlledState(
 		mappedItem.mappedField || config.layoutType === LAYOUT_TYPES.display
 			? MAPPING_SOURCE_TYPE_IDS.structure
 			: MAPPING_SOURCE_TYPE_IDS.content
@@ -251,7 +253,7 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 			...mappedItem,
 			...selectedItem,
 		}));
-	}, [mappedItem, mappedInfoItems]);
+	}, [mappedItem, mappedInfoItems, setSelectedItem]);
 
 	useEffect(() => {
 		const data =
@@ -377,15 +379,21 @@ function MappingFieldSelect({fieldSets, fieldType, onValueSelect, value}) {
 						/>
 
 						{fieldSets.map((fieldSet, index) => {
-							const Wrapper = fieldSet.label
-								? ClaySelect.OptGroup
-								: React.Fragment;
+							const key = `${fieldSet.label || ''}${index}`;
+
+							const Wrapper = ({children, ...props}) =>
+								fieldSet.label ? (
+									<ClaySelect.OptGroup {...props}>
+										{children}
+									</ClaySelect.OptGroup>
+								) : (
+									<React.Fragment key={key}>
+										{children}
+									</React.Fragment>
+								);
 
 							return (
-								<Wrapper
-									key={`${fieldSet.label || ''}${index}`}
-									label={fieldSet.label}
-								>
+								<Wrapper key={key} label={fieldSet.label}>
 									{fieldSet.fields.map((field) => (
 										<ClaySelect.Option
 											key={field.key}

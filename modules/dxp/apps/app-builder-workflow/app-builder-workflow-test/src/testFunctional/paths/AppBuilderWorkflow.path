@@ -8,10 +8,20 @@
 <tr><td rowspan="1" colspan="3">AppBuilderWorkflow</td></tr>
 </thead>
 <tbody>
-<!--APPS_LISTING_SCREEN-->
+<!--APP_CREATION-->
 <tr>
-	<td>COLUMN_ITEM</td>
-	<td>//table[contains(@class,'table')]//th[contains(text(),'${value1}')]</td>
+	<td>BACK_BUTTON</td>
+	<td>//a[contains(@href,'workflow')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>WORKFLOW_APP_NAME_FIELD</td>
+	<td>//input[contains(@placeholder,'Untitled App')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DATA_AND_VIEWS_BUTTON</td>
+	<td>//button//span[contains(text(),'Data and Views')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -20,34 +30,74 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SEARCH_BOX_OBJECT_DISABLED</td>
-	<td>//div[contains(@class,'dropdown-section')]//input[contains(@placeholder,'Search') and @disabled]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEARCH_BOX_OBJECT</td>
-	<td>//div[contains(@class,'dropdown-section')]//input[contains(@placeholder,'Search')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SEARCH_BOX_OBJECT_NO_RESULT_MESSAGE</td>
-	<td>//span[contains(text(),'There were no objects found with this name.')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>OBJECT_ITEM</td>
 	<td>//span[contains(@title,'${key_objectName}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>PLUS_BUTTON</td>
-	<td>//button[contains(@class,'nav-btn')]</td>
+	<td>SELECT_FORM_VIEW_BUTTON</td>
+	<td>//button[contains(@aria-labelledby,'form-view')]</td>
 	<td></td>
 </tr>
-<!--APPS_TABS-->
 <tr>
-	<td>APP_TAB</td>
-	<td>//a[contains(@class,'nav-link') and contains (@href,'${key_tabName}')]</td>
+	<td>SELECT_FORM_VIEW_BUTTON_TEXT</td>
+	<td>//button[contains(@aria-labelledby,'form-view')]//span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_VIEW_MODE</td>
+	<td>//span[contains(text(),'${key_formViewMode}')]/ancestor::label//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_TABLE_VIEW_BUTTON</td>
+	<td>//button[contains(@aria-labelledby,'table-view')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_OR_TABLE_VIEW_ITEM</td>
+	<td>//button[contains(@class,'dropdown-item') and contains(text(),'${key_itemName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NEW_STEP_BUTTON</td>
+	<td>//div[contains(@class,'arrow-plus-button')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>STEP_CARD</td>
+	<td>//span[contains(text(),'${key_stepNumber}')]/parent::span/following-sibling::div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_ASSIGNEE_FIELD</td>
+	<td>//input[contains(@class,'form-control-inset')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSIGNEE_ITEM</td>
+	<td>//span[contains(@class,'dropdown-item') and (text()="${key_assignee}")]</td>
+	<td></td>
+</tr>
+<!--APP_RUNNING-->
+<tr>
+	<td>SELECT_NEW_ASSIGNEE_BUTTON</td>
+	<td>//div[contains(@label,'Select a new assignee')]//button</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_NEW_ASSIGNEE_SEARCH_FIELD</td>
+	<td>//div[contains(@class,'dropdown-section')]//input[contains(@placeholder,'Search')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_NEW_ASSIGNEE</td>
+	<td>//button[contains(@class,'dropdown-item') and contains(text(),'${key_assignee}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TEXT_FIELD_DISABLED</td>
+	<td>//label[contains(text(),'${key_fieldName}')]/..//input[@disabled][1]</td>
 	<td></td>
 </tr>
 </tbody>

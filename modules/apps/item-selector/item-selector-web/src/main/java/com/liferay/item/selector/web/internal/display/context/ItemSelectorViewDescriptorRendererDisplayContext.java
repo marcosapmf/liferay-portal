@@ -16,9 +16,12 @@ package com.liferay.item.selector.web.internal.display.context;
 
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
+import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
+import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
@@ -43,11 +46,13 @@ public class ItemSelectorViewDescriptorRendererDisplayContext {
 	public ItemSelectorViewDescriptorRendererDisplayContext(
 		HttpServletRequest httpServletRequest, String itemSelectedEventName,
 		ItemSelectorViewDescriptor<Object> itemSelectorViewDescriptor,
+		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
 		_httpServletRequest = httpServletRequest;
 		_itemSelectedEventName = itemSelectedEventName;
 		_itemSelectorViewDescriptor = itemSelectorViewDescriptor;
+		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 	}
 
@@ -89,12 +94,38 @@ public class ItemSelectorViewDescriptorRendererDisplayContext {
 		return itemSelectorReturnTypeClass.getName();
 	}
 
+	public SearchContainer<Object> getSearchContainer() throws PortalException {
+		if (_searchContainer == null) {
+			_searchContainer = _itemSelectorViewDescriptor.getSearchContainer();
+
+			if (isMultipleSelection()) {
+				if (_searchContainer.getRowChecker() == null) {
+					_searchContainer.setRowChecker(
+						new EmptyOnClickRowChecker(_liferayPortletResponse));
+				}
+			}
+			else {
+				_searchContainer.setRowChecker(null);
+			}
+
+			_searchContainer.setIteratorURL(
+				PortletURLUtil.getCurrent(
+					_liferayPortletRequest, _liferayPortletResponse));
+		}
+
+		return _searchContainer;
+	}
+
 	public boolean isIconDisplayStyle() {
 		if (Objects.equals(getDisplayStyle(), "icon")) {
 			return true;
 		}
 
 		return false;
+	}
+
+	public boolean isMultipleSelection() {
+		return ParamUtil.getBoolean(_httpServletRequest, "multipleSelection");
 	}
 
 	private BreadcrumbEntry _getCurrentGroupBreadcrumbEntry(
@@ -141,6 +172,8 @@ public class ItemSelectorViewDescriptorRendererDisplayContext {
 	private final String _itemSelectedEventName;
 	private final ItemSelectorViewDescriptor<Object>
 		_itemSelectorViewDescriptor;
+	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
+	private SearchContainer<Object> _searchContainer;
 
 }

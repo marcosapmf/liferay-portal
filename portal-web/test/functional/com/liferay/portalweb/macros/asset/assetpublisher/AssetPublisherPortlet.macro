@@ -344,9 +344,9 @@ definition {
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		if (isSet(fieldValue)) {
-			AssertTextEquals.assertPartialText(
-				locator1 = "APConfiguration#SOURCE_SCOPE_FIELD_FILTER_AND_VALUE",
-				value1 = "${fieldFilter}: ${fieldValue}");
+			AssertElementPresent(
+				key_text = "${fieldFilter}: ${fieldValue}",
+				locator1 = "APConfiguration#SOURCE_SCOPE_FIELD_FILTER_AND_VALUE");
 		}
 
 		PortletEntry.save();
@@ -507,23 +507,25 @@ definition {
 
 			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
-			Navigator.gotoNavTab(navTab = "Sites That I Administer");
-
-			LexiconEntry.changeDisplayStyle(displayStyle = "table");
-
 			if ("${siteScopeType}" == "Child Site") {
-				Type(
-					locator1 = "TextInput#SITE_SEARCH_KEYWORDS",
-					value1 = "${siteName}");
+				Navigator.gotoNavTab(navTab = "Child Sites");
 
-				KeyPress(
-					locator1 = "TextInput#SEARCH",
-					value1 = "\RETURN");
+				LexiconEntry.changeDisplayStyle(displayStyle = "table");
+			}
+			else if ("${siteScopeType}" == "Parent Site") {
+				Navigator.gotoNavTab(navTab = "Parent Sites");
+
+				LexiconEntry.changeDisplayStyle(displayStyle = "table");
+			}
+			else {
+				Navigator.gotoNavTab(navTab = "Sites That I Administer");
+
+				LexiconEntry.changeDisplayStyle(displayStyle = "table");
 			}
 
 			AssertTextEquals(
 				locator1 = "APConfigurationSites#SITES_TABLE_NAME",
-				value1 = "${siteName} (Opens New Window)");
+				value1 = "${siteName}");
 
 			AssertTextEquals(
 				locator1 = "APConfigurationSites#SITES_TABLE_TYPE",
@@ -1023,7 +1025,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "APConfigurationSites#SITES_TABLE_NAME",
-				value1 = "${liferaySiteName} (Opens New Window)");
+				value1 = "${liferaySiteName}");
 
 			AssertTextEquals(
 				locator1 = "APConfigurationSites#SITES_TABLE_TYPE",

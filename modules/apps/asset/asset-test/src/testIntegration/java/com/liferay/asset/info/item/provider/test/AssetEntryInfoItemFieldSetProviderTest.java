@@ -101,8 +101,8 @@ public class AssetEntryInfoItemFieldSetProviderTest {
 		AssetEntry assetEntry = AssetTestUtil.addAssetEntry(
 			_group.getGroupId());
 
-		_assetEntryLocalService.addAssetCategoryAssetEntry(
-			assetCategory.getCategoryId(), assetEntry);
+		_assetCategoryLocalService.addAssetEntryAssetCategory(
+			assetEntry.getEntryId(), assetCategory);
 
 		InfoFieldSet infoFieldSet =
 			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(assetEntry);
@@ -191,6 +191,31 @@ public class AssetEntryInfoItemFieldSetProviderTest {
 
 		Assert.assertEquals(
 			assetVocabulary.getName(), infoFieldSetEntry.getName());
+	}
+
+	@Test
+	public void testGetInfoFieldValuesAssetEntryPublicAssetVocabularyWithAssetCategory()
+		throws Exception {
+
+		AssetVocabulary assetVocabulary = _addAssetVocabulary(
+			AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC);
+
+		AssetCategory assetCategory = _addAssetCategory(assetVocabulary);
+
+		AssetEntry assetEntry = AssetTestUtil.addAssetEntry(
+			_group.getGroupId());
+
+		_assetCategoryLocalService.addAssetEntryAssetCategory(
+			assetEntry.getEntryId(), assetCategory);
+
+		List<InfoFieldValue<Object>> filteredInfoFieldValues =
+			_getInfoFieldValues(assetEntry, assetVocabulary.getName());
+
+		Category category = _getCategory(filteredInfoFieldValues);
+
+		Assert.assertEquals(
+			category.getLabel(LocaleUtil.ENGLISH),
+			assetCategory.getTitle(LocaleUtil.ENGLISH));
 	}
 
 	@Test

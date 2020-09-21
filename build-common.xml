@@ -1812,7 +1812,7 @@ artifact.url=${remote.repository.url}/com/liferay/portal/com.liferay.${processed
 				</then>
 			</if>
 
-			<update-gradle-properties />
+			<antcall inheritAll="false" target="update-gradle-properties" />
 
 			<gradle-execute setupbinariescache="@{setupbinariescache}" task="setUpPortalTools">
 				<arg value="--build-file=${project.dir}/modules/util.gradle" />

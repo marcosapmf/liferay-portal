@@ -14,6 +14,7 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
+import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -103,11 +104,7 @@ export default ({currentSection, items, question, showSectionLabel}) => {
 
 			<Link
 				className="questions-title stretched-link"
-				to={`/questions/${
-					(question.messageBoardSection &&
-						question.messageBoardSection.title) ||
-					currentSection
-				}/${question.friendlyUrlPath}`}
+				to={`/questions/${sectionTitle}/${question.friendlyUrlPath}`}
 			>
 				<h2
 					className={classNames(
@@ -120,6 +117,12 @@ export default ({currentSection, items, question, showSectionLabel}) => {
 					)}
 				>
 					{question.headline}
+
+					{!!question.locked && (
+						<span className="c-ml-2">
+							<ClayIcon symbol="lock" />
+						</span>
+					)}
 				</h2>
 			</Link>
 

@@ -145,18 +145,22 @@ public class CommerceCatalogLocalServiceImpl
 
 		validate(commerceCatalog);
 
+		long groupId = commerceCatalog.getGroupId();
+
+		// Commerce catalog
+
+		commerceCatalogPersistence.remove(commerceCatalog);
+
 		// Group
 
-		groupLocalService.deleteGroup(commerceCatalog.getGroupId());
+		groupLocalService.deleteGroup(groupId);
 
 		// Resources
 
 		resourceLocalService.deleteResource(
 			commerceCatalog, ResourceConstants.SCOPE_INDIVIDUAL);
 
-		// Commerce catalog
-
-		return commerceCatalogPersistence.remove(commerceCatalog);
+		return commerceCatalog;
 	}
 
 	@Override
@@ -305,16 +309,17 @@ public class CommerceCatalogLocalServiceImpl
 
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
+
+		if (sort != null) {
+			searchContext.setSorts(sort);
+		}
+
 		searchContext.setStart(start);
 
 		QueryConfig queryConfig = searchContext.getQueryConfig();
 
 		queryConfig.setHighlightEnabled(false);
 		queryConfig.setScoreEnabled(false);
-
-		if (sort != null) {
-			searchContext.setSorts(sort);
-		}
 
 		return searchContext;
 	}

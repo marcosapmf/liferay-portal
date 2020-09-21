@@ -21,7 +21,7 @@ ItemSelectorViewDescriptorRendererDisplayContext itemSelectorViewDescriptorRende
 
 ItemSelectorViewDescriptor<Object> itemSelectorViewDescriptor = itemSelectorViewDescriptorRendererDisplayContext.getItemSelectorViewDescriptor();
 
-SearchContainer<Object> searchContainer = itemSelectorViewDescriptor.getSearchContainer();
+SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisplayContext.getSearchContainer();
 %>
 
 <c:if test="<%= itemSelectorViewDescriptor.isShowManagementToolbar() %>">
@@ -71,12 +71,12 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptor.getSearchCo
 						<c:choose>
 							<c:when test="<%= itemDescriptor.isCompact() %>">
 								<clay:horizontal-card
-									horizontalCard="<%= new ItemDescriptorHorizontalCard(itemDescriptor, renderRequest) %>"
+									horizontalCard="<%= new ItemDescriptorHorizontalCard(itemDescriptor, renderRequest, searchContainer.getRowChecker()) %>"
 								/>
 							</c:when>
 							<c:otherwise>
 								<clay:vertical-card
-									verticalCard="<%= new ItemDescriptorVerticalCard(itemDescriptor, renderRequest) %>"
+									verticalCard="<%= new ItemDescriptorVerticalCard(itemDescriptor, renderRequest, searchContainer.getRowChecker()) %>"
 								/>
 							</c:otherwise>
 						</c:choose>
@@ -92,6 +92,12 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptor.getSearchCo
 						<liferay-ui:search-container-column-user
 							showDetails="<%= false %>"
 							userId="<%= itemDescriptor.getUserId() %>"
+						/>
+					</c:if>
+
+					<c:if test="<%= Validator.isNotNull(itemDescriptor.getImageURL()) %>">
+						<liferay-ui:search-container-column-image
+							src="<%= itemDescriptor.getImageURL() %>"
 						/>
 					</c:if>
 
@@ -140,37 +146,79 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptor.getSearchCo
 	</liferay-ui:search-container>
 </clay:container-fluid>
 
-<aui:script require="metal-dom/src/all/dom as dom">
-	var selectItemHandler = dom.delegate(
-		document.querySelector('#<portlet:namespace/>entriesContainer'),
-		'click',
-		'.entry',
-		function (event) {
-			dom.removeClasses(
-				document.querySelectorAll('.form-check-card.active'),
-				'active'
-			);
-			dom.addClasses(
-				dom.closest(event.delegateTarget, '.form-check-card'),
-				'active'
+<c:choose>
+	<c:when test="<%= itemSelectorViewDescriptorRendererDisplayContext.isMultipleSelection() %>">
+		<aui:script use="liferay-search-container">
+			var searchContainer = Liferay.SearchContainer.get(
+				'<portlet:namespace />entries'
 			);
 
-			Liferay.Util.getOpener().Liferay.fire(
-				'<%= itemSelectorViewDescriptorRendererDisplayContext.getItemSelectedEventName() %>',
-				{
-					data: {
-						returnType:
-							'<%= itemSelectorViewDescriptorRendererDisplayContext.getReturnType() %>',
-						value: event.delegateTarget.dataset.value,
-					},
+			searchContainer.on('rowToggled', function (event) {
+				var searchContainerItems = event.elements.allSelectedElements;
+
+				var arr = [];
+
+				searchContainerItems.each(function () {
+					var domElement = this.ancestor('li');
+
+					if (domElement == null) {
+						domElement = this.ancestor('tr');
+					}
+
+					if (domElement != null) {
+						var itemValue = domElement.getDOM().dataset.value;
+
+						arr.push(itemValue);
+					}
+				});
+
+				Liferay.Util.getOpener().Liferay.fire(
+					'<%= itemSelectorViewDescriptorRendererDisplayContext.getItemSelectedEventName() %>',
+					{
+						data: {
+							returnType:
+								'<%= itemSelectorViewDescriptorRendererDisplayContext.getReturnType() %>',
+							value: arr,
+						},
+					}
+				);
+			});
+		</aui:script>
+	</c:when>
+	<c:otherwise>
+		<aui:script require="metal-dom/src/all/dom as dom">
+			var selectItemHandler = dom.delegate(
+				document.querySelector('#<portlet:namespace/>entriesContainer'),
+				'click',
+				'.entry',
+				function (event) {
+					dom.removeClasses(
+						document.querySelectorAll('.form-check-card.active'),
+						'active'
+					);
+					dom.addClasses(
+						dom.closest(event.delegateTarget, '.form-check-card'),
+						'active'
+					);
+
+					Liferay.Util.getOpener().Liferay.fire(
+						'<%= itemSelectorViewDescriptorRendererDisplayContext.getItemSelectedEventName() %>',
+						{
+							data: {
+								returnType:
+									'<%= itemSelectorViewDescriptorRendererDisplayContext.getReturnType() %>',
+								value: event.delegateTarget.dataset.value,
+							},
+						}
+					);
 				}
 			);
-		}
-	);
 
-	Liferay.on('destroyPortlet', function removeListener() {
-		selectItemHandler.removeListener();
+			Liferay.on('destroyPortlet', function removeListener() {
+				selectItemHandler.removeListener();
 
-		Liferay.detach('destroyPortlet', removeListener);
-	});
-</aui:script>
+				Liferay.detach('destroyPortlet', removeListener);
+			});
+		</aui:script>
+	</c:otherwise>
+</c:choose>

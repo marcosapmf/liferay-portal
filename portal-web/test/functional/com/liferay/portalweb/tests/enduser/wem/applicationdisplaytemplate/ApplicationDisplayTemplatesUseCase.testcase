@@ -320,9 +320,9 @@ definition {
 			siteName = "Test Site Name");
 
 		CategoriesNavigationPortlet.viewCustomADTMultiColumnPG(
-			categoryNameList = "Null,Null,Null,Null,Category Name 2,Category Name 3",
-			columnList = "1,2,3,4,5,6",
-			vocabularyNameList = "Audience,Stage,Topic,Vocabulary Name 1,Vocabulary Name 2,Vocabulary Name 3");
+			categoryNameList = "Null,Null,Category Name 2,Category Name 3",
+			columnList = "1,2,3,4",
+			vocabularyNameList = "Topic,Vocabulary Name 1,Vocabulary Name 2,Vocabulary Name 3");
 	}
 
 	@priority = "3"
@@ -452,9 +452,9 @@ definition {
 			siteName = "Test Site Name");
 
 		CategoriesNavigationPortlet.viewCustomADTMultiColumnPG(
-			categoryNameList = "Null,Null,Null,Null,Category Name 2,Category Name 3",
-			columnList = "1,2,3,4,5,6",
-			vocabularyNameList = "Audience,Stage,Topic,Vocabulary Name 1,Vocabulary Name 2,Vocabulary Name 3");
+			categoryNameList = "Null,Null,Category Name 2,Category Name 3",
+			columnList = "1,2,3,4",
+			vocabularyNameList = "Topic,Vocabulary Name 1,Vocabulary Name 2,Vocabulary Name 3");
 
 		Staging.gotoPublishToLive();
 
@@ -465,9 +465,9 @@ definition {
 			siteName = "Test Site Name");
 
 		CategoriesNavigationPortlet.viewCustomADTMultiColumnPG(
-			categoryNameList = "Null,Null,Null,Null,Category Name 2,Category Name 3",
-			columnList = "1,2,3,4,5,6",
-			vocabularyNameList = "Audience,Stage,Topic,Vocabulary Name 1,Vocabulary Name 2,Vocabulary Name 3");
+			categoryNameList = "Null,Null,Category Name 2,Category Name 3",
+			columnList = "1,2,3,4",
+			vocabularyNameList = "Topic,Vocabulary Name 1,Vocabulary Name 2,Vocabulary Name 3");
 	}
 
 	@priority = "5"

@@ -112,7 +112,11 @@ export default withRouter(({history}) => {
 									>
 										<Link
 											className="questions-card text-decoration-none text-secondary"
-											to={`/questions/${section.title}`}
+											to={`/questions/${
+												context.useTopicNamesInURL
+													? section.title
+													: section.id
+											}`}
 										>
 											<ClayCard>
 												<ClayCard.Body>
@@ -159,7 +163,7 @@ export default withRouter(({history}) => {
 								))) || (
 								<ClayEmptyState
 									description={Liferay.Language.get(
-										'there-are-no-topics-in-this-page-create-the-first-topic'
+										'there-are-no-topics-in-this-page-be-the-first-to-create-a-topic'
 									)}
 									imgSrc={
 										context.includeContextPath +

@@ -67,6 +67,8 @@ class FragmentCollectionsViewDefaultEventHandler extends DefaultEventHandler {
 	 * @review
 	 */
 	exportCollections() {
+		let processed = false;
+
 		this._openFragmentCollectionsItemSelector(
 			Liferay.Language.get('export'),
 			Liferay.Language.get('export-collection'),
@@ -84,6 +86,21 @@ class FragmentCollectionsViewDefaultEventHandler extends DefaultEventHandler {
 					fragmentCollectionsForm,
 					this.exportFragmentCollectionsURL
 				);
+
+				processed = true;
+			},
+			() => {
+				if (processed) {
+					Liferay.Util.openToast({
+						message: Liferay.Language.get(
+							'your-request-processed-successfully'
+						),
+						toastProps: {
+							autoClose: 5000,
+						},
+						type: 'success',
+					});
+				}
 			}
 		);
 	}
@@ -102,17 +119,19 @@ class FragmentCollectionsViewDefaultEventHandler extends DefaultEventHandler {
 		dialogButtonLabel,
 		dialogTitle,
 		dialogURL,
-		callback
+		callback,
+		onClose
 	) {
 		openSelectionModal({
 			buttonAddLabel: dialogButtonLabel,
 			multiple: true,
+			onClose,
 			onSelect: (selectedItem) => {
 				if (selectedItem) {
 					callback(selectedItem);
 				}
 			},
-			selectedEventName: this.ns('selectCollections'),
+			selectEventName: this.ns('selectCollections'),
 			title: dialogTitle,
 			url: dialogURL,
 		});

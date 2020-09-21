@@ -356,7 +356,9 @@ export const getThreadQuery = gql`
 			headline
 			id
 			keywords
+			locked
 			messageBoardSection {
+				id
 				numberOfMessageBoardSections
 				parentMessageBoardSectionId
 				title
@@ -685,6 +687,7 @@ export const getThreadsQuery = gql`
 				headline
 				id
 				keywords
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
@@ -730,6 +733,7 @@ export const getSectionThreadsQuery = gql`
 				headline
 				id
 				keywords
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
@@ -803,6 +807,7 @@ export const getRankedThreadsQuery = gql`
 				headline
 				id
 				keywords
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
@@ -843,6 +848,7 @@ export const getRelatedThreadsQuery = gql`
 				friendlyUrlPath
 				headline
 				id
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
@@ -983,6 +989,7 @@ export const getUserActivityQuery = gql`
 				id
 				keywords
 				messageBoardSection {
+					id
 					numberOfMessageBoardSections
 					parentMessageBoardSectionId
 					title
@@ -1128,6 +1135,7 @@ export const getSubscriptionsQuery = gql`
 						id
 						keywords
 						messageBoardSection {
+							id
 							numberOfMessageBoardSections
 							parentMessageBoardSectionId
 							title

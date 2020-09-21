@@ -1238,21 +1238,6 @@ public class LayoutsAdminDisplayContext {
 		return false;
 	}
 
-	public boolean isLayoutReachable(Layout layout) throws PortalException {
-		List<Layout> ancestorLayouts = layout.getAncestors();
-
-		for (Layout ancestorLayout : ancestorLayouts) {
-			if (!LayoutPermissionUtil.contains(
-					themeDisplay.getPermissionChecker(), ancestorLayout,
-					ActionKeys.VIEW)) {
-
-				return false;
-			}
-		}
-
-		return true;
-	}
-
 	public boolean isPrivateLayout() {
 		if (_privateLayout != null) {
 			return _privateLayout;
@@ -1536,6 +1521,27 @@ public class LayoutsAdminDisplayContext {
 		}
 
 		return true;
+	}
+
+	public boolean isShowViewLayoutAction(Layout layout) {
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		if (layout.isDenied() || layout.isPending()) {
+			return true;
+		}
+
+		boolean published = true;
+
+		if (draftLayout != null) {
+			published = GetterUtil.getBoolean(
+				draftLayout.getTypeSettingsProperty("published"));
+		}
+
+		if (!layout.isTypeContent() || published) {
+			return true;
+		}
+
+		return false;
 	}
 
 	protected long getActiveLayoutSetBranchId() throws PortalException {

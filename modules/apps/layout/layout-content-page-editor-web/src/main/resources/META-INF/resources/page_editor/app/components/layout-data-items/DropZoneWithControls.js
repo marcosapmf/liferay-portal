@@ -15,41 +15,42 @@
 import React from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
-import {
-	LayoutDataPropTypes,
-	getLayoutDataItemPropTypes,
-} from '../../../prop-types/index';
+import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
 import ManageAllowedFragmentButton from '../ManageAllowedFragmentButton';
 import Topper from '../Topper';
 
-const DropZoneWithControls = React.forwardRef(({item, layoutData}, ref) => {
+const DropZone = React.forwardRef(({item}, ref) => {
+	return (
+		<div className="page-editor__drop-zone" ref={ref}>
+			<p>{Liferay.Language.get('drop-zone')}</p>
+
+			<p>
+				{Liferay.Language.get(
+					'fragments-and-widgets-for-pages-based-on-this-master-will-be-placed-here'
+				)}
+			</p>
+
+			<ManageAllowedFragmentButton item={item} />
+		</div>
+	);
+});
+
+DropZone.propTypes = {
+	item: getLayoutDataItemPropTypes().isRequired,
+};
+
+const DropZoneWithControls = React.forwardRef(({item}, ref) => {
 	const [setRef, itemElement] = useSetRef(ref);
 
 	return (
-		<Topper
-			active
-			item={item}
-			itemElement={itemElement}
-			layoutData={layoutData}
-		>
-			<div className="page-editor__drop-zone" ref={setRef}>
-				<p>{Liferay.Language.get('drop-zone')}</p>
-
-				<p>
-					{Liferay.Language.get(
-						'fragments-and-widgets-for-pages-based-on-this-master-will-be-placed-here'
-					)}
-				</p>
-
-				<ManageAllowedFragmentButton item={item} />
-			</div>
+		<Topper active item={item} itemElement={itemElement}>
+			<DropZone item={item} ref={setRef} />
 		</Topper>
 	);
 });
 
 DropZoneWithControls.propTypes = {
 	item: getLayoutDataItemPropTypes().isRequired,
-	layoutData: LayoutDataPropTypes.isRequired,
 };
 
 export default DropZoneWithControls;

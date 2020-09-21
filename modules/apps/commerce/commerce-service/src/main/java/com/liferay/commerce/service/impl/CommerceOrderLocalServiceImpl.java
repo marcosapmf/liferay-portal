@@ -147,6 +147,16 @@ public class CommerceOrderLocalServiceImpl
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setScopeGroupId(groupId);
+
+		if (userId == 0) {
+			Group group = groupLocalService.getGroup(groupId);
+
+			User defaultUser = _userLocalService.getDefaultUser(
+				group.getCompanyId());
+
+			userId = defaultUser.getUserId();
+		}
+
 		serviceContext.setUserId(userId);
 
 		if (hasWorkflowDefinition(
@@ -1774,12 +1784,13 @@ public class CommerceOrderLocalServiceImpl
 		searchContext.setEnd(end);
 		searchContext.setGroupIds(new long[] {commerceChannelGroupId});
 		searchContext.setKeywords(keywords);
-		searchContext.setStart(start);
 
 		Sort sort = SortFactoryUtil.getSort(
 			CommerceOrder.class, Sort.LONG_TYPE, Field.CREATE_DATE, "DESC");
 
 		searchContext.setSorts(sort);
+
+		searchContext.setStart(start);
 
 		QueryConfig queryConfig = searchContext.getQueryConfig();
 

@@ -187,7 +187,7 @@ public class SoyPortlet extends MVCPortlet {
 			}
 		}
 		catch (Exception exception) {
-			_log.error("Error on the Serve Resource Phase", exception);
+			_log.error("Unable to serve resource", exception);
 		}
 	}
 

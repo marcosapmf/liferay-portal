@@ -34,6 +34,7 @@ import com.liferay.commerce.wish.list.model.CommerceWishList;
 import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
 import com.liferay.commerce.wish.list.service.CommerceWishListService;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -222,9 +223,9 @@ public class MiniumCPContentListEntryRenderer
 			ProductSettingsModel productSettingsModel =
 				_productHelper.getProductSettingsModel(cpSku.getCPInstanceId());
 
-			PriceModel priceModel = _productHelper.getPrice(
+			PriceModel priceModel = _productHelper.getPriceModel(
 				cpSku.getCPInstanceId(), productSettingsModel.getMinQuantity(),
-				commerceContext, themeDisplay.getLocale());
+				commerceContext, StringPool.BLANK, themeDisplay.getLocale());
 
 			context.put("prices", priceModel);
 

@@ -133,7 +133,7 @@ function LayoutFinder(props) {
 	return (
 		<div className="layout-finder">
 			<button
-				className={`back-to-menu btn-sm btn-unstyled mb-3`}
+				className={`back-to-menu btn btn-sm btn-unstyled mb-3 pr-3`}
 				onClick={handleOnClick}
 			>
 				<ClayIcon className={`icon-monospaced`} symbol="angle-left" />
@@ -168,30 +168,42 @@ function LayoutFinder(props) {
 							(layout, layoutIndex) =>
 								layoutIndex < MAX_ITEMS_TO_SHOW && (
 									<>
-										{layout.path && layout.path.length > 0 && (
-											<ol className="breadcrumb">
-												{layout.path.map(
-													(layoutPath) => (
-														<li
-															className="breadcrumb-item"
-															key={layoutPath}
-														>
-															<span className="breadcrumb-text-truncate">
-																{layoutPath}
-															</span>
-														</li>
-													)
+										<ol className="breadcrumb">
+											{layout.path &&
+												layout.path.length > 0 && (
+													<>
+														{layout.path.map(
+															(layoutPath) => (
+																<li
+																	className="breadcrumb-item text-secondary"
+																	key={
+																		layoutPath
+																	}
+																>
+																	<span className="breadcrumb-text-truncate">
+																		{
+																			layoutPath
+																		}
+																	</span>
+																</li>
+															)
+														)}
+													</>
 												)}
-											</ol>
-										)}
 
-										<a
-											className="d-block font-weight-bold mb-2 text-break"
-											href={layout.url}
-											key={layout.url}
-										>
-											{layout.name}
-										</a>
+											<li
+												className="breadcrumb-item"
+												key={layout.name}
+											>
+												<a
+													className="d-block font-weight-bold mb-2 text-break"
+													href={layout.url}
+													key={layout.url}
+												>
+													{layout.name}
+												</a>
+											</li>
+										</ol>
 									</>
 								)
 						)}

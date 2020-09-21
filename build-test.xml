@@ -2722,6 +2722,8 @@ tell application "Safari" to quit
 
 			<antcall target="deploy-license-xml" />
 
+			<antcall target="deploy-commerce-license-xml" />
+
 			<if>
 				<matches pattern="https?://" string="${test.build.plugins.war.zip.url}" />
 				<then>
@@ -6527,6 +6529,14 @@ go</echo>
 		<if>
 			<equals arg1="${functional.test.type}" arg2="analytics-cloud" />
 			<then>
+				<ant dir="portal-kernel" target="clean" />
+
+				<ant dir="portal-kernel" target="compile" />
+
+				<ant dir="portal-kernel" target="deploy" />
+
+				<ant dir="portal-kernel" target="install-portal-snapshot" />
+
 				<mirrors-get
 					dest="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.api.jar"
 					src="${baseline.jar.url}/com/liferay/com.liferay.analytics.demo.data.creator.api/${analytics.cloud.faro.data.creator.api}/com.liferay.analytics.demo.data.creator.api-${analytics.cloud.faro.data.creator.api}.jar"
@@ -6545,6 +6555,20 @@ virtualHostname="localhost"
 				</echo>
 
 				<print-file file.name="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.configuration.AnalyticsDemoDataCreatorConfiguration.config" />
+			</then>
+		</if>
+	</target>
+
+	<target name="deploy-commerce-license-xml">
+		<if>
+			<matches pattern="https?://" string="${test.commerce.license.url}" />
+			<then>
+				<mkdir dir="${liferay.home}/deploy" />
+
+				<mirrors-get
+					dest="${liferay.home}/deploy/portal-commerce-license.xml"
+					src="${test.commerce.license.url}"
+				/>
 			</then>
 		</if>
 	</target>

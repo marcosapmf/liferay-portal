@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.exception.SitemapChangeFrequencyException;
 import com.liferay.portal.kernel.exception.SitemapIncludeException;
 import com.liferay.portal.kernel.exception.SitemapPagePriorityException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CustomizedPages;
@@ -66,6 +67,7 @@ import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.security.SecureRandomUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.systemevent.SystemEventHierarchyEntry;
@@ -105,6 +107,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Provides the local service for accessing, adding, deleting, exporting,
@@ -288,8 +291,17 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
-		friendlyURLMap = layoutLocalServiceHelper.getFriendlyURLMap(
-			groupId, privateLayout, layoutId, name, friendlyURLMap);
+		if (system &&
+			(Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY) ||
+			 Objects.equals(type, LayoutConstants.TYPE_COLLECTION) ||
+			 Objects.equals(type, LayoutConstants.TYPE_CONTENT))) {
+
+			friendlyURLMap = _getDraftFriendlyURLMap(groupId, friendlyURLMap);
+		}
+		else {
+			friendlyURLMap = layoutLocalServiceHelper.getFriendlyURLMap(
+				groupId, privateLayout, layoutId, name, friendlyURLMap);
+		}
 
 		String friendlyURL = friendlyURLMap.get(LocaleUtil.getSiteDefault());
 
@@ -3794,6 +3806,13 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		return searchContext;
 	}
 
+	private String _generateFriendlyURLUUID() {
+		UUID uuid = new UUID(
+			SecureRandomUtil.nextLong(), SecureRandomUtil.nextLong());
+
+		return StringPool.SLASH + uuid.toString();
+	}
+
 	private List<Layout> _getChildLayouts(
 		LayoutSet layoutSet, long[] parentLayoutIds) {
 
@@ -3827,6 +3846,31 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 		catch (PortalException portalException) {
 			throw new SystemException(portalException);
 		}
+	}
+
+	private Map<Locale, String> _getDraftFriendlyURLMap(
+		long groupId, Map<Locale, String> friendlyURLMap) {
+
+		Map<Locale, String> newFriendlyURLMap = new HashMap<>();
+
+		for (Locale locale : LanguageUtil.getAvailableLocales(groupId)) {
+			String friendlyURL = friendlyURLMap.get(locale);
+
+			if (Validator.isNotNull(friendlyURL)) {
+				newFriendlyURLMap.put(locale, _generateFriendlyURLUUID());
+			}
+		}
+
+		Locale siteDefaultLocale = LocaleUtil.getSiteDefault();
+
+		if (newFriendlyURLMap.isEmpty() ||
+			Validator.isNull(newFriendlyURLMap.get(siteDefaultLocale))) {
+
+			newFriendlyURLMap.put(
+				siteDefaultLocale, _generateFriendlyURLUUID());
+		}
+
+		return newFriendlyURLMap;
 	}
 
 	private long _getParentPlid(

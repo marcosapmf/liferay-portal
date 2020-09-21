@@ -197,9 +197,7 @@ out.println(PortalUtil.escapeRedirect("/"));
 			key_pageName = "Home",
 			locator1 = "Home#PAGE");
 
-		AssertTextEquals(
-			locator1 = "HelloWorld#PORTLET_TITLE",
-			value1 = "Hello World");
+		Smoke.viewWelcomeContentPage();
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",

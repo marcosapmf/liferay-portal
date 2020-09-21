@@ -27,8 +27,7 @@ definition {
 	@description = "This is use case for LPS-107776. Can add collection items in a collection page based on dynamic collection with all types."
 	@priority = "5"
 	test AddCollectionItemsInCollectionPageBasedOnDynamicCollection {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		task ("Add a dynamic collection with All Types") {
@@ -434,8 +433,8 @@ definition {
 		}
 
 		AssertVisible(
-			key_pageName = "Content Collection Page Name",
-			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+			key_itemName = "Content Collection Page Name",
+			locator1 = "SitePages#LIST_GROUP_ITEM");
 
 		PagesFinder.goToFindAPage();
 
@@ -462,8 +461,8 @@ definition {
 			Click(locator1 = "Icon#ANGLE_LEFT_BACK");
 
 			AssertVisible(
-				key_pageName = "Content Collection Page Name",
-				locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+				key_itemName = "Content Collection Page Name",
+				locator1 = "SitePages#LIST_GROUP_ITEM");
 		}
 	}
 
@@ -558,7 +557,7 @@ definition {
 
 		AssertVisible(
 			key_pageName = "Content Collection Page Name",
-			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+			locator1 = "SitePages#LIST_GROUP_ITEM_ENTRY_TITLE");
 
 		PagesFinder.goToFindAPage();
 
@@ -582,7 +581,7 @@ definition {
 
 		AssertVisible(
 			key_pageName = "Content Collection Page Name",
-			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+			locator1 = "SitePages#LIST_GROUP_ITEM_ENTRY_TITLE");
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
@@ -607,7 +606,7 @@ definition {
 
 		AssertVisible(
 			key_pageName = "Content Collection Page Name",
-			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+			locator1 = "SitePages#LIST_GROUP_ITEM_ENTRY_TITLE");
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
@@ -631,7 +630,7 @@ definition {
 
 		AssertVisible(
 			key_pageName = "Content Collection Page Name",
-			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+			locator1 = "SitePages#LIST_GROUP_ITEM_ENTRY_TITLE");
 
 		PagesFinder.viewPageNameInPagesFinder(pageName = "Content Collection Page Name");
 	}
@@ -690,8 +689,8 @@ definition {
 		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
 
 		Click(
-			key_pageName = "Test Content Page Name 1",
-			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY_TITLE_LINK");
+			key_itemName = "Test Content Page Name 1",
+			locator1 = "SitePages#LIST_GROUP_ITEM");
 
 		AssertVisible(locator1 = "Icon#EDIT_PENCIL");
 
@@ -1136,9 +1135,8 @@ definition {
 	@description = "This is a test for LPS-110183. Can view information about collection items of collection page."
 	@priority = "5"
 	test ViewCollectionItemViaPageFinderAndPageAdmin {
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
 
 		JSONWebcontent.addWebContent(
 			content = "Webcontent Content",

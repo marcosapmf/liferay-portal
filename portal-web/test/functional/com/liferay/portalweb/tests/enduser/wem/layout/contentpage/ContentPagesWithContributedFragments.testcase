@@ -32,6 +32,8 @@ definition {
 	@description = "This is a test for LPS-112249. The Content Flags, Content Ratings and Content Display are compatible and consistent in the same cell of Collection Display."
 	@priority = "4"
 	test AddAllThreeContentFragmentsInCollectionDisplayOneCell {
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
+
 		for (var i : list "1,2,3") {
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content ${i}",
@@ -148,36 +150,6 @@ definition {
 			value1 = "WC WebContent Title 3");
 	}
 
-	@description = "This is a test for LPS-101330. A user should be able to add a video fragment and the video should play."
-	@priority = "5"
-	test AddContentPageWithVideoFragment {
-		property portal.acceptance = "true";
-
-		// Assert the Home page is a content page in the default site
-
-		AssertVisible(locator1 = "Icon#EDIT_PENCIL");
-
-		ContentPagesNavigator.openEditContentPage(
-			pageName = "Content Page Name",
-			siteName = "Test Site Name");
-
-		PageEditor.addFragment(
-			collectionName = "Basic Components",
-			fragmentName = "Video");
-
-		PageEditor.gotoConfiguration(fragmentName = "Video");
-
-		PageEditor.addVideoFragmentURL(videoLink = "https://www.youtube.com/watch?v=2EPZxIC5ogU");
-
-		PageEditor.clickPublish();
-
-		ContentPagesNavigator.openViewContentPage(
-			pageName = "Content Page Name",
-			siteName = "Test Site Name");
-
-		YoutubePortlet.assertVideoTitle(videoTitle = "Life at Liferay - A Look into Liferay Culture");
-	}
-
 	@description = "This is a use case for LPS-109298. Each tab of Tabs fragment is able to contain any elements in content page."
 	@priority = "5"
 	test AddFragmentToIndividualTabOfTabsFragment {
@@ -289,8 +261,7 @@ definition {
 	@description = "This is a use case for LPS-86141. The fragment should be added to all cells of the Collection Display when add it to one cell."
 	@priority = "5"
 	test AddFragmentToOneCellOfCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		task ("Add three Web Content Articles based on Basic Web Content") {
@@ -1365,8 +1336,7 @@ definition {
 	@description = "This is a use case for LPS-86141. The mapped content of asset entries in selected collection should be respectively shown in each cell of the Collection Display when map content to editable field of one fragment in one cell."
 	@priority = "4"
 	test MapContentToEditableFieldOfFragmentInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 
 		task ("Add three Web Content Articles based on Basic Web Content") {
 			for (var entryTitle : list "First Web Content,Second Web Content,Third Web Content") {
@@ -1870,8 +1840,7 @@ definition {
 	@description = "This is a use case for LPS-86141. The changes will be propagated to others cells when edit inline content of fragment in one cell."
 	@priority = "4"
 	test PropagateChangesOfInlineContentToOtherCellsOfCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 
 		task ("Add three documents") {
 			for (var entryTitle : list "First Document,Second Document,Third Document") {
@@ -2040,8 +2009,7 @@ definition {
 	@description = "This is a use case for LPS-86141. The title of asset entries in selected collection should be shown as a list in the Collection Display."
 	@priority = "5"
 	test ShowTitleOfCollectionItemsInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		task ("Add three Web Content Articles based on Basic Web Content") {
@@ -2695,8 +2663,7 @@ definition {
 	@description = "This is a test for LPS-112093. The Blogs Entries of collection are displayed using Full Content when add a Content Display to Collection Display."
 	@priority = "4"
 	test ViewBlogEntryViaContentInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 
 		for (var i : list "1,2,3") {
 			JSONBlog.addEntry(
@@ -2773,8 +2740,7 @@ definition {
 	@description = "This is a test for LPS-112093. The documents of collection are displayed using Abstract when add a Content Display to Collection Display."
 	@priority = "4"
 	test ViewDocumentViaContentInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 
 		for (var i : list "1,2,3") {
 			JSONDocument.addFileWithUploadedFile(
@@ -2853,8 +2819,7 @@ definition {
 	@description = "This is a test for LPS-112249. The flags of each collection item are shown when add a Content Flags fragment to Collection Display."
 	@priority = "5"
 	test ViewFlagsViaContentFlagsInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		for (var i : list "1,2,3") {
@@ -3396,8 +3361,7 @@ definition {
 	@description = "This is a test for LPS-112249. The ratings of each collection item are shown when add a Content Ratings fragment to Collection Display."
 	@priority = "5"
 	test ViewRatingsViaContentRatingsInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		for (var i : list "1,2,3") {
@@ -3475,8 +3439,7 @@ definition {
 	@description = "This is a test for LPS-112094. The title of asset entries should be shown when select Title as List Item Style for different List styles."
 	@priority = "5"
 	test ViewTitleListItemStyleInDifferentListStyles {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		task ("Add a Web Content Article,a Blogs Entry and a document") {
@@ -3721,8 +3684,7 @@ definition {
 	@description = "This is a test for LPS-112093. The Web Content Articles of collection are displayed using Default Template when add a Content Display to Collection Display."
 	@priority = "5"
 	test ViewWebContentViaContentInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		for (var i : list "1,2,3") {
@@ -3800,8 +3762,7 @@ definition {
 	@description = "This is a test for LPS-112093. Can display Web Content Articles of collection using custom template when add a Content Display to Collection Display."
 	@priority = "5"
 	test ViewWebContentWithCustomTemplateViaContentDisplayInCollectionDisplay {
-		property osgi.app.includes = "bookmarks";
-		property osgi.app.includes = "document-library-google-docs";
+		property osgi.app.includes = "bookmarks,document-library-google-docs";
 		property portal.acceptance = "true";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");

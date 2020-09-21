@@ -793,6 +793,8 @@ mariadb.executable=${mariadb.executable}]]></echo>
 				</not>
 				<then>
 					<antcall target="deploy-license-xml" />
+
+					<antcall target="deploy-commerce-license-xml" />
 				</then>
 			</if>
 
@@ -6802,16 +6804,11 @@ information. Make sure to commit in all build services results.
 					<arg value="${liferay.portal.branch}..HEAD" />
 				</exec>
 
-				<var name="format.current.branch" value="true" />
-
 				<if>
 					<or>
 						<contains string="${git.diff}" substring="modules${file.separator}util${file.separator}source-formatter" />
-						<contains string="${git.diff}" substring="source-formatter.properties" />
 					</or>
 					<then>
-						<var name="format.current.branch" value="false" />
-
 						<antcall target="compile" />
 
 						<antcall target="install-portal-snapshots" />
@@ -6830,15 +6827,34 @@ information. Make sure to commit in all build services results.
 					</else>
 				</if>
 
-				<ant dir="portal-impl" target="format-source-all">
-					<property name="format.current.branch" value="${format.current.branch}" />
-					<property name="show.documentation" value="false" />
-					<property name="source.auto.fix" value="false" />
-					<property name="source.fail.on.auto.fix" value="true" />
-					<property name="source.fail.on.has.warning" value="true" />
-					<property name="source.print.errors" value="false" />
-					<property name="source.use.properties" value="false" />
-				</ant>
+				<if>
+					<or>
+						<contains string="${git.diff}" substring="modules${file.separator}util${file.separator}source-formatter" />
+						<contains string="${git.diff}" substring="source-formatter.properties" />
+					</or>
+					<then>
+						<ant dir="portal-impl" target="format-source-current-branch">
+							<property name="show.documentation" value="false" />
+							<property name="source.auto.fix" value="false" />
+							<property name="source.fail.on.auto.fix" value="true" />
+							<property name="source.fail.on.has.warning" value="true" />
+							<property name="source.print.errors" value="false" />
+							<property name="source.use.properties" value="false" />
+							<property name="validate.commit.messages" value="true" />
+						</ant>
+					</then>
+					<else>
+						<ant dir="portal-impl" target="format-source-all">
+							<property name="show.documentation" value="false" />
+							<property name="source.auto.fix" value="false" />
+							<property name="source.fail.on.auto.fix" value="true" />
+							<property name="source.fail.on.has.warning" value="true" />
+							<property name="source.print.errors" value="false" />
+							<property name="source.use.properties" value="false" />
+							<property name="validate.commit.messages" value="true" />
+						</ant>
+					</else>
+				</if>
 			</test-action>
 		</run-batch-test>
 	</target>
