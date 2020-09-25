@@ -12,11 +12,57 @@
  * details.
  */
 
-import {ClassicEditor} from 'frontend-editor-ckeditor-web';
-import React from 'react';
+import {Editor} from 'frontend-editor-ckeditor-web';
+import React, {useCallback, useRef} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
+
+const ClassicEditor = ({contents, editorConfig, onChange, ...otherProps}) => {
+	const editorRef = useRef();
+
+	const getHTML = useCallback(() => {
+		let data = contents;
+
+		const editor = editorRef.current.editor;
+
+		if (editor && editor.instanceReady) {
+			data = editor.getData();
+
+			if (CKEDITOR.env.gecko && CKEDITOR.tools.trim(data) === '<br />') {
+				data = '';
+			}
+		}
+
+		return data;
+	}, [contents]);
+
+	return (
+		<Editor
+			className="lfr-editable"
+			config={{
+				toolbar: 'simple',
+				...editorConfig,
+			}}
+			onChange={() => {
+				const editor = editorRef.current.editor;
+
+				if (editor.checkDirty()) {
+					onChange(getHTML());
+
+					editor.resetDirty();
+				}
+			}}
+			onInstanceReady={() => {
+				const editor = editorRef.current.editor;
+
+				editor.setData(contents);
+			}}
+			ref={editorRef}
+			{...otherProps}
+		/>
+	);
+};
 
 const RichText = ({
 	editorConfig,
