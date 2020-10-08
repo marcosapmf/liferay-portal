@@ -236,7 +236,7 @@ const getFieldOptions = (fieldName, pages) => {
 		return field.fieldName === fieldName;
 	});
 
-	options = field ? field.options : [];
+	options = field ? field.options : []; 
 
 	return options;
 };
