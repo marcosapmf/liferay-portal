@@ -67,7 +67,7 @@ public class DDMFormInstanceReportLocalServiceTest
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new LiferayIntegrationTestRule(); 
 
 	@BeforeClass
 	public static void setUpClass() {
