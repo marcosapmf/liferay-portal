@@ -14,6 +14,8 @@
 
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
+import com.google.common.base.Objects;
+
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluator;
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluatorEvaluateRequest;
 import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluatorEvaluateResponse;
@@ -23,6 +25,8 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
+import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
@@ -93,6 +97,9 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 		_addRecordMVCCommandHelper.updateRequiredFieldsAccordingToVisibility(
 			_actionRequest, _ddmForm, _ddmFormValues, LocaleUtil.US);
 
+		Assert.assertEquals(
+			new UnlocalizedValue(StringPool.BLANK), getFieldValue());
+
 		Assert.assertFalse(_ddmFormField.isRequired());
 	}
 
@@ -108,6 +115,9 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 		_addRecordMVCCommandHelper.updateRequiredFieldsAccordingToVisibility(
 			_actionRequest, _ddmForm, _ddmFormValues, LocaleUtil.US);
 
+		Assert.assertEquals(
+			new UnlocalizedValue(_STRING_VALUE), getFieldValue());
+
 		Assert.assertFalse(_ddmFormField.isRequired());
 	}
 
@@ -120,6 +130,9 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 
 		_addRecordMVCCommandHelper.updateRequiredFieldsAccordingToVisibility(
 			_actionRequest, _ddmForm, _ddmFormValues, LocaleUtil.US);
+
+		Assert.assertEquals(
+			new UnlocalizedValue(StringPool.BLANK), getFieldValue());
 
 		Assert.assertFalse(_ddmFormField.isRequired());
 	}
@@ -134,19 +147,36 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 		_addRecordMVCCommandHelper.updateRequiredFieldsAccordingToVisibility(
 			_actionRequest, _ddmForm, _ddmFormValues, LocaleUtil.US);
 
+		Assert.assertEquals(
+			new UnlocalizedValue(_STRING_VALUE), getFieldValue());
+
 		Assert.assertTrue(_ddmFormField.isRequired());
+	}
+
+	protected Value getFieldValue() {
+		for (DDMFormFieldValue ddmFormFieldValue :
+				_ddmFormValues.getDDMFormFieldValues()) {
+
+			if (Objects.equal(ddmFormFieldValue.getName(), _FIELD_NAME)) {
+				return ddmFormFieldValue.getValue();
+			}
+		}
+
+		return null;
 	}
 
 	protected void mockDDMFormEvaluator(
 			Map<String, Object> fieldChangesProperties)
 		throws Exception {
 
-		_ddmForm = DDMFormTestUtil.createDDMForm("field0");
+		_ddmForm = DDMFormTestUtil.createDDMForm(_FIELD_NAME);
 
 		Map<String, DDMFormField> ddmFormFields = _ddmForm.getDDMFormFieldsMap(
 			true);
 
-		_ddmFormField = ddmFormFields.get("field0");
+		_ddmFormField = ddmFormFields.get(_FIELD_NAME);
+
+		_ddmFormField.setLocalizable(false);
 
 		_ddmFormField.setRequired(true);
 
@@ -154,7 +184,7 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 
 		DDMFormFieldValue ddmFormFieldValue =
 			DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
-				"field0", StringPool.BLANK);
+				_FIELD_NAME, _STRING_VALUE);
 
 		_ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
@@ -163,7 +193,7 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 				HashMapBuilder.
 					<DDMFormEvaluatorFieldContextKey, Map<String, Object>>put(
 						new DDMFormEvaluatorFieldContextKey(
-							"field0", ddmFormFieldValue.getInstanceId()),
+							_FIELD_NAME, ddmFormFieldValue.getInstanceId()),
 						fieldChangesProperties
 					).build());
 
@@ -257,6 +287,10 @@ public class AddFormInstanceRecordMVCCommandHelperTest extends PowerMockito {
 			ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE
 		);
 	}
+
+	private static final String _FIELD_NAME = "field0";
+
+	private static final String _STRING_VALUE = "string value";
 
 	@Mock
 	private ActionRequest _actionRequest;
