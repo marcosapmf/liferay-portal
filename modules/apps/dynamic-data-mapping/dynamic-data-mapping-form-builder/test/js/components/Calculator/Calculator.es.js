@@ -18,7 +18,7 @@ import Token from '../../../../src/main/resources/META-INF/resources/js/expressi
 
 let component;
 
-const fields = [
+const fields = [ 
 	{
 		dataType: 'number',
 		fieldName: 'option1repeatablefieldName',
