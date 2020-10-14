@@ -464,8 +464,12 @@ const Main = ({
 								handleField('generateKeyword', generate);
 								handleField('value', value);
 							}}
+							onReferenceChange={(event, value) => {
+								handleField('reference', value);
+							}}
 							placeholder={placeholder}
 							readOnly={option.disabled}
+							reference={option.reference}
 							required={required}
 							showLabel={false}
 							value={option.label}
