@@ -252,6 +252,27 @@ public interface DispatchTriggerModel
 	public void setName(String name);
 
 	/**
+	 * Returns the overlap allowed of this dispatch trigger.
+	 *
+	 * @return the overlap allowed of this dispatch trigger
+	 */
+	public boolean getOverlapAllowed();
+
+	/**
+	 * Returns <code>true</code> if this dispatch trigger is overlap allowed.
+	 *
+	 * @return <code>true</code> if this dispatch trigger is overlap allowed; <code>false</code> otherwise
+	 */
+	public boolean isOverlapAllowed();
+
+	/**
+	 * Sets whether this dispatch trigger is overlap allowed.
+	 *
+	 * @param overlapAllowed the overlap allowed of this dispatch trigger
+	 */
+	public void setOverlapAllowed(boolean overlapAllowed);
+
+	/**
 	 * Returns the start date of this dispatch trigger.
 	 *
 	 * @return the start date of this dispatch trigger
@@ -287,6 +308,21 @@ public interface DispatchTriggerModel
 	public void setSystem(boolean system);
 
 	/**
+	 * Returns the task executor type of this dispatch trigger.
+	 *
+	 * @return the task executor type of this dispatch trigger
+	 */
+	@AutoEscape
+	public String getTaskExecutorType();
+
+	/**
+	 * Sets the task executor type of this dispatch trigger.
+	 *
+	 * @param taskExecutorType the task executor type of this dispatch trigger
+	 */
+	public void setTaskExecutorType(String taskExecutorType);
+
+	/**
 	 * Returns the task settings of this dispatch trigger.
 	 *
 	 * @return the task settings of this dispatch trigger
@@ -300,20 +336,5 @@ public interface DispatchTriggerModel
 	 * @param taskSettings the task settings of this dispatch trigger
 	 */
 	public void setTaskSettings(String taskSettings);
-
-	/**
-	 * Returns the task type of this dispatch trigger.
-	 *
-	 * @return the task type of this dispatch trigger
-	 */
-	@AutoEscape
-	public String getTaskType();
-
-	/**
-	 * Sets the task type of this dispatch trigger.
-	 *
-	 * @param taskType the task type of this dispatch trigger
-	 */
-	public void setTaskType(String taskType);
 
 }

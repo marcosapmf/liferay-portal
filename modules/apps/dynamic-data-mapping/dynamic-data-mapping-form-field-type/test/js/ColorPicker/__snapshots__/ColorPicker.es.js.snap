@@ -138,7 +138,6 @@ exports[`Field Color Picker renders field with label 1`] = `
     <label
       aria-labelledby="colorPicker_fieldDetails"
       class="ddm-label"
-      for="colorPicker"
       tabindex="0"
     >
       label

@@ -490,9 +490,7 @@ public class FragmentEntryConfigurationParserImpl
 				GetterUtil.getLong(
 					configurationValueJSONObject.getString("classPK"))
 			).put(
-				"template",
-				GetterUtil.getLong(
-					configurationValueJSONObject.getString("template"))
+				"template", configurationValueJSONObject.get("template")
 			).put(
 				"title", configurationValueJSONObject.getString("title")
 			);

@@ -32,14 +32,15 @@ import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.document.library.web.internal.security.permission.resource.DLFileEntryPermission;
 import com.liferay.document.library.web.internal.security.permission.resource.DLFolderPermission;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
+import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -82,18 +83,25 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Alejandro Tardín
  */
-public class DLAdminManagementToolbarDisplayContext {
+public class DLAdminManagementToolbarDisplayContext
+	extends SearchContainerManagementToolbarDisplayContext {
 
 	public DLAdminManagementToolbarDisplayContext(
 		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		DLAdminDisplayContext dlAdminDisplayContext) {
+		DLAdminDisplayContext dlAdminDisplayContext,
+		DLTrashHelper dlTrashHelper) {
+
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
+			dlAdminDisplayContext.getSearchContainer());
 
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 		_dlAdminDisplayContext = dlAdminDisplayContext;
+		_dlTrashHelper = dlTrashHelper;
 
 		_currentURLObj = PortletURLUtil.getCurrent(
 			liferayPortletRequest, liferayPortletResponse);
@@ -103,14 +111,12 @@ public class DLAdminManagementToolbarDisplayContext {
 		_dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(
 			_dlRequestHelper);
 
-		_dlTrashHelper = (DLTrashHelper)_httpServletRequest.getAttribute(
-			DLWebKeys.DOCUMENT_LIBRARY_TRASH_HELPER);
-
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public List<DropdownItem> getActionDropdownItems() throws PortalException {
+	@Override
+	public List<DropdownItem> getActionDropdownItems() {
 		if (!_dlPortletInstanceSettingsHelper.isShowActions()) {
 			return null;
 		}
@@ -295,6 +301,7 @@ public class DLAdminManagementToolbarDisplayContext {
 		return availableActions;
 	}
 
+	@Override
 	public String getClearResultsURL() {
 		PortletURL clearResultsURL = _liferayPortletResponse.createRenderURL();
 
@@ -306,11 +313,13 @@ public class DLAdminManagementToolbarDisplayContext {
 		return clearResultsURL.toString();
 	}
 
+	@Override
 	public String getComponentId() {
 		return _liferayPortletResponse.getNamespace() +
 			"entriesManagementToolbar";
 	}
 
+	@Override
 	public CreationMenu getCreationMenu() {
 		String portletName = _liferayPortletRequest.getPortletName();
 
@@ -352,6 +361,12 @@ public class DLAdminManagementToolbarDisplayContext {
 		return creationMenu;
 	}
 
+	@Override
+	public String getDefaultEventHandler() {
+		return liferayPortletResponse.getNamespace() + "DocumentLibrary";
+	}
+
+	@Override
 	public List<DropdownItem> getFilterDropdownItems() {
 		if (_isSearch()) {
 			return null;
@@ -374,6 +389,7 @@ public class DLAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
+	@Override
 	public List<LabelItem> getFilterLabelItems() {
 		long fileEntryTypeId = _getFileEntryTypeId();
 
@@ -434,7 +450,13 @@ public class DLAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
-	public PortletURL getSearchURL() {
+	@Override
+	public String getInfoPanelId() {
+		return "infoPanelId";
+	}
+
+	@Override
+	public String getSearchActionURL() {
 		PortletURL searchURL = _liferayPortletResponse.createRenderURL();
 
 		searchURL.setParameter(
@@ -462,9 +484,15 @@ public class DLAdminManagementToolbarDisplayContext {
 
 		searchURL.setParameter("showSearchInfo", Boolean.TRUE.toString());
 
-		return searchURL;
+		return searchURL.toString();
 	}
 
+	@Override
+	public String getSearchContainerId() {
+		return "entries";
+	}
+
+	@Override
 	public String getSortingOrder() {
 		if (_isSearch()) {
 			return null;
@@ -473,7 +501,8 @@ public class DLAdminManagementToolbarDisplayContext {
 		return _dlAdminDisplayContext.getOrderByType();
 	}
 
-	public PortletURL getSortingURL() {
+	@Override
+	public String getSortingURL() {
 		if (_isSearch()) {
 			return null;
 		}
@@ -484,17 +513,16 @@ public class DLAdminManagementToolbarDisplayContext {
 			"orderByType",
 			Objects.equals(_getOrderByType(), "asc") ? "desc" : "asc");
 
-		return sortingURL;
+		return sortingURL.toString();
 	}
 
-	public int getTotalItems() {
-		SearchContainer<Object> searchContainer =
-			_dlAdminDisplayContext.getSearchContainer();
-
-		return searchContainer.getTotal();
+	@Override
+	public Boolean getSupportsBulkActions() {
+		return true;
 	}
 
-	public ViewTypeItemList getViewTypes() {
+	@Override
+	public List<ViewTypeItem> getViewTypeItems() {
 		if (_isSearch()) {
 			return null;
 		}
@@ -564,7 +592,8 @@ public class DLAdminManagementToolbarDisplayContext {
 		};
 	}
 
-	public boolean isDisabled() {
+	@Override
+	public Boolean isDisabled() {
 		try {
 			int count =
 				DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcutsCount(
@@ -582,12 +611,20 @@ public class DLAdminManagementToolbarDisplayContext {
 		}
 	}
 
-	public boolean isSelectable() {
+	@Override
+	public Boolean isShowInfoButton() {
 		return true;
 	}
 
-	public boolean isShowSearch() {
-		return _dlPortletInstanceSettingsHelper.isShowSearch();
+	@Override
+	public Boolean isShowSearch() {
+		if (_dlPortletInstanceSettingsHelper.isShowSearch() &&
+			super.isShowSearch()) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private PortletURL _getCurrentSortingURL() {

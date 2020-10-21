@@ -157,7 +157,7 @@ public class BlogsEntryInfoItemFieldValuesProvider
 			if (themeDisplay != null) {
 				blogsEntryFieldValues.add(
 					new InfoFieldValue<>(
-						BlogsEntryInfoItemFields.displayPageUrlInfoField,
+						BlogsEntryInfoItemFields.displayPageURLInfoField,
 						_getDisplayPageURL(blogsEntry)));
 			}
 

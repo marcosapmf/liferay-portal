@@ -16,8 +16,8 @@ package com.liferay.dispatch.talend.web.internal.frontend.taglib.servlet.taglib.
 
 import com.liferay.dispatch.constants.DispatchConstants;
 import com.liferay.dispatch.model.DispatchTrigger;
-import com.liferay.dispatch.talend.web.internal.executor.DispatchTalendScheduledTaskExecutor;
-import com.liferay.dispatch.talend.web.internal.executor.DispatchTalendScheduledTaskExecutorHelper;
+import com.liferay.dispatch.talend.web.internal.executor.TalendDispatchTaskExecutor;
+import com.liferay.dispatch.talend.web.internal.executor.TalendDispatchTaskExecutorHelper;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationCategory;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import java.io.IOException;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.servlet.ServletContext;
@@ -53,8 +54,7 @@ public class DispatchTalendScreenNavigationCategory
 
 	@Override
 	public String getCategoryKey() {
-		return DispatchTalendScheduledTaskExecutor.
-			SCHEDULED_TASK_EXECUTOR_TYPE_TALEND;
+		return TalendDispatchTaskExecutor.DISPATCH_TASK_EXECUTOR_TYPE_TALEND;
 	}
 
 	@Override
@@ -81,11 +81,10 @@ public class DispatchTalendScreenNavigationCategory
 			return false;
 		}
 
-		String taskType = dispatchTrigger.getTaskType();
-
-		if (taskType.equals(
-				DispatchTalendScheduledTaskExecutor.
-					SCHEDULED_TASK_EXECUTOR_TYPE_TALEND) &&
+		if (Objects.equals(
+				dispatchTrigger.getTaskExecutorType(),
+				TalendDispatchTaskExecutor.
+					DISPATCH_TASK_EXECUTOR_TYPE_TALEND) &&
 			!dispatchTrigger.isSystem()) {
 
 			return true;
@@ -101,17 +100,13 @@ public class DispatchTalendScreenNavigationCategory
 		throws IOException {
 
 		httpServletRequest.setAttribute(
-			"dispatchTalendScheduledTaskExecutorHelper",
-			_dispatchTalendScheduledTaskExecutorHelper);
+			TalendDispatchTaskExecutorHelper.class.getName(),
+			_talendDispatchTaskExecutorHelper);
 
 		_jspRenderer.renderJSP(
 			_servletContext, httpServletRequest, httpServletResponse,
 			"/view.jsp");
 	}
-
-	@Reference
-	private DispatchTalendScheduledTaskExecutorHelper
-		_dispatchTalendScheduledTaskExecutorHelper;
 
 	@Reference
 	private JSPRenderer _jspRenderer;
@@ -120,5 +115,8 @@ public class DispatchTalendScreenNavigationCategory
 		target = "(osgi.web.symbolicname=com.liferay.dispatch.talend.web)"
 	)
 	private ServletContext _servletContext;
+
+	@Reference
+	private TalendDispatchTaskExecutorHelper _talendDispatchTaskExecutorHelper;
 
 }

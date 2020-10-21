@@ -38,6 +38,7 @@ page import="com.liferay.portal.kernel.lock.Lock" %><%@
 page import="com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil" %><%@
 page import="com.liferay.portal.kernel.util.LinkedHashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.LocaleUtil" %><%@
+page import="com.liferay.portal.kernel.view.count.ViewCountManagerUtil" %><%@
 page import="com.liferay.portal.util.RepositoryUtil" %>
 
 <%@ page import="java.util.Collections" %>
@@ -49,17 +50,9 @@ String portletId = dlRequestHelper.getResourcePortletId();
 
 portletName = dlRequestHelper.getResourcePortletName();
 
-DLAdminDisplayContext dlAdminDisplayContext = dlAdminDisplayContextProvider.getDLAdminDisplayContext(request, response);
-
 DLConfiguration dlConfiguration = ConfigurationProviderUtil.getSystemConfiguration(DLConfiguration.class);
 DLGroupServiceSettings dlGroupServiceSettings = dlRequestHelper.getDLGroupServiceSettings();
 DLPortletInstanceSettings dlPortletInstanceSettings = dlRequestHelper.getDLPortletInstanceSettings();
-
-long rootFolderId = dlAdminDisplayContext.getRootFolderId();
-String rootFolderName = dlAdminDisplayContext.getRootFolderName();
-
-boolean showComments = ParamUtil.getBoolean(request, "showComments", true);
-boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 %>
 
 <%@ include file="/document_library/init-ext.jsp" %>

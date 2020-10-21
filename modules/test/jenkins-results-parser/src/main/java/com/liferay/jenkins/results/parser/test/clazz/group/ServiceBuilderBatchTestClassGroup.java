@@ -160,7 +160,8 @@ public class ServiceBuilderBatchTestClassGroup
 		int axisCount = getAxisCount();
 
 		if ((testClassCount == 0) && (axisCount == 1)) {
-			axisTestClassGroups.put(0, new AxisTestClassGroup(this, 0));
+			axisTestClassGroups.add(
+				0, TestClassGroupFactory.newAxisTestClassGroup(this));
 
 			return;
 		}

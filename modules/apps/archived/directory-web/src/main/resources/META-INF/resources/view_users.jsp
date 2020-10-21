@@ -27,8 +27,6 @@ PortletURL portletURL = (PortletURL)request.getAttribute("view.jsp-portletURL");
 if (Validator.isNotNull(viewUsersRedirect)) {
 	portletURL.setParameter("viewUsersRedirect", viewUsersRedirect);
 }
-
-boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 %>
 
 <c:if test="<%= Validator.isNotNull(viewUsersRedirect) %>">
@@ -57,7 +55,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 			portletURL="<%= portletURL %>"
 		/>
 
-		<c:if test="<%= showSearch %>">
+		<c:if test='<%= ParamUtil.getBoolean(request, "showSearch", true) %>'>
 			<li>
 				<liferay-util:include page="/user_search.jsp" servletContext="<%= application %>" />
 			</li>
@@ -122,17 +120,18 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 			userParams.put("socialRelationType", new Long[] {themeDisplay.getUserId(), Long.valueOf(SocialRelationConstants.TYPE_BI_FRIEND)});
 		}
 		else if (portletName.equals(PortletKeys.MY_SITES_DIRECTORY) && (organizationId == 0) && (userGroupId == 0)) {
-			LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
-				"inherit", Boolean.FALSE
-			).put(
-				"site", Boolean.TRUE
-			).put(
-				"usersGroups", user.getUserId()
-			).build();
-
 			userParams.put("inherit", Boolean.TRUE);
 
-			List<Group> groups = GroupLocalServiceUtil.search(user.getCompanyId(), groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			List<Group> groups = GroupLocalServiceUtil.search(
+				user.getCompanyId(),
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", Boolean.FALSE
+				).put(
+					"site", Boolean.TRUE
+				).put(
+					"usersGroups", user.getUserId()
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 			userParams.put("usersGroups", SitesUtil.filterGroups(groups, PropsValues.MY_SITES_DIRECTORY_SITE_EXCLUDES));
 		}

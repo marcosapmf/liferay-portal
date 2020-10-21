@@ -60,6 +60,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, with no direct replacement.</description>
 		<name>app-view-entry</name>
 		<tag-class>com.liferay.taglib.ui.AppViewEntryTag</tag-class>
 		<body-content>empty</body-content>
@@ -415,6 +416,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-asset:asset-categories-selector</code>]]> tag.</description>
 		<name>asset-categories-selector</name>
 		<tag-class>com.liferay.taglib.ui.AssetCategoriesSelectorTag</tag-class>
 		<body-content>JSP</body-content>
@@ -460,6 +462,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-asset:asset-categories-summary</code>]]> tag.</description>
 		<name>asset-categories-summary</name>
 		<tag-class>com.liferay.taglib.ui.AssetCategoriesSummaryTag</tag-class>
 		<body-content>JSP</body-content>
@@ -490,6 +493,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-asset:asset-tags-selector</code>]]> tag.</description>
 		<description>Creates a <![CDATA[<code>Liferay.AssetTagsSelector</code>]]> component to create and select tags to add to an asset, such as a blog entry, bookmark, or wiki page.</description>
 		<name>asset-tags-selector</name>
 		<tag-class>com.liferay.taglib.ui.AssetTagsSelectorTag</tag-class>
@@ -566,6 +570,7 @@
 	</tag>
 	<tag>
 		<description>Creates a component to display all the tags associated with an asset, such as a blog entry, wiki page, or message boards message.</description>
+		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-asset:asset-tags-summary</code>]]> tag.</description>
 		<name>asset-tags-summary</name>
 		<tag-class>com.liferay.taglib.ui.AssetTagsSummaryTag</tag-class>
 		<body-content>JSP</body-content>
@@ -607,6 +612,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-site-navigation:breadcrumb</code>]]> tag.</description>
 		<name>breadcrumb</name>
 		<tag-class>com.liferay.taglib.ui.BreadcrumbTag</tag-class>
 		<body-content>JSP</body-content>
@@ -780,111 +786,7 @@
 		<body-content>JSP</body-content>
 	</tag>
 	<tag>
-		<name>flash</name>
-		<tag-class>com.liferay.taglib.ui.FlashTag</tag-class>
-		<body-content>JSP</body-content>
-		<attribute>
-			<name>align</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>allowFullScreen</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>allowScriptAccess</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>base</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>bgcolor</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>devicefont</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>flashvars</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>height</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>id</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>loop</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>menu</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>movie</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>play</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>quality</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>salign</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>scale</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>swliveconnect</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>version</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>width</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<name>wmode</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-	<tag>
+		<description>Deprecated as of 7.3.0, replaced by the <![CDATA[<code>liferay-frontend:form-navigator</code>]]> tag.</description>
 		<description>Creates a navigable form for multiple section forms. Its default navigation is a side navigation box with links to each section. The navigation can be configured as a progressive step navigation positioned above the form, or as vertically stacked accordion style sections that expand when clicked.</description>
 		<name>form-navigator</name>
 		<tag-class>com.liferay.taglib.ui.FormNavigatorTag</tag-class>
@@ -4277,6 +4179,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, with no direct replacement.</description>
 		<name>user-group-search-container-results</name>
 		<tag-class>com.liferay.taglib.ui.UserGroupSearchContainerResultsTag</tag-class>
 		<body-content>JSP</body-content>
@@ -4347,6 +4250,7 @@
 		</attribute>
 	</tag>
 	<tag>
+		<description>Deprecated as of 7.3.0, with no direct replacement.</description>
 		<name>user-search-container-results</name>
 		<tag-class>com.liferay.taglib.ui.UserSearchContainerResultsTag</tag-class>
 		<body-content>JSP</body-content>

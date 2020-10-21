@@ -73,6 +73,7 @@ public class LayoutStructureItemJSONSerializerImpl
 	private static final ObjectMapper _objectMapper = new ObjectMapper() {
 		{
 			configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+			configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 			configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
 			setDateFormat(new ISO8601DateFormat());
 			setSerializationInclusion(JsonInclude.Include.NON_NULL);

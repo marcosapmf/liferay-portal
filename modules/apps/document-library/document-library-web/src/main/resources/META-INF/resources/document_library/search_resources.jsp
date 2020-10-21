@@ -41,6 +41,8 @@ if (searchFolderId > 0) {
 
 String keywords = ParamUtil.getString(request, "keywords");
 
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
+
 EntriesChecker entriesChecker = new EntriesChecker(liferayPortletRequest, liferayPortletResponse);
 
 entriesChecker.setCssClass("entry-selector");

@@ -541,7 +541,7 @@ definition {
 
 		Click(locator1 = "PageEditor#EXPERIENCE_SELECT_ITEM");
 
-		Click(locator1 = "PageEditor#FRAGMENT_SIDEBAR");
+		PageEditor.clickManagementBar();
 
 		AssertElementPresent(locator1 = "PageEditor#EXPERIENCE_BUTTON_NAME");
 	}
@@ -605,6 +605,20 @@ definition {
 		else {
 			Click(locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD");
 		}
+	}
+
+	macro clickManagementBar {
+		var elementHeight = selenium.getElementHeight("PageEditor#MANAGEMENT_BAR");
+		var offSetY = MathUtil.product("50","${elementHeight}");
+		var offSetY = MathUtil.quotient("${offSetY}","100");
+
+		var elementWidth = selenium.getElementWidth("PageEditor#MANAGEMENT_BAR");
+		var offSetX = MathUtil.product("25","${elementWidth}");
+		var offSetX = MathUtil.quotient("${offSetX}","100");
+
+		Click.clickAt(
+			locator1 = "PageEditor#MANAGEMENT_BAR",
+			value1 = "${offSetX},${offSetY}");
 	}
 
 	macro clickPublish {
@@ -1244,7 +1258,7 @@ definition {
 				value1 = "${text}");
 		}
 
-		Click(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+		PageEditor.clickManagementBar();
 
 		PageEditor.waitForAutoSave();
 	}

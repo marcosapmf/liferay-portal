@@ -18,6 +18,7 @@ import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.exception.NoSuchEntryException;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.renderer.FragmentRendererTracker;
@@ -111,11 +112,16 @@ public class AddFragmentEntryLinkMVCActionCommand
 				contributedRendererKey, serviceContext);
 		}
 
+		DefaultFragmentRendererContext defaultFragmentRendererContext =
+			new DefaultFragmentRendererContext(null);
+
 		return _fragmentEntryLinkService.addFragmentEntryLink(
 			serviceContext.getScopeGroupId(), 0, 0, segmentsExperienceId,
 			serviceContext.getPlid(), StringPool.BLANK, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-			StringPool.BLANK, 0, fragmentEntryKey, serviceContext);
+			StringPool.BLANK,
+			fragmentRenderer.getConfiguration(defaultFragmentRendererContext),
+			StringPool.BLANK, StringPool.BLANK, 0, fragmentEntryKey,
+			serviceContext);
 	}
 
 	@Override

@@ -59,8 +59,8 @@ public class DispatchTriggerLocalServiceImpl
 
 	@Override
 	public DispatchTrigger addDispatchTrigger(
-			long userId, String name, boolean system,
-			UnicodeProperties taskSettingsUnicodeProperties, String taskType)
+			long userId, String name, boolean system, String taskExecutorType,
+			UnicodeProperties taskSettingsUnicodeProperties)
 		throws PortalException {
 
 		User user = userLocalService.getUser(userId);
@@ -75,9 +75,9 @@ public class DispatchTriggerLocalServiceImpl
 		dispatchTrigger.setUserName(user.getFullName());
 		dispatchTrigger.setName(name);
 		dispatchTrigger.setSystem(system);
+		dispatchTrigger.setTaskExecutorType(taskExecutorType);
 		dispatchTrigger.setTaskSettingsUnicodeProperties(
 			taskSettingsUnicodeProperties);
-		dispatchTrigger.setTaskType(taskType);
 
 		dispatchTrigger = dispatchTriggerPersistence.update(dispatchTrigger);
 
@@ -116,7 +116,8 @@ public class DispatchTriggerLocalServiceImpl
 	public DispatchTrigger deleteDispatchTrigger(long dispatchTriggerId)
 		throws PortalException {
 
-		return dispatchTriggerPersistence.remove(dispatchTriggerId);
+		return deleteDispatchTrigger(
+			dispatchTriggerPersistence.findByPrimaryKey(dispatchTriggerId));
 	}
 
 	@Override
@@ -189,9 +190,9 @@ public class DispatchTriggerLocalServiceImpl
 	public DispatchTrigger updateDispatchTrigger(
 			long dispatchTriggerId, boolean active, String cronExpression,
 			int endDateMonth, int endDateDay, int endDateYear, int endDateHour,
-			int endDateMinute, boolean neverEnd, int startDateMonth,
-			int startDateDay, int startDateYear, int startDateHour,
-			int startDateMinute)
+			int endDateMinute, boolean neverEnd, boolean overlapAllowed,
+			int startDateMonth, int startDateDay, int startDateYear,
+			int startDateHour, int startDateMinute)
 		throws PortalException {
 
 		DispatchTrigger dispatchTrigger =
@@ -209,6 +210,8 @@ public class DispatchTriggerLocalServiceImpl
 					endDateMonth, endDateDay, endDateYear, endDateHour,
 					endDateMinute, DispatchTriggerEndDateException.class));
 		}
+
+		dispatchTrigger.setOverlapAllowed(overlapAllowed);
 
 		dispatchTrigger.setStartDate(
 			_portal.getDate(

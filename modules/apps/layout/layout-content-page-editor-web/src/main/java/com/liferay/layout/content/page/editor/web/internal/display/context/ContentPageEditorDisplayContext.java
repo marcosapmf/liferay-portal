@@ -236,6 +236,9 @@ public class ContentPageEditorDisplayContext {
 		return HashMapBuilder.<String, Object>put(
 			"config",
 			HashMapBuilder.<String, Object>put(
+				"adaptiveMediaEnabled",
+				_ffLayoutContentPageEditorConfiguration.adaptiveMediaEnabled()
+			).put(
 				"addFragmentCompositionURL",
 				getFragmentEntryActionURL(
 					"/content_layout/add_fragment_composition")
@@ -292,7 +295,7 @@ public class ContentPageEditorDisplayContext {
 				"defaultStyleBookEntryImagePreviewURL",
 				() -> {
 					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultStyleBookEntry();
+						_getDefaultMasterStyleBookEntry();
 
 					if (defaultStyleBookEntry != null) {
 						return defaultStyleBookEntry.getImagePreviewURL(
@@ -305,7 +308,7 @@ public class ContentPageEditorDisplayContext {
 				"defaultStyleBookEntryName",
 				() -> {
 					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultStyleBookEntry();
+						_getDefaultMasterStyleBookEntry();
 
 					if (defaultStyleBookEntry != null) {
 						return defaultStyleBookEntry.getName();
@@ -362,6 +365,10 @@ public class ContentPageEditorDisplayContext {
 						frontendTokenDefinition, themeDisplay.getLocale(),
 						_getDefaultStyleBookEntry());
 				}
+			).put(
+				"getAvailableImageConfigurationsURL",
+				getResourceURL(
+					"/content_layout/get_available_image_configurations")
 			).put(
 				"getAvailableListItemRenderersURL",
 				getResourceURL(
@@ -903,6 +910,18 @@ public class ContentPageEditorDisplayContext {
 		return _defaultConfigurations;
 	}
 
+	private StyleBookEntry _getDefaultMasterStyleBookEntry() {
+		if (_defaultMasterStyleBookEntry != null) {
+			return _defaultMasterStyleBookEntry;
+		}
+
+		_defaultMasterStyleBookEntry =
+			DefaultStyleBookEntryUtil.getDefaultMasterStyleBookEntry(
+				themeDisplay.getLayout());
+
+		return _defaultMasterStyleBookEntry;
+	}
+
 	private StyleBookEntry _getDefaultStyleBookEntry() {
 		if (_defaultStyleBookEntry != null) {
 			return _defaultStyleBookEntry;
@@ -1434,7 +1453,7 @@ public class ContentPageEditorDisplayContext {
 					).put(
 						"editableTypes",
 						EditableFragmentEntryProcessorUtil.getEditableTypes(
-							fragmentEntryLink.getHtml())
+							content)
 					).put(
 						"editableValues",
 						JSONFactoryUtil.createJSONObject(
@@ -2192,6 +2211,7 @@ public class ContentPageEditorDisplayContext {
 	private final List<ContentPageEditorSidebarPanel>
 		_contentPageEditorSidebarPanels;
 	private Map<String, Object> _defaultConfigurations;
+	private StyleBookEntry _defaultMasterStyleBookEntry;
 	private StyleBookEntry _defaultStyleBookEntry;
 	private final FFLayoutContentPageEditorConfiguration
 		_ffLayoutContentPageEditorConfiguration;

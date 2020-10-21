@@ -26,6 +26,10 @@
 			continue;
 		}
 
+		if (!GroupCapabilityUtil.isSupportsPortlet(liveGroup, portlet)) {
+			continue;
+		}
+
 		PortletDataHandler portletDataHandler = portlet.getPortletDataHandlerInstance();
 
 		Class<?> portletDataHandlerClass = portletDataHandler.getClass();
@@ -187,16 +191,21 @@
 				<li>
 					<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= portlet.getPortletId() %>"></span>
 
-					<%
-					Map<String, Object> data = HashMapBuilder.<String, Object>put(
-						"portletid", portletId
-					).put(
-						"portlettitle", portletTitle
-					).build();
-					%>
-
 					<span <%= !disableInputs ? StringPool.BLANK : "class=\"hide\"" %>>
-						<aui:a cssClass="content-link modify-link" data="<%= data %>" href="javascript:;" id='<%= "contentLink_" + portlet.getPortletId() %>' label="change" method="get" />
+						<aui:a
+							cssClass="content-link modify-link"
+							data='<%=
+								HashMapBuilder.<String, Object>put(
+									"portletid", portletId
+								).put(
+									"portlettitle", portletTitle
+								).build()
+							%>'
+							href="javascript:;"
+							id='<%= "contentLink_" + portlet.getPortletId() %>'
+							label="change"
+							method="get"
+						/>
 					</span>
 				</li>
 			</ul>

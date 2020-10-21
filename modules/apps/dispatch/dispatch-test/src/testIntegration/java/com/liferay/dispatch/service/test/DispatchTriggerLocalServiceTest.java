@@ -21,6 +21,7 @@ import com.liferay.dispatch.exception.DuplicateDispatchTriggerException;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
 import com.liferay.dispatch.service.test.util.DispatchTriggerTestUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
@@ -133,7 +134,8 @@ public class DispatchTriggerLocalServiceTest {
 
 			List<DispatchTrigger> userDispatchTriggers =
 				_dispatchTriggerLocalService.getUserDispatchTriggers(
-					user.getCompanyId(), user.getUserId(), -1, -1);
+					user.getCompanyId(), user.getUserId(), QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS);
 
 			for (DispatchTrigger dispatchTrigger : userDispatchTriggers) {
 				Assert.assertEquals(
@@ -165,7 +167,7 @@ public class DispatchTriggerLocalServiceTest {
 					dispatchTrigger.getDispatchTriggerId(),
 					expectedDispatchTrigger.isActive(),
 					expectedDispatchTrigger.getCronExpression(), 5, 5, 2024, 11,
-					11, false, 4, 4, 2024, 12, 0);
+					11, false, true, 4, 4, 2024, 12, 0);
 
 			_basicAssertEquals(expectedDispatchTrigger, dispatchTrigger);
 
@@ -235,9 +237,8 @@ public class DispatchTriggerLocalServiceTest {
 
 		return _dispatchTriggerLocalService.addDispatchTrigger(
 			dispatchTrigger.getUserId(), dispatchTrigger.getName(),
-			dispatchTrigger.isSystem(),
-			dispatchTrigger.getTaskSettingsUnicodeProperties(),
-			dispatchTrigger.getTaskType());
+			dispatchTrigger.isSystem(), dispatchTrigger.getTaskExecutorType(),
+			dispatchTrigger.getTaskSettingsUnicodeProperties());
 	}
 
 	private void _advancedAssertEquals(
@@ -267,8 +268,8 @@ public class DispatchTriggerLocalServiceTest {
 			expectedDispatchTrigger.isSystem(),
 			actualDispatchTrigger.isSystem());
 		Assert.assertEquals(
-			expectedDispatchTrigger.getTaskType(),
-			actualDispatchTrigger.getTaskType());
+			expectedDispatchTrigger.getTaskExecutorType(),
+			actualDispatchTrigger.getTaskExecutorType());
 
 		UnicodeProperties actualTaskSettingsUnicodeProperties =
 			actualDispatchTrigger.getTaskSettingsUnicodeProperties();

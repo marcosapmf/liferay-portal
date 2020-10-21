@@ -67,20 +67,23 @@ const Option = React.forwardRef(
 );
 
 const getInitialOption = (generateOptionValueUsingOptionLabel) => {
-	return generateOptionValueUsingOptionLabel
-		? {
-				id: random(),
-				label: '',
-				value: '',
-		  }
-		: {
-				id: random(),
-				label: '',
-				value: getDefaultOptionValue(
-					generateOptionValueUsingOptionLabel,
-					''
-				),
-		  };
+	const optionValue = getDefaultOptionValue(
+		generateOptionValueUsingOptionLabel,
+		''
+	);
+
+	const initalOption = {
+		id: random(),
+		label: '',
+		reference: optionValue,
+		value: '',
+	};
+
+	if (!generateOptionValueUsingOptionLabel) {
+		initalOption.value = optionValue;
+	}
+
+	return initalOption;
 };
 
 const refreshFields = (
@@ -147,19 +150,29 @@ const Options = ({
 
 			formattedValue[languageId] = formattedValue[languageId].map(
 				(option) => {
-					return {
+					let newOption = {
 						id: random(),
 						...option,
-						value:
-							!option.value &&
-							option.label.toLowerCase() ===
-								Liferay.Language.get('option').toLowerCase()
-								? getDefaultOptionValue(
-										generateOptionValueUsingOptionLabel,
-										option.label
-								  )
-								: option.value,
 					};
+
+					if (
+						!option.value &&
+						option.label.toLowerCase() ===
+							Liferay.Language.get('option').toLowerCase()
+					) {
+						const optionValue = getDefaultOptionValue(
+							generateOptionValueUsingOptionLabel,
+							option.label
+						);
+
+						newOption = {
+							...newOption,
+							reference: optionValue,
+							value: optionValue,
+						};
+					}
+
+					return newOption;
 				}
 			);
 		});
@@ -323,7 +336,10 @@ const Options = ({
 	};
 
 	const handleConfirmDelete = (index, option) => {
-		if (RulesSupport.findRuleByFieldName(option, builderRules)) {
+		if (
+			builderRules &&
+			RulesSupport.findRuleByFieldName(option, builderRules)
+		) {
 			openModal({
 				bodyHTML: Liferay.Language.get(
 					'a-rule-is-applied-to-this-field'
@@ -423,6 +439,7 @@ const Main = ({
 	placeholder = Liferay.Language.get('enter-an-option'),
 	readOnly,
 	required,
+	showKeyword,
 	value = {},
 	visible,
 	...otherProps
@@ -461,9 +478,14 @@ const Main = ({
 								handleField('generateKeyword', generate);
 								handleField('value', value);
 							}}
+							onReferenceChange={(event) => {
+								handleField('reference', event.target.value);
+							}}
 							placeholder={placeholder}
 							readOnly={option.disabled}
+							reference={option.reference}
 							required={required}
+							showKeyword={showKeyword}
 							showLabel={false}
 							value={option.label}
 							visible={visible}

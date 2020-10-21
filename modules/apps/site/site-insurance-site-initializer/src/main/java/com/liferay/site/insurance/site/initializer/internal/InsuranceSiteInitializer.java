@@ -31,7 +31,6 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateExportImportConstants;
 import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -49,6 +48,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -396,8 +396,8 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 					journalArticleJSONObject.getString("name")),
 				null,
 				StringUtil.replace(
-					_read("journal_article.xml", url), StringPool.DOLLAR,
-					StringPool.DOLLAR, fileEntriesMap),
+					_read("journal_article.xml", url), "[$", "$]",
+					fileEntriesMap),
 				journalArticleJSONObject.getString("ddmStructureKey"),
 				journalArticleJSONObject.getString("ddmTemplateKey"), null,
 				displayDateMonth, displayDateDay, displayDateYear,
@@ -480,6 +480,10 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 				String.valueOf(
 					_siteNavigationMenuMap.get("Customer Portal Menu"))
 			).put(
+				"LAYOUT_URL_CLAIMS", _getPrivateFriendlyURL("claims")
+			).put(
+				"LAYOUT_URL_POLICIES", _getPrivateFriendlyURL("policies")
+			).put(
 				"PUBLIC_SITE_NAVIGATION_MENU_ID",
 				String.valueOf(_siteNavigationMenuMap.get("Public Menu"))
 			).put(
@@ -521,7 +525,7 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 						StringBundler.concat(
 							"/layouts/", path, StringPool.SLASH,
 							"page-definition.json")),
-					"\"$", "$\"", resourcesMap);
+					"\"[$", "$]\"", resourcesMap);
 
 				layout = _addContentLayout(
 					pageJSONObject,
@@ -630,10 +634,9 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 			String content = StringUtil.read(url.openStream());
 
 			content = StringUtil.replace(
-				content, "\"£", "£\"", numberValuesMap);
+				content, "\"[£", "£]\"", numberValuesMap);
 
-			content = StringUtil.replace(
-				content, StringPool.DOLLAR, StringPool.DOLLAR, stringValuesMap);
+			content = StringUtil.replace(content, "[$", "$]", stringValuesMap);
 
 			zipWriter.addEntry(
 				StringUtil.removeSubstring(url.getPath(), _PATH), content);
@@ -772,6 +775,14 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 		return fileEntriesMap;
 	}
 
+	private String _getPrivateFriendlyURL(String layoutName) throws Exception {
+		Group scopeGroup = _serviceContext.getScopeGroup();
+
+		return StringBundler.concat(
+			_portal.getPathFriendlyURLPrivateGroup(),
+			scopeGroup.getFriendlyURL(), StringPool.FORWARD_SLASH, layoutName);
+	}
+
 	private Map<String, String> _getResourcesMap() {
 		Map<String, String> resourcesMap = new HashMap<>();
 
@@ -893,19 +904,21 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 	private void _setDefaultLayoutPageTemplateEntries() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				_serviceContext.getScopeGroupId(), "policy",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				_serviceContext.getScopeGroupId(), "policy");
 
-		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		if (layoutPageTemplateEntry != null) {
+			_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		}
 
 		layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				_serviceContext.getScopeGroupId(), "claim",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				_serviceContext.getScopeGroupId(), "claim");
 
-		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		if (layoutPageTemplateEntry != null) {
+			_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		}
 	}
 
 	private void _setDefaultStyleBookEntry() throws PortalException {
@@ -989,9 +1002,7 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 		String themeName = settingsJSONObject.getString("themeName");
 
 		if (Validator.isNotNull(themeName)) {
-			String themeId = _getThemeId(layout.getCompanyId(), themeName);
-
-			layout.setThemeId(themeId);
+			layout.setThemeId(_getThemeId(layout.getCompanyId(), themeName));
 		}
 
 		String colorSchemeName = settingsJSONObject.getString(

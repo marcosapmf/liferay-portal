@@ -38,6 +38,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.powwow.exception.NoSuchMeetingException;
 import com.liferay.powwow.model.PowwowMeeting;
+import com.liferay.powwow.model.PowwowMeetingTable;
 import com.liferay.powwow.model.impl.PowwowMeetingImpl;
 import com.liferay.powwow.model.impl.PowwowMeetingModelImpl;
 import com.liferay.powwow.service.persistence.PowwowMeetingPersistence;
@@ -3044,6 +3045,8 @@ public class PowwowMeetingPersistenceImpl
 
 		setModelImplClass(PowwowMeetingImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(PowwowMeetingTable.INSTANCE);
 	}
 
 	/**
@@ -3086,9 +3089,7 @@ public class PowwowMeetingPersistenceImpl
 	public void clearCache() {
 		EntityCacheUtil.clearCache(PowwowMeetingImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(PowwowMeetingImpl.class);
 	}
 
 	/**
@@ -3113,9 +3114,7 @@ public class PowwowMeetingPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(PowwowMeetingImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(PowwowMeetingImpl.class, primaryKey);

@@ -63,7 +63,7 @@ const Text = ({
 		<ClayInput
 			className="ddm-field-text"
 			disabled={disabled}
-			id={id ? id : name}
+			id={id}
 			name={name}
 			onBlur={onBlur}
 			onChange={(event) => {
@@ -138,7 +138,19 @@ const Autocomplete = ({
 			setVisible(false);
 		}
 		else {
-			setVisible(!!value);
+			const ddmPageContainerLayout = inputRef.current.closest(
+				'.ddm-page-container-layout'
+			);
+
+			if (
+				ddmPageContainerLayout &&
+				ddmPageContainerLayout.classList.contains('hide')
+			) {
+				setVisible(false);
+			}
+			else {
+				setVisible(!!value);
+			}
 		}
 	}, [filteredItems, value]);
 

@@ -71,6 +71,89 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 
 	@Override
 	@Test
+	public void testGetDataDefinitionDataRecordsPageWithSortInteger()
+		throws Exception {
+
+		super.testGetDataDefinitionDataRecordsPageWithSortInteger();
+
+		DataDefinition dataDefinition =
+			DataDefinitionTestUtil.addDataDefinition(
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read("data-definition.json")),
+				testGroup.getGroupId());
+
+		DataRecordCollectionResource.Builder builder =
+			DataRecordCollectionResource.builder();
+
+		DataRecordCollectionResource dataRecordCollectionResource =
+			builder.authentication(
+				"test@liferay.com", "test"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		DataRecordCollection dataDefinitionDataRecordCollection =
+			dataRecordCollectionResource.getDataDefinitionDataRecordCollection(
+				dataDefinition.getId());
+
+		_dataRecordCollectionId = dataDefinitionDataRecordCollection.getId();
+
+		Long dataRecordCollectionId =
+			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
+
+		DataRecord dataRecord1 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId,
+				new DataRecord() {
+					{
+						dataRecordCollectionId = _dataRecordCollectionId;
+						dataRecordValues = HashMapBuilder.<String, Object>put(
+							"Numeric",
+							HashMapBuilder.put(
+								"en_US", new String[] {"10"}
+							).build()
+						).build();
+					}
+				});
+
+		DataRecord dataRecord2 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId,
+				new DataRecord() {
+					{
+						dataRecordCollectionId = _dataRecordCollectionId;
+						dataRecordValues = HashMapBuilder.<String, Object>put(
+							"Numeric",
+							HashMapBuilder.put(
+								"en_US", new String[] {"20"}
+							).build()
+						).build();
+					}
+				});
+
+		// Sort by numeric
+
+		Page<DataRecord> sortByNumericAscPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, Pagination.of(1, 2),
+				"dataRecordValues/Numeric:asc");
+
+		assertEquals(
+			Arrays.asList(dataRecord1, dataRecord2),
+			(List<DataRecord>)sortByNumericAscPage.getItems());
+
+		Page<DataRecord> sortByNumericDescPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				dataRecordCollectionId, null, null, Pagination.of(1, 2),
+				"dataRecordValues/Numeric:desc");
+
+		assertEquals(
+			Arrays.asList(dataRecord2, dataRecord1),
+			(List<DataRecord>)sortByNumericDescPage.getItems());
+	}
+
+	@Override
+	@Test
 	public void testGetDataRecordCollectionDataRecordExport() throws Exception {
 		DataRecord dataRecord = testGetDataRecord_addDataRecord();
 
@@ -114,18 +197,20 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 
 		// Retrieve data records according to fixed filters
 
-		DataListViewResource.Builder builder = DataListViewResource.builder();
+		DataListViewResource.Builder dataListViewResourceBuilder =
+			DataListViewResource.builder();
 
-		DataListViewResource dataListViewResource = builder.authentication(
-			"test@liferay.com", "test"
-		).locale(
-			LocaleUtil.getDefault()
-		).build();
+		DataListViewResource dataListViewResource =
+			dataListViewResourceBuilder.authentication(
+				"test@liferay.com", "test"
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
 
 		Long dataRecordCollectionId =
 			testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId();
 
-		DataRecord dataRecord =
+		DataRecord dataRecord1 =
 			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
 				dataRecordCollectionId,
 				new DataRecord() {
@@ -140,19 +225,20 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 					}
 				});
 
-		testGetDataRecordCollectionDataRecordsPage_addDataRecord(
-			dataRecordCollectionId,
-			new DataRecord() {
-				{
-					dataRecordCollectionId = _dataRecordCollectionId;
-					dataRecordValues = HashMapBuilder.<String, Object>put(
-						"SingleSelection",
-						HashMapBuilder.put(
-							"en_US", new String[] {"Boat"}
-						).build()
-					).build();
-				}
-			});
+		DataRecord dataRecord2 =
+			testGetDataRecordCollectionDataRecordsPage_addDataRecord(
+				dataRecordCollectionId,
+				new DataRecord() {
+					{
+						dataRecordCollectionId = _dataRecordCollectionId;
+						dataRecordValues = HashMapBuilder.<String, Object>put(
+							"SingleSelection",
+							HashMapBuilder.put(
+								"en_US", new String[] {"Boat"}
+							).build()
+						).build();
+					}
+				});
 
 		DataListView dataListView =
 			dataListViewResource.postDataDefinitionDataListView(
@@ -168,13 +254,36 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 					}
 				});
 
-		Page<DataRecord> page =
+		Page<DataRecord> singleSelectionFixedFilterPage =
 			dataRecordResource.getDataRecordCollectionDataRecordsPage(
 				testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
 				dataListView.getId(), null, Pagination.of(1, 2), null);
 
 		assertEqualsIgnoringOrder(
-			Arrays.asList(dataRecord), (List<DataRecord>)page.getItems());
+			Arrays.asList(dataRecord1),
+			(List<DataRecord>)singleSelectionFixedFilterPage.getItems());
+
+		// Retrieve data records according to full term
+
+		Page<DataRecord> searchFullTermPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
+				null, "Boat", Pagination.of(1, 2), null);
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(dataRecord2),
+			(List<DataRecord>)searchFullTermPage.getItems());
+
+		// Retrieve data records according to partial term
+
+		Page<DataRecord> searchPartialTermPage =
+			dataRecordResource.getDataRecordCollectionDataRecordsPage(
+				testGetDataRecordCollectionDataRecordsPage_getDataRecordCollectionId(),
+				null, "Bo", Pagination.of(1, 2), null);
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(dataRecord2),
+			(List<DataRecord>)searchPartialTermPage.getItems());
 	}
 
 	@Override
@@ -190,12 +299,11 @@ public class DataRecordResourceTest extends BaseDataRecordResourceTestCase {
 
 		_dataDefinitionId = dataDefinition.getId();
 
-		DataRecordCollectionResource.Builder
-			dataRecordCollectionResourceBuilder =
-				DataRecordCollectionResource.builder();
+		DataRecordCollectionResource.Builder builder =
+			DataRecordCollectionResource.builder();
 
 		DataRecordCollectionResource dataRecordCollectionResource =
-			dataRecordCollectionResourceBuilder.authentication(
+			builder.authentication(
 				"test@liferay.com", "test"
 			).locale(
 				LocaleUtil.getDefault()

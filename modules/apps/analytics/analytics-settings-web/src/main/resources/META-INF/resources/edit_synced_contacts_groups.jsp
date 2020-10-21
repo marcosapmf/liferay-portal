@@ -24,10 +24,10 @@ portletURL.setParameter("mvcRenderCommandName", "/view_configuration_screen");
 boolean includeSyncContactsFields = ParamUtil.getBoolean(request, "includeSyncContactsFields");
 
 if (includeSyncContactsFields) {
-	portletURL.setParameter("configurationScreenKey", "synced-contact-data");
+	portletURL.setParameter("configurationScreenKey", "2-synced-contact-data");
 }
 else {
-	portletURL.setParameter("configurationScreenKey", "synced-contacts");
+	portletURL.setParameter("configurationScreenKey", "2-synced-contacts");
 }
 
 String redirect = ParamUtil.getString(request, "redirect", portletURL.toString());
@@ -90,7 +90,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 
 	<aui:form action="<%= includeSyncContactsFields ? editSyncedContactsFieldsURL : editSyncedContactsURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="update_synced_groups" />
-		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="redirect" type="hidden" value="<%= includeSyncContactsFields ? currentURL : redirect %>" />
 		<aui:input name="includeSyncContactsFields" type="hidden" value="<%= String.valueOf(includeSyncContactsFields) %>" />
 
 		<liferay-ui:search-container

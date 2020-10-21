@@ -58,14 +58,20 @@ public class DispatchTriggerTable extends BaseTable<DispatchTriggerTable> {
 		"endDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<DispatchTriggerTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<DispatchTriggerTable, Boolean> overlapAllowed =
+		createColumn(
+			"overlapAllowed", Boolean.class, Types.BOOLEAN,
+			Column.FLAG_DEFAULT);
 	public final Column<DispatchTriggerTable, Date> startDate = createColumn(
 		"startDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<DispatchTriggerTable, Boolean> system = createColumn(
 		"system_", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
+	public final Column<DispatchTriggerTable, String> taskExecutorType =
+		createColumn(
+			"taskExecutorType", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
 	public final Column<DispatchTriggerTable, Clob> taskSettings = createColumn(
 		"taskSettings", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
-	public final Column<DispatchTriggerTable, String> taskType = createColumn(
-		"taskType", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 
 	private DispatchTriggerTable() {
 		super("DispatchTrigger", DispatchTriggerTable::new);

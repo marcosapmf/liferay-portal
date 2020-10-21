@@ -50,8 +50,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import javax.portlet.PortletRequest;
+import javax.portlet.PortletResponse;
 
 /**
  * @author Eudaldo Alonso
@@ -138,7 +138,7 @@ public class FragmentEntryLinkUtil {
 	}
 
 	public static JSONObject getFragmentEntryLinkJSONObject(
-			ActionRequest actionRequest, ActionResponse actionResponse,
+			PortletRequest portletRequest, PortletResponse portletResponse,
 			FragmentEntryConfigurationParser fragmentEntryConfigurationParser,
 			FragmentEntryLink fragmentEntryLink,
 			FragmentCollectionContributorTracker
@@ -148,93 +148,105 @@ public class FragmentEntryLinkUtil {
 			ItemSelector itemSelector, String portletId)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		DefaultFragmentRendererContext defaultFragmentRendererContext =
-			new DefaultFragmentRendererContext(fragmentEntryLink);
+		boolean isolated = themeDisplay.isIsolated();
 
-		defaultFragmentRendererContext.setLocale(themeDisplay.getLocale());
-		defaultFragmentRendererContext.setMode(FragmentEntryLinkConstants.EDIT);
-		defaultFragmentRendererContext.setSegmentsExperienceIds(
-			new long[] {SegmentsExperienceConstants.ID_DEFAULT});
+		themeDisplay.setIsolated(true);
 
-		String configuration = fragmentRendererController.getConfiguration(
-			defaultFragmentRendererContext);
+		try {
+			DefaultFragmentRendererContext defaultFragmentRendererContext =
+				new DefaultFragmentRendererContext(fragmentEntryLink);
 
-		FragmentEntry fragmentEntry = _getFragmentEntry(
-			fragmentEntryLink, fragmentCollectionContributorTracker,
-			themeDisplay.getLocale());
+			defaultFragmentRendererContext.setLocale(themeDisplay.getLocale());
+			defaultFragmentRendererContext.setMode(
+				FragmentEntryLinkConstants.EDIT);
+			defaultFragmentRendererContext.setSegmentsExperienceIds(
+				new long[] {SegmentsExperienceConstants.ID_DEFAULT});
 
-		String fragmentEntryKey = null;
-		String icon = null;
-		String name = null;
+			String configuration = fragmentRendererController.getConfiguration(
+				defaultFragmentRendererContext);
 
-		if (fragmentEntry != null) {
-			fragmentEntryKey = fragmentEntry.getFragmentEntryKey();
-			icon = fragmentEntry.getIcon();
-			name = fragmentEntry.getName();
-		}
-		else {
-			String rendererKey = fragmentEntryLink.getRendererKey();
+			FragmentEntry fragmentEntry = _getFragmentEntry(
+				fragmentEntryLink, fragmentCollectionContributorTracker,
+				themeDisplay.getLocale());
 
-			if (Validator.isNull(rendererKey)) {
-				rendererKey =
-					FragmentRendererConstants.
-						FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY;
+			String fragmentEntryKey = null;
+			String icon = null;
+			String name = null;
+
+			if (fragmentEntry != null) {
+				fragmentEntryKey = fragmentEntry.getFragmentEntryKey();
+				icon = fragmentEntry.getIcon();
+				name = fragmentEntry.getName();
+			}
+			else {
+				String rendererKey = fragmentEntryLink.getRendererKey();
+
+				if (Validator.isNull(rendererKey)) {
+					rendererKey =
+						FragmentRendererConstants.
+							FRAGMENT_ENTRY_FRAGMENT_RENDERER_KEY;
+				}
+
+				FragmentRenderer fragmentRenderer =
+					fragmentRendererTracker.getFragmentRenderer(rendererKey);
+
+				fragmentEntryKey = fragmentRenderer.getKey();
+
+				name = fragmentRenderer.getLabel(themeDisplay.getLocale());
+
+				if (Validator.isNotNull(portletId)) {
+					name = PortalUtil.getPortletTitle(
+						portletId, themeDisplay.getLocale());
+				}
 			}
 
-			FragmentRenderer fragmentRenderer =
-				fragmentRendererTracker.getFragmentRenderer(rendererKey);
+			JSONObject configurationJSONObject =
+				JSONFactoryUtil.createJSONObject(configuration);
 
-			fragmentEntryKey = fragmentRenderer.getKey();
+			FragmentEntryLinkItemSelectorUtil.
+				addFragmentEntryLinkFieldsSelectorURL(
+					itemSelector,
+					PortalUtil.getHttpServletRequest(portletRequest),
+					PortalUtil.getLiferayPortletResponse(portletResponse),
+					configurationJSONObject);
 
-			name = fragmentRenderer.getLabel(themeDisplay.getLocale());
-
-			if (Validator.isNotNull(portletId)) {
-				name = PortalUtil.getPortletTitle(
-					portletId, themeDisplay.getLocale());
-			}
-		}
-
-		JSONObject configurationJSONObject = JSONFactoryUtil.createJSONObject(
-			configuration);
-
-		FragmentEntryLinkItemSelectorUtil.addFragmentEntryLinkFieldsSelectorURL(
-			itemSelector, PortalUtil.getHttpServletRequest(actionRequest),
-			PortalUtil.getLiferayPortletResponse(actionResponse),
-			configurationJSONObject);
-
-		return JSONUtil.put(
-			"configuration", configurationJSONObject
-		).put(
-			"content",
-			fragmentRendererController.render(
+			String content = fragmentRendererController.render(
 				defaultFragmentRendererContext,
-				PortalUtil.getHttpServletRequest(actionRequest),
-				PortalUtil.getHttpServletResponse(actionResponse))
-		).put(
-			"defaultConfigurationValues",
-			fragmentEntryConfigurationParser.
-				getConfigurationDefaultValuesJSONObject(configuration)
-		).put(
-			"editableTypes",
-			EditableFragmentEntryProcessorUtil.getEditableTypes(
-				fragmentEntryLink.getHtml())
-		).put(
-			"editableValues",
-			JSONFactoryUtil.createJSONObject(
-				fragmentEntryLink.getEditableValues())
-		).put(
-			"fragmentEntryKey", fragmentEntryKey
-		).put(
-			"fragmentEntryLinkId",
-			String.valueOf(fragmentEntryLink.getFragmentEntryLinkId())
-		).put(
-			"icon", icon
-		).put(
-			"name", name
-		);
+				PortalUtil.getHttpServletRequest(portletRequest),
+				PortalUtil.getHttpServletResponse(portletResponse));
+
+			return JSONUtil.put(
+				"configuration", configurationJSONObject
+			).put(
+				"content", content
+			).put(
+				"defaultConfigurationValues",
+				fragmentEntryConfigurationParser.
+					getConfigurationDefaultValuesJSONObject(configuration)
+			).put(
+				"editableTypes",
+				EditableFragmentEntryProcessorUtil.getEditableTypes(content)
+			).put(
+				"editableValues",
+				JSONFactoryUtil.createJSONObject(
+					fragmentEntryLink.getEditableValues())
+			).put(
+				"fragmentEntryKey", fragmentEntryKey
+			).put(
+				"fragmentEntryLinkId",
+				String.valueOf(fragmentEntryLink.getFragmentEntryLinkId())
+			).put(
+				"icon", icon
+			).put(
+				"name", name
+			);
+		}
+		finally {
+			themeDisplay.setIsolated(isolated);
+		}
 	}
 
 	private static FragmentEntry _getFragmentEntry(

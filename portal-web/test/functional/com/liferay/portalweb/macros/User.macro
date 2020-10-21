@@ -402,14 +402,26 @@ definition {
 
 		UserNavigator.gotoProfileAndDashboard();
 
-		AssertTextEquals(
-			key_subtitle = "Dashboard",
-			locator1 = "UsersAndOrganizationsEditUser#PERSONAL_SITE_LABEL",
-			value1 = "DASHBOARD");
+		if ("${personalSite}" == "Public") {
+			AssertTextEquals(
+				key_subtitle = "Profile",
+				locator1 = "UsersAndOrganizationsEditUser#PERSONAL_SITE_LABEL",
+				value1 = "PROFILE");
 
-		Select(
-			locator1 = "UsersAndOrganizationsEditUser#PERSONAL_SITE_MY_DASHBOARD",
-			value1 = "${siteTemplateName}");
+			Select(
+				locator1 = "UsersAndOrganizationsEditUser#PERSONAL_SITE_MY_PROFILE",
+				value1 = "${siteTemplateName}");
+		}
+		else {
+			AssertTextEquals(
+				key_subtitle = "Dashboard",
+				locator1 = "UsersAndOrganizationsEditUser#PERSONAL_SITE_LABEL",
+				value1 = "DASHBOARD");
+
+			Select(
+				locator1 = "UsersAndOrganizationsEditUser#PERSONAL_SITE_MY_DASHBOARD",
+				value1 = "${siteTemplateName}");
+		}
 
 		PortletEntry.save();
 	}
@@ -948,7 +960,6 @@ definition {
 	}
 
 	macro basicSearchCP {
-
 		if ("${userBasicSearch}" == "Basic") {
 			Search.searchCP(searchTerm = "${userScreenName}");
 
@@ -969,7 +980,6 @@ definition {
 				value1 = "No users were found.");
 		}
 		else if ("${userBasicSearch}" == "Full Name") {
-
 			var fullName = '''"${userFirstName} ${userLastName}"''';
 
 			Search.searchCP(searchTerm = "${fullName}");
@@ -993,7 +1003,6 @@ definition {
 				value1 = "No users were found.");
 		}
 		else if ("${userBasicSearch}" == "Quotes") {
-
 			var quotes = '''"${userScreenName}"''';
 
 			Search.searchCP(searchTerm = "${quotes}");
@@ -1569,6 +1578,20 @@ definition {
 		Click(locator1 = "Button#SAVE");
 
 		Alert.viewSuccessMessage();
+	}
+
+	macro editUserAlertsAndAnnouncementsDeliveryCP {
+		UserNavigator.gotoAlertsAndAnnouncementsDelivery();
+
+		if ("${checkbox}" == "Enable") {
+			for (var deliveryOption : list "${deliveryOptions}") {
+				Check(
+					key_tableEntry = "${deliveryOption}",
+					locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+			}
+		}
+
+		PortletEntry.save();
 	}
 
 	macro editUserAssetLibraryCP {

@@ -83,7 +83,6 @@ exports[`Field Radio has a label 1`] = `
     <label
       aria-labelledby="radioField_fieldDetails"
       class="ddm-label"
-      for="radioField"
       tabindex="0"
     >
       label
@@ -464,7 +463,6 @@ exports[`Field Radio renders Label if showLabel is true 1`] = `
     <label
       aria-labelledby="radioField_fieldDetails"
       class="ddm-label"
-      for="radioField"
       tabindex="0"
     >
       text

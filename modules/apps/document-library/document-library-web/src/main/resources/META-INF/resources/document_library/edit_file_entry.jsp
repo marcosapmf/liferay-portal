@@ -17,8 +17,6 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-String cmd = ParamUtil.getString(request, Constants.CMD, Constants.EDIT);
-
 String redirect = ParamUtil.getString(request, "redirect");
 
 String uploadProgressId = "dlFileEntryUploadProgress";
@@ -95,6 +93,8 @@ boolean saveAsDraft = false;
 if ((checkedOut || pending) && !dlPortletInstanceSettings.isEnableFileEntryDrafts()) {
 	saveAsDraft = true;
 }
+
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
 
 DLEditFileEntryDisplayContext dlEditFileEntryDisplayContext = null;
 
@@ -333,7 +333,7 @@ renderResponse.setTitle(headerTitle);
 							%>
 
 							<c:choose>
-								<c:when test="<%= !cmd.equals(Constants.ADD) && (dlFileEntryTypes.size() > 1) %>">
+								<c:when test="<%= dlFileEntryTypes.size() > 1 %>">
 									<aui:select changesContext="<%= true %>" label="document-type" name="fileEntryTypeId" onChange='<%= liferayPortletResponse.getNamespace() + "changeFileEntryType();" %>'>
 
 										<%
@@ -569,11 +569,11 @@ renderResponse.setTitle(headerTitle);
 	var form = document.<portlet:namespace />fm;
 
 	function <portlet:namespace />changeFileEntryType() {
-		Liferay.Util.postForm(form, {
-			data: {
-				<%= Constants.CMD %>: '<%= Constants.PREVIEW %>',
-			},
-		});
+		var uri = '<%= themeDisplay.getURLCurrent() %>';
+
+		form.<portlet:namespace />cmd.value = '<%= Constants.PREVIEW %>';
+
+		submitForm(form, uri, false, false);
 	}
 
 	function <portlet:namespace />cancelCheckOut() {

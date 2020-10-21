@@ -90,7 +90,6 @@ function FieldBase({
 	children,
 	displayErrors,
 	errorMessage,
-	id,
 	label,
 	localizedValue = {},
 	name,
@@ -247,7 +246,6 @@ function FieldBase({
 										'ddm-empty': !showLabel && !required,
 										'ddm-label': showLabel || required,
 									})}
-									htmlFor={id ? id : name}
 									tabIndex="0"
 								>
 									{label && showLabel && label}

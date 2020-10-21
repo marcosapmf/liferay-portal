@@ -25,7 +25,6 @@ definition {
 	}
 
 	tearDown {
-
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
@@ -38,7 +37,6 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-
 			Page.tearDownCP();
 
 			JSONGroup.deleteGroupByName(groupName = "App Builder Site Name");
@@ -63,7 +61,6 @@ definition {
 					resourceName = "com.liferay.app.builder",
 					roleTitle = "${roleTitle}");
 			}
-
 		}
 	}
 
@@ -134,7 +131,6 @@ definition {
 		var fieldList = "Text,Select from List,Single Selection,Multiple Selection,Date,Numeric,Upload";
 
 		for (var field : list "${fieldList}") {
-
 			AppBuilderAdmin.add();
 
 			FormViewBuilder.addFormViewAndValidateFieldLabel(
@@ -1098,6 +1094,8 @@ definition {
 	test MakeSureIsNotPossibleSaveEmptyFormView {
 		property portal.upstream = "quarantine";
 
+		var myFormViewName = "My Form View Title";
+
 		AppBuilderAdmin.addCustomObject(
 			customObjectName = "my custom object",
 			isCreatingFormView = "true",
@@ -1113,25 +1111,25 @@ definition {
 			fieldLabel = "Text",
 			fieldName = "Text");
 
-		Button.clickSave();
+		AppBuilderAdmin.viewInactiveSaveButton();
 
-		Alert.viewErrorMessage(errorMessage = "Layout is empty.");
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Text");
 
-		FormViewBuilder.addFieldToObject(fieldName = "Text");
+		FormViewBuilder.save();
 
-		Button.clickSave();
+		FormViewBuilder.openFormView(formViewName = "My Form View Title");
 
-		Alert.viewErrorMessage(errorMessage = "Layout is empty.");
-
-		FormViewBuilder.addFieldByDoubleClickFromObjectSidebar(fieldLabel = "Text");
-
-		FormViewBuilder.fieldEllipsisAction(
+		FormViewBuilder.deleteObjectSidebarField(
 			fieldLabel = "Text",
-			selectAction = "Remove");
+			fieldName = "Text");
 
-		Button.clickSave();
+		AppBuilderAdmin.viewInactiveSaveButton();
 
-		Alert.viewErrorMessage(errorMessage = "Layout is empty.");
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Text");
+
+		FormViewBuilder.save();
+
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "${myFormViewName}");
 	}
 
 	@description = "Place a widget in my page with only a Form View of my App"
@@ -1885,7 +1883,6 @@ definition {
 		FormViewBuilder.setName(formViewName = "Form View Title 1");
 
 		for (var fieldType : list "Text,Select from List,Single Selection,Multiple Selection,Date,Numeric,Upload") {
-
 			FormViewBuilder.addFieldByDoubleClick(fieldType = "${fieldType}");
 
 			FormViewBuilder.closeSidebar();
@@ -1906,7 +1903,6 @@ definition {
 		TableViewBuilder.validateColumnLabelAtSidebar(columnLabel = "Date");
 
 		for (var columnLabel : list "Text,Select from List,Single Selection,Multiple Selection,Numeric,Upload") {
-
 			TableViewBuilder.validateNoColumnLabelAtSidebar(columnLabel = "${columnLabel}");
 		}
 
@@ -1917,7 +1913,6 @@ definition {
 		TableViewBuilder.validateColumnLabelAtSidebar(columnLabel = "My Text 23");
 
 		for (var columnLabel : list "Select from List,Single Selection,Multiple Selection,Date,Numeric,Upload") {
-
 			TableViewBuilder.validateNoColumnLabelAtSidebar(columnLabel = "${columnLabel}");
 		}
 
@@ -1932,7 +1927,6 @@ definition {
 		TableViewBuilder.validateColumnLabelAtSidebar(columnLabel = "Multiple Selection");
 
 		for (var columnLabel : list "Text,Date,Numeric,Upload") {
-
 			TableViewBuilder.validateNoColumnLabelAtSidebar(columnLabel = "${columnLabel}");
 		}
 
@@ -1941,14 +1935,12 @@ definition {
 		TableViewBuilder.searchByItem(itemName = "Oranges");
 
 		for (var columnLabel : list "Text,Select from List,Single Selection,Multiple Selection,Date,Numeric,Upload") {
-
 			TableViewBuilder.validateNoColumnLabelAtSidebar(columnLabel = "${columnLabel}");
 		}
 
 		TableViewBuilder.clearSearch();
 
 		for (var columnLabel : list "My Text 23,Select from List,Single Selection,Multiple Selection,Date,Numeric,Upload") {
-
 			TableViewBuilder.validateColumnLabelAtSidebar(columnLabel = "${columnLabel}");
 		}
 	}
@@ -2338,9 +2330,7 @@ definition {
 			siteName = "App Builder Site Name");
 
 		for (var number : list "1,2") {
-
 			if ("${number}" == "2") {
-
 				User.logoutAndLoginPG(
 					userLoginEmailAddress = "test@liferay.com",
 					userLoginFullName = "Test Test");
@@ -3034,6 +3024,306 @@ definition {
 		DetailsView.validateEntry(entry = "Bester");
 
 		DetailsView.deleteEntry(itemName = "Changed");
+	}
+
+	@description = "Saved form view rules run during new entry submissions"
+	@priority = "5"
+	test ViewFormViewRules {
+		property portal.acceptance = "true";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Roles");
+
+		Role.assignRegRoleCP(
+			roleTitle = "Portal Content Reviewer",
+			userScreenName = "test");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Objects");
+
+		AppBuilderAdmin.addCustomObject(
+			customObjectName = "my custom object",
+			isCreatingFormView = "true",
+			isCreatingViaPlusIcon = "true");
+
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Multiple Selection");
+		for (var number : list "1,2,3") {
+			FormViewBuilder.editOptionsRow(
+				optionName = "Option${number}",
+				optionValue = "Option ${number}",
+				rowNumber = "${number}");
+		}
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Numeric");
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Numeric");
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Numeric");
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Numeric");
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Upload");
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Select from List");
+		for (var number : list "1,2,3") {
+			FormViewBuilder.editOptionsRow(
+				optionName = "Select${number}",
+				optionValue = "Select ${number}",
+				rowNumber = "${number}");
+		}
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Text");
+		FormViewBuilder.closeSidebar();
+		FormViewBuilder.addFieldByDoubleClick(fieldType = "Single Selection");
+		for (var number : list "1,2,3") {
+			FormViewBuilder.editOptionsRow(
+				optionName = "Single${number}",
+				optionValue = "Single ${number}",
+				rowNumber = "${number}");
+		}
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Numeric",
+			label = "Quantity");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Numeric",
+			label = "Value");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Numeric",
+			label = "Total");
+
+		FormViewBuilder.clickFieldLabel(fieldLabel = "Multiple Selection");
+
+		FormViewBuilder.gotoRules();
+
+		FormViewBuilder.addRule();
+
+		FormViewBuilder.editRuleName(ruleName = "Multiple Selection Rule");
+
+		FormRules.configureConditionOptions(
+			conditionField = "Multiple Selection",
+			conditionOperator = "Is not empty",
+			conditionRowNumber = "1");
+
+		FormRules.configureActionOptions(
+			action = "Show",
+			actionRowNumber = "1",
+			actionTarget = "Upload");
+
+		FormViewBuilder.ruleSave();
+
+		FormViewBuilder.clickFieldLabel(fieldLabel = "Numeric");
+
+		FormViewBuilder.gotoRules();
+
+		FormViewBuilder.addRule();
+
+		FormViewBuilder.editRuleName(ruleName = "Numeric Rule One");
+
+		FormRules.configureConditionOptions(
+			conditionField = "Numeric",
+			conditionFieldValue = "0",
+			conditionOperator = "Is greater than",
+			conditionRowNumber = "1",
+			conditionValueType = "Value");
+
+		FormRules.configureActionOptions(
+			action = "Enable",
+			actionRowNumber = "1",
+			actionTarget = "Text");
+
+		FormViewBuilder.ruleSave();
+
+		FormViewBuilder.clickFieldLabel(fieldLabel = "Numeric");
+
+		FormViewBuilder.gotoRules();
+
+		FormViewBuilder.addRule();
+
+		FormViewBuilder.editRuleName(ruleName = "Numeric Rule Two");
+
+		FormRules.configureConditionOptions(
+			conditionField = "Numeric",
+			conditionFieldValue = "0",
+			conditionOperator = "Is less than or equal to",
+			conditionRowNumber = "1",
+			conditionValueType = "Value");
+
+		FormRules.selectAction(
+			action = "Calculate",
+			actionRowNumber = "1");
+
+		FormRules.selectCalculateResultField(calculateResultField = "Total");
+
+		FormRules.selectCalculateField(calculateFieldOption = "Value");
+
+		FormRules.chooseCalculateOperator(calculateOperator = "*");
+
+		FormRules.selectCalculateField(calculateFieldOption = "Quantity");
+
+		FormViewBuilder.ruleSave();
+
+		FormViewBuilder.clickFieldLabel(fieldLabel = "Select from List");
+
+		FormViewBuilder.gotoRules();
+
+		FormViewBuilder.addRule();
+
+		FormViewBuilder.editRuleName(ruleName = "Select from List");
+
+		FormRules.configureConditionOptions(
+			conditionField = "Select from List",
+			conditionOperator = "Is not equal to",
+			conditionRowNumber = "1",
+			conditionValueField = "Select 1",
+			conditionValueType = "Value");
+
+		FormRules.configureActionOptions(
+			action = "Enable",
+			actionRowNumber = "1",
+			actionTarget = "Single Selection");
+
+		FormViewBuilder.ruleSave();
+
+		FormViewBuilder.clickFieldLabel(fieldLabel = "Text");
+
+		FormViewBuilder.gotoRules();
+
+		FormViewBuilder.addRule();
+
+		FormViewBuilder.editRuleName(ruleName = "Text Field Rule");
+
+		FormRules.addCondition();
+
+		FormRules.selectRuleCondition(condition = "AND");
+
+		FormRules.configureConditionOptions(
+			conditionField = "Text",
+			conditionFieldValue = "0",
+			conditionOperator = "Is equal to",
+			conditionRowNumber = "1",
+			conditionValueType = "Value");
+
+		FormRules.configureConditionOptions(
+			conditionField = "Select from List",
+			conditionOperator = "Is not equal to",
+			conditionRowNumber = "2",
+			conditionValueField = "Select 1",
+			conditionValueType = "Value");
+
+		FormRules.configureActionOptions(
+			action = "Show",
+			actionRowNumber = "1",
+			actionTarget = "Single Selection");
+
+		FormViewBuilder.ruleSave();
+
+		FormViewBuilder.clickFieldLabel(fieldLabel = "Numeric");
+
+		FormViewBuilder.gotoRules();
+
+		FormViewBuilder.addRule();
+
+		FormViewBuilder.editRuleName(ruleName = "User Numeric Rule");
+
+		FormRules.configureConditionOptions(
+			conditionField = "User",
+			conditionOperator = "Belongs to",
+			conditionRowNumber = "1",
+			conditionValueType = "Portal Content Reviewer");
+
+		FormRules.configureActionOptions(
+			action = "Show",
+			actionRowNumber = "1",
+			actionTarget = "Numeric");
+
+		FormViewBuilder.ruleSave();
+
+		Type(
+			locator1 = "FormViewBuilder#RULE_BUILDER_FORM_VIEW_NAME",
+			value1 = "My Form View");
+
+		FormViewBuilder.save();
+
+		AppBuilderAdmin.switchTab(tabName = "Table Views");
+
+		AppBuilderAdmin.add();
+
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Multiple Selection");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Numeric");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Upload");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Select from List");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Text");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Single Selection");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Quantity");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Value");
+		TableViewBuilder.addColumnByDoubleClick(fieldType = "Total");
+
+		TableViewBuilder.setName(tableViewName = "My Table View");
+
+		TableViewBuilder.save();
+
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "My Table View");
+
+		App.add(
+			appTitle = "My App",
+			deployOption = "Standalone",
+			formViewName = "My Form View",
+			tableViewName = "My Table View");
+
+		AppBuilderAdmin.openStandAloneApp(itemName = "My App");
+
+		SelectWindow.selectPopUp(locator1 = "null");
+
+		AppBuilderAdmin.addEntry();
+
+		FormViewBuilder.selectSelectWithMultipleOptions(
+			fieldName = "Multiple Selection",
+			selectOptionsList = "Option 1,Option 2");
+
+		FormViewBuilder.validateFieldLabel(fieldLabel = "Upload");
+
+		FormViewBuilder.validateFieldLabel(fieldLabel = "Text");
+
+		FormViewBuilder.editText(
+			fieldName = "Numeric",
+			fieldValue = "0");
+
+		FormViewBuilder.editText(
+			fieldName = "Quantity",
+			fieldValue = "5");
+
+		FormViewBuilder.editText(
+			fieldName = "Value",
+			fieldValue = "5");
+
+		AppBuilderAdmin.save();
+
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "25");
+
+		AppBuilderAdmin.addEntry();
+
+		FormViewBuilder.selectSelectOption(
+			fieldName = "Select from List",
+			selectOption = "Select 2");
+
+		FormViewBuilder.editText(
+			fieldName = "Numeric",
+			fieldValue = "2");
+
+		FormViewBuilder.editText(
+			fieldName = "Text",
+			fieldValue = "0");
+
+		FormViewBuilder.validateFieldLabel(fieldLabel = "Single Selection");
+
+		AppBuilderAdmin.save();
 	}
 
 }

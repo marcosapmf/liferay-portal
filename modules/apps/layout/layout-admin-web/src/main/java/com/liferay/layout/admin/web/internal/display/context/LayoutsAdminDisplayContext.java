@@ -31,6 +31,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUt
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionNameComparator;
 import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.layout.util.comparator.LayoutCreateDateComparator;
+import com.liferay.layout.util.comparator.LayoutRelevanceComparator;
 import com.liferay.layout.util.template.LayoutConverter;
 import com.liferay.layout.util.template.LayoutConverterRegistry;
 import com.liferay.petra.content.ContentUtil;
@@ -601,6 +602,9 @@ public class LayoutsAdminDisplayContext {
 
 		if (Objects.equals(_getOrderByCol(), "create-date")) {
 			orderByComparator = new LayoutCreateDateComparator(orderByAsc);
+		}
+		else if (Objects.equals(_getOrderByCol(), "relevance")) {
+			orderByComparator = new LayoutRelevanceComparator(orderByAsc);
 		}
 
 		layoutsSearchContainer.setOrderByComparator(orderByComparator);
@@ -1706,17 +1710,23 @@ public class LayoutsAdminDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(
-			_liferayPortletRequest, "orderByCol", "path");
+		String defaultOrderByCol = "create-date";
 
 		if (isSearch()) {
-			_orderByCol = "create-date";
+			defaultOrderByCol = "relevance";
 		}
+
+		_orderByCol = ParamUtil.getString(
+			_liferayPortletRequest, "orderByCol", defaultOrderByCol);
 
 		return _orderByCol;
 	}
 
 	private String _getOrderByType() {
+		if (Objects.equals(_getOrderByCol(), "relevance")) {
+			return "desc";
+		}
+
 		if (Validator.isNotNull(_orderByType)) {
 			return _orderByType;
 		}

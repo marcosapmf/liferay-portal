@@ -2943,6 +2943,11 @@ public class PropsValues {
 			PropsUtil.get(
 				PropsKeys.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED));
 
+	public static final boolean USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT =
+		GetterUtil.getBoolean(
+			PropsUtil.get(
+				PropsKeys.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT));
+
 	public static final boolean USERS_REMINDER_QUERIES_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.USERS_REMINDER_QUERIES_ENABLED));
@@ -3018,6 +3023,12 @@ public class PropsValues {
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.VERIFY_PROCESS_CONCURRENCY_THRESHOLD));
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             com.liferay.view.count.configuration.ViewCountsConfiguration
+	 *             #enabled()}
+	 */
+	@Deprecated
 	public static final boolean VIEW_COUNT_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.VIEW_COUNT_ENABLED));
 

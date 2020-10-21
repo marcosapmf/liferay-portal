@@ -22,8 +22,6 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.file.install.FileInstaller;
-import com.liferay.portal.file.install.internal.manifest.Clause;
-import com.liferay.portal.file.install.internal.manifest.Parser;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -46,7 +44,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,21 +86,9 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 
 	public static final String FILTER = "file.install.filter";
 
-	public static final String FRAGMENT_SCOPE =
-		"file.install.fragmentRefreshScope";
-
 	public static final String NO_INITIAL_DELAY = "file.install.noInitialDelay";
 
-	public static final String OPTIONAL_SCOPE =
-		"file.install.optionalImportRefreshScope";
-
 	public static final String POLL = "file.install.poll";
-
-	public static final String SCOPE_ALL = "all";
-
-	public static final String SCOPE_MANAGED = "managed";
-
-	public static final String SCOPE_NONE = "none";
 
 	public static final String START_LEVEL = "file.install.start.level";
 
@@ -130,10 +115,8 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 		_activeLevel = GetterUtil.getInteger(
 			bundleContext.getProperty(ACTIVE_LEVEL));
 		_filter = bundleContext.getProperty(FILTER);
-		_fragmentScope = bundleContext.getProperty(FRAGMENT_SCOPE);
 		_noInitialDelay = GetterUtil.getBoolean(
 			bundleContext.getProperty(NO_INITIAL_DELAY));
-		_optionalScope = bundleContext.getProperty(OPTIONAL_SCOPE);
 		_poll = GetterUtil.getLong(bundleContext.getProperty(POLL), 2000);
 		_startBundles = GetterUtil.getBoolean(
 			bundleContext.getProperty(START_NEW_BUNDLES), true);
@@ -325,70 +308,32 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 		super.start();
 	}
 
-	protected void findBundlesWithFragmentsToRefresh(
-		Set<Bundle> refreshBundles) {
-
-		Set<Bundle> fragments = new HashSet<>();
-
-		Set<Bundle> bundles = getScopedBundles(_fragmentScope);
-
-		for (Bundle bundle : refreshBundles) {
-			if (bundle.getState() != Bundle.UNINSTALLED) {
-				Dictionary<String, String> headers = bundle.getHeaders(
-					StringPool.BLANK);
-
-				String hostHeader = headers.get(Constants.FRAGMENT_HOST);
-
-				if (hostHeader != null) {
-					Clause[] clauses = Parser.parseHeader(hostHeader);
-
-					if ((clauses != null) && (clauses.length > 0)) {
-						Clause clause = clauses[0];
-
-						for (Bundle hostBundle : bundles) {
-							String hostSymbolicName =
-								hostBundle.getSymbolicName();
-
-							if ((hostSymbolicName != null) &&
-								Objects.equals(
-									hostSymbolicName, clause.getName())) {
-
-								String versionString = clause.getAttribute(
-									Constants.BUNDLE_VERSION_ATTRIBUTE);
-
-								if (versionString != null) {
-									VersionRange versionRange =
-										new VersionRange(versionString);
-
-									headers = hostBundle.getHeaders(
-										StringPool.BLANK);
-
-									if (versionRange.includes(
-											Version.parseVersion(
-												headers.get(
-													Constants.
-														BUNDLE_VERSION)))) {
-
-										fragments.add(hostBundle);
-									}
-								}
-								else {
-									fragments.add(hostBundle);
-								}
-							}
-						}
-					}
-				}
+	private boolean _contains(String path, List<String> dirPaths) {
+		for (String dirPath : dirPaths) {
+			if (path.contains(dirPath)) {
+				return true;
 			}
 		}
 
-		refreshBundles.addAll(fragments);
+		return false;
 	}
 
-	protected void findBundlesWithOptionalPackagesToRefresh(
+	private void _findBundlesWithOptionalPackagesToRefresh(
 		Set<Bundle> refreshBundles) {
 
-		Set<Bundle> bundles = getScopedBundles(_optionalScope);
+		Set<Bundle> bundles = new HashSet<>();
+
+		for (Artifact artifact : _getArtifacts()) {
+			long bundleId = artifact.getBundleId();
+
+			if (bundleId > 0) {
+				Bundle bundle = _bundleContext.getBundle(bundleId);
+
+				if (bundle != null) {
+					bundles.add(bundle);
+				}
+			}
+		}
 
 		bundles.removeAll(refreshBundles);
 
@@ -396,7 +341,8 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 			return;
 		}
 
-		Map<Bundle, List<Clause>> importClausesMap = new HashMap<>();
+		Map<Bundle, Map<String, Map<String, String>>> importMap =
+			new HashMap<>();
 
 		Iterator<Bundle> iterator = bundles.iterator();
 
@@ -406,15 +352,33 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 			Dictionary<String, String> header = bundle.getHeaders(
 				StringPool.BLANK);
 
-			String imports = header.get(Constants.IMPORT_PACKAGE);
+			String importHeader = header.get(Constants.IMPORT_PACKAGE);
 
-			List<Clause> importClauses = getOptionalImports(imports);
+			Map<String, Map<String, String>> imports = _parseHeader(
+				importHeader);
 
-			if (importClauses.isEmpty()) {
+			Collection<Map<String, String>> set = imports.values();
+
+			Iterator<Map<String, String>> parameterIterator = set.iterator();
+
+			while (parameterIterator.hasNext()) {
+				Map<String, String> attributes = parameterIterator.next();
+
+				String resolution = attributes.get(
+					Constants.RESOLUTION_DIRECTIVE);
+
+				if (!Objects.equals(
+						Constants.RESOLUTION_OPTIONAL, resolution)) {
+
+					parameterIterator.remove();
+				}
+			}
+
+			if (imports.isEmpty()) {
 				iterator.remove();
 			}
 			else {
-				importClausesMap.put(bundle, importClauses);
+				importMap.put(bundle, imports);
 			}
 		}
 
@@ -422,18 +386,17 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 			return;
 		}
 
-		List<Clause> exportClauses = new ArrayList<>();
+		Map<String, Map<String, String>> exportMap = new HashMap<>();
 
 		for (Bundle bundle : refreshBundles) {
 			if (bundle.getState() != Bundle.UNINSTALLED) {
 				Dictionary<String, String> headers = bundle.getHeaders(
 					StringPool.BLANK);
 
-				String exports = headers.get(Constants.EXPORT_PACKAGE);
+				String bundleExports = headers.get(Constants.EXPORT_PACKAGE);
 
-				if (exports != null) {
-					Collections.addAll(
-						exportClauses, Parser.parseHeader(exports));
+				if (bundleExports != null) {
+					exportMap.putAll(_parseHeader(bundleExports));
 				}
 			}
 		}
@@ -443,20 +406,30 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 		while (iterator.hasNext()) {
 			Bundle bundle = iterator.next();
 
-			List<Clause> importClauses = importClausesMap.get(bundle);
+			Map<String, Map<String, String>> imports = importMap.get(bundle);
 
-			Iterator<Clause> importIterator = importClauses.iterator();
+			Set<Map.Entry<String, Map<String, String>>> importSet =
+				imports.entrySet();
+
+			Iterator<Map.Entry<String, Map<String, String>>> importIterator =
+				importSet.iterator();
 
 			while (importIterator.hasNext()) {
-				Clause importClause = importIterator.next();
+				Map.Entry<String, Map<String, String>> importEntry =
+					importIterator.next();
 
 				boolean matching = false;
 
-				for (Clause exportClause : exportClauses) {
-					if (Objects.equals(
-							importClause.getName(), exportClause.getName())) {
+				for (Map.Entry<String, Map<String, String>> exportEntry :
+						exportMap.entrySet()) {
 
-						String importVersionString = importClause.getAttribute(
+					if (Objects.equals(
+							importEntry.getKey(), exportEntry.getKey())) {
+
+						Map<String, String> importAttributes =
+							importEntry.getValue();
+
+						String importVersionString = importAttributes.get(
 							Constants.VERSION_ATTRIBUTE);
 
 						if (importVersionString == null) {
@@ -467,7 +440,10 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 
 						Version exportedVersion = Version.emptyVersion;
 
-						String exportVersionString = exportClause.getAttribute(
+						Map<String, String> exportAttributes =
+							exportEntry.getValue();
+
+						String exportVersionString = exportAttributes.get(
 							Constants.VERSION_ATTRIBUTE);
 
 						if (exportVersionString != null) {
@@ -491,65 +467,12 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 				}
 			}
 
-			if (importClauses.isEmpty()) {
+			if (imports.isEmpty()) {
 				iterator.remove();
 			}
 		}
 
 		refreshBundles.addAll(bundles);
-	}
-
-	protected List<Clause> getOptionalImports(String importsString) {
-		Clause[] importClauses = Parser.parseHeader(importsString);
-
-		List<Clause> clauses = new LinkedList<>();
-
-		for (Clause importClause : importClauses) {
-			String resolution = importClause.getDirective(
-				Constants.RESOLUTION_DIRECTIVE);
-
-			if (Constants.RESOLUTION_OPTIONAL.equals(resolution)) {
-				clauses.add(importClause);
-			}
-		}
-
-		return clauses;
-	}
-
-	protected Set<Bundle> getScopedBundles(String scope) {
-		if (SCOPE_NONE.equals(scope)) {
-			return new HashSet<>();
-		}
-		else if (SCOPE_MANAGED.equals(scope)) {
-			Set<Bundle> bundles = new HashSet<>();
-
-			for (Artifact artifact : _getArtifacts()) {
-				long bundleId = artifact.getBundleId();
-
-				if (bundleId > 0) {
-					Bundle bundle = _bundleContext.getBundle(bundleId);
-
-					if (bundle != null) {
-						bundles.add(bundle);
-					}
-				}
-			}
-
-			return bundles;
-		}
-		else {
-			return new HashSet<>(Arrays.asList(_bundleContext.getBundles()));
-		}
-	}
-
-	private boolean _contains(String path, List<String> dirPaths) {
-		for (String dirPath : dirPaths) {
-			if (path.contains(dirPath)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	private FileInstaller _findFileInstaller(
@@ -912,6 +835,107 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 		return _stateChanged.get();
 	}
 
+	private List<String> _parseDelimitedString(String value, char delimiter) {
+		if (value == null) {
+			return Collections.<String>emptyList();
+		}
+
+		List<String> strings = new ArrayList<>();
+
+		StringBundler sb = new StringBundler();
+
+		boolean inQuotes = false;
+
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+
+			if ((c == delimiter) && !inQuotes) {
+				String string = sb.toString();
+
+				strings.add(string.trim());
+
+				sb = new StringBundler();
+			}
+			else if (c == CharPool.QUOTE) {
+				inQuotes = !inQuotes;
+			}
+			else {
+				sb.append(c);
+			}
+		}
+
+		String string = sb.toString();
+
+		string = string.trim();
+
+		if (string.length() > 0) {
+			strings.add(string);
+		}
+
+		return strings;
+	}
+
+	private Map<String, Map<String, String>> _parseHeader(String header) {
+		List<String> imports = _parseDelimitedString(header, CharPool.COMMA);
+
+		Map<String, Map<String, String>> headers = _parseImports(imports);
+
+		if (headers == null) {
+			return Collections.emptyMap();
+		}
+
+		return headers;
+	}
+
+	private Map<String, Map<String, String>> _parseImports(
+		List<String> imports) {
+
+		if (imports.isEmpty()) {
+			return null;
+		}
+
+		Map<String, Map<String, String>> finalImports = new HashMap<>();
+
+		for (String clause : imports) {
+			List<String> tokens = _parseDelimitedString(
+				clause, CharPool.SEMICOLON);
+
+			List<String> paths = new ArrayList<>();
+
+			Map<String, String> attributes = new HashMap<>();
+
+			for (String token : tokens) {
+				int index = token.indexOf(StringPool.EQUAL);
+
+				if (index == -1) {
+					paths.add(token);
+
+					continue;
+				}
+
+				String key = token.substring(0, index);
+
+				if (token.charAt(index - 1) == CharPool.COLON) {
+					key = key.substring(0, key.length() - 1);
+				}
+
+				key = key.trim();
+
+				String value = token.substring(index + 1);
+
+				value = value.trim();
+
+				attributes.put(key, value);
+			}
+
+			for (String path : paths) {
+				finalImports.put(path, attributes);
+			}
+		}
+
+		return finalImports;
+	}
+
 	private void _process(Set<File> files) throws InterruptedException {
 		List<Artifact> createdArtifacts = new ArrayList<>();
 		List<Artifact> deletedArtifacts = new ArrayList<>();
@@ -964,9 +988,7 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 
 			bundles.addAll(installedBundles);
 
-			findBundlesWithFragmentsToRefresh(bundles);
-
-			findBundlesWithOptionalPackagesToRefresh(bundles);
+			_findBundlesWithOptionalPackagesToRefresh(bundles);
 
 			if (!bundles.isEmpty()) {
 				_refresh(bundles);
@@ -1315,11 +1337,9 @@ public class DirectoryWatcher extends Thread implements BundleListener {
 	private final ServiceTrackerList<FileInstaller, FileInstaller>
 		_fileInstallers;
 	private final String _filter;
-	private final String _fragmentScope;
 	private int _frameworkStartLevel;
 	private final Map<File, Artifact> _installationFailures = new HashMap<>();
 	private final boolean _noInitialDelay;
-	private final String _optionalScope;
 	private final long _poll;
 	private final Set<File> _processingFailures = new HashSet<>();
 	private final Scanner _scanner;

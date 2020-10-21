@@ -43,6 +43,7 @@ import com.liferay.registry.RegistryUtil;
 import com.liferay.registry.ServiceRegistration;
 import com.liferay.tasks.exception.NoSuchTasksEntryException;
 import com.liferay.tasks.model.TasksEntry;
+import com.liferay.tasks.model.TasksEntryTable;
 import com.liferay.tasks.model.impl.TasksEntryImpl;
 import com.liferay.tasks.model.impl.TasksEntryModelImpl;
 import com.liferay.tasks.service.persistence.TasksEntryPersistence;
@@ -9887,6 +9888,8 @@ public class TasksEntryPersistenceImpl
 
 		setModelImplClass(TasksEntryImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(TasksEntryTable.INSTANCE);
 	}
 
 	/**
@@ -9927,9 +9930,7 @@ public class TasksEntryPersistenceImpl
 	public void clearCache() {
 		EntityCacheUtil.clearCache(TasksEntryImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(TasksEntryImpl.class);
 	}
 
 	/**
@@ -9953,9 +9954,7 @@ public class TasksEntryPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(TasksEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(TasksEntryImpl.class, primaryKey);

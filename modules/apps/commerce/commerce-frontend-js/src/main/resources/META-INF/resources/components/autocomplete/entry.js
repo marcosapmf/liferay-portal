@@ -13,6 +13,6 @@
  */
 
 import launcher from '../../utilities/launcher';
-import ItemFinder from './Autocomplete';
+import Autocomplete from './Autocomplete';
 
-export default (...data) => launcher(ItemFinder, ...data);
+export default (...data) => launcher(Autocomplete, ...data);

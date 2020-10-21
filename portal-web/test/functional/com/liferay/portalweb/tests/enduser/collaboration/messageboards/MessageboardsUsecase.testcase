@@ -73,6 +73,8 @@ definition {
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
 
+		MessageboardsThread.gotoCP(threadSubject = "MB Thread Message Subject");
+
 		MessageboardsThread.replyCP(
 			threadReplyBody = "MB Body Reply",
 			threadSubject = "MB Thread Message Subject");
@@ -257,6 +259,14 @@ definition {
 		MessageboardsThread.addPG(
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
+
+		MessageboardsThread.gotoPG(
+			lastPostUserName = "Test Test",
+			replyCount = "0",
+			threadBody = "MB Thread Message Body",
+			threadSubject = "MB Thread Message Subject");
+
+		Pause(locator1 = "3000");
 
 		JSONMBMessage.addMessageReply(
 			threadBody = '''<script>alert(123);</script>''',
@@ -754,6 +764,12 @@ definition {
 			threadBody = '''<script>alert(123);</script>''',
 			threadSubject = '''<script>alert(123);</script>''');
 
+		MessageboardsThread.gotoPG(
+			lastPostUserName = "Test Test",
+			replyCount = "0",
+			threadBody = '''<script>alert(123);</script>''',
+			threadSubject = '''<script>alert(123);</script>''');
+
 		MessageboardsThread.viewNoXSSPG(
 			threadBody = '''<script>alert(123);</script>''',
 			threadSubject = '''<script>alert(123);</script>''');
@@ -783,6 +799,12 @@ definition {
 
 		MessageboardsThread.addPG(
 			source = "true",
+			threadBody = "[img]asd[font= onerror=alert(/This is an XSS Message/.source)//]FF[/font][/img]",
+			threadSubject = "MB Thread Message Subject");
+
+		MessageboardsThread.gotoPG(
+			lastPostUserName = "Test Test",
+			replyCount = "0",
 			threadBody = "[img]asd[font= onerror=alert(/This is an XSS Message/.source)//]FF[/font][/img]",
 			threadSubject = "MB Thread Message Subject");
 
@@ -842,8 +864,10 @@ definition {
 
 		MenuItem.viewPresent(menuItem = "Unsubscribe");
 
+		Navigator.gotoPage(pageName = "Message Boards Page");
+
 		AssertClick(
-			locator1 = "MessageBoards#THREAD_LIST_THREAD",
+			locator1 = "MessageBoards#THREAD_LIST_THREAD_UNREAD",
 			value1 = "MB Thread Message Subject");
 
 		Click(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
@@ -1013,6 +1037,9 @@ definition {
 
 		MessageboardsThread.addPGAsQuestion(
 			breadcrumbName = "Home",
+			lastPostUserName = "Test Test",
+			pageName = "Message Boards Page",
+			replyCount = "0",
 			threadBody = "MB Thread Message Body",
 			threadSubject = "MB Thread Message Subject");
 

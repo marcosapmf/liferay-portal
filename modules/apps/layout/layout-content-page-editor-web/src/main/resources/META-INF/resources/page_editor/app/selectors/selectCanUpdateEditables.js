@@ -12,18 +12,12 @@
  * details.
  */
 
-import {VIEWPORT_SIZES} from '../config/constants/viewportSizes';
-
 /**
  * @param {{ permissions: import("../../types/ActionKeys").ActionKeysMap, selectedViewportSize: string }} state
  */
-export default function selectCanUpdateEditables({
-	permissions,
-	selectedViewportSize,
-}) {
+export default function selectCanUpdateEditables({permissions}) {
 	return (
 		!permissions.LOCKED_SEGMENTS_EXPERIMENT &&
-		(permissions.UPDATE || permissions.UPDATE_LAYOUT_CONTENT) &&
-		selectedViewportSize === VIEWPORT_SIZES.desktop
+		(permissions.UPDATE || permissions.UPDATE_LAYOUT_CONTENT)
 	);
 }

@@ -15,8 +15,15 @@
 package com.liferay.roles.admin.role.type.contributor;
 
 import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.service.RoleServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 
+import java.util.LinkedHashMap;
 import java.util.Locale;
 
 /**
@@ -109,6 +116,10 @@ public interface RoleTypeContributor {
 	 */
 	public int getType();
 
+	public default String getTypeLabel() {
+		return RoleConstants.getTypeLabel(getType());
+	}
+
 	/**
 	 * Returns <code>true</code> if users are allowed to assign members to the
 	 * role; <code>false</code> otherwise.
@@ -155,6 +166,25 @@ public interface RoleTypeContributor {
 	 */
 	public default boolean isAutomaticallyAssigned(Role role) {
 		return false;
+	}
+
+	public default BaseModelSearchResult<Role> searchRoles(
+		long companyId, String keywords, int start, int end,
+		OrderByComparator<Role> orderByComparator) {
+
+		LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+
+		if (Validator.isNotNull(getClassName())) {
+			params.put(
+				"classNameId", PortalUtil.getClassNameId(getClassName()));
+		}
+
+		return new BaseModelSearchResult<>(
+			RoleServiceUtil.search(
+				companyId, keywords, new Integer[] {getType()}, params, start,
+				end, orderByComparator),
+			RoleServiceUtil.searchCount(
+				companyId, keywords, new Integer[] {getType()}, params));
 	}
 
 }

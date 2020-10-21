@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.powwow.exception.NoSuchServerException;
 import com.liferay.powwow.model.PowwowServer;
+import com.liferay.powwow.model.PowwowServerTable;
 import com.liferay.powwow.model.impl.PowwowServerImpl;
 import com.liferay.powwow.model.impl.PowwowServerModelImpl;
 import com.liferay.powwow.service.persistence.PowwowServerPersistence;
@@ -681,6 +682,8 @@ public class PowwowServerPersistenceImpl
 
 		setModelImplClass(PowwowServerImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(PowwowServerTable.INSTANCE);
 	}
 
 	/**
@@ -722,9 +725,7 @@ public class PowwowServerPersistenceImpl
 	public void clearCache() {
 		EntityCacheUtil.clearCache(PowwowServerImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(PowwowServerImpl.class);
 	}
 
 	/**
@@ -748,9 +749,7 @@ public class PowwowServerPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(PowwowServerImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(PowwowServerImpl.class, primaryKey);

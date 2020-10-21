@@ -30,7 +30,12 @@ public class AnalyticsSyncedContactsConfigurationScreen
 
 	@Override
 	public String getKey() {
-		return "synced-contacts";
+		return "2-synced-contacts";
+	}
+
+	@Override
+	public boolean isVisible() {
+		return false;
 	}
 
 	@Override

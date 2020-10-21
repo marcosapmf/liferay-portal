@@ -26,9 +26,10 @@ long folderId = GetterUtil.getLong((String)request.getAttribute("view.jsp-folder
 
 long repositoryId = GetterUtil.getLong((String)request.getAttribute("view.jsp-repositoryId"));
 
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
 DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
 
-String displayStyle = GetterUtil.getString((String)request.getAttribute("view.jsp-displayStyle"));
+String displayStyle = dlAdminDisplayContext.getDisplayStyle();
 
 FolderActionDisplayContext folderActionDisplayContext = new FolderActionDisplayContext(dlTrashHelper, request, liferayPortletResponse);
 
@@ -52,7 +53,7 @@ String[] entryColumns = dlPortletInstanceSettingsHelper.getEntryColumns();
 
 boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
 
-if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) && (folderId != rootFolderId)) {
+if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) && (folderId != dlAdminDisplayContext.getRootFolderId())) {
 	String redirect = ParamUtil.getString(request, "redirect");
 
 	if (Validator.isNotNull(redirect)) {
@@ -65,7 +66,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 <div class="document-container" id="<portlet:namespace />entriesContainer">
 
 	<%
-	DLAdminManagementToolbarDisplayContext dlAdminManagementToolbarDisplayContext = dlAdminDisplayContextProvider.getDLAdminManagementToolbarDisplayContext(request, response);
+	DLAdminManagementToolbarDisplayContext dlAdminManagementToolbarDisplayContext = (DLAdminManagementToolbarDisplayContext)request.getAttribute(DLAdminManagementToolbarDisplayContext.class.getName());
 
 	SearchContainer<Object> dlSearchContainer = dlAdminDisplayContext.getSearchContainer();
 	%>
@@ -99,15 +100,14 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						dlSearchContainer.setRowChecker(entriesChecker);
 					}
 
-					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-						"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(fileEntry))
-					).put(
-						"draggable", draggable
-					).put(
-						"title", fileEntry.getTitle()
-					).build();
-
-					row.setData(rowData);
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(fileEntry))
+						).put(
+							"draggable", draggable
+						).put(
+							"title", fileEntry.getTitle()
+						).build());
 
 					DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext = null;
 
@@ -328,11 +328,13 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 										/>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("downloads") %>'>
-										<liferay-ui:search-container-column-text
-											cssClass="table-cell-expand-smallest"
-											name="downloads"
-											value="<%= String.valueOf(fileEntry.getReadCount()) %>"
-										/>
+										<c:if test="<%= ViewCountManagerUtil.isViewCountEnabled(PortalUtil.getClassNameId(DLFileEntryConstants.getClassName())) %>">
+											<liferay-ui:search-container-column-text
+												cssClass="table-cell-expand-smallest"
+												name="downloads"
+												value="<%= String.valueOf(fileEntry.getReadCount()) %>"
+											/>
+										</c:if>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("create-date") %>'>
 										<liferay-ui:search-container-column-date
@@ -379,19 +381,18 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 						}
 					}
 
-					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-						"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(curFolder))
-					).put(
-						"draggable", draggable
-					).put(
-						"folder", true
-					).put(
-						"folder-id", curFolder.getFolderId()
-					).put(
-						"title", curFolder.getName()
-					).build();
-
-					row.setData(rowData);
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"actions", StringUtil.merge(dlAdminManagementToolbarDisplayContext.getAvailableActions(curFolder))
+						).put(
+							"draggable", draggable
+						).put(
+							"folder", true
+						).put(
+							"folder-id", curFolder.getFolderId()
+						).put(
+							"title", curFolder.getName()
+						).build());
 
 					row.setPrimaryKey(String.valueOf(curFolder.getPrimaryKey()));
 					%>

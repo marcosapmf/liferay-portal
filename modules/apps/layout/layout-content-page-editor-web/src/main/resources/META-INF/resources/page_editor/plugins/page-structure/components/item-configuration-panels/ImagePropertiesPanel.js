@@ -12,28 +12,36 @@
  * details.
  */
 
-import ClayForm, {ClayInput} from '@clayui/form';
+import ClayForm, {ClayInput, ClaySelectWithOption} from '@clayui/form';
 import React, {useEffect, useState} from 'react';
 
 import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../app/config/constants/backgroundImageFragmentEntryProcessor';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../app/config/constants/editableFragmentEntryProcessor';
 import {EDITABLE_TYPES} from '../../../../app/config/constants/editableTypes';
+import {VIEWPORT_SIZES} from '../../../../app/config/constants/viewportSizes';
+import {config} from '../../../../app/config/index';
 import selectEditableValueContent from '../../../../app/selectors/selectEditableValueContent';
+import ImageService from '../../../../app/services/ImageService';
 import {useDispatch, useSelector} from '../../../../app/store/index';
 import updateEditableValuesThunk from '../../../../app/thunks/updateEditableValues';
 import {useId} from '../../../../app/utils/useId';
 import {ImageSelector} from '../../../../common/components/ImageSelector';
 import {getEditableItemPropTypes} from '../../../../prop-types/index';
 
+const DEFAULT_IMAGE_CONFIGURATION = 'auto';
+
 export function ImagePropertiesPanel({item}) {
 	const {editableId, fragmentEntryLinkId, type} = item;
 	const dispatch = useDispatch();
+	const imageConfigurationId = useId();
 	const imageDescriptionId = useId();
 	const state = useSelector((state) => state);
 
 	const selectedViewportSize = useSelector(
 		(state) => state.selectedViewportSize
 	);
+
+	const canUpdateImage = selectedViewportSize === VIEWPORT_SIZES.desktop;
 
 	const processorKey =
 		type === EDITABLE_TYPES.backgroundImage
@@ -51,6 +59,14 @@ export function ImagePropertiesPanel({item}) {
 		editableConfig.alt || ''
 	);
 
+	const [imageConfiguration, setImageConfiguration] = useState(
+		DEFAULT_IMAGE_CONFIGURATION
+	);
+
+	const [imageConfigurations, setImageConfigurations] = useState([]);
+
+	const [imageFileSize, setImageFileSize] = useState('');
+
 	const editables = useSelector((state) => state.editables);
 
 	const editableElement = editables
@@ -59,15 +75,31 @@ export function ImagePropertiesPanel({item}) {
 
 	const [imageSize, setImageSize] = useState(null);
 
+	const editableContent = useSelector((state) => {
+		const content = selectEditableValueContent(
+			state,
+			fragmentEntryLinkId,
+			editableId,
+			processorKey
+		);
+
+		return content;
+	});
+
+	const imageUrl =
+		typeof editableContent === 'string'
+			? editableContent
+			: editableContent?.url;
+
+	const imageTitle =
+		editableConfig.imageTitle ||
+		(imageUrl === editableValue.defaultValue ? '' : imageUrl);
+
 	useEffect(() => {
 		if (editableElement != null) {
 			const setSize = () => {
-				if (
-					editableElement.naturalHeight &&
-					editableElement.naturalWidth
-				) {
+				if (editableElement.naturalWidth) {
 					setImageSize({
-						height: editableElement.naturalHeight,
 						width: editableElement.naturalWidth,
 					});
 				}
@@ -86,7 +118,31 @@ export function ImagePropertiesPanel({item}) {
 	}, [editableConfig.naturalHeight, editableElement, selectedViewportSize]);
 
 	useEffect(() => {
-		const editableConfig = editableValue ? editableValue.config || {} : {};
+		const fileEntryId = editableContent?.fileEntryId;
+
+		if (config.adaptiveMediaEnabled && fileEntryId > 0) {
+			ImageService.getAvailableImageConfigurations({
+				fileEntryId,
+				onNetworkStatus: dispatch,
+			}).then((availableImageConfigurations) =>
+				setImageConfigurations(availableImageConfigurations)
+			);
+		}
+	}, [dispatch, editableContent.fileEntryId]);
+
+	useEffect(() => {
+		const selectedImageConfigurationValue =
+			editableConfig.imageConfiguration?.[selectedViewportSize] ??
+			DEFAULT_IMAGE_CONFIGURATION;
+
+		const selectedImageConfiguration = imageConfigurations.find(
+			(imageConfiguration) =>
+				imageConfiguration.value === selectedImageConfigurationValue
+		);
+
+		if (selectedImageConfiguration) {
+			setImageConfiguration(selectedImageConfiguration.value);
+		}
 
 		setImageDescription((imageDescription) => {
 			if (imageDescription !== editableConfig.alt) {
@@ -95,25 +151,19 @@ export function ImagePropertiesPanel({item}) {
 
 			return imageDescription;
 		});
-	}, [editableValue]);
 
-	const imageUrl = useSelector((state) => {
-		const content = selectEditableValueContent(
-			state,
-			fragmentEntryLinkId,
-			editableId,
-			processorKey
-		);
+		setImageFileSize(selectedImageConfiguration?.size);
+	}, [
+		editableConfig.alt,
+		editableConfig.imageConfiguration,
+		editableValue,
+		imageConfigurations,
+		selectedViewportSize,
+		state.languageId,
+	]);
 
-		return content?.url ?? content;
-	});
-
-	const imageTitle =
-		editableConfig.imageTitle ||
-		(imageUrl === editableValue.defaultValue ? '' : imageUrl);
-
-	const updateEditableValues = (
-		alt,
+	const updateEditableConfig = (
+		newConfig = {},
 		editableValues,
 		editableId,
 		processorKey
@@ -132,7 +182,7 @@ export function ImagePropertiesPanel({item}) {
 					...editableProcessorValues[editableId],
 					config: {
 						...editableConfig,
-						alt,
+						...newConfig,
 					},
 				},
 			},
@@ -156,21 +206,29 @@ export function ImagePropertiesPanel({item}) {
 
 		let nextEditableValue = {};
 
+		setImageConfiguration(DEFAULT_IMAGE_CONFIGURATION);
+		setImageConfigurations([]);
 		setImageDescription('');
+		setImageFileSize('');
 
 		const nextEditableValueConfig = {
 			...editableValue.config,
 			alt: '',
+			imageConfiguration: {},
 			imageTitle: imageTitle || '',
 		};
+
+		const nextEditableValueContent = config.adaptiveMediaEnabled
+			? {
+					fileEntryId,
+					url: imageUrl,
+			  }
+			: imageUrl;
 
 		nextEditableValue = {
 			...editableValue,
 			config: nextEditableValueConfig,
-			[state.languageId]: {
-				fileEntryId,
-				url: imageUrl,
-			},
+			[state.languageId]: nextEditableValueContent,
 		};
 
 		const nextEditableValues = {
@@ -195,25 +253,65 @@ export function ImagePropertiesPanel({item}) {
 
 	return (
 		<>
-			<ImageSelector
-				imageTitle={imageTitle}
-				label={Liferay.Language.get('image')}
-				onClearButtonPressed={() => onImageChange('', '')}
-				onImageSelected={(image) =>
-					onImageChange(image.title, image.url, image.fileEntryId)
-				}
-			/>
+			{canUpdateImage && (
+				<ImageSelector
+					imageTitle={imageTitle}
+					label={Liferay.Language.get('image')}
+					onClearButtonPressed={() => onImageChange('', '')}
+					onImageSelected={(image) =>
+						onImageChange(image.title, image.url, image.fileEntryId)
+					}
+				/>
+			)}
 
-			{imageTitle && imageSize && (
+			{config.adaptiveMediaEnabled && imageConfigurations?.length > 0 && (
+				<ClayForm.Group>
+					<label htmlFor={imageConfigurationId}>
+						{Liferay.Language.get('resolution')}
+					</label>
+					<ClaySelectWithOption
+						className={'form-control form-control-sm'}
+						id={imageConfigurationId}
+						name={imageConfigurationId}
+						onChange={(event) => {
+							const imageConfiguration =
+								editableConfig.imageConfiguration || {};
+
+							const nextImageConfiguration = {
+								...imageConfiguration,
+								[selectedViewportSize]: event.target.value,
+							};
+
+							updateEditableConfig(
+								{imageConfiguration: nextImageConfiguration},
+								editableValues,
+								editableId,
+								processorKey
+							);
+						}}
+						options={imageConfigurations}
+						value={imageConfiguration}
+					/>
+				</ClayForm.Group>
+			)}
+
+			{config.adaptiveMediaEnabled && imageTitle && imageSize && (
 				<div className="mb-2 small">
-					<b>{Liferay.Language.get('resolution')}:</b>
+					<b>{Liferay.Language.get('width')}:</b>
+					<span className="ml-2">{imageSize.width}px</span>
+				</div>
+			)}
+
+			{config.adaptiveMediaEnabled && imageTitle && imageFileSize && (
+				<div className="mb-2 small">
+					<b>{Liferay.Language.get('file-size')}:</b>
 					<span className="ml-2">
-						{imageSize.width}x{imageSize.height}px
+						{Number(imageFileSize).toFixed(2)}kB
 					</span>
 				</div>
 			)}
 
-			{type === EDITABLE_TYPES.image && (
+			{canUpdateImage && type === EDITABLE_TYPES.image && (
 				<ClayForm.Group>
 					<label htmlFor={imageDescriptionId}>
 						{Liferay.Language.get('image-description')}
@@ -224,8 +322,8 @@ export function ImagePropertiesPanel({item}) {
 							const previousValue = editableConfig.alt || '';
 
 							if (previousValue !== imageDescription) {
-								updateEditableValues(
-									imageDescription,
+								updateEditableConfig(
+									{alt: imageDescription},
 									editableValues,
 									editableId,
 									processorKey

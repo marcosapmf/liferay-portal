@@ -114,7 +114,7 @@ const ImagePicker = ({
 						<ClayInput
 							className="field"
 							disabled
-							id={id ? id : name}
+							id={id}
 							type="text"
 							value={imageValues.title}
 						/>

@@ -9,6 +9,11 @@
 </thead>
 <tbody>
 <tr>
+	<td>AUDIT_GRAPH_CATEGORY_CHECKBOX</td>
+	<td>//*[contains(@class, 'inline-item-after') and contains(text(),'Stage 1')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>AUTHOR_SELECT_DISPLAY_MODE_BUTTON</td>
 	<td>//button[contains(@class, 'dropdown-toggle') and contains(@class, 'btn-unstyled') and contains(@class, 'nav-link-monospaced') and contains(@class, 'btn nav-link')]</td>
 	<td></td>
@@ -63,28 +68,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FILTER_BY_AUTHOR_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Author')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_CATEGORY_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Categories')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_MODIFICATION_DATE_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Modified Date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_TAG_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Tags')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_TITLE_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Title')]</td>
+	<td>FILTER_BY_OPTION</td>
+	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'${filterOption}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -103,6 +88,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>GLOBAL_SITE_CARD</td>
+	<td>//*[contains(@class, 'card')]//*[contains(@data-groupdescriptivename, 'Global')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INFO_OPTION</td>
 	<td>//*[contains(@data-action, 'showInfo')]</td>
 	<td></td>
@@ -110,6 +100,16 @@
 <tr>
 	<td>INFO_PANEL_TITLE</td>
 	<td>//*[contains(@class, 'text-truncate') and contains(text(),'Content Info')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MY_SITES_TAB</td>
+	<td>//*[contains(@class, 'nav-link') and contains(text(),'My Sites')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NO_CATEGORIES_SELECTED_TEXT</td>
+	<td>//*[contains(@class, 'text-truncate') and contains(text(),'There are no categories selected')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -150,6 +150,11 @@
 <tr>
 	<td>WEB_CONTENT_MENU_DROPDOWN_BUTTON</td>
 	<td>//button[contains(@class, 'dropdown-toggle') and contains(@class, 'btn-unstyled') and contains(@class, 'btn-monospaced') and contains(@class, 'component-action')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>X_AXIS_VOCABULARY_NAME</td>
+	<td>//button[contains(@class, 'recharts-layer recharts-cartesian-axis-tick') and contains(text(),'${xAxisCtegoryName}')]</td>
 	<td></td>
 </tr>
 </tbody>

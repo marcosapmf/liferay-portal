@@ -1,5 +1,11 @@
 definition {
 
+	macro assertDueDate {
+		AssertElementPresent(
+			key_date = "${date}",
+			locator1 = "AssetWorkflow#DUE_DATE");
+	}
+
 	macro createNewUserAccount {
 		User.createAccount(
 			newPassword = "${newPassword}",

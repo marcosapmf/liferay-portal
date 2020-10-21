@@ -751,7 +751,6 @@ definition {
 		}
 
 		task ("Assert could edit fragment upgrading from 7.2") {
-
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
 
 			FragmentsAdminNavigator.gotoEntry(entry = "Fragment Name");
@@ -768,13 +767,11 @@ definition {
 		}
 
 		task ("Assert could delete fragment upgrading from 7.2") {
-
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/test-fragment-content-page");
 
 			ContentPages.clickPencil();
 
 			PageEditor.removeFragment(fragmentName = "Fragment Name");
-
 		}
 
 		task ("Assert the experience survived and could edit") {
@@ -2608,6 +2605,22 @@ definition {
 			pollsQuestionVotePercent = "100%");
 	}
 
+	macro viewPortalCORS {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "${name}");
+
+		AssertTextEquals(
+			key_configurationValue = "filter.mapping.url.pattern",
+			locator1 = "SystemSettings#CORS_CONFIGURATION",
+			value1 = "${urlPattern}");
+
+		AssertTextEquals(
+			key_configurationValue = "header",
+			locator1 = "SystemSettings#CORS_CONFIGURATION",
+			value1 = "${header}");
+	}
+
 	macro ViewPortletsPermissions {
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea1@liferay.com",
@@ -3142,6 +3155,17 @@ definition {
 		SignOut.signOut();
 
 		SignIn.signIn();
+	}
+
+	macro viewWebContextsCORS {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "${filter}");
+
+		AssertTextEquals(
+			key_configurationValue = "filter.mapping.url.pattern",
+			locator1 = "SystemSettings#CORS_CONFIGURATION",
+			value1 = "${urlPattern}");
 	}
 
 }

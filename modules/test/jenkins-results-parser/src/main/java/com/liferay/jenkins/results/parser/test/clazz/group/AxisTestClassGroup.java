@@ -27,18 +27,35 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _batchTestClassGroup;
 	}
 
-	public int getId() {
-		return _id;
+	public Integer getMinimumSlaveRAM() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getMinimumSlaveRAM();
+		}
+
+		return _batchTestClassGroup.getMinimumSlaveRAM();
 	}
 
-	protected AxisTestClassGroup(
-		BatchTestClassGroup batchTestClassGroup, int id) {
+	public SegmentTestClassGroup getSegmentTestClassGroup() {
+		return _segmentTestClassGroup;
+	}
+
+	protected AxisTestClassGroup(BatchTestClassGroup batchTestClassGroup) {
+		setBatchTestClassGroup(batchTestClassGroup);
+	}
+
+	protected void setBatchTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup) {
 
 		_batchTestClassGroup = batchTestClassGroup;
-		_id = id;
 	}
 
-	private final BatchTestClassGroup _batchTestClassGroup;
-	private final int _id;
+	protected void setSegmentTestClassGroup(
+		SegmentTestClassGroup segmentTestClassGroup) {
+
+		_segmentTestClassGroup = segmentTestClassGroup;
+	}
+
+	private BatchTestClassGroup _batchTestClassGroup;
+	private SegmentTestClassGroup _segmentTestClassGroup;
 
 }

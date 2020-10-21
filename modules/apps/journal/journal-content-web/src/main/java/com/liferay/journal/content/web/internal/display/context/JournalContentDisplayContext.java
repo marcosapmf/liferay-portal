@@ -73,7 +73,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.LiferayPortletUtil;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
@@ -827,23 +826,8 @@ public class JournalContentDisplayContext {
 	}
 
 	public boolean isEnableViewCountIncrement() {
-		if (_enableViewCountIncrement != null) {
-			return _enableViewCountIncrement;
-		}
-
-		if (Validator.isNotNull(
-				_journalContentPortletInstanceConfiguration.
-					enableViewCountIncrement())) {
-
-			_enableViewCountIncrement = GetterUtil.getBoolean(
-				_journalContentPortletInstanceConfiguration.
-					enableViewCountIncrement());
-		}
-		else {
-			_enableViewCountIncrement = PropsValues.VIEW_COUNT_ENABLED;
-		}
-
-		return _enableViewCountIncrement;
+		return _journalContentPortletInstanceConfiguration.
+			enableViewCountIncrement();
 	}
 
 	public boolean isExpired() throws PortalException {
@@ -1168,7 +1152,6 @@ public class JournalContentDisplayContext {
 		_ddmTemplateModelResourcePermission;
 	private List<DDMTemplate> _ddmTemplates;
 	private DDMTemplate _defaultDDMTemplate;
-	private Boolean _enableViewCountIncrement;
 	private Boolean _expired;
 	private Boolean _hasViewPermission;
 	private final JournalContentPortletInstanceConfiguration

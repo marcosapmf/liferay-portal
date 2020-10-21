@@ -167,7 +167,6 @@ definition {
 				Button.clickAdd();
 
 				IFrame.selectTopFrame();
-
 			}
 			else {
 				NavigationMenusAdmin._editItemPage(name = "${name}");
@@ -263,6 +262,10 @@ definition {
 			key_index = "${index}",
 			locator1 = "SiteNavigationMenu#ITEM_ENTRY_N",
 			value1 = "${itemName}");
+	}
+
+	macro viewMenuTitle {
+		LexiconTable.viewTableEntryTitle(tableEntry = "${navigationMenu}");
 	}
 
 	macro viewMenuType {

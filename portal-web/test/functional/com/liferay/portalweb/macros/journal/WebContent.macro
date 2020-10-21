@@ -559,7 +559,6 @@ definition {
 					locator1 = "WC#ICON_DOCUMENT_TITLE",
 					value1 = "${webContentDocumentsAndMedia}");
 			}
-
 		}
 
 		if (isSet(webContentHTML)) {
@@ -671,7 +670,6 @@ definition {
 
 				SelectFrame(value1 = "relative=top");
 			}
-
 		}
 
 		if (isSet(webContentText)) {
@@ -1708,6 +1706,16 @@ definition {
 				value1 = "${webContentHTML}");
 
 			SelectFrame(value1 = "relative=top");
+		}
+
+		if (isSet(displayPageTemplateDisabled)) {
+			Portlet.waitForForm();
+
+			var key_panel = "Display Page Template";
+
+			AssertElementNotPresent(locator1 = "Panel#PANEL_COLLAPSED");
+
+			AssertElementNotPresent(locator1 = "Panel#PANEL_EXPANDED");
 		}
 	}
 

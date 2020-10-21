@@ -1538,6 +1538,12 @@ public class VerifyProperties extends VerifyProcess {
 			"com.liferay.portal.template.velocity"
 		},
 
+		// View Count
+
+		{
+			"view.count.enabled", "enabled", "com.liferay.view.count.service"
+		},
+
 		// XSL Content
 
 		{
@@ -1797,6 +1803,7 @@ public class VerifyProperties extends VerifyProcess {
 		"microsoft.translator.client.id", "microsoft.translator.client.secret",
 		"minifier.inline.content.cache.size",
 		"mobile.device.styling.wap.enabled", "module.framework.initial.bundles",
+		"module.framework.properties.file.install.optionalImportRefreshScope",
 		"module.framework.properties.lpkg.index.validator.enabled",
 		"module.framework.register.liferay.services", "msn.login",
 		"msn.password", "multicast.group.address[\"hibernate\"]",
@@ -1982,12 +1989,6 @@ public class VerifyProperties extends VerifyProcess {
 		{
 			"module.framework.properties.felix.fileinstall.noInitialDelay",
 			"module.framework.properties.file.install.noInitialDelay"
-		},
-		{
-			"module.framework.properties.felix.fileinstall." +
-				"optionalImportRefreshScope",
-			"module.framework.properties.file.install." +
-				"optionalImportRefreshScope"
 		},
 		{
 			"module.framework.properties.felix.fileinstall.subdir.mode",

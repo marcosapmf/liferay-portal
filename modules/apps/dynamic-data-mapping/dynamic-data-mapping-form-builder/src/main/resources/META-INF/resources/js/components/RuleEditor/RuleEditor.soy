@@ -89,7 +89,15 @@
 	}
 	{@param conditions: list<[
 			binaryOperator: bool,
+			firstOperandColumns: list<[
+				label: string,
+				value: string
+			]>,
 			firstOperandOptions: list<[
+				label: string,
+				value: string
+			]>,
+			firstOperandRows: list<[
 				label: string,
 				value: string
 			]>,
@@ -201,7 +209,9 @@
 					{param _handleSecondOperandValueEdited: $_handleSecondOperandValueEdited /}
 					{param binaryOperator: $condition.binaryOperator /}
 					{param fieldOptions: $conditionsFieldOptions /}
+					{param firstOperandColumns: $condition.firstOperandColumns /}
 					{param firstOperandOptions: $condition.firstOperandOptions /}
+					{param firstOperandRows: $condition.firstOperandRows /}
 					{param firstOperandType: $condition.operands[0].type /}
 					{param firstOperandValueSelected: $condition.operands[0].value /}
 					{param fixedOptions: $fixedOptions /}
@@ -489,6 +499,7 @@
 								{msg desc=""}choose-an-option{/msg}
 							{/param}
 							{param ref: 'action' + $index /}
+							{param showEmptyOption: false /}
 							{param spritemap: $spritemap /}
 							{param value: [$actionSelected] /}
 						{/call}
@@ -600,6 +611,7 @@
 			{param options: $options /}
 			{param placeholder: $placeholder /}
 			{param ref: $ref /}
+			{param showEmptyOption: false /}
 			{param spritemap: $spritemap /}
 			{param value: [$value] /}
 		{/call}
@@ -628,7 +640,15 @@
 	{@param? _handleSecondOperandTypeEdited: any}
 	{@param? _handleSecondOperandValueEdited: any}
 	{@param? firstOperandType: string}
+	{@param? firstOperandColumns: list<[
+		label: string,
+		value: string
+	]>}
 	{@param? firstOperandOptions: list<[
+		label: string,
+		value: string
+	]>}
+	{@param? firstOperandRows: list<[
 		label: string,
 		value: string
 	]>}
@@ -672,6 +692,7 @@
 								{msg desc=""}choose-an-option{/msg}
 							{/param}
 							{param ref: 'firstOperand' + $index /}
+							{param showEmptyOption: false /}
 							{param spritemap: $spritemap /}
 							{param value: [$firstOperandValueSelected] /}
 						{/call}
@@ -717,6 +738,7 @@
 											{/param}
 											{param readOnly: $readOnly /}
 											{param ref: 'secondOperandField' + $index /}
+											{param showEmptyOption: false /}
 											{param spritemap: $spritemap /}
 											{param value: [$secondOperandOptionValue] /}
 										{/call}
@@ -732,8 +754,24 @@
 												{msg desc=""}choose-an-option{/msg}
 											{/param}
 											{param ref: 'secondOperandField' + $index /}
+											{param showEmptyOption: false /}
 											{param spritemap: $spritemap /}
 											{param value: [$secondOperandValue] /}
+										{/call}
+									{elseif $secondOperandType == 'grid'}
+										{call ReactFieldAdapter.render}
+											{param columns: $firstOperandColumns /}
+											{param dataType: $secondOperandDataType /}
+											{param events: [
+												'fieldEdited': $_handleSecondOperandValueEdited
+											] /}
+											{param fieldType: $secondOperandType /}
+											{param name: $secondOperandFieldName /}
+											{param readOnly: $readOnly /}
+											{param ref: 'secondOperandValue' + $index /}
+											{param rows: $firstOperandRows /}
+											{param spritemap: $spritemap /}
+											{param value: $secondOperandValue /}
 										{/call}
 									{elseif $secondOperandType != ''}
 										{call ReactFieldAdapter.render}
@@ -745,6 +783,7 @@
 											{param name: $secondOperandFieldName /}
 											{param readOnly: $readOnly /}
 											{param ref: 'secondOperandValue' + $index /}
+											{param showEmptyOption: false /}
 											{param spritemap: $spritemap /}
 											{param value: $secondOperandValue /}
 										{/call}
@@ -822,6 +861,7 @@
 			{/param}
 			{param readOnly: $readOnly /}
 			{param ref: 'conditionOperator' + $index /}
+			{param showEmptyOption: false /}
 			{param spritemap: $spritemap /}
 			{param value: [$selectedOperator] /}
 		{/call}
@@ -870,6 +910,7 @@
 					{msg desc=""}choose-an-option{/msg}
 				{/param}
 				{param ref: 'secondOperandTypeSelector' + $index /}
+				{param showEmptyOption: false /}
 				{param spritemap: $spritemap /}
 				{param value: [$value] /}
 				{param visible: $visible /}
@@ -903,6 +944,7 @@
 			{param placeholder kind="text"}
 				{msg desc=""}choose-an-option{/msg}
 			{/param}
+			{param showEmptyOption: false /}
 			{param spritemap: $spritemap /}
 			{param value: [$secondOperandValue] /}
 		{/call}
@@ -1096,6 +1138,7 @@
 									{msg desc=""}choose-an-option{/msg}
 								{/param}
 								{param ref: 'action' + $actionIndex + 'dataProviderInput' + $index /}
+								{param showEmptyOption: false /}
 								{param spritemap: $spritemap /}
 								{param value: [$input.value] /}
 							{/call}

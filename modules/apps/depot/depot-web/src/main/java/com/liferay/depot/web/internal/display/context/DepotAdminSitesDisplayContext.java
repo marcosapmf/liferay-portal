@@ -36,6 +36,8 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -128,8 +130,7 @@ public class DepotAdminSitesDisplayContext {
 	}
 
 	public List<DepotEntryGroupRel> getDepotEntryGroupRels() {
-		DepotEntry depotEntry = (DepotEntry)_liferayPortletRequest.getAttribute(
-			DepotAdminWebKeys.DEPOT_ENTRY);
+		DepotEntry depotEntry = _getDepotEntry();
 
 		return DepotEntryGroupRelLocalServiceUtil.getDepotEntryGroupRels(
 			depotEntry);
@@ -164,14 +165,28 @@ public class DepotAdminSitesDisplayContext {
 		return group.getDescriptiveName(locale);
 	}
 
+	public boolean isLiveDepotEntry() throws PortalException {
+		DepotEntry depotEntry = _getDepotEntry();
+
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
+
+		return stagingGroupHelper.isLiveGroup(depotEntry.getGroup());
+	}
+
+	private DepotEntry _getDepotEntry() {
+		return (DepotEntry)_liferayPortletRequest.getAttribute(
+			DepotAdminWebKeys.DEPOT_ENTRY);
+	}
+
 	private String _getUpdateDDMStructuresAvailableKey(
 		DepotEntryGroupRel depotEntryGroupRel) {
 
 		if (!depotEntryGroupRel.isDdmStructuresAvailable()) {
-			return "make-web-content-structures-available";
+			return "make-structures-available";
 		}
 
-		return "make-web-content-structures-unavailable";
+		return "make-structures-unavailable";
 	}
 
 	private String _getUpdateSearchableKey(

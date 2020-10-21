@@ -16,6 +16,7 @@ package com.liferay.opensocial.service.persistence.impl;
 
 import com.liferay.opensocial.exception.NoSuchOAuthTokenException;
 import com.liferay.opensocial.model.OAuthToken;
+import com.liferay.opensocial.model.OAuthTokenTable;
 import com.liferay.opensocial.model.impl.OAuthTokenImpl;
 import com.liferay.opensocial.model.impl.OAuthTokenModelImpl;
 import com.liferay.opensocial.service.persistence.OAuthTokenPersistence;
@@ -1112,6 +1113,8 @@ public class OAuthTokenPersistenceImpl
 
 		setModelImplClass(OAuthTokenImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(OAuthTokenTable.INSTANCE);
 	}
 
 	/**
@@ -1161,9 +1164,7 @@ public class OAuthTokenPersistenceImpl
 	public void clearCache() {
 		EntityCacheUtil.clearCache(OAuthTokenImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OAuthTokenImpl.class);
 	}
 
 	/**
@@ -1187,9 +1188,7 @@ public class OAuthTokenPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OAuthTokenImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(OAuthTokenImpl.class, primaryKey);

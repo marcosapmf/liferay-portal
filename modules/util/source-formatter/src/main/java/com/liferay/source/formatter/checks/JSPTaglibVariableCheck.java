@@ -18,6 +18,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.checks.util.JSPSourceUtil;
 
@@ -50,11 +51,32 @@ public class JSPTaglibVariableCheck extends BaseJSPTermsCheck {
 		while (matcher.find()) {
 			int x = matcher.start(1);
 
+			StringBundler sb = new StringBundler();
+
+			int lineNumber = getLineNumber(content, matcher.end());
+
+			String indent = matcher.group(3);
+
+			while (true) {
+				String line = getLine(content, lineNumber);
+
+				if ((line == null) ||
+					(Validator.isNotNull(line) && !line.startsWith(indent))) {
+
+					break;
+				}
+
+				sb.append(line);
+				sb.append("\n");
+
+				lineNumber++;
+			}
+
+			String nextTags = sb.toString();
+
 			String s = matcher.group(1);
 
 			String[] variableDefinitions = s.split(";\n");
-
-			String nextTag = matcher.group(7);
 
 			for (String variableDefinition : variableDefinitions) {
 				x = x + variableDefinition.length() + 2;
@@ -67,10 +89,17 @@ public class JSPTaglibVariableCheck extends BaseJSPTermsCheck {
 
 				String variableName = variableTypeAndName.substring(y + 1);
 
+				if (!nextTags.contains("=\"<%= " + variableName + " %>\"")) {
+					continue;
+				}
+
+				s = content.substring(x);
+
 				String taglibValue = array[1];
 
-				if (_hasVariableReference(
-						content.substring(x), variableName, taglibValue)) {
+				if (hasVariableReference(
+						s, taglibValue,
+						s.lastIndexOf("=\"<%= " + variableName + " %>\""))) {
 
 					continue;
 				}
@@ -82,7 +111,7 @@ public class JSPTaglibVariableCheck extends BaseJSPTermsCheck {
 
 					if (!variableName.startsWith("taglib") &&
 						(_getVariableCount(content, variableName) == 2) &&
-						nextTag.contains("=\"<%= " + variableName + " %>\"")) {
+						nextTags.contains("=\"<%= " + variableName + " %>\"")) {
 
 						addMessage(
 							fileName,
@@ -94,55 +123,52 @@ public class JSPTaglibVariableCheck extends BaseJSPTermsCheck {
 					continue;
 				}
 
-				if (nextTag.contains("=\"<%= " + variableName + " %>\"")) {
-					populateContentsMap(fileName, content);
+				populateContentsMap(fileName, content);
 
-					String newContent = null;
+				String newContent = null;
 
-					if (taglibValue.startsWith("{")) {
-						String typeName = StringUtil.trimLeading(
-							variableTypeAndName.substring(0, y));
+				if (taglibValue.startsWith("{")) {
+					String typeName = StringUtil.trimLeading(
+						variableTypeAndName.substring(0, y));
 
-						if (typeName.endsWith("[][]") ||
-							!typeName.endsWith("[]")) {
-
-							continue;
-						}
-
-						newContent = StringUtil.replaceFirst(
-							content, "<%= " + variableName + " %>\"",
-							StringBundler.concat(
-								"<%= new ", typeName, " ", taglibValue,
-								" %>\""),
-							matcher.start(7));
-					}
-					else {
-						newContent = StringUtil.replaceFirst(
-							content, "<%= " + variableName + " %>\"",
-							"<%= " + taglibValue + " %>\"", matcher.start(7));
+					if (typeName.endsWith("[][]") || !typeName.endsWith("[]")) {
+						continue;
 					}
 
-					Set<String> checkedFileNames = new HashSet<>();
-					Set<String> includeFileNames = new HashSet<>();
+					newContent = StringUtil.replaceFirst(
+						content, "<%= " + variableName + " %>\"",
+						StringBundler.concat(
+							"<%= new ", typeName, " ", taglibValue, " %>\""),
+						matcher.end());
+				}
+				else {
+					newContent = StringUtil.replaceFirst(
+						content, "<%= " + variableName + " %>\"",
+						"<%= " + taglibValue + " %>\"", matcher.end());
+				}
 
-					if (hasUnusedJSPTerm(
-							fileName, newContent, "\\W" + variableName + "\\W",
-							"variable", checkedFileNames, includeFileNames,
-							getContentsMap())) {
+				y = newContent.indexOf(variableDefinition, matcher.start());
 
-						if (!taglibValue.contains("\n")) {
-							return StringUtil.replaceFirst(
-								newContent, variableDefinition + ";\n",
-								StringPool.BLANK, matcher.start());
-						}
+				Set<String> checkedFileNames = new HashSet<>();
+				Set<String> includeFileNames = new HashSet<>();
 
-						addMessage(
-							fileName,
-							StringBundler.concat(
-								"No need to declare variable '", variableName,
-								"', inline inside the tag."),
-							getLineNumber(content, matcher.start(3)));
+				if (hasUnusedJSPTerm(
+						fileName, newContent, "\\W" + variableName + "\\W",
+						getLineNumber(newContent, y), "variable",
+						checkedFileNames, includeFileNames, getContentsMap())) {
+
+					if (!taglibValue.contains("\n")) {
+						return StringUtil.replaceFirst(
+							newContent, variableDefinition + ";\n",
+							StringPool.BLANK, matcher.start());
 					}
+
+					addMessage(
+						fileName,
+						StringBundler.concat(
+							"No need to declare variable '", variableName,
+							"', inline inside the tag."),
+						getLineNumber(content, matcher.start(4)));
 				}
 			}
 		}
@@ -176,49 +202,8 @@ public class JSPTaglibVariableCheck extends BaseJSPTermsCheck {
 		return count;
 	}
 
-	private boolean _hasVariableReference(
-		String content, String variableName, String taglibValue) {
-
-		int endPosition = content.lastIndexOf(
-			"=\"<%= " + variableName + " %>\"");
-
-		if (endPosition == -1) {
-			return false;
-		}
-
-		endPosition = content.indexOf("\n", endPosition);
-
-		Matcher matcher1 = _methodCallPattern.matcher(taglibValue);
-
-		while (matcher1.find()) {
-			Pattern pattern = Pattern.compile(
-				"\\b(?<!['\"])" + matcher1.group(1) + "\\.(\\w+)?\\(");
-
-			Matcher matcher2 = pattern.matcher(content);
-
-			while (matcher2.find()) {
-				if (matcher2.start() > endPosition) {
-					break;
-				}
-
-				String methodName = matcher2.group(1);
-
-				if (!methodName.startsWith("get") &&
-					!methodName.startsWith("is")) {
-
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	private static final Pattern _methodCallPattern = Pattern.compile(
-		"\\b(?<!['\"])([a-z]\\w+)\\.(\\w+)?\\(");
 	private static final Pattern _taglibVariablePattern = Pattern.compile(
-		"\n((\t*([\\w<>\\[\\],\\? ]+) (\\w+) = (((?!;\n).)*);\n)+)\\s*%>\n+" +
-			"((\n\t*)<(([^\n]+/>)|([\\S\\s]*?\\8((</)|(/>))\\S*)))(\n|\\Z)",
+		"\n(((\t*)([\\w<>\\[\\],\\? ]+) (\\w+) = (((?!;\n).)*);\n)+)\\s*%>\n",
 		Pattern.DOTALL);
 
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.3.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_3_0.dtd">
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.4.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_4_0.dtd">
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.depot">
 	<namespace>Depot</namespace>
@@ -74,6 +74,8 @@
 		<!-- Audit fields -->
 
 		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
 		<column name="createDate" type="Date" />
 		<column name="modifiedDate" type="Date" />
 
@@ -83,6 +85,7 @@
 		<column name="depotEntryId" type="long" />
 		<column name="searchable" type="boolean" />
 		<column name="toGroupId" type="long" />
+		<column name="lastPublishDate" type="Date" />
 
 		<!-- Finder methods -->
 
@@ -108,6 +111,7 @@
 	<exceptions>
 		<exception>DepotEntryGroup</exception>
 		<exception>DepotEntryGroupRelStagedGroup</exception>
+		<exception>DepotEntryGroupRelToGroup</exception>
 		<exception>DepotEntryName</exception>
 	</exceptions>
 </service-builder>

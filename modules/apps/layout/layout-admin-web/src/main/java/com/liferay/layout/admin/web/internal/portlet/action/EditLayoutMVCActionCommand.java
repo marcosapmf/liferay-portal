@@ -104,16 +104,18 @@ public class EditLayoutMVCActionCommand extends BaseMVCActionCommand {
 			iconBytes = FileUtil.getBytes(fileEntry.getContentStream());
 		}
 
+		Layout layout = _layoutLocalService.getLayout(
+			groupId, privateLayout, layoutId);
+
 		long masterLayoutPlid = ParamUtil.getLong(
-			uploadPortletRequest, "masterLayoutPlid");
+			uploadPortletRequest, "masterLayoutPlid",
+			layout.getMasterLayoutPlid());
 		long styleBookEntryId = ParamUtil.getLong(
-			uploadPortletRequest, "styleBookEntryId");
+			uploadPortletRequest, "styleBookEntryId",
+			layout.getStyleBookEntryId());
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			Layout.class.getName(), actionRequest);
-
-		Layout layout = _layoutLocalService.getLayout(
-			groupId, privateLayout, layoutId);
 
 		String oldFriendlyURL = layout.getFriendlyURL();
 

@@ -17,6 +17,8 @@ package com.liferay.jenkins.results.parser;
 import com.google.common.collect.Lists;
 import com.google.common.io.CountingInputStream;
 
+import com.liferay.jenkins.results.parser.spira.SpiraRelease;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -99,22 +101,23 @@ import org.json.JSONObject;
  */
 public class JenkinsResultsParserUtil {
 
+	public static final String[] CACHED_REPOSITORIES = {
+		"liferay-jenkins-ee", "liferay-jenkins-results-parser-samples-ee",
+		"liferay-portal"
+	};
+
+	public static final String URL_CACHE = initCacheURL();
+
 	public static final String[] URLS_BUILD_PROPERTIES_DEFAULT = {
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-jenkins-ee/build.properties",
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-jenkins-ee/commands/build.properties",
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-portal/build.properties",
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-portal/ci.properties",
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-portal/test.properties"
+		URL_CACHE + "/liferay-jenkins-ee/build.properties",
+		URL_CACHE + "/liferay-jenkins-ee/commands/build.properties",
+		URL_CACHE + "/liferay-portal/build.properties",
+		URL_CACHE + "/liferay-portal/ci.properties",
+		URL_CACHE + "/liferay-portal/test.properties"
 	};
 
 	public static final String[] URLS_JENKINS_PROPERTIES_DEFAULT = {
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-jenkins-ee/jenkins.properties"
+		URL_CACHE + "/liferay-jenkins-ee/jenkins.properties"
 	};
 
 	public static boolean debug;
@@ -779,6 +782,42 @@ public class JenkinsResultsParserUtil {
 		return new File(buildProperties.getProperty("base.repository.dir"));
 	}
 
+	public static String getBuildID(
+		String topLevelBuildURL, String testSuiteName) {
+
+		Properties buildProperties = null;
+
+		try {
+			buildProperties = getBuildProperties();
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to get build.properties", ioException);
+		}
+
+		Matcher matcher = _topLevelBuildURLPattern.matcher(topLevelBuildURL);
+
+		matcher.find();
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(matcher.group("cohortNumber"));
+
+		String masterNumber = matcher.group("masterNumber");
+
+		sb.append(String.format("%02d", Integer.parseInt(masterNumber)));
+
+		sb.append(
+			buildProperties.getProperty(
+				"spira.release.id[" + matcher.group("jobName") + "][" +
+					testSuiteName + "]"));
+
+		sb.append("_");
+		sb.append(matcher.group("buildNumber"));
+
+		return sb.toString();
+	}
+
 	public static String getBuildParameter(String buildURL, String key) {
 		Map<String, String> buildParameters = getBuildParameters(buildURL);
 
@@ -899,6 +938,29 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return Arrays.asList(propertyContent.split(","));
+	}
+
+	public static String getBuildURLByBuildID(String buildID) {
+		Matcher matcher = _buildIDPattern.matcher(buildID);
+
+		matcher.find();
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("https://test-");
+		sb.append(matcher.group("cohortNumber"));
+		sb.append("-");
+		sb.append(Integer.parseInt(matcher.group("masterNumber")));
+		sb.append(".liferay.com/job/");
+
+		sb.append(
+			SpiraRelease.getJobNameByID(
+				Integer.parseInt(matcher.group("spiraReleaseID"))));
+
+		sb.append("/");
+		sb.append(matcher.group("buildNumber"));
+
+		return sb.toString();
 	}
 
 	public static BufferedReader getCachedFileBufferedReader(String key) {
@@ -2500,6 +2562,22 @@ public class JenkinsResultsParserUtil {
 			int timeout, HTTPAuthorization httpAuthorizationHeader)
 		throws IOException {
 
+		if (!isCINode() && url.startsWith("file:") &&
+			url.contains("liferay-jenkins-results-parser-samples-ee")) {
+
+			File file = new File(url.replace("file:", ""));
+
+			if (!file.exists()) {
+				if (url.contains("json?")) {
+					url = url.substring(0, url.indexOf("json?") + 4);
+				}
+
+				if (url.contains("json[qt]")) {
+					url = url.substring(0, url.indexOf("json[qt]") + 4);
+				}
+			}
+		}
+
 		if (url.contains("/userContent/") && (timeout == 0)) {
 			timeout = 5000;
 		}
@@ -3254,11 +3332,36 @@ public class JenkinsResultsParserUtil {
 
 	}
 
+	protected static String initCacheURL() {
+		String cacheDirPath = System.getenv("CACHE_DIR");
+
+		if (cacheDirPath != null) {
+			File cacheDir = new File(cacheDirPath);
+
+			if (cacheDir.exists()) {
+				for (String cachedRepository : CACHED_REPOSITORIES) {
+					File cacheRepositoryDir = new File(
+						cacheDir, cachedRepository);
+
+					if (!cacheRepositoryDir.exists()) {
+						break;
+					}
+				}
+
+				System.out.println(
+					"Using " + cacheDirPath + " for cached files");
+
+				return "file://" + cacheDirPath;
+			}
+		}
+
+		return "http://mirrors-no-cache.lax.liferay.com/github.com/liferay";
+	}
+
 	protected static final String URL_DEPENDENCIES_FILE;
 
 	protected static final String URL_DEPENDENCIES_HTTP =
-		"http://mirrors-no-cache.lax.liferay.com/github.com/liferay" +
-			"/liferay-jenkins-results-parser-samples-ee/1/";
+		URL_CACHE + "/liferay-jenkins-results-parser-samples-ee/1/";
 
 	static {
 		File dependenciesDir = new File("src/test/resources/dependencies/");
@@ -3829,6 +3932,9 @@ public class JenkinsResultsParserUtil {
 	private static final String _URL_LOAD_BALANCER =
 		"http://cloud-10-0-0-31.lax.liferay.com/osb-jenkins-web/load_balancer";
 
+	private static final Pattern _buildIDPattern = Pattern.compile(
+		"(?<cohortNumber>[\\d]{1})(?<masterNumber>[\\d]{2})" +
+			"(?<spiraReleaseID>[\\d]+)_(?<buildNumber>[\\d]+)");
 	private static final Hashtable<Object, Object> _buildProperties =
 		new Hashtable<>();
 	private static String[] _buildPropertiesURLs;
@@ -3862,6 +3968,10 @@ public class JenkinsResultsParserUtil {
 		}
 	};
 	private static final Set<String> _timeStamps = new HashSet<>();
+	private static final Pattern _topLevelBuildURLPattern = Pattern.compile(
+		"http(?:|s):\\/\\/test-(?<cohortNumber>[\\d]{1})-" +
+			"(?<masterNumber>[\\d]{1,2}).*(?:|\\.liferay\\.com)\\/job\\/" +
+				"(?<jobName>[\\w\\W]*?)\\/(?<buildNumber>[0-9]*)");
 	private static final File _userHomeDir = new File(
 		System.getProperty("user.home"));
 

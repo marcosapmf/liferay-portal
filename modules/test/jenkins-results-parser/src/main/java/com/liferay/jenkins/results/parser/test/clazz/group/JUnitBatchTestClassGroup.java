@@ -415,6 +415,8 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 		_setIncludeAutoBalanceTests();
 
 		setAxisTestClassGroups();
+
+		setSegmentTestClassGroups();
 	}
 
 	protected List<String> getReleaseTestClassNamesRelativeIncludesGlobs(
@@ -493,26 +495,23 @@ public class JUnitBatchTestClassGroup extends BatchTestClassGroup {
 				return;
 			}
 
-			axisTestClassGroups.put(0, new AxisTestClassGroup(this, 0));
+			axisTestClassGroups.add(
+				0, TestClassGroupFactory.newAxisTestClassGroup(this));
 		}
 		else {
 			int axisSize = (int)Math.ceil((double)testClassCount / axisCount);
 
-			int id = 0;
-
 			for (List<TestClassGroup.TestClass> axisTestClasses :
 					Lists.partition(testClasses, axisSize)) {
 
-				AxisTestClassGroup axisTestClassGroup = new AxisTestClassGroup(
-					this, id);
+				AxisTestClassGroup axisTestClassGroup =
+					TestClassGroupFactory.newAxisTestClassGroup(this);
 
 				for (TestClassGroup.TestClass axisTestClass : axisTestClasses) {
 					axisTestClassGroup.addTestClass(axisTestClass);
 				}
 
-				axisTestClassGroups.put(id, axisTestClassGroup);
-
-				id++;
+				axisTestClassGroups.add(axisTestClassGroup);
 			}
 		}
 

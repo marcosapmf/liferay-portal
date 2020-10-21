@@ -78,7 +78,7 @@ public class DispatchTriggerCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(33);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -102,14 +102,16 @@ public class DispatchTriggerCacheModel
 		sb.append(endDate);
 		sb.append(", name=");
 		sb.append(name);
+		sb.append(", overlapAllowed=");
+		sb.append(overlapAllowed);
 		sb.append(", startDate=");
 		sb.append(startDate);
 		sb.append(", system=");
 		sb.append(system);
+		sb.append(", taskExecutorType=");
+		sb.append(taskExecutorType);
 		sb.append(", taskSettings=");
 		sb.append(taskSettings);
-		sb.append(", taskType=");
-		sb.append(taskType);
 		sb.append("}");
 
 		return sb.toString();
@@ -168,6 +170,8 @@ public class DispatchTriggerCacheModel
 			dispatchTriggerImpl.setName(name);
 		}
 
+		dispatchTriggerImpl.setOverlapAllowed(overlapAllowed);
+
 		if (startDate == Long.MIN_VALUE) {
 			dispatchTriggerImpl.setStartDate(null);
 		}
@@ -177,18 +181,18 @@ public class DispatchTriggerCacheModel
 
 		dispatchTriggerImpl.setSystem(system);
 
+		if (taskExecutorType == null) {
+			dispatchTriggerImpl.setTaskExecutorType("");
+		}
+		else {
+			dispatchTriggerImpl.setTaskExecutorType(taskExecutorType);
+		}
+
 		if (taskSettings == null) {
 			dispatchTriggerImpl.setTaskSettings("");
 		}
 		else {
 			dispatchTriggerImpl.setTaskSettings(taskSettings);
-		}
-
-		if (taskType == null) {
-			dispatchTriggerImpl.setTaskType("");
-		}
-		else {
-			dispatchTriggerImpl.setTaskType(taskType);
 		}
 
 		dispatchTriggerImpl.resetOriginalValues();
@@ -215,11 +219,13 @@ public class DispatchTriggerCacheModel
 		cronExpression = objectInput.readUTF();
 		endDate = objectInput.readLong();
 		name = objectInput.readUTF();
+
+		overlapAllowed = objectInput.readBoolean();
 		startDate = objectInput.readLong();
 
 		system = objectInput.readBoolean();
+		taskExecutorType = objectInput.readUTF();
 		taskSettings = (String)objectInput.readObject();
-		taskType = objectInput.readUTF();
 	}
 
 	@Override
@@ -260,22 +266,23 @@ public class DispatchTriggerCacheModel
 			objectOutput.writeUTF(name);
 		}
 
+		objectOutput.writeBoolean(overlapAllowed);
 		objectOutput.writeLong(startDate);
 
 		objectOutput.writeBoolean(system);
+
+		if (taskExecutorType == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(taskExecutorType);
+		}
 
 		if (taskSettings == null) {
 			objectOutput.writeObject("");
 		}
 		else {
 			objectOutput.writeObject(taskSettings);
-		}
-
-		if (taskType == null) {
-			objectOutput.writeUTF("");
-		}
-		else {
-			objectOutput.writeUTF(taskType);
 		}
 	}
 
@@ -290,9 +297,10 @@ public class DispatchTriggerCacheModel
 	public String cronExpression;
 	public long endDate;
 	public String name;
+	public boolean overlapAllowed;
 	public long startDate;
 	public boolean system;
+	public String taskExecutorType;
 	public String taskSettings;
-	public String taskType;
 
 }

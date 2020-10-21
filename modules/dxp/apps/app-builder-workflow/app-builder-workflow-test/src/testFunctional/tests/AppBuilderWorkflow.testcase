@@ -25,7 +25,6 @@ definition {
 	}
 
 	tearDown {
-
 		AppBuilderAdmin.teardownAppBuilder();
 
 		Page.tearDownCP();
@@ -147,7 +146,6 @@ definition {
 	@description = "Create a Basic Workflow App with different deployment options"
 	@priority = "4"
 	test CreateBasicWorkflowAppWithDifferentDeployments {
-
 		AppBuilderAdmin.addCustomObject(
 			customObjectName = "my custom object 1",
 			isCreatingFormView = "true",
@@ -303,6 +301,35 @@ definition {
 		Navigator.closeWindow();
 	}
 
+	@description = "LRQA-60385 - Automate LPS-110981: As an App Admin, I want to deploy an App with multiple workflow steps and one same Form View"
+	@priority = "5"
+	test CreateNewStepSecondaryActionAndAssignee {
+		property portal.acceptance = "true";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.goToWorkflowPoweredTab();
+		AppBuilderAppAdmin.clickOnCreateNewAppButton();
+		AppBuilderWorkflow.addNewStep();
+		AppBuilderWorkflow.assertStepPresent(step = "1");
+
+		AppBuilderWorkflow.addNewStep();
+		AppBuilderWorkflow.selectActionsCard();
+		AppBuilderWorkflow.clickOnAddNewActionButton();
+		AppBuilderWorkflow.validateActionPresent(action = "Secondary Action");
+
+		AppBuilderWorkflow.clickStepConfigurationBackButton();
+		AppBuilderWorkflow.selectStepAssignee(
+			assignee = "Administrator",
+			step = "2");
+		AppBuilderWorkflow.assertAssigneeInfoPresentOnStep(
+			assignee = "Administrator",
+			step = "2");
+	}
+
 	@description = "Create an App through the 'Apps' portlet"
 	@priority = "5"
 	test CreateStandardApp {
@@ -440,6 +467,7 @@ definition {
 		AppBuilderAppAdmin.clickOnCreateNewAppButton();
 
 		AppBuilderWorkflow.addNewStep();
+		AppBuilderWorkflow.assertStepPresent(step = "1");
 		AppBuilderWorkflow.deleteStep(step = "1");
 		AppBuilderWorkflow.assertStepNotPresent(step = "1");
 	}
@@ -796,10 +824,169 @@ definition {
 		AppBuilderAdmin.deleteApp(itemName = "My App");
 	}
 
+	@description = "LRQA-60598 - Automate LPS-111001: As an App Admin, I want to Liferay to handle multiple running versions of my App every time I make an update on a existing App"
+	@priority = "5"
+	test ValidateMultipleRunningVersions {
+		property portal.acceptance = "true";
+
+		AppBuilderAdmin.addCustomObject(
+			customObjectName = "my custom object",
+			isCreatingFormView = "true",
+			isCreatingViaPlusIcon = "true");
+
+		AppBuilderAdmin.createFormViewAndTableView(
+			fieldType = "Text",
+			formViewName = "My Form View 1",
+			tableViewName = "My Table View");
+
+		FormViewBuilder.addFormView(
+			fieldType = "Text",
+			formViewName = "My Form View 2");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.createBasicWorkflowApp(
+			deployOption = "Product Menu",
+			formViewName = "My Form View 1",
+			isCreatingViaPlusIcon = "false",
+			objectName = "my custom object",
+			tableViewName = "My Table View",
+			workflowAppName = "My Workflow App");
+
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "My Workflow App");
+		AppBuilderAdmin.addEntry();
+		FormViewBuilder.editText(
+			fieldName = "Text",
+			fieldValue = "Content 1");
+
+		AppBuilderWorkflow.submit();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.goToWorkflowPoweredTab();
+		AppBuilderAdmin.openItem(itemName = "My Workflow App");
+		AppBuilderWorkflow.addNewStep();
+		AppBuilderWorkflow.selectStepAssignee(
+			assignee = "Administrator",
+			step = "1");
+
+		AppBuilderWorkflow.saveNewVersionedApp();
+		AppBuilderAppAdmin.assertWorkflowAppVersion(
+			versionNumber = "2.0",
+			workflowAppName = "My Workflow App");
+
+		AppBuilderAdmin.openItem(itemName = "My Workflow App");
+		AppBuilderWorkflow.selectStepSingleFormView(
+			formViewMode = "Editable",
+			formViewName = "My Form View 2",
+			step = "1");
+
+		AppBuilderWorkflow.saveNewVersionedApp();
+		AppBuilderAppAdmin.assertWorkflowAppVersion(
+			versionNumber = "3.0",
+			workflowAppName = "My Workflow App");
+
+		AppBuilderAdmin.openItem(itemName = "My Workflow App");
+		AppBuilderWorkflow.deleteStep(step = "1");
+		AppBuilderWorkflow.saveNewVersionedApp();
+		AppBuilderAppAdmin.assertWorkflowAppVersion(
+			versionNumber = "4.0",
+			workflowAppName = "My Workflow App");
+
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "My Workflow App");
+		AppBuilderAdmin.addEntry();
+		FormViewBuilder.editText(
+			fieldName = "Text",
+			fieldValue = "Content 2");
+
+		AppBuilderWorkflow.submit();
+		AppBuilderAdmin.openItem(itemName = "Content 1");
+		AppBuilderWorkflow.assertEntryAppVersion(versionNumber = "1.0");
+		DetailsView.nextEntry();
+		AppBuilderWorkflow.assertEntryAppVersion(versionNumber = "4.0");
+	}
+
+	@description = "LRQA-61243 - Automate LPS-119370: As an App Admin, I want a shortcut link to create new Objects during the Workflow App creation experience"
+	@priority = "4"
+	test ValidateShortcutLinkToCreateObject {
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.clickOnCreateNewAppButton();
+		AppBuilderAppAdmin.clickOnSelectObject();
+		AppBuilderAppAdmin.assertCreateObjectShortLinkPresent();
+		AppBuilderAppAdmin.clickOnCreateObjectShortLink();
+		SelectWindow.selectPopUp(locator1 = "null");
+		AppBuilderAdmin.assertNewButtonIsVisible(buttonValue = "New Custom Object");
+		AppBuilderAdmin.assertCheckboxPresent(checkboxOption = "Continue and Create Form View");
+		Navigator.closeWindow();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.goToWorkflowPoweredTab();
+		AppBuilderAppAdmin.clickOnCreateNewAppButton();
+		AppBuilderWorkflow.selectDataAndViewsCard();
+		AppBuilderAppAdmin.clickOnSelectObject();
+		AppBuilderAppAdmin.assertCreateObjectShortLinkPresent();
+		AppBuilderAppAdmin.clickOnCreateObjectShortLink();
+		SelectWindow.selectPopUp(locator1 = "null");
+		AppBuilderAdmin.assertNewButtonIsVisible(buttonValue = "New Custom Object");
+		AppBuilderAdmin.assertCheckboxPresent(checkboxOption = "Continue and Create Form View");
+
+		AppBuilderAdmin.addCustomObject(
+			customObjectName = "my custom object",
+			isCreatingFormView = "false",
+			isCreatingViaPlusIcon = "true");
+
+		Navigator.closeWindow();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.clickOnCreateNewAppButton();
+		AppBuilderAppAdmin.clickOnSelectObject();
+		AppBuilderAppAdmin.searchItem(itemName = "No Object Result");
+		AppBuilderAppAdmin.assertCreateObjectShortLinkPresent();
+		AppBuilderAppAdmin.clickOnCreateObjectShortLink();
+		SelectWindow.selectPopUp(locator1 = "null");
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "my custom object");
+		AppBuilderAdmin.assertCheckboxPresent(checkboxOption = "Continue and Create Form View");
+		Navigator.closeWindow();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "App Builder",
+			panel = "Applications",
+			portlet = "Apps");
+
+		AppBuilderAppAdmin.goToWorkflowPoweredTab();
+		AppBuilderAppAdmin.clickOnCreateNewAppButton();
+		AppBuilderWorkflow.selectDataAndViewsCard();
+		AppBuilderAppAdmin.clickOnSelectObject();
+		AppBuilderAppAdmin.searchItem(itemName = "No Object Result");
+		AppBuilderAppAdmin.assertCreateObjectShortLinkPresent();
+		AppBuilderAppAdmin.clickOnCreateObjectShortLink();
+		SelectWindow.selectPopUp(locator1 = "null");
+		AppBuilderAdmin.validateItemNameOnTable(itemName = "my custom object");
+		AppBuilderAdmin.assertCheckboxPresent(checkboxOption = "Continue and Create Form View");
+		Navigator.closeWindow();
+	}
+
 	@description = "Validate steps while running an App"
 	@priority = "4"
 	test ValidateStepsWhileRunningApp {
-
 		var formViewName = "My Form View";
 		var tableViewName = "My Table View";
 
@@ -848,6 +1035,7 @@ definition {
 
 		AppBuilderWorkflow.selectActionsCard();
 		AppBuilderWorkflow.clickOnAddNewActionButton();
+		AppBuilderWorkflow.validateActionPresent(action = "Secondary Action");
 		Button.click(button = "Remove");
 		AppBuilderWorkflow.validateActionNotPresent(action = "Secondary Action");
 

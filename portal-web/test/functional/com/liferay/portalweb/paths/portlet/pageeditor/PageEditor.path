@@ -197,6 +197,11 @@
 	<td>//div[contains(@data-analytics-asset-title,'${key_assetTitle}')]//*[contains(.,'${key_assetContent}')]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>ENTRY_COVER_IMAGE</td>
+	<td>//div[contains(@class,'cover-image') and contains(@style,'${key_imageFileName}')]</td>
+	<td></td>
+</tr>
 <!--DROP_TARGET-->
 <tr>
 	<td>ANY_FRAGMENT_DROP_TARGET</td>
@@ -302,18 +307,13 @@
 </tr>
 <!--FRAGMENT_SIDEBAR-->
 <tr>
-	<td>FRAGMENT_SIDEBAR</td>
-	<td>//div[contains(@class,'page-editor__sidebar__buttons')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>FRAGMENT_SIDEBAR_BACK</td>
 	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-angle-left')]]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_BODY</td>
-	<td>//div[@class='page-editor__sidebar']</td>
+	<td>//div[contains(@class,'page-editor__sidebar')][contains(@class,'theme-adapter-forms')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -686,6 +686,11 @@
 <tr>
 	<td>DEVICE_TYPE</td>
 	<td>//button[contains(@class,'btn')][@aria-label='${key_deviceType}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MANAGEMENT_BAR</td>
+	<td>//div[contains(@class,'management-bar')]</td>
 	<td></td>
 </tr>
 <tr>

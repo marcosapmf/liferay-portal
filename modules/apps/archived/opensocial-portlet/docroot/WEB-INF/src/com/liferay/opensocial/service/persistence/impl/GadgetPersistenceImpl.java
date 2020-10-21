@@ -16,6 +16,7 @@ package com.liferay.opensocial.service.persistence.impl;
 
 import com.liferay.opensocial.exception.NoSuchGadgetException;
 import com.liferay.opensocial.model.Gadget;
+import com.liferay.opensocial.model.GadgetTable;
 import com.liferay.opensocial.model.impl.GadgetImpl;
 import com.liferay.opensocial.model.impl.GadgetModelImpl;
 import com.liferay.opensocial.service.persistence.GadgetPersistence;
@@ -3165,6 +3166,8 @@ public class GadgetPersistenceImpl
 
 		setModelImplClass(GadgetImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(GadgetTable.INSTANCE);
 	}
 
 	/**
@@ -3209,9 +3212,7 @@ public class GadgetPersistenceImpl
 	public void clearCache() {
 		EntityCacheUtil.clearCache(GadgetImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(GadgetImpl.class);
 	}
 
 	/**
@@ -3235,9 +3236,7 @@ public class GadgetPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(GadgetImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(GadgetImpl.class, primaryKey);

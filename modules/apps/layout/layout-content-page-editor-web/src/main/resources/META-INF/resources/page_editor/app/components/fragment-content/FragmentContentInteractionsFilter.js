@@ -18,10 +18,12 @@ import React, {useEffect, useMemo} from 'react';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../config/constants/editableFragmentEntryProcessor';
 import {ITEM_ACTIVATION_ORIGINS} from '../../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../../config/constants/itemTypes';
+import {VIEWPORT_SIZES} from '../../config/constants/viewportSizes';
 import {config} from '../../config/index';
 import selectCanUpdateEditables from '../../selectors/selectCanUpdateEditables';
 import selectCanUpdatePageStructure from '../../selectors/selectCanUpdatePageStructure';
 import {useSelector, useSelectorCallback} from '../../store/index';
+import canActivateEditable from '../../utils/canActivateEditable';
 import {deepEqual} from '../../utils/checkDeepEqual';
 import isMapped from '../../utils/isMapped';
 import {useToControlsId} from '../CollectionItemContext';
@@ -64,6 +66,9 @@ function FragmentContentInteractionsFilter({
 	const isHovered = useIsHovered();
 	const languageId = useSelector((state) => state.languageId);
 	const selectItem = useSelectItem();
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 	const setEditableProcessorUniqueId = useSetEditableProcessorUniqueId();
 	const toControlsId = useToControlsId();
 
@@ -199,7 +204,10 @@ function FragmentContentInteractionsFilter({
 			);
 
 			if (activeEditable) {
-				if (canUpdateEditables) {
+				if (
+					canUpdateEditables &&
+					selectedViewportSize === VIEWPORT_SIZES.desktop
+				) {
 					requestAnimationFrame(() => {
 						activeEditable.element.addEventListener(
 							'dblclick',
@@ -238,6 +246,7 @@ function FragmentContentInteractionsFilter({
 		isActive,
 		itemId,
 		setEditableProcessorUniqueId,
+		selectedViewportSize,
 	]);
 
 	const hoverEditable = (event) => {
@@ -261,7 +270,11 @@ function FragmentContentInteractionsFilter({
 			(editable) => editable.element === editableElement
 		);
 
-		if (editable) {
+		if (
+			editable &&
+			canUpdateEditables &&
+			canActivateEditable(selectedViewportSize, editable.type)
+		) {
 			event.stopPropagation();
 
 			if (isActive(editable.itemId)) {
@@ -277,10 +290,7 @@ function FragmentContentInteractionsFilter({
 
 	const props = {};
 
-	if (
-		canUpdateEditables &&
-		(siblingIds.some(isActive) || !canUpdatePageStructure)
-	) {
+	if (siblingIds.some(isActive) || !canUpdatePageStructure) {
 		props.onClickCapture = selectEditable;
 		props.onMouseLeave = () => hoverItem(null);
 		props.onMouseOverCapture = hoverEditable;

@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import java.io.IOException;
 
 import java.util.Calendar;
+import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -92,13 +93,15 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		try {
-			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
+			if (Objects.equals(cmd, Constants.ADD) ||
+				Objects.equals(cmd, Constants.UPDATE)) {
+
 				updateDispatchTrigger(actionRequest, actionResponse);
 			}
-			else if (cmd.equals(Constants.DELETE)) {
+			else if (Objects.equals(cmd, Constants.DELETE)) {
 				deleteDispatchTrigger(actionRequest);
 			}
-			else if (cmd.equals("runProcess")) {
+			else if (Objects.equals(cmd, "runProcess")) {
 				HttpServletResponse httpServletResponse =
 					_portal.getHttpServletResponse(actionResponse);
 
@@ -109,7 +112,7 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 
 				hideDefaultSuccessMessage(actionRequest);
 			}
-			else if (cmd.equals("schedule")) {
+			else if (Objects.equals(cmd, "schedule")) {
 				scheduleDispatchTrigger(actionRequest);
 			}
 		}
@@ -169,6 +172,8 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		boolean neverEnd = ParamUtil.getBoolean(actionRequest, "neverEnd");
+		boolean overlapAllowed = ParamUtil.getBoolean(
+			actionRequest, "overlapAllowed");
 
 		int startDateMonth = ParamUtil.getInteger(
 			actionRequest, "startDateMonth");
@@ -189,8 +194,9 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 
 		_dispatchTriggerService.updateDispatchTrigger(
 			dispatchTriggerId, active, cronExpression, endDateMonth, endDateDay,
-			endDateYear, endDateHour, endDateMinute, neverEnd, startDateMonth,
-			startDateDay, startDateYear, startDateHour, startDateMinute);
+			endDateYear, endDateHour, endDateMinute, neverEnd, overlapAllowed,
+			startDateMonth, startDateDay, startDateYear, startDateHour,
+			startDateMinute);
 	}
 
 	protected DispatchTrigger updateDispatchTrigger(
@@ -201,14 +207,14 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "dispatchTriggerId");
 
 		String name = ParamUtil.getString(actionRequest, "name");
+		String taskExecutorType = ParamUtil.getString(
+			actionRequest, "taskExecutorType");
 
 		UnicodeProperties taskSettingsUnicodeProperties = new UnicodeProperties(
 			true);
 
 		taskSettingsUnicodeProperties.fastLoad(
 			ParamUtil.getString(actionRequest, "taskSettings"));
-
-		String taskType = ParamUtil.getString(actionRequest, "taskType");
 
 		DispatchTrigger dispatchTrigger = null;
 
@@ -218,8 +224,8 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		}
 		else {
 			dispatchTrigger = _dispatchTriggerService.addDispatchTrigger(
-				_portal.getUserId(actionRequest), name,
-				taskSettingsUnicodeProperties, taskType);
+				_portal.getUserId(actionRequest), name, taskExecutorType,
+				taskSettingsUnicodeProperties);
 		}
 
 		return dispatchTrigger;

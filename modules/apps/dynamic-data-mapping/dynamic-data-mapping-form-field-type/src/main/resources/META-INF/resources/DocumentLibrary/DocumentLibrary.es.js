@@ -190,7 +190,7 @@ const DocumentLibrary = ({
 			)}
 
 			<ClayInput
-				id={id ? id : name}
+				id={id}
 				name={name}
 				placeholder={placeholder}
 				type="hidden"

@@ -17,6 +17,8 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
+
 DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisplayContext, request, renderRequest, renderResponse);
 %>
 
@@ -33,21 +35,9 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 		<liferay-util:dynamic-include key="com.liferay.document.library.web#/document_library/view.jsp#pre" />
 
 		<%
-		String displayStyle = dlAdminDisplayContext.getDisplayStyle();
+		request.setAttribute("view.jsp-folderId", String.valueOf(dlViewDisplayContext.getFolderId()));
 
-		Folder folder = dlAdminDisplayContext.getFolder();
-
-		long folderId = dlAdminDisplayContext.getFolderId();
-
-		long repositoryId = dlAdminDisplayContext.getRepositoryId();
-
-		request.setAttribute("view.jsp-folder", folder);
-
-		request.setAttribute("view.jsp-folderId", String.valueOf(folderId));
-
-		request.setAttribute("view.jsp-repositoryId", String.valueOf(repositoryId));
-
-		request.setAttribute("view.jsp-displayStyle", displayStyle);
+		request.setAttribute("view.jsp-repositoryId", String.valueOf(dlViewDisplayContext.getRepositoryId()));
 		%>
 
 		<liferay-trash:undo
@@ -56,7 +46,9 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 
 		<liferay-util:include page="/document_library/navigation.jsp" servletContext="<%= application %>" />
 
-		<liferay-util:include page="/document_library/toolbar.jsp" servletContext="<%= application %>" />
+		<clay:management-toolbar
+			displayContext="<%= (DLAdminManagementToolbarDisplayContext)request.getAttribute(DLAdminManagementToolbarDisplayContext.class.getName()) %>"
+		/>
 
 		<%
 		BulkSelectionRunner bulkSelectionRunner = BulkSelectionRunnerUtil.getBulkSelectionRunner();
@@ -96,7 +88,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 						<c:if test="<%= !dlViewDisplayContext.isSearch() %>">
 
 							<%
-							DLBreadcrumbUtil.addPortletBreadcrumbEntries(folder, request, liferayPortletResponse);
+							DLBreadcrumbUtil.addPortletBreadcrumbEntries(dlViewDisplayContext.getFolder(), request, liferayPortletResponse);
 							%>
 
 							<liferay-ui:breadcrumb
@@ -115,9 +107,9 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 					<aui:form action="<%= dlViewDisplayContext.getEditFileEntryURL() %>" method="get" name="fm2">
 						<aui:input name="<%= Constants.CMD %>" type="hidden" />
 						<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
-						<aui:input name="repositoryId" type="hidden" value="<%= repositoryId %>" />
+						<aui:input name="repositoryId" type="hidden" value="<%= dlViewDisplayContext.getRepositoryId() %>" />
 						<aui:input name="newFolderId" type="hidden" />
-						<aui:input name="folderId" type="hidden" value="<%= folderId %>" />
+						<aui:input name="folderId" type="hidden" value="<%= dlViewDisplayContext.getFolderId() %>" />
 						<aui:input name="changeLog" type="hidden" />
 						<aui:input name="versionIncrease" type="hidden" />
 						<aui:input name="selectAll" type="hidden" value="<%= false %>" />
@@ -191,6 +183,8 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 
 		<%
 		if (dlViewDisplayContext.isShowFolderDescription()) {
+			Folder folder = dlViewDisplayContext.getFolder();
+
 			PortalUtil.setPageDescription(folder.getDescription(), request);
 		}
 		%>
@@ -224,11 +218,12 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 					%>
 
 					decimalSeparator: '<%= decimalFormatSymbols.getDecimalSeparator() %>',
-					displayStyle: '<%= HtmlUtil.escapeJS(displayStyle) %>',
+					displayStyle:
+						'<%= HtmlUtil.escapeJS(dlAdminDisplayContext.getDisplayStyle()) %>',
 					editEntryUrl: '<%= dlViewDisplayContext.getEditEntryURL() %>',
 					downloadEntryUrl: '<%= dlViewDisplayContext.getDownloadEntryURL() %>',
 					folders: {
-						defaultParentFolderId: '<%= folderId %>',
+						defaultParentFolderId: '<%= dlViewDisplayContext.getFolderId() %>',
 						dimensions: {
 							height:
 								'<%= PrefsPropsUtil.getLong(PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT) %>',
@@ -251,7 +246,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 					selectFolderURL: '<%= dlViewDisplayContext.getSelectFolderURL() %>',
 					scopeGroupId: <%= scopeGroupId %>,
 					searchContainerId: 'entries',
-					trashEnabled: <%= (scopeGroupId == repositoryId) && dlTrashHelper.isTrashEnabled(scopeGroupId, repositoryId) %>,
+					trashEnabled: <%= dlTrashHelper.isTrashEnabled(scopeGroupId, dlViewDisplayContext.getRepositoryId()) %>,
 					uploadable: <%= dlViewDisplayContext.isUploadable() %>,
 					uploadURL: '<%= dlViewDisplayContext.getUploadURL() %>',
 					viewFileEntryTypeURL:
@@ -292,7 +287,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 		).put(
 			"pathModule", PortalUtil.getPathModule()
 		).put(
-			"repositoryId", String.valueOf(repositoryId)
+			"repositoryId", String.valueOf(dlViewDisplayContext.getRepositoryId())
 		).build();
 		%>
 
@@ -315,7 +310,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 		).put(
 			"pathModule", PortalUtil.getPathModule()
 		).put(
-			"repositoryId", String.valueOf(repositoryId)
+			"repositoryId", String.valueOf(dlViewDisplayContext.getRepositoryId())
 		).put(
 			"selectCategoriesUrl", dlViewDisplayContext.getSelectCategoriesURL()
 		).build();

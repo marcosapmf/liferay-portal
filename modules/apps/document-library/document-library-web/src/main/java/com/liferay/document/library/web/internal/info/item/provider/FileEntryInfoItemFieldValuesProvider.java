@@ -14,6 +14,7 @@
 
 package com.liferay.document.library.web.internal.info.item.provider;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.info.item.provider.AssetEntryInfoItemFieldSetProvider;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -51,7 +53,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author Alejandro Tardín
  * @author Jorge Ferrer
  */
-@Component(service = InfoItemFieldValuesProvider.class)
+@Component(
+	immediate = true, property = Constants.SERVICE_RANKING + ":Integer=10",
+	service = InfoItemFieldValuesProvider.class
+)
 public class FileEntryInfoItemFieldValuesProvider
 	implements InfoItemFieldValuesProvider<FileEntry> {
 
@@ -116,6 +121,15 @@ public class FileEntryInfoItemFieldValuesProvider
 		return Collections.emptyList();
 	}
 
+	private String _getDisplayPageURL(
+			FileEntry fileEntry, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+			FileEntry.class.getName(), fileEntry.getFileEntryId(),
+			themeDisplay);
+	}
+
 	private List<InfoFieldValue<Object>> _getExpandoInfoFieldValues(
 			FileEntry fileEntry)
 		throws PortalException {
@@ -168,7 +182,7 @@ public class FileEntryInfoItemFieldValuesProvider
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
 					FileEntryInfoItemFields.titleInfoField,
-					fileEntry.getDescription()));
+					fileEntry.getTitle()));
 			fileEntryFieldValues.add(
 				new InfoFieldValue<>(
 					FileEntryInfoItemFields.descriptionInfoField,
@@ -226,6 +240,13 @@ public class FileEntryInfoItemFieldValuesProvider
 					FileEntryInfoItemFields.previewImage,
 					imagePreviewURLWebImage));
 
+			if (themeDisplay != null) {
+				fileEntryFieldValues.add(
+					new InfoFieldValue<>(
+						FileEntryInfoItemFields.displayPageURLInfoField,
+						_getDisplayPageURL(fileEntry, themeDisplay)));
+			}
+
 			return fileEntryFieldValues;
 		}
 		catch (Exception exception) {
@@ -243,6 +264,10 @@ public class FileEntryInfoItemFieldValuesProvider
 
 		return null;
 	}
+
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
 	private AssetEntryInfoItemFieldSetProvider

@@ -3539,32 +3539,37 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 
 		Map<Long, Integer> counts = new HashMap<>();
 
+		LinkedHashMap<String, Object> params = null;
+
 		try {
-			Set<Serializable> groupIdSet = new HashSet<>();
-
 			for (long groupId : groupIds) {
-				groupIdSet.add(groupId);
-			}
+				Group group = groupPersistence.fetchByPrimaryKey(groupId);
 
-			Map<Serializable, Group> groups =
-				groupPersistence.fetchByPrimaryKeys(groupIdSet);
-
-			for (Group group : groups.values()) {
-				int count = 0;
+				if (group == null) {
+					continue;
+				}
 
 				if (group.isOrganization()) {
-					count = getOrganizationUsersCount(
-						group.getOrganizationId(), status);
+					params = LinkedHashMapBuilder.<String, Object>put(
+						"usersOrgs", group.getOrganizationId()
+					).build();
 				}
 				else if (group.isUserGroup()) {
-					count = getUserGroupUsersCount(group.getClassPK(), status);
+					params = LinkedHashMapBuilder.<String, Object>put(
+						"usersUserGroups", group.getClassPK()
+					).build();
 				}
 				else {
-					count = getGroupUsersCount(group.getGroupId(), status);
+					params = LinkedHashMapBuilder.<String, Object>put(
+						"usersGroups", groupId
+					).build();
 				}
 
+				int count = userFinder.countByKeywords(
+					companyId, null, status, params);
+
 				if (count > 0) {
-					counts.put(group.getGroupId(), count);
+					counts.put(groupId, count);
 				}
 			}
 		}

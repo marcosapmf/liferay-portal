@@ -297,7 +297,7 @@ public class JournalArticleInfoItemFieldValuesProvider
 			if (themeDisplay != null) {
 				journalArticleFieldValues.add(
 					new InfoFieldValue<>(
-						JournalArticleInfoItemFields.displayPageUrlInfoField,
+						JournalArticleInfoItemFields.displayPageURLInfoField,
 						_getDisplayPageURL(journalArticle, themeDisplay)));
 			}
 

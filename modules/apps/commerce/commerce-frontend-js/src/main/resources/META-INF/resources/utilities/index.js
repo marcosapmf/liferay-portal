@@ -16,11 +16,19 @@ import {fetch} from 'frontend-js-web';
 
 import createOdataFilter from './odata';
 
-export function getData(apiUrl, query) {
-	let url = apiUrl;
+export function getData(apiUrl, query, page, pageSize) {
+	const url = new URL(apiUrl, Liferay.ThemeDisplay.getPortalURL());
 
 	if (query) {
-		url += (url.includes('?') ? '&' : '?') + `search=${query}`;
+		url.searchParams.append('search', query);
+	}
+
+	if (page) {
+		url.searchParams.append('page', page);
+	}
+
+	if (pageSize) {
+		url.searchParams.append('pageSize', pageSize);
 	}
 
 	return fetch(url, {

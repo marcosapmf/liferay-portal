@@ -33,21 +33,27 @@ List<DepotEntryGroupRel> depotEntryGroupRels = depotAdminSitesDisplayContext.get
 			<span class="heading-text"><liferay-ui:message key="connected-sites" /></span>
 		</clay:content-col>
 
-		<clay:content-col>
-			<span class="heading-end">
-				<clay:button
-					displayType="secondary"
-					id='<%= liferayPortletResponse.getNamespace() + "addConnectedSiteButton" %>'
-					label="add"
-					small="<%= true %>"
-					title="connect-to-a-site"
-				/>
-			</span>
-		</clay:content-col>
+		<c:if test="<%= !depotAdminSitesDisplayContext.isLiveDepotEntry() %>">
+			<clay:content-col>
+				<span class="heading-end">
+					<clay:button
+						displayType="secondary"
+						id='<%= liferayPortletResponse.getNamespace() + "addConnectedSiteButton" %>'
+						label="add"
+						small="<%= true %>"
+						title="connect-to-a-site"
+					/>
+				</span>
+			</clay:content-col>
+		</c:if>
 	</clay:content-row>
 
-	<liferay-ui:error exception="<%= DepotEntryGroupRelStagedGroupException.class %>">
-		<liferay-ui:message key="an-asset-library-cannot-be-connected-to-a-staged-site" />
+	<liferay-ui:error exception="<%= DepotEntryGroupRelToGroupException.MustBeStaged.class %>">
+		<liferay-ui:message key="a-staged-asset-library-cannot-be-connected-to-an-unstaged-site" />
+	</liferay-ui:error>
+
+	<liferay-ui:error exception="<%= DepotEntryGroupRelToGroupException.MustNotBeStaged.class %>">
+		<liferay-ui:message key="an-unstaged-asset-library-cannot-be-connected-to-a-staged-site" />
 	</liferay-ui:error>
 
 	<aui:input name="toGroupId" type="hidden" />
@@ -88,7 +94,7 @@ List<DepotEntryGroupRel> depotEntryGroupRels = depotAdminSitesDisplayContext.get
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-content"
 				helpMessage="makes-the-asset-library-web-content-structures-and-document-types-available-in-the-site"
-				name="web-content-structures"
+				name="structures-and-types"
 			>
 				<liferay-ui:message key='<%= depotEntryGroupRel.isDdmStructuresAvailable() ? "yes" : "no" %>' />
 			</liferay-ui:search-container-column-text>
@@ -116,29 +122,31 @@ List<DepotEntryGroupRel> depotEntryGroupRels = depotAdminSitesDisplayContext.get
 			'#<portlet:namespace />addConnectedSiteButton'
 		);
 
-		addConnectedSiteButton.addEventListener('click', function (event) {
-			Liferay.Util.openSelectionModal({
-				onSelect: function (event) {
-					var toGroupIdInput = document.querySelector(
-						'#<portlet:namespace />toGroupId'
-					);
+		if (addConnectedSiteButton) {
+			addConnectedSiteButton.addEventListener('click', function (event) {
+				Liferay.Util.openSelectionModal({
+					onSelect: function (event) {
+						var toGroupIdInput = document.querySelector(
+							'#<portlet:namespace />toGroupId'
+						);
 
-					toGroupIdInput.value = event.groupid;
+						toGroupIdInput.value = event.groupid;
 
-					var redirectInput = document.querySelector(
-						'#<portlet:namespace />redirect'
-					);
+						var redirectInput = document.querySelector(
+							'#<portlet:namespace />redirect'
+						);
 
-					redirectInput.value = '<%= currentURL %>';
+						redirectInput.value = '<%= currentURL %>';
 
-					submitForm(toGroupIdInput.form);
-				},
-				selectEventName:
-					'<%= liferayPortletResponse.getNamespace() + "selectSite" %>',
-				title: '<liferay-ui:message key="select-site" />',
-				url:
-					'<%= String.valueOf(depotAdminSitesDisplayContext.getItemSelectorURL()) %>',
+						submitForm(toGroupIdInput.form);
+					},
+					selectEventName:
+						'<%= liferayPortletResponse.getNamespace() + "selectSite" %>',
+					title: '<liferay-ui:message key="select-site" />',
+					url:
+						'<%= String.valueOf(depotAdminSitesDisplayContext.getItemSelectorURL()) %>',
+				});
 			});
-		});
+		}
 	</aui:script>
 </clay:sheet-section>

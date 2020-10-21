@@ -46,6 +46,7 @@ import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -195,7 +196,18 @@ public class PageFragmentInstanceDefinitionDTOConverter {
 						if (value instanceof JSONObject) {
 							JSONObject valueJSONObject = (JSONObject)value;
 
-							value = valueJSONObject.getString("color");
+							if (valueJSONObject.has("color")) {
+								value = valueJSONObject.getString("color");
+							}
+							else {
+								JSONDeserializer<Map<String, Object>>
+									jsonDeserializer =
+										JSONFactoryUtil.
+											createJSONDeserializer();
+
+								value = jsonDeserializer.deserialize(
+									value.toString());
+							}
 						}
 
 						put(key, value);
@@ -659,6 +671,12 @@ public class PageFragmentInstanceDefinitionDTOConverter {
 
 						if (Validator.isNull(target)) {
 							return null;
+						}
+
+						if (StringUtil.equalsIgnoreCase(target, "_parent") ||
+							StringUtil.equalsIgnoreCase(target, "_top")) {
+
+							target = "_self";
 						}
 
 						return Target.create(

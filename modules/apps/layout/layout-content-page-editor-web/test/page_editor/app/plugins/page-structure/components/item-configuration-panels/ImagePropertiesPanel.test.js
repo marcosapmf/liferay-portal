@@ -20,6 +20,7 @@ import React from 'react';
 import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/backgroundImageFragmentEntryProcessor';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/editableFragmentEntryProcessor';
 import {EDITABLE_TYPES} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/editableTypes';
+import {VIEWPORT_SIZES} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import {StoreAPIContextProvider} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/store/index';
 import updateEditableValues from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/updateEditableValues';
 import {ImageSelector} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/common/components/ImageSelector';
@@ -58,6 +59,7 @@ jest.mock(
 	'../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
 	() => ({
 		config: {
+			adaptiveMediaEnabled: true,
 			defaultLanguageId: 'en',
 		},
 	})
@@ -111,9 +113,9 @@ const renderComponent = ({
 						},
 					},
 				},
-
 				languageId,
 				segmentsExperienceId,
+				selectedViewportSize: VIEWPORT_SIZES.desktop,
 			})}
 		>
 			<ImagePropertiesPanel
@@ -237,6 +239,7 @@ describe('TextField', () => {
 							'e-1': expect.objectContaining({
 								config: {
 									alt: '',
+									imageConfiguration: {},
 									imageTitle: 'New title',
 								},
 
@@ -264,7 +267,11 @@ describe('TextField', () => {
 					[EDITABLE_FRAGMENT_ENTRY_PROCESSOR]: expect.objectContaining(
 						{
 							'e-1': expect.objectContaining({
-								config: {alt: '', imageTitle: ''},
+								config: {
+									alt: '',
+									imageConfiguration: {},
+									imageTitle: '',
+								},
 								es: {fileEntryId: undefined, url: ''},
 							}),
 						}
@@ -288,7 +295,11 @@ describe('TextField', () => {
 					[EDITABLE_FRAGMENT_ENTRY_PROCESSOR]: expect.objectContaining(
 						{
 							'e-1': expect.objectContaining({
-								config: {alt: '', imageTitle: ''},
+								config: {
+									alt: '',
+									imageConfiguration: {},
+									imageTitle: '',
+								},
 								es: {fileEntryId: undefined, url: ''},
 							}),
 						}
@@ -312,6 +323,7 @@ describe('TextField', () => {
 							'e-1': expect.objectContaining({
 								config: {
 									alt: '',
+									imageConfiguration: {},
 									imageTitle: 'New title',
 								},
 

@@ -38,14 +38,13 @@ public class DispatchTriggerServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.dispatch.service.impl.DispatchTriggerServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
-			long userId, String name,
+			long userId, String name, String taskExecutorType,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				taskSettingsUnicodeProperties,
-			String taskType)
+				taskSettingsUnicodeProperties)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addDispatchTrigger(
-			userId, name, taskSettingsUnicodeProperties, taskType);
+			userId, name, taskExecutorType, taskSettingsUnicodeProperties);
 	}
 
 	public static void deleteDispatchTrigger(long dispatchTriggerId)
@@ -81,14 +80,15 @@ public class DispatchTriggerServiceUtil {
 				long dispatchTriggerId, boolean active, String cronExpression,
 				int endDateMonth, int endDateDay, int endDateYear,
 				int endDateHour, int endDateMinute, boolean neverEnd,
-				int startDateMonth, int startDateDay, int startDateYear,
-				int startDateHour, int startDateMinute)
+				boolean overlapAllowed, int startDateMonth, int startDateDay,
+				int startDateYear, int startDateHour, int startDateMinute)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().updateDispatchTrigger(
 			dispatchTriggerId, active, cronExpression, endDateMonth, endDateDay,
-			endDateYear, endDateHour, endDateMinute, neverEnd, startDateMonth,
-			startDateDay, startDateYear, startDateHour, startDateMinute);
+			endDateYear, endDateHour, endDateMinute, neverEnd, overlapAllowed,
+			startDateMonth, startDateDay, startDateYear, startDateHour,
+			startDateMinute);
 	}
 
 	public static com.liferay.dispatch.model.DispatchTrigger

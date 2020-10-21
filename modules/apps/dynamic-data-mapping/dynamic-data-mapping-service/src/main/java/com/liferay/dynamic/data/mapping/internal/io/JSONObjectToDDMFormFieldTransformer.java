@@ -199,6 +199,8 @@ public class JSONObjectToDDMFormFieldTransformer {
 			String value = jsonObject.getString("value");
 
 			ddmFormFieldOptions.addOption(value);
+			ddmFormFieldOptions.addOptionReference(
+				value, jsonObject.getString("reference"));
 
 			addOptionValueLabels(
 				jsonObject.getJSONObject("label"), ddmFormFieldOptions, value);
@@ -277,9 +279,7 @@ public class JSONObjectToDDMFormFieldTransformer {
 			return;
 		}
 
-		List<DDMFormField> nestedDDMFormFields = getDDMFormFields(jsonArray);
-
-		ddmFormField.setNestedDDMFormFields(nestedDDMFormFields);
+		ddmFormField.setNestedDDMFormFields(getDDMFormFields(jsonArray));
 	}
 
 	private final DDMFormFieldTypeServicesTracker

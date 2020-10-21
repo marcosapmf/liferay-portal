@@ -18,6 +18,7 @@ import React, {useCallback, useMemo, useState} from 'react';
 
 import {useActiveItemId} from '../../../app/components/Controls';
 import hasDropZoneChild from '../../../app/components/layout-data-items/hasDropZoneChild';
+import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../app/config/constants/backgroundImageFragmentEntryProcessor';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../app/config/constants/editableFragmentEntryProcessor';
 import {EDITABLE_TYPES} from '../../../app/config/constants/editableTypes';
 import {ITEM_TYPES} from '../../../app/config/constants/itemTypes';
@@ -27,6 +28,7 @@ import {config} from '../../../app/config/index';
 import selectCanUpdateEditables from '../../../app/selectors/selectCanUpdateEditables';
 import selectCanUpdateItemConfiguration from '../../../app/selectors/selectCanUpdateItemConfiguration';
 import {useSelector} from '../../../app/store/index';
+import canActivateEditable from '../../../app/utils/canActivateEditable';
 import {DragAndDropContextProvider} from '../../../app/utils/dragAndDrop/useDragAndDrop';
 import getLayoutDataItemLabel from '../../../app/utils/getLayoutDataItemLabel';
 import PageStructureSidebarSection from './PageStructureSidebarSection';
@@ -38,7 +40,7 @@ const EDITABLE_TYPE_ICONS = {
 	[EDITABLE_TYPES.image]: 'picture',
 	[EDITABLE_TYPES.link]: 'link',
 	[EDITABLE_TYPES['rich-text']]: 'text-editor',
-	[EDITABLE_TYPES.text]: 'text-editor',
+	[EDITABLE_TYPES.text]: 'text',
 };
 
 const LAYOUT_DATA_ITEM_TYPE_ICONS = {
@@ -62,6 +64,10 @@ export default function PageStructureSidebar() {
 	const layoutData = useSelector((state) => state.layoutData);
 	const masterLayoutData = useSelector(
 		(state) => state.masterLayout?.masterLayoutData
+	);
+
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
 	);
 
 	const [dragAndDropHoveredItemId, setDragAndDropHoveredItemId] = useState(
@@ -88,6 +94,7 @@ export default function PageStructureSidebar() {
 				layoutData,
 				masterLayoutData,
 				onHoverNode,
+				selectedViewportSize,
 			}).children,
 		[
 			activeItemId,
@@ -101,6 +108,7 @@ export default function PageStructureSidebar() {
 			layoutData,
 			masterLayoutData,
 			onHoverNode,
+			selectedViewportSize,
 		]
 	);
 
@@ -154,6 +162,7 @@ function visit(
 		layoutData,
 		masterLayoutData,
 		onHoverNode,
+		selectedViewportSize,
 	}
 ) {
 	const children = [];
@@ -171,18 +180,26 @@ function visit(
 		icon = fragmentEntryLink.icon || icon;
 
 		const editables =
-			fragmentEntryLink.editableValues[
-				EDITABLE_FRAGMENT_ENTRY_PROCESSOR
-			] || {};
+			{
+				...fragmentEntryLink.editableValues[
+					EDITABLE_FRAGMENT_ENTRY_PROCESSOR
+				],
+				...fragmentEntryLink.editableValues[
+					BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR
+				],
+			} || {};
 
 		const editableTypes = fragmentEntryLink.editableTypes;
 
 		Object.keys(editables).forEach((editableId) => {
 			const childId = `${item.config.fragmentEntryLinkId}-${editableId}`;
-			const type = editableTypes[editableId] || EDITABLE_TYPES.text;
+			const type =
+				editableTypes[editableId] || EDITABLE_TYPES.backgroundImage;
 
 			children.push({
-				activable: canUpdateEditables,
+				activable:
+					canUpdateEditables &&
+					canActivateEditable(selectedViewportSize, type),
 				children: [],
 				disabled: !isMasterPage && itemInMasterLayout,
 				dragAndDropHoveredItemId,
@@ -210,6 +227,7 @@ function visit(
 					layoutData,
 					masterLayoutData,
 					onHoverNode,
+					selectedViewportSize,
 				}),
 
 				name: Liferay.Language.get('drop-zone'),
@@ -245,6 +263,7 @@ function visit(
 						layoutData,
 						masterLayoutData,
 						onHoverNode,
+						selectedViewportSize,
 					}
 				).children;
 
@@ -261,6 +280,7 @@ function visit(
 					layoutData,
 					masterLayoutData,
 					onHoverNode,
+					selectedViewportSize,
 				});
 
 				children.push(child);

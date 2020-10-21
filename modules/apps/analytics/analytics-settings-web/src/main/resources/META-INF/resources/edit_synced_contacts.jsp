@@ -24,10 +24,10 @@ portletURL.setParameter("mvcRenderCommandName", "/view_configuration_screen");
 boolean includeSyncContactsFields = ParamUtil.getBoolean(request, "includeSyncContactsFields");
 
 if (includeSyncContactsFields) {
-	portletURL.setParameter("configurationScreenKey", "synced-contact-data");
+	portletURL.setParameter("configurationScreenKey", "2-synced-contact-data");
 }
 else {
-	portletURL.setParameter("configurationScreenKey", "synced-contacts");
+	portletURL.setParameter("configurationScreenKey", "2-synced-contacts");
 }
 
 String redirect = portletURL.toString();
@@ -86,6 +86,10 @@ if (includeSyncContactsFields) {
 		<liferay-ui:message key="contact-data" />
 	</h2>
 
+	<div class="c-pb-3 form-text">
+		<liferay-ui:message key="contact-data-help" />
+	</div>
+
 	<aui:form action="<%= includeSyncContactsFields ? editSyncedContactsFieldsURL : editSyncedContactsURL %>" method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 		<aui:input name="includeSyncContactsFields" type="hidden" value="<%= String.valueOf(includeSyncContactsFields) %>" />
@@ -95,9 +99,7 @@ if (includeSyncContactsFields) {
 				<liferay-ui:message key="sync-all-contacts" />
 			</label>
 
-			<div class="form-text">
-				<liferay-ui:message key="sync-all-contacts-help" />
-			</div>
+			<br />
 
 			<label class="mb-5 mt-3 toggle-switch">
 				<input class="toggle-switch-check" name="<portlet:namespace />syncAllContacts" type="checkbox" <%= syncAllContacts ? "checked" : "" %> />
@@ -115,10 +117,6 @@ if (includeSyncContactsFields) {
 			<label class="control-label">
 				<liferay-ui:message key="sync-by-user-groups-and-organizations" />
 			</label>
-
-			<div class="form-text">
-				<liferay-ui:message key="sync-by-user-groups-and-organizations-help" />
-			</div>
 
 			<c:choose>
 				<c:when test="<%= connected %>">

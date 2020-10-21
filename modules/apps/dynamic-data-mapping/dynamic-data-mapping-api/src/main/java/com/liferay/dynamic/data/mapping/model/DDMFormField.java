@@ -67,6 +67,7 @@ public class DDMFormField implements Serializable {
 				new DDMFormFieldValidation(ddmFormFieldValidation));
 		}
 
+		setFieldReference(ddmFormField.getFieldReference());
 		setLabel(new LocalizedValue(ddmFormField.getLabel()));
 		setPredefinedValue(
 			new LocalizedValue(ddmFormField.getPredefinedValue()));
@@ -92,6 +93,7 @@ public class DDMFormField implements Serializable {
 		setType(type);
 
 		setDDMFormFieldOptions(new DDMFormFieldOptions());
+		setFieldReference(name);
 		setLabel(new LocalizedValue());
 		setPredefinedValue(new LocalizedValue());
 		setStyle(new LocalizedValue());
@@ -213,6 +215,10 @@ public class DDMFormField implements Serializable {
 		return MapUtil.getString(_properties, "fieldNamespace");
 	}
 
+	public String getFieldReference() {
+		return MapUtil.getString(_properties, "fieldReference");
+	}
+
 	public String getIndexType() {
 		return MapUtil.getString(_properties, "indexType");
 	}
@@ -244,6 +250,21 @@ public class DDMFormField implements Serializable {
 		return nestedDDMFormFieldsMap;
 	}
 
+	public Map<String, DDMFormField> getNestedDDMFormFieldsReferencesMap() {
+		Map<String, DDMFormField> nestedDDMFormFieldsReferencesMap =
+			new LinkedHashMap<>();
+
+		for (DDMFormField nestedDDMFormField : _nestedDDMFormFields) {
+			nestedDDMFormFieldsReferencesMap.put(
+				nestedDDMFormField.getFieldReference(), nestedDDMFormField);
+
+			nestedDDMFormFieldsReferencesMap.putAll(
+				nestedDDMFormField.getNestedDDMFormFieldsReferencesMap());
+		}
+
+		return nestedDDMFormFieldsReferencesMap;
+	}
+
 	public Map<String, DDMFormField> getNontransientNestedDDMFormFieldsMap() {
 		Map<String, DDMFormField> nestedDDMFormFieldsMap =
 			new LinkedHashMap<>();
@@ -259,6 +280,26 @@ public class DDMFormField implements Serializable {
 		}
 
 		return nestedDDMFormFieldsMap;
+	}
+
+	public Map<String, DDMFormField>
+		getNontransientNestedDDMFormFieldsReferencesMap() {
+
+		Map<String, DDMFormField> nestedDDMFormFieldsReferencesMap =
+			new LinkedHashMap<>();
+
+		for (DDMFormField nestedDDMFormField : _nestedDDMFormFields) {
+			if (!nestedDDMFormField.isTransient()) {
+				nestedDDMFormFieldsReferencesMap.put(
+					nestedDDMFormField.getFieldReference(), nestedDDMFormField);
+			}
+
+			nestedDDMFormFieldsReferencesMap.putAll(
+				nestedDDMFormField.
+					getNontransientNestedDDMFormFieldsReferencesMap());
+		}
+
+		return nestedDDMFormFieldsReferencesMap;
 	}
 
 	public LocalizedValue getPredefinedValue() {
@@ -354,6 +395,10 @@ public class DDMFormField implements Serializable {
 
 	public void setFieldNamespace(String fieldNamespace) {
 		_properties.put("fieldNamespace", fieldNamespace);
+	}
+
+	public void setFieldReference(String fieldReference) {
+		_properties.put("fieldReference", fieldReference);
 	}
 
 	public void setIndexType(String indexType) {

@@ -56,11 +56,10 @@ public class DefaultDDMFormValuesFactory {
 
 		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
+		ddmFormFieldValue.setFieldReference(ddmFormField.getFieldReference());
 		ddmFormFieldValue.setName(ddmFormField.getName());
 
-		Value value = createDefaultValue(ddmFormField);
-
-		ddmFormFieldValue.setValue(value);
+		ddmFormFieldValue.setValue(createDefaultValue(ddmFormField));
 
 		for (DDMFormField nestedDDMFormField :
 				ddmFormField.getNestedDDMFormFields()) {

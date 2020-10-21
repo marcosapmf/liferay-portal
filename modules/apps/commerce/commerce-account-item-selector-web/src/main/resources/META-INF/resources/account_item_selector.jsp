@@ -19,7 +19,6 @@
 <%
 CommerceAccountItemSelectorViewDisplayContext commerceAccountItemSelectorViewDisplayContext = (CommerceAccountItemSelectorViewDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-SearchContainer<CommerceAccount> commerceAccountSearchContainer = commerceAccountItemSelectorViewDisplayContext.getSearchContainer();
 String itemSelectedEventName = commerceAccountItemSelectorViewDisplayContext.getItemSelectedEventName();
 PortletURL portletURL = commerceAccountItemSelectorViewDisplayContext.getPortletURL();
 %>
@@ -61,7 +60,7 @@ PortletURL portletURL = commerceAccountItemSelectorViewDisplayContext.getPortlet
 <div class="container-fluid-1280" id="<portlet:namespace />commerceAccountSelectorWrapper">
 	<liferay-ui:search-container
 		id="commerceAccounts"
-		searchContainer="<%= commerceAccountSearchContainer %>"
+		searchContainer="<%= commerceAccountItemSelectorViewDisplayContext.getSearchContainer() %>"
 	>
 		<liferay-ui:search-container-row
 			className="com.liferay.commerce.account.model.CommerceAccount"
@@ -71,13 +70,12 @@ PortletURL portletURL = commerceAccountItemSelectorViewDisplayContext.getPortlet
 		>
 
 			<%
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"commerce-account-id", commerceAccount.getCommerceAccountId()
-			).put(
-				"name", commerceAccount.getName()
-			).build();
-
-			row.setData(data);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"commerce-account-id", commerceAccount.getCommerceAccountId()
+				).put(
+					"name", commerceAccount.getName()
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text

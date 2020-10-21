@@ -1,7 +1,6 @@
 definition {
 
 	macro addFieldByDoubleClick {
-
 		var key_fieldLabel = "${fieldType}";
 
 		var iterator = "0";
@@ -23,7 +22,6 @@ definition {
 	}
 
 	macro addFieldByDoubleClickFromObjectSidebar {
-
 		var key_fieldLabel = "${fieldLabel}";
 
 		DoubleClick(locator1 = "FormViewBuilder#OBJECT_FIELD_LABEL");
@@ -32,7 +30,6 @@ definition {
 	}
 
 	macro addFieldByDragAndDrop {
-
 		Pause(locator1 = "10000");
 
 		var key_fieldLabel = "${fieldType}";
@@ -56,7 +53,6 @@ definition {
 	}
 
 	macro addFormView {
-
 		while ( IsElementNotPresent(locator1 = "AppBuilder#NAVBAR") || IsElementNotPresent(locator1 = "FormViewBuilder#SIDEBAR_FIELDS_TAB") ) {
 			Pause(locator1 = "1000");
 		}
@@ -105,6 +101,12 @@ definition {
 			locator1 = "FormViewBuilder#SWITCHER_OPTION");
 	}
 
+	macro clickFieldLabel {
+		Click(
+			locator1 = "FormViewBuilder#FIELD_LABEL",
+			value1 = "${fieldLabel}");
+	}
+
 	macro closeSidebar() {
 		Click(locator1 = "FormViewBuilder#CLOSE_SIDEBAR");
 	}
@@ -128,16 +130,13 @@ definition {
 	}
 
 	macro deleteObjectSidebarField {
-
 		FormViewBuilder.deleteFromObjectViaX(fieldName = "${fieldLabel}");
 
 		while (IsElementPresent(locator1 = "FormViewBuilder#VALIDATE_DELETE_OBJECT_MESSAGE")) {
-
 			Click(locator1 = "FormViewBuilder#DELETE_OBJECT_LABEL_DELETE_BUTTON");
 		}
 
 		while (IsElementPresent(locator1 = "FormViewBuilder#VALIDATE_DELETE_USED_OBJECT_MESSAGE")) {
-
 			Click(locator1 = "FormViewBuilder#DELETE_OBJECT_LABEL_DELETE_BUTTON");
 		}
 
@@ -147,7 +146,6 @@ definition {
 	}
 
 	macro deselectSelectWithMultipleOptions {
-
 		for (var selectOption : list "${selectOptionsList}") {
 			FormViewBuilder.disableCheckbox(
 				fieldName = "${fieldName}",
@@ -201,6 +199,12 @@ definition {
 			value1 = "${optionValue}");
 
 		AssertElementPresent(locator1 = "FormViewBuilder#OPTIONS_OPTION_NAME_FIELD");
+	}
+
+	macro editRuleName {
+		Type(
+			locator1 = "FormViewBuilder#RULE_BUILDER_NAME",
+			value1 = "${ruleName}");
 	}
 
 	macro editRules {
@@ -272,6 +276,14 @@ definition {
 			locator1 = "FormViewBuilder#FIELD_ELLIPSIS_ACTION");
 	}
 
+	macro gotoFields {
+		Click(locator1 = "FormViewBuilder#FIELDS_TAB");
+	}
+
+	macro gotoRules {
+		Click(locator1 = "FormViewBuilder#RULES_TAB");
+	}
+
 	macro openFormView {
 		AppBuilderAdmin.openItem(itemName = "${formViewName}");
 	}
@@ -329,7 +341,6 @@ definition {
 	}
 
 	macro selectSelectWithMultipleOptions {
-
 		for (var selectOption : list "${selectOptionsList}") {
 			FormViewBuilder.enableCheckbox(
 				fieldName = "${fieldName}",
@@ -388,7 +399,6 @@ definition {
 	}
 
 	macro setName {
-
 		AppBuilderAdmin.setName(title = "${formViewName}");
 	}
 

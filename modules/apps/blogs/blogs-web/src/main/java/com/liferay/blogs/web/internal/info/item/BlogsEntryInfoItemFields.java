@@ -96,7 +96,7 @@ public interface BlogsEntryInfoItemFields {
 			InfoLocalizedValue.localize(
 				BlogsEntryInfoItemFields.class, "display-date")
 		).build();
-	public static final InfoField<URLInfoFieldType> displayPageUrlInfoField =
+	public static final InfoField<URLInfoFieldType> displayPageURLInfoField =
 		InfoField.builder(
 		).infoFieldType(
 			URLInfoFieldType.INSTANCE

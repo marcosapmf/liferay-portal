@@ -3895,6 +3895,10 @@ public class LayoutLocalServiceImpl extends LayoutLocalServiceBaseImpl {
 
 		String[] fields = orderByComparator.getOrderByFields();
 
+		if (ArrayUtil.contains(fields, "score")) {
+			return new Sort(null, Sort.SCORE_TYPE, false);
+		}
+
 		boolean reverse = !orderByComparator.isAscending();
 		String field = fields[0];
 

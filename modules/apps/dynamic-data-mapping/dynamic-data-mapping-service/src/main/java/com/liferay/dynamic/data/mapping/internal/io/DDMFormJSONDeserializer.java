@@ -275,6 +275,8 @@ public class DDMFormJSONDeserializer implements DDMFormDeserializer {
 			String value = jsonObject.getString("value");
 
 			ddmFormFieldOptions.addOption(value);
+			ddmFormFieldOptions.addOptionReference(
+				value, jsonObject.getString("reference"));
 
 			addOptionValueLabels(
 				jsonObject.getJSONObject("label"), ddmFormFieldOptions, value);
@@ -322,9 +324,7 @@ public class DDMFormJSONDeserializer implements DDMFormDeserializer {
 	protected static void setDDMFormDefaultLocale(
 		String defaultLanguageId, DDMForm ddmForm) {
 
-		Locale defaultLocale = LocaleUtil.fromLanguageId(defaultLanguageId);
-
-		ddmForm.setDefaultLocale(defaultLocale);
+		ddmForm.setDefaultLocale(LocaleUtil.fromLanguageId(defaultLanguageId));
 	}
 
 	protected static void setDDMFormFieldLocalizedValueDefaultLocale(
@@ -450,9 +450,7 @@ public class DDMFormJSONDeserializer implements DDMFormDeserializer {
 			return;
 		}
 
-		List<DDMFormField> nestedDDMFormFields = getDDMFormFields(jsonArray);
-
-		ddmFormField.setNestedDDMFormFields(nestedDDMFormFields);
+		ddmFormField.setNestedDDMFormFields(getDDMFormFields(jsonArray));
 	}
 
 	@Reference(unbind = "-")

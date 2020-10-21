@@ -228,7 +228,9 @@ public class LayoutsAdminManagementToolbarDisplayContext
 
 	@Override
 	public String getSortingOrder() {
-		if (_layoutsAdminDisplayContext.isFirstColumn()) {
+		if (_layoutsAdminDisplayContext.isFirstColumn() ||
+			Objects.equals(getOrderByCol(), "relevance")) {
+
 			return null;
 		}
 
@@ -287,7 +289,7 @@ public class LayoutsAdminManagementToolbarDisplayContext
 		}
 
 		if (_layoutsAdminDisplayContext.isSearch()) {
-			return new String[] {"create-date"};
+			return new String[] {"create-date", "relevance"};
 		}
 
 		return null;

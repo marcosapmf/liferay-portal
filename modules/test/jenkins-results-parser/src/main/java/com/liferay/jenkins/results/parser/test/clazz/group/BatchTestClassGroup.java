@@ -100,6 +100,14 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return portalGitWorkingDirectory;
 	}
 
+	public int getSegmentCount() {
+		return _segmentTestClassGroups.size();
+	}
+
+	public SegmentTestClassGroup getSegmentTestClassGroup(int segmentId) {
+		return _segmentTestClassGroups.get(segmentId);
+	}
+
 	public static class BatchTestClass extends BaseTestClass {
 
 		protected static BatchTestClass getInstance(
@@ -392,6 +400,19 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return _getRequiredModuleDirs(moduleDirs, new ArrayList<>(moduleDirs));
 	}
 
+	protected int getSegmentMaxChildren() {
+		String segmentMaxChildren = getFirstPropertyValue(
+			"test.batch.segment.max.children");
+
+		if ((segmentMaxChildren == null) ||
+			!segmentMaxChildren.matches("\\d+")) {
+
+			return _SEGMENT_MAX_CHILDREN_DEFAULT;
+		}
+
+		return Integer.valueOf(segmentMaxChildren);
+	}
+
 	protected boolean isIntegrationUnitTestFileModifiedOnly() {
 		List<PathMatcher> relevantIntegrationUnitIncludePathMatchers =
 			getRelevantIntegrationUnitIncludePathMatchers();
@@ -432,28 +453,77 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		int axisSize = (int)Math.ceil((double)testClassCount / axisCount);
 
-		int id = 0;
-
 		for (List<TestClass> axisTestClasses :
 				Lists.partition(testClasses, axisSize)) {
 
-			AxisTestClassGroup axisTestClassGroup = new AxisTestClassGroup(
-				this, id);
+			AxisTestClassGroup axisTestClassGroup =
+				TestClassGroupFactory.newAxisTestClassGroup(this);
 
 			for (TestClass axisTestClass : axisTestClasses) {
 				axisTestClassGroup.addTestClass(axisTestClass);
 			}
 
-			axisTestClassGroups.put(id, axisTestClassGroup);
+			axisTestClassGroups.add(axisTestClassGroup);
+		}
+	}
 
-			id++;
+	protected void setSegmentTestClassGroups() {
+		if (!_isSegmentEnabled()) {
+			return;
+		}
+
+		if (!_segmentTestClassGroups.isEmpty()) {
+			return;
+		}
+
+		if (axisTestClassGroups.isEmpty()) {
+			return;
+		}
+
+		Map<Integer, List<AxisTestClassGroup>> axisTestClassGroupsMap =
+			new HashMap<>();
+
+		for (AxisTestClassGroup axisTestClassGroup : axisTestClassGroups) {
+			Integer minimumSlaveRAM = axisTestClassGroup.getMinimumSlaveRAM();
+
+			List<AxisTestClassGroup> axisTestClassGroups =
+				axisTestClassGroupsMap.get(minimumSlaveRAM);
+
+			if (axisTestClassGroups == null) {
+				axisTestClassGroups = new ArrayList<>();
+			}
+
+			axisTestClassGroups.add(axisTestClassGroup);
+
+			axisTestClassGroupsMap.put(minimumSlaveRAM, axisTestClassGroups);
+		}
+
+		for (List<AxisTestClassGroup> axisTestClassGroupsMapValue :
+				axisTestClassGroupsMap.values()) {
+
+			for (List<AxisTestClassGroup> axisTestClassGroups :
+					Lists.partition(
+						axisTestClassGroupsMapValue, getSegmentMaxChildren())) {
+
+				SegmentTestClassGroup segmentTestClassGroup =
+					TestClassGroupFactory.newSegmentTestClassGroup(this);
+
+				for (AxisTestClassGroup axisTestClassGroup :
+						axisTestClassGroups) {
+
+					segmentTestClassGroup.addAxisTestClassGroup(
+						axisTestClassGroup);
+				}
+
+				_segmentTestClassGroups.add(segmentTestClassGroup);
+			}
 		}
 	}
 
 	protected static final String NAME_STABLE_TEST_SUITE = "stable";
 
-	protected final Map<Integer, AxisTestClassGroup> axisTestClassGroups =
-		new HashMap<>();
+	protected final List<AxisTestClassGroup> axisTestClassGroups =
+		new ArrayList<>();
 	protected final String batchName;
 	protected final BuildProfile buildProfile;
 	protected final List<PathMatcher> excludesPathMatchers = new ArrayList<>();
@@ -568,6 +638,17 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return Lists.newArrayList(requiredModuleDirs);
 	}
 
+	private boolean _isSegmentEnabled() {
+		String segmentEnabled = getFirstPropertyValue(
+			"test.batch.segment.enabled");
+
+		if ((segmentEnabled != null) && segmentEnabled.equals("true")) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _setIncludeStableTestSuite() {
 		includeStableTestSuite = testRelevantChanges;
 	}
@@ -611,5 +692,10 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	private static final boolean _ENABLE_TEST_RELEASE_BUNDLE_DEFAULT = false;
 
 	private static final boolean _ENABLE_TEST_RELEVANT_CHANGES_DEFAULT = false;
+
+	private static final int _SEGMENT_MAX_CHILDREN_DEFAULT = 25;
+
+	private final List<SegmentTestClassGroup> _segmentTestClassGroups =
+		new ArrayList<>();
 
 }

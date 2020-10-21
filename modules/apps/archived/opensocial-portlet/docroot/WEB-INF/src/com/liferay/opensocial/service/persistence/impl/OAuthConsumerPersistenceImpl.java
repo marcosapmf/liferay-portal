@@ -16,6 +16,7 @@ package com.liferay.opensocial.service.persistence.impl;
 
 import com.liferay.opensocial.exception.NoSuchOAuthConsumerException;
 import com.liferay.opensocial.model.OAuthConsumer;
+import com.liferay.opensocial.model.OAuthConsumerTable;
 import com.liferay.opensocial.model.impl.OAuthConsumerImpl;
 import com.liferay.opensocial.model.impl.OAuthConsumerModelImpl;
 import com.liferay.opensocial.service.persistence.OAuthConsumerPersistence;
@@ -928,6 +929,8 @@ public class OAuthConsumerPersistenceImpl
 
 		setModelImplClass(OAuthConsumerImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(OAuthConsumerTable.INSTANCE);
 	}
 
 	/**
@@ -977,9 +980,7 @@ public class OAuthConsumerPersistenceImpl
 	public void clearCache() {
 		EntityCacheUtil.clearCache(OAuthConsumerImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OAuthConsumerImpl.class);
 	}
 
 	/**
@@ -1004,9 +1005,7 @@ public class OAuthConsumerPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OAuthConsumerImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(OAuthConsumerImpl.class, primaryKey);

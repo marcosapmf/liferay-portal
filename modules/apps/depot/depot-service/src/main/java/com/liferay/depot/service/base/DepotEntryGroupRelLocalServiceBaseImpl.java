@@ -373,6 +373,9 @@ public abstract class DepotEntryGroupRelLocalServiceBaseImpl
 		exportActionableDynamicQuery.setCompanyId(
 			portletDataContext.getCompanyId());
 
+		exportActionableDynamicQuery.setGroupId(
+			portletDataContext.getScopeGroupId());
+
 		exportActionableDynamicQuery.setPerformActionMethod(
 			new ActionableDynamicQuery.PerformActionMethod
 				<DepotEntryGroupRel>() {
@@ -396,6 +399,7 @@ public abstract class DepotEntryGroupRelLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -414,6 +418,7 @@ public abstract class DepotEntryGroupRelLocalServiceBaseImpl
 			(DepotEntryGroupRel)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DepotEntryGroupRel> getBasePersistence() {
 		return depotEntryGroupRelPersistence;
 	}

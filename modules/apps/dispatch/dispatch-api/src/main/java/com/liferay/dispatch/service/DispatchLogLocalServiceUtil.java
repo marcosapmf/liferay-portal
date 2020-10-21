@@ -56,12 +56,13 @@ public class DispatchLogLocalServiceUtil {
 
 	public static com.liferay.dispatch.model.DispatchLog addDispatchLog(
 			long userId, long dispatchTriggerId, java.util.Date endDate,
-			String error, String output, java.util.Date startDate, int status)
+			String error, String output, java.util.Date startDate,
+			com.liferay.dispatch.executor.DispatchTaskStatus dispatchTaskStatus)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().addDispatchLog(
 			userId, dispatchTriggerId, endDate, error, output, startDate,
-			status);
+			dispatchTaskStatus);
 	}
 
 	/**
@@ -232,6 +233,12 @@ public class DispatchLogLocalServiceUtil {
 		return getService().fetchDispatchLog(dispatchLogId);
 	}
 
+	public static com.liferay.dispatch.model.DispatchLog fetchLatestDispatchLog(
+		long dispatchTriggerId) {
+
+		return getService().fetchLatestDispatchLog(dispatchTriggerId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -332,11 +339,12 @@ public class DispatchLogLocalServiceUtil {
 
 	public static com.liferay.dispatch.model.DispatchLog updateDispatchLog(
 			long dispatchLogId, java.util.Date endDate, String error,
-			String output, int status)
+			String output,
+			com.liferay.dispatch.executor.DispatchTaskStatus dispatchTaskStatus)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return getService().updateDispatchLog(
-			dispatchLogId, endDate, error, output, status);
+			dispatchLogId, endDate, error, output, dispatchTaskStatus);
 	}
 
 	public static DispatchLogLocalService getService() {
