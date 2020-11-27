@@ -408,8 +408,7 @@ class LayoutProvider extends Component {
 					availableLanguageIds,
 					defaultLanguageId,
 					pages: this.getLocalizedPages(
-						settingsContext.pages,
-						this.getSettingsContextLocalizationMap(field.fieldName)
+						settingsContext.pages
 					),
 				};
 
