@@ -258,15 +258,6 @@ class DataLayoutBuilder extends React.Component {
 				}
 
 				if (localizable) {
-					if (this.props.contentType !== 'app-builder') {
-						availableLanguageIds.forEach((languageId) => {
-							if (!localizedValue[languageId]) {
-								localizedValue[languageId] =
-									localizedValue[defaultLanguageId] || '';
-							}
-						});
-					}
-
 					if (this._isCustomProperty(fieldName)) {
 						fieldConfig.customProperties[
 							fieldName
