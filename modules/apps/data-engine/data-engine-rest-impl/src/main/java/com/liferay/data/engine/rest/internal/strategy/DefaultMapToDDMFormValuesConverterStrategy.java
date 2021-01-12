@@ -16,6 +16,7 @@ package com.liferay.data.engine.rest.internal.strategy;
 
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -29,8 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 /**
  * @author Jeyvison Nascimento
@@ -52,195 +51,98 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 			false);
 
 		for (Map.Entry<String, DDMFormField> entry : ddmFormFields.entrySet()) {
-			_addDDFormFieldValues(
-				dataRecordValues, entry.getValue(), ddmFormValues,
-				ddmForm.getDefaultLocale(), locale);
+			DDMFormField ddmFormField = entry.getValue();
+
+			List<DDMFormFieldValue> ddmFormFieldValues =
+				createDDMFormFieldValues(
+					(List<Object>)dataRecordValues.get(ddmFormField.getName()),
+					ddmFormField, ddmForm.getDefaultLocale(), locale);
+
+			ddmFormFieldValues.forEach(ddmFormValues::addDDMFormFieldValue);
 		}
 	}
 
 	protected List<DDMFormFieldValue> createDDMFormFieldValues(
-		Map<String, Object> dataRecordValues, DDMFormField ddmFormField,
+		List<Object> dataRecordValues, DDMFormField ddmFormField,
 		Locale defaultLocale, Locale locale) {
 
-		if ((dataRecordValues == null) ||
-			!dataRecordValues.containsKey(ddmFormField.getName())) {
-
+		if (ListUtil.isEmpty(dataRecordValues)) {
 			return ListUtil.fromArray(
 				new DDMFormFieldValue() {
 					{
 						setName(ddmFormField.getName());
+
+						if (!StringUtil.equals(
+								ddmFormField.getType(),
+								DDMFormFieldType.FIELDSET)) {
+
+							setValue(ddmFormField.getPredefinedValue());
+						}
 					}
 				});
 		}
 
-		if (StringUtil.equals(ddmFormField.getType(), "fieldset")) {
-			if (ListUtil.isEmpty(ddmFormField.getNestedDDMFormFields())) {
-				return ListUtil.fromArray(
-					new DDMFormFieldValue() {
-						{
-							setName(ddmFormField.getName());
-						}
+		List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>(
+			dataRecordValues.size());
+
+		for (Object object : dataRecordValues) {
+			DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
+
+			Map<String, Object> fieldDataRecordValues =
+				(Map<String, Object>)object;
+
+			ddmFormFieldValue.setInstanceId(
+				GetterUtil.getString(fieldDataRecordValues.get("instanceId")));
+
+			ddmFormFieldValue.setName(ddmFormField.getName());
+
+			if (StringUtil.equals(
+					ddmFormField.getType(), DDMFormFieldType.FIELDSET)) {
+
+				List<DDMFormField> nestedDDMFormFields =
+					ddmFormField.getNestedDDMFormFields();
+
+				Map<String, Object> nestedDataRecordValues =
+					(Map<String, Object>)fieldDataRecordValues.get(
+						"nestedFields");
+
+				nestedDDMFormFields.forEach(
+					nestedDDMFormField -> {
+						List<DDMFormFieldValue> nestedDDMFormFieldValues =
+							createDDMFormFieldValues(
+								(List<Object>)nestedDataRecordValues.get(
+									nestedDDMFormField.getName()),
+								nestedDDMFormField, defaultLocale, locale);
+
+						nestedDDMFormFieldValues.forEach(
+							ddmFormFieldValue::addNestedDDMFormFieldValue);
 					});
 			}
-
-			Map<String, Object> fieldSetInstanceValues =
-				(Map<String, Object>)dataRecordValues.get(
-					ddmFormField.getName());
-
-			List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>(
-				fieldSetInstanceValues.size());
-
-			for (Map.Entry<String, Object> entry :
-					fieldSetInstanceValues.entrySet()) {
-
-				DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue() {
-					{
-						setName(ddmFormField.getName());
-						setInstanceId(entry.getKey());
-					}
-				};
-
-				for (DDMFormField nestedDDMFormField :
-						ddmFormField.getNestedDDMFormFields()) {
-
-					List<DDMFormFieldValue> nestedDDMFormFieldValues =
-						createDDMFormFieldValues(
-							(Map<String, Object>)fieldSetInstanceValues.get(
-								ddmFormFieldValue.getInstanceId()),
-							nestedDDMFormField, defaultLocale, locale);
-
-					Stream<DDMFormFieldValue> stream =
-						nestedDDMFormFieldValues.stream();
-
-					stream.forEach(
-						ddmFormFieldValue::addNestedDDMFormFieldValue);
-				}
-
-				ddmFormFieldValues.add(ddmFormFieldValue);
-			}
-
-			return ddmFormFieldValues;
-		}
-
-		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue() {
-			{
-				setName(ddmFormField.getName());
-				setValue(ddmFormField.getPredefinedValue());
-			}
-		};
-
-		if (ddmFormField.isRepeatable()) {
-			List<Object> list = null;
-
-			if (ddmFormField.isLocalizable()) {
-				Object value = dataRecordValues.get(ddmFormField.getName());
-
-				if (!(value instanceof Map)) {
-					throw new IllegalArgumentException(
-						"Field value is not a map");
-				}
-
-				Map<String, Object> localizedValues =
-					(Map<String, Object>)value;
-
-				list = (List<Object>)localizedValues.get(
-					LanguageUtil.getLanguageId(
-						(Locale)GetterUtil.getObject(
-							locale, LocaleUtil.getSiteDefault())));
-
-				if (!Objects.equals(
-						LocaleUtil.getSiteDefault(), defaultLocale) &&
-					ListUtil.isEmpty(list)) {
-
-					list = (List<Object>)localizedValues.get(
-						LanguageUtil.getLanguageId(defaultLocale));
-				}
-			}
 			else {
-				list = (List<Object>)dataRecordValues.get(
-					ddmFormField.getName());
-			}
-
-			if (list == null) {
-				return ListUtil.fromArray(ddmFormFieldValue);
-			}
-
-			List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>(
-				list.size());
-
-			for (Object object : list) {
-				ddmFormFieldValue = new DDMFormFieldValue();
-
-				ddmFormFieldValue.setName(ddmFormField.getName());
+				Map<String, Object> localizedValues =
+					(Map<String, Object>)fieldDataRecordValues.get(
+						"localizedValue");
 
 				LocalizedValue localizedValue = new LocalizedValue();
 
 				localizedValue.addString(
 					(Locale)GetterUtil.getObject(locale, defaultLocale),
-					String.valueOf(object));
+					String.valueOf(
+						localizedValues.get(
+							LanguageUtil.getLanguageId(
+								(Locale)GetterUtil.getObject(
+									locale, LocaleUtil.getSiteDefault())))));
 
 				ddmFormFieldValue.setValue(localizedValue);
-
-				ddmFormFieldValues.add(ddmFormFieldValue);
 			}
 
-			return ddmFormFieldValues;
+			ddmFormFieldValues.add(ddmFormFieldValue);
 		}
-
-		if (dataRecordValues.get(ddmFormField.getName()) != null) {
-			ddmFormFieldValue.setValue(
-				createValue(
-					ddmFormField, locale,
-					dataRecordValues.get(ddmFormField.getName())));
-		}
-
-		return ListUtil.fromArray(ddmFormFieldValue);
-	}
-
-	private DefaultMapToDDMFormValuesConverterStrategy() {
-	}
-
-	private List<DDMFormFieldValue> _addDDFormFieldValues(
-		Map<String, Object> dataRecordValues, DDMFormField ddmFormField,
-		DDMFormValues ddmFormValues, Locale defaultLocale, Locale locale) {
-
-		List<DDMFormFieldValue> ddmFormFieldValues = new ArrayList<>();
-
-		ddmFormFieldValues.addAll(
-			createDDMFormFieldValues(
-				dataRecordValues, ddmFormField, defaultLocale, locale));
-
-		Stream<DDMFormFieldValue> stream = ddmFormFieldValues.stream();
-
-		stream.forEach(
-			ddmFormFieldValue -> {
-				List<DDMFormField> nestedDDMFormFields =
-					ddmFormField.getNestedDDMFormFields();
-
-				List<DDMFormFieldValue> nestedDDMFormFieldValues =
-					ddmFormFieldValue.getNestedDDMFormFieldValues();
-
-				nestedDDMFormFieldValues.clear();
-
-				nestedDDMFormFields.forEach(
-					nestedDDMFormField -> {
-						List<DDMFormFieldValue>
-							updatedNestedDDMFormFieldValues =
-								_addDDFormFieldValues(
-									dataRecordValues, nestedDDMFormField,
-									ddmFormValues, defaultLocale, locale);
-
-						updatedNestedDDMFormFieldValues.forEach(
-							ddmFormFieldValue::addNestedDDMFormFieldValue);
-					});
-
-				ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
-			});
 
 		return ddmFormFieldValues;
 	}
-
-	private static final DefaultMapToDDMFormValuesConverterStrategy
+	
+	private static DefaultMapToDDMFormValuesConverterStrategy
 		_defaultMapToDDMFormValuesConverterStrategy =
 			new DefaultMapToDDMFormValuesConverterStrategy();
 
