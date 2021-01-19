@@ -112,7 +112,7 @@ const getValueForHidden = (value) => {
 		return moment(value).format('YYYY-MM-DD');
 	}
 
-	return null;
+	return '';
 };
 
 const DatePicker = ({
@@ -144,6 +144,16 @@ const DatePicker = ({
 	});
 
 	const {dateMask, inputMask} = getDateFormat(locale);
+	const [valueMoment, setValueMoment] = useState(moment(value, dateMask));
+
+	useEffect(() => {
+		if (!value) {
+			setValueMoment(null);
+		}
+		else {
+			setValueMoment(moment(value, dateMask));
+		}
+	}, [dateMask, value]);
 
 	useEffect(() => {
 		if (inputRef.current && inputMask && dateMask) {
@@ -155,9 +165,17 @@ const DatePicker = ({
 				pipe: createAutoCorrectedDatePipe(dateMask.toLowerCase()),
 				showMask: true,
 			});
-			maskInstance.current.update(inputRef.current.value);
+
+			if (valueMoment) {
+				maskInstance.current.update(
+					valueMoment.format(dateMask.toUpperCase())
+				);
+			}
+			else {
+				maskInstance.current.update('');
+			}
 		}
-	}, [inputMask, dateMask, inputRef]);
+	}, [dateMask, inputMask, inputRef, valueMoment]);
 
 	const handleNavigation = (date) => {
 		const currentYear = date.getFullYear();
