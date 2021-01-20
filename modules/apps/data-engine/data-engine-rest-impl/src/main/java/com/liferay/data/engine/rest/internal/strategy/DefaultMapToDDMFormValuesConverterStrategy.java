@@ -20,7 +20,6 @@ import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -56,15 +55,14 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 			List<DDMFormFieldValue> ddmFormFieldValues =
 				createDDMFormFieldValues(
 					(List<Object>)dataRecordValues.get(ddmFormField.getName()),
-					ddmFormField, ddmForm.getDefaultLocale(), locale);
+					ddmFormField);
 
 			ddmFormFieldValues.forEach(ddmFormValues::addDDMFormFieldValue);
 		}
 	}
 
 	protected List<DDMFormFieldValue> createDDMFormFieldValues(
-		List<Object> dataRecordValues, DDMFormField ddmFormField,
-		Locale defaultLocale, Locale locale) {
+		List<Object> dataRecordValues, DDMFormField ddmFormField) {
 
 		if (ListUtil.isEmpty(dataRecordValues)) {
 			return ListUtil.fromArray(
@@ -112,7 +110,7 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 							createDDMFormFieldValues(
 								(List<Object>)nestedDataRecordValues.get(
 									nestedDDMFormField.getName()),
-								nestedDDMFormField, defaultLocale, locale);
+								nestedDDMFormField);
 
 						nestedDDMFormFieldValues.forEach(
 							ddmFormFieldValue::addNestedDDMFormFieldValue);
@@ -125,15 +123,15 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 
 				LocalizedValue localizedValue = new LocalizedValue();
 
-				localizedValue.addString(
-					(Locale)GetterUtil.getObject(locale, defaultLocale),
-					String.valueOf(
-						localizedValues.get(
-							LanguageUtil.getLanguageId(
-								(Locale)GetterUtil.getObject(
-									locale, LocaleUtil.getSiteDefault())))));
+				for (Map.Entry<String, Object> key :
+						localizedValues.entrySet()) {
 
-				ddmFormFieldValue.setValue(localizedValue);
+					localizedValue.addString(
+						LocaleUtil.fromLanguageId(key.getKey()),
+						String.valueOf(localizedValues.get(key.getKey())));
+
+					ddmFormFieldValue.setValue(localizedValue);
+				}
 			}
 
 			ddmFormFieldValues.add(ddmFormFieldValue);
@@ -141,8 +139,8 @@ public class DefaultMapToDDMFormValuesConverterStrategy
 
 		return ddmFormFieldValues;
 	}
-	
-	private static DefaultMapToDDMFormValuesConverterStrategy
+
+	private static final DefaultMapToDDMFormValuesConverterStrategy
 		_defaultMapToDDMFormValuesConverterStrategy =
 			new DefaultMapToDDMFormValuesConverterStrategy();
 

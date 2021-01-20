@@ -27,8 +27,10 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -58,30 +60,6 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 	}
 
 	@Test
-	public void testCreateDDMFormFieldValueInvalidName() {
-		DDMFormField ddmFormField = _createDDMFormField("field1", "text", true);
-
-		List<DDMFormFieldValue> ddmFormFieldValues =
-			_defaultMapToDDMFormValuesConverterStrategy.
-				createDDMFormFieldValues(
-					HashMapBuilder.<String, Object>put(
-						"field2",
-						HashMapBuilder.put(
-							"en_US", "Value 2"
-						).put(
-							"pt_BR", "Valor 2"
-						).build()
-					).build(),
-					ddmFormField, null, null);
-
-		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
-
-		Assert.assertEquals("field1", ddmFormFieldValue.getName());
-
-		Assert.assertNull(ddmFormFieldValue.getValue());
-	}
-
-	@Test
 	public void testCreateDDMFormFieldValueNestedField() {
 		DDMFormField ddmFormField = _createDDMFormField(
 			"parent", "fieldset", true);
@@ -92,21 +70,27 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 		List<DDMFormFieldValue> ddmFormFieldValues =
 			_defaultMapToDDMFormValuesConverterStrategy.
 				createDDMFormFieldValues(
-					HashMapBuilder.<String, Object>put(
-						"parent",
+					ListUtil.fromArray(
 						HashMapBuilder.<String, Object>put(
-							"instanceId",
+							"instanceId", "parent"
+						).put(
+							"nestedFields",
 							HashMapBuilder.<String, Object>put(
 								"child",
-								HashMapBuilder.<String, Object>put(
-									"en_US", "Child Value 1"
-								).put(
-									"pt_BR", "Filho Valor 1"
-								).build()
+								ListUtil.fromArray(
+									HashMapBuilder.<String, Object>put(
+										"instanceId", "child"
+									).put(
+										"localizedValue",
+										HashMapBuilder.<String, Object>put(
+											"en_US", "Child Value 1"
+										).put(
+											"pt_BR", "Filho Valor 1"
+										).build()
+									).build())
 							).build()
-						).build()
-					).build(),
-					ddmFormField, null, null);
+						).build()),
+					ddmFormField);
 
 		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
 
@@ -130,7 +114,7 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 		LocalizedValue localizedValue = (LocalizedValue)value;
 
 		Assert.assertEquals(
-			"Child Value 1", localizedValue.getString(LocaleUtil.ENGLISH));
+			"Child Value 1", localizedValue.getString(LocaleUtil.US));
 		Assert.assertEquals(
 			"Filho Valor 1", localizedValue.getString(LocaleUtil.BRAZIL));
 	}
@@ -142,15 +126,18 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 		List<DDMFormFieldValue> ddmFormFieldValues =
 			_defaultMapToDDMFormValuesConverterStrategy.
 				createDDMFormFieldValues(
-					HashMapBuilder.<String, Object>put(
-						"field1",
-						HashMapBuilder.put(
-							"en_US", "Value 1"
+					ListUtil.fromArray(
+						HashMapBuilder.<String, Object>put(
+							"instanceId", StringUtil.randomString(8)
 						).put(
-							"pt_BR", "Valor 1"
-						).build()
-					).build(),
-					ddmFormField, null, null);
+							"localizedValue",
+							HashMapBuilder.put(
+								"en_US", "Value 1"
+							).put(
+								"pt_BR", "Valor 1"
+							).build()
+						).build()),
+					ddmFormField);
 
 		DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
 
@@ -299,18 +286,30 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 			MapToDDMFormValuesConverterUtil.toDDMFormValues(
 				HashMapBuilder.<String, Object>put(
 					"field1",
-					HashMapBuilder.put(
-						"en_US", "Value 1"
-					).put(
-						"pt_BR", "Valor 1"
-					).build()
+					ListUtil.fromArray(
+						HashMapBuilder.<String, Object>put(
+							"instanceId", StringUtil.randomString(8)
+						).put(
+							"localizedValue",
+							HashMapBuilder.put(
+								"en_US", "Value 1"
+							).put(
+								"pt_BR", "Valor 1"
+							).build()
+						).build())
 				).put(
 					"field2",
-					HashMapBuilder.put(
-						"en_US", "Value 2"
-					).put(
-						"pt_BR", "Valor 2"
-					).build()
+					ListUtil.fromArray(
+						HashMapBuilder.<String, Object>put(
+							"instanceId", StringUtil.randomString(8)
+						).put(
+							"localizedValue",
+							HashMapBuilder.put(
+								"en_US", "Value 2"
+							).put(
+								"pt_BR", "Valor 2"
+							).build()
+						).build())
 				).build(),
 				ddmForm, null);
 
@@ -369,18 +368,30 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 			MapToDDMFormValuesConverterUtil.toDDMFormValues(
 				HashMapBuilder.<String, Object>put(
 					"field1",
-					HashMapBuilder.put(
-						"en_US", "Value 1"
-					).put(
-						"pt_BR", "Valor 1"
-					).build()
+					ListUtil.fromArray(
+						HashMapBuilder.<String, Object>put(
+							"instanceId", StringUtil.randomString(8)
+						).put(
+							"localizedValue",
+							HashMapBuilder.put(
+								"en_US", "Value 1"
+							).put(
+								"pt_BR", "Valor 1"
+							).build()
+						).build())
 				).put(
 					"field2",
-					HashMapBuilder.put(
-						"en_US", "Value 2"
-					).put(
-						"pt_BR", "Valor 2"
-					).build()
+					ListUtil.fromArray(
+						HashMapBuilder.<String, Object>put(
+							"instanceId", StringUtil.randomString(8)
+						).put(
+							"localizedValue",
+							HashMapBuilder.put(
+								"en_US", "Value 2"
+							).put(
+								"pt_BR", "Valor 2"
+							).build()
+						).build())
 				).build(),
 				ddmForm, LocaleUtil.BRAZIL);
 
@@ -408,7 +419,7 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 		Set<Locale> availableLocales = localizedValue.getAvailableLocales();
 
 		Assert.assertEquals(
-			availableLocales.toString(), 1, availableLocales.size());
+			availableLocales.toString(), 2, availableLocales.size());
 
 		Assert.assertEquals(
 			"Valor 1", localizedValue.getString(LocaleUtil.BRAZIL));
@@ -426,7 +437,7 @@ public class DefaultMapToDDMFormValuesConverterStrategyTest
 		localizedValue = (LocalizedValue)value;
 
 		Assert.assertEquals(
-			availableLocales.toString(), 1, availableLocales.size());
+			availableLocales.toString(), 2, availableLocales.size());
 		Assert.assertEquals(
 			"Valor 2", localizedValue.getString(LocaleUtil.BRAZIL));
 	}
