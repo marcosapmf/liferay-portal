@@ -256,6 +256,17 @@ export default (state, action) => {
 				}
 			});
 
+			if (action.dataObject.id === state.dataObject.id) {
+				return {
+					...state,
+					dataObject: {
+						...state.dataObject,
+						dataDefinitionFields:
+							action.dataObject.dataDefinitionFields,
+					},
+				};
+			}
+
 			return {
 				...state,
 				dataObject: action.dataObject,
