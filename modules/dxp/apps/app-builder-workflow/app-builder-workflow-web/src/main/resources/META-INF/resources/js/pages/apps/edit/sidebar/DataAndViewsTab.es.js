@@ -247,7 +247,13 @@ export default function DataAndViewsTab({
 			type: 'custom',
 		});
 
-		openFormViewModal(id, defaultLanguageId, updateFormView);
+		openFormViewModal(
+			id,
+			defaultLanguageId,
+			updateFormView,
+			0,
+			updateDataObject
+		);
 	};
 
 	const AddButton = (props) => (

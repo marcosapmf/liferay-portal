@@ -101,7 +101,8 @@ export default ({
 		dataDefinitionId,
 		defaultLanguageId,
 		selectFormView,
-		dataLayoutId
+		dataLayoutId,
+		updateDataObject
 	) => {
 		const event = window.top?.Liferay.once(
 			'newFormViewCreated',
@@ -115,6 +116,10 @@ export default ({
 							formViews,
 							dataDefinition
 						);
+
+						if (updateDataObject) {
+							updateDataObject(dataDefinition);
+						}
 
 						dispatchConfig({
 							listItems: {
