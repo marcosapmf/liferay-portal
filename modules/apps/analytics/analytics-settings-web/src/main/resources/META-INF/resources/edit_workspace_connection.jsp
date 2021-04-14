@@ -111,6 +111,7 @@ if (analyticsConfiguration != null) {
 						<span class="lfr-btn-label"><liferay-ui:message key="go-to-workspace" /></span>
 
 						<liferay-ui:icon
+							cssClass="go-to-workspace"
 							icon="shortcut"
 							markupView="lexicon"
 						/>

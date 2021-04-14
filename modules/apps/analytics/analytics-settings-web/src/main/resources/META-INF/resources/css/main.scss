@@ -17,7 +17,6 @@
 			padding: 0;
 		}
 	}
-
 	.radio-buttons {
 		label {
 			cursor: pointer;
@@ -30,5 +29,12 @@
 		.radio {
 			margin-bottom: 0;
 		}
+	}
+	
+}
+
+.go-to-workspace {
+	.c-inner {
+		margin: 0px;
 	}
 }
