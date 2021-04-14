@@ -30,14 +30,13 @@ long structureClassNameId = PortalUtil.getClassNameId(DDMStructure.class);
 if ((classPK > 0) && (structureClassNameId == classNameId)) {
 	structure = DDMStructureLocalServiceUtil.getStructure(classPK);
 }
-
-SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearch();
 %>
 
 <liferay-util:include page="/navigation_bar.jsp" servletContext="<%= application %>" />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= ddmDisplayContext.getClearResultsURL() %>"
+	componentId="ddmTemplateManagementToolbar"
 	creationMenu="<%= ddmDisplayContext.getTemplateCreationMenu() %>"
 	disabled="<%= ddmDisplayContext.isDisabledManagementBar(DDMWebKeys.DYNAMIC_DATA_MAPPING_TEMPLATE) %>"
 	filterDropdownItems="<%= ddmDisplayContext.getFilterItemsDropdownItems() %>"
@@ -53,7 +52,7 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 <aui:form action="<%= ddmDisplayContext.getSelectTemplateSearchActionURL() %>" method="post" name="selectTemplateFm">
 	<clay:container-fluid>
 		<liferay-ui:search-container
-			searchContainer="<%= templateSearch %>"
+			searchContainer="<%= ddmDisplayContext.getTemplateSearch() %>"
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.dynamic.data.mapping.model.DDMTemplate"
@@ -66,7 +65,7 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="name"
 				>
 					<c:choose>
@@ -98,7 +97,7 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-jsp
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="description"
 					path="/template_description.jsp"
 				/>
@@ -117,9 +116,11 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 </aui:form>
 
 <aui:script>
-	Liferay.Util.focusFormField(
-		document.<portlet:namespace />searchForm.<portlet:namespace />keywords
-	);
+	Liferay.componentReady('ddmTemplateManagementToolbar').then(function () {
+		Liferay.Util.focusFormField(
+			document.<portlet:namespace />searchForm.<portlet:namespace />keywords
+		);
+	});
 </aui:script>
 
 <aui:script>

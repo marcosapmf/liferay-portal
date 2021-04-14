@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Blogs";
+
 	var pageName = "Blogs Page";
 
 	setUp {
@@ -506,7 +507,7 @@ definition {
 
 	@priority = "4"
 	test ImportBlogsCommentLAR {
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -619,15 +620,15 @@ definition {
 
 		Portlet.addPG(portletName = "Blogs");
 
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
-		Refresh();
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content 2",
 			entryTitle = "Blogs Entry Title 2");
+
+		Navigator.gotoPage(pageName = "Blogs Page");
 
 		BlogsEntry.removeViewPermissionsPG(
 			entryTitle = "Blogs Entry Title 2",
@@ -764,6 +765,7 @@ definition {
 	@priority = "3"
 	test ViewBlogsEntryFriendlyURLViaBlogsPortletAndRecentBloggers {
 		property test.name.skip.portal.instance = "BlogsUsecase#ViewBlogsEntryFriendlyURLViaBlogsPortletAndRecentBloggers";
+
 		var portalURL = PropsUtil.get("portal.url");
 		var entryAuthor = "Test Test";
 		var entryContent = "Blogs Entry Content";
@@ -1181,7 +1183,7 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			portlet = "Settings");
+			portlet = "Site Settings");
 
 		Site.addVirtualHostsURLCP(
 			privatePageVirtualHostURL = "www.baker.com",

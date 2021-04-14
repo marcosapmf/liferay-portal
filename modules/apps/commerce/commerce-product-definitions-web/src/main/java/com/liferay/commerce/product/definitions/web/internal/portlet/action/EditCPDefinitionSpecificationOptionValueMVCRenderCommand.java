@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editProductDefinitionSpecificationOptionValue"
+		"mvc.command.name=/cp_definitions/edit_cp_definition_specification_option_value"
 	},
 	service = MVCRenderCommand.class
 )
@@ -77,7 +77,7 @@ public class EditCPDefinitionSpecificationOptionValueMVCRenderCommand
 			throw new PortletException(exception);
 		}
 
-		return "/edit_definition_specification_option_value.jsp";
+		return "/edit_cp_definition_specification_option_value.jsp";
 	}
 
 	@Reference

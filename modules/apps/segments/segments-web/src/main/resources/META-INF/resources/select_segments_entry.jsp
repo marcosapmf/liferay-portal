@@ -20,7 +20,7 @@
 SelectSegmentsEntryDisplayContext selectSegmentsEntryDisplayContext = (SelectSegmentsEntryDisplayContext)request.getAttribute(SegmentsWebKeys.SELECT_SEGMENTS_ENTRY_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= selectSegmentsEntryDisplayContext.getClearResultsURL() %>"
 	componentId="selectSegmentsEntryManagementToolbar"
 	disabled="<%= selectSegmentsEntryDisplayContext.isDisabledManagementBar() %>"
@@ -34,7 +34,7 @@ SelectSegmentsEntryDisplayContext selectSegmentsEntryDisplayContext = (SelectSeg
 	sortingURL="<%= selectSegmentsEntryDisplayContext.getSortingURL() %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="selectSegmentsEntryFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectSegmentsEntryFm">
 	<liferay-ui:search-container
 		id="<%= selectSegmentsEntryDisplayContext.getSearchContainerId() %>"
 		searchContainer="<%= selectSegmentsEntryDisplayContext.getSearchContainer() %>"

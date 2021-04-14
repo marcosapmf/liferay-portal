@@ -20,20 +20,25 @@ import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.adaptive.media.web.internal.constants.AMPortletKeys;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
-import com.liferay.portal.kernel.servlet.SessionErrors;
-import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -101,7 +106,13 @@ public class EditImageConfigurationEntryMVCActionCommand
 			newUuid = ParamUtil.getString(actionRequest, "newUuid");
 		}
 
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			"content.Language", themeDisplay.getLocale(), getClass());
+
 		try {
+			String message = "";
+
 			if (amImageConfigurationEntryOptional.isPresent()) {
 				AMImageConfigurationEntry amImageConfigurationEntry =
 					amImageConfigurationEntryOptional.get();
@@ -123,14 +134,20 @@ public class EditImageConfigurationEntryMVCActionCommand
 						newUuid, properties);
 
 				if (autoModifiedUuid) {
-					SessionMessages.add(
-						actionRequest, "configurationEntryUpdatedAndIDRenamed",
-						amImageConfigurationEntry);
+					message = LanguageUtil.format(
+						resourceBundle,
+						"x-was-saved-successfully.-the-id-was-duplicated-and-" +
+							"renamed-to-x",
+						new String[] {
+							HtmlUtil.escape(
+								amImageConfigurationEntry.getName()),
+							amImageConfigurationEntry.getUUID()
+						});
 				}
 				else {
-					SessionMessages.add(
-						actionRequest, "configurationEntryUpdated",
-						amImageConfigurationEntry);
+					message = LanguageUtil.format(
+						resourceBundle, "x-was-saved-successfully",
+						amImageConfigurationEntry.getName());
 				}
 			}
 			else {
@@ -149,32 +166,58 @@ public class EditImageConfigurationEntryMVCActionCommand
 								themeDisplay.getCompanyId(),
 								amImageConfigurationEntry);
 
-					SessionMessages.add(
-						actionRequest, "highResolutionConfigurationEntryAdded",
-						new AMImageConfigurationEntry[] {
-							amImageConfigurationEntry,
-							highResolutionAMImageConfigurationEntry
+					message = LanguageUtil.format(
+						resourceBundle, "x-and-x-were-saved-successfully",
+						new String[] {
+							HtmlUtil.escape(
+								amImageConfigurationEntry.getName()),
+							HtmlUtil.escape(
+								highResolutionAMImageConfigurationEntry.
+									getName())
 						});
 				}
 				else {
 					if (autoModifiedUuid) {
-						SessionMessages.add(
-							actionRequest,
-							"configurationEntryAddedAndIDRenamed",
-							amImageConfigurationEntry);
+						message = LanguageUtil.format(
+							resourceBundle,
+							"x-was-saved-successfully.-the-id-was-duplicated-" +
+								"and-renamed-to-x",
+							new String[] {
+								HtmlUtil.escape(
+									amImageConfigurationEntry.getName()),
+								amImageConfigurationEntry.getUUID()
+							});
 					}
 					else {
-						SessionMessages.add(
-							actionRequest, "configurationEntryAdded",
-							amImageConfigurationEntry);
+						message = LanguageUtil.format(
+							resourceBundle, "x-was-saved-successfully",
+							amImageConfigurationEntry.getName());
 					}
 				}
 			}
+
+			jsonObject.put(
+				"message", message
+			).put(
+				"success", true
+			);
 		}
 		catch (AMImageConfigurationException amImageConfigurationException) {
-			SessionErrors.add(
-				actionRequest, amImageConfigurationException.getClass());
+			jsonObject.put(
+				"message",
+				LanguageUtil.get(
+					resourceBundle,
+					_errorMessagesMap.get(
+						amImageConfigurationException.getClass()))
+			).put(
+				"success", false
+			);
 		}
+
+		hideDefaultSuccessMessage(actionRequest);
+
+		JSONPortletResponseUtil.writeJSON(
+			actionRequest, actionResponse, jsonObject);
 	}
 
 	private AMImageConfigurationEntry _addHighResolutionConfigurationEntry(
@@ -241,6 +284,34 @@ public class EditImageConfigurationEntryMVCActionCommand
 
 		return false;
 	}
+
+	private static final Map<Class<? extends Exception>, String>
+		_errorMessagesMap =
+			HashMapBuilder.<Class<? extends Exception>, String>put(
+				AMImageConfigurationException.
+					DuplicateAMImageConfigurationNameException.class,
+				"a-configuration-with-this-name-already-exists"
+			).put(
+				AMImageConfigurationException.
+					DuplicateAMImageConfigurationUuidException.class,
+				"a-configuration-with-this-id-already-exists"
+			).put(
+				AMImageConfigurationException.InvalidHeightException.class,
+				"please-enter-a-max-height-value-larger-than-0"
+			).put(
+				AMImageConfigurationException.InvalidNameException.class,
+				"please-enter-a-valid-name"
+			).put(
+				AMImageConfigurationException.InvalidUuidException.class,
+				"please-enter-a-valid-identifier"
+			).put(
+				AMImageConfigurationException.InvalidWidthException.class,
+				"please-enter-a-max-width-value-larger-than-0"
+			).put(
+				AMImageConfigurationException.RequiredWidthOrHeightException.
+					class,
+				"please-enter-a-max-width-or-max-height-value-larger-than-0"
+			).build();
 
 	@Reference
 	private AMImageConfigurationHelper _amImageConfigurationHelper;

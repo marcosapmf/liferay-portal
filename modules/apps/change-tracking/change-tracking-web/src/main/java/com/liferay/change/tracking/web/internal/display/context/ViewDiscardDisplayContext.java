@@ -21,6 +21,7 @@ import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistr
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.UserTable;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -82,15 +83,24 @@ public class ViewDiscardDisplayContext {
 		}
 
 		return HashMapBuilder.<String, Object>put(
-			"ctEntries",
+			"ctEntriesJSONArray",
 			() -> {
 				JSONArray ctEntriesJSONArray =
 					JSONFactoryUtil.createJSONArray();
 
 				for (CTEntry ctEntry : ctEntries) {
+					ResourceURL dataURL = _renderResponse.createResourceURL();
+
+					dataURL.setResourceID(
+						"/change_tracking/get_entry_render_data");
+					dataURL.setParameter(
+						"ctEntryId", String.valueOf(ctEntry.getCtEntryId()));
+
 					ctEntriesJSONArray.put(
 						JSONUtil.put(
 							"ctEntryId", ctEntry.getCtEntryId()
+						).put(
+							"dataURL", dataURL.toString()
 						).put(
 							"description",
 							_ctDisplayRendererRegistry.getEntryDescription(
@@ -112,15 +122,6 @@ public class ViewDiscardDisplayContext {
 				return ctEntriesJSONArray;
 			}
 		).put(
-			"renderURL",
-			() -> {
-				ResourceURL renderURL = _renderResponse.createResourceURL();
-
-				renderURL.setResourceID("/publications/render_diff");
-
-				return renderURL.toString();
-			}
-		).put(
 			"spritemap", _themeDisplay.getPathThemeImages() + "/clay/icons.svg"
 		).put(
 			"typeNames",
@@ -129,9 +130,10 @@ public class ViewDiscardDisplayContext {
 		).put(
 			"userInfo",
 			DisplayContextUtil.getUserInfoJSONObject(
+				CTEntryTable.INSTANCE.userId.eq(UserTable.INSTANCE.userId),
+				CTEntryTable.INSTANCE, _themeDisplay, _userLocalService,
 				CTEntryTable.INSTANCE.ctEntryId.in(
-					ctEntryIds.toArray(new Long[0])),
-				_themeDisplay, _userLocalService)
+					ctEntryIds.toArray(new Long[0])))
 		).build();
 	}
 
@@ -144,6 +146,11 @@ public class ViewDiscardDisplayContext {
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/change_tracking/view_changes");
+		portletURL.setParameter(
+			"ctCollectionId", String.valueOf(_ctCollectionId));
+
 		return portletURL.toString();
 	}
 
@@ -151,7 +158,7 @@ public class ViewDiscardDisplayContext {
 		ActionURL submitURL = _renderResponse.createActionURL();
 
 		submitURL.setParameter(
-			ActionRequest.ACTION_NAME, "/publications/discard_changes");
+			ActionRequest.ACTION_NAME, "/change_tracking/discard_changes");
 		submitURL.setParameter("redirect", getRedirectURL());
 		submitURL.setParameter(
 			"ctCollectionId", String.valueOf(_ctCollectionId));

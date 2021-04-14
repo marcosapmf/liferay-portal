@@ -28,10 +28,12 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceListChanne
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -49,10 +51,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/price-list-channel.properties",
-	scope = ServiceScope.PROTOTYPE, service = PriceListChannelResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {NestedFieldSupport.class, PriceListChannelResource.class}
 )
 public class PriceListChannelResourceImpl
-	extends BasePriceListChannelResourceImpl {
+	extends BasePriceListChannelResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public void deletePriceListChannel(Long id) throws Exception {
@@ -143,13 +146,12 @@ public class PriceListChannelResourceImpl
 			Long id, PriceListChannel priceListChannel)
 		throws Exception {
 
-		CommercePriceList commercePriceList =
-			_commercePriceListService.getCommercePriceList(id);
-
 		CommercePriceListChannelRel commercePriceListChannelRel =
 			PriceListChannelUtil.addCommercePriceListChannelRel(
 				_commerceChannelService, _commercePriceListChannelRelService,
-				priceListChannel, commercePriceList, _serviceContextHelper);
+				priceListChannel,
+				_commercePriceListService.getCommercePriceList(id),
+				_serviceContextHelper);
 
 		return _toPriceListChannel(
 			commercePriceListChannelRel.getCommercePriceListChannelRelId());
@@ -161,16 +163,11 @@ public class PriceListChannelResourceImpl
 
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> {
-				CommercePriceList commercePriceList =
-					commercePriceListChannelRel.getCommercePriceList();
-
-				return addAction(
-					"UPDATE", commercePriceList.getCommercePriceListId(),
-					"deletePriceListChannel", commercePriceList.getUserId(),
-					"com.liferay.commerce.price.list.model.CommercePriceList",
-					commercePriceList.getGroupId());
-			}
+			addAction(
+				"UPDATE",
+				commercePriceListChannelRel.getCommercePriceListChannelRelId(),
+				"deletePriceListChannel",
+				_commercePriceListChannelRelModelResourcePermission)
 		).build();
 	}
 
@@ -211,6 +208,12 @@ public class PriceListChannelResourceImpl
 
 	@Reference
 	private CommerceChannelService _commerceChannelService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceListChannelRel)"
+	)
+	private ModelResourcePermission<CommercePriceListChannelRel>
+		_commercePriceListChannelRelModelResourcePermission;
 
 	@Reference
 	private CommercePriceListChannelRelService

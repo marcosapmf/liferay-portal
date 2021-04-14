@@ -32,24 +32,32 @@
 
 	<tbody>
 		<tr>
-			<td><clay:checkbox checked="<%= true %>" label="My Input" name="name" showLabel="<%= false %>" /></td>
+			<td><clay:checkbox checked="<%= true %>" name="name" /></td>
 			<td>On</td>
 		</tr>
 		<tr>
-			<td><clay:checkbox label="My Input" name="name" showLabel="<%= false %>" /></td>
+			<td><clay:checkbox name="name" /></td>
 			<td>Off</td>
 		</tr>
 		<tr>
-			<td><clay:checkbox checked="<%= true %>" disabled="<%= true %>" label="My Input" name="name" showLabel="<%= false %>" /></td>
+			<td><clay:checkbox checked="<%= true %>" cssClass="custom-css-class" id="customId" name="name" /></td>
+			<td>With custom class and id</td>
+		</tr>
+		<tr>
+			<td><clay:checkbox label="Checkbox with Label" name="checkboxWithLabel" /></td>
+			<td>With Label</td>
+		</tr>
+		<tr>
+			<td><clay:checkbox checked="<%= true %>" disabled="<%= true %>" name="name" /></td>
 			<td>On disabled</td>
 		</tr>
 		<tr>
-			<td><clay:checkbox disabled="<%= true %>" label="My Input" name="name" showLabel="<%= false %>" /></td>
+			<td><clay:checkbox disabled="<%= true %>" name="name" /></td>
 			<td>Off disabled</td>
 		</tr>
 		<tr>
-			<td><clay:checkbox indeterminate="<%= true %>" label="My Input" name="name" showLabel="<%= false %>" /></td>
-			<td>Checkbox Variable for multiple selection</td>
+			<td><clay:checkbox indeterminate="<%= true %>" name="name" /></td>
+			<td>Indeterminate</td>
 		</tr>
 	</tbody>
 </table>
@@ -103,6 +111,9 @@ for (int i = 0; i < 8; i++) {
 %>
 
 <clay:select
+	containerCssClass="custom-container-css-class"
+	cssClass="custom-css-class"
+	id="customId"
 	label="Regular Select Element"
 	name="name"
 	options="<%= selectOptions %>"
@@ -128,4 +139,26 @@ for (int i = 0; i < 8; i++) {
 	multiple="<%= true %>"
 	name="name"
 	options="<%= selectOptions %>"
+/>
+
+<h3>MULTISELECT</h3>
+
+<clay:multiselect
+	helpText="Help text is displayed here."
+	id="multiselect-1"
+	inputName="multiSelectInput1"
+	label="Multiselect 1"
+	multiselectLocator="<%= multiselectDisplayContext.getMultiselectLocator() %>"
+	selectedMultiselectItems="<%= multiselectDisplayContext.getSelectedMultiselectItemsWithCustomProperties() %>"
+	sourceMultiselectItems="<%= multiselectDisplayContext.getSourceMultiselectItemsWithCustomProperties() %>"
+/>
+
+<clay:multiselect
+	helpText="Help text is displayed here."
+	id="multiselect-2"
+	inputName="multiSelectInput2"
+	label="Multiselect with Custom Menu Renderer"
+	propsTransformer="js/ClaySampleMultiselectPropsTransformer"
+	selectedMultiselectItems="<%= multiselectDisplayContext.getSelectedMultiselectItems() %>"
+	sourceMultiselectItems="<%= multiselectDisplayContext.getSourceMultiselectItems() %>"
 />

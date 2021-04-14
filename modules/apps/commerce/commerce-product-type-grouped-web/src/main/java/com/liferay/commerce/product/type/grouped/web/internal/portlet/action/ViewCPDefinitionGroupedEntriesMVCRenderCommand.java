@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=viewCPDefinitionGroupedEntries"
+		"mvc.command.name=/cp_definitions/view_cp_definition_grouped_entries"
 	},
 	service = MVCRenderCommand.class
 )
@@ -57,7 +57,7 @@ public class ViewCPDefinitionGroupedEntriesMVCRenderCommand
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(
-				"/view_definition_grouped_entries.jsp");
+				"/view_cp_definition_grouped_entries.jsp");
 
 		try {
 			HttpServletRequest httpServletRequest =

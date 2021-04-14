@@ -332,8 +332,7 @@ definition {
 
 		WebContentStructures.addCP(structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -1255,7 +1254,6 @@ definition {
 		}
 
 		task ("Add a page with category via json addLayout") {
-
 			JSONLayout.addPublicLayout(
 				assetCategoryIds = "${categoryId}",
 				groupName = "Test Site Name",

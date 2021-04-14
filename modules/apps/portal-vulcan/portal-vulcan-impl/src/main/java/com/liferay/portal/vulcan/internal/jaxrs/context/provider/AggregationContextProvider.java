@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.CollectionEntityField;
+import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
@@ -63,23 +64,38 @@ public class AggregationContextProvider
 			aggregation.getAggregationTerms();
 
 		for (String aggregationTerm : aggregationTermsArray) {
-			if (entityFieldsMap.containsKey(aggregationTerm)) {
-				EntityField entityField = entityFieldsMap.get(aggregationTerm);
+			String[] aggregationTermParts = aggregationTerm.split("/");
 
-				if (EntityField.Type.COLLECTION.equals(entityField.getType())) {
-					CollectionEntityField collectionEntityField =
-						(CollectionEntityField)entityField;
+			if (!entityFieldsMap.containsKey(aggregationTermParts[0])) {
+				aggregationTerms.put(aggregationTerm, aggregationTerm);
 
-					entityField = collectionEntityField.getEntityField();
-				}
+				continue;
+			}
 
+			EntityField entityField = entityFieldsMap.get(
+				aggregationTermParts[0]);
+
+			if (EntityField.Type.COLLECTION.equals(entityField.getType())) {
+				CollectionEntityField collectionEntityField =
+					(CollectionEntityField)entityField;
+
+				entityField = collectionEntityField.getEntityField();
+			}
+			else if (EntityField.Type.COMPLEX.equals(entityField.getType())) {
+				ComplexEntityField complexEntityField =
+					(ComplexEntityField)entityField;
+
+				Map<String, EntityField> complexEntityFieldsMap =
+					complexEntityField.getEntityFieldsMap();
+
+				entityField = complexEntityFieldsMap.get(
+					aggregationTermParts[1]);
+			}
+
+			if (entityField != null) {
 				aggregationTerms.put(
 					aggregationTerm,
-					entityField.getFilterableName(
-						acceptLanguage.getPreferredLocale()));
-			}
-			else {
-				aggregationTerms.put(aggregationTerm, aggregationTerm);
+					_getAggregationTermValue(acceptLanguage, entityField));
 			}
 		}
 
@@ -101,6 +117,19 @@ public class AggregationContextProvider
 		catch (Exception exception) {
 			throw new ServerErrorException(500, exception);
 		}
+	}
+
+	private String _getAggregationTermValue(
+		AcceptLanguage acceptLanguage, EntityField entityField) {
+
+		String aggregationTermValue = entityField.getFilterableName(
+			acceptLanguage.getPreferredLocale());
+
+		if (aggregationTermValue.startsWith("expando")) {
+			aggregationTermValue += ".raw";
+		}
+
+		return aggregationTermValue;
 	}
 
 	private final Language _language;

@@ -155,7 +155,10 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 					branchingPrivate, serviceContext);
 			}
 			catch (Exception exception) {
-				SessionErrors.add(actionRequest, Exception.class, exception);
+				SessionErrors.add(
+					actionRequest, exception.getClass(), exception);
+
+				return;
 			}
 		}
 		else if (stagingType == StagingConstants.TYPE_REMOTE_STAGING) {
@@ -191,11 +194,14 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 					liveGroup, overrideRemoteSiteURL, remoteSiteURL);
 			}
 			catch (Exception exception) {
-				SessionErrors.add(actionRequest, Exception.class, exception);
+				SessionErrors.add(
+					actionRequest, exception.getClass(), exception);
 
 				if (_log.isDebugEnabled()) {
 					_log.debug(exception, exception);
 				}
+
+				return;
 			}
 		}
 		else if (stagingType == StagingConstants.TYPE_NOT_STAGED) {

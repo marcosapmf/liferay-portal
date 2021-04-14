@@ -15,6 +15,7 @@
 package com.liferay.layout.admin.web.internal.servlet.taglib.clay;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -39,19 +40,23 @@ public class SelectStylebookLayoutVerticalCard implements VerticalCard {
 	}
 
 	@Override
-	public Map<String, String> getData() {
-		return HashMapBuilder.put(
-			"name", _styleBookEntry.getName()
-		).put(
-			"styleBookEntryId",
-			String.valueOf(_styleBookEntry.getStyleBookEntryId())
-		).build();
+	public String getCssClass() {
+		return "select-master-layout-option card-interactive " +
+			"card-interactive-secondary";
 	}
 
 	@Override
-	public String getElementClasses() {
-		return "select-master-layout-option card-interactive " +
-			"card-interactive-primary";
+	public Map<String, String> getDynamicAttributes() {
+		return HashMapBuilder.put(
+			"data-name", _styleBookEntry.getName()
+		).put(
+			"data-styleBookEntryId",
+			String.valueOf(_styleBookEntry.getStyleBookEntryId())
+		).put(
+			"role", "button"
+		).put(
+			"tabIndex", "0"
+		).build();
 	}
 
 	@Override
@@ -62,6 +67,11 @@ public class SelectStylebookLayoutVerticalCard implements VerticalCard {
 	@Override
 	public String getImageSrc() {
 		return _styleBookEntry.getImagePreviewURL(_themeDisplay);
+	}
+
+	@Override
+	public String getSubtitle() {
+		return StringPool.DASH;
 	}
 
 	@Override

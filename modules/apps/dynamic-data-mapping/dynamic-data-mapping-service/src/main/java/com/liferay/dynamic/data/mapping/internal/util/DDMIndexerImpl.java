@@ -15,9 +15,9 @@
 package com.liferay.dynamic.data.mapping.internal.util;
 
 import com.liferay.dynamic.data.mapping.configuration.DDMIndexerConfiguration;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -50,9 +50,9 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.SortedArrayList;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.search.engine.SearchEngineInformation;
 
 import java.io.Serializable;
 
@@ -60,10 +60,11 @@ import java.math.BigDecimal;
 
 import java.text.Format;
 
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.osgi.service.component.annotations.Activate;
@@ -302,7 +303,7 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 					String type = field.getType();
 
-					if (type.equals(DDMImpl.TYPE_SELECT)) {
+					if (type.equals(DDMFormFieldTypeConstants.SELECT)) {
 						JSONArray jsonArray = JSONFactoryUtil.createJSONArray(
 							valueString);
 
@@ -314,7 +315,7 @@ public class DDMIndexerImpl implements DDMIndexer {
 						sb.append(StringPool.SPACE);
 					}
 					else {
-						if (type.equals(DDMImpl.TYPE_DDM_TEXT_HTML)) {
+						if (type.equals(DDMFormFieldTypeConstants.RICH_TEXT)) {
 							valueString = HtmlUtil.extractText(valueString);
 						}
 
@@ -358,10 +359,6 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 	@Override
 	public boolean isLegacyDDMIndexFieldsEnabled() {
-		if (Objects.equals(searchEngineInformation.getVendorString(), "Solr")) {
-			return true;
-		}
-
 		return _ddmIndexerConfiguration.enableLegacyDDMIndexFields();
 	}
 
@@ -413,7 +410,9 @@ public class DDMIndexerImpl implements DDMIndexer {
 			Serializable sortableValue, Serializable value)
 		throws PortalException {
 
-		if (value instanceof BigDecimal) {
+		if (value == null) {
+		}
+		else if (value instanceof BigDecimal) {
 			document.addNumberSortable(name, (BigDecimal)value);
 		}
 		else if (value instanceof BigDecimal[]) {
@@ -483,17 +482,17 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 			String type = field.getType();
 
-			if (type.equals(DDMFormFieldType.GEOLOCATION)) {
+			if (type.equals(DDMFormFieldTypeConstants.GEOLOCATION)) {
 				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 					valueString);
 
-				double latitude = jsonObject.getDouble("latitude", 0);
-				double longitude = jsonObject.getDouble("longitude", 0);
+				double latitude = jsonObject.getDouble("lat", 0);
+				double longitude = jsonObject.getDouble("lng", 0);
 
 				document.addGeoLocation(
 					name.concat("_geolocation"), latitude, longitude);
 			}
-			else if (type.equals(DDMImpl.TYPE_SELECT)) {
+			else if (type.equals(DDMFormFieldTypeConstants.SELECT)) {
 				document.addKeyword(
 					_getSortableFieldName(name),
 					ArrayUtil.toStringArray(
@@ -504,18 +503,18 @@ public class DDMIndexerImpl implements DDMIndexer {
 						JSONFactoryUtil.createJSONArray(valueString)));
 			}
 			else {
-				if (type.equals(DDMImpl.TYPE_DDM_TEXT_HTML)) {
+				if (type.equals(DDMFormFieldTypeConstants.RICH_TEXT)) {
 					valueString = HtmlUtil.extractText(valueString);
+					sortableValueString = HtmlUtil.extractText(
+						sortableValueString);
 				}
 
+				_createSortableTextField(document, name, sortableValueString);
+
 				if (indexType.equals("keyword")) {
-					document.addKeyword(
-						_getSortableFieldName(name), sortableValueString);
 					document.addKeyword(name, valueString);
 				}
 				else {
-					document.addText(
-						_getSortableFieldName(name), sortableValueString);
 					document.addText(name, valueString);
 				}
 			}
@@ -527,6 +526,14 @@ public class DDMIndexerImpl implements DDMIndexer {
 			String indexType, Locale locale, String name, Serializable value)
 		throws PortalException {
 
+		com.liferay.portal.kernel.search.Field ddmField =
+			new com.liferay.portal.kernel.search.Field(StringPool.BLANK);
+
+		List<com.liferay.portal.kernel.search.Field> sortedFields =
+			new SortedArrayList<>(
+				Comparator.comparing(
+					com.liferay.portal.kernel.search.Field::getName));
+
 		Document document = new DocumentImpl();
 
 		String valueFieldName = getValueFieldName(indexType, locale);
@@ -535,22 +542,19 @@ public class DDMIndexerImpl implements DDMIndexer {
 			document, ddmStructureField, indexType, valueFieldName,
 			_getSortableValue(ddmFormField, locale, value), value);
 
-		Map<String, com.liferay.portal.kernel.search.Field> fields =
+		Map<String, com.liferay.portal.kernel.search.Field> documentFields =
 			document.getFields();
 
-		com.liferay.portal.kernel.search.Field ddmField =
-			new com.liferay.portal.kernel.search.Field("");
+		sortedFields.addAll(documentFields.values());
 
-		ddmField.addField(
+		sortedFields.add(
 			new com.liferay.portal.kernel.search.Field(DDM_FIELD_NAME, name));
 
-		ddmField.addField(
+		sortedFields.add(
 			new com.liferay.portal.kernel.search.Field(
 				DDM_VALUE_FIELD_NAME, valueFieldName));
 
-		for (com.liferay.portal.kernel.search.Field field : fields.values()) {
-			ddmField.addField(field);
-		}
+		sortedFields.forEach(ddmField::addField);
 
 		return ddmField;
 	}
@@ -614,8 +618,22 @@ public class DDMIndexerImpl implements DDMIndexer {
 		return new Fields();
 	}
 
-	@Reference
-	protected SearchEngineInformation searchEngineInformation;
+	private void _createSortableTextField(
+		Document document, String name, String sortableValueString) {
+
+		if (Validator.isNull(sortableValueString)) {
+			return;
+		}
+
+		if (sortableValueString.length() >
+				_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH) {
+
+			sortableValueString = sortableValueString.substring(
+				0, _SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH);
+		}
+
+		document.addKeyword(_getSortableFieldName(name), sortableValueString);
+	}
 
 	private String _getSortableFieldName(String name) {
 		return com.liferay.portal.kernel.search.Field.getSortableFieldName(
@@ -624,6 +642,10 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 	private String _getSortableValue(
 		DDMFormField ddmFormField, Locale locale, Serializable value) {
+
+		if (Validator.isNull(value)) {
+			return null;
+		}
 
 		String sortableValue = String.valueOf(value);
 
@@ -642,6 +664,11 @@ public class DDMIndexerImpl implements DDMIndexer {
 
 		return sortableValue;
 	}
+
+	private static final int _SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH =
+		GetterUtil.getInteger(
+			PropsUtil.get(
+				PropsKeys.INDEX_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH));
 
 	private static final Log _log = LogFactoryUtil.getLog(DDMIndexerImpl.class);
 

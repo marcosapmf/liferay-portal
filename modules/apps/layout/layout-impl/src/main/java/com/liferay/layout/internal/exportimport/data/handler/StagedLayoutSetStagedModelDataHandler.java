@@ -213,7 +213,8 @@ public class StagedLayoutSetStagedModelDataHandler
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to delete layout with UUID " + layoutUUID);
+							"Unable to delete layout with UUID " + layoutUUID,
+							exception);
 					}
 				}
 			}
@@ -725,22 +726,16 @@ public class StagedLayoutSetStagedModelDataHandler
 		UnicodeProperties settingsUnicodeProperties =
 			layoutSet.getSettingsProperties();
 
-		String mergeFailFriendlyURLLayouts =
-			settingsUnicodeProperties.getProperty(
-				Sites.MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
+		settingsUnicodeProperties.setProperty(
+			Sites.LAST_MERGE_TIME, String.valueOf(lastMergeTime));
 
-		if (Validator.isNull(mergeFailFriendlyURLLayouts)) {
-			settingsUnicodeProperties.setProperty(
-				Sites.LAST_MERGE_TIME, String.valueOf(lastMergeTime));
+		long lastMergeVersion = MapUtil.getLong(
+			portletDataContext.getParameterMap(), "lastMergeVersion");
 
-			long lastMergeVersion = MapUtil.getLong(
-				portletDataContext.getParameterMap(), "lastMergeVersion");
+		settingsUnicodeProperties.setProperty(
+			Sites.LAST_MERGE_VERSION, String.valueOf(lastMergeVersion));
 
-			settingsUnicodeProperties.setProperty(
-				Sites.LAST_MERGE_VERSION, String.valueOf(lastMergeVersion));
-
-			_layoutSetLocalService.updateLayoutSet(layoutSet);
-		}
+		_layoutSetLocalService.updateLayoutSet(layoutSet);
 	}
 
 	protected void updateLayoutPriorities(

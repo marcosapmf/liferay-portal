@@ -23,8 +23,8 @@ LocalEntityManager.CertificateUsage certificateUsage = LocalEntityManager.Certif
 
 GeneralTabDefaultViewDisplayContext.X509CertificateStatus x509CertificateStatus = generalTabDefaultViewDisplayContext.getX509CertificateStatus(certificateUsage);
 
-boolean certificateAuthNeeded = x509CertificateStatus.getStatus() == GeneralTabDefaultViewDisplayContext.X509CertificateStatus.Status.SAML_X509_CERTIFICATE_AUTH_NEEDED;
 X509Certificate x509Certificate = x509CertificateStatus.getX509Certificate();
+
 String deleteCertificatePrompt = UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this-certificate-from-the-keystore");
 String introKey = StringPool.BLANK;
 %>
@@ -47,7 +47,7 @@ String introKey = StringPool.BLANK;
 </c:choose>
 
 <portlet:renderURL copyCurrentRenderParameters="<%= false %>" var="replaceCertificateURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcRenderCommandName" value="/admin/updateCertificate" />
+	<portlet:param name="mvcRenderCommandName" value="/admin/update_certificate" />
 	<portlet:param name="<%= Constants.CMD %>" value="replace" />
 	<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
 </portlet:renderURL>
@@ -56,7 +56,7 @@ String introKey = StringPool.BLANK;
 	<%@ include file="/admin/certificate_info.jspf" %>
 </c:if>
 
-<portlet:actionURL name="/admin/updateCertificate" var="deleteCertificateURL">
+<portlet:actionURL name="/admin/update_certificate" var="deleteCertificateURL">
 	<portlet:param name="<%= Constants.CMD %>" value="delete" />
 	<portlet:param name="tabs1" value="general" />
 	<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
@@ -64,7 +64,7 @@ String introKey = StringPool.BLANK;
 
 <c:choose>
 	<c:when test="<%= x509Certificate != null %>">
-		<portlet:resourceURL id="/admin/downloadCertificate" var="downloadCertificateURL">
+		<portlet:resourceURL id="/admin/download_certificate" var="downloadCertificateURL">
 			<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
 		</portlet:resourceURL>
 
@@ -84,9 +84,9 @@ String introKey = StringPool.BLANK;
 			<liferay-ui:message key="entity-id-must-be-set-before-private-key-and-certificate-can-be-generated" />
 		</div>
 	</c:when>
-	<c:when test="<%= certificateAuthNeeded %>">
+	<c:when test="<%= x509CertificateStatus.getStatus() == GeneralTabDefaultViewDisplayContext.X509CertificateStatus.Status.SAML_X509_CERTIFICATE_AUTH_NEEDED %>">
 		<portlet:renderURL copyCurrentRenderParameters="<%= false %>" var="authCertificateURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-			<portlet:param name="mvcRenderCommandName" value="/admin/updateCertificate" />
+			<portlet:param name="mvcRenderCommandName" value="/admin/update_certificate" />
 			<portlet:param name="<%= Constants.CMD %>" value="auth" />
 			<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
 		</portlet:renderURL>

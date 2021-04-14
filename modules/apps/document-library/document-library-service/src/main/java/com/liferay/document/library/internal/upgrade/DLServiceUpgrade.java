@@ -14,7 +14,6 @@
 
 package com.liferay.document.library.internal.upgrade;
 
-import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
 import com.liferay.document.library.internal.upgrade.v1_0_0.UpgradeDocumentLibrary;
 import com.liferay.document.library.internal.upgrade.v1_0_1.UpgradeDLConfiguration;
@@ -23,6 +22,7 @@ import com.liferay.document.library.internal.upgrade.v1_0_2.UpgradeDLFileShortcu
 import com.liferay.document.library.internal.upgrade.v1_1_0.UpgradeSchema;
 import com.liferay.document.library.internal.upgrade.v1_1_2.UpgradeDLFileEntryType;
 import com.liferay.document.library.internal.upgrade.v2_0_0.UpgradeCompanyId;
+import com.liferay.document.library.internal.upgrade.v3_2_1.UpgradeDDMStructureLink;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.store.Store;
 import com.liferay.portal.configuration.upgrade.PrefsPropsToConfigurationUpgradeHelper;
@@ -75,8 +75,8 @@ public class DLServiceUpgrade implements UpgradeStepRegistrator {
 		registry.register(
 			"3.0.0", "3.0.1",
 			new UpgradeDiscussionSubscriptionClassName(
-				_assetEntryLocalService, _classNameLocalService,
-				_subscriptionLocalService, DLFileEntry.class.getName(),
+				_classNameLocalService, _subscriptionLocalService,
+				DLFileEntry.class.getName(),
 				UpgradeDiscussionSubscriptionClassName.DeletionMode.UPDATE));
 
 		registry.register(
@@ -90,10 +90,19 @@ public class DLServiceUpgrade implements UpgradeStepRegistrator {
 
 			},
 			new UpgradeCTModel("DLFileVersionPreview"));
-	}
 
-	@Reference
-	private AssetEntryLocalService _assetEntryLocalService;
+		registry.register(
+			"3.1.0", "3.2.0",
+			new com.liferay.document.library.internal.upgrade.v3_2_0.
+				UpgradeSchema(),
+			new com.liferay.document.library.internal.upgrade.v3_2_0.
+				UpgradeStorageQuota());
+
+		registry.register(
+			"3.2.0", "3.2.1", new UpgradeDDMStructureLink(),
+			new com.liferay.document.library.internal.upgrade.v3_2_1.
+				UpgradeDLFileEntryType());
+	}
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;

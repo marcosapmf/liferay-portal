@@ -34,7 +34,7 @@ export default ({
 		Liferay.Util.PortletURL.createRenderURL(basePortletURL, {
 			dataDefinitionId,
 			dataLayoutId: item.id,
-			mvcRenderCommandName: '/edit_form_view',
+			mvcRenderCommandName: '/app_builder/edit_form_view',
 		});
 
 	const handleEditItem = (item) => {
@@ -52,7 +52,7 @@ export default ({
 		{
 			key: 'dateCreated',
 			sortable: true,
-			value: Liferay.Language.get('create-date'),
+			value: Liferay.Language.get('created-date'),
 		},
 		{
 			asc: false,
@@ -68,7 +68,7 @@ export default ({
 
 	const addURL = Liferay.Util.PortletURL.createRenderURL(basePortletURL, {
 		dataDefinitionId,
-		mvcRenderCommandName: '/edit_form_view',
+		mvcRenderCommandName: '/app_builder/edit_form_view',
 	});
 
 	return (

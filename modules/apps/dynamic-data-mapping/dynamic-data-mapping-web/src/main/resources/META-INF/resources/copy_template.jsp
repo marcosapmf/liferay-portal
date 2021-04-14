@@ -30,11 +30,11 @@ DDMTemplateVersion templateVersion = template.getTemplateVersion();
 boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
 %>
 
-<portlet:actionURL name="copyTemplate" var="copyTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/copy_template" var="copyTemplateURL">
 	<portlet:param name="mvcPath" value="/copy_template.jsp" />
 </portlet:actionURL>
 
-<aui:form action="<%= copyTemplateURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= copyTemplateURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource) %>" />
 
 	<aui:input name="templateId" type="hidden" value="<%= String.valueOf(templateId) %>" />
@@ -45,12 +45,10 @@ boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
 	<c:if test="<%= showBackURL && ddmDisplay.isShowBackURLInTitleBar() %>">
 
 		<%
-		String title = LanguageUtil.get(request, "copy-template");
-
 		portletDisplay.setShowBackIcon(true);
 		portletDisplay.setURLBack(ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource));
 
-		renderResponse.setTitle(title);
+		renderResponse.setTitle(LanguageUtil.get(request, "copy-template"));
 		%>
 
 	</c:if>

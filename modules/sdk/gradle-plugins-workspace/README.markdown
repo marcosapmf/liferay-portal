@@ -4,7 +4,7 @@ A Liferay Workspace is a generated environment that is built to hold and manage
 your Liferay projects. This workspace is intended to aid in the management of
 Liferay projects by providing various build scripts and configured properties.
 
-The plugin has been successfully tested with Gradle 5.6.4.
+The plugin has been successfully tested with Gradle 5.6.4 and 6.6.1.
 
 ## Usage
 
@@ -13,7 +13,7 @@ To use the plugin, include it in your `settings.gradle`:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.workspace", version: "3.0.11"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.workspace", version: "3.4.1"
 	}
 
 	repositories {

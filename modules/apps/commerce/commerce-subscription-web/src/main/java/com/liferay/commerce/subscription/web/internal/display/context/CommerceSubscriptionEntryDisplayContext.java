@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
@@ -65,22 +65,25 @@ public class CommerceSubscriptionEntryDisplayContext {
 	public CommerceSubscriptionEntryDisplayContext(
 		CommercePaymentMethodGroupRelLocalService
 			commercePaymentMethodGroupRelLocalService,
-		CommerceSubscriptionEntryLocalService commerceSubscriptionEntryService,
+		CommerceSubscriptionEntryLocalService
+			commerceSubscriptionEntryLocalService,
 		CommerceOrderItemLocalService commerceOrderItemLocalService,
 		CPSubscriptionTypeJSPContributorRegistry
 			cpSubscriptionTypeJSPContributorRegistry,
 		CPSubscriptionTypeRegistry cpSubscriptionTypeRegistry,
-		HttpServletRequest httpServletRequest) {
+		HttpServletRequest httpServletRequest,
+		PortletResourcePermission portletResourcePermission) {
 
 		_commercePaymentMethodGroupRelLocalService =
 			commercePaymentMethodGroupRelLocalService;
 		_commerceSubscriptionEntryLocalService =
-			commerceSubscriptionEntryService;
+			commerceSubscriptionEntryLocalService;
 		_commerceOrderItemLocalService = commerceOrderItemLocalService;
 		_cpSubscriptionTypeJSPContributorRegistry =
 			cpSubscriptionTypeJSPContributorRegistry;
 		_cpSubscriptionTypeRegistry = cpSubscriptionTypeRegistry;
 		_httpServletRequest = httpServletRequest;
+		_portletResourcePermission = portletResourcePermission;
 
 		_cpRequestHelper = new CPRequestHelper(httpServletRequest);
 	}
@@ -202,7 +205,9 @@ public class CommerceSubscriptionEntryDisplayContext {
 			_httpServletRequest, themeDisplay.getScopeGroup(),
 			CommerceOrder.class.getName(), PortletProvider.Action.MANAGE);
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceOrder");
+		portletURL.setParameter(
+			"mvcRenderCommandName",
+			"/commerce_open_order_content/edit_commerce_order");
 		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
 		portletURL.setParameter("commerceOrderId", orderId);
 
@@ -342,7 +347,9 @@ public class CommerceSubscriptionEntryDisplayContext {
 
 		PortletURL portletURL = liferayPortletResponse.createActionURL();
 
-		portletURL.setParameter(ActionRequest.ACTION_NAME, "editCommerceOrder");
+		portletURL.setParameter(
+			ActionRequest.ACTION_NAME,
+			"/commerce_open_order_content/edit_commerce_order");
 		portletURL.setParameter(Constants.CMD, ActionKeys.UPDATE);
 		portletURL.setParameter(
 			"commerceSubscriptionEntryId",
@@ -354,8 +361,8 @@ public class CommerceSubscriptionEntryDisplayContext {
 	}
 
 	public boolean hasManageCommerceSubscriptionEntryPermission() {
-		return PortalPermissionUtil.contains(
-			_cpRequestHelper.getPermissionChecker(),
+		return _portletResourcePermission.contains(
+			_cpRequestHelper.getPermissionChecker(), null,
 			CommerceActionKeys.MANAGE_COMMERCE_SUBSCRIPTIONS);
 	}
 
@@ -387,5 +394,6 @@ public class CommerceSubscriptionEntryDisplayContext {
 		_cpSubscriptionTypeJSPContributorRegistry;
 	private final CPSubscriptionTypeRegistry _cpSubscriptionTypeRegistry;
 	private final HttpServletRequest _httpServletRequest;
+	private final PortletResourcePermission _portletResourcePermission;
 
 }

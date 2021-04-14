@@ -25,23 +25,23 @@ import java.util.TreeSet;
 public class PortalReleaseJob extends BasePortalReleaseJob {
 
 	public PortalReleaseJob(
-		String jobName, String portalBranchName, BuildProfile buildProfile,
+		String jobName, BuildProfile buildProfile, String portalBranchName,
 		String testSuiteName) {
 
-		super(jobName, portalBranchName, buildProfile, testSuiteName);
-	}
-
-	@Override
-	public Set<String> getBatchNames() {
-		Set<String> testBatchNames = super.getBatchNames();
-
-		testBatchNames.addAll(_getOptionalBatchNames());
-
-		return testBatchNames;
+		super(jobName, buildProfile, portalBranchName, testSuiteName);
 	}
 
 	public void setPortalReleaseRef(String portalReleaseRef) {
 		_portalReleaseRef = portalReleaseRef;
+	}
+
+	@Override
+	protected Set<String> getRawBatchNames() {
+		Set<String> batchNames = super.getRawBatchNames();
+
+		batchNames.addAll(_getOptionalBatchNames());
+
+		return batchNames;
 	}
 
 	private Set<String> _getOptionalBatchNames() {
@@ -58,6 +58,9 @@ public class PortalReleaseJob extends BasePortalReleaseJob {
 				JenkinsResultsParserUtil.getProperty(
 					jobProperties, "test.batch.names.optional", false,
 					_portalReleaseRef)));
+
+		BuildProfile buildProfile = getBuildProfile();
+
 		batchNames.addAll(
 			getSetFromString(
 				JenkinsResultsParserUtil.getProperty(

@@ -329,11 +329,18 @@ public class DDMHelperImpl implements DDMHelper {
 			DDMFormField ddmFormField = _getDDMFormField(
 				cpDefinitionOptionRel, cpDefinitionOptionValueRels, locale);
 
-			if (!optional) {
-				ddmFormField.setRequired(
-					_isDDMFormFieldRequired(
-						cpDefinitionOptionRel, ignoreSKUCombinations,
-						publicStore));
+			if (publicStore) {
+				_setPredefinedValue(ddmFormField, cpDefinitionOptionRel);
+
+				if (!optional) {
+					ddmFormField.setRequired(
+						_isDDMFormFieldRequired(
+							cpDefinitionOptionRel, ignoreSKUCombinations,
+							publicStore));
+				}
+			}
+			else {
+				ddmFormField.setRequired(!optional);
 			}
 
 			ddmForm.addDDMFormField(ddmFormField);
@@ -370,26 +377,6 @@ public class DDMHelperImpl implements DDMHelper {
 			cpDefinitionOptionValueRels, locale);
 
 		ddmFormField.setDDMFormFieldOptions(ddmFormFieldOptions);
-
-		CPDefinitionOptionValueRel preselectedCPDefinitionOptionValueRel =
-			cpDefinitionOptionRel.fetchPreselectedCPDefinitionOptionValueRel();
-
-		if (preselectedCPDefinitionOptionValueRel != null) {
-			ddmFormField.setPredefinedValue(
-				_getDDMFormFieldPredefinedValue(
-					ddmFormFieldOptions,
-					_isArrayValueCPDefinitionOptionRelFieldType(
-						cpDefinitionOptionRel),
-					preselectedCPDefinitionOptionValueRel.getKey()));
-		}
-		else if (cpDefinitionOptionRel.isSkuContributor()) {
-			ddmFormField.setPredefinedValue(
-				_getDDMFormFieldPredefinedValue(
-					ddmFormFieldOptions,
-					_isArrayValueCPDefinitionOptionRelFieldType(
-						cpDefinitionOptionRel),
-					null));
-		}
 
 		return ddmFormField;
 	}
@@ -537,6 +524,33 @@ public class DDMHelperImpl implements DDMHelper {
 		}
 
 		return _ddmFormRenderer.render(ddmForm, ddmFormRenderingContext);
+	}
+
+	private void _setPredefinedValue(
+		DDMFormField ddmFormField,
+		CPDefinitionOptionRel cpDefinitionOptionRel) {
+
+		CPDefinitionOptionValueRel preselectedCPDefinitionOptionValueRel =
+			cpDefinitionOptionRel.fetchPreselectedCPDefinitionOptionValueRel();
+
+		String predefinedValueKey = null;
+
+		if (preselectedCPDefinitionOptionValueRel != null) {
+			predefinedValueKey = preselectedCPDefinitionOptionValueRel.getKey();
+		}
+
+		if (Validator.isNull(predefinedValueKey) &&
+			!cpDefinitionOptionRel.isSkuContributor()) {
+
+			return;
+		}
+
+		ddmFormField.setPredefinedValue(
+			_getDDMFormFieldPredefinedValue(
+				ddmFormField.getDDMFormFieldOptions(),
+				_isArrayValueCPDefinitionOptionRelFieldType(
+					cpDefinitionOptionRel),
+				predefinedValueKey));
 	}
 
 	private static final String[] _ARRAY_VALUE_FIELD_TYPE = {

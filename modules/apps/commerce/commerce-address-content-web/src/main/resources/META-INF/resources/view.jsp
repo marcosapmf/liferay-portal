@@ -49,8 +49,8 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 			displayStyleGroupId="<%= commerceAddressDisplayContext.getDisplayStyleGroupId() %>"
 			entries="<%= commerceAddressSearchContainer.getResults() %>"
 		>
-			<div class="container-fluid-1280" id="<portlet:namespace />addressesContainer">
-				<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="fm">
+			<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />addressesContainer">
+				<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 					<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
 					<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 
@@ -62,7 +62,6 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 						>
 							<liferay-ui:search-container-row
 								className="com.liferay.commerce.model.CommerceAddress"
-								cssClass="entry-display-style"
 								keyProperty="commerceAddressId"
 								modelVar="commerceAddress"
 							>
@@ -72,7 +71,7 @@ CommerceAddressDisplayContext commerceAddressDisplayContext = (CommerceAddressDi
 								/>
 
 								<liferay-ui:search-container-column-text
-									cssClass="table-cell-content"
+									cssClass="table-cell-expand"
 									property="street1"
 								/>
 

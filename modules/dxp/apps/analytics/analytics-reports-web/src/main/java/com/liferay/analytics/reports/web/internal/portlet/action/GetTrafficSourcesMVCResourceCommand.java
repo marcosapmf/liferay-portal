@@ -18,7 +18,12 @@ import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPort
 import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
 import com.liferay.analytics.reports.web.internal.info.display.contributor.util.LayoutDisplayPageProviderUtil;
 import com.liferay.analytics.reports.web.internal.layout.seo.CanonicalURLProvider;
-import com.liferay.analytics.reports.web.internal.model.TrafficSource;
+import com.liferay.analytics.reports.web.internal.model.DirectTrafficChannelImpl;
+import com.liferay.analytics.reports.web.internal.model.OrganicTrafficChannelImpl;
+import com.liferay.analytics.reports.web.internal.model.PaidTrafficChannelImpl;
+import com.liferay.analytics.reports.web.internal.model.ReferralTrafficChannelImpl;
+import com.liferay.analytics.reports.web.internal.model.SocialTrafficChannelImpl;
+import com.liferay.analytics.reports.web.internal.model.TrafficChannel;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
 import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
@@ -39,11 +44,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
@@ -133,24 +139,49 @@ public class GetTrafficSourcesMVCResourceCommand
 		}
 	}
 
-	private List<TrafficSource> _getTrafficSources(
+	private List<TrafficChannel> _getTrafficChannels(
 		AnalyticsReportsDataProvider analyticsReportsDataProvider,
 		String canonicalURL, long companyId) {
+
+		Map<String, TrafficChannel> emptyMap = HashMapBuilder.put(
+			"direct", (TrafficChannel)new DirectTrafficChannelImpl(false)
+		).put(
+			"organic", new OrganicTrafficChannelImpl(false)
+		).put(
+			"paid", new PaidTrafficChannelImpl(false)
+		).put(
+			"referral", new ReferralTrafficChannelImpl(false)
+		).put(
+			"social", new SocialTrafficChannelImpl(false)
+		).build();
 
 		if (!analyticsReportsDataProvider.isValidAnalyticsConnection(
 				companyId)) {
 
-			return Collections.emptyList();
+			return new ArrayList<>(emptyMap.values());
 		}
 
 		try {
-			return analyticsReportsDataProvider.getTrafficSources(
-				companyId, canonicalURL);
+			Map<String, TrafficChannel> trafficChannels =
+				analyticsReportsDataProvider.getTrafficChannels(
+					companyId, canonicalURL);
+
+			emptyMap.forEach(
+				(name, trafficChannel) -> trafficChannels.merge(
+					name, trafficChannel,
+					(trafficChannel1, trafficChannel2) -> trafficChannel1));
+
+			return new ArrayList<>(trafficChannels.values());
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException, portalException);
 
-			return Collections.emptyList();
+			return Arrays.asList(
+				new DirectTrafficChannelImpl(true),
+				new OrganicTrafficChannelImpl(true),
+				new PaidTrafficChannelImpl(true),
+				new ReferralTrafficChannelImpl(true),
+				new SocialTrafficChannelImpl(true));
 		}
 	}
 
@@ -159,54 +190,20 @@ public class GetTrafficSourcesMVCResourceCommand
 		long companyId, String canonicalURL, Locale locale,
 		ResourceBundle resourceBundle) {
 
-		Map<String, String> helpMessageMap = HashMapBuilder.put(
-			"organic",
-			ResourceBundleUtil.getString(
-				resourceBundle,
-				"this-number-refers-to-the-volume-of-people-that-find-your-" +
-					"page-through-a-search-engine")
-		).put(
-			"paid",
-			ResourceBundleUtil.getString(
-				resourceBundle,
-				"this-number-refers-to-the-volume-of-people-that-find-your-" +
-					"page-through-paid-keywords")
-		).build();
-
-		Map<String, String> titleMap = HashMapBuilder.put(
-			"organic", ResourceBundleUtil.getString(resourceBundle, "organic")
-		).put(
-			"paid", ResourceBundleUtil.getString(resourceBundle, "paid")
-		).build();
-
-		List<TrafficSource> trafficSources = _getTrafficSources(
+		List<TrafficChannel> trafficChannels = _getTrafficChannels(
 			analyticsReportsDataProvider, canonicalURL, companyId);
 
-		return JSONUtil.putAll(
-			Stream.of(
-				"organic", "paid"
-			).map(
-				name -> {
-					Stream<TrafficSource> stream = trafficSources.stream();
+		Stream<TrafficChannel> stream = trafficChannels.stream();
 
-					return stream.filter(
-						trafficSource -> Objects.equals(
-							name, trafficSource.getName())
-					).findFirst(
-					).map(
-						trafficSource -> trafficSource.toJSONObject(
-							helpMessageMap.get(name), locale,
-							titleMap.get(name))
-					).orElse(
-						JSONUtil.put(
-							"helpMessage", helpMessageMap.get(name)
-						).put(
-							"name", name
-						).put(
-							"title", titleMap.get(name)
-						)
-					);
-				}
+		Comparator<TrafficChannel> comparator = Comparator.comparing(
+			TrafficChannel::getTrafficShare);
+
+		return JSONUtil.putAll(
+			stream.sorted(
+				comparator.reversed()
+			).map(
+				trafficChannel -> trafficChannel.toJSONObject(
+					locale, resourceBundle)
 			).toArray());
 	}
 

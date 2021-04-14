@@ -152,7 +152,7 @@ AUI.add(
 			'</span>';
 
 		var TPL_ENTRY_WRAPPER =
-			'<li class="lfr-asset-item data-title="{title}"></li>';
+			'<li class="card-page-item card-page-item-asset" data-title="{title}"></li>';
 
 		var TPL_ERROR_FOLDER = new A.Template(
 			'<span class="lfr-status-success-label">{validFilesLength}</span>',
@@ -498,8 +498,7 @@ AUI.add(
 						'display-style-descriptive tabular-list-group';
 
 					if (displayStyle === CSS_ICON) {
-						containerClasses =
-							'display-style-icon list-unstyled row';
+						containerClasses = 'card-page card-page-equal-height';
 					}
 
 					var entriesContainer = ANode.create(
@@ -537,7 +536,7 @@ AUI.add(
 
 						if (displayStyle === CSS_ICON) {
 							entriesContainerSelector =
-								'ul.list-unstyled:last-of-type';
+								'ul.card-page:last-of-type';
 						}
 
 						entriesContainer =
@@ -573,7 +572,7 @@ AUI.add(
 						instance._removeEmptyResultsMessage(searchContainer);
 
 						var searchContainerWrapper = A.one(
-							'div.lfr-search-container-wrapper.main-content-body'
+							'div.lfr-search-container-wrapper'
 						);
 
 						if (searchContainerWrapper) {

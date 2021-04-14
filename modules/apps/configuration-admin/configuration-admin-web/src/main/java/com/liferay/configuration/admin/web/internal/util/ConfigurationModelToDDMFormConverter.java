@@ -133,10 +133,9 @@ public class ConfigurationModelToDDMFormConverter {
 		return null;
 	}
 
-	protected DDMFormFieldOptions getDDMFieldOptions(
-		AttributeDefinition attributeDefinition) {
-
-		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
+	protected ConfigurationFieldOptionsProvider
+		getConfigurationFieldOptionsProvider(
+			AttributeDefinition attributeDefinition) {
 
 		String pid = _configurationModel.getID();
 
@@ -144,10 +143,18 @@ public class ConfigurationModelToDDMFormConverter {
 			pid = _configurationModel.getFactoryPid();
 		}
 
+		return ConfigurationFieldOptionsProviderUtil.
+			getConfigurationFieldOptionsProvider(
+				pid, attributeDefinition.getID());
+	}
+
+	protected DDMFormFieldOptions getDDMFieldOptions(
+		AttributeDefinition attributeDefinition) {
+
+		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
+
 		ConfigurationFieldOptionsProvider configurationFieldOptionsProvider =
-			ConfigurationFieldOptionsProviderUtil.
-				getConfigurationFieldOptionsProvider(
-					pid, attributeDefinition.getID());
+			getConfigurationFieldOptionsProvider(attributeDefinition);
 
 		if (configurationFieldOptionsProvider != null) {
 			for (ConfigurationFieldOptionsProvider.Option option :
@@ -275,7 +282,12 @@ public class ConfigurationModelToDDMFormConverter {
 			return DDMFormFieldType.LOCALIZABLE_TEXT;
 		}
 
-		if (!SetUtil.isEmpty(ddmFormFieldOptions.getOptionsValues())) {
+		ConfigurationFieldOptionsProvider configurationFieldOptionsProvider =
+			getConfigurationFieldOptionsProvider(attributeDefinition);
+
+		if (!SetUtil.isEmpty(ddmFormFieldOptions.getOptionsValues()) ||
+			(configurationFieldOptionsProvider != null)) {
+
 			return DDMFormFieldType.SELECT;
 		}
 
@@ -285,9 +297,7 @@ public class ConfigurationModelToDDMFormConverter {
 	protected void setDDMFormFieldDataType(
 		AttributeDefinition attributeDefinition, DDMFormField ddmFormField) {
 
-		String dataType = getDDMFormFieldDataType(attributeDefinition);
-
-		ddmFormField.setDataType(dataType);
+		ddmFormField.setDataType(getDDMFormFieldDataType(attributeDefinition));
 	}
 
 	protected void setDDMFormFieldDisplayStyle(DDMFormField ddmFormField) {
@@ -435,7 +445,7 @@ public class ConfigurationModelToDDMFormConverter {
 	private final ConfigurationModel _configurationModel;
 	private final Locale _locale;
 
-	private Predicate<AttributeDefinition> _requiredInputPredicate =
+	private final Predicate<AttributeDefinition> _requiredInputPredicate =
 		attributeDefinition -> {
 			Map<String, String> extensionAttributes = _getExtensionAttributes(
 				attributeDefinition);

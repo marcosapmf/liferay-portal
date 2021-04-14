@@ -60,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PROMOTION,
-		"mvc.command.name=editCommercePriceList"
+		"mvc.command.name=/commerce_price_list/edit_commerce_price_list"
 	},
 	service = MVCActionCommand.class
 )
@@ -170,7 +170,8 @@ public class EditCommercePriceListMVCActionCommand
 		}
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommercePriceList");
+			"mvcRenderCommandName",
+			"/commerce_price_list/edit_commerce_price_list");
 		portletURL.setParameter(
 			"commercePriceListId",
 			String.valueOf(commercePriceList.getCommercePriceListId()));
@@ -185,8 +186,6 @@ public class EditCommercePriceListMVCActionCommand
 		long commercePriceListId = ParamUtil.getLong(
 			actionRequest, "commercePriceListId");
 
-		long commerceCatalogGroupId = ParamUtil.getLong(
-			actionRequest, "commerceCatalogGroupId");
 		long commerceCurrencyId = ParamUtil.getLong(
 			actionRequest, "commerceCurrencyId");
 		boolean netPrice = ParamUtil.getBoolean(
@@ -196,7 +195,6 @@ public class EditCommercePriceListMVCActionCommand
 
 		String name = ParamUtil.getString(actionRequest, "name");
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
-		String type = ParamUtil.getString(actionRequest, "type");
 
 		Date now = new Date();
 
@@ -246,6 +244,10 @@ public class EditCommercePriceListMVCActionCommand
 		CommercePriceList commercePriceList;
 
 		if (commercePriceListId <= 0) {
+			long commerceCatalogGroupId = ParamUtil.getLong(
+				actionRequest, "commerceCatalogGroupId");
+			String type = ParamUtil.getString(actionRequest, "type");
+
 			commercePriceList = _commercePriceListService.addCommercePriceList(
 				commerceCatalogGroupId, serviceContext.getUserId(),
 				commerceCurrencyId, netPrice, type, parentCommercePriceListId,

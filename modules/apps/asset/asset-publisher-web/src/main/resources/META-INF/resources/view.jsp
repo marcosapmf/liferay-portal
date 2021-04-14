@@ -34,6 +34,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 			<div class="btn-group-item">
 				<clay:link
 					borderless="<%= true %>"
+					data-senna-off="<%= true %>"
 					displayType="secondary"
 					href="<%= rssURL.toString() %>"
 					icon="rss-full"
@@ -155,7 +156,8 @@ SearchContainer<AssetEntry> searchContainer = assetPublisherDisplayContext.getSe
 </c:if>
 
 <aui:script sandbox="<%= true %>">
-	var assetEntryId = '<%= assetPublisherDisplayContext.getAssetEntryId() %>';
+	var assetEntryId =
+		'<%= HtmlUtil.escape(assetPublisherDisplayContext.getAssetEntryId()) %>';
 
 	if (assetEntryId) {
 		window.location.hash = assetEntryId;

@@ -548,9 +548,7 @@ public class OpenSamlUtil {
 		authnRequest.setIsPassive(false);
 		authnRequest.setIssueInstant(now);
 
-		Issuer issuer = buildIssuer(spEntityId);
-
-		authnRequest.setIssuer(issuer);
+		authnRequest.setIssuer(buildIssuer(spEntityId));
 
 		authnRequest.setAssertionConsumerServiceURL(
 			assertionConsumerService.getLocation());
@@ -606,7 +604,7 @@ public class OpenSamlUtil {
 	}
 
 	public static KeyDescriptor buildKeyDescriptor(
-		UsageType useType, KeyInfo keyInfo) {
+		UsageType usageType, KeyInfo keyInfo) {
 
 		SAMLObjectBuilder<KeyDescriptor> samlObjectBuilder =
 			(SAMLObjectBuilder<KeyDescriptor>)_getBuilder(
@@ -615,7 +613,7 @@ public class OpenSamlUtil {
 		KeyDescriptor keyDescriptor = samlObjectBuilder.buildObject();
 
 		keyDescriptor.setKeyInfo(keyInfo);
-		keyDescriptor.setUse(useType);
+		keyDescriptor.setUse(usageType);
 
 		return keyDescriptor;
 	}
@@ -859,11 +857,9 @@ public class OpenSamlUtil {
 		Signature signature = buildSignature(credential);
 
 		try {
-			SignatureSigningParameters signatureSigningParameters =
-				_getSignatureSigningParameters(credential, peerRoleDescriptor);
-
 			SignatureSupport.prepareSignatureParams(
-				signature, signatureSigningParameters);
+				signature,
+				_getSignatureSigningParameters(credential, peerRoleDescriptor));
 
 			signableObject.setSignature(signature);
 

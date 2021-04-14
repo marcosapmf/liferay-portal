@@ -94,6 +94,26 @@ public class CommonSearchSourceBuilderAssemblerImpl
 		).build();
 	}
 
+	protected QueryBuilder buildQueryBuilder(
+		BaseSearchRequest baseSearchRequest) {
+
+		QueryBuilder queryBuilder = null;
+
+		if (baseSearchRequest.getPostFilterQuery() != null) {
+			queryBuilder = _queryToQueryBuilderTranslator.translate(
+				baseSearchRequest.getPostFilterQuery());
+		}
+
+		List<ComplexQueryPart> postFilterQueryParts =
+			baseSearchRequest.getPostFilterComplexQueryParts();
+
+		if (!postFilterQueryParts.isEmpty()) {
+			queryBuilder = combine(queryBuilder, postFilterQueryParts);
+		}
+
+		return queryBuilder;
+	}
+
 	protected QueryBuilder combine(
 		BoolQueryBuilder boolQueryBuilder, QueryBuilder queryBuilder,
 		BiConsumer<BoolQueryBuilder, QueryBuilder> biConsumer) {
@@ -107,6 +127,30 @@ public class CommonSearchSourceBuilderAssemblerImpl
 		}
 
 		return boolQueryBuilder;
+	}
+
+	protected QueryBuilder combine(
+		QueryBuilder queryBuilder, List<ComplexQueryPart> complexQueryParts) {
+
+		List<ComplexQueryPart> additiveComplexQueryParts = new ArrayList<>();
+		List<ComplexQueryPart> nonadditiveComplexQueryParts = new ArrayList<>();
+
+		for (ComplexQueryPart complexQueryPart : complexQueryParts) {
+			if (complexQueryPart.isAdditive()) {
+				additiveComplexQueryParts.add(complexQueryPart);
+			}
+			else {
+				nonadditiveComplexQueryParts.add(complexQueryPart);
+			}
+		}
+
+		QueryBuilder queryBuilder1 = combine(
+			translate(nonadditiveComplexQueryParts), queryBuilder,
+			BoolQueryBuilder::must);
+
+		return combine(
+			translate(additiveComplexQueryParts), queryBuilder1,
+			BoolQueryBuilder::should);
 	}
 
 	protected QueryBuilder combine(
@@ -155,27 +199,7 @@ public class CommonSearchSourceBuilderAssemblerImpl
 				BoolQueryBuilder::should);
 		}
 
-		List<ComplexQueryPart> additiveComplexQueryParts = new ArrayList<>();
-
-		List<ComplexQueryPart> noneAdditiveComplexQueryParts =
-			new ArrayList<>();
-
-		for (ComplexQueryPart complexQueryPart : complexQueryParts) {
-			if (complexQueryPart.isAdditive()) {
-				additiveComplexQueryParts.add(complexQueryPart);
-			}
-			else {
-				noneAdditiveComplexQueryParts.add(complexQueryPart);
-			}
-		}
-
-		QueryBuilder queryBuilder2 = combine(
-			translate(noneAdditiveComplexQueryParts), queryBuilder1,
-			BoolQueryBuilder::must);
-
-		return combine(
-			translate(additiveComplexQueryParts), queryBuilder2,
-			BoolQueryBuilder::should);
+		return combine(queryBuilder1, complexQueryParts);
 	}
 
 	protected void setAggregations(
@@ -311,10 +335,10 @@ public class CommonSearchSourceBuilderAssemblerImpl
 		SearchSourceBuilder searchSourceBuilder,
 		BaseSearchRequest baseSearchRequest) {
 
-		if (baseSearchRequest.getPostFilterQuery() != null) {
-			searchSourceBuilder.postFilter(
-				_queryToQueryBuilderTranslator.translate(
-					baseSearchRequest.getPostFilterQuery()));
+		QueryBuilder queryBuilder = buildQueryBuilder(baseSearchRequest);
+
+		if (queryBuilder != null) {
+			searchSourceBuilder.postFilter(queryBuilder);
 		}
 		else if (baseSearchRequest.getPostFilter() != null) {
 			searchSourceBuilder.postFilter(

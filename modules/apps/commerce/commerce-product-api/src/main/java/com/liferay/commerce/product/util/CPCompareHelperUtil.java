@@ -19,8 +19,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.List;
 
-import javax.servlet.http.HttpSession;
-
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -30,45 +28,24 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class CPCompareHelperUtil {
 
-	public static void addCompareProduct(
-			long groupId, long commerceAccountId, long cpDefinitionId,
-			HttpSession httpSession)
-		throws PortalException {
-
-		CPCompareHelper cpCompareHelper = _serviceTracker.getService();
-
-		cpCompareHelper.addCompareProduct(
-			groupId, commerceAccountId, cpDefinitionId, httpSession);
-	}
-
 	public static List<Long> getCPDefinitionIds(
-			long groupId, long commerceAccountId, HttpSession httpSession)
+			long groupId, long commerceAccountId,
+			String cpDefinitionIdsCookieValue)
 		throws PortalException {
 
 		CPCompareHelper cpCompareHelper = _serviceTracker.getService();
 
 		return cpCompareHelper.getCPDefinitionIds(
-			groupId, commerceAccountId, httpSession);
+			groupId, commerceAccountId, cpDefinitionIdsCookieValue);
 	}
 
-	public static void removeCompareProduct(
-			long groupId, long commerceAccountId, long cpDefinitionId,
-			HttpSession httpSession)
-		throws PortalException {
+	public static String getCPDefinitionIdsCookieKey(
+		long commerceChannelGroupId) {
 
 		CPCompareHelper cpCompareHelper = _serviceTracker.getService();
 
-		cpCompareHelper.removeCompareProduct(
-			groupId, commerceAccountId, cpDefinitionId, httpSession);
-	}
-
-	public static void setCPDefinitionIds(
-		long groupId, List<Long> cpDefinitionIds, HttpSession httpSession) {
-
-		CPCompareHelper cpCompareHelper = _serviceTracker.getService();
-
-		cpCompareHelper.setCPDefinitionIds(
-			groupId, cpDefinitionIds, httpSession);
+		return cpCompareHelper.getCPDefinitionIdsCookieKey(
+			commerceChannelGroupId);
 	}
 
 	private static final ServiceTracker<?, CPCompareHelper> _serviceTracker =

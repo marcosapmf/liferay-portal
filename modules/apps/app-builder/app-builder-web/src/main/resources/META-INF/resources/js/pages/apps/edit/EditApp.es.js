@@ -17,11 +17,9 @@ import React, {useEffect, useReducer, useState} from 'react';
 
 import ControlMenu from '../../../components/control-menu/ControlMenu.es';
 import {Loading} from '../../../components/loading/Loading.es';
-import MultiStepNav from '../../../components/multi-step-nav/MultiStepNav.es';
 import useDataDefinition from '../../../hooks/useDataDefinition.es';
 import {toQuery} from '../../../hooks/useQuery.es';
 import {getItem} from '../../../utils/client.es';
-import DeployApp from './DeployApp.es';
 import EditAppBody from './EditAppBody.es';
 import EditAppContext, {UPDATE_APP, reducer} from './EditAppContext.es';
 import EditAppFooter from './EditAppFooter.es';
@@ -34,10 +32,9 @@ export default ({
 	},
 	scope,
 }) => {
-	const {
-		availableLanguageIds = [],
-		defaultLanguageId = '',
-	} = useDataDefinition(dataDefinitionId);
+	const {availableLanguageIds = [], defaultLanguageId} = useDataDefinition(
+		dataDefinitionId
+	);
 
 	const [currentStep, setCurrentStep] = useState(0);
 	const [isLoading, setLoading] = useState(false);
@@ -48,9 +45,7 @@ export default ({
 			appDeployments: [],
 			dataLayoutId: null,
 			dataListViewId: null,
-			name: {
-				[defaultLanguageId]: '',
-			},
+			name: {},
 			scope,
 		},
 	});
@@ -85,13 +80,6 @@ export default ({
 		title = Liferay.Language.get('edit-app');
 	}
 
-	const getEmptyState = (description, title) => {
-		return {
-			description,
-			title,
-		};
-	};
-
 	return (
 		<>
 			<ControlMenu backURL={backUrl} title={title} />
@@ -111,56 +99,11 @@ export default ({
 								}}
 							/>
 
-							<div className="card-body p-0 shadowless-card-body">
-								<ClayLayout.Row>
-									<ClayLayout.Col>
-										<MultiStepNav
-											currentStep={currentStep}
-											steps={['1', '2', '3']}
-										/>
-									</ClayLayout.Col>
-								</ClayLayout.Row>
-
-								{currentStep == 0 && (
-									<EditAppBody
-										defaultLanguageId={defaultLanguageId}
-										emptyState={getEmptyState(
-											Liferay.Language.get(
-												'create-one-or-more-forms-to-display-the-data-held-in-your-data-object'
-											),
-											Liferay.Language.get(
-												'there-are-no-form-views-yet'
-											)
-										)}
-										endpoint={`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-layouts`}
-										itemType="DATA_LAYOUT"
-										title={Liferay.Language.get(
-											'select-a-form-view'
-										)}
-									/>
-								)}
-
-								{currentStep == 1 && (
-									<EditAppBody
-										defaultLanguageId={defaultLanguageId}
-										emptyState={getEmptyState(
-											Liferay.Language.get(
-												'create-one-or-more-tables-to-display-the-data-held-in-your-data-object'
-											),
-											Liferay.Language.get(
-												'there-are-no-table-views-yet'
-											)
-										)}
-										endpoint={`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-list-views`}
-										itemType="DATA_LIST_VIEW"
-										title={Liferay.Language.get(
-											'select-a-table-view'
-										)}
-									/>
-								)}
-
-								{currentStep == 2 && <DeployApp />}
-							</div>
+							<EditAppBody
+								currentStep={currentStep}
+								dataDefinitionId={dataDefinitionId}
+								defaultLanguageId={defaultLanguageId}
+							/>
 
 							<h4 className="card-divider"></h4>
 
@@ -168,9 +111,7 @@ export default ({
 								currentStep={currentStep}
 								defaultLanguageId={defaultLanguageId}
 								editingLanguageId={editingLanguageId}
-								onCurrentStepChange={(step) => {
-									setCurrentStep(step);
-								}}
+								onCurrentStepChange={setCurrentStep}
 							/>
 						</div>
 					</ClayLayout.ContainerFluid>

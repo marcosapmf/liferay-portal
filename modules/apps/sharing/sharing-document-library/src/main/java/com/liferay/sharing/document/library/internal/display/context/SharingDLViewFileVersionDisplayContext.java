@@ -68,13 +68,14 @@ public class SharingDLViewFileVersionDisplayContext
 
 		_httpServletRequest = httpServletRequest;
 		_fileEntry = fileEntry;
-		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 		_sharingEntryLocalService = sharingEntryLocalService;
 		_sharingMenuItemFactory = sharingMenuItemFactory;
 		_sharingToolbarItemFactory = sharingToolbarItemFactory;
 		_sharingPermission = sharingPermission;
 		_sharingConfiguration = sharingConfiguration;
+
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 	}
 
 	@Override
@@ -143,7 +144,7 @@ public class SharingDLViewFileVersionDisplayContext
 	}
 
 	/**
-	 * @see com.liferay.frontend.image.editor.integration.document.library.internal.display.context.ImageEditorDLViewFileVersionDisplayContext#_addEditWithImageEditorUIItem
+	 * @see com.liferay.document.library.opener.onedrive.web.internal.display.context.DLOpenerOneDriveDLViewFileVersionDisplayContext#_addEditInOffice365UIItem(List, BaseUIItem)
 	 */
 	private <T extends BaseUIItem> List<T> _addSharingUIItem(
 		List<T> uiItems, T sharingUIItem) {
@@ -187,11 +188,11 @@ public class SharingDLViewFileVersionDisplayContext
 	}
 
 	private boolean _isShowShareAction() throws PortalException {
-		if (_showImageEditorAction != null) {
-			return _showImageEditorAction;
+		if (_showShareAction != null) {
+			return _showShareAction;
 		}
 
-		_showImageEditorAction = false;
+		_showShareAction = false;
 
 		if (_themeDisplay.isSignedIn() && _isShowActions() &&
 			_sharingPermission.containsSharePermission(
@@ -199,10 +200,10 @@ public class SharingDLViewFileVersionDisplayContext
 				PortalUtil.getClassNameId(DLFileEntryConstants.getClassName()),
 				_fileEntry.getFileEntryId(), _themeDisplay.getScopeGroupId())) {
 
-			_showImageEditorAction = true;
+			_showShareAction = true;
 		}
 
-		return _showImageEditorAction;
+		return _showShareAction;
 	}
 
 	private static final UUID _UUID = UUID.fromString(
@@ -215,7 +216,7 @@ public class SharingDLViewFileVersionDisplayContext
 	private final SharingMenuItemFactory _sharingMenuItemFactory;
 	private final SharingPermission _sharingPermission;
 	private final SharingToolbarItemFactory _sharingToolbarItemFactory;
-	private Boolean _showImageEditorAction;
+	private Boolean _showShareAction;
 	private final ThemeDisplay _themeDisplay;
 
 }

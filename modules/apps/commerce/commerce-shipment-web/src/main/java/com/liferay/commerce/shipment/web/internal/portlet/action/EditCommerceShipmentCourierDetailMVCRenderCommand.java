@@ -15,6 +15,7 @@
 package com.liferay.commerce.shipment.web.internal.portlet.action;
 
 import com.liferay.commerce.address.CommerceAddressFormatter;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.service.CommerceAddressService;
@@ -24,6 +25,7 @@ import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.commerce.shipment.web.internal.display.context.CommerceShipmentDisplayContext;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -41,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPMENT,
-		"mvc.command.name=editCommerceShipmentCourierDetail"
+		"mvc.command.name=/commerce_shipment/edit_commerce_shipment_courier_detail"
 	},
 	service = MVCRenderCommand.class
 )
@@ -59,12 +61,12 @@ public class EditCommerceShipmentCourierDetailMVCRenderCommand
 				_commerceAddressFormatter, _commerceAddressService,
 				_commerceChannelService, _commerceCountryService,
 				_commerceOrderItemService, _commerceOrderLocalService,
-				_commerceRegionService);
+				_commerceRegionService, _portletResourcePermission);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, commerceShipmentDisplayContext);
 
-		return "/shipment/carrier_details.jsp";
+		return "/shipment/edit_commerce_shipment_courier_details.jsp";
 	}
 
 	@Reference
@@ -93,5 +95,10 @@ public class EditCommerceShipmentCourierDetailMVCRenderCommand
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_SHIPMENT + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

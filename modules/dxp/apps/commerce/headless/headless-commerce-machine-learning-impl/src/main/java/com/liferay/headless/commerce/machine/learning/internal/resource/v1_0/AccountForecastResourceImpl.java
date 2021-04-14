@@ -14,8 +14,8 @@
 
 package com.liferay.headless.commerce.machine.learning.internal.resource.v1_0;
 
-import com.liferay.commerce.machine.learning.forecast.model.CommerceAccountCommerceMLForecast;
-import com.liferay.commerce.machine.learning.forecast.service.CommerceAccountCommerceMLForecastService;
+import com.liferay.commerce.machine.learning.forecast.CommerceAccountCommerceMLForecast;
+import com.liferay.commerce.machine.learning.forecast.CommerceAccountCommerceMLForecastManager;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.AccountForecast;
 import com.liferay.headless.commerce.machine.learning.internal.constants.CommerceMLForecastConstants;
 import com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.AccountForecastDTOConverter;
@@ -27,11 +27,15 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,6 +51,17 @@ import org.osgi.service.component.annotations.ServiceScope;
 )
 public class AccountForecastResourceImpl
 	extends BaseAccountForecastResourceImpl {
+
+	@Override
+	public void create(
+			Collection<AccountForecast> accountForecasts,
+			Map<String, Serializable> parameters)
+		throws Exception {
+
+		for (AccountForecast accountForecast : accountForecasts) {
+			_createItem(accountForecast);
+		}
+	}
 
 	@Override
 	public Page<AccountForecast> getAccountForecastsByMonthlyRevenuePage(
@@ -79,7 +94,7 @@ public class AccountForecastResourceImpl
 
 		List<CommerceAccountCommerceMLForecast>
 			commerceAccountCommerceMLForecasts =
-				_commerceAccountCommerceMLForecastService.
+				_commerceAccountCommerceMLForecastManager.
 					getMonthlyRevenueCommerceAccountCommerceMLForecasts(
 						contextCompany.getCompanyId(),
 						ArrayUtil.toLongArray(commerceAccountIds), startDate,
@@ -88,7 +103,7 @@ public class AccountForecastResourceImpl
 						pagination.getEndPosition());
 
 		long totalItems =
-			_commerceAccountCommerceMLForecastService.
+			_commerceAccountCommerceMLForecastManager.
 				getMonthlyRevenueCommerceAccountCommerceMLForecastsCount(
 					contextCompany.getCompanyId(),
 					ArrayUtil.toLongArray(commerceAccountIds), startDate,
@@ -97,6 +112,36 @@ public class AccountForecastResourceImpl
 		return Page.of(
 			_toAccountForecasts(commerceAccountCommerceMLForecasts), pagination,
 			totalItems);
+	}
+
+	private void _createItem(AccountForecast accountForecast) throws Exception {
+		CommerceAccountCommerceMLForecast commerceAccountCommerceMLForecast =
+			_commerceAccountCommerceMLForecastManager.create();
+
+		if (accountForecast.getActual() != null) {
+			commerceAccountCommerceMLForecast.setActual(
+				accountForecast.getActual());
+		}
+
+		commerceAccountCommerceMLForecast.setCommerceAccountId(
+			accountForecast.getAccount());
+		commerceAccountCommerceMLForecast.setCompanyId(
+			contextCompany.getCompanyId());
+		commerceAccountCommerceMLForecast.setForecast(
+			accountForecast.getForecast());
+		commerceAccountCommerceMLForecast.setForecastLowerBound(
+			accountForecast.getForecastLowerBound());
+		commerceAccountCommerceMLForecast.setForecastUpperBound(
+			accountForecast.getForecastUpperBound());
+		commerceAccountCommerceMLForecast.setPeriod("month");
+		commerceAccountCommerceMLForecast.setScope("commerce-account");
+		commerceAccountCommerceMLForecast.setTarget("revenue");
+		commerceAccountCommerceMLForecast.setTimestamp(
+			accountForecast.getTimestamp());
+
+		_commerceAccountCommerceMLForecastManager.
+			addCommerceAccountCommerceMLForecast(
+				commerceAccountCommerceMLForecast);
 	}
 
 	private List<AccountForecast> _toAccountForecasts(
@@ -130,8 +175,8 @@ public class AccountForecastResourceImpl
 	private AccountForecastDTOConverter _accountForecastDTOConverter;
 
 	@Reference
-	private CommerceAccountCommerceMLForecastService
-		_commerceAccountCommerceMLForecastService;
+	private CommerceAccountCommerceMLForecastManager
+		_commerceAccountCommerceMLForecastManager;
 
 	@Reference
 	private CommerceAccountPermissionHelper _commerceAccountPermissionHelper;

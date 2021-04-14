@@ -185,7 +185,7 @@ public class PortletURLImpl
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Layout cannot be found for " + _plid);
+					_log.warn("Layout cannot be found for " + _plid, exception);
 				}
 			}
 		}
@@ -1244,6 +1244,10 @@ public class PortletURLImpl
 			return URLCodec.encodeURL(Encryptor.encrypt(key, value));
 		}
 		catch (EncryptorException encryptorException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(encryptorException, encryptorException);
+			}
+
 			return value;
 		}
 	}
@@ -1263,6 +1267,7 @@ public class PortletURLImpl
 		_layout = layout;
 		_lifecycle = lifecycle;
 		_copy = copy;
+
 		_parametersIncludedInPath = Collections.emptySet();
 
 		PortletApp portletApp = portlet.getPortletApp();

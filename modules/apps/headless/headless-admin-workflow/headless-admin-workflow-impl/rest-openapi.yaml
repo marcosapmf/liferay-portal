@@ -179,6 +179,10 @@ components:
                     type: boolean
                 content:
                     type: string
+                dateCreated:
+                    format: date-time
+                    readOnly: true
+                    type: string
                 dateModified:
                     format: date-time
                     readOnly: true
@@ -190,6 +194,11 @@ components:
                     type: string
                 title:
                     type: string
+                title_i18n:
+                    additionalProperties:
+                        type: string
+                    readOnly: true
+                    type: object
                 version:
                     type: string
             type: object
@@ -227,6 +236,12 @@ components:
                     description:
                         The object/asset that the instance's workflow is managing.
                     readOnly: true
+                state:
+                    # @review
+                    description:
+                        The instance's current state.
+                    readOnly: true
+                    type: string
                 workflowDefinitionName:
                     description:
                         The name of the instance's workflow definition.
@@ -275,6 +290,12 @@ components:
                     description:
                         The log's creation date.
                     format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    # @review
+                    description:
+                        The log's description.
                     readOnly: true
                     type: string
                 id:
@@ -558,7 +579,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.admin.workflow.client', and version '3.0.5'."
+        'com.liferay.headless.admin.workflow.client', and version '4.0.0'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -571,6 +592,10 @@ paths:
             operationId: getWorkflowDefinitionsPage
             parameters:
                 - in: query
+                  name: active
+                  schema:
+                      type: boolean
+                - in: query
                   name: page
                   schema:
                       type: integer
@@ -578,6 +603,11 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: sort
+                  required: false
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -719,18 +749,14 @@ paths:
             operationId: getWorkflowInstancesPage
             parameters:
                 - in: query
-                  name: assetClassNames
+                  name: assetClassName
                   schema:
-                      items:
-                          type: string
-                      type: array
+                      type: string
                 - in: query
-                  name: assetPrimaryKeys
+                  name: assetPrimaryKey
                   schema:
-                      items:
-                          format: int64
-                          type: integer
-                      type: array
+                      format: int64
+                      type: integer
                 - in: query
                   name: completed
                   schema:

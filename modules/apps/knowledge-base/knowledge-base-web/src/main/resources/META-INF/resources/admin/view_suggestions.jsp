@@ -56,13 +56,14 @@ kbCommentsSearchContainer.setRowChecker(new KBCommentsChecker(liferayPortletRequ
 KBSuggestionListManagementToolbarDisplayContext kbSuggestionListManagementToolbarDisplayContext = new KBSuggestionListManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, kbCommentsSearchContainer);
 
 request.setAttribute("view_suggestions.jsp-kbSuggestionListManagementToolbarDisplayContext", kbSuggestionListManagementToolbarDisplayContext);
+
 request.setAttribute("view_suggestions.jsp-resultRowSplitter", kbCommentResultRowSplitter);
 request.setAttribute("view_suggestions.jsp-searchContainer", kbCommentsSearchContainer);
 %>
 
 <liferay-util:include page="/admin/common/top_tabs.jsp" servletContext="<%= application %>" />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= kbSuggestionListManagementToolbarDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= kbSuggestionListManagementToolbarDisplayContext.getClearResultsURL() %>"
 	componentId="kbSuggestionListManagementToolbar"
@@ -89,7 +90,7 @@ request.setAttribute("view_suggestions.jsp-searchContainer", kbCommentsSearchCon
 	<liferay-util:include page="/admin/common/view_suggestions_by_status.jsp" servletContext="<%= application %>" />
 </clay:container-fluid>
 
-<aui:script>
+<script>
 	var deleteKBComments = function () {
 		if (
 			confirm(
@@ -119,4 +120,4 @@ request.setAttribute("view_suggestions.jsp-searchContainer", kbCommentsSearchCon
 			}
 		});
 	});
-</aui:script>
+</script>

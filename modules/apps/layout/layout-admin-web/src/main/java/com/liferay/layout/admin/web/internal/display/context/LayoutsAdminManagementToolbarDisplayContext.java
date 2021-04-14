@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
@@ -60,6 +61,7 @@ public class LayoutsAdminManagementToolbarDisplayContext
 			layoutsAdminDisplayContext.getLayoutsSearchContainer());
 
 		_layoutsAdminDisplayContext = layoutsAdminDisplayContext;
+
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -85,7 +87,7 @@ public class LayoutsAdminManagementToolbarDisplayContext
 					liferayPortletResponse.createActionURL();
 
 				convertLayoutURL.setParameter(
-					ActionRequest.ACTION_NAME, "/layout/convert_layout");
+					ActionRequest.ACTION_NAME, "/layout_admin/convert_layout");
 				convertLayoutURL.setParameter(
 					"redirect", _themeDisplay.getURLCurrent());
 
@@ -94,7 +96,8 @@ public class LayoutsAdminManagementToolbarDisplayContext
 
 				dropdownItem.setIcon("change");
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "convert-to-content-page"));
+					LanguageUtil.get(
+						httpServletRequest, "convert-to-content-page"));
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -105,7 +108,7 @@ public class LayoutsAdminManagementToolbarDisplayContext
 					liferayPortletResponse.createActionURL();
 
 				deleteLayoutURL.setParameter(
-					ActionRequest.ACTION_NAME, "/layout/delete_layout");
+					ActionRequest.ACTION_NAME, "/layout_admin/delete_layout");
 				deleteLayoutURL.setParameter(
 					"redirect", _themeDisplay.getURLCurrent());
 
@@ -113,7 +116,8 @@ public class LayoutsAdminManagementToolbarDisplayContext
 					"deleteLayoutURL", deleteLayoutURL.toString());
 
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -228,7 +232,9 @@ public class LayoutsAdminManagementToolbarDisplayContext
 
 	@Override
 	public String getSortingOrder() {
-		if (_layoutsAdminDisplayContext.isFirstColumn()) {
+		if (_layoutsAdminDisplayContext.isFirstColumn() ||
+			Objects.equals(getOrderByCol(), "relevance")) {
+
 			return null;
 		}
 
@@ -287,7 +293,7 @@ public class LayoutsAdminManagementToolbarDisplayContext
 		}
 
 		if (_layoutsAdminDisplayContext.isSearch()) {
-			return new String[] {"create-date"};
+			return new String[] {"create-date", "relevance"};
 		}
 
 		return null;
@@ -298,20 +304,21 @@ public class LayoutsAdminManagementToolbarDisplayContext
 
 		if (layout != null) {
 			return LanguageUtil.format(
-				request, "add-child-collection-page-of-x",
-				layout.getName(_themeDisplay.getLocale()));
+				httpServletRequest, "add-child-collection-page-of-x",
+				HtmlUtil.escape(layout.getName(_themeDisplay.getLocale())));
 		}
 
 		if (_isSiteTemplate()) {
 			return LanguageUtil.get(
-				request, "add-site-template-collection-page");
+				httpServletRequest, "add-site-template-collection-page");
 		}
 
 		if (privateLayout) {
-			return LanguageUtil.get(request, "private-collection-page");
+			return LanguageUtil.get(
+				httpServletRequest, "private-collection-page");
 		}
 
-		return LanguageUtil.get(request, "public-collection-page");
+		return LanguageUtil.get(httpServletRequest, "public-collection-page");
 	}
 
 	private String _getLabel(boolean privateLayout) {
@@ -319,19 +326,20 @@ public class LayoutsAdminManagementToolbarDisplayContext
 
 		if (layout != null) {
 			return LanguageUtil.format(
-				request, "add-child-page-of-x",
-				layout.getName(_themeDisplay.getLocale()));
+				httpServletRequest, "add-child-page-of-x",
+				HtmlUtil.escape(layout.getName(_themeDisplay.getLocale())));
 		}
 
 		if (_isSiteTemplate()) {
-			return LanguageUtil.get(request, "add-site-template-page");
+			return LanguageUtil.get(
+				httpServletRequest, "add-site-template-page");
 		}
 
 		if (privateLayout) {
-			return LanguageUtil.get(request, "private-page");
+			return LanguageUtil.get(httpServletRequest, "private-page");
 		}
 
-		return LanguageUtil.get(request, "public-page");
+		return LanguageUtil.get(httpServletRequest, "public-page");
 	}
 
 	private boolean _isSiteTemplate() {

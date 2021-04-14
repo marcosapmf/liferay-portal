@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
@@ -63,6 +64,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 import com.liferay.taglib.security.PermissionsURLTag;
+import com.liferay.translation.url.provider.TranslationURLProvider;
 import com.liferay.trash.TrashHelper;
 
 import java.util.List;
@@ -100,6 +102,9 @@ public class JournalArticleActionDropdownItemsProvider {
 			liferayPortletRequest);
 		_themeDisplay = (ThemeDisplay)liferayPortletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+		_translationURLProvider =
+			(TranslationURLProvider)liferayPortletRequest.getAttribute(
+				TranslationURLProvider.class.getName());
 	}
 
 	public List<DropdownItem> getActionDropdownItems() throws Exception {
@@ -169,7 +174,7 @@ public class JournalArticleActionDropdownItemsProvider {
 				JournalArticlePermission.contains(
 					_themeDisplay.getPermissionChecker(), _article,
 					ActionKeys.EXPIRE) &&
-				_article.hasApprovedVersion(),
+				(_article.hasApprovedVersion() || _article.isScheduled()),
 			_getExpireArticleActionConsumer(_article.getArticleId())
 		).add(
 			() -> hasDeletePermission && trashEnabled,
@@ -219,7 +224,8 @@ public class JournalArticleActionDropdownItemsProvider {
 				JournalArticlePermission.contains(
 					_themeDisplay.getPermissionChecker(), _article,
 					ActionKeys.EXPIRE) &&
-				(_article.getStatus() == WorkflowConstants.STATUS_APPROVED),
+				((_article.getStatus() == WorkflowConstants.STATUS_APPROVED) ||
+				 (_article.getStatus() == WorkflowConstants.STATUS_SCHEDULED)),
 			_getExpireArticleActionConsumer(
 				articleId, _themeDisplay.getURLCurrent())
 		).add(
@@ -303,7 +309,7 @@ public class JournalArticleActionDropdownItemsProvider {
 				_liferayPortletResponse.createActionURL();
 
 			copyArticleURL.setParameter(
-				ActionRequest.ACTION_NAME, "copyArticle");
+				ActionRequest.ACTION_NAME, "/journal/copy_article");
 
 			copyArticleURL.setParameter("redirect", _getRedirect());
 			copyArticleURL.setParameter(
@@ -691,13 +697,13 @@ public class JournalArticleActionDropdownItemsProvider {
 
 		return dropdownItem -> {
 			dropdownItem.setHref(
-				_liferayPortletResponse.createRenderURL(),
-				"mvcRenderCommandName", "/journal/translate", "redirect",
-				_getRedirect(), "referringPortletResource",
-				_getReferringPortletResource(), "groupId",
-				_article.getGroupId(), "folderId", _article.getFolderId(),
-				"articleId", _article.getArticleId(), "version",
-				_article.getVersion());
+				_translationURLProvider.getTranslateURL(
+					PortalUtil.getClassNameId(JournalArticle.class.getName()),
+					_article.getResourcePrimKey(),
+					RequestBackedPortletURLFactoryUtil.create(
+						_httpServletRequest)),
+				"redirect", _getRedirect(), "referringPortletResource",
+				_getReferringPortletResource());
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "translate"));
 		};
@@ -891,6 +897,7 @@ public class JournalArticleActionDropdownItemsProvider {
 	private String _redirect;
 	private String _referringPortletResource;
 	private final ThemeDisplay _themeDisplay;
+	private final TranslationURLProvider _translationURLProvider;
 	private final TrashHelper _trashHelper;
 
 }

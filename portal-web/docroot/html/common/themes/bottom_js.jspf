@@ -72,22 +72,24 @@
 	}
 </aui:script>
 
-<aui:script require="metal-dom/src/all/dom as dom" sandbox="<%= true %>">
-	var focusInPortletHandler = dom.delegate(
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+	var delegate = delegateModule.default;
+
+	delegate(
 		document,
 		'focusin',
 		'.portlet',
 		function(event) {
-			dom.addClasses(dom.closest(event.delegateTarget, '.portlet'), 'open');
+			event.delegateTarget.closest('.portlet').classList.add('open');
 		}
 	);
 
-	var focusOutPortletHandler = dom.delegate(
+	delegate(
 		document,
 		'focusout',
 		'.portlet',
 		function(event) {
-			dom.removeClasses(dom.closest(event.delegateTarget, '.portlet'), 'open');
+			event.delegateTarget.closest('.portlet').classList.remove('open');
 		}
 	);
 </aui:script>

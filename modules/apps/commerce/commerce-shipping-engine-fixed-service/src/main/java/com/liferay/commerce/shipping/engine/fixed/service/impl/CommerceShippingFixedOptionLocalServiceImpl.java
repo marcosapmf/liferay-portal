@@ -167,6 +167,22 @@ public class CommerceShippingFixedOptionLocalServiceImpl
 			countByCommerceShippingMethodId(commerceShippingMethodId);
 	}
 
+	@Override
+	public long getCommerceShippingFixedOptionsCount(
+			long companyId, long groupId, long commerceShippingMethodId,
+			String keywords)
+		throws PortalException {
+
+		SearchContext searchContext = buildSearchContext(
+			companyId, groupId, commerceShippingMethodId, keywords, 0, 0);
+
+		Indexer<CommerceShippingFixedOption> indexer =
+			IndexerRegistryUtil.nullSafeGetIndexer(
+				CommerceShippingFixedOption.class.getName());
+
+		return indexer.searchCount(searchContext);
+	}
+
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public BaseModelSearchResult<CommerceShippingFixedOption>

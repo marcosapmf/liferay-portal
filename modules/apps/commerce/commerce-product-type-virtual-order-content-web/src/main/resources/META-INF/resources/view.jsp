@@ -43,7 +43,7 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 			displayStyleGroupId="<%= commerceVirtualOrderItemContentDisplayContext.getDisplayStyleGroupId() %>"
 			entries="<%= commerceVirtualOrderContentDisplayContextSearchContainer.getResults() %>"
 		>
-			<div class="container-fluid-1280" id="<portlet:namespace />virtualOrderItemsContainer">
+			<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />virtualOrderItemsContainer">
 				<div class="commerce-virtual-order-items-container" id="<portlet:namespace />entriesContainer">
 					<liferay-ui:search-container
 						id="commerceVirtualOrderItems"
@@ -52,7 +52,6 @@ CommerceVirtualOrderItemContentDisplayContext commerceVirtualOrderItemContentDis
 					>
 						<liferay-ui:search-container-row
 							className="com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem"
-							cssClass="entry-display-style"
 							keyProperty="commerceVirtualOrderItemId"
 							modelVar="commerceVirtualOrderItem"
 						>

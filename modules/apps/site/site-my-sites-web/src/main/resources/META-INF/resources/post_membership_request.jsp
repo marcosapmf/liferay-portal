@@ -30,8 +30,6 @@ if (Validator.isNull(redirect)) {
 long groupId = ParamUtil.getLong(request, "groupId");
 
 Group group = GroupLocalServiceUtil.fetchGroup(groupId);
-
-MembershipRequest membershipRequest = (MembershipRequest)request.getAttribute(WebKeys.MEMBERSHIP_REQUEST);
 %>
 
 <portlet:actionURL name="postMembershipRequest" var="postMembershipRequestURL">
@@ -39,7 +37,7 @@ MembershipRequest membershipRequest = (MembershipRequest)request.getAttribute(We
 	<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= postMembershipRequestURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= postMembershipRequestURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 
 	<c:if test="<%= !layout.isTypeControlPanel() %>">
@@ -53,7 +51,7 @@ MembershipRequest membershipRequest = (MembershipRequest)request.getAttribute(We
 
 	<liferay-ui:error exception="<%= MembershipRequestCommentsException.class %>" message="please-enter-valid-comments" />
 
-	<aui:model-context bean="<%= membershipRequest %>" model="<%= MembershipRequest.class %>" />
+	<aui:model-context bean="<%= (MembershipRequest)request.getAttribute(WebKeys.MEMBERSHIP_REQUEST) %>" model="<%= MembershipRequest.class %>" />
 
 	<c:if test="<%= Validator.isNotNull(group.getDescription()) %>">
 		<div class="alert alert-info">

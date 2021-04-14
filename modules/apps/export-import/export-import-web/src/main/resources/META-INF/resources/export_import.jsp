@@ -24,7 +24,7 @@ String returnToFullPageURL = ParamUtil.getString(request, "returnToFullPageURL")
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
-portletURL.setParameter("mvcRenderCommandName", "exportImport");
+portletURL.setParameter("mvcRenderCommandName", "/export_import/export_import");
 portletURL.setParameter("redirect", redirect);
 portletURL.setParameter("returnToFullPageURL", returnToFullPageURL);
 portletURL.setParameter("portletResource", portletResource);
@@ -47,7 +47,7 @@ portletURL.setParameter("portletResource", portletResource);
 							navigationItem -> {
 								navigationItem.setActive(tabs2.equals("export"));
 								navigationItem.setHref(portletURL.toString());
-								navigationItem.setLabel(LanguageUtil.get(request, "export"));
+								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "export"));
 							});
 
 						portletURL.setParameter("tabs2", "import");
@@ -56,7 +56,7 @@ portletURL.setParameter("portletResource", portletResource);
 							navigationItem -> {
 								navigationItem.setActive(tabs2.equals("import"));
 								navigationItem.setHref(portletURL.toString());
-								navigationItem.setLabel(LanguageUtil.get(request, "import"));
+								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "import"));
 							});
 					}
 				}

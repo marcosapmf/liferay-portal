@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Reports Engine Console Jasper
 Bundle-SymbolicName: com.liferay.portal.reports.engine.console.jasper
-Bundle-Version: 3.0.9
+Bundle-Version: 4.0.0
 DynamicImport-Package: *
 Import-Package:\
 	!antlr.*,\
@@ -88,8 +88,6 @@ Import-Package:\
 	!sun.*,\
 	\
 	com.github.*;resolution:=optional,\
-	\
-	com.graphbuilder.*;resolution:=optional,\
 	\
 	com.microsoft.schemas.office.powerpoint.*;resolution:=optional,\
 	com.microsoft.schemas.office.word.*;resolution:=optional,\

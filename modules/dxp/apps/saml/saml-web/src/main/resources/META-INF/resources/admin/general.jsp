@@ -25,6 +25,7 @@ GeneralTabDefaultViewDisplayContext.X509CertificateStatus x509CertificateStatus 
 
 boolean keystoreException = x509CertificateStatus.getStatus() == GeneralTabDefaultViewDisplayContext.X509CertificateStatus.Status.SAML_KEYSTORE_EXCEPTION;
 boolean keystoreIncorrectPassword = x509CertificateStatus.getStatus() == GeneralTabDefaultViewDisplayContext.X509CertificateStatus.Status.SAML_KEYSTORE_PASSWORD_INCORRECT;
+
 String samlRole = properties.getProperty(PortletPropsKeys.SAML_ROLE, samlProviderConfiguration.role());
 boolean samlRoleIdpOptionDisabled = StringUtil.equalsIgnoreCase(samlProviderConfiguration.role(), SamlProviderConfigurationKeys.SAML_ROLE_SP) && !generalTabDefaultViewDisplayContext.isRoleIdPAvailable();
 
@@ -35,7 +36,7 @@ if (samlRoleIdpOptionDisabled) {
 }
 %>
 
-<portlet:actionURL name="/admin/updateGeneral" var="updateGeneralURL">
+<portlet:actionURL name="/admin/update_general" var="updateGeneralURL">
 	<portlet:param name="tabs1" value="general" />
 </portlet:actionURL>
 
@@ -78,7 +79,7 @@ if (samlRoleIdpOptionDisabled) {
 	</aui:button-row>
 </aui:form>
 
-<portlet:actionURL name="/admin/updateCertificate" var="updateCertificateURL">
+<portlet:actionURL name="/admin/update_certificate" var="updateCertificateURL">
 	<portlet:param name="tabs1" value="general" />
 </portlet:actionURL>
 

@@ -10,8 +10,6 @@
 		"**/liferay/liferay.js",
 		"**/liferay/portlet.js",
 		"**/liferay/workflow.js",
-		"**/loader/config.js",
-		"**/misc/swfobject.js",
-		"**/misc/xp_progress.js"
+		"**/loader/config.js"
 	]
 }

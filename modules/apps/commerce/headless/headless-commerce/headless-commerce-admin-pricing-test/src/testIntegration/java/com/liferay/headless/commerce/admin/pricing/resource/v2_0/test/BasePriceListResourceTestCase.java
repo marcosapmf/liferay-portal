@@ -626,6 +626,7 @@ public abstract class BasePriceListResourceTestCase {
 
 		PriceList randomPatchPriceList = randomPatchPriceList();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		PriceList patchPriceList =
 			priceListResource.patchPriceListByExternalReferenceCode(
 				postPriceList.getExternalReferenceCode(), randomPatchPriceList);
@@ -635,8 +636,9 @@ public abstract class BasePriceListResourceTestCase {
 		_beanUtilsBean.copyProperties(
 			expectedPatchPriceList, randomPatchPriceList);
 
-		PriceList getPriceList = priceListResource.getPriceList(
-			patchPriceList.getId());
+		PriceList getPriceList =
+			priceListResource.getPriceListByExternalReferenceCode(
+				patchPriceList.getExternalReferenceCode());
 
 		assertEquals(expectedPatchPriceList, getPriceList);
 		assertValid(getPriceList);
@@ -770,6 +772,7 @@ public abstract class BasePriceListResourceTestCase {
 
 		PriceList randomPatchPriceList = randomPatchPriceList();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		PriceList patchPriceList = priceListResource.patchPriceList(
 			postPriceList.getId(), randomPatchPriceList);
 

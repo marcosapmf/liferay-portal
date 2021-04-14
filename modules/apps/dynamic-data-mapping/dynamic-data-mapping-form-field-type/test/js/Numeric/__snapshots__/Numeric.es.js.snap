@@ -10,7 +10,6 @@ exports[`Field Numeric has a helptext 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""
@@ -22,8 +21,7 @@ exports[`Field Numeric has a helptext 1`] = `
       Type something
     </span>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="numericField_fieldDetails"
     >
       Type something
@@ -43,7 +41,6 @@ exports[`Field Numeric has a key 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""
@@ -60,23 +57,20 @@ exports[`Field Numeric has a label 1`] = `
     data-field-name="numericField"
   >
     <label
-      aria-labelledby="numericField_fieldDetails"
+      aria-describedby="numericField_fieldDetails"
       class="ddm-label"
-      for="numericField"
       tabindex="0"
     >
       label
     </label>
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""
     />
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="numericField_fieldDetails"
     >
       label
@@ -96,7 +90,6 @@ exports[`Field Numeric has a placeholder 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       placeholder="Placeholder"
       type="text"
@@ -117,7 +110,6 @@ exports[`Field Numeric has a value 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value="123"
@@ -157,7 +149,6 @@ exports[`Field Numeric is not readOnly 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""
@@ -177,7 +168,6 @@ exports[`Field Numeric is not required 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""
@@ -194,23 +184,20 @@ exports[`Field Numeric renders Label if showLabel is true 1`] = `
     data-field-name="numericField"
   >
     <label
-      aria-labelledby="numericField_fieldDetails"
+      aria-describedby="numericField_fieldDetails"
       class="ddm-label"
-      for="numericField"
       tabindex="0"
     >
       Numeric Field
     </label>
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""
     />
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="numericField_fieldDetails"
     >
       Numeric Field
@@ -230,7 +217,6 @@ exports[`Field Numeric renders the default markup 1`] = `
   >
     <input
       class="form-control"
-      id="numericField"
       name="numericField"
       type="text"
       value=""

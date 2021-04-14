@@ -16,7 +16,7 @@
 
 <%@ include file="/admin/init.jsp" %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= ddmFormAdminDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= ddmFormAdminDisplayContext.getClearResultsURL() %>"
 	componentId="ddmFormManagementToolbar"
@@ -55,7 +55,7 @@
 							),
 						},
 
-						<portlet:actionURL name="deleteFormInstance" var="deleteFormInstanceURL">
+						<portlet:actionURL name="/dynamic_data_mapping_form/delete_form_instance" var="deleteFormInstanceURL">
 							<portlet:param name="mvcPath" value="/admin/view.jsp" />
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 						</portlet:actionURL>
@@ -88,7 +88,7 @@
 							),
 						},
 
-						<portlet:actionURL name="deleteStructure" var="deleteStructureURL">
+						<portlet:actionURL name="/dynamic_data_mapping_form/delete_structure" var="deleteStructureURL">
 							<portlet:param name="mvcPath" value="/admin/view.jsp" />
 							<portlet:param name="currentTab" value="element-set" />
 							<portlet:param name="redirect" value="<%= currentURL %>" />

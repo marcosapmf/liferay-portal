@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.model.impl;
 
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
@@ -173,6 +174,10 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 				QueryUtil.ALL_POS);
 
 		for (FragmentEntry fragmentEntry : fragmentEntries) {
+			if (fragmentEntry.getType() == FragmentConstants.TYPE_REACT) {
+				continue;
+			}
+
 			fragmentEntry.populateZipWriter(zipWriter, path + "/fragments");
 		}
 

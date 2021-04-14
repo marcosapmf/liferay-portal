@@ -257,9 +257,8 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 			return new DateConfig(CalendarFactoryUtil.getCalendar(timeZone));
 		}
 
-		long time = date.getTime();
-
-		Calendar calendar = CalendarFactoryUtil.getCalendar(time, timeZone);
+		Calendar calendar = CalendarFactoryUtil.getCalendar(
+			date.getTime(), timeZone);
 
 		return new DateConfig(calendar);
 	}
@@ -274,9 +273,8 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 			return new DateConfig(expirationCalendar);
 		}
 
-		long time = date.getTime();
-
-		Calendar calendar = CalendarFactoryUtil.getCalendar(time, timeZone);
+		Calendar calendar = CalendarFactoryUtil.getCalendar(
+			date.getTime(), timeZone);
 
 		return new DateConfig(calendar);
 	}
@@ -465,10 +463,10 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 				CommercePriceEntry commercePriceEntry =
 					_commercePriceEntryService.upsertCommercePriceEntry(
+						priceEntry.getExternalReferenceCode(),
 						GetterUtil.getLong(priceEntry.getPriceEntryId()),
 						GetterUtil.getLong(priceEntry.getSkuId()), null,
 						commercePriceList.getCommercePriceListId(),
-						priceEntry.getExternalReferenceCode(),
 						BigDecimal.valueOf(priceEntry.getPrice()),
 						priceEntry.getDiscountDiscovery(),
 						priceEntry.getDiscountLevel1(),
@@ -509,8 +507,13 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 		throws Exception {
 
 		CommerceCurrency commerceCurrency =
+			commercePriceList.getCommerceCurrency();
+
+		CommerceCurrency updatedCommerceCurrency =
 			_commerceCurrencyService.getCommerceCurrency(
-				contextCompany.getCompanyId(), priceList.getCurrencyCode());
+				contextCompany.getCompanyId(),
+				GetterUtil.get(
+					priceList.getCurrencyCode(), commerceCurrency.getCode()));
 
 		ServiceContext serviceContext = _serviceContextHelper.getServiceContext(
 			commercePriceList.getGroupId());
@@ -523,7 +526,7 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		commercePriceList = _commercePriceListService.updateCommercePriceList(
 			commercePriceList.getCommercePriceListId(),
-			commerceCurrency.getCommerceCurrencyId(),
+			updatedCommerceCurrency.getCommerceCurrencyId(),
 			GetterUtil.get(
 				priceList.getNetPrice(), commercePriceList.isNetPrice()),
 			GetterUtil.get(

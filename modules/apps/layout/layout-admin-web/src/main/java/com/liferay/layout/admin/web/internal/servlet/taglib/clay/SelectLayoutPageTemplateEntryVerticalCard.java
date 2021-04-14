@@ -53,14 +53,20 @@ public class SelectLayoutPageTemplateEntryVerticalCard implements VerticalCard {
 	}
 
 	@Override
-	public Map<String, String> getData() {
+	public String getCssClass() {
+		return "add-layout-action-option card-interactive " +
+			"card-interactive-primary";
+	}
+
+	@Override
+	public Map<String, String> getDynamicAttributes() {
 		Map<String, String> data = new HashMap<>();
 
 		try {
 			PortletURL addLayoutURL = _renderResponse.createRenderURL();
 
 			addLayoutURL.setParameter(
-				"mvcRenderCommandName", "/layout/add_layout");
+				"mvcRenderCommandName", "/layout_admin/add_layout");
 
 			String redirect = ParamUtil.getString(
 				_httpServletRequest, "redirect");
@@ -83,18 +89,15 @@ public class SelectLayoutPageTemplateEntryVerticalCard implements VerticalCard {
 					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
 			addLayoutURL.setWindowState(LiferayWindowState.POP_UP);
 
-			data.put("add-layout-url", addLayoutURL.toString());
+			data.put("data-add-layout-url", addLayoutURL.toString());
 		}
 		catch (Exception exception) {
 		}
 
-		return data;
-	}
+		data.put("role", "button");
+		data.put("tabIndex", "0");
 
-	@Override
-	public String getElementClasses() {
-		return "add-layout-action-option card-interactive " +
-			"card-interactive-primary";
+		return data;
 	}
 
 	@Override

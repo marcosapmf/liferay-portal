@@ -15,27 +15,33 @@
 import {DataLayoutBuilderActions} from 'data-engine-taglib';
 import React, {useContext, useEffect} from 'react';
 
+import customFields from '../../utils/formRendererCustomFields.es';
 import DataLayoutBuilderContext from './DataLayoutBuilderInstanceContext.es';
 import FormViewContext from './FormViewContext.es';
 import useDeleteDefinitionField from './useDeleteDefinitionField.es';
 import useDeleteDefinitionFieldModal from './useDeleteDefinitionFieldModal.es';
+import useDuplicateField from './useDuplicateField.es';
 import useSaveAsFieldset from './useSaveAsFieldset.es';
 
 export default ({children, dataLayoutBuilder}) => {
 	const [
 		{
 			config: {allowNestedFields},
-			dataDefinition: {defaultLanguageId},
+			dataDefinition,
 			editingLanguageId,
 			hoveredField,
 		},
 		dispatch,
 	] = useContext(FormViewContext);
-	const deleteDefinitionField = useDeleteDefinitionField({dataLayoutBuilder});
-	const onDeleteDefinitionField = useDeleteDefinitionFieldModal((event) => {
-		deleteDefinitionField(event);
-	});
+	const {defaultLanguageId} = dataDefinition;
 
+	const deleteDefinitionField = useDeleteDefinitionField({dataLayoutBuilder});
+	const deleteDefinitionFieldModal = useDeleteDefinitionFieldModal(
+		(event) => {
+			deleteDefinitionField(event);
+		}
+	);
+	const duplicateField = useDuplicateField({dataLayoutBuilder});
 	const saveAsFieldset = useSaveAsFieldset({dataLayoutBuilder});
 
 	useEffect(() => {
@@ -47,8 +53,7 @@ export default ({children, dataLayoutBuilder}) => {
 
 	useEffect(() => {
 		const duplicateAction = {
-			action: (event) =>
-				dataLayoutBuilder.dispatch('fieldDuplicated', event),
+			action: (event) => duplicateField(event),
 			label: Liferay.Language.get('duplicate'),
 		};
 
@@ -65,18 +70,15 @@ export default ({children, dataLayoutBuilder}) => {
 		};
 
 		const deleteFromObjectAction = {
-			action: (event) => {
-				onDeleteDefinitionField(event);
-			},
+			action: (event) => deleteDefinitionFieldModal(event),
 			label: Liferay.Language.get('delete-from-object'),
-			style: 'danger',
 		};
 
 		let fieldActions = [
 			duplicateAction,
+			removeAction,
 			{
-				...removeAction,
-				separator: true,
+				type: 'divider',
 			},
 			deleteFromObjectAction,
 		];
@@ -93,7 +95,9 @@ export default ({children, dataLayoutBuilder}) => {
 				{
 					action: ({fieldName}) => saveAsFieldset(fieldName),
 					label: Liferay.Language.get('save-as-fieldset'),
-					separator: true,
+				},
+				{
+					type: 'divider',
 				},
 				deleteFromObjectAction,
 			];
@@ -115,10 +119,18 @@ export default ({children, dataLayoutBuilder}) => {
 		allowNestedFields,
 		dataLayoutBuilder,
 		dispatch,
+		duplicateField,
 		hoveredField,
-		onDeleteDefinitionField,
+		deleteDefinitionFieldModal,
 		saveAsFieldset,
 	]);
+
+	useEffect(() => {
+		dispatch({
+			payload: customFields,
+			type: DataLayoutBuilderActions.SET_FORM_RENDERER_CUSTOM_FIELDS,
+		});
+	}, [dispatch]);
 
 	return (
 		<DataLayoutBuilderContext.Provider

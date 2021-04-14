@@ -106,7 +106,7 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 					_themeDisplay.getLocale(), userSearchContainer.getStart(),
 					userSearchContainer.getEnd());
 			}
-			else if (segmentsEntry != null) {
+			else if ((criteria == null) && (segmentsEntry != null)) {
 				total =
 					_segmentsEntryProviderRegistry.
 						getSegmentsEntryClassPKsCount(
@@ -148,20 +148,15 @@ public class PreviewSegmentsEntryUsersDisplayContext {
 	protected Criteria getCriteriaFromSession() {
 		PortletSession portletSession = _renderRequest.getPortletSession();
 
-		Criteria criteria = (Criteria)portletSession.getAttribute(
+		return (Criteria)portletSession.getAttribute(
 			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
-
-		portletSession.removeAttribute(
-			SegmentsWebKeys.PREVIEW_SEGMENTS_ENTRY_CRITERIA);
-
-		return criteria;
 	}
 
 	protected PortletURL getPortletURL() {
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "previewSegmentsEntryUsers");
+			"mvcRenderCommandName", "/segments/preview_segments_entry_users");
 
 		SegmentsEntry segmentsEntry = getSegmentsEntry();
 

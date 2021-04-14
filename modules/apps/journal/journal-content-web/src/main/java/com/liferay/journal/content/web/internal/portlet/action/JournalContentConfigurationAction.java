@@ -19,13 +19,16 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.dynamic.data.mapping.kernel.DDMTemplateManager;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLinkLocalService;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalWebKeys;
 import com.liferay.journal.content.web.internal.display.context.JournalContentDisplayContext;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,12 +36,15 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.portlet.DefaultConfigurationAction;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -131,6 +137,8 @@ public class JournalContentConfigurationAction
 			actionRequest, "userToolAssetAddonEntryKeys",
 			StringUtil.merge(userToolAssetAddonEntryKeys));
 
+		_addDDMTemplateLinks(actionRequest);
+
 		super.processAction(portletConfig, actionRequest, actionResponse);
 	}
 
@@ -183,6 +191,55 @@ public class JournalContentConfigurationAction
 		return StringUtil.toUpperCase(article.getArticleId());
 	}
 
+	protected long getDDMTemplateId(PortletRequest portletRequest)
+		throws PortalException {
+
+		String ddmTemplateKey = getParameter(portletRequest, "ddmTemplateKey");
+
+		if (Validator.isNull(ddmTemplateKey)) {
+			return 0;
+		}
+
+		com.liferay.dynamic.data.mapping.kernel.DDMTemplate ddmTemplate =
+			_ddmTemplateManager.fetchTemplate(
+				getArticleGroupId(portletRequest), _CLASS_NAME_ID,
+				ddmTemplateKey);
+
+		if (ddmTemplate == null) {
+			return 0;
+		}
+
+		return ddmTemplate.getTemplateId();
+	}
+
+	private void _addDDMTemplateLinks(ActionRequest actionRequest)
+		throws Exception {
+
+		JournalArticle journalArticle =
+			_journalArticleLocalService.fetchArticle(
+				getArticleGroupId(actionRequest), getArticleId(actionRequest));
+
+		if (journalArticle == null) {
+			return;
+		}
+
+		String compositeClassName = ResourceActionsUtil.getCompositeModelName(
+			JournalArticle.class.getName(), DDMTemplate.class.getName());
+
+		_ddmTemplateLinkLocalService.deleteTemplateLink(
+			_portal.getClassNameId(compositeClassName), journalArticle.getId());
+
+		long ddmTemplateId = getDDMTemplateId(actionRequest);
+
+		if (ddmTemplateId == 0) {
+			return;
+		}
+
+		_ddmTemplateLinkLocalService.addTemplateLink(
+			_portal.getClassNameId(compositeClassName), journalArticle.getId(),
+			ddmTemplateId);
+	}
+
 	private static final long _CLASS_NAME_ID = PortalUtil.getClassNameId(
 		DDMStructure.class);
 
@@ -191,6 +248,12 @@ public class JournalContentConfigurationAction
 
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private DDMTemplateLinkLocalService _ddmTemplateLinkLocalService;
+
+	@Reference
+	private DDMTemplateManager _ddmTemplateManager;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
@@ -202,6 +265,12 @@ public class JournalContentConfigurationAction
 	private ItemSelector _itemSelector;
 
 	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
 	private JournalContent _journalContent;
+
+	@Reference
+	private Portal _portal;
 
 }

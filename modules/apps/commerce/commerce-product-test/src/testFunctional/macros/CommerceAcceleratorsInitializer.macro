@@ -46,7 +46,7 @@ definition {
 	}
 
 	macro createNewAccountViaFront {
-		Click.clickNoMouseOver(
+		Click.mouseDownMouseUp(
 			key_text = "Add Account",
 			locator1 = "Button#ANY");
 
@@ -81,6 +81,12 @@ definition {
 		CommerceEntry.clickNoError(menuItem = "Deactivate");
 
 		Alert.viewSuccessMessage();
+	}
+
+	macro gotoMiniumProductDetailsPage {
+		Click(
+			key_productName = "${productName}",
+			locator1 = "CommerceAccelerators#MINIUM_CARD_NAME");
 	}
 
 	macro inviteNewMemberWithRoleToAccount {
@@ -150,6 +156,18 @@ definition {
 			value1 = "$ ${productPrice}");
 	}
 
+	macro selectAccountFromAccountSelector {
+		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
+
+		Click(locator1 = "CommerceAccelerators#ACCOUNT_SWITCHER_BACK_BUTTON");
+
+		Click(
+			key_accountName = "${accountName}",
+			locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_ACCOUNT_LIST_ITEM");
+
+		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
+	}
+
 	macro viewAllAccountsFromAccountSelector {
 		Click(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 
@@ -162,6 +180,20 @@ definition {
 		AssertElementPresent(
 			key_productName = "${productName}",
 			locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_DISABLED");
+	}
+
+	macro viewDiscountedProductDetailsPage {
+		AssertTextEquals.assertPartialText(
+			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_LIST_PRICE_INACTIVE",
+			value1 = "${productListPrice}");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_DISCOUNT",
+			value1 = "${discountPercentage}");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "CommerceAccelerators#PRODUCT_DETAILS_NET_PRICE",
+			value1 = "${productDiscountedPrice}");
 	}
 
 	macro viewEnabledAddToCartButton {
@@ -178,11 +210,13 @@ definition {
 	}
 
 	macro viewMiniumSelectedAccount {
-		Click(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
+		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 
 		AssertTextEquals(
 			locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_SELECTED_ACCOUNT",
 			value1 = "${selectedAccount}");
+
+		Click.clickNoMouseOver(locator1 = "CommerceAccelerators#ACCOUNT_SELECTOR_DROPDOWN");
 	}
 
 	macro viewSpeedwellAccount {

@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -37,7 +38,6 @@ import com.liferay.segments.provider.SegmentsEntryProvider;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryRelLocalService;
 
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -152,12 +152,6 @@ public abstract class BaseSegmentsEntryProvider
 		return stream.filter(
 			segmentsEntry -> isMember(
 				className, classPK, context, segmentsEntry, segmentsEntryIds)
-		).sorted(
-			(segmentsEntry1, segmentsEntry2) -> {
-				Date modifiedDate = segmentsEntry2.getModifiedDate();
-
-				return modifiedDate.compareTo(segmentsEntry1.getModifiedDate());
-			}
 		).mapToLong(
 			SegmentsEntry::getSegmentsEntryId
 		).toArray();
@@ -234,27 +228,35 @@ public abstract class BaseSegmentsEntryProvider
 		Criteria.Conjunction contextConjunction = getConjunction(
 			segmentsEntry, Criteria.Type.CONTEXT);
 
-		if ((context != null) && Validator.isNotNull(contextFilterString)) {
+		if (context != null) {
 			boolean matchesContext = false;
 
-			try {
-				matchesContext = oDataMatcher.matches(
-					contextFilterString, context);
+			if (Validator.isNotNull(contextFilterString)) {
+				try {
+					matchesContext = oDataMatcher.matches(
+						contextFilterString, context);
+				}
+				catch (PortalException portalException) {
+					_log.error(portalException, portalException);
+				}
+
+				if (matchesContext &&
+					contextConjunction.equals(Criteria.Conjunction.OR)) {
+
+					return true;
+				}
+
+				if (!matchesContext &&
+					contextConjunction.equals(Criteria.Conjunction.AND)) {
+
+					return false;
+				}
 			}
-			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
-			}
 
-			if (matchesContext &&
-				contextConjunction.equals(Criteria.Conjunction.OR)) {
+			if (context.containsKey(Context.SIGNED_IN) &&
+				!GetterUtil.getBoolean(context.get(Context.SIGNED_IN))) {
 
-				return true;
-			}
-
-			if (!matchesContext &&
-				contextConjunction.equals(Criteria.Conjunction.AND)) {
-
-				return false;
+				return matchesContext;
 			}
 		}
 

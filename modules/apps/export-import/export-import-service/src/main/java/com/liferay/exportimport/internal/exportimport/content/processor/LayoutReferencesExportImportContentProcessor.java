@@ -55,7 +55,7 @@ import com.liferay.portal.util.PropsValues;
 import com.liferay.staging.StagingGroupHelper;
 
 import java.net.InetAddress;
-import java.net.URL;
+import java.net.URI;
 
 import java.util.Locale;
 import java.util.Map;
@@ -250,7 +250,10 @@ public class LayoutReferencesExportImportContentProcessor
 
 				char c = content.charAt(beginPos + offset);
 
-				if ((c == CharPool.APOSTROPHE) || (c == CharPool.QUOTE)) {
+				if (c == CharPool.BACK_SLASH) {
+					offset = 7;
+				}
+				else if ((c == CharPool.APOSTROPHE) || (c == CharPool.QUOTE)) {
 					offset++;
 				}
 			}
@@ -260,9 +263,16 @@ public class LayoutReferencesExportImportContentProcessor
 				offset = 2;
 			}
 
-			endPos = StringUtil.indexOfAny(
-				content, _LAYOUT_REFERENCE_STOP_CHARS, beginPos + offset,
-				endPos);
+			if (content.startsWith("href=", beginPos)) {
+				endPos = StringUtil.indexOfAny(
+					content, _URL_REFERENCE_STOP_CHARS, beginPos + offset,
+					endPos);
+			}
+			else {
+				endPos = StringUtil.indexOfAny(
+					content, _LAYOUT_REFERENCE_STOP_CHARS, beginPos + offset,
+					endPos);
+			}
 
 			if (endPos == -1) {
 				continue;
@@ -785,7 +795,10 @@ public class LayoutReferencesExportImportContentProcessor
 
 				char c = content.charAt(beginPos + offset);
 
-				if ((c == CharPool.APOSTROPHE) || (c == CharPool.QUOTE)) {
+				if (c == CharPool.BACK_SLASH) {
+					offset = 7;
+				}
+				else if ((c == CharPool.APOSTROPHE) || (c == CharPool.QUOTE)) {
 					offset++;
 				}
 			}
@@ -795,9 +808,16 @@ public class LayoutReferencesExportImportContentProcessor
 				offset = 2;
 			}
 
-			endPos = StringUtil.indexOfAny(
-				content, _LAYOUT_REFERENCE_STOP_CHARS, beginPos + offset,
-				endPos);
+			if (content.startsWith("href=", beginPos)) {
+				endPos = StringUtil.indexOfAny(
+					content, _URL_REFERENCE_STOP_CHARS, beginPos + offset,
+					endPos);
+			}
+			else {
+				endPos = StringUtil.indexOfAny(
+					content, _LAYOUT_REFERENCE_STOP_CHARS, beginPos + offset,
+					endPos);
+			}
 
 			if (endPos == -1) {
 				continue;
@@ -992,18 +1012,18 @@ public class LayoutReferencesExportImportContentProcessor
 		throws PortalException {
 
 		try {
-			URL urlObject = new URL(url);
+			URI uri = new URI(url);
 
 			if (InetAddressUtil.isLocalInetAddress(
-					InetAddress.getByName(urlObject.getHost()))) {
+					InetAddress.getByName(uri.getHost()))) {
 
 				StringBundler sb = new StringBundler(5);
 
-				sb.append(urlObject.getProtocol());
+				sb.append(uri.getScheme());
 				sb.append("://");
-				sb.append(urlObject.getHost());
+				sb.append(uri.getHost());
 				sb.append(StringPool.COLON);
-				sb.append(urlObject.getPort());
+				sb.append(uri.getPort());
 
 				return sb.toString();
 			}
@@ -1104,6 +1124,12 @@ public class LayoutReferencesExportImportContentProcessor
 			StringPool.SLASH;
 
 	private static final String _TEMPLATE_NAME_PREFIX = "template";
+
+	private static final char[] _URL_REFERENCE_STOP_CHARS = {
+		CharPool.APOSTROPHE, CharPool.BACK_SLASH, CharPool.CLOSE_BRACKET,
+		CharPool.GREATER_THAN, CharPool.PIPE, CharPool.POUND, CharPool.QUESTION,
+		CharPool.QUOTE, CharPool.SPACE
+	};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutReferencesExportImportContentProcessor.class);

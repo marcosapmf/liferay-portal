@@ -84,12 +84,13 @@ if (layoutSetPrototypeId > 0) {
 
 <liferay-ui:success key='<%= SiteAdminPortletKeys.SITE_SETTINGS + "requestProcessed" %>' message="site-was-added" />
 
-<portlet:actionURL name="editGroup" var="editGroupURL">
+<portlet:actionURL name="/site_admin/edit_group" var="editGroupURL">
 	<portlet:param name="mvcPath" value="/edit_site.jsp" />
 </portlet:actionURL>
 
 <liferay-frontend:edit-form
 	action="<%= editGroupURL %>"
+	cssClass="container-form-lg"
 	method="post"
 	name="fm"
 	onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveGroup();" %>'
@@ -128,10 +129,6 @@ if (layoutSetPrototypeId > 0) {
 
 <script>
 	function <portlet:namespace />saveGroup(forceDisable) {
-		<c:if test="<%= (group != null) && !group.isCompany() %>">
-			<portlet:namespace />saveLocales();
-		</c:if>
-
 		submitForm(document.<portlet:namespace />fm);
 	}
 </script>

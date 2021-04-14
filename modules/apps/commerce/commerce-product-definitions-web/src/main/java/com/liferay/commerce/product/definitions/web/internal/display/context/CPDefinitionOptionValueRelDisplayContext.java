@@ -24,7 +24,7 @@ import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
-import com.liferay.commerce.product.servlet.taglib.ui.CPDefinitionScreenNavigationConstants;
+import com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -125,7 +125,8 @@ public class CPDefinitionOptionValueRelDisplayContext
 
 		portletURL.setParameter(Constants.CMD, "deleteSku");
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "editProductDefinitionOptionValueRel");
+			ActionRequest.ACTION_NAME,
+			"/cp_definitions/edit_cp_definition_option_value_rel");
 		portletURL.setParameter(
 			"cpDefinitionOptionValueRelId",
 			String.valueOf(getCPDefinitionOptionValueRelId()));

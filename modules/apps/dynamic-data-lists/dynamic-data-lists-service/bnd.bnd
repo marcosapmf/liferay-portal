@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Dynamic Data Lists Service
 Bundle-SymbolicName: com.liferay.dynamic.data.lists.service
-Bundle-Version: 4.0.22
+Bundle-Version: 5.0.0
 Import-Package:\
 	com.github.*;resolution:=optional,\
 	\
@@ -29,7 +29,7 @@ Import-Package:\
 	org.tukaani.*;resolution:=optional,\
 	\
 	*
-Liferay-Require-SchemaVersion: 2.2.0
+Liferay-Require-SchemaVersion: 2.3.0
 Liferay-Service: true
 -dsannotations-options: inherit
 -includeresource: @poi-[0-9.]*.jar

@@ -23,6 +23,7 @@ import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.headless.delivery.dto.v1_0.PageElement;
+import com.liferay.layout.page.template.admin.web.internal.exception.DropzoneLayoutStructureItemException;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
@@ -53,6 +54,13 @@ public class DropZoneLayoutStructureItemImporter
 			PageElement pageElement, String parentItemId, int position,
 			Set<String> warningMessages)
 		throws Exception {
+
+		LayoutStructureItem existingLayoutStructureItem =
+			layoutStructure.getDropZoneLayoutStructureItem();
+
+		if (existingLayoutStructureItem != null) {
+			throw new DropzoneLayoutStructureItemException();
+		}
 
 		DropZoneLayoutStructureItem dropZoneLayoutStructureItem =
 			(DropZoneLayoutStructureItem)

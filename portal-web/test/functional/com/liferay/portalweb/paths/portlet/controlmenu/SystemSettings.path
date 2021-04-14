@@ -43,15 +43,26 @@
 	<td>//span[contains(@class,'custom-control-label-text') and contains(.,'${key_settingFieldName}')]/../..//input[@type='checkbox']</td>
 	<td></td>
 </tr>
-<tr>
-	<td></td>
-	<td></td>
-	<td></td>
-</tr>
 <!--ASSETS-->
 <tr>
 	<td>ASSETS_DYNAMIC_EXPORT_LIMIT</td>
 	<td>//div[contains(@data-field-name,'dynamicExportLimit')]//input[@type='text']</td>
+	<td></td>
+</tr>
+<!--CORS-->
+<tr>
+	<td>CORS_CONFIGURATION</td>
+	<td>//textarea[contains(@name,'${key_configurationValue}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CORS_DELETE_RESPONSE_HEADERS</td>
+	<td>//div[@class='position-relative row']//div[2]//div[1]//button[contains(@aria-label,'trash')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
 	<td></td>
 </tr>
 </tbody>

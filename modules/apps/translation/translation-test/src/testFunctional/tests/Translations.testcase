@@ -108,6 +108,344 @@ definition {
 			value1 = "Approved");
 	}
 
+	@description = "This ensures that the translation in the web content will not be retained after deleting the translation in draft status from the app."
+	@priority = "4"
+	test DeleteDraftTranslation {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			description = "Description",
+			groupName = "Guest",
+			title = "WC WebContent Title");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
+
+		Translations.changeTargetLocale(
+			currentTargetLocale = "ar-SA",
+			newTargetLocale = "es-ES");
+
+		Translations.viewBaseFields(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		Translations.translateFields(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		PortletEntry.saveAsDraft();
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Draft",
+			title = "Translation of WC WebContent Title to es-ES");
+
+		LexiconEntry.delete(
+			confirmationText = "Are you sure you want to delete this? It will be deleted immediately.",
+			rowEntry = "Translation of WC WebContent Title to es-ES");
+
+		AssertElementNotPresent(
+			key_rowEntry = "Translation of WC WebContent Title to es-ES",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+
+		Click.clickNoMouseOver(
+			key_currentLocale = StringUtil.lowerCase("en-US"),
+			locator1 = "Button#TRANSLATIONS_LOCALIZATION");
+
+		AssertTextEquals(
+			key_localizedLanguage = "es-ES",
+			locator1 = "Translation#TRANSLATION_STATUS_TITLE",
+			value1 = "Untranslated");
+	}
+
+	@description = "This ensures that the translation in the web content will not be retained after deleting the translation in pending status from the app."
+	@priority = "4"
+	test DeletePendingTranslation {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			description = "Description",
+			groupName = "Guest",
+			title = "WC WebContent Title");
+
+		Workflow.openWorkflowAdmin(siteURLKey = "guest");
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver",
+			workflowResourceValue = "Translation");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
+
+		Translations.changeTargetLocale(
+			currentTargetLocale = "ar-SA",
+			newTargetLocale = "es-ES");
+
+		Translations.viewBaseFields(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		Translations.translateFields(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		AssertClick(
+			locator1 = "Button#SUBMIT_FOR_PUBLICATION",
+			value1 = "Submit for Publication");
+
+		Alert.viewSuccessMessage();
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Pending",
+			title = "Translation of WC WebContent Title to es-ES");
+
+		LexiconEntry.delete(
+			confirmationText = "Are you sure you want to delete this? It will be deleted immediately.",
+			rowEntry = "Translation of WC WebContent Title to es-ES");
+
+		AssertElementNotPresent(
+			key_rowEntry = "Translation of WC WebContent Title to es-ES",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+
+		Click.clickNoMouseOver(
+			key_currentLocale = StringUtil.lowerCase("en-US"),
+			locator1 = "Button#TRANSLATIONS_LOCALIZATION");
+
+		AssertTextEquals(
+			key_localizedLanguage = "es-ES",
+			locator1 = "Translation#TRANSLATION_STATUS_TITLE",
+			value1 = "Untranslated");
+	}
+
+	@description = "This ensures that The translation in the web content remains after deleting the translation in approved status from the app."
+	@priority = "5"
+	test DeleteTranslation {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			description = "Description",
+			groupName = "Guest",
+			title = "WC WebContent Title");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
+
+		Translations.changeTargetLocale(
+			currentTargetLocale = "ar-SA",
+			newTargetLocale = "es-ES");
+
+		Translations.viewBaseFields(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		Translations.translateFields(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		PortletEntry.publish();
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
+
+		LexiconEntry.delete(
+			confirmationText = "Are you sure you want to delete this? It will be deleted immediately.",
+			rowEntry = "Translation of WC WebContent Title to es-ES");
+
+		AssertElementNotPresent(
+			key_rowEntry = "Translation of WC WebContent Title to es-ES",
+			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.viewCP(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+	}
+
+	@description = "This ensures that the translation can be edited under Translations app."
+	@priority = "5"
+	test EditTranslation {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			description = "Description",
+			groupName = "Guest",
+			title = "WC WebContent Title");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
+
+		Translations.changeTargetLocale(
+			currentTargetLocale = "ar-SA",
+			newTargetLocale = "es-ES");
+
+		Translations.viewBaseFields(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		Translations.translateFields(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		PortletEntry.publish();
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Translation of WC WebContent Title to es-ES");
+
+		Translations.viewTranslationDetails(
+			currentTargetLocale = "es-ES",
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		Translations.translateFields(
+			webContentContent = "WC WebContent Contenido editar",
+			webContentDescription = "WC WebContent Descripción editar",
+			webContentTitle = "WC WebContent Título editar");
+
+		PortletEntry.publish();
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Translation of WC WebContent Title to es-ES");
+
+		Translations.viewTranslationDetails(
+			currentTargetLocale = "es-ES",
+			webContentContent = "WC WebContent Contenido editar",
+			webContentDescription = "WC WebContent Descripción editar",
+			webContentTitle = "WC WebContent Título editar");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.viewCP(
+			webContentContent = "WC WebContent Contenido editar",
+			webContentDescription = "WC WebContent Descripción editar",
+			webContentTitle = "WC WebContent Título editar");
+	}
+
+	@description = "This ensures that the translation can be edited to a new language under Translations app."
+	@priority = "5"
+	test EditTranslationToNewLanguage {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			description = "Description",
+			groupName = "Guest",
+			title = "WC WebContent Title");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
+
+		Translations.changeTargetLocale(
+			currentTargetLocale = "ar-SA",
+			newTargetLocale = "es-ES");
+
+		Translations.viewBaseFields(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		Translations.translateFields(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		PortletEntry.publish();
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Translation of WC WebContent Title to es-ES");
+
+		Translations.viewTranslationDetails(
+			currentTargetLocale = "es-ES",
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		Translations.changeTargetLocale(
+			currentTargetLocale = "es-ES",
+			newTargetLocale = "ja-JP");
+
+		Translations.translateFields(
+			webContentContent = "wc webcontentコンテンツ",
+			webContentDescription = "wc webcontent記述",
+			webContentTitle = "wc webcontentタイトル");
+
+		PortletEntry.publish();
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Translation of WC WebContent Title to ja-JP");
+
+		Translations.viewTranslationDetails(
+			currentTargetLocale = "ja-JP",
+			webContentContent = "wc webcontentコンテンツ",
+			webContentDescription = "wc webcontent記述",
+			webContentTitle = "wc webcontentタイトル");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.viewCP(
+			webContentContent = "WC WebContent Contenido",
+			webContentDescription = "WC WebContent Descripción",
+			webContentTitle = "WC WebContent Título");
+
+		PortletEntry.changeLocale(locale = "ja-JP");
+
+		WebContent.viewCP(
+			webContentContent = "wc webcontentコンテンツ",
+			webContentDescription = "wc webcontent記述",
+			webContentTitle = "wc webcontentタイトル");
+	}
+
 	@description = "This ensures that translate side by side shows the latest values after editing the web content article."
 	@priority = "5"
 	test EditWCAfterSideBySideTranslation {
@@ -134,6 +472,13 @@ definition {
 			webContentTitle = "WC WebContent Título");
 
 		PortletEntry.publish();
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
@@ -246,7 +591,7 @@ definition {
 	@description = "This ensures that a translated file(.xlf) with an available language can be imported."
 	@priority = "5"
 	test ImportWebContent {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		JSONWebcontent.addWebContent(
 			content = "WebContent",
@@ -289,7 +634,7 @@ definition {
 	@description = "This ensures that a translated file(.xliff) with an available language can be imported."
 	@priority = "5"
 	test ImportWebContentWithXliffFile {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		JSONWebcontent.addWebContent(
 			content = "WebContent",
@@ -462,17 +807,17 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text Box",
-			fieldFieldLabel = "Text Box",
-			fieldName = "TextBox");
+		DataEngine.addFields(fieldNameList = "Numeric,Rich Text,Text");
 
-		for (var fieldName : list "Text,HTML,Integer,Number,Decimal,") {
-			DynamicDataMapping.addField(
-				field = "${fieldName}",
-				fieldFieldLabel = "${fieldName}",
-				fieldName = "${fieldName}");
-		}
+		DataEngine.addField(
+			fieldFieldLabel = "Text Box",
+			fieldName = "Text",
+			fieldType = "Multiple Lines");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Decimal",
+			fieldName = "Numeric",
+			numericType = "Decimal");
 
 		WebContentStructures.saveCP(structureName = "WC Structure Name");
 
@@ -489,18 +834,26 @@ definition {
 
 		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
+		WebContent.addWithStructureCP(
+			numericType = "Decimal",
+			webContentNumeric = "0.5",
+			webContentNumericFieldLabel = "Decimal");
+
+		WebContent.addWithStructureCP(
+			fieldType = "Multiple Lines",
+			webContentText = "This is a Text Box field",
+			webContentTextFieldLabel = "Text Box");
+
 		var webContentSourceHTML = '''<h2 class="text-center">This is a HTML title</h2>''';
 
 		WebContent.addWithStructureCP(
 			description = "WC WebContent Description",
+			source = "true",
 			structureName = "WC Structure Name",
 			templateName = "WC Template Name",
-			webContentDecimal = "1.1",
-			webContentInteger = "123",
-			webContentNumber = "100",
-			webContentSourceHTML = "${webContentSourceHTML}",
+			webContentNumeric = "100",
+			webContentRichText = "${webContentSourceHTML}",
 			webContentText = "Text",
-			webContentTextBox = "This is a text box.",
 			webContentTitle = "WC WebContent Title");
 
 		PortletEntry.publish();
@@ -511,16 +864,23 @@ definition {
 			currentTargetLocale = "ar-SA",
 			newTargetLocale = "es-ES");
 
+		Translations.viewBaseFields(
+			fieldType = "Multiple Lines",
+			webContentText = "This is a Text Box field",
+			webContentTextFieldLabel = "Text Box");
+
+		Translations.viewBaseFields(
+			numericType = "Decimal",
+			webContentNumeric = "0.5",
+			webContentNumericFieldLabel = "Decimal");
+
 		var webContentHTML = "This is a HTML title";
 
 		Translations.viewBaseFields(
-			webContentDecimal = "1.1",
 			webContentDescription = "WC WebContent Description",
-			webContentHTML = "${webContentHTML}",
-			webContentInteger = "123",
-			webContentNumber = "100",
+			webContentNumeric = "100",
+			webContentRichText = "${webContentHTML}",
 			webContentText = "Text",
-			webContentTextBox = "This is a text box.",
 			webContentTitle = "WC WebContent Title");
 
 		var webContentSourceHTML = '''<h2 class="text-center">Este es un título HTML</h2>''';
@@ -528,7 +888,6 @@ definition {
 		Translations.translateFields(
 			webContentDecimal = "2.2",
 			webContentDescription = "WC WebContent Descripción",
-			webContentInteger = "321",
 			webContentNumber = "200",
 			webContentSourceHTML = "${webContentSourceHTML}",
 			webContentText = "Mensaje de texto",
@@ -549,17 +908,23 @@ definition {
 			webContentDecimal = "22,0",
 			webContentDescription = "WC WebContent Descripción",
 			webContentHTML = "${webContentHTML}",
-			webContentInteger = "321",
 			webContentNumber = "200",
 			webContentText = "Mensaje de texto",
 			webContentTextBox = "Este es un cuadro de texto.",
 			webContentTitle = "WC WebContent Título");
 
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		Navigator.openSpecificURL(url = "${portalURL}/es/group/guest/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet");
 
-		LexiconEntry.changeDisplayStyle(displayStyle = "lista");
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		Click.waitForMenuToggleJSClick(
 			key_webContentTitle = "WC WebContent Título",
@@ -574,7 +939,6 @@ definition {
 			webContentDecimal = "22,0",
 			webContentDescription = "WC WebContent Descripción",
 			webContentHTML = "${webContentHTML}",
-			webContentInteger = "321",
 			webContentNumber = "200",
 			webContentText = "Mensaje de texto",
 			webContentTextBox = "Este es un cuadro de texto.",
@@ -608,6 +972,13 @@ definition {
 			roleTitle = "Regrole Name",
 			userEmailAddress = "userea@liferay.com");
 
+		for (var resourceActionIndex : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "${resourceActionIndex}",
+				resourceName = "com_liferay_translation_web_internal_portlet_TranslationPortlet",
+				roleTitle = "Regrole Name");
+		}
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_SITE_ADMINISTRATION",
 			resourceName = "com.liferay.portal.kernel.model.Group",
@@ -633,12 +1004,14 @@ definition {
 
 		Translations.gotoTranslate(webContentTitle = "WC WebContent Title");
 
-		Alert.viewInfoMessageSpecific(infoMessage = "Info:You do not have permissions to translate to any of the available languages.");
+		Alert.viewInfoMessageSpecific(infoMessage = "You do not have permissions to translate to any of the available languages.");
 	}
 
 	@description = "This ensures that the user can translate a Web content to the language she has permissions."
 	@priority = "5"
 	test TranslateWCWithSpecificLanguagesPermissions {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
 			groupName = "Guest",
@@ -649,8 +1022,6 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
 		Permissions.definePermissionViaJSONAPI(
@@ -667,6 +1038,13 @@ definition {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW",
 				resourceName = "${resourceNameIndex}",
+				roleTitle = "Regrole Name");
+		}
+
+		for (var resourceActionIndex : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
+			Permissions.definePermissionViaJSONAPI(
+				resourceAction = "${resourceActionIndex}",
+				resourceName = "com_liferay_translation_web_internal_portlet_TranslationPortlet",
 				roleTitle = "Regrole Name");
 		}
 
@@ -719,12 +1097,19 @@ definition {
 			webContentContent = "WC WebContent Contenido",
 			webContentDescription = "WC WebContent Descripción",
 			webContentTitle = "WC WebContent Título");
+
+		Translations.openTranslationAdmin(siteURLKey = "guest");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
 	}
 
 	@description = "This ensures that the translator can select which base language she wants to translate."
 	@priority = "5"
 	test TranslateWebContent {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -809,6 +1194,20 @@ definition {
 			webContentContent = "wc webcontentコンテンツ",
 			webContentDescription = "wc webcontent記述",
 			webContentTitle = "wc webcontentタイトル");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Translation");
+
+		Translations.viewTranslationEntry(
+			language = "es-ES",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to es-ES");
+
+		Translations.viewTranslationEntry(
+			language = "ja-JP",
+			status = "Approved",
+			title = "Translation of WC WebContent Title to ja-JP");
 	}
 
 	@description = "This ensures that the user can see translation options after move all available languages to current."
@@ -822,8 +1221,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 

@@ -19,6 +19,7 @@ import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.frontend.model.LabelField;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderPayment;
+import com.liferay.commerce.order.web.internal.frontend.constants.CommerceOrderDataSetConstants;
 import com.liferay.commerce.order.web.internal.model.Payment;
 import com.liferay.commerce.service.CommerceOrderPaymentLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
@@ -80,10 +81,10 @@ public class CommercePaymentDataSetDataProvider
 
 		String amount = StringPool.BLANK;
 
-		CommerceMoney totalMoney = commerceOrder.getTotalMoney();
+		CommerceMoney totalCommerceMoney = commerceOrder.getTotalMoney();
 
-		if (totalMoney != null) {
-			amount = totalMoney.format(themeDisplay.getLocale());
+		if (totalCommerceMoney != null) {
+			amount = totalCommerceMoney.format(themeDisplay.getLocale());
 		}
 
 		List<CommerceOrderPayment> commerceOrderPayments =

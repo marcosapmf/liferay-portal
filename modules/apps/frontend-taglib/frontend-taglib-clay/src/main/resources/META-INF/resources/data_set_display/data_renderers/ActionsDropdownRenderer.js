@@ -12,22 +12,20 @@
  * details.
  */
 
-import ClayButton from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useIsMounted} from 'frontend-js-react-web';
 import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
 import DataSetDisplayContext from '../DataSetDisplayContext';
-import {ACTION_ITEM_TARGETS} from '../utilities/actionItems/constants';
-import {formatActionURL} from '../utilities/index';
-import {
-	openPermissionsModal,
-	resolveModalSize,
-} from '../utilities/modals/index';
+import {ACTION_ITEM_TARGETS} from '../utils/actionItems/constants';
+import {formatActionURL} from '../utils/index';
+import {openPermissionsModal, resolveModalSize} from '../utils/modals/index';
 
 const {MODAL_PERMISSIONS} = ACTION_ITEM_TARGETS;
 
@@ -38,17 +36,23 @@ export function isLink(target, onClick) {
 export function handleAction(
 	{
 		event,
-		itemId = '',
+		itemId,
 		method,
-		onClick = '',
-		setLoading = () => {},
-		size = '',
-		target = '',
-		title = '',
+		onClick,
+		setLoading,
+		size,
 		successMessage,
-		url = '',
+		target,
+		title,
+		url,
 	},
-	{executeAsyncItemAction, highlightItems, openModal, openSidePanel}
+	{
+		executeAsyncItemAction,
+		highlightItems,
+		openModal,
+		openSidePanel,
+		toggleItemInlineEdit,
+	}
 ) {
 	if (target?.includes('modal')) {
 		event.preventDefault();
@@ -92,6 +96,11 @@ export function handleAction(
 				setLoading(false);
 			});
 	}
+	else if (target === 'inlineEdit') {
+		event.preventDefault();
+
+		toggleItemInlineEdit(itemId);
+	}
 	else if (target === 'blank') {
 		event.preventDefault();
 
@@ -112,9 +121,11 @@ function ActionItem({
 	handleAction,
 	href,
 	icon,
+	itemId,
 	label,
 	method,
 	onClick,
+	setLoading,
 	size,
 	target,
 	title,
@@ -127,8 +138,10 @@ function ActionItem({
 		handleAction(
 			{
 				event,
+				itemId,
 				method,
 				onClick,
+				setLoading,
 				size: size || 'lg',
 				successMessage: data?.successMessage,
 				target,
@@ -160,8 +173,55 @@ function ActionItem({
 
 function ActionsDropdownRenderer({actions, itemData, itemId}) {
 	const context = useContext(DataSetDisplayContext);
-	const [active, setActive] = useState(false);
+	const [menuActive, setMenuActive] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const inlineEditingAvailable =
+		context.inlineEditingSettings && itemData.actions?.update;
+	const inlineEditingAlwaysOn =
+		inlineEditingAvailable && context.inlineEditingSettings.alwaysOn;
+	const isMounted = useIsMounted();
+	const editModeActive = !!context.itemsChanges[itemId];
+	const itemChanges =
+		editModeActive && Object.keys(context.itemsChanges[itemId]).length
+			? context.itemsChanges[itemId]
+			: null;
+
+	const inlineEditingActions = (
+		<div className="d-flex">
+			<ClayButtonWithIcon
+				className="mr-1"
+				disabled={inlineEditingAlwaysOn && !itemChanges}
+				displayType="secondary"
+				onClick={() => context.toggleItemInlineEdit(itemId)}
+				small
+				symbol="times-small"
+			/>
+			{loading ? (
+				<ClayButton disabled monospaced small>
+					<ClayLoadingIndicator small />
+				</ClayButton>
+			) : (
+				<ClayButtonWithIcon
+					disabled={!itemChanges}
+					monospaced
+					onClick={() => {
+						setLoading(true);
+						context.applyItemInlineUpdates(itemId).finally(() => {
+							if (isMounted()) {
+								setLoading(false);
+							}
+						});
+					}}
+					small
+					symbol="check"
+				/>
+			)}
+		</div>
+	);
+
+	if (!inlineEditingAlwaysOn && editModeActive) {
+		return inlineEditingActions;
+	}
 
 	const formattedActions = actions
 		? actions.reduce((actions, action) => {
@@ -190,11 +250,19 @@ function ActionsDropdownRenderer({actions, itemData, itemId}) {
 		  }, [])
 		: [];
 
+	if (inlineEditingAvailable && !inlineEditingAlwaysOn) {
+		formattedActions.unshift({
+			icon: 'fieldset',
+			label: Liferay.Language.get('inline-edit'),
+			target: 'inlineEdit',
+		});
+	}
+
 	if (!formattedActions || !formattedActions.length) {
 		return null;
 	}
 
-	if (formattedActions.length === 1) {
+	if (!inlineEditingAlwaysOn && formattedActions.length === 1) {
 		const [action] = formattedActions;
 		const {data: actionData} = action;
 
@@ -250,14 +318,9 @@ function ActionsDropdownRenderer({actions, itemData, itemId}) {
 		);
 	}
 
-	if (loading) {
+	if (loading && !inlineEditingAlwaysOn) {
 		return (
-			<ClayButton
-				className="btn-sm"
-				disabled
-				displayType="secondary"
-				monospaced
-			>
+			<ClayButton disabled displayType="secondary" monospaced small>
 				<ClayLoadingIndicator small />
 			</ClayButton>
 		);
@@ -277,32 +340,37 @@ function ActionsDropdownRenderer({actions, itemData, itemId}) {
 			return (
 				<ActionItem
 					{...item}
-					closeMenu={() => setActive(false)}
+					closeMenu={() => setMenuActive(false)}
 					handleAction={handleAction}
 					href={item.href && formatActionURL(item.href, itemData)}
+					itemId={itemId}
 					key={i}
 					method={item.method ?? item.data?.method}
+					setLoading={setLoading}
 				/>
 			);
 		});
 
 	return (
-		<ClayDropDown
-			active={active}
-			onActiveChange={setActive}
-			trigger={
-				<ClayButton
-					className="component-action dropdown-toggle"
-					displayType="unstyled"
-				>
-					<ClayIcon symbol="ellipsis-v" />
-				</ClayButton>
-			}
-		>
-			<ClayDropDown.ItemList>
-				{renderItems(formattedActions)}
-			</ClayDropDown.ItemList>
-		</ClayDropDown>
+		<div className="d-flex justify-content-end">
+			{inlineEditingAlwaysOn && inlineEditingActions}
+			<ClayDropDown
+				active={menuActive}
+				onActiveChange={setMenuActive}
+				trigger={
+					<ClayButtonWithIcon
+						className="component-action dropdown-toggle ml-1"
+						disabled={loading}
+						displayType="unstyled"
+						symbol="ellipsis-v"
+					/>
+				}
+			>
+				<ClayDropDown.ItemList>
+					{renderItems(formattedActions)}
+				</ClayDropDown.ItemList>
+			</ClayDropDown>
+		</div>
 	);
 }
 
@@ -325,6 +393,7 @@ ActionsDropdownRenderer.propTypes = {
 				'link',
 				'async',
 				'headless',
+				'inlineEdit',
 			]),
 		})
 	),

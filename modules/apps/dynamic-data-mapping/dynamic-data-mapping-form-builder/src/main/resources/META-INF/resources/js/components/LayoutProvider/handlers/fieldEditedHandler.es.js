@@ -17,7 +17,9 @@ import {PagesVisitor} from 'dynamic-data-mapping-form-renderer/js/util/visitors.
 import {getField} from '../../../util/fieldSupport.es';
 import {updateRulesReferences} from '../util/rules.es';
 import {
+	getSettingsContextProperty,
 	updateField,
+	updateFieldReference,
 	updateSettingsContextProperty,
 } from '../util/settingsContext.es';
 
@@ -100,11 +102,19 @@ export const updateState = (props, state, propertyName, propertyValue) => {
 		propertyValue
 	);
 
+	const visitor = new PagesVisitor(pages);
+
+	let stateField = visitor.findField(
+		(field) => field.fieldName === previousFocusedFieldName
+	);
+
+	stateField = updateField(props, stateField, propertyName, propertyValue);
+
 	const newPages = updatePages(
 		props,
 		pages,
 		previousFocusedFieldName,
-		newFocusedField
+		stateField
 	);
 
 	return {
@@ -119,6 +129,28 @@ export const updateState = (props, state, propertyName, propertyValue) => {
 	};
 };
 
+export const findInvalidFieldReference = (focusedField, pages, value) => {
+	let hasInvalidFieldReference = false;
+
+	const visitor = new PagesVisitor(pages);
+
+	visitor.mapFields((field) => {
+		const fieldReference = getSettingsContextProperty(
+			field.settingsContext,
+			'fieldReference'
+		);
+
+		if (
+			focusedField.fieldName !== field.fieldName &&
+			fieldReference === value
+		) {
+			hasInvalidFieldReference = true;
+		}
+	});
+
+	return hasInvalidFieldReference;
+};
+
 export const handleFieldEdited = (props, state, event) => {
 	const {fieldName, propertyName, propertyValue} = event;
 	let newState = {};
@@ -128,6 +160,25 @@ export const handleFieldEdited = (props, state, event) => {
 			...state,
 			...(fieldName && {focusedField: getField(state.pages, fieldName)}),
 		};
+
+		if (
+			propertyName === 'fieldReference' &&
+			propertyValue !== '' &&
+			propertyValue !== state.focusedField.fieldName
+		) {
+			state = {
+				...state,
+				focusedField: updateFieldReference(
+					state.focusedField,
+					findInvalidFieldReference(
+						state.focusedField,
+						state.pages,
+						propertyValue
+					),
+					false
+				),
+			};
+		}
 
 		newState = updateState(props, state, propertyName, propertyValue);
 	}

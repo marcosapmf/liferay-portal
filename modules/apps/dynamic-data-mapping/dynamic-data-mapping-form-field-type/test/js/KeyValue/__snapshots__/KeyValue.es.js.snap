@@ -16,7 +16,6 @@ exports[`KeyValue has a helptext 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -29,11 +28,11 @@ exports[`KeyValue has a helptext 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
@@ -46,8 +45,7 @@ exports[`KeyValue has a helptext 1`] = `
       Type something
     </span>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="keyValue_fieldDetails"
     >
       Type something
@@ -64,9 +62,8 @@ exports[`KeyValue has a label 1`] = `
     data-field-name="keyValue"
   >
     <label
-      aria-labelledby="keyValue_fieldDetails"
+      aria-describedby="keyValue_fieldDetails"
       class="ddm-label"
-      for="keyValue"
       tabindex="0"
     >
       label
@@ -79,7 +76,6 @@ exports[`KeyValue has a label 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -92,19 +88,18 @@ exports[`KeyValue has a label 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
       />
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="keyValue_fieldDetails"
     >
       label
@@ -130,7 +125,6 @@ exports[`KeyValue has a predefined Value 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         placeholder="Option 1"
         type="text"
@@ -144,11 +138,11 @@ exports[`KeyValue has a predefined Value 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
@@ -175,7 +169,6 @@ exports[`KeyValue has a value 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value="value"
@@ -188,11 +181,11 @@ exports[`KeyValue has a value 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
@@ -219,7 +212,6 @@ exports[`KeyValue has an id 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -232,11 +224,11 @@ exports[`KeyValue has an id 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
@@ -264,7 +256,6 @@ exports[`KeyValue is not editable 1`] = `
       <input
         class="form-control ddm-field-text"
         disabled=""
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -277,11 +268,11 @@ exports[`KeyValue is not editable 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
@@ -308,7 +299,6 @@ exports[`KeyValue is not required 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -321,11 +311,11 @@ exports[`KeyValue is not required 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
@@ -343,9 +333,8 @@ exports[`KeyValue renders Label if showLabel is true 1`] = `
     data-field-name="keyValue"
   >
     <label
-      aria-labelledby="keyValue_fieldDetails"
+      aria-describedby="keyValue_fieldDetails"
       class="ddm-label"
-      for="keyValue"
       tabindex="0"
     >
       text
@@ -358,7 +347,6 @@ exports[`KeyValue renders Label if showLabel is true 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -371,19 +359,18 @@ exports[`KeyValue renders Label if showLabel is true 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
         value=""
       />
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="keyValue_fieldDetails"
     >
       text
@@ -409,7 +396,6 @@ exports[`KeyValue renders component with a key 1`] = `
     >
       <input
         class="form-control ddm-field-text"
-        id="keyValueLabelkeyValue"
         name="keyValueLabelkeyValue"
         type="text"
         value=""
@@ -422,14 +408,14 @@ exports[`KeyValue renders component with a key 1`] = `
       <label
         class="control-label key-value-label"
       >
-        field-id
+        field-reference
         :
       </label>
       <input
-        class="key-value-input"
+        class="key-value-reference-input"
         tabindex="0"
         type="text"
-        value="key"
+        value=""
       />
     </div>
     

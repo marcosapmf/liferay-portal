@@ -113,7 +113,6 @@ public class PortalRequestProcessor {
 
 		_publicPaths.add(_PATH_C);
 		_publicPaths.add(_PATH_PORTAL_API_JSONWS);
-		_publicPaths.add(_PATH_PORTAL_FLASH);
 		_publicPaths.add(_PATH_PORTAL_J_LOGIN);
 		_publicPaths.add(_PATH_PORTAL_LAYOUT);
 		_publicPaths.add(_PATH_PORTAL_LICENSE);
@@ -526,6 +525,9 @@ public class PortalRequestProcessor {
 			user = PortalUtil.getUser(httpServletRequest);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		// Last path
@@ -726,6 +728,9 @@ public class PortalRequestProcessor {
 			user = PortalUtil.getUser(httpServletRequest);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if ((user != null) && _isPortletPath(path)) {
@@ -789,6 +794,10 @@ public class PortalRequestProcessor {
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
+
 				SessionErrors.add(
 					httpServletRequest, PrincipalException.class.getName());
 
@@ -829,8 +838,6 @@ public class PortalRequestProcessor {
 
 	private static final String _PATH_PORTAL_EXTEND_SESSION =
 		"/portal/extend_session";
-
-	private static final String _PATH_PORTAL_FLASH = "/portal/flash";
 
 	private static final String _PATH_PORTAL_J_LOGIN = "/portal/j_login";
 

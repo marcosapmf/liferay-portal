@@ -14,6 +14,7 @@
 
 package com.liferay.gradle.plugins.poshi.runner;
 
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.GradleUtil;
 
 import java.io.File;
@@ -26,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gradle.api.Project;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -115,6 +115,6 @@ public class PoshiRunnerExtension {
 	private Object _poshiPropertiesFile = "poshi.properties";
 	private final Project _project;
 	private final Set<Object> _testNames = new LinkedHashSet<>();
-	private Object _version = "1.0.278";
+	private Object _version = "1.0.291";
 
 }

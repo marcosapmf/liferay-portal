@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.order.web.internal.frontend;
 
+import com.liferay.commerce.order.web.internal.frontend.constants.CommerceOrderDataSetConstants;
 import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.BaseTableClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchema;
@@ -62,11 +63,7 @@ public class CommerceOrderItemClayTableDataSetDisplayView
 		clayTableSchemaBuilder.addClayTableSchemaField(
 			"deliveryGroup", "delivery-group");
 
-		ClayTableSchemaField priceField =
-			clayTableSchemaBuilder.addClayTableSchemaField(
-				"price", "list-price");
-
-		priceField.setContentRenderer("commerceTableCellSubscription");
+		clayTableSchemaBuilder.addClayTableSchemaField("price", "list-price");
 
 		clayTableSchemaBuilder.addClayTableSchemaField("discount", "discount");
 

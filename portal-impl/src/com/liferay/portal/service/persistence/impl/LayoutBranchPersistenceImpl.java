@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -33,7 +34,6 @@ import com.liferay.portal.kernel.model.LayoutBranchTable;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.LayoutBranchPersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.model.impl.LayoutBranchImpl;
@@ -46,7 +46,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -184,7 +183,7 @@ public class LayoutBranchPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<LayoutBranch>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LayoutBranch layoutBranch : list) {
@@ -551,8 +550,7 @@ public class LayoutBranchPersistenceImpl
 
 		Object[] finderArgs = new Object[] {layoutSetBranchId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -697,7 +695,7 @@ public class LayoutBranchPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<LayoutBranch>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LayoutBranch layoutBranch : list) {
@@ -1087,8 +1085,7 @@ public class LayoutBranchPersistenceImpl
 
 		Object[] finderArgs = new Object[] {layoutSetBranchId, plid};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1221,7 +1218,7 @@ public class LayoutBranchPersistenceImpl
 
 		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByL_P_N, finderArgs, this);
+				_finderPathFetchByL_P_N, finderArgs);
 		}
 
 		if (result instanceof LayoutBranch) {
@@ -1340,8 +1337,7 @@ public class LayoutBranchPersistenceImpl
 
 		Object[] finderArgs = new Object[] {layoutSetBranchId, plid, name};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -1520,7 +1516,7 @@ public class LayoutBranchPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<LayoutBranch>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LayoutBranch layoutBranch : list) {
@@ -1935,8 +1931,7 @@ public class LayoutBranchPersistenceImpl
 
 		Object[] finderArgs = new Object[] {layoutSetBranchId, plid, master};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -2039,23 +2034,21 @@ public class LayoutBranchPersistenceImpl
 	 * Clears the cache for all layout branches.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(LayoutBranchImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(LayoutBranchImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the layout branch.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -2072,9 +2065,7 @@ public class LayoutBranchPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(LayoutBranchImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(LayoutBranchImpl.class, primaryKey);
@@ -2090,9 +2081,9 @@ public class LayoutBranchPersistenceImpl
 		};
 
 		FinderCacheUtil.putResult(
-			_finderPathCountByL_P_N, args, Long.valueOf(1), false);
+			_finderPathCountByL_P_N, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathFetchByL_P_N, args, layoutBranchModelImpl, false);
+			_finderPathFetchByL_P_N, args, layoutBranchModelImpl);
 	}
 
 	/**
@@ -2388,7 +2379,7 @@ public class LayoutBranchPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<LayoutBranch>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -2458,7 +2449,7 @@ public class LayoutBranchPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -2511,24 +2502,21 @@ public class LayoutBranchPersistenceImpl
 		Registry registry = RegistryUtil.getRegistry();
 
 		_argumentsResolverServiceRegistration = registry.registerService(
-			ArgumentsResolver.class, new LayoutBranchModelArgumentsResolver(),
-			HashMapBuilder.<String, Object>put(
-				"model.class.name", LayoutBranch.class.getName()
-			).build());
+			ArgumentsResolver.class, new LayoutBranchModelArgumentsResolver());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByLayoutSetBranchId = _createFinderPath(
+		_finderPathWithPaginationFindByLayoutSetBranchId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLayoutSetBranchId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -2536,17 +2524,17 @@ public class LayoutBranchPersistenceImpl
 			},
 			new String[] {"layoutSetBranchId"}, true);
 
-		_finderPathWithoutPaginationFindByLayoutSetBranchId = _createFinderPath(
+		_finderPathWithoutPaginationFindByLayoutSetBranchId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByLayoutSetBranchId", new String[] {Long.class.getName()},
 			new String[] {"layoutSetBranchId"}, true);
 
-		_finderPathCountByLayoutSetBranchId = _createFinderPath(
+		_finderPathCountByLayoutSetBranchId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByLayoutSetBranchId", new String[] {Long.class.getName()},
 			new String[] {"layoutSetBranchId"}, false);
 
-		_finderPathWithPaginationFindByL_P = _createFinderPath(
+		_finderPathWithPaginationFindByL_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByL_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -2555,17 +2543,17 @@ public class LayoutBranchPersistenceImpl
 			},
 			new String[] {"layoutSetBranchId", "plid"}, true);
 
-		_finderPathWithoutPaginationFindByL_P = _createFinderPath(
+		_finderPathWithoutPaginationFindByL_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByL_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"layoutSetBranchId", "plid"}, true);
 
-		_finderPathCountByL_P = _createFinderPath(
+		_finderPathCountByL_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByL_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"layoutSetBranchId", "plid"}, false);
 
-		_finderPathFetchByL_P_N = _createFinderPath(
+		_finderPathFetchByL_P_N = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByL_P_N",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -2573,7 +2561,7 @@ public class LayoutBranchPersistenceImpl
 			},
 			new String[] {"layoutSetBranchId", "plid", "name"}, true);
 
-		_finderPathCountByL_P_N = _createFinderPath(
+		_finderPathCountByL_P_N = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByL_P_N",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -2581,7 +2569,7 @@ public class LayoutBranchPersistenceImpl
 			},
 			new String[] {"layoutSetBranchId", "plid", "name"}, false);
 
-		_finderPathWithPaginationFindByL_P_M = _createFinderPath(
+		_finderPathWithPaginationFindByL_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByL_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -2590,7 +2578,7 @@ public class LayoutBranchPersistenceImpl
 			},
 			new String[] {"layoutSetBranchId", "plid", "master"}, true);
 
-		_finderPathWithoutPaginationFindByL_P_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByL_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByL_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -2598,7 +2586,7 @@ public class LayoutBranchPersistenceImpl
 			},
 			new String[] {"layoutSetBranchId", "plid", "master"}, true);
 
-		_finderPathCountByL_P_M = _createFinderPath(
+		_finderPathCountByL_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByL_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -2611,12 +2599,6 @@ public class LayoutBranchPersistenceImpl
 		EntityCacheUtil.removeCache(LayoutBranchImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private static final String _SQL_SELECT_LAYOUTBRANCH =
@@ -2642,31 +2624,13 @@ public class LayoutBranchPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutBranchPersistenceImpl.class);
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			Registry registry = RegistryUtil.getRegistry();
-
-			_serviceRegistrations.add(
-				registry.registerService(
-					FinderPath.class, finderPath,
-					HashMapBuilder.<String, Object>put(
-						"cache.name", cacheName
-					).build()));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class LayoutBranchModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -2715,6 +2679,16 @@ public class LayoutBranchPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return LayoutBranchImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return LayoutBranchTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

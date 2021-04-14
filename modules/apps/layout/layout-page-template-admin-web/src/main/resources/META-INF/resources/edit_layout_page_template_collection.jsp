@@ -29,13 +29,14 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle((layoutPageTemplateCollection != null) ? layoutPageTemplateCollection.getName() : LanguageUtil.get(request, "add-collection"));
 %>
 
-<portlet:actionURL name="/layout_page_template/edit_layout_page_template_collection" var="editLayoutPageTemplateCollectionURL">
-	<portlet:param name="mvcRenderCommandName" value="/layout_page_template/edit_layout_page_template_collection" />
+<portlet:actionURL name="/layout_page_template_admin/edit_layout_page_template_collection" var="editLayoutPageTemplateCollectionURL">
+	<portlet:param name="mvcRenderCommandName" value="/layout_page_template_admin/edit_layout_page_template_collection" />
 	<portlet:param name="tabs1" value="page-templates" />
 </portlet:actionURL>
 
 <liferay-frontend:edit-form
 	action="<%= editLayoutPageTemplateCollectionURL %>"
+	cssClass="container-form-lg"
 	name="fm"
 >
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />

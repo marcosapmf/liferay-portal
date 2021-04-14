@@ -27,7 +27,6 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 >
 	<liferay-ui:search-container-row
 		className="Object"
-		cssClass="entry-display-style"
 		modelVar="object"
 	>
 
@@ -55,15 +54,14 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 					title = curArticle.getTitle(LocaleUtil.fromLanguageId(curArticle.getDefaultLanguageId()));
 				}
 
-				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-					"actions", journalDisplayContext.getAvailableActions(curArticle)
-				).put(
-					"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE))
-				).put(
-					"title", HtmlUtil.escape(title)
-				).build();
-
-				row.setData(rowData);
+				row.setData(
+					HashMapBuilder.<String, Object>put(
+						"actions", journalDisplayContext.getAvailableActions(curArticle)
+					).put(
+						"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.DELETE) || JournalArticlePermission.contains(permissionChecker, curArticle, ActionKeys.UPDATE))
+					).put(
+						"title", HtmlUtil.escape(title)
+					).build());
 
 				row.setPrimaryKey(HtmlUtil.escape(curArticle.getArticleId()));
 
@@ -148,11 +146,6 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 						</liferay-ui:search-container-column-text>
 					</c:when>
 					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "icon") %>'>
-
-						<%
-						row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
-						%>
-
 						<liferay-ui:search-container-column-text>
 							<clay:vertical-card
 								verticalCard="<%= new JournalArticleVerticalCard(curArticle, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper) %>"
@@ -257,19 +250,18 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 			<c:when test="<%= curFolder != null %>">
 
 				<%
-				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-					"actions", journalDisplayContext.getAvailableActions(curFolder)
-				).put(
-					"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE))
-				).put(
-					"folder", true
-				).put(
-					"folder-id", curFolder.getFolderId()
-				).put(
-					"title", HtmlUtil.escape(curFolder.getName())
-				).build();
-
-				row.setData(rowData);
+				row.setData(
+					HashMapBuilder.<String, Object>put(
+						"actions", journalDisplayContext.getAvailableActions(curFolder)
+					).put(
+						"draggable", !BrowserSnifferUtil.isMobile(request) && (JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.DELETE) || JournalFolderPermission.contains(permissionChecker, curFolder, ActionKeys.UPDATE))
+					).put(
+						"folder", true
+					).put(
+						"folder-id", curFolder.getFolderId()
+					).put(
+						"title", HtmlUtil.escape(curFolder.getName())
+					).build());
 				row.setPrimaryKey(String.valueOf(curFolder.getPrimaryKey()));
 
 				PortletURL rowURL = liferayPortletResponse.createRenderURL();
@@ -327,7 +319,7 @@ String referringPortletResource = ParamUtil.getString(request, "referringPortlet
 					<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "icon") %>'>
 
 						<%
-						row.setCssClass("entry-card lfr-asset-folder " + row.getCssClass());
+						row.setCssClass("card-page-item card-page-item-directory " + row.getCssClass());
 						%>
 
 						<liferay-ui:search-container-column-text

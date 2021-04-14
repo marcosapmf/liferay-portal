@@ -54,14 +54,16 @@ public class LayoutPageTemplateCollectionsManagementToolbarDisplayContext
 
 	@Override
 	public String getSearchActionURL() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		PortletURL searchActionURL = liferayPortletResponse.createRenderURL();
 
 		searchActionURL.setParameter(
 			"mvcRenderCommandName",
-			"/layout_page_template/select_layout_page_template_collections");
+			"/layout_page_template_admin" +
+				"/select_layout_page_template_collections");
 		searchActionURL.setParameter("redirect", themeDisplay.getURLCurrent());
 
 		return searchActionURL.toString();

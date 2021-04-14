@@ -20,6 +20,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.frontend.token.definition.FrontendTokenMapping;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
@@ -65,8 +66,8 @@ import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -80,9 +81,14 @@ import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -130,7 +136,9 @@ public class RenderLayoutStructureDisplayContext {
 		JSONObject collectionJSONObject =
 			collectionStyledLayoutStructureItem.getCollectionJSONObject();
 
-		if (collectionJSONObject.length() <= 0) {
+		if ((collectionJSONObject == null) ||
+			(collectionJSONObject.length() <= 0)) {
+
 			return Collections.emptyList();
 		}
 
@@ -153,7 +161,9 @@ public class RenderLayoutStructureDisplayContext {
 		DefaultLayoutListRetrieverContext defaultLayoutListRetrieverContext =
 			new DefaultLayoutListRetrieverContext();
 
-		defaultLayoutListRetrieverContext.setSegmentsExperienceIdsOptional(
+		defaultLayoutListRetrieverContext.setAssetCategoryIds(
+			_getAssetCategoryIds());
+		defaultLayoutListRetrieverContext.setSegmentsExperienceIds(
 			_getSegmentsExperienceIds());
 		defaultLayoutListRetrieverContext.setPagination(
 			Pagination.of(
@@ -167,8 +177,17 @@ public class RenderLayoutStructureDisplayContext {
 		CollectionStyledLayoutStructureItem
 			collectionStyledLayoutStructureItem) {
 
+		JSONObject collectionJSONObject =
+			collectionStyledLayoutStructureItem.getCollectionJSONObject();
+
+		if ((collectionJSONObject == null) ||
+			(collectionJSONObject.length() <= 0)) {
+
+			return null;
+		}
+
 		ListObjectReference listObjectReference = _getListObjectReference(
-			collectionStyledLayoutStructureItem.getCollectionJSONObject());
+			collectionJSONObject);
 
 		if (listObjectReference == null) {
 			return null;
@@ -190,11 +209,31 @@ public class RenderLayoutStructureDisplayContext {
 			Object displayObject)
 		throws PortalException {
 
+		return getContainerLinkHref(
+			containerStyledLayoutStructureItem, displayObject,
+			LocaleUtil.getMostRelevantLocale());
+	}
+
+	public String getContainerLinkHref(
+			ContainerStyledLayoutStructureItem
+				containerStyledLayoutStructureItem,
+			Object displayObject, Locale locale)
+		throws PortalException {
+
 		JSONObject linkJSONObject =
 			containerStyledLayoutStructureItem.getLinkJSONObject();
 
 		if (linkJSONObject == null) {
 			return StringPool.BLANK;
+		}
+
+		JSONObject localizedJSONObject = linkJSONObject.getJSONObject(
+			LocaleUtil.toLanguageId(locale));
+
+		if ((localizedJSONObject != null) &&
+			(localizedJSONObject.length() > 0)) {
+
+			linkJSONObject = localizedJSONObject;
 		}
 
 		String mappedField = linkJSONObject.getString("mappedField");
@@ -312,11 +351,29 @@ public class RenderLayoutStructureDisplayContext {
 	public String getContainerLinkTarget(
 		ContainerStyledLayoutStructureItem containerStyledLayoutStructureItem) {
 
+		return getContainerLinkTarget(
+			containerStyledLayoutStructureItem,
+			LocaleUtil.getMostRelevantLocale());
+	}
+
+	public String getContainerLinkTarget(
+		ContainerStyledLayoutStructureItem containerStyledLayoutStructureItem,
+		Locale locale) {
+
 		JSONObject linkJSONObject =
 			containerStyledLayoutStructureItem.getLinkJSONObject();
 
 		if (linkJSONObject == null) {
 			return StringPool.BLANK;
+		}
+
+		JSONObject localizedJSONObject = linkJSONObject.getJSONObject(
+			LocaleUtil.toLanguageId(locale));
+
+		if ((localizedJSONObject != null) &&
+			(localizedJSONObject.length() > 0)) {
+
+			linkJSONObject = localizedJSONObject;
 		}
 
 		return linkJSONObject.getString("target");
@@ -543,12 +600,9 @@ public class RenderLayoutStructureDisplayContext {
 	public String getStyle(StyledLayoutStructureItem styledLayoutStructureItem)
 		throws Exception {
 
-		StringBundler styleSB = new StringBundler(57);
+		StringBundler styleSB = new StringBundler(60);
 
 		styleSB.append("box-sizing: border-box;");
-
-		String backgroundImage = _getBackgroundImage(
-			styledLayoutStructureItem.getBackgroundImageJSONObject());
 
 		if (Validator.isNotNull(
 				styledLayoutStructureItem.getBackgroundColor())) {
@@ -560,12 +614,23 @@ public class RenderLayoutStructureDisplayContext {
 			styleSB.append(StringPool.SEMICOLON);
 		}
 
+		JSONObject backgroundImageJSONObject =
+			styledLayoutStructureItem.getBackgroundImageJSONObject();
+
+		String backgroundImage = _getBackgroundImage(backgroundImageJSONObject);
+
 		if (Validator.isNotNull(backgroundImage)) {
 			styleSB.append("background-position: 50% 50%; background-repeat: ");
 			styleSB.append("no-repeat; background-size: cover; ");
 			styleSB.append("background-image: url(");
 			styleSB.append(backgroundImage);
 			styleSB.append(");");
+		}
+
+		if (backgroundImageJSONObject.has("fileEntryId")) {
+			styleSB.append("--background-image-file-entry-id:");
+			styleSB.append(backgroundImageJSONObject.getLong("fileEntryId"));
+			styleSB.append(StringPool.SEMICOLON);
 		}
 
 		if (Validator.isNotNull(styledLayoutStructureItem.getBorderColor())) {
@@ -704,11 +769,50 @@ public class RenderLayoutStructureDisplayContext {
 			return styleValue;
 		}
 
-		if (BrowserSnifferUtil.isIe(_httpServletRequest)) {
-			return styleValue;
+		String cssVariable = styleValueJSONObject.getString(
+			FrontendTokenMapping.TYPE_CSS_VARIABLE);
+
+		return "var(--" + cssVariable + ")";
+	}
+
+	private long[][] _getAssetCategoryIds() {
+		if (_assetCategoryIds != null) {
+			return _assetCategoryIds;
 		}
 
-		return "var(--" + styleValueJSONObject.getString("cssVariable") + ")";
+		Set<long[]> assetCategoryIdsSet = new HashSet<>();
+
+		HttpServletRequest originalHttpServletRequest =
+			PortalUtil.getOriginalServletRequest(_httpServletRequest);
+
+		Map<String, String[]> parameterMap =
+			originalHttpServletRequest.getParameterMap();
+
+		Set<String> parameterNames = parameterMap.keySet();
+
+		Stream<String> parameterNameStream = parameterNames.stream();
+
+		Set<String> categoryIdParameterNames = parameterNameStream.filter(
+			parameterName -> parameterName.startsWith("categoryId_")
+		).collect(
+			Collectors.toSet()
+		);
+
+		for (String categoryIdParameterName : categoryIdParameterNames) {
+			String[] values = parameterMap.get(categoryIdParameterName);
+
+			if (ArrayUtil.isNotEmpty(values)) {
+				assetCategoryIdsSet.add(
+					ArrayUtil.filter(
+						GetterUtil.getLongValues(values),
+						categoryId -> categoryId != 0));
+			}
+		}
+
+		_assetCategoryIds = assetCategoryIdsSet.toArray(
+			new long[assetCategoryIdsSet.size()][]);
+
+		return _assetCategoryIds;
 	}
 
 	private String _getBackgroundImage(JSONObject rowConfigJSONObject)
@@ -837,9 +941,15 @@ public class RenderLayoutStructureDisplayContext {
 
 		_frontendTokensJSONObject = JSONFactoryUtil.createJSONObject();
 
-		StyleBookEntry styleBookEntry =
-			DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(
+		StyleBookEntry styleBookEntry = null;
+
+		boolean styleBookEntryPreview = ParamUtil.getBoolean(
+			_httpServletRequest, "styleBookEntryPreview");
+
+		if (!styleBookEntryPreview) {
+			styleBookEntry = DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(
 				_themeDisplay.getLayout());
+		}
 
 		JSONObject frontendTokenValuesJSONObject =
 			JSONFactoryUtil.createJSONObject();
@@ -898,7 +1008,7 @@ public class RenderLayoutStructureDisplayContext {
 
 						if (Objects.equals(
 								mappingJSONObject.getString("type"),
-								"cssVariable")) {
+								FrontendTokenMapping.TYPE_CSS_VARIABLE)) {
 
 							cssVariable = mappingJSONObject.getString("value");
 						}
@@ -922,7 +1032,7 @@ public class RenderLayoutStructureDisplayContext {
 					_frontendTokensJSONObject.put(
 						name,
 						JSONUtil.put(
-							"cssVariable", cssVariable
+							FrontendTokenMapping.TYPE_CSS_VARIABLE, cssVariable
 						).put(
 							"value", value
 						));
@@ -1093,6 +1203,7 @@ public class RenderLayoutStructureDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		RenderLayoutStructureDisplayContext.class);
 
+	private long[][] _assetCategoryIds;
 	private final Map<String, Object> _fieldValues;
 	private final FrontendTokenDefinitionRegistry
 		_frontendTokenDefinitionRegistry;

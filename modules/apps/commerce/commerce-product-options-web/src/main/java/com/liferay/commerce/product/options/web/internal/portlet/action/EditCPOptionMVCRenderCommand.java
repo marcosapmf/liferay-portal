@@ -22,6 +22,7 @@ import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServices
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.PortletException;
@@ -38,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_OPTIONS,
-		"mvc.command.name=cpOption"
+		"mvc.command.name=/cp_options/edit_cp_option"
 	},
 	service = MVCRenderCommand.class
 )
@@ -57,7 +58,8 @@ public class EditCPOptionMVCRenderCommand implements MVCRenderCommand {
 			CPOptionDisplayContext cpOptionDisplayContext =
 				new CPOptionDisplayContext(
 					_configurationProvider, cpOption,
-					_ddmFormFieldTypeServicesTracker, renderRequest);
+					_ddmFormFieldTypeServicesTracker,
+					_portal.getHttpServletRequest(renderRequest));
 
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, cpOptionDisplayContext);
@@ -66,7 +68,7 @@ public class EditCPOptionMVCRenderCommand implements MVCRenderCommand {
 			throw new PortletException(exception);
 		}
 
-		return "/edit_option.jsp";
+		return "/edit_cp_option.jsp";
 	}
 
 	@Reference
@@ -77,5 +79,8 @@ public class EditCPOptionMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
+
+	@Reference
+	private Portal _portal;
 
 }

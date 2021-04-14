@@ -12,33 +12,27 @@
  * details.
  */
 
+import ClayLabel from '@clayui/label';
 import React from 'react';
 import {Link} from 'react-router-dom';
 
-import {toQuery, toQueryString} from '../../hooks/useQuery.es';
+import {toQueryString} from '../../hooks/useQuery.es';
 import {FieldValuePreview} from './FieldPreview.es';
+import {ENTRY_STATUS_LABEL} from './constants.es';
 
 export function buildEntries({
 	dataDefinition,
 	fieldNames = [],
 	permissions,
-	scope,
+	query,
 }) {
-	const query = toQuery(
-		window.location.search,
-		{
-			keywords: '',
-			page: 1,
-			pageSize: 20,
-			sort: '',
-		},
-		scope
-	);
-
 	return ({dataRecordValues = {}, ...entry}, index) => {
 		const entryIndex = query.pageSize * (query.page - 1) + index + 1;
 
-		const viewURL = `/entries/${entryIndex}?${toQueryString(query)}`;
+		const viewURL = `/entries/${entryIndex}?${toQueryString({
+			...query,
+			backURL: window.location.href,
+		})}`;
 
 		const displayedDataRecordValues = {};
 
@@ -71,11 +65,25 @@ export function buildEntries({
 	};
 }
 
+export function getStatusLabel(status) {
+	const statusLabel = ENTRY_STATUS_LABEL[status];
+
+	return (
+		<>
+			{statusLabel && (
+				<ClayLabel displayType={statusLabel?.displayType}>
+					{statusLabel?.label}
+				</ClayLabel>
+			)}
+		</>
+	);
+}
+
 export function navigateToEditPage(basePortletURL, params = {}) {
 	Liferay.Util.navigate(
 		Liferay.Util.PortletURL.createRenderURL(basePortletURL, {
 			dataRecordId: 0,
-			mvcPath: '/edit_entry.jsp',
+			mvcPath: '/edit_app_entry.jsp',
 			...params,
 		})
 	);

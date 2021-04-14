@@ -67,7 +67,7 @@ if (portletTitleBasedNavigation) {
 	/>
 </c:if>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl\"" : StringPool.BLANK %>>
 	<liferay-portlet:actionURL name="moveKBObject" var="moveKBObjectURL" />
 
 	<aui:form action="<%= moveKBObjectURL %>" method="post" name="fm">
@@ -109,7 +109,7 @@ if (portletTitleBasedNavigation) {
 	</aui:form>
 </div>
 
-<aui:script>
+<script>
 	var selectKBObjectButton = document.getElementById(
 		'<portlet:namespace />selectKBObjectButton'
 	);
@@ -151,4 +151,4 @@ if (portletTitleBasedNavigation) {
 			});
 		});
 	}
-</aui:script>
+</script>

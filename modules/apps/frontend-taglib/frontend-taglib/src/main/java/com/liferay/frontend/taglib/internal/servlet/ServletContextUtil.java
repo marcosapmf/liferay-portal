@@ -14,6 +14,8 @@
 
 package com.liferay.frontend.taglib.internal.servlet;
 
+import com.liferay.frontend.taglib.form.navigator.FormNavigatorCategoryProvider;
+import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntryProvider;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationRegistry;
 
 import javax.servlet.ServletContext;
@@ -27,12 +29,38 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = {})
 public class ServletContextUtil {
 
+	public static final FormNavigatorCategoryProvider
+		getFormNavigatorCategoryProvider() {
+
+		return _formNavigatorCategoryProvider;
+	}
+
+	public static final FormNavigatorEntryProvider
+		getFormNavigatorEntryProvider() {
+
+		return _formNavigatorEntryProvider;
+	}
+
 	public static final ScreenNavigationRegistry getScreenNavigationRegistry() {
 		return _screenNavigationRegistry;
 	}
 
 	public static final ServletContext getServletContext() {
 		return _servletContext;
+	}
+
+	@Reference(unbind = "-")
+	protected void setFormNavigatorCategoryProvider(
+		FormNavigatorCategoryProvider formNavigatorCategoryProvider) {
+
+		_formNavigatorCategoryProvider = formNavigatorCategoryProvider;
+	}
+
+	@Reference(unbind = "-")
+	protected void setFormNavigatorEntryProvider(
+		FormNavigatorEntryProvider formNavigatorEntryProvider) {
+
+		_formNavigatorEntryProvider = formNavigatorEntryProvider;
 	}
 
 	@Reference(unbind = "-")
@@ -50,6 +78,8 @@ public class ServletContextUtil {
 		_servletContext = servletContext;
 	}
 
+	private static FormNavigatorCategoryProvider _formNavigatorCategoryProvider;
+	private static FormNavigatorEntryProvider _formNavigatorEntryProvider;
 	private static ScreenNavigationRegistry _screenNavigationRegistry;
 	private static ServletContext _servletContext;
 

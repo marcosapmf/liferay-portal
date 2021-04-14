@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editProductInstance"
+		"mvc.command.name=/cp_definitions/edit_cp_instance"
 	},
 	service = MVCRenderCommand.class
 )
@@ -80,7 +80,7 @@ public class EditCPInstanceMVCRenderCommand implements MVCRenderCommand {
 			throw new PortletException(exception);
 		}
 
-		return "/edit_instance.jsp";
+		return "/edit_cp_instance.jsp";
 	}
 
 	@Reference

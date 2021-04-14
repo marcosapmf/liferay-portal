@@ -33,43 +33,41 @@ if (persistState) {
 }
 %>
 
-<div class="panel panel-default <%= cssClass %>" id="<%= id %>">
-	<div class="panel-heading" id="<%= id %>Header" role="tab">
-		<div class="h4 panel-title">
-			<c:choose>
-				<c:when test="<%= collapsible %>">
-					<a aria-controls="<%= id %>Content" aria-expanded="<%= !collapsed %>" class="collapse-icon collapse-icon-middle <%= collapsed ? "collapsed" : StringPool.BLANK %>" data-parent="#<%= id %>" data-toggle="liferay-collapse" href="#<%= id %>Content" role="button">
-						<c:if test="<%= Validator.isNotNull(iconCssClass) %>">
-							<i class="<%= iconCssClass %>"></i>
-						</c:if>
+<div class="panel <%= cssClass %>" id="<%= id %>">
+	<c:choose>
+		<c:when test="<%= collapsible %>">
+			<a aria-controls="<%= id %>Content" aria-expanded="<%= !collapsed %>" class="collapse-icon collapsed panel-header panel-header-link <%= collapsed ? "collapsed" : StringPool.BLANK %>" data-parent="#<%= id %>" data-toggle="liferay-collapse" href="#<%= id %>Content" role="button">
+				<span class="panel-title" id="<%= id %>Header">
+					<c:if test="<%= Validator.isNotNull(iconCssClass) %>">
+						<i class="<%= iconCssClass %>"></i>
+					</c:if>
 
-						<liferay-ui:message key="<%= title %>" />
+					<liferay-ui:message key="<%= title %>" />
 
-						<c:if test="<%= Validator.isNotNull(helpMessage) %>">
-							<liferay-ui:icon-help message="<%= helpMessage %>" />
-						</c:if>
+					<c:if test="<%= Validator.isNotNull(helpMessage) %>">
+						<liferay-ui:icon-help message="<%= helpMessage %>" />
+					</c:if>
+				</span>
 
-						<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+				<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
 
-						<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
-					</a>
-				</c:when>
-				<c:otherwise>
-					<span>
-						<c:if test="<%= Validator.isNotNull(iconCssClass) %>">
-							<i class="<%= iconCssClass %>"></i>
-						</c:if>
+				<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
+			</a>
+		</c:when>
+		<c:otherwise>
+			<span class="panel-title" id="<%= id %>Header">
+				<c:if test="<%= Validator.isNotNull(iconCssClass) %>">
+					<i class="<%= iconCssClass %>"></i>
+				</c:if>
 
-						<liferay-ui:message key="<%= title %>" />
+				<liferay-ui:message key="<%= title %>" />
 
-						<c:if test="<%= Validator.isNotNull(helpMessage) %>">
-							<liferay-ui:icon-help message="<%= helpMessage %>" />
-						</c:if>
-					</span>
-				</c:otherwise>
-			</c:choose>
-		</div>
-	</div>
+				<c:if test="<%= Validator.isNotNull(helpMessage) %>">
+					<liferay-ui:icon-help message="<%= helpMessage %>" />
+				</c:if>
+			</span>
+		</c:otherwise>
+	</c:choose>
 
 	<div aria-labelledby="<%= id %>Header" class="<%= collapsible ? "collapse panel-collapse" : StringPool.BLANK %> <%= !collapsed ? "show" : StringPool.BLANK %>" <%= accordion ? "data-parent='#" + parentId + "'" : StringPool.BLANK %> id="<%= id %>Content" role="tabpanel">
 		<div class="panel-body">

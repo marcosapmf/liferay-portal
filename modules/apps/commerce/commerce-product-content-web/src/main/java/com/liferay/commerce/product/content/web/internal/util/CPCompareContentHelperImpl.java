@@ -15,6 +15,7 @@
 package com.liferay.commerce.product.content.web.internal.util;
 
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
+import com.liferay.commerce.product.constants.CPMeasurementUnitConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.content.util.CPCompareContentHelper;
 import com.liferay.commerce.product.content.web.internal.configuration.CPCompareContentMiniPortletInstanceConfiguration;
@@ -25,13 +26,13 @@ import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPMeasurementUnit;
-import com.liferay.commerce.product.model.CPMeasurementUnitConstants;
 import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
 import com.liferay.commerce.product.service.CPOptionCategoryLocalService;
+import com.liferay.commerce.product.util.CPCompareHelper;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -41,6 +42,7 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -57,6 +59,8 @@ import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -87,22 +91,11 @@ public class CPCompareContentHelperImpl implements CPCompareContentHelper {
 	}
 
 	@Override
-	public String getClearCompareProductsURL(
-		RenderRequest renderRequest, RenderResponse renderResponse) {
-
-		PortletURL portletURL = renderResponse.createActionURL();
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "clearCompareProducts");
-
-		String redirect = _portal.getCurrentURL(renderRequest);
-
-		portletURL.setParameter("redirect", redirect);
-
-		return portletURL.toString();
+	public String getCompareContentPortletNamespace() {
+		return _portal.getPortletNamespace(
+			CPPortletKeys.CP_COMPARE_CONTENT_WEB);
 	}
 
-	@Override
 	public String getCompareProductsURL(ThemeDisplay themeDisplay)
 		throws PortalException {
 
@@ -119,6 +112,19 @@ public class CPCompareContentHelperImpl implements CPCompareContentHelper {
 		}
 
 		return _portal.getLayoutURL(layout, themeDisplay);
+	}
+
+	@Override
+	public List<CPCatalogEntry> getCPCatalogEntries(
+			long groupId, long commerceAccountId,
+			HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		return _cpCompareHelper.getCPCatalogEntries(
+			groupId, commerceAccountId,
+			CookieKeys.getCookie(
+				httpServletRequest,
+				_cpCompareHelper.getCPDefinitionIdsCookieKey(groupId)));
 	}
 
 	@Override
@@ -232,7 +238,8 @@ public class CPCompareContentHelperImpl implements CPCompareContentHelper {
 		PortletURL portletURL = renderResponse.createActionURL();
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "deleteCompareProduct");
+			ActionRequest.ACTION_NAME,
+			"/cp_compare_content_mini_web/delete_compare_product");
 
 		String redirect = _portal.getCurrentURL(renderRequest);
 
@@ -386,6 +393,9 @@ public class CPCompareContentHelperImpl implements CPCompareContentHelper {
 
 		return multiValueCPDefinitionOptionRels;
 	}
+
+	@Reference
+	private CPCompareHelper _cpCompareHelper;
 
 	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;

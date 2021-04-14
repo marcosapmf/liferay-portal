@@ -22,6 +22,8 @@ CommerceOrderContentDisplayContext commerceOrderContentDisplayContext = (Commerc
 CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerceAccount();
 %>
 
+<liferay-ui:error exception="<%= CommerceOrderAccountLimitException.class %>" message="unable-to-create-a-new-order-as-the-open-order-limit-has-been-reached" />
+
 <liferay-ddm:template-renderer
 	className="<%= CommerceOpenOrderContentPortlet.class.getName() %>"
 	contextObjects='<%=
@@ -43,7 +45,7 @@ CommerceAccount commerceAccount = commerceOrderContentDisplayContext.getCommerce
 		style="stacked"
 	/>
 
-	<portlet:actionURL name="editCommerceOrder" var="editCommerceOrderURL" />
+	<portlet:actionURL name="/commerce_open_order_content/edit_commerce_order" var="editCommerceOrderURL" />
 
 	<div class="commerce-cta is-visible">
 		<c:if test="<%= commerceOrderContentDisplayContext.hasPermission(CommerceOrderActionKeys.ADD_COMMERCE_ORDER) %>">

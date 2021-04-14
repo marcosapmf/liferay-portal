@@ -28,11 +28,27 @@ if (commerceOrder != null) {
 }
 %>
 
-<portlet:actionURL name="applyCommerceDiscountCouponCode" var="applyCommerceDiscountCouponCodeActionURL" />
+<portlet:actionURL name="/commerce_discount_content/apply_commerce_discount_coupon_code" var="applyCommerceDiscountCouponCodeActionURL" />
 
 <aui:form action="<%= applyCommerceDiscountCouponCodeActionURL %>" method="post" name="fm">
 	<liferay-ui:error exception="<%= CommerceDiscountCouponCodeException.class %>" message="please-enter-a-valid-coupon-code" />
 	<liferay-ui:error exception="<%= CommerceDiscountLimitationTimesException.class %>" message="the-inserted-coupon-code-has-reached-its-usage-limit" />
+
+	<liferay-ui:error exception="<%= CommerceDiscountValidatorException.class %>">
+
+		<%
+		CommerceDiscountValidatorException commerceDiscountValidatorException = (CommerceDiscountValidatorException)errorException;
+
+		if (commerceDiscountValidatorException != null) {
+		%>
+
+			<liferay-ui:message key="<%= commerceDiscountValidatorException.getLocalizedMessage() %>" />
+
+		<%
+		}
+		%>
+
+	</liferay-ui:error>
 
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 

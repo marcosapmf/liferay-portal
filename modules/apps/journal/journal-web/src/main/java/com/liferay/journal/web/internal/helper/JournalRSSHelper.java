@@ -362,6 +362,9 @@ public class JournalRSSHelper {
 				feed = _journalFeedLocalService.getFeed(id);
 			}
 			catch (NoSuchFeedException noSuchFeedException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchFeedException, noSuchFeedException);
+				}
 
 				// Backward compatibility with old URLs
 
@@ -421,9 +424,7 @@ public class JournalRSSHelper {
 		for (JournalArticle article : articles) {
 			SyndEntry syndEntry = _syndModelFactory.createSyndEntry();
 
-			String author = _portal.getUserName(article);
-
-			syndEntry.setAuthor(author);
+			syndEntry.setAuthor(_portal.getUserName(article));
 
 			SyndContent syndContent = _syndModelFactory.createSyndContent();
 
@@ -469,7 +470,7 @@ public class JournalRSSHelper {
 		feedURL.setCacheability(ResourceURL.FULL);
 		feedURL.setParameter("groupId", String.valueOf(feed.getGroupId()));
 		feedURL.setParameter("feedId", String.valueOf(feed.getFeedId()));
-		feedURL.setResourceID("rss");
+		feedURL.setResourceID("/journal/rss");
 
 		selfSyndLink.setHref(feedURL.toString());
 

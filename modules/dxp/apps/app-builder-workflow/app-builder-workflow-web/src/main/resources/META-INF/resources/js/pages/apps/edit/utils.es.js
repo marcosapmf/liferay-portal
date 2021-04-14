@@ -42,6 +42,28 @@ export function canDeployApp(app, config) {
 	);
 }
 
+export function checkRequiredFields(formViews = [], dataDefinition) {
+	const requiredFields = dataDefinition.dataDefinitionFields
+		.filter(({required}) => required)
+		.map(({customProperties: {nativeField}, name}) => ({
+			name,
+			nativeField,
+		}));
+
+	return formViews.map((formView) => ({
+		...formView,
+		missingRequiredFields: {
+			missing: !requiredFields.every(({name: fieldName}) =>
+				formView.fields.includes(fieldName)
+			),
+			nativeField: requiredFields.some(
+				({name, nativeField}) =>
+					!formView.fields.includes(name) && nativeField
+			),
+		},
+	}));
+}
+
 export function getFormViewFields({dataLayoutPages = []}) {
 	return dataLayoutPages.reduce(
 		(fields, {dataLayoutRows}) => [

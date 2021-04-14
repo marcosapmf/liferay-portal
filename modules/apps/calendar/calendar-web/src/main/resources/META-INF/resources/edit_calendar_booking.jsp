@@ -176,18 +176,8 @@ if (guestCalendarResource != null) {
 	manageableCalendars.remove(guestCalendarResource.getDefaultCalendar());
 }
 
-long[] otherCalendarIds = StringUtil.split(SessionClicks.get(request, "com.liferay.calendar.web_otherCalendars", StringPool.BLANK), 0L);
-
-for (long otherCalendarId : otherCalendarIds) {
-	Calendar otherCalendar = CalendarServiceUtil.fetchCalendar(otherCalendarId);
-
-	if (otherCalendar == null) {
-		continue;
-	}
-
-	CalendarResource otherCalendarResource = otherCalendar.getCalendarResource();
-
-	if (otherCalendarResource.isActive() && !manageableCalendars.contains(otherCalendar) && CalendarPermission.contains(themeDisplay.getPermissionChecker(), otherCalendar, CalendarActionKeys.MANAGE_BOOKINGS)) {
+for (Calendar otherCalendar : otherCalendars) {
+	if (!manageableCalendars.contains(otherCalendar) && CalendarPermission.contains(themeDisplay.getPermissionChecker(), otherCalendar, CalendarActionKeys.MANAGE_BOOKINGS)) {
 		manageableCalendars.add(otherCalendar);
 	}
 }
@@ -309,12 +299,14 @@ while (manageableCalendarsIterator.hasNext()) {
 
 			<aui:fieldset markupView="lexicon">
 				<liferay-ui:panel-container
+					cssClass="panel-group-flush panel-group-sm"
 					extended="<%= true %>"
 					id="calendarBookingDetailsPanelContainer"
 					persistState="<%= true %>"
 				>
 					<liferay-ui:panel
 						collapsible="<%= true %>"
+						cssClass="panel-unstyled"
 						defaultState="closed"
 						extended="<%= false %>"
 						id="calendarBookingDetailsPanel"
@@ -372,6 +364,7 @@ while (manageableCalendarsIterator.hasNext()) {
 
 					<liferay-ui:panel
 						collapsible="<%= true %>"
+						cssClass="panel-unstyled"
 						defaultState="closed"
 						extended="<%= false %>"
 						id="calendarBookingInvitationPanel"
@@ -460,6 +453,7 @@ while (manageableCalendarsIterator.hasNext()) {
 
 					<liferay-ui:panel
 						collapsible="<%= true %>"
+						cssClass="panel-unstyled"
 						defaultState="closed"
 						extended="<%= false %>"
 						id="calendarBookingReminderPanel"
@@ -472,6 +466,7 @@ while (manageableCalendarsIterator.hasNext()) {
 
 					<liferay-ui:panel
 						collapsible="<%= true %>"
+						cssClass="panel-unstyled"
 						defaultState="closed"
 						extended="<%= false %>"
 						id="calendarBookingCategorizationPanel"
@@ -493,6 +488,7 @@ while (manageableCalendarsIterator.hasNext()) {
 
 					<liferay-ui:panel
 						collapsible="<%= true %>"
+						cssClass="panel-unstyled"
 						defaultState="closed"
 						extended="<%= false %>"
 						id="calendarBookingAssetLinksPanel"

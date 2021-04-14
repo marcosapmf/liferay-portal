@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.delivery.cart.client.dto.v1_0;
 import com.liferay.headless.commerce.delivery.cart.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.delivery.cart.client.serdes.v1_0.CartItemSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class CartItem implements Cloneable {
+public class CartItem implements Cloneable, Serializable {
 
 	public static CartItem toDTO(String json) {
 		return CartItemSerDes.toDTO(json);
@@ -74,6 +76,27 @@ public class CartItem implements Cloneable {
 	}
 
 	protected Map<String, ?> customFields;
+
+	public String[] getErrorMessages() {
+		return errorMessages;
+	}
+
+	public void setErrorMessages(String[] errorMessages) {
+		this.errorMessages = errorMessages;
+	}
+
+	public void setErrorMessages(
+		UnsafeSupplier<String[], Exception> errorMessagesUnsafeSupplier) {
+
+		try {
+			errorMessages = errorMessagesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] errorMessages;
 
 	public Long getId() {
 		return id;
@@ -316,6 +339,27 @@ public class CartItem implements Cloneable {
 	}
 
 	protected String thumbnail;
+
+	public Boolean getValid() {
+		return valid;
+	}
+
+	public void setValid(Boolean valid) {
+		this.valid = valid;
+	}
+
+	public void setValid(
+		UnsafeSupplier<Boolean, Exception> validUnsafeSupplier) {
+
+		try {
+			valid = validUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean valid;
 
 	@Override
 	public CartItem clone() throws CloneNotSupportedException {

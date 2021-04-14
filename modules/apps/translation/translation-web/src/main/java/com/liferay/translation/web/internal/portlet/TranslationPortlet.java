@@ -28,8 +28,10 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"com.liferay.portlet.display-category=category.hidden",
+		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.instanceable=false",
 		"javax.portlet.display-name=Translation",
+		"javax.portlet.init-param.mvc-command-names-default-views=/translation/view",
 		"javax.portlet.name=" + TranslationPortletKeys.TRANSLATION,
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=administrator"

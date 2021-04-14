@@ -14,8 +14,7 @@
 
 import {ClayAlert} from 'clay-alert';
 import {render} from 'frontend-js-react-web';
-import {PortletBase} from 'frontend-js-web';
-import dom from 'metal-dom';
+import {PortletBase, delegate} from 'frontend-js-web';
 import {EventHandler} from 'metal-events';
 import {Config} from 'metal-state';
 import ReactDOM from 'react-dom';
@@ -86,12 +85,9 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		const data = {
 			container,
 			currentIndex: index,
-			editItemURL: this.editItemURL,
 			handleSelectedItem: this._onItemSelected.bind(this),
 			headerTitle: this.closeCaption,
 			items,
-			uploadItemReturnType: this.uploadItemReturnType,
-			uploadItemURL: this.uploadItemURL,
 		};
 
 		render(ItemSelectorPreview, data, container);
@@ -119,7 +115,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 	 */
 	_bindEvents() {
 		this._eventHandler.add(
-			dom.delegate(this.rootNode, 'click', '.item-preview', (event) =>
+			delegate(this.rootNode, 'click', '.item-preview', (event) =>
 				this._onItemSelected(event.delegateTarget.dataset)
 			)
 		);
@@ -474,7 +470,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		) {
 			const maxFileSize = this.maxFileSize;
 
-			if (file.size <= maxFileSize) {
+			if (maxFileSize === 0 || file.size <= maxFileSize) {
 				this._previewFile(file);
 			}
 			else {
@@ -523,15 +519,6 @@ ItemSelectorRepositoryEntryBrowser.STATE = {
 	 * @type {String}
 	 */
 	closeCaption: Config.string(),
-
-	/**
-	 * Url to edit the item.
-	 *
-	 * @instance
-	 * @memberof ItemSelectorRepositoryEntryBrowser
-	 * @type {String}
-	 */
-	editItemURL: Config.string(),
 
 	/**
 	 * Time to hide the alert messages.

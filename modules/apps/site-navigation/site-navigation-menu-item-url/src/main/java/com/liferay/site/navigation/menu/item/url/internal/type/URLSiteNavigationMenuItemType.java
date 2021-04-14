@@ -15,8 +15,10 @@
 package com.liferay.site.navigation.menu.item.url.internal.type;
 
 import com.liferay.frontend.taglib.servlet.taglib.util.JSPRenderer;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.site.navigation.constants.SiteNavigationWebKeys;
@@ -68,6 +70,25 @@ public class URLSiteNavigationMenuItemType
 			siteNavigationMenuItem.getTypeSettings());
 
 		return typeSettingsUnicodeProperties.get("url");
+	}
+
+	@Override
+	public String getTarget(SiteNavigationMenuItem siteNavigationMenuItem) {
+		UnicodeProperties typeSettingsUnicodeProperties =
+			new UnicodeProperties();
+
+		typeSettingsUnicodeProperties.fastLoad(
+			siteNavigationMenuItem.getTypeSettings());
+
+		boolean useNewTab = GetterUtil.getBoolean(
+			typeSettingsUnicodeProperties.getProperty(
+				"useNewTab", Boolean.FALSE.toString()));
+
+		if (!useNewTab) {
+			return StringPool.BLANK;
+		}
+
+		return "target=\"_blank\"";
 	}
 
 	@Override

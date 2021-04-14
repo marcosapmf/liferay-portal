@@ -25,14 +25,6 @@ public abstract class PortalGitRepositoryJob
 	extends GitRepositoryJob implements PortalTestClassJob {
 
 	@Override
-	public Set<String> getBatchNames() {
-		String testBatchNames = JenkinsResultsParserUtil.getProperty(
-			getJobProperties(), "test.batch.names");
-
-		return getSetFromString(testBatchNames);
-	}
-
-	@Override
 	public Set<String> getDistTypes() {
 		String testBatchDistAppServers = JenkinsResultsParserUtil.getProperty(
 			getJobProperties(), "test.batch.dist.app.servers");
@@ -51,8 +43,10 @@ public abstract class PortalGitRepositoryJob
 		return (PortalGitWorkingDirectory)gitWorkingDirectory;
 	}
 
-	protected PortalGitRepositoryJob(String jobName) {
-		super(jobName);
+	protected PortalGitRepositoryJob(
+		String jobName, BuildProfile buildProfile) {
+
+		super(jobName, buildProfile);
 
 		gitWorkingDirectory = getNewGitWorkingDirectory();
 
@@ -71,6 +65,13 @@ public abstract class PortalGitRepositoryJob
 	protected GitWorkingDirectory getNewGitWorkingDirectory() {
 		return GitWorkingDirectoryFactory.newPortalGitWorkingDirectory(
 			getBranchName());
+	}
+
+	@Override
+	protected Set<String> getRawBatchNames() {
+		return getSetFromString(
+			JenkinsResultsParserUtil.getProperty(
+				getJobProperties(), "test.batch.names"));
 	}
 
 }

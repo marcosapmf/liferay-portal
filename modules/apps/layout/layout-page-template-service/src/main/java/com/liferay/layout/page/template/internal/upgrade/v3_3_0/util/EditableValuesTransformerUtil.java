@@ -116,6 +116,8 @@ public class EditableValuesTransformerUtil {
 			JSONObject newEditableJSONObject =
 				JSONFactoryUtil.createJSONObject();
 
+			boolean processedSegmentsExperienceId = false;
+
 			Iterator<String> valueKeysIterator = editableJSONObject.keys();
 
 			while (valueKeysIterator.hasNext()) {
@@ -138,8 +140,16 @@ public class EditableValuesTransformerUtil {
 							segmentedValueKey,
 							valueJSONObject.get(segmentedValueKey));
 					}
+
+					processedSegmentsExperienceId = true;
 				}
 				else if (!valueKey.startsWith(_ID_PREFIX)) {
+					if (processedSegmentsExperienceId &&
+						newEditableJSONObject.has(valueKey)) {
+
+						continue;
+					}
+
 					newEditableJSONObject.put(
 						valueKey, editableJSONObject.get(valueKey));
 				}
@@ -156,7 +166,19 @@ public class EditableValuesTransformerUtil {
 		JSONObject jsonObject, long segmentsExperienceId) {
 
 		if (!jsonObject.has(_ID_PREFIX + segmentsExperienceId)) {
-			return JSONFactoryUtil.createJSONObject();
+			JSONObject newJSONObject = JSONFactoryUtil.createJSONObject();
+
+			Iterator<String> valueKeysIterator = jsonObject.keys();
+
+			while (valueKeysIterator.hasNext()) {
+				String valueKey = valueKeysIterator.next();
+
+				if (!valueKey.startsWith(_ID_PREFIX)) {
+					newJSONObject.put(valueKey, jsonObject.get(valueKey));
+				}
+			}
+
+			return newJSONObject;
 		}
 
 		return jsonObject.getJSONObject(_ID_PREFIX + segmentsExperienceId);

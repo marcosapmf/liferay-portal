@@ -174,7 +174,7 @@
 											"value": {
 												"text": {
 													"value_i18n": {
-														"en_US": "Open claims"
+														"en_US": "Open Claims"
 													}
 												}
 											}
@@ -216,7 +216,7 @@
 									"collectionConfig": {
 										"collectionReference": {
 											"className": "com.liferay.asset.list.model.AssetListEntry",
-											"classPK": "$OPEN-CLAIMS$"
+											"classPK": "[$OPEN-CLAIMS$]"
 										},
 										"collectionType": "Collection"
 									},
@@ -319,7 +319,7 @@
 											"value": {
 												"text": {
 													"value_i18n": {
-														"en_US": "Closed claims"
+														"en_US": "Closed Claims"
 													}
 												}
 											}
@@ -361,7 +361,7 @@
 									"collectionConfig": {
 										"collectionReference": {
 											"className": "com.liferay.asset.list.model.AssetListEntry",
-											"classPK": "$CLOSED-CLAIMS$"
+											"classPK": "[$CLOSED-CLAIMS$]"
 										},
 										"collectionType": "Collection"
 									},

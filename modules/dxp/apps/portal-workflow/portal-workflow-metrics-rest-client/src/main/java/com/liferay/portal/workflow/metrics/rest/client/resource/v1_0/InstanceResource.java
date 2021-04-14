@@ -270,8 +270,9 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances",
-				processId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances");
+
+			httpInvoker.path("processId", processId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -335,8 +336,9 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances",
-				processId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances");
+
+			httpInvoker.path("processId", processId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -396,8 +398,9 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/batch",
-				processId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/batch");
+
+			httpInvoker.path("processId", processId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -459,8 +462,10 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}",
-				processId, instanceId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}");
+
+			httpInvoker.path("processId", processId);
+			httpInvoker.path("instanceId", instanceId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -522,8 +527,10 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}",
-				processId, instanceId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}");
+
+			httpInvoker.path("processId", processId);
+			httpInvoker.path("instanceId", instanceId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -589,8 +596,10 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}",
-				processId, instanceId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}");
+
+			httpInvoker.path("processId", processId);
+			httpInvoker.path("instanceId", instanceId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -657,8 +666,10 @@ public interface InstanceResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}/complete",
-				processId, instanceId);
+						"/o/portal-workflow-metrics/v1.0/processes/{processId}/instances/{instanceId}/complete");
+
+			httpInvoker.path("processId", processId);
+			httpInvoker.path("instanceId", instanceId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

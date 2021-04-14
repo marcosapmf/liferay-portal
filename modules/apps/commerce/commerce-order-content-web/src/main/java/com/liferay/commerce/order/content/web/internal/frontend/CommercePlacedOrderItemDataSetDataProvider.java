@@ -17,6 +17,7 @@ package com.liferay.commerce.order.content.web.internal.frontend;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.order.content.web.internal.frontend.constants.CommerceOrderDataSetConstants;
 import com.liferay.commerce.order.content.web.internal.model.OrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
@@ -108,10 +109,10 @@ public class CommercePlacedOrderItemDataSetDataProvider
 			return StringPool.BLANK;
 		}
 
-		CommerceMoney discountAmountMoney =
+		CommerceMoney discountAmountCommerceMoney =
 			commerceOrderItemPrice.getDiscountAmount();
 
-		return discountAmountMoney.format(locale);
+		return discountAmountCommerceMoney.format(locale);
 	}
 
 	private String _formatFinalPrice(
@@ -122,28 +123,30 @@ public class CommercePlacedOrderItemDataSetDataProvider
 			return StringPool.BLANK;
 		}
 
-		CommerceMoney finalPrice = commerceOrderItemPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceOrderItemPrice.getFinalPrice();
 
-		return finalPrice.format(locale);
+		return finalPriceCommerceMoney.format(locale);
 	}
 
 	private String _formatPromoPrice(
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
 
-		CommerceMoney promoPrice = commerceOrderItemPrice.getPromoPrice();
+		CommerceMoney promoPriceCommerceMoney =
+			commerceOrderItemPrice.getPromoPrice();
 
-		if (promoPrice == null) {
+		if (promoPriceCommerceMoney == null) {
 			return StringPool.BLANK;
 		}
 
-		BigDecimal price = promoPrice.getPrice();
+		BigDecimal price = promoPriceCommerceMoney.getPrice();
 
 		if (price.compareTo(BigDecimal.ZERO) <= 0) {
 			return StringPool.BLANK;
 		}
 
-		return promoPrice.format(locale);
+		return promoPriceCommerceMoney.format(locale);
 	}
 
 	private String _formatSubscriptionPeriod(
@@ -192,9 +195,10 @@ public class CommercePlacedOrderItemDataSetDataProvider
 			return StringPool.BLANK;
 		}
 
-		CommerceMoney unitPrice = commerceOrderItemPrice.getUnitPrice();
+		CommerceMoney unitPriceCommerceMoney =
+			commerceOrderItemPrice.getUnitPrice();
 
-		return unitPrice.format(locale);
+		return unitPriceCommerceMoney.format(locale);
 	}
 
 	private BaseModelSearchResult<CommerceOrderItem> _getBaseModelSearchResult(
@@ -213,7 +217,7 @@ public class CommercePlacedOrderItemDataSetDataProvider
 			end = pagination.getEndPosition();
 		}
 
-		return _commerceOrderItemService.search(
+		return _commerceOrderItemService.searchCommerceOrderItems(
 			commerceOrderId, 0, filter.getKeywords(), start, end, sort);
 	}
 
@@ -262,11 +266,11 @@ public class CommercePlacedOrderItemDataSetDataProvider
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		List<OrderItem> orderItems = new ArrayList<>();
-
 		if (commerceOrderItems.isEmpty()) {
 			return Collections.emptyList();
 		}
+
+		List<OrderItem> orderItems = new ArrayList<>();
 
 		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
 			ThemeDisplay themeDisplay =

@@ -12,39 +12,55 @@
  * details.
  */
 
-function onLocaleChange(layoutRendererInstance, event) {
-	const selectedLanguageId = event.item.getAttribute('data-value');
-
-	const {
-		reactComponentRef: {current},
-	} = layoutRendererInstance;
-
-	if (current) {
-		current.updateEditingLanguageId({
-			editingLanguageId: selectedLanguageId,
-		});
-	}
-}
-
-export default function dataEngineLayoutRendererLanguageProxy(props) {
+export default function dataEngineLayoutRendererLanguageProxy({
+	currentLanguageId,
+	namespace,
+}) {
 	let localeChangedHandler = null;
 
-	Liferay.componentReady(props.namespace + 'dataEngineLayoutRenderer').then(
-		(event) => {
+	Liferay.componentReady(`${namespace}dataEngineLayoutRenderer`).then(
+		(dataEngineLayoutRenderer) => {
+			const dataEngineReactComponentRef =
+				dataEngineLayoutRenderer?.reactComponentRef;
+
 			localeChangedHandler = Liferay.after(
 				'inputLocalized:localeChanged',
-				onLocaleChange.bind(this, event)
+				(event) => {
+					const selectedLanguageId = event.item.getAttribute(
+						'data-value'
+					);
+
+					switchLanguage(
+						dataEngineReactComponentRef,
+						selectedLanguageId
+					);
+				}
 			);
+
+			switchLanguage(dataEngineReactComponentRef, currentLanguageId, {
+				preserveValue: true,
+			});
 		}
 	);
 
-	function destroyInstance(_event) {
-		if (localeChangedHandler) {
-			localeChangedHandler.detach();
-		}
+	return {
+		dispose() {
+			if (localeChangedHandler) {
+				localeChangedHandler.detach();
+			}
+		},
+	};
+}
 
-		Liferay.detach('destroyPortlet', destroyInstance);
+function switchLanguage(
+	dataEngineReactComponentRef,
+	languageId,
+	{preserveValue = false} = {}
+) {
+	if (dataEngineReactComponentRef?.current) {
+		dataEngineReactComponentRef.current.updateEditingLanguageId({
+			editingLanguageId: languageId,
+			preserveValue,
+		});
 	}
-
-	Liferay.on('destroyPortlet', destroyInstance);
 }

@@ -22,13 +22,11 @@ CommerceBOMAdminDisplayContext commerceBOMAdminDisplayContext = (CommerceBOMAdmi
 CommerceBOMDefinition commerceBOMDefinition = commerceBOMAdminDisplayContext.getCommerceBOMDefinition();
 
 CPAttachmentFileEntry cpAttachmentFileEntry = commerceBOMAdminDisplayContext.getCPAttachmentFileEntry();
-
-long fileEntryId = BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEntryId");
 %>
 
-<portlet:actionURL name="editCommerceBOMDefinition" var="editCommerceBOMDefinitionActionURL" />
+<portlet:actionURL name="/commerce_bom_admin/edit_commerce_bom_definition" var="editCommerceBOMDefinitionActionURL" />
 
-<div class="container-fluid-1280 entry-body">
+<div class="container-fluid container-fluid-max-xl entry-body">
 	<aui:form action="<%= editCommerceBOMDefinitionActionURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commerceBOMDefinition == null) ? Constants.ADD : Constants.UPDATE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -43,12 +41,12 @@ long fileEntryId = BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEn
 
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
-				<portlet:actionURL name="uploadTempAttachment" var="uploadCoverImageURL" />
+				<portlet:actionURL name="/commerce_bom_admin/upload_temp_attachment" var="uploadCoverImageURL" />
 
 				<div class="lfr-attachment-cover-image-selector">
 					<liferay-item-selector:image-selector
 						draggableImage="vertical"
-						fileEntryId="<%= fileEntryId %>"
+						fileEntryId='<%= BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEntryId") %>'
 						itemSelectorEventName="addCPAttachmentFileEntry"
 						itemSelectorURL="<%= commerceBOMAdminDisplayContext.getItemSelectorUrl() %>"
 						maxFileSize="<%= commerceBOMAdminDisplayContext.getImageMaxSize() %>"

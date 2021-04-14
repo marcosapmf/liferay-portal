@@ -290,6 +290,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PERSONAL_SITE_MY_PROFILE</td>
+	<td>//div[contains(@class,'form-group')]//select[contains(@id,'publicLayoutSetPrototypeId')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -335,7 +340,7 @@
 <!--CUSTOM_FIELDS-->
 <tr>
 	<td>CUSTOM_FIELDS_LABEL</td>
-	<td>//div/label[@class='control-label' and contains(.,'${key_customFieldName}')]</td>
+	<td>//div/label[contains(@class,'control-label') and contains(.,'${key_customFieldName}')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -176,10 +176,15 @@ public class CommerceShippingFixedOptionClayTable
 		long commerceShippingMethodId = ParamUtil.getLong(
 			httpServletRequest, "commerceShippingMethodId");
 
+		CommerceShippingMethod commerceShippingMethod =
+			_commerceShippingMethodLocalService.getCommerceShippingMethod(
+				commerceShippingMethodId);
+
 		List<CommerceShippingFixedOption> commerceShippingFixedOptions =
 			_commerceShippingFixedOptionService.getCommerceShippingFixedOptions(
-				commerceShippingMethodId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				null);
+				commerceShippingMethod.getCompanyId(),
+				commerceShippingMethod.getGroupId(), commerceShippingMethodId,
+				null, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		return commerceShippingFixedOptions.size();
 	}
@@ -196,7 +201,8 @@ public class CommerceShippingFixedOptionClayTable
 			_portal.getCurrentURL(httpServletRequest));
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "editCommerceShippingFixedOption");
+			ActionRequest.ACTION_NAME,
+			"/commerce_shipping_methods/edit_commerce_shipping_fixed_option");
 		portletURL.setParameter(Constants.CMD, Constants.DELETE);
 		portletURL.setParameter("redirect", redirect);
 		portletURL.setParameter(
@@ -215,10 +221,18 @@ public class CommerceShippingFixedOptionClayTable
 			PortletProvider.Action.EDIT);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceShippingFixedOption");
+			"mvcRenderCommandName",
+			"/commerce_shipping_methods/edit_commerce_shipping_fixed_option");
 		portletURL.setParameter(
 			"commerceShippingFixedOptionId",
 			String.valueOf(shippingFixedOptionId));
+
+		long commerceShippingMethodId = ParamUtil.getLong(
+			httpServletRequest, "commerceShippingMethodId");
+
+		portletURL.setParameter(
+			"commerceShippingMethodId",
+			String.valueOf(commerceShippingMethodId));
 
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 

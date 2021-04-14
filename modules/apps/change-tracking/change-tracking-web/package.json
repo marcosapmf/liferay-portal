@@ -1,16 +1,22 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.4.1",
-		"@clayui/breadcrumb": "3.2.8",
-		"@clayui/button": "3.4.0",
-		"@clayui/drop-down": "3.7.0",
-		"@clayui/form": "3.11.1",
-		"@clayui/icon": "3.0.5",
-		"@clayui/management-toolbar": "3.2.3",
-		"@clayui/pagination-bar": "3.1.12",
-		"@clayui/table": "3.0.7",
+		"@clayui/alert": "3.5.1",
+		"@clayui/breadcrumb": "3.3.4",
+		"@clayui/button": "3.5.0",
+		"@clayui/date-picker": "3.7.0",
+		"@clayui/drop-down": "3.8.4",
+		"@clayui/form": "3.14.2",
+		"@clayui/icon": "3.1.0",
+		"@clayui/link": "3.2.0",
+		"@clayui/list": "3.4.5",
+		"@clayui/management-toolbar": "3.3.0",
+		"@clayui/navigation-bar": "3.3.3",
+		"@clayui/pagination-bar": "3.2.4",
+		"@clayui/panel": "3.3.4",
+		"@clayui/table": "3.1.0",
+		"@clayui/tooltip": "3.4.3",
 		"frontend-js-web": "*",
-		"prop-types": "15.7.2",
+		"moment": "^2.22.2",
 		"react": "16.12.0"
 	},
 	"name": "change-tracking-web",
@@ -19,5 +25,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.19"
+	"version": "2.0.0"
 }

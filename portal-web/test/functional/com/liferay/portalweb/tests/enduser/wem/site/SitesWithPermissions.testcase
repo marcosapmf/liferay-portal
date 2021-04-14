@@ -26,6 +26,7 @@ definition {
 		}
 	}
 
+	@description = "This is for LPS-121422. The elements are still shown in edit mode after executing reset changes."
 	@priority = "3"
 	test SitesTemplatePermissionPersistence {
 		property testray.component.names = "Permissions,Site Administration";
@@ -66,7 +67,7 @@ definition {
 		}
 
 		task ("Add a search page in the new site template") {
-			Close.closeAndSelectWindow(locator1 = "title=Site Templates - Control Panel - ${siteName}");
+			Close.closeAndSelectWindow(locator1 = "title=Site Templates - ${siteName}");
 
 			SiteTemplates.addSitePageViaSiteTemplateCP(
 				pageName = "search",
@@ -86,10 +87,24 @@ definition {
 				siteType = "Site Template");
 		}
 
+		task ("Add a poll via Polls admin") {
+			ProductMenu.gotoPortlet(
+				category = "Content &amp; Data",
+				portlet = "Polls");
+
+			Polls.addPollCP(
+				pollsQuestion = "What is the most important issue for this election?",
+				pollsQuestionChoiceA = "The Economy",
+				pollsQuestionChoiceB = "The National Debt",
+				pollsQuestionTitle = "Election Poll");
+		}
+
 		task ("Assert permissions of each widgets in Home page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Home",
 				siteName = "Site Name");
+
+			PageEditor.assertFragmentSidebarLoaded();
 
 			PermissionsInline.gotoConfigurationPG(portletName = "Polls Display");
 
@@ -123,11 +138,15 @@ definition {
 				locator1 = "Home#PORTLET_BORDERLESS");
 
 			SiteTemplates.resetPageChanges(widgetName = "Asset Publisher");
+
+			ContentPages.clickPencil();
+
+			AssertElementNotPresent(
+				key_fragmentName = "Asset Publisher",
+				locator1 = "Fragment#FRAGMENT_HEADER");
 		}
 
 		task ("Assert permissions of each widgets in Home page") {
-			ContentPages.clickPencil();
-
 			PermissionsInline.gotoConfigurationPG(portletName = "Polls Display");
 
 			PermissionsInline.assertDefaultPG(roleList = "Guest,Owner,Power User,Site Member,User");
@@ -141,26 +160,18 @@ definition {
 			IFrame.closeFrame();
 		}
 
-		task ("Add poll in Polls Display") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Home",
-				siteName = "Site Name");
-
-			Polls.addPollPG(
-				pollsQuestion = "What is the most important issue for this election?",
-				pollsQuestionChoiceA = "The Economy",
-				pollsQuestionChoiceB = "The National Debt",
-				pollsQuestionTitle = "Election Poll");
+		task ("Select poll in Polls Display") {
+			Polls.selectPollPageEditor(pollsQuestionTitle = "Election Poll");
 
 			IFrame.closeFrame();
 
-			Polls.selectPollPG(pollsQuestionTitle = "Election Poll");
-
-			IFrame.closeFrame();
+			Refresh();
 
 			Polls.viewPollPG(
 				pollsQuestion = "What is the most important issue for this election?",
 				pollsQuestionChoiceList = "The Economy,The National Debt");
+
+			PageEditor.clickPublish();
 		}
 
 		task ("Add thread in Message Boards") {
@@ -168,9 +179,9 @@ definition {
 				threadBody = "This is the message boards thread.",
 				threadSubject = "Thread");
 
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Home",
-				siteName = "Site Name");
+			var portalURL = PropsUtil.get("portal.url");
+
+			Navigator.openSpecificURL(url = "${portalURL}/web/site-name/home");
 
 			MessageboardsThread.gotoPG(
 				lastPostUserName = "Test Test",
@@ -200,13 +211,9 @@ definition {
 				threadBody = "This is the message boards thread.",
 				threadSubject = "Thread");
 
-			Polls.viewPollPG(
+			Polls.viewPollAsGuestPG(
 				pollsQuestion = "What is the most important issue for this election?",
 				pollsQuestionChoiceList = "The Economy,The National Debt");
-
-			AssertTextEquals(
-				locator1 = "Message#INFO",
-				value1 = "Please sign in to vote.");
 
 			AssertElementPresent(locator1 = "Search#EMBEDDED_SEARCH_BAR");
 		}
@@ -219,6 +226,8 @@ definition {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Home",
 				siteName = "Site Name");
+
+			PageEditor.assertFragmentSidebarLoaded();
 
 			PermissionsInline.gotoConfigurationPG(portletName = "Polls Display");
 

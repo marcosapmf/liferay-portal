@@ -14,6 +14,7 @@
 
 package com.liferay.change.tracking.web.internal.display.context;
 
+import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTPreferences;
@@ -21,23 +22,34 @@ import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
+import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
+import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.DisplayTerms;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.util.PropsValues;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -53,18 +65,15 @@ public class PublicationsDisplayContext {
 		CTCollectionService ctCollectionService,
 		CTDisplayRendererRegistry ctDisplayRendererRegistry,
 		CTEntryLocalService ctEntryLocalService,
-		CTPreferencesLocalService ctPreferencesLocalService, Language language,
-		Portal portal, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
+		CTPreferencesLocalService ctPreferencesLocalService,
+		HttpServletRequest httpServletRequest, Language language,
+		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		_ctCollectionService = ctCollectionService;
 		_ctDisplayRendererRegistry = ctDisplayRendererRegistry;
 		_ctEntryLocalService = ctEntryLocalService;
+		_httpServletRequest = httpServletRequest;
 		_language = language;
-
-		_portal = portal;
-
-		_httpServletRequest = _portal.getHttpServletRequest(renderRequest);
 
 		_renderRequest = renderRequest;
 
@@ -97,13 +106,20 @@ public class PublicationsDisplayContext {
 		return ParamUtil.getString(_renderRequest, "displayStyle", "list");
 	}
 
+	public Map<String, Object> getDropdownReactData(
+			CTCollection ctCollection, PermissionChecker permissionChecker)
+		throws Exception {
+
+		return Collections.singletonMap(
+			"dropdownItems",
+			_getDropdownItemsJSONArray(ctCollection, permissionChecker));
+	}
+
 	public String getReviewChangesURL(long ctCollectionId) {
 		PortletURL reviewURL = _renderResponse.createRenderURL();
 
 		reviewURL.setParameter(
-			"mvcRenderCommandName", "/publications/view_changes");
-		reviewURL.setParameter(
-			"backURL", _portal.getCurrentURL(_renderRequest));
+			"mvcRenderCommandName", "/change_tracking/view_changes");
 		reviewURL.setParameter(
 			"ctCollectionId", String.valueOf(ctCollectionId));
 
@@ -130,7 +146,10 @@ public class PublicationsDisplayContext {
 		String keywords = displayTerms.getKeywords();
 
 		int count = _ctCollectionService.getCTCollectionsCount(
-			_themeDisplay.getCompanyId(), WorkflowConstants.STATUS_DRAFT,
+			_themeDisplay.getCompanyId(),
+			new int[] {
+				WorkflowConstants.STATUS_DRAFT, WorkflowConstants.STATUS_EXPIRED
+			},
 			keywords);
 
 		searchContainer.setTotal(count);
@@ -147,7 +166,10 @@ public class PublicationsDisplayContext {
 				Objects.equals(searchContainer.getOrderByType(), "asc"));
 
 		List<CTCollection> results = _ctCollectionService.getCTCollections(
-			_themeDisplay.getCompanyId(), WorkflowConstants.STATUS_DRAFT,
+			_themeDisplay.getCompanyId(),
+			new int[] {
+				WorkflowConstants.STATUS_DRAFT, WorkflowConstants.STATUS_EXPIRED
+			},
 			keywords, searchContainer.getStart(), searchContainer.getEnd(),
 			orderByComparator);
 
@@ -156,6 +178,34 @@ public class PublicationsDisplayContext {
 		_searchContainer = searchContainer;
 
 		return _searchContainer;
+	}
+
+	public String getStatusLabel(int status) {
+		if (status == WorkflowConstants.STATUS_APPROVED) {
+			return "published";
+		}
+		else if (status == WorkflowConstants.STATUS_EXPIRED) {
+			return "out-of-date";
+		}
+		else if (status == WorkflowConstants.STATUS_DRAFT) {
+			return "in-progress";
+		}
+		else if (status == WorkflowConstants.STATUS_DENIED) {
+			return "failed";
+		}
+		else if (status == WorkflowConstants.STATUS_SCHEDULED) {
+			return "scheduled";
+		}
+
+		return StringPool.BLANK;
+	}
+
+	public String getStatusStyle(int status) {
+		if (status == WorkflowConstants.STATUS_EXPIRED) {
+			return "warning";
+		}
+
+		return WorkflowConstants.getStatusStyle(status);
 	}
 
 	public List<NavigationItem> getViewNavigationItems() {
@@ -167,11 +217,12 @@ public class PublicationsDisplayContext {
 					_language.get(_httpServletRequest, "ongoing"));
 			}
 		).add(
+			() -> PropsValues.SCHEDULER_ENABLED,
 			navigationItem -> {
 				navigationItem.setActive(false);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/publications/view_scheduled", "displayStyle",
+					"/change_tracking/view_scheduled", "displayStyle",
 					getDisplayStyle());
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "scheduled"));
@@ -181,7 +232,7 @@ public class PublicationsDisplayContext {
 				navigationItem.setActive(false);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/publications/view_history", "displayStyle",
+					"/change_tracking/view_history", "displayStyle",
 					getDisplayStyle());
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "history"));
@@ -198,6 +249,153 @@ public class PublicationsDisplayContext {
 		}
 
 		return false;
+	}
+
+	private JSONArray _getDropdownItemsJSONArray(
+			CTCollection ctCollection, PermissionChecker permissionChecker)
+		throws Exception {
+
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		if (CTCollectionPermission.contains(
+				permissionChecker, ctCollection, ActionKeys.UPDATE)) {
+
+			if (ctCollection.getCtCollectionId() != _ctCollectionId) {
+				jsonArray.put(
+					JSONUtil.put(
+						"disabled",
+						ctCollection.getStatus() ==
+							WorkflowConstants.STATUS_EXPIRED
+					).put(
+						"href",
+						PublicationsPortletURLUtil.getHref(
+							_renderResponse.createActionURL(),
+							ActionRequest.ACTION_NAME,
+							"/change_tracking/checkout_ct_collection",
+							"redirect", _themeDisplay.getURLCurrent(),
+							"ctCollectionId",
+							String.valueOf(ctCollection.getCtCollectionId()))
+					).put(
+						"label",
+						_language.get(
+							_httpServletRequest, "work-on-publication")
+					).put(
+						"symbolLeft", "radio-button"
+					));
+			}
+
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					PublicationsPortletURLUtil.getHref(
+						_renderResponse.createRenderURL(),
+						"mvcRenderCommandName",
+						"/change_tracking/edit_ct_collection", "redirect",
+						_themeDisplay.getURLCurrent(), "ctCollectionId",
+						String.valueOf(ctCollection.getCtCollectionId()))
+				).put(
+					"label", _language.get(_httpServletRequest, "edit")
+				).put(
+					"symbolLeft", "pencil"
+				));
+		}
+
+		jsonArray.put(
+			JSONUtil.put(
+				"href",
+				PublicationsPortletURLUtil.getHref(
+					_renderResponse.createRenderURL(), "mvcRenderCommandName",
+					"/change_tracking/view_changes", "ctCollectionId",
+					String.valueOf(ctCollection.getCtCollectionId()))
+			).put(
+				"label", _language.get(_httpServletRequest, "review-changes")
+			).put(
+				"symbolLeft", "list-ul"
+			));
+
+		if (CTCollectionPermission.contains(
+				permissionChecker, ctCollection, ActionKeys.PERMISSIONS)) {
+
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					PublicationsPortletURLUtil.getPermissionsHref(
+						_httpServletRequest, ctCollection, _language)
+				).put(
+					"label", _language.get(_httpServletRequest, "permissions")
+				).put(
+					"symbolLeft", "password-policies"
+				));
+		}
+
+		if (CTCollectionPermission.contains(
+				permissionChecker, ctCollection, ActionKeys.DELETE)) {
+
+			jsonArray.put(
+				JSONUtil.put("type", "divider")
+			).put(
+				JSONUtil.put(
+					"href",
+					PublicationsPortletURLUtil.getDeleteHref(
+						_httpServletRequest, _renderResponse,
+						_themeDisplay.getURLCurrent(),
+						ctCollection.getCtCollectionId(), _language)
+				).put(
+					"label", _language.get(_httpServletRequest, "delete")
+				).put(
+					"symbolLeft", "times-circle"
+				)
+			);
+		}
+
+		if (isPublishEnabled(ctCollection.getCtCollectionId()) &&
+			CTCollectionPermission.contains(
+				permissionChecker, ctCollection, CTActionKeys.PUBLISH)) {
+
+			jsonArray.put(JSONUtil.put("type", "divider"));
+
+			if (PropsValues.SCHEDULER_ENABLED) {
+				jsonArray.put(
+					JSONUtil.put(
+						"disabled",
+						ctCollection.getStatus() ==
+							WorkflowConstants.STATUS_EXPIRED
+					).put(
+						"href",
+						PublicationsPortletURLUtil.getHref(
+							_renderResponse.createRenderURL(),
+							"mvcRenderCommandName",
+							"/change_tracking/view_conflicts", "redirect",
+							_themeDisplay.getURLCurrent(), "ctCollectionId",
+							String.valueOf(ctCollection.getCtCollectionId()),
+							"schedule", Boolean.TRUE.toString())
+					).put(
+						"label", _language.get(_httpServletRequest, "schedule")
+					).put(
+						"symbolLeft", "calendar"
+					));
+			}
+
+			jsonArray.put(
+				JSONUtil.put(
+					"disabled",
+					ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED
+				).put(
+					"href",
+					PublicationsPortletURLUtil.getHref(
+						_renderResponse.createRenderURL(),
+						"mvcRenderCommandName",
+						"/change_tracking/view_conflicts", "redirect",
+						_themeDisplay.getURLCurrent(), "ctCollectionId",
+						String.valueOf(ctCollection.getCtCollectionId()))
+				).put(
+					"label", _language.get(_httpServletRequest, "publish")
+				).put(
+					"symbolLeft", "change"
+				));
+		}
+
+		return jsonArray;
 	}
 
 	private String _getOrderByCol() {
@@ -218,7 +416,6 @@ public class PublicationsDisplayContext {
 	private final CTEntryLocalService _ctEntryLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
-	private final Portal _portal;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 	private SearchContainer<CTCollection> _searchContainer;

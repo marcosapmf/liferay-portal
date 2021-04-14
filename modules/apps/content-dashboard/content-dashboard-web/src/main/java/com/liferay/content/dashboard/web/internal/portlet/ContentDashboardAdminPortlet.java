@@ -43,32 +43,33 @@ import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.searcher.Searcher;
 
 import java.io.IOException;
 
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
+import javax.portlet.PortletPreferences;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Cristina González
  */
 @Component(
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-content-dashboard-admin",
 		"com.liferay.portlet.display-category=category.hidden",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
-		"com.liferay.portlet.preferences-company-wide=true",
+		"com.liferay.portlet.preferences-company-wide=false",
 		"com.liferay.portlet.preferences-owned-by-group=false",
 		"com.liferay.portlet.preferences-unique-per-layout=false",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -77,11 +78,11 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.use-default-template=true",
 		"javax.portlet.display-name=Content Dashboard",
 		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.config-template=/configuration.jsp",
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + ContentDashboardPortletKeys.CONTENT_DASHBOARD_ADMIN,
-		"javax.portlet.portlet-mode=text/html;config",
+		"javax.portlet.portlet-mode=text/html",
+		"javax.portlet.preferences=classpath:/META-INF/portlet-preferences/default-portlet-preferences.xml",
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=power-user,user"
 	},
@@ -94,13 +95,19 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			_portal.getLocale(renderRequest), getClass());
+
 		ContentDashboardDataProvider contentDashboardDataProvider =
 			new ContentDashboardDataProvider(
 				_aggregations,
 				new ContentDashboardSearchContextBuilder(
-					_portal.getHttpServletRequest(renderRequest)),
+					_portal.getHttpServletRequest(renderRequest),
+					_assetCategoryLocalService, _assetVocabularyLocalService),
 				_contentDashboardSearchRequestBuilderFactory,
-				_portal.getLocale(renderRequest), _searcher);
+				_portal.getLocale(renderRequest), _queries, resourceBundle,
+				_searcher);
+
 		LiferayPortletRequest liferayPortletRequest =
 			_portal.getLiferayPortletRequest(renderRequest);
 		LiferayPortletResponse liferayPortletResponse =
@@ -109,6 +116,7 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 		ContentDashboardItemSearchContainerFactory
 			contentDashboardItemSearchContainerFactory =
 				ContentDashboardItemSearchContainerFactory.getInstance(
+					_assetCategoryLocalService, _assetVocabularyLocalService,
 					_contentDashboardItemFactoryTracker,
 					_contentDashboardSearchRequestBuilderFactory, _portal,
 					renderRequest, renderResponse, _searcher);
@@ -116,8 +124,12 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 		SearchContainer<ContentDashboardItem<?>> searchContainer =
 			contentDashboardItemSearchContainerFactory.create();
 
+		PortletPreferences portletPreferences = renderRequest.getPreferences();
+
 		List<AssetVocabulary> assetVocabularies =
 			_assetVocabulariesProvider.getAssetVocabularies(
+				portletPreferences.getValues(
+					"assetVocabularyNames", new String[0]),
 				_portal.getCompanyId(liferayPortletRequest));
 
 		ContentDashboardAdminDisplayContext
@@ -134,9 +146,7 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 						_portal.getLocale(liferayPortletRequest),
 						LanguageConstants.KEY_DIR),
 					liferayPortletRequest, liferayPortletResponse, _portal,
-					ResourceBundleUtil.getBundle(
-						_portal.getLocale(renderRequest), getClass()),
-					searchContainer);
+					resourceBundle, searchContainer);
 
 		renderRequest.setAttribute(
 			ContentDashboardWebKeys.CONTENT_DASHBOARD_ADMIN_DISPLAY_CONTEXT,
@@ -197,6 +207,9 @@ public class ContentDashboardAdminPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private Queries _queries;
 
 	@Reference
 	private Searcher _searcher;

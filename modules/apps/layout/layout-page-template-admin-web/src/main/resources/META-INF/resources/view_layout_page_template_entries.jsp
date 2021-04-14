@@ -22,11 +22,11 @@ LayoutPageTemplateDisplayContext layoutPageTemplateDisplayContext = new LayoutPa
 LayoutPageTemplateManagementToolbarDisplayContext layoutPageTemplateManagementToolbarDisplayContext = new LayoutPageTemplateManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, layoutPageTemplateDisplayContext);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= layoutPageTemplateManagementToolbarDisplayContext %>"
 />
 
-<portlet:actionURL name="/layout_page_template/delete_layout_page_template_entry" var="deleteLayoutPageTemplateEntryURL">
+<portlet:actionURL name="/layout_page_template_admin/delete_layout_page_template_entry" var="deleteLayoutPageTemplateEntryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
@@ -44,17 +44,15 @@ LayoutPageTemplateManagementToolbarDisplayContext layoutPageTemplateManagementTo
 		>
 
 			<%
-			row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
-
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"actions", layoutPageTemplateManagementToolbarDisplayContext.getAvailableActions(layoutPageTemplateEntry)
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"actions", layoutPageTemplateManagementToolbarDisplayContext.getAvailableActions(layoutPageTemplateEntry)
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text>
 				<clay:vertical-card
+					propsTransformer="js/propsTransformers/LayoutPageTemplateEntryPropsTransformer"
 					verticalCard="<%= new LayoutPageTemplateEntryVerticalCard(layoutPageTemplateEntry, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
 				/>
 			</liferay-ui:search-container-column-text>
@@ -67,7 +65,7 @@ LayoutPageTemplateManagementToolbarDisplayContext layoutPageTemplateManagementTo
 	</liferay-ui:search-container>
 </aui:form>
 
-<portlet:actionURL name="/layout_page_template/update_layout_page_template_entry_preview" var="updateLayoutPageTemplateEntryPreviewURL">
+<portlet:actionURL name="/layout_page_template_admin/update_layout_page_template_entry_preview" var="updateLayoutPageTemplateEntryPreviewURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
@@ -75,11 +73,6 @@ LayoutPageTemplateManagementToolbarDisplayContext layoutPageTemplateManagementTo
 	<aui:input name="layoutPageTemplateEntryId" type="hidden" />
 	<aui:input name="fileEntryId" type="hidden" />
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= LayoutPageTemplateAdminWebKeys.LAYOUT_PAGE_TEMPLATE_ENTRY_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/LayoutPageTemplateEntryDropdownDefaultEventHandler.es"
-/>
 
 <liferay-frontend:component
 	componentId="<%= layoutPageTemplateManagementToolbarDisplayContext.getDefaultEventHandler() %>"

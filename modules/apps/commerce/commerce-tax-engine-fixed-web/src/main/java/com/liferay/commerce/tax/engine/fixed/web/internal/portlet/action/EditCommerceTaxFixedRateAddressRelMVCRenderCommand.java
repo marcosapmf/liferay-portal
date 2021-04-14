@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_TAX_METHODS,
-		"mvc.command.name=editCommerceTaxFixedRateAddressRel"
+		"mvc.command.name=/commerce_tax_methods/edit_commerce_tax_fixed_rate_address_rel"
 	},
 	service = MVCRenderCommand.class
 )
@@ -65,7 +65,7 @@ public class EditCommerceTaxFixedRateAddressRelMVCRenderCommand
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(
-				"/edit_address_tax_fixed_rate.jsp");
+				"/edit_commerce_tax_fixed_rate_address_rel.jsp");
 
 		try {
 			CommerceTaxFixedRateAddressRelsDisplayContext

@@ -10,8 +10,9 @@
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
 		<field name="credentialKey" type="String">
-			<hint name="max-length">128</hint>
+			<hint-collection name="CLOB" />
 		</field>
+		<field name="credentialKeyHash" type="long" />
 		<field name="credentialType" type="int" />
 		<field name="failedAttempts" type="int" />
 		<field name="publicKeyCOSE" type="String">

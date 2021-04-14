@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -50,7 +50,6 @@ import java.lang.reflect.InvocationHandler;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -192,7 +191,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -561,7 +560,7 @@ public class CommerceAddressPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceRegionId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -704,7 +703,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -1074,7 +1073,7 @@ public class CommerceAddressPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceCountryId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1218,7 +1217,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -1608,7 +1607,7 @@ public class CommerceAddressPersistenceImpl
 
 		Object[] finderArgs = new Object[] {classNameId, classPK};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1765,7 +1764,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -2178,7 +2177,7 @@ public class CommerceAddressPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, classNameId, classPK};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -2343,7 +2342,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -2757,7 +2756,7 @@ public class CommerceAddressPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, classNameId, classPK};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -2933,7 +2932,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -3381,7 +3380,7 @@ public class CommerceAddressPersistenceImpl
 			groupId, classNameId, classPK, defaultBilling
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -3564,7 +3563,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -4012,7 +4011,7 @@ public class CommerceAddressPersistenceImpl
 			groupId, classNameId, classPK, defaultShipping
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -4193,7 +4192,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAddress commerceAddress : list) {
@@ -4636,7 +4635,7 @@ public class CommerceAddressPersistenceImpl
 			companyId, classNameId, classPK, type
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -4776,8 +4775,7 @@ public class CommerceAddressPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByC_ERC, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByC_ERC, finderArgs);
 		}
 
 		if (result instanceof CommerceAddress) {
@@ -4909,7 +4907,7 @@ public class CommerceAddressPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, externalReferenceCode};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -5033,9 +5031,7 @@ public class CommerceAddressPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(CommerceAddressImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceAddressImpl.class);
 	}
 
 	/**
@@ -5060,9 +5056,7 @@ public class CommerceAddressPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceAddressImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(CommerceAddressImpl.class, primaryKey);
@@ -5077,10 +5071,9 @@ public class CommerceAddressPersistenceImpl
 			commerceAddressModelImpl.getExternalReferenceCode()
 		};
 
+		finderCache.putResult(_finderPathCountByC_ERC, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByC_ERC, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByC_ERC, args, commerceAddressModelImpl, false);
+			_finderPathFetchByC_ERC, args, commerceAddressModelImpl);
 	}
 
 	/**
@@ -5405,7 +5398,7 @@ public class CommerceAddressPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAddress>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -5475,7 +5468,7 @@ public class CommerceAddressPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -5538,22 +5531,21 @@ public class CommerceAddressPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new CommerceAddressModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", CommerceAddress.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByCommerceRegionId = _createFinderPath(
+		_finderPathWithPaginationFindByCommerceRegionId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCommerceRegionId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -5561,17 +5553,17 @@ public class CommerceAddressPersistenceImpl
 			},
 			new String[] {"commerceRegionId"}, true);
 
-		_finderPathWithoutPaginationFindByCommerceRegionId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCommerceRegionId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCommerceRegionId",
 			new String[] {Long.class.getName()},
 			new String[] {"commerceRegionId"}, true);
 
-		_finderPathCountByCommerceRegionId = _createFinderPath(
+		_finderPathCountByCommerceRegionId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceRegionId", new String[] {Long.class.getName()},
 			new String[] {"commerceRegionId"}, false);
 
-		_finderPathWithPaginationFindByCommerceCountryId = _createFinderPath(
+		_finderPathWithPaginationFindByCommerceCountryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCommerceCountryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -5579,17 +5571,17 @@ public class CommerceAddressPersistenceImpl
 			},
 			new String[] {"commerceCountryId"}, true);
 
-		_finderPathWithoutPaginationFindByCommerceCountryId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCommerceCountryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByCommerceCountryId", new String[] {Long.class.getName()},
 			new String[] {"commerceCountryId"}, true);
 
-		_finderPathCountByCommerceCountryId = _createFinderPath(
+		_finderPathCountByCommerceCountryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceCountryId", new String[] {Long.class.getName()},
 			new String[] {"commerceCountryId"}, false);
 
-		_finderPathWithPaginationFindByC_C = _createFinderPath(
+		_finderPathWithPaginationFindByC_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5598,17 +5590,17 @@ public class CommerceAddressPersistenceImpl
 			},
 			new String[] {"classNameId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByC_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"classNameId", "classPK"}, true);
 
-		_finderPathCountByC_C = _createFinderPath(
+		_finderPathCountByC_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByG_C_C = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5617,21 +5609,21 @@ public class CommerceAddressPersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, true);
 
-		_finderPathCountByG_C_C = _createFinderPath(
+		_finderPathCountByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByC_C_C = _createFinderPath(
+		_finderPathWithPaginationFindByC_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5640,21 +5632,21 @@ public class CommerceAddressPersistenceImpl
 			},
 			new String[] {"companyId", "classNameId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByC_C_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"companyId", "classNameId", "classPK"}, true);
 
-		_finderPathCountByC_C_C = _createFinderPath(
+		_finderPathCountByC_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"companyId", "classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByG_C_C_DB = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_C_DB = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C_DB",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5667,7 +5659,7 @@ public class CommerceAddressPersistenceImpl
 			},
 			true);
 
-		_finderPathWithoutPaginationFindByG_C_C_DB = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_C_DB = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C_DB",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5678,7 +5670,7 @@ public class CommerceAddressPersistenceImpl
 			},
 			true);
 
-		_finderPathCountByG_C_C_DB = _createFinderPath(
+		_finderPathCountByG_C_C_DB = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C_DB",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5689,7 +5681,7 @@ public class CommerceAddressPersistenceImpl
 			},
 			false);
 
-		_finderPathWithPaginationFindByG_C_C_DS = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_C_DS = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C_DS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5702,7 +5694,7 @@ public class CommerceAddressPersistenceImpl
 			},
 			true);
 
-		_finderPathWithoutPaginationFindByG_C_C_DS = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_C_DS = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C_DS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5713,7 +5705,7 @@ public class CommerceAddressPersistenceImpl
 			},
 			true);
 
-		_finderPathCountByG_C_C_DS = _createFinderPath(
+		_finderPathCountByG_C_C_DS = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C_DS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5724,7 +5716,7 @@ public class CommerceAddressPersistenceImpl
 			},
 			false);
 
-		_finderPathWithPaginationFindByC_C_C_C = _createFinderPath(
+		_finderPathWithPaginationFindByC_C_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5735,7 +5727,7 @@ public class CommerceAddressPersistenceImpl
 			new String[] {"companyId", "classNameId", "classPK", "type_"},
 			true);
 
-		_finderPathWithoutPaginationFindByC_C_C_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_C_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5744,7 +5736,7 @@ public class CommerceAddressPersistenceImpl
 			new String[] {"companyId", "classNameId", "classPK", "type_"},
 			true);
 
-		_finderPathCountByC_C_C_C = _createFinderPath(
+		_finderPathCountByC_C_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -5753,12 +5745,12 @@ public class CommerceAddressPersistenceImpl
 			new String[] {"companyId", "classNameId", "classPK", "type_"},
 			false);
 
-		_finderPathFetchByC_ERC = _createFinderPath(
+		_finderPathFetchByC_ERC = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByC_ERC",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "externalReferenceCode"}, true);
 
-		_finderPathCountByC_ERC = _createFinderPath(
+		_finderPathCountByC_ERC = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_ERC",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "externalReferenceCode"}, false);
@@ -5768,12 +5760,6 @@ public class CommerceAddressPersistenceImpl
 		entityCache.removeCache(CommerceAddressImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -5810,27 +5796,13 @@ public class CommerceAddressPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"type"});
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class CommerceAddressModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -5881,6 +5853,16 @@ public class CommerceAddressPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return CommerceAddressImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return CommerceAddressTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

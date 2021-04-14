@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -50,7 +50,6 @@ import java.sql.Timestamp;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -206,7 +205,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceInventoryReplenishmentItem>)finderCache.getResult(
-					finderPath, finderArgs, this);
+					finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceInventoryReplenishmentItem
@@ -611,7 +610,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceInventoryWarehouseId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -752,7 +751,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceInventoryReplenishmentItem>)finderCache.getResult(
-					finderPath, finderArgs, this);
+					finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceInventoryReplenishmentItem
@@ -1160,7 +1159,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {sku};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1317,7 +1316,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceInventoryReplenishmentItem>)finderCache.getResult(
-					finderPath, finderArgs, this);
+					finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceInventoryReplenishmentItem
@@ -1729,7 +1728,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {_getTime(availabilityDate)};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1893,7 +1892,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceInventoryReplenishmentItem>)finderCache.getResult(
-					finderPath, finderArgs, this);
+					finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceInventoryReplenishmentItem
@@ -2327,7 +2326,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, sku};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -2497,7 +2496,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceInventoryReplenishmentItem>)finderCache.getResult(
-					finderPath, finderArgs, this);
+					finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceInventoryReplenishmentItem
@@ -2954,7 +2953,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {sku, _getTime(availabilityDate)};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -3095,9 +3094,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(CommerceInventoryReplenishmentItemImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceInventoryReplenishmentItemImpl.class);
 	}
 
 	/**
@@ -3133,9 +3130,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceInventoryReplenishmentItemImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -3500,7 +3495,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceInventoryReplenishmentItem>)finderCache.getResult(
-					finderPath, finderArgs, this);
+					finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -3573,7 +3568,7 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -3637,24 +3632,22 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new CommerceInventoryReplenishmentItemModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name",
-				CommerceInventoryReplenishmentItem.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByCommerceInventoryWarehouseId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 				"findByCommerceInventoryWarehouseId",
 				new String[] {
@@ -3664,19 +3657,19 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 				new String[] {"commerceInventoryWarehouseId"}, true);
 
 		_finderPathWithoutPaginationFindByCommerceInventoryWarehouseId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				"findByCommerceInventoryWarehouseId",
 				new String[] {Long.class.getName()},
 				new String[] {"commerceInventoryWarehouseId"}, true);
 
-		_finderPathCountByCommerceInventoryWarehouseId = _createFinderPath(
+		_finderPathCountByCommerceInventoryWarehouseId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceInventoryWarehouseId",
 			new String[] {Long.class.getName()},
 			new String[] {"commerceInventoryWarehouseId"}, false);
 
-		_finderPathWithPaginationFindBySku = _createFinderPath(
+		_finderPathWithPaginationFindBySku = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findBySku",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -3684,15 +3677,15 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 			},
 			new String[] {"sku"}, true);
 
-		_finderPathWithoutPaginationFindBySku = _createFinderPath(
+		_finderPathWithoutPaginationFindBySku = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findBySku",
 			new String[] {String.class.getName()}, new String[] {"sku"}, true);
 
-		_finderPathCountBySku = _createFinderPath(
+		_finderPathCountBySku = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countBySku",
 			new String[] {String.class.getName()}, new String[] {"sku"}, false);
 
-		_finderPathWithPaginationFindByAvailabilityDate = _createFinderPath(
+		_finderPathWithPaginationFindByAvailabilityDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByAvailabilityDate",
 			new String[] {
 				Date.class.getName(), Integer.class.getName(),
@@ -3700,17 +3693,17 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 			},
 			new String[] {"availabilityDate"}, true);
 
-		_finderPathWithoutPaginationFindByAvailabilityDate = _createFinderPath(
+		_finderPathWithoutPaginationFindByAvailabilityDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByAvailabilityDate",
 			new String[] {Date.class.getName()},
 			new String[] {"availabilityDate"}, true);
 
-		_finderPathCountByAvailabilityDate = _createFinderPath(
+		_finderPathCountByAvailabilityDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByAvailabilityDate", new String[] {Date.class.getName()},
 			new String[] {"availabilityDate"}, false);
 
-		_finderPathWithPaginationFindByC_S = _createFinderPath(
+		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -3719,17 +3712,17 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 			},
 			new String[] {"companyId", "sku"}, true);
 
-		_finderPathWithoutPaginationFindByC_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "sku"}, true);
 
-		_finderPathCountByC_S = _createFinderPath(
+		_finderPathCountByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "sku"}, false);
 
-		_finderPathWithPaginationFindByS_AD = _createFinderPath(
+		_finderPathWithPaginationFindByS_AD = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByS_AD",
 			new String[] {
 				String.class.getName(), Date.class.getName(),
@@ -3738,12 +3731,12 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 			},
 			new String[] {"sku", "availabilityDate"}, true);
 
-		_finderPathWithoutPaginationFindByS_AD = _createFinderPath(
+		_finderPathWithoutPaginationFindByS_AD = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByS_AD",
 			new String[] {String.class.getName(), Date.class.getName()},
 			new String[] {"sku", "availabilityDate"}, true);
 
-		_finderPathCountByS_AD = _createFinderPath(
+		_finderPathCountByS_AD = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByS_AD",
 			new String[] {String.class.getName(), Date.class.getName()},
 			new String[] {"sku", "availabilityDate"}, false);
@@ -3754,12 +3747,6 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 			CommerceInventoryReplenishmentItemImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -3807,27 +3794,13 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"commerceInventoryReplenishmentItemId"});
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class
 		CommerceInventoryReplenishmentItemModelArgumentsResolver
@@ -3884,6 +3857,17 @@ public class CommerceInventoryReplenishmentItemPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return CommerceInventoryReplenishmentItemImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return CommerceInventoryReplenishmentItemTable.INSTANCE.
+				getTableName();
 		}
 
 		private Object[] _getValue(

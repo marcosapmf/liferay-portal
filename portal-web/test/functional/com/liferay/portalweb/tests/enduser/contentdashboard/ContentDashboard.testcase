@@ -13,6 +13,18 @@ definition {
 		JSONGroup.addGroup(groupName = "Test Site Name");
 
 		Navigator.openURL();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Instance Settings");
+
+		SystemSettings.gotoConfiguration(
+			configurationCategory = "User Authentication",
+			configurationName = "General",
+			configurationScope = "Virtual Instance Scope");
+
+		PortalSettings.uncheckStrangersVerifyEmailCheckbox();
 	}
 
 	tearDown {
@@ -21,6 +33,245 @@ definition {
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
 		}
+	}
+
+	@description = "Validate if the user can edit a web content through the Edit option"
+	@priority = "5"
+	test ContentDashboardClickTitleApprovedDPTWithNoPermissions {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "ContentDashboard#ContentDashboardClickTitleApprovedDPTWithNoPermissions";
+
+		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+			contentType = "Web Content Article",
+			displayPageTemplateEntryName = "Display Page Name",
+			groupName = "Test Site Name",
+			subType = "Basic Web Content");
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+		Button.clickPublish();
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content",
+			groupName = "Test Site Name",
+			title = "WC Title");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editPasswordCP(
+			requirePasswordReset = "true",
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
+
+		JSONRole.addRegularRole(
+			roleKey = "WC Creator Edit Permissions",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW_SITE_ADMINISTRATION",
+			resourceName = "com.liferay.portal.kernel.model.Group",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW_CONTROL_PANEL",
+			resourceName = "90",
+			roleTitle = "WC Creator Edit Permissions");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "WC Creator Edit Permissions",
+			userEmailAddress = "userea@liferay.com");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		LexiconTable.clickTableEntryColumnLink(
+			columnName = "title",
+			tableEntry = "");
+
+		Pause(locator1 = "3000");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
+
+		JSONRole.deleteRole(roleTitle = "WC Creator Edit Permissions");
+
+		JSONUser.deleteUserByEmailAddress(userEmailAddress = "userea@liferay.com");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewTitle(webContentTitle = "WC Title");
+
+		WebContent.deleteCP(
+			siteURLKey = "test-site-name",
+			webContentTitle = "WC Title");
+	}
+
+	@description = "Validate if the user can edit a web content through the Edit option"
+	@priority = "5"
+	test ContentDashboardClickTitleApprovedDPTWithPermissions {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "ContentDashboard#ContentDashboardClickTitleApprovedDPTWithPermissions";
+
+		JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+			contentType = "Web Content Article",
+			displayPageTemplateEntryName = "Display Page Name",
+			groupName = "Test Site Name",
+			subType = "Basic Web Content");
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
+
+		Button.clickPublish();
+
+		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
+
+		DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content",
+			groupName = "Test Site Name",
+			title = "WC Title");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.addCP(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		User.editPasswordCP(
+			requirePasswordReset = "true",
+			userEmailAddress = "userea@liferay.com",
+			userScreenName = "usersn");
+
+		JSONRole.addRegularRole(
+			roleKey = "WC Creator Edit Permissions",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW",
+			resourceName = "com.liferay.journal",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ADD_ARTICLE",
+			resourceName = "com.liferay.journal",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW_SITE_ADMINISTRATION",
+			resourceName = "com.liferay.portal.kernel.model.Group",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_journal_web_portlet_JournalPortlet",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_content_dashboard_web_portlet_ContentDashboardAdminPortlet",
+			roleTitle = "WC Creator Edit Permissions");
+
+		Permissions.definePermissionViaJSONAPI(
+			resourceAction = "VIEW_CONTROL_PANEL",
+			resourceName = "90",
+			roleTitle = "WC Creator Edit Permissions");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "WC Creator Edit Permissions",
+			userEmailAddress = "userea@liferay.com");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "userea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		LexiconTable.clickTableEntryColumnLink(
+			columnName = "title",
+			tableEntry = "");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#DISPLAY_PAGE_TITLE",
+			value1 = "Display Page Name");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "test@liferay.com");
+
+		JSONRole.deleteRole(roleTitle = "WC Creator Edit Permissions");
+
+		JSONUser.deleteUserByEmailAddress(userEmailAddress = "userea@liferay.com");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewTitle(webContentTitle = "WC Title");
+
+		WebContent.deleteCP(
+			siteURLKey = "test-site-name",
+			webContentTitle = "WC Title");
 	}
 
 	@description = "Validate if the user can edit a web content through the Edit option"
@@ -72,7 +323,7 @@ definition {
 
 		Pause(locator1 = "5000");
 
-		ContentDashboard.filterByAuthorTable();
+		ContentDashboard.filterByAuthorTable(filterOption = "Author");
 
 		Pause(locator1 = "3000");
 
@@ -82,7 +333,7 @@ definition {
 
 		ContentDashboard.clearFilters();
 
-		ContentDashboard.filterByAuthorList();
+		ContentDashboard.filterByAuthorList(filterOption = "Author");
 
 		Pause(locator1 = "3000");
 
@@ -92,7 +343,7 @@ definition {
 
 		ContentDashboard.clearFilters();
 
-		ContentDashboard.filterByAuthorCard();
+		ContentDashboard.filterByAuthorCard(filterOption = "Author");
 
 		Pause(locator1 = "3000");
 
@@ -136,7 +387,9 @@ definition {
 
 		Pause(locator1 = "5000");
 
-		ContentDashboard.filterByCategory();
+		ContentDashboard.filterByCategory(
+			categoryName = "Category Name",
+			filterOption = "Categories");
 
 		Pause(locator1 = "3000");
 
@@ -155,6 +408,377 @@ definition {
 			vocabularyName = "Vocabulary Name");
 	}
 
+	@description = "Validate if the user can filter by category and subtype"
+	@priority = "5"
+	test ContentDashboardFilterByCategoryAndSubtype {
+		property portal.acceptance = "true";
+
+		JSONCategory.addVocabulary(
+			groupName = "Test Site Name",
+			title = "Vocabulary Name");
+
+		var categoryId1 = JSONCategory.addCategory(
+			groupName = "Test Site Name",
+			title = "Category 1",
+			vocabularyName = "Vocabulary Name");
+
+		var categoryId2 = JSONCategory.addCategory(
+			groupName = "Test Site Name",
+			title = "Category 2",
+			vocabularyName = "Vocabulary Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "WC Structure Description",
+			structureName = "Subtype1");
+
+		DataEngine.addFields(fieldNameList = "Link to Page");
+
+		WebContentStructures.saveCP(structureName = "Subtype1");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "WC Structure Description",
+			structureName = "Subtype2");
+
+		DataEngine.addFields(fieldNameList = "Link to Page");
+
+		WebContentStructures.saveCP(structureName = "Subtype2");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Subtype1");
+
+		WebContent.addWithStructureCP(
+			structureName = "Subtype1",
+			webContentTitle = "WC Title 1");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Subtype2");
+
+		WebContent.addWithStructureCP(
+			structureName = "Subtype2",
+			webContentTitle = "WC Title 2");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC Title 1");
+
+		WebContent.selectCategory(
+			categoryName = "Category 1",
+			userSegmentDetailTitle = "${userSegmentDetailTitle}",
+			vocabularyName = "Vocabulary Name");
+
+		WebContent.selectCategory(
+			categoryName = "Category 2",
+			userSegmentDetailTitle = "${userSegmentDetailTitle}",
+			vocabularyName = "Vocabulary Name");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC Title 2");
+
+		WebContent.selectCategory(
+			categoryName = "Category 1",
+			userSegmentDetailTitle = "${userSegmentDetailTitle}",
+			vocabularyName = "Vocabulary Name");
+
+		PortletEntry.publish();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "5000");
+
+		ContentDashboard.filterByCategory(
+			categoryName = "Category 1",
+			filterOption = "Categories");
+
+		ContentDashboard.filterBySubtype(
+			filterOption = "Subtype",
+			subtypeName = "Subtype1");
+
+		Pause(locator1 = "3000");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title 1");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title 1");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title 2");
+
+		Category.openCategoriesAdmin(siteURLKey = "test-site-name");
+
+		Vocabulary.deleteByMenuCP(vocabularyName = "Vocabulary Name");
+	}
+
+	@description = "Validate if the user can filter by multiple tags"
+	@priority = "5"
+	test ContentDashboardFilterByMultipleTags {
+		property portal.acceptance = "true";
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addWithTagCP(
+			tagNameList = "tagnumber1,tagnumber2",
+			webContentContent = "Web Content With Tag1 and Tag2",
+			webContentTitle = "WC Title 1");
+
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addWithTagCP(
+			tagNameList = "tagnumber1",
+			webContentContent = "Web Content With Tag1",
+			webContentTitle = "WC Title 2");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterByTag(
+			filterOption = "Tags",
+			tagName = "tagnumber1");
+
+		ContentDashboard.filterByTag(
+			filterOption = "Tags",
+			tagName = "tagnumber2");
+
+		Pause(locator1 = "3000");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title 1");
+
+		Tag.openTagsAdmin(siteURLKey = "test-site-name");
+
+		ProductMenu.gotoPortlet(
+			category = "Categorization",
+			portlet = "Tags");
+
+		Tag.viewCP(tagName = "tagnumber1");
+
+		PortletEntry.deleteViaToolbar(rowEntries = "tagnumber1");
+
+		Alert.viewSuccessMessage();
+
+		Tag.viewCP(tagName = "tagnumber2");
+
+		PortletEntry.deleteViaToolbar(rowEntries = "tagnumber2");
+
+		Alert.viewSuccessMessage();
+
+		Portlet.viewEmptyMessage(message = "There are no tags.");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title 1");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title 2");
+	}
+
+	@description = "Validate if the user can filter by Site"
+	@priority = "5"
+	test ContentDashboardFilterBySite {
+		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content",
+			groupName = "Global",
+			title = "WC Title Global");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterBySiteGlobal(filterOption = "Site or Asset Library");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title Global");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title Global");
+	}
+
+	@description = "Validate if the user can filter by Status: Any"
+	@priority = "5"
+	test ContentDashboardFilterByStatusAny {
+		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content",
+			groupName = "Test Site Name",
+			title = "WC Title Approved");
+
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "Test Site Name",
+			title = "WC Title Draft",
+			workflowAction = "DRAFT");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterByStatusAny(filterOption = "Any");
+
+		ContentDashboard.searchValue(webContentTitle = "WC Title Approved");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title Approved");
+
+		ContentDashboard.searchValue(webContentTitle = "WC Title Draft");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title Draft");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title Approved");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewTitle(webContentTitle = "WC Title Draft");
+
+		WebContent.deleteCP(
+			siteURLKey = "test-site-name",
+			webContentTitle = "WC Title Draft");
+	}
+
+	@description = "Validate if the user can filter by Status: Approved"
+	@priority = "5"
+	test ContentDashboardFilterByStatusApproved {
+		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content",
+			groupName = "Test Site Name",
+			title = "WC Title Approved");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterByStatusApproved(filterOption = "Approved");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title Approved");
+
+		JSONWebcontent.deleteWebContent(
+			groupName = "Test Site Name",
+			title = "WC Title Approved");
+	}
+
+	@description = "Validate if the user can filter by Status: Draft"
+	@priority = "5"
+	test ContentDashboardFilterByStatusDraft {
+		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "Test Site Name",
+			title = "WC Title Draft",
+			workflowAction = "DRAFT");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterByStatusDraft(filterOption = "Draft");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title Draft");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewTitle(webContentTitle = "WC Title Draft");
+
+		WebContent.deleteCP(
+			siteURLKey = "test-site-name",
+			webContentTitle = "WC Title Draft");
+	}
+
+	@description = "Validate if the user can filter by Status: Scheduled"
+	@priority = "5"
+	test ContentDashboardFilterByStatusScheduled {
+		property portal.acceptance = "true";
+
+		task ("Add a web content article with a future display date") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(
+				webContentContent = "WC WebContent Content",
+				webContentTitle = "WC Title Scheduled");
+
+			WebContent.editDisplayDate(displayDate = "01/01/2100");
+
+			PortletEntry.publish();
+		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterByStatusScheduled(filterOption = "Scheduled");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+			value1 = "WC Title Scheduled");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewTitle(webContentTitle = "WC Title Scheduled");
+
+		WebContent.deleteCP(
+			siteURLKey = "test-site-name",
+			webContentTitle = "WC Title Scheduled");
+	}
+
 	@description = "Validate if the user can filter by tag"
 	@priority = "5"
 	test ContentDashboardFilterByTag {
@@ -165,7 +789,7 @@ definition {
 		WebContentNavigator.gotoAddCP();
 
 		WebContent.addWithTagCP(
-			tagNameList = "tag1,tag2",
+			tagNameList = "tag1",
 			webContentContent = "Web Content With Tag1 and Tag2",
 			webContentTitle = "Web Content Title");
 
@@ -176,14 +800,14 @@ definition {
 
 		Pause(locator1 = "3000");
 
-		ContentDashboard.filterByTag();
-
-		ContentDashboard.searchValue(webContentTitle = "Web Content Title");
+		ContentDashboard.filterByTag(
+			filterOption = "Tags",
+			tagName = "tag1");
 
 		Pause(locator1 = "3000");
 
 		AssertTextPresent(
-			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED_TAGS",
+			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
 			value1 = "Web Content Title");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -203,12 +827,6 @@ definition {
 		Tag.viewCP(tagName = "tag1");
 
 		PortletEntry.deleteViaToolbar(rowEntries = "tag1");
-
-		Alert.viewSuccessMessage();
-
-		Tag.viewCP(tagName = "tag2");
-
-		PortletEntry.deleteViaToolbar(rowEntries = "tag2");
 
 		Alert.viewSuccessMessage();
 
@@ -232,7 +850,7 @@ definition {
 
 		Pause(locator1 = "3000");
 
-		ContentDashboard.orderByModificationDate();
+		ContentDashboard.orderByModificationDate(filterOption = "Modified Date");
 
 		AssertTextPresent(
 			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
@@ -276,7 +894,7 @@ definition {
 
 		Pause(locator1 = "3000");
 
-		ContentDashboard.orderByTitle();
+		ContentDashboard.orderByTitle(filterOption = "Title");
 
 		AssertTextPresent(
 			locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
@@ -301,6 +919,40 @@ definition {
 				siteURLKey = "test-site-name",
 				webContentTitle = "WC Title ${count}");
 		}
+	}
+
+	@description = "Validate if the user can open de Info side panel of a web content"
+	@priority = "5"
+	test ContentDashboardSaveFiltersAfterEditing {
+		property portal.acceptance = "true";
+
+		JSONWebcontent.addWebContent(
+			content = "WC Content",
+			groupName = "Test Site Name",
+			title = "WC Title");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
+			portlet = "Content Dashboard");
+
+		Pause(locator1 = "3000");
+
+		ContentDashboard.filterByAuthorTable(filterOption = "Author");
+
+		ContentDashboard.editWebContent(webContentTitle = "WC Title Edited");
+
+		AssertTextPresent(
+			locator1 = "ContentDashboard#FILTER_TEXT",
+			value1 = "Author:Test Test");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewTitle(webContentTitle = "WC Title Edited");
+
+		WebContent.deleteCP(
+			siteURLKey = "test-site-name",
+			webContentTitle = "WC Title Edited");
 	}
 
 	@description = "Validate if the user can open de Info side panel of a web content"

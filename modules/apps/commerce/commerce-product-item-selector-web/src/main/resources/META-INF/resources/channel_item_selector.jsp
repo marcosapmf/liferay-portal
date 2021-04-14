@@ -58,7 +58,7 @@ PortletURL portletURL = commerceChannelItemSelectorViewDisplayContext.getPortlet
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280" id="<portlet:namespace />commerceChannelSelectorWrapper">
+<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />commerceChannelSelectorWrapper">
 	<liferay-ui:search-container
 		id="commerceChannels"
 		searchContainer="<%= commerceChannelSearchContainer %>"
@@ -71,22 +71,21 @@ PortletURL portletURL = commerceChannelItemSelectorViewDisplayContext.getPortlet
 		>
 
 			<%
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"commerce-channel-id", commerceChannel.getCommerceChannelId()
-			).put(
-				"name", commerceChannel.getName()
-			).build();
-
-			row.setData(data);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"commerce-channel-id", commerceChannel.getCommerceChannelId()
+				).put(
+					"name", commerceChannel.getName()
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				property="name"
 			/>
 
 			<liferay-ui:search-container-column-date
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="create-date"
 				property="createDate"
 			/>

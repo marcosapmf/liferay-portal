@@ -46,8 +46,6 @@ sb.append("\n");
 sb.append("vspace=");
 sb.append(iFramePortletInstanceConfiguration.vspace());
 sb.append("\n");
-
-String htmlAttributes = sb.toString();
 %>
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -71,7 +69,7 @@ String htmlAttributes = sb.toString();
 			>
 				<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" cssClass="lfr-input-text-container" label="source-url" name="preferences--src--" prefix="<%= iFramePortletInstanceConfiguration.relative() ? StringPool.TRIPLE_PERIOD : StringPool.BLANK %>" type="text" value="<%= iFramePortletInstanceConfiguration.src() %>" />
 
-				<aui:input label="relative-to-context-path" name="preferences--relative--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.relative() %>" />
+				<aui:input inlineLabel="right" label="relative-to-context-path" labelCssClass="simple-toggle-switch" name="preferences--relative--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.relative() %>" />
 			</liferay-frontend:fieldset>
 
 			<liferay-frontend:fieldset
@@ -79,7 +77,7 @@ String htmlAttributes = sb.toString();
 				collapsible="<%= true %>"
 				label="authenticate"
 			>
-				<aui:input label="authenticate" name="preferences--auth--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.auth() %>" />
+				<aui:input inlineLabel="right" label="authenticate" labelCssClass="simple-toggle-switch" name="preferences--auth--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.auth() %>" />
 
 				<div id="<portlet:namespace />authenticationOptions">
 					<div class="alert alert-info" id="<portlet:namespace />currentLoginMsg">
@@ -146,7 +144,7 @@ String htmlAttributes = sb.toString();
 				collapsible="<%= true %>"
 				label="display-settings"
 			>
-				<aui:input helpMessage="resize-automatically-help" label="resize-automatically" name="preferences--resizeAutomatically--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.resizeAutomatically() %>" />
+				<aui:input helpMessage="resize-automatically-help" inlineLabel="right" label="resize-automatically" labelCssClass="simple-toggle-switch" name="preferences--resizeAutomatically--" type="toggle-switch" value="<%= iFramePortletInstanceConfiguration.resizeAutomatically() %>" />
 
 				<div id="<portlet:namespace />displaySettings">
 					<aui:input name="preferences--heightMaximized--" type="text" value="<%= iFramePortletInstanceConfiguration.heightMaximized() %>">
@@ -162,7 +160,7 @@ String htmlAttributes = sb.toString();
 					<aui:input name="preferences--width--" type="text" value="<%= iFramePortletInstanceConfiguration.width() %>" />
 				</div>
 
-				<aui:input cssClass="lfr-textarea-container" name="preferences--htmlAttributes--" onKeyDown="Liferay.Util.checkTab(this); Liferay.Util.disableEsc();" type="textarea" value="<%= htmlAttributes %>" wrap="soft" />
+				<aui:input cssClass="lfr-textarea-container" name="preferences--htmlAttributes--" onKeyDown="Liferay.Util.checkTab(this); Liferay.Util.disableEsc();" type="textarea" value="<%= sb.toString() %>" wrap="soft" />
 			</liferay-frontend:fieldset>
 		</liferay-frontend:fieldset-group>
 	</liferay-frontend:edit-form-body>

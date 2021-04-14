@@ -55,6 +55,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.List;
 import java.util.Locale;
@@ -232,6 +234,10 @@ public class DDMFormImporter {
 			ServiceContext serviceContext)
 		throws Exception {
 
+		jsonForm = StringUtil.replace(
+			jsonForm, "[$LOCALE$]",
+			LocaleUtil.toLanguageId(serviceContext.getLocale()));
+
 		DDMFormDeserializerDeserializeRequest
 			ddmFormDeserializerDeserializeRequest =
 				DDMFormDeserializerDeserializeRequest.Builder.newBuilder(
@@ -258,7 +264,7 @@ public class DDMFormImporter {
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
 			userId, groupId, DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			classNameId, StringPool.BLANK, nameMap, descriptionMap, ddmForm,
-			defaultDDMFormLayout, StorageType.JSON.toString(),
+			defaultDDMFormLayout, StorageType.DEFAULT.toString(),
 			DDMStructureConstants.TYPE_AUTO, serviceContext);
 
 		DDLRecordSet ddlRecordSet = _ddlRecordSetLocalService.addRecordSet(

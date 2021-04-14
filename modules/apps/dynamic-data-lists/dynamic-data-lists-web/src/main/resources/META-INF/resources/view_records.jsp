@@ -39,7 +39,7 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 	/>
 </c:if>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= ddlViewRecordsDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= ddlViewRecordsDisplayContext.getClearResultsURL() %>"
 	componentId='<%= randomNamespace + "ddlViewRecordsManagementToolbar" %>'
@@ -118,7 +118,7 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 				%>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						href="<%= href %>"
 						name="<%= label.getString(themeDisplay.getLocale()) %>"
 						value="<%= value %>"
@@ -179,7 +179,7 @@ if (!ddlDisplayContext.isAdminPortlet()) {
 			);
 
 			if (searchContainer) {
-				<portlet:actionURL name="deleteRecord" var="deleteRecordURL">
+				<portlet:actionURL name="/dynamic_data_lists/delete_record" var="deleteRecordURL">
 					<portlet:param name="mvcPath" value="/view_records.jsp" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 				</portlet:actionURL>

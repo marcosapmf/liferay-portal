@@ -29,7 +29,7 @@ DDMStructure ddmStructure = recordSet.getDDMStructure();
 %>
 
 <clay:container-fluid
-	cssClass="lfr-spreadsheet-container"
+	cssClass="container-view lfr-spreadsheet-container"
 >
 	<div id="<portlet:namespace />spreadsheet">
 		<div class="table-striped yui3-datatable yui3-widget" id="<portlet:namespace />dataTable">
@@ -167,7 +167,7 @@ DDMStructure ddmStructure = recordSet.getDDMStructure();
 		},
 		structure: structure,
 		updateRecordURL:
-			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/ddl/update_record" />',
+			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_lists/update_record" />',
 		width: '100%',
 	});
 

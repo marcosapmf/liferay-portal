@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICING_CLASSES,
-		"mvc.command.name=addCommercePricingClass"
+		"mvc.command.name=/commerce_pricing_classes/add_commerce_pricing_class"
 	},
 	service = MVCRenderCommand.class
 )
@@ -42,7 +42,7 @@ public class AddCommercePricingClassMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/pricing_class/add_pricing_class.jsp";
+		return "/pricing_class/add_commerce_pricing_class.jsp";
 	}
 
 }

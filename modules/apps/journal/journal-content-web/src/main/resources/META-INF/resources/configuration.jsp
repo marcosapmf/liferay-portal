@@ -16,10 +16,6 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-String redirect = ParamUtil.getString(request, "redirect");
-%>
-
 <liferay-ui:error exception="<%= NoSuchArticleException.class %>" message="the-web-content-could-not-be-found" />
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -50,11 +46,11 @@ String redirect = ParamUtil.getString(request, "redirect");
 	<liferay-frontend:edit-form-footer>
 		<aui:button name="saveButton" type="submit" />
 
-		<aui:button href="<%= redirect %>" type="cancel" />
+		<aui:button href='<%= ParamUtil.getString(request, "redirect") %>' type="cancel" />
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script require="metal-dom/src/all/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var articlePreview = document.getElementById(
 		'<portlet:namespace />articlePreview'
 	);
@@ -62,9 +58,9 @@ String redirect = ParamUtil.getString(request, "redirect");
 		'<portlet:namespace />assetEntryId'
 	);
 
-	dom.delegate(articlePreview, 'click', '.web-content-selector', function (
-		event
-	) {
+	var delegate = delegateModule.default;
+
+	delegate(articlePreview, 'click', '.web-content-selector', function (event) {
 		event.preventDefault();
 
 		Liferay.Util.openSelectionModal({
@@ -79,7 +75,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 		});
 	});
 
-	dom.delegate(articlePreview, 'click', '.selector-button', function (event) {
+	delegate(articlePreview, 'click', '.selector-button', function (event) {
 		event.preventDefault();
 		retrieveWebContent(-1);
 	});

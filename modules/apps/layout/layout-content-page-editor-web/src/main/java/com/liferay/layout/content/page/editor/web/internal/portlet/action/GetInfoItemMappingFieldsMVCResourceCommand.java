@@ -57,7 +57,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/get_info_item_mapping_fields"
+		"mvc.command.name=/layout_content_page_editor/get_info_item_mapping_fields"
 	},
 	service = MVCResourceCommand.class
 )
@@ -92,9 +92,15 @@ public class GetInfoItemMappingFieldsMVCResourceCommand
 			return;
 		}
 
+		long classPK = ParamUtil.getLong(resourceRequest, "classPK");
+
+		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
+			classPK);
+
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceTracker.getFirstInfoItemService(
-				InfoItemObjectProvider.class, itemClassName);
+				InfoItemObjectProvider.class, itemClassName,
+				infoItemIdentifier.getInfoItemServiceFilter());
 
 		if (infoItemObjectProvider == null) {
 			JSONPortletResponseUtil.writeJSON(
@@ -103,11 +109,6 @@ public class GetInfoItemMappingFieldsMVCResourceCommand
 
 			return;
 		}
-
-		long classPK = ParamUtil.getLong(resourceRequest, "classPK");
-
-		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
-			classPK);
 
 		Object infoItemObject = infoItemObjectProvider.getInfoItem(
 			infoItemIdentifier);

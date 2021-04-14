@@ -70,17 +70,17 @@ public class MoneyOrderCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 
 		CommerceOrder commerceOrder = _getCommerceOrder(httpServletRequest);
 
-		MoneyOrderGroupServiceConfiguration
-			moneyOrderGroupServiceConfiguration =
-				_configurationProvider.getConfiguration(
-					MoneyOrderGroupServiceConfiguration.class,
-					new GroupServiceSettingsLocator(
-						commerceOrder.getGroupId(),
-						MoneyOrderCommercePaymentEngineMethodConstants.
-							SERVICE_NAME));
-
 		if (MoneyOrderCommercePaymentMethod.KEY.equals(
 				commerceOrder.getCommercePaymentMethodKey())) {
+
+			MoneyOrderGroupServiceConfiguration
+				moneyOrderGroupServiceConfiguration =
+					_configurationProvider.getConfiguration(
+						MoneyOrderGroupServiceConfiguration.class,
+						new GroupServiceSettingsLocator(
+							commerceOrder.getGroupId(),
+							MoneyOrderCommercePaymentEngineMethodConstants.
+								SERVICE_NAME));
 
 			return moneyOrderGroupServiceConfiguration.showMessagePage();
 		}
@@ -128,8 +128,7 @@ public class MoneyOrderCommerceCheckoutStep extends BaseCommerceCheckoutStep {
 		MoneyOrderCheckoutStepDisplayContext
 			moneyOrderCheckoutStepDisplayContext =
 				new MoneyOrderCheckoutStepDisplayContext(
-					_commerceOrderService, _configurationProvider,
-					httpServletRequest);
+					_configurationProvider, httpServletRequest);
 
 		httpServletRequest.setAttribute(
 			CommerceCheckoutWebKeys.COMMERCE_CHECKOUT_STEP_DISPLAY_CONTEXT,

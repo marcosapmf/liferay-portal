@@ -63,7 +63,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 	displayStyleGroupId="<%= commerceCartContentDisplayContext.getDisplayStyleGroupId() %>"
 	entries="<%= commerceOrderItemSearchContainer.getResults() %>"
 >
-	<div class="commerce-order-items container-fluid-1280" id="<portlet:namespace />orderItemsContainer">
+	<div class="commerce-order-items container-fluid container-fluid-max-xl" id="<portlet:namespace />orderItemsContainer">
 		<div class="commerce-order-items-container" id="<portlet:namespace />entriesContainer">
 			<liferay-ui:search-container
 				id="commerceOrderItems"
@@ -72,22 +72,31 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 			>
 				<liferay-ui:search-container-row
 					className="com.liferay.commerce.model.CommerceOrderItem"
-					cssClass="entry-display-style"
 					keyProperty="CommerceOrderItemId"
 					modelVar="commerceOrderItem"
 				>
 
 					<%
-					CPDefinition cpDefinition = commerceOrderItem.getCPDefinition();
+					CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
 
-					String thumbnailSrc = commerceCartContentDisplayContext.getCommerceOrderItemThumbnailSrc(commerceOrderItem);
+					long cpDefinitionId = 0;
 
-					List<KeyValuePair> keyValuePairs = commerceCartContentDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale);
+					String thumbnailSrc = StringPool.BLANK;
 
 					StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
 
-					for (KeyValuePair keyValuePair : keyValuePairs) {
-						stringJoiner.add(keyValuePair.getValue());
+					if (cpInstance != null) {
+						CPDefinition cpDefinition = commerceOrderItem.getCPDefinition();
+
+						cpDefinitionId = cpDefinition.getCPDefinitionId();
+
+						thumbnailSrc = commerceCartContentDisplayContext.getCommerceOrderItemThumbnailSrc(commerceOrderItem);
+
+						List<KeyValuePair> keyValuePairs = commerceCartContentDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale);
+
+						for (KeyValuePair keyValuePair : keyValuePairs) {
+							stringJoiner.add(keyValuePair.getValue());
+						}
 					}
 					%>
 
@@ -99,8 +108,8 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 					<liferay-ui:search-container-column-text
 						name="description"
 					>
-						<a class="font-weight-bold" href="<%= commerceCartContentDisplayContext.getCPDefinitionURL(cpDefinition.getCPDefinitionId(), themeDisplay) %>">
-							<%= HtmlUtil.escape(cpDefinition.getName(languageId)) %>
+						<a class="font-weight-bold" href="<%= (cpDefinitionId == 0) ? StringPool.BLANK : commerceCartContentDisplayContext.getCPDefinitionURL(cpDefinitionId, themeDisplay) %>">
+							<%= HtmlUtil.escape(commerceOrderItem.getName(languageId)) %>
 						</a>
 
 						<h6 class="text-default">
@@ -126,24 +135,37 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 						</c:if>
 					</liferay-ui:search-container-column-text>
 
-					<%
-					String commercePriceDisplayType = commerceCartContentDisplayContext.getCommercePriceDisplayType();
-					%>
-
 					<liferay-ui:search-container-column-text
-						name="list-price"
+						name="price"
 					>
 						<c:if test="<%= commerceCartContentDisplayContext.hasViewPricePermission() %>">
 
 							<%
-							CommerceMoney unitPriceMoney = commerceOrderItem.getUnitPriceMoney();
-
-							if (commercePriceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-								unitPriceMoney = commerceOrderItem.getUnitPriceWithTaxAmountMoney();
-							}
+							CommerceMoney unitPriceCommerceMoney = commerceCartContentDisplayContext.getUnitPriceCommerceMoney(commerceOrderItem);
+							CommerceMoney unitPromoPriceCommerceMoney = commerceCartContentDisplayContext.getUnitPromoPriceCommerceMoney(commerceOrderItem);
 							%>
 
-							<%= HtmlUtil.escape(unitPriceMoney.format(locale)) %>
+							<c:choose>
+								<c:when test="<%= commerceCartContentDisplayContext.isUnitPromoPriceActive(commerceOrderItem) %>">
+									<%= HtmlUtil.escape(unitPromoPriceCommerceMoney.format(locale)) %>
+								</c:when>
+								<c:otherwise>
+									<%= HtmlUtil.escape(unitPriceCommerceMoney.format(locale)) %>
+								</c:otherwise>
+							</c:choose>
+						</c:if>
+					</liferay-ui:search-container-column-text>
+
+					<liferay-ui:search-container-column-text
+						name="discount"
+					>
+						<c:if test="<%= commerceCartContentDisplayContext.hasViewPricePermission() %>">
+
+							<%
+							CommerceMoney discountAmountCommerceMoney = commerceCartContentDisplayContext.getDiscountAmountCommerceMoney(commerceOrderItem);
+							%>
+
+							<%= HtmlUtil.escape(discountAmountCommerceMoney.format(locale)) %>
 						</c:if>
 					</liferay-ui:search-container-column-text>
 
@@ -163,14 +185,10 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 						<c:if test="<%= commerceCartContentDisplayContext.hasViewPricePermission() %>">
 
 							<%
-							CommerceMoney finalPriceMoney = commerceOrderItem.getFinalPriceMoney();
-
-							if (commercePriceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-								finalPriceMoney = commerceOrderItem.getFinalPriceWithTaxAmountMoney();
-							}
+							CommerceMoney finalPriceCommerceMoney = commerceCartContentDisplayContext.getFinalPriceCommerceMoney(commerceOrderItem);
 							%>
 
-							<%= HtmlUtil.escape(finalPriceMoney.format(locale)) %>
+							<%= HtmlUtil.escape(finalPriceCommerceMoney.format(locale)) %>
 
 							<commerce-ui:product-subscription-info
 								CPInstanceId="<%= commerceOrderItem.getCPInstanceId() %>"
@@ -199,7 +217,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultMap = 
 	</div>
 
 	<aui:script>
-		Liferay.after('commerce:productAddedToCart', function (event) {
+		Liferay.after('current-order-updated', function (event) {
 			Liferay.Portlet.refresh('#p_p_id<portlet:namespace />');
 		});
 	</aui:script>

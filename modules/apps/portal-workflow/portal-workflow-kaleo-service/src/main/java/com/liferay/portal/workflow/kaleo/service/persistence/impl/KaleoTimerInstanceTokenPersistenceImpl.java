@@ -31,8 +31,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,7 +51,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,7 +75,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = KaleoTimerInstanceTokenPersistence.class)
+@Component(
+	service = {KaleoTimerInstanceTokenPersistence.class, BasePersistence.class}
+)
 public class KaleoTimerInstanceTokenPersistenceImpl
 	extends BasePersistenceImpl<KaleoTimerInstanceToken>
 	implements KaleoTimerInstanceTokenPersistence {
@@ -198,7 +200,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KaleoTimerInstanceToken>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTimerInstanceToken kaleoTimerInstanceToken : list) {
@@ -570,7 +572,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		Object[] finderArgs = new Object[] {kaleoInstanceId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -689,7 +691,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByKITI_KTI, finderArgs, this);
+				_finderPathFetchByKITI_KTI, finderArgs);
 		}
 
 		if (result instanceof KaleoTimerInstanceToken) {
@@ -809,7 +811,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		Object[] finderArgs = new Object[] {kaleoInstanceTokenId, kaleoTimerId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -963,7 +965,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KaleoTimerInstanceToken>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTimerInstanceToken kaleoTimerInstanceToken : list) {
@@ -1360,7 +1362,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		Object[] finderArgs = new Object[] {kaleoInstanceTokenId, completed};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1525,7 +1527,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KaleoTimerInstanceToken>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoTimerInstanceToken kaleoTimerInstanceToken : list) {
@@ -1950,7 +1952,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 			kaleoInstanceTokenId, blocking, completed
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -2065,9 +2067,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(KaleoTimerInstanceTokenImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(KaleoTimerInstanceTokenImpl.class);
 	}
 
 	/**
@@ -2097,9 +2097,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(KaleoTimerInstanceTokenImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -2116,10 +2114,9 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 		};
 
 		finderCache.putResult(
-			_finderPathCountByKITI_KTI, args, Long.valueOf(1), false);
+			_finderPathCountByKITI_KTI, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchByKITI_KTI, args, kaleoTimerInstanceTokenModelImpl,
-			false);
+			_finderPathFetchByKITI_KTI, args, kaleoTimerInstanceTokenModelImpl);
 	}
 
 	/**
@@ -2458,7 +2455,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KaleoTimerInstanceToken>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -2529,7 +2526,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -2586,22 +2583,21 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new KaleoTimerInstanceTokenModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", KaleoTimerInstanceToken.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByKaleoInstanceId = _createFinderPath(
+		_finderPathWithPaginationFindByKaleoInstanceId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByKaleoInstanceId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -2609,27 +2605,27 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 			},
 			new String[] {"kaleoInstanceId"}, true);
 
-		_finderPathWithoutPaginationFindByKaleoInstanceId = _createFinderPath(
+		_finderPathWithoutPaginationFindByKaleoInstanceId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByKaleoInstanceId",
 			new String[] {Long.class.getName()},
 			new String[] {"kaleoInstanceId"}, true);
 
-		_finderPathCountByKaleoInstanceId = _createFinderPath(
+		_finderPathCountByKaleoInstanceId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoInstanceId",
 			new String[] {Long.class.getName()},
 			new String[] {"kaleoInstanceId"}, false);
 
-		_finderPathFetchByKITI_KTI = _createFinderPath(
+		_finderPathFetchByKITI_KTI = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByKITI_KTI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"kaleoInstanceTokenId", "kaleoTimerId"}, true);
 
-		_finderPathCountByKITI_KTI = _createFinderPath(
+		_finderPathCountByKITI_KTI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKITI_KTI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"kaleoInstanceTokenId", "kaleoTimerId"}, false);
 
-		_finderPathWithPaginationFindByKITI_C = _createFinderPath(
+		_finderPathWithPaginationFindByKITI_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByKITI_C",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -2638,17 +2634,17 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 			},
 			new String[] {"kaleoInstanceTokenId", "completed"}, true);
 
-		_finderPathWithoutPaginationFindByKITI_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByKITI_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByKITI_C",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"kaleoInstanceTokenId", "completed"}, true);
 
-		_finderPathCountByKITI_C = _createFinderPath(
+		_finderPathCountByKITI_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKITI_C",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"kaleoInstanceTokenId", "completed"}, false);
 
-		_finderPathWithPaginationFindByKITI_B_C = _createFinderPath(
+		_finderPathWithPaginationFindByKITI_B_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByKITI_B_C",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -2658,7 +2654,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 			new String[] {"kaleoInstanceTokenId", "blocking", "completed"},
 			true);
 
-		_finderPathWithoutPaginationFindByKITI_B_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByKITI_B_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByKITI_B_C",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -2667,7 +2663,7 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 			new String[] {"kaleoInstanceTokenId", "blocking", "completed"},
 			true);
 
-		_finderPathCountByKITI_B_C = _createFinderPath(
+		_finderPathCountByKITI_B_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKITI_B_C",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -2682,12 +2678,6 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 		entityCache.removeCache(KaleoTimerInstanceTokenImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -2748,36 +2738,13 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		KaleoTimerInstanceTokenPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(KaleoPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class KaleoTimerInstanceTokenModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -2830,6 +2797,16 @@ public class KaleoTimerInstanceTokenPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return KaleoTimerInstanceTokenImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return KaleoTimerInstanceTokenTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

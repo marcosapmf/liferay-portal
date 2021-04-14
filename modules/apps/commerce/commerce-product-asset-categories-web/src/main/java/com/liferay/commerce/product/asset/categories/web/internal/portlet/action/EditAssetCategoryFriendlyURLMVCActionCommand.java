@@ -48,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet",
-		"mvc.command.name=editAssetCategoryFriendlyURL"
+		"mvc.command.name=/commerce_product_asset_categories/edit_asset_category_friendly_url"
 	},
 	service = MVCActionCommand.class
 )
@@ -87,7 +87,7 @@ public class EditAssetCategoryFriendlyURLMVCActionCommand
 		}
 		catch (Exception exception) {
 			Group companyGroup = _groupLocalService.getCompanyGroup(
-				_portal.getDefaultCompanyId());
+				assetCategory.getCompanyId());
 
 			_friendlyURLEntryLocalService.addFriendlyURLEntry(
 				companyGroup.getGroupId(),
@@ -104,7 +104,7 @@ public class EditAssetCategoryFriendlyURLMVCActionCommand
 		Map<String, String> newUrlTitleMap = new HashMap<>();
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
-			_portal.getDefaultCompanyId());
+			assetCategory.getCompanyId());
 
 		long classNameId = _portal.getClassNameId(AssetCategory.class);
 

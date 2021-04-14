@@ -21,6 +21,7 @@ String action = (String)request.getAttribute("render_controls.jsp-action");
 boolean childControl = GetterUtil.getBoolean(String.valueOf(request.getAttribute("render_controls.jsp-childControl")));
 PortletDataHandlerControl[] controls = (PortletDataHandlerControl[])request.getAttribute("render_controls.jsp-controls");
 ManifestSummary manifestSummary = (ManifestSummary)request.getAttribute("render_controls.jsp-manifestSummary");
+
 String portletId = (String)request.getAttribute("render_controls.jsp-portletId");
 
 if (Validator.isNotNull(portletId)) {
@@ -127,13 +128,22 @@ for (int i = 0; i < controls.length; i++) {
 						String controlValue = MapUtil.getString(parameterMap, control.getNamespacedControlName(), defaultChoice);
 
 						String controlName = LanguageUtil.get(request, resourceBundle, choice);
-
-						Map<String, Object> data = HashMapBuilder.<String, Object>put(
-							"name", controlName
-						).build();
 					%>
 
-						<aui:input checked="<%= controlValue.equals(choices[j]) %>" data="<%= data %>" disabled="<%= disableInputs %>" helpMessage="<%= control.getHelpMessage(locale, action) %>" label="<%= choice %>" name="<%= control.getNamespacedControlName() %>" type="radio" value="<%= choices[j] %>" />
+						<aui:input
+							checked="<%= controlValue.equals(choices[j]) %>"
+							data='<%=
+								HashMapBuilder.<String, Object>put(
+									"name", controlName
+								).build()
+							%>'
+							disabled="<%= disableInputs %>"
+							helpMessage="<%= control.getHelpMessage(locale, action) %>"
+							label="<%= choice %>"
+							name="<%= control.getNamespacedControlName() %>"
+							type="radio"
+							value="<%= choices[j] %>"
+						/>
 
 					<%
 					}

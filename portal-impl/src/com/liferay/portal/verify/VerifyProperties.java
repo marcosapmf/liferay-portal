@@ -1538,6 +1538,12 @@ public class VerifyProperties extends VerifyProcess {
 			"com.liferay.portal.template.velocity"
 		},
 
+		// View Count
+
+		{
+			"view.count.enabled", "enabled", "com.liferay.view.count.service"
+		},
+
 		// XSL Content
 
 		{
@@ -1655,7 +1661,8 @@ public class VerifyProperties extends VerifyProcess {
 		"dl.hook.cmis.credentials.username", "dl.hook.cmis.repository.url",
 		"dl.hook.cmis.system.root.dir", "dl.hook.file.system.root.dir",
 		"dl.hook.jcr.fetch.delay", "dl.hook.jcr.fetch.max.failures",
-		"dl.hook.jcr.move.version.labels", "dl.store.cmis.credentials.username",
+		"dl.hook.jcr.move.version.labels", "dl.store.antivirus.impl",
+		"dl.store.cmis.credentials.username",
 		"dl.store.cmis.credentials.password", "dl.store.cmis.repository.url",
 		"dl.store.cmis.system.root.dir", "dl.store.file.system.root.dir",
 		"dl.store.jcr.fetch.delay", "dl.store.jcr.fetch.max.failures",
@@ -1693,6 +1700,7 @@ public class VerifyProperties extends VerifyProcess {
 			"edit_message.html.jsp",
 		"editor.wysiwyg.portal-web.docroot.html.portlet.portal_settings." +
 			"email_notifications.jsp",
+		"editor.wysiwyg.portal-web.docroot.html.taglib.ui.discussion.jsp",
 		"ehcache.blocking.cache.allowed",
 		"ehcache.bootstrap.cache.loader.enabled",
 		"ehcache.bootstrap.cache.loader.factory",
@@ -1797,6 +1805,7 @@ public class VerifyProperties extends VerifyProcess {
 		"microsoft.translator.client.id", "microsoft.translator.client.secret",
 		"minifier.inline.content.cache.size",
 		"mobile.device.styling.wap.enabled", "module.framework.initial.bundles",
+		"module.framework.properties.file.install.optionalImportRefreshScope",
 		"module.framework.properties.lpkg.index.validator.enabled",
 		"module.framework.register.liferay.services", "msn.login",
 		"msn.password", "multicast.group.address[\"hibernate\"]",
@@ -1982,12 +1991,6 @@ public class VerifyProperties extends VerifyProcess {
 		{
 			"module.framework.properties.felix.fileinstall.noInitialDelay",
 			"module.framework.properties.file.install.noInitialDelay"
-		},
-		{
-			"module.framework.properties.felix.fileinstall." +
-				"optionalImportRefreshScope",
-			"module.framework.properties.file.install." +
-				"optionalImportRefreshScope"
 		},
 		{
 			"module.framework.properties.felix.fileinstall.subdir.mode",

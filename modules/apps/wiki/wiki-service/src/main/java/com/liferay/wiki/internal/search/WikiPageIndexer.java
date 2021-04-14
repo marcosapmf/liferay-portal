@@ -134,6 +134,10 @@ public class WikiPageIndexer
 			page = _wikiPageLocalService.getPage(classPK);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return;
 		}
 
@@ -254,7 +258,8 @@ public class WikiPageIndexer
 		catch (WikiFormatException wikiFormatException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"Unable to get wiki engine for " + wikiPage.getFormat());
+					"Unable to get wiki engine for " + wikiPage.getFormat(),
+					wikiFormatException);
 			}
 		}
 

@@ -40,12 +40,18 @@ renderResponse.setTitle(LanguageUtil.get(request, "view-form"));
 <clay:container-fluid
 	cssClass="editing-form-entry-admin"
 >
-	<portlet:actionURL name="addFormInstanceRecord" var="editFormInstanceRecordActionURL" />
+	<portlet:actionURL name="/dynamic_data_mapping_form/add_form_instance_record" var="editFormInstanceRecordActionURL" />
 
 	<aui:form action="<%= editFormInstanceRecordActionURL %>" data-DDMFormInstanceId="<%= ddmFormInstanceRecordVersion.getFormInstanceId() %>" data-senna-off="true" method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 		<aui:input name="formInstanceRecordId" type="hidden" value="<%= ddmFormInstanceRecordVersion.getFormInstanceRecordId() %>" />
 		<aui:input name="formInstanceId" type="hidden" value="<%= ddmFormInstanceRecordVersion.getFormInstanceId() %>" />
+
+		<%
+		DDMFormValues ddmFormValues = ddmFormInstanceRecordVersion.getDDMFormValues();
+		%>
+
+		<aui:input name="defaultLanguageId" type="hidden" value="<%= LocaleUtil.toLanguageId(ddmFormValues.getDefaultLocale()) %>" />
 
 		<div class="ddm-form-basic-info">
 			<h1 class="ddm-form-name"><%= ddmFormAdminDisplayContext.getFormName() %></h1>
@@ -59,6 +65,21 @@ renderResponse.setTitle(LanguageUtil.get(request, "view-form"));
 			</c:if>
 		</div>
 
-		<%= ddmFormAdminDisplayContext.getDDMFormHTML(renderRequest, false) %>
+		<%
+		String containerId = StringPool.BLANK;
+
+		Map<String, Object> ddmFormContext = ddmFormAdminDisplayContext.getDDMFormContext(renderRequest, false);
+
+		if (ddmFormContext.containsKey("containerId")) {
+			containerId = (String)ddmFormContext.get("containerId");
+		}
+		%>
+
+		<div id="<%= containerId %>">
+			<react:component
+				module="admin/js/index.es"
+				props="<%= ddmFormContext %>"
+			/>
+		</div>
 	</aui:form>
 </clay:container-fluid>

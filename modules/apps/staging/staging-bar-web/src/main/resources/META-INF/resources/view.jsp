@@ -157,7 +157,7 @@ if (liveLayout != null) {
 											</clay:col>
 
 											<clay:col>
-												<c:if test="<%= !layoutRevision.isIncomplete() %>">
+												<c:if test="<%= !layoutRevision.isIncomplete() && !layout.isTypeContent() %>">
 													<liferay-util:include page="/view_layout_branch_details.jsp" servletContext="<%= application %>" />
 												</c:if>
 											</clay:col>
@@ -215,7 +215,7 @@ if (liveLayout != null) {
 									cssClass="staging-alert-container"
 								>
 									<div class="alert alert-warning hide warning-content" id="<portlet:namespace />warningMessage">
-										<liferay-ui:message key="an-inital-staging-publication-is-in-progress" />
+										<liferay-ui:message key="an-inital-staging-publish-process-is-in-progress" />
 									</div>
 
 									<liferay-util:include page="/last_publication_date_message.jsp" servletContext="<%= application %>" />

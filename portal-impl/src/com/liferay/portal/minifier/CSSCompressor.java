@@ -30,7 +30,9 @@ import java.util.regex.Pattern;
 
 /**
  * @author Iván Zaera Avellón
+ * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
  */
+@Deprecated
 public class CSSCompressor {
 
 	public CSSCompressor(Reader reader) throws IOException {
@@ -880,6 +882,6 @@ public class CSSCompressor {
 				"([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])",
 				"(:?\\}|[^0-9a-fA-F{][^{]*?\\})"));
 
-	private StringBuffer _sb = new StringBuffer();
+	private final StringBuffer _sb = new StringBuffer();
 
 }

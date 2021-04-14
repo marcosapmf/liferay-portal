@@ -17,12 +17,11 @@ package com.liferay.dynamic.data.mapping.internal.upgrade.v1_1_0;
 import com.liferay.dynamic.data.mapping.internal.util.ExpressionParameterValueExtractor;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializer;
-import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeRequest;
-import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormRule;
 import com.liferay.dynamic.data.mapping.util.DDMFormDeserializeUtil;
+import com.liferay.dynamic.data.mapping.util.DDMFormSerializeUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
@@ -87,13 +86,7 @@ public class UpgradeDDMStructure extends UpgradeProcess {
 
 		ddmForm.setDDMFormRules(ddmFormRules);
 
-		DDMFormSerializerSerializeRequest.Builder serializerBuilder =
-			DDMFormSerializerSerializeRequest.Builder.newBuilder(ddmForm);
-
-		DDMFormSerializerSerializeResponse ddmFormSerializerSerializeResponse =
-			_ddmFormSerializer.serialize(serializerBuilder.build());
-
-		return ddmFormSerializerSerializeResponse.getContent();
+		return DDMFormSerializeUtil.serialize(ddmForm, _ddmFormSerializer);
 	}
 
 	protected void upgradeDDMStructureDefinition() throws Exception {
@@ -166,6 +159,8 @@ public class UpgradeDDMStructure extends UpgradeProcess {
 			ExpressionParameterValueExtractor.extractParameterValues(
 				visibilityExpression);
 
+		StringBundler sb1 = new StringBundler();
+
 		for (String parameterValue : parameterValues) {
 			if (Validator.isNull(parameterValue) ||
 				Validator.isNumber(parameterValue) ||
@@ -174,19 +169,27 @@ public class UpgradeDDMStructure extends UpgradeProcess {
 				continue;
 			}
 
-			StringBundler sb = new StringBundler(5);
+			StringBundler sb2 = new StringBundler(5);
 
-			sb.append("getValue(");
-			sb.append(StringPool.APOSTROPHE);
-			sb.append(parameterValue);
-			sb.append(StringPool.APOSTROPHE);
-			sb.append(")");
+			sb2.append("getValue(");
+			sb2.append(StringPool.APOSTROPHE);
+			sb2.append(parameterValue);
+			sb2.append(StringPool.APOSTROPHE);
+			sb2.append(")");
 
-			visibilityExpression = StringUtil.replace(
-				visibilityExpression, parameterValue, sb.toString());
+			int index = visibilityExpression.indexOf(parameterValue);
+
+			sb1.append(visibilityExpression.substring(0, index));
+
+			sb1.append(sb2.toString());
+
+			visibilityExpression = visibilityExpression.substring(
+				index + parameterValue.length());
 		}
 
-		return visibilityExpression;
+		sb1.append(visibilityExpression);
+
+		return sb1.toString();
 	}
 
 	private final DDMFormDeserializer _ddmFormDeserializer;

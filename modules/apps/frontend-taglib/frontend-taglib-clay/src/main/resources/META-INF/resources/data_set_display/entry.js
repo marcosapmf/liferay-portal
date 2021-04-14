@@ -13,17 +13,23 @@
  */
 
 import {render, useThunk} from 'frontend-js-react-web';
+import PropTypes from 'prop-types';
 import React, {useReducer} from 'react';
 
 import {AppContext} from './AppContext';
 import DataSetDisplay from './DataSetDisplay';
 import ViewsContext, {viewsReducer} from './views/ViewsContext';
 
-const App = ({apiURL, appURL, portletId, ...props}) => {
-	const {
-		activeViewSettings: {name: activeViewName, visibleFieldNames = {}},
-		views,
-	} = props;
+const App = ({
+	activeViewSettings,
+	apiURL,
+	appURL,
+	portletId,
+	views,
+	...props
+}) => {
+	const activeViewName = activeViewSettings?.name;
+
 	const activeView = activeViewName
 		? views.find(({name}) => name === activeViewName)
 		: views[0];
@@ -31,7 +37,7 @@ const App = ({apiURL, appURL, portletId, ...props}) => {
 		useReducer(viewsReducer, {
 			activeView,
 			views,
-			visibleFieldNames,
+			visibleFieldNames: activeViewSettings?.visibleFieldNames || {},
 		})
 	);
 
@@ -42,6 +48,26 @@ const App = ({apiURL, appURL, portletId, ...props}) => {
 			</ViewsContext.Provider>
 		</AppContext.Provider>
 	);
+};
+
+App.proptypes = {
+	activeViewSettings: PropTypes.shape({
+		name: PropTypes.string,
+		visibleFieldNames: PropTypes.array,
+	}),
+	apiURL: PropTypes.string,
+	appURL: PropTypes.string,
+	portletId: PropTypes.string,
+	views: PropTypes.arrayOf(
+		PropTypes.shape({
+			component: PropTypes.any,
+			contentRenderer: PropTypes.string,
+			contentRendererModuleURL: PropTypes.string,
+			label: PropTypes.string,
+			schema: PropTypes.object,
+			thumbnail: PropTypes.string,
+		})
+	).isRequired,
 };
 
 export default (...data) => render(App, ...data);

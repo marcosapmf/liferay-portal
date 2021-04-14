@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICING_CLASSES,
-		"mvc.command.name=editCommercePricingClassExternalReferenceCode"
+		"mvc.command.name=/commerce_pricing_classes/edit_commerce_pricing_class_external_reference_code"
 	},
 	service = MVCRenderCommand.class
 )
@@ -42,7 +42,8 @@ public class EditCommercePricingClassExternalReferenceCodeMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/pricing_class/external_reference_code.jsp";
+		return "/pricing_class" +
+			"/edit_commerce_pricing_class_external_reference_code.jsp";
 	}
 
 }

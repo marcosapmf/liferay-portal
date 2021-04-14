@@ -222,6 +222,13 @@ public abstract class BaseCheck extends AbstractCheck {
 			StringPool.PERIOD + typeName;
 	}
 
+	protected CommonHiddenStreamToken getHiddenAfter(DetailAST detailAST) {
+		CommonASTWithHiddenTokens commonASTWithHiddenTokens =
+			(CommonASTWithHiddenTokens)detailAST;
+
+		return commonASTWithHiddenTokens.getHiddenAfter();
+	}
+
 	protected CommonHiddenStreamToken getHiddenBefore(DetailAST detailAST) {
 		CommonASTWithHiddenTokens commonASTWithHiddenTokens =
 			(CommonASTWithHiddenTokens)detailAST;
@@ -257,16 +264,19 @@ public abstract class BaseCheck extends AbstractCheck {
 		DetailAST siblingDetailAST = rootDetailAST.getNextSibling();
 
 		while (true) {
-			if ((siblingDetailAST == null) ||
-				(siblingDetailAST.getType() != TokenTypes.IMPORT)) {
-
+			if (siblingDetailAST == null) {
 				return importNames;
 			}
 
-			FullIdent importIdent = FullIdent.createFullIdentBelow(
-				siblingDetailAST);
+			if (siblingDetailAST.getType() == TokenTypes.IMPORT) {
+				FullIdent importIdent = FullIdent.createFullIdentBelow(
+					siblingDetailAST);
 
-			importNames.add(importIdent.getText());
+				importNames.add(importIdent.getText());
+			}
+			else if (siblingDetailAST.getType() != TokenTypes.STATIC_IMPORT) {
+				return importNames;
+			}
 
 			siblingDetailAST = siblingDetailAST.getNextSibling();
 		}
@@ -896,6 +906,28 @@ public abstract class BaseCheck extends AbstractCheck {
 		return false;
 	}
 
+	protected boolean isMethodNameDetailAST(DetailAST identDetailAST) {
+		DetailAST parentDetailAST = identDetailAST.getParent();
+
+		if (parentDetailAST.getType() == TokenTypes.METHOD_CALL) {
+			return true;
+		}
+
+		if (parentDetailAST.getType() != TokenTypes.DOT) {
+			return false;
+		}
+
+		parentDetailAST = parentDetailAST.getParent();
+
+		if ((parentDetailAST.getType() == TokenTypes.METHOD_CALL) &&
+			(identDetailAST.getNextSibling() == null)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	protected static final int ALL_TYPES = DetailASTUtil.ALL_TYPES;
 
 	protected static final int[] ARITHMETIC_OPERATOR_TOKEN_TYPES = {
@@ -942,7 +974,7 @@ public abstract class BaseCheck extends AbstractCheck {
 			detailAST, true, TokenTypes.IDENT);
 
 		for (DetailAST identDetailAST : identDetailASTList) {
-			if (_isMethodNameDetailAST(identDetailAST) ||
+			if (isMethodNameDetailAST(identDetailAST) ||
 				dependentIdentDetailASTList.contains(identDetailAST)) {
 
 				continue;
@@ -1026,7 +1058,7 @@ public abstract class BaseCheck extends AbstractCheck {
 			detailAST, true, TokenTypes.IDENT);
 
 		for (DetailAST identDetailAST : identDetailASTList) {
-			if (_isMethodNameDetailAST(identDetailAST)) {
+			if (isMethodNameDetailAST(identDetailAST)) {
 				continue;
 			}
 
@@ -1116,28 +1148,6 @@ public abstract class BaseCheck extends AbstractCheck {
 			(parentDetailAST.getType() == TokenTypes.POST_DEC) ||
 			(parentDetailAST.getType() == TokenTypes.POST_INC) ||
 			(parentDetailAST.getType() == TokenTypes.VARIABLE_DEF)) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private boolean _isMethodNameDetailAST(DetailAST identDetailAST) {
-		DetailAST parentDetailAST = identDetailAST.getParent();
-
-		if (parentDetailAST.getType() == TokenTypes.METHOD_CALL) {
-			return true;
-		}
-
-		if (parentDetailAST.getType() != TokenTypes.DOT) {
-			return false;
-		}
-
-		parentDetailAST = parentDetailAST.getParent();
-
-		if ((parentDetailAST.getType() == TokenTypes.METHOD_CALL) &&
-			(identDetailAST.getNextSibling() == null)) {
 
 			return true;
 		}

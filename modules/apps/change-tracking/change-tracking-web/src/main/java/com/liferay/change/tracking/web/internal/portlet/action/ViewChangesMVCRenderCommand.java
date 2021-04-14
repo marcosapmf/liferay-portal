@@ -21,6 +21,7 @@ import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
+import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.web.internal.configuration.CTConfiguration;
 import com.liferay.change.tracking.web.internal.constants.CTPortletKeys;
 import com.liferay.change.tracking.web.internal.constants.CTWebKeys;
@@ -52,6 +53,9 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Samuel Trong Tran
@@ -61,7 +65,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
-		"mvc.command.name=/publications/view_changes"
+		"mvc.command.name=/change_tracking/view_changes"
 	},
 	service = MVCRenderCommand.class
 )
@@ -96,7 +100,7 @@ public class ViewChangesMVCRenderCommand implements MVCRenderCommand {
 					themeDisplay.getPermissionChecker(), ctCollection,
 					ActionKeys.VIEW)) {
 
-				return "/publications/view.jsp";
+				return "/publications/view_publications.jsp";
 			}
 		}
 		catch (PortalException portalException) {
@@ -104,7 +108,7 @@ public class ViewChangesMVCRenderCommand implements MVCRenderCommand {
 				_log.warn(portalException, portalException);
 			}
 
-			return "/publications/view.jsp";
+			return "/publications/view_publications.jsp";
 		}
 
 		ViewChangesDisplayContext viewChangesDisplayContext =
@@ -112,8 +116,9 @@ public class ViewChangesMVCRenderCommand implements MVCRenderCommand {
 				activeCtCollectionId, _basePersistenceRegistry,
 				_ctClosureFactory, ctCollection, _ctConfiguration,
 				_ctDisplayRendererRegistry, _ctEntryLocalService,
-				_groupLocalService, _language, _portal, _publishScheduler,
-				renderRequest, renderResponse, _userLocalService);
+				_ctSchemaVersionLocalService, _groupLocalService, _language,
+				_portal, _publishScheduler, renderRequest, renderResponse,
+				_userLocalService);
 
 		renderRequest.setAttribute(
 			CTWebKeys.VIEW_CHANGES_DISPLAY_CONTEXT, viewChangesDisplayContext);
@@ -158,6 +163,9 @@ public class ViewChangesMVCRenderCommand implements MVCRenderCommand {
 	private CTPreferencesLocalService _ctPreferencesLocalService;
 
 	@Reference
+	private CTSchemaVersionLocalService _ctSchemaVersionLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
@@ -166,8 +174,12 @@ public class ViewChangesMVCRenderCommand implements MVCRenderCommand {
 	@Reference
 	private Portal _portal;
 
-	@Reference
-	private PublishScheduler _publishScheduler;
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile PublishScheduler _publishScheduler;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -14,7 +14,6 @@
 
 package com.liferay.site.insurance.site.initializer.internal;
 
-import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
 import com.liferay.asset.display.page.service.AssetDisplayPageEntryLocalService;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
@@ -31,7 +30,6 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateExportImportConstants;
 import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -49,6 +47,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -384,7 +383,7 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 			int displayDateHour = calendar.get(Calendar.HOUR_OF_DAY);
 			int displayDateMinute = calendar.get(Calendar.MINUTE);
 
-			JournalArticle article = _journalArticleLocalService.addArticle(
+			_journalArticleLocalService.addArticle(
 				_serviceContext.getUserId(), _serviceContext.getScopeGroupId(),
 				journalFolderMap.getOrDefault(
 					journalArticleJSONObject.getString("folder"),
@@ -396,32 +395,14 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 					journalArticleJSONObject.getString("name")),
 				null,
 				StringUtil.replace(
-					_read("journal_article.xml", url), StringPool.DOLLAR,
-					StringPool.DOLLAR, fileEntriesMap),
+					_read("journal_article.xml", url), "[$", "$]",
+					fileEntriesMap),
 				journalArticleJSONObject.getString("ddmStructureKey"),
 				journalArticleJSONObject.getString("ddmTemplateKey"), null,
 				displayDateMonth, displayDateDay, displayDateYear,
 				displayDateHour, displayDateMinute, 0, 0, 0, 0, 0, true, 0, 0,
 				0, 0, 0, true, true, false, null, null, null, null,
 				_serviceContext);
-
-			long resourceClassNameId = _portal.getClassNameId(
-				JournalArticle.class);
-
-			DDMStructure ddmStructure =
-				_ddmStructureLocalService.fetchStructure(
-					_serviceContext.getScopeGroupId(), resourceClassNameId,
-					journalArticleJSONObject.getString("ddmStructureKey"));
-
-			long defaultLayoutPageTemplateEntryId =
-				_getDefaultLayoutPageTemplateEntryId(
-					resourceClassNameId, ddmStructure.getStructureId());
-
-			_assetDisplayPageEntryLocalService.addAssetDisplayPageEntry(
-				_serviceContext.getUserId(), _serviceContext.getScopeGroupId(),
-				resourceClassNameId, article.getResourcePrimKey(),
-				defaultLayoutPageTemplateEntryId,
-				AssetDisplayPageConstants.TYPE_DEFAULT, _serviceContext);
 
 			_serviceContext.setAssetTagNames(null);
 		}
@@ -480,6 +461,10 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 				String.valueOf(
 					_siteNavigationMenuMap.get("Customer Portal Menu"))
 			).put(
+				"LAYOUT_URL_CLAIMS", _getPrivateFriendlyURL("claims")
+			).put(
+				"LAYOUT_URL_POLICIES", _getPrivateFriendlyURL("policies")
+			).put(
 				"PUBLIC_SITE_NAVIGATION_MENU_ID",
 				String.valueOf(_siteNavigationMenuMap.get("Public Menu"))
 			).put(
@@ -521,7 +506,7 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 						StringBundler.concat(
 							"/layouts/", path, StringPool.SLASH,
 							"page-definition.json")),
-					"\"$", "$\"", resourcesMap);
+					"\"[$", "$]\"", resourcesMap);
 
 				layout = _addContentLayout(
 					pageJSONObject,
@@ -630,10 +615,9 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 			String content = StringUtil.read(url.openStream());
 
 			content = StringUtil.replace(
-				content, "\"£", "£\"", numberValuesMap);
+				content, "\"[£", "£]\"", numberValuesMap);
 
-			content = StringUtil.replace(
-				content, StringPool.DOLLAR, StringPool.DOLLAR, stringValuesMap);
+			content = StringUtil.replace(content, "[$", "$]", stringValuesMap);
 
 			zipWriter.addEntry(
 				StringUtil.removeSubstring(url.getPath(), _PATH), content);
@@ -692,20 +676,6 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 		}
 
 		return zipWriter.getFile();
-	}
-
-	private long _getDefaultLayoutPageTemplateEntryId(
-		long classNameId, long classTypeId) {
-
-		LayoutPageTemplateEntry defaultAssetDisplayPage =
-			_layoutPageTemplateEntryService.fetchDefaultLayoutPageTemplateEntry(
-				_serviceContext.getScopeGroupId(), classNameId, classTypeId);
-
-		if (defaultAssetDisplayPage == null) {
-			return 0;
-		}
-
-		return defaultAssetDisplayPage.getLayoutPageTemplateEntryId();
 	}
 
 	private String _getDynamicCollectionTypeSettings(
@@ -770,6 +740,14 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 		}
 
 		return fileEntriesMap;
+	}
+
+	private String _getPrivateFriendlyURL(String layoutName) throws Exception {
+		Group scopeGroup = _serviceContext.getScopeGroup();
+
+		return StringBundler.concat(
+			_portal.getPathFriendlyURLPrivateGroup(),
+			scopeGroup.getFriendlyURL(), StringPool.FORWARD_SLASH, layoutName);
 	}
 
 	private Map<String, String> _getResourcesMap() {
@@ -893,19 +871,21 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 	private void _setDefaultLayoutPageTemplateEntries() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				_serviceContext.getScopeGroupId(), "policy",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				_serviceContext.getScopeGroupId(), "policy");
 
-		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		if (layoutPageTemplateEntry != null) {
+			_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		}
 
 		layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
-				_serviceContext.getScopeGroupId(), "claim",
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE);
+				_serviceContext.getScopeGroupId(), "claim");
 
-		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		if (layoutPageTemplateEntry != null) {
+			_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+		}
 	}
 
 	private void _setDefaultStyleBookEntry() throws PortalException {
@@ -960,7 +940,8 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 	}
 
 	private Layout _updateLayoutTypeSettings(
-		Layout layout, JSONObject settingsJSONObject) {
+			Layout layout, JSONObject settingsJSONObject)
+		throws Exception {
 
 		UnicodeProperties unicodeProperties =
 			layout.getTypeSettingsProperties();
@@ -983,29 +964,29 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 					key, themeSettingsJSONObject.getString(key));
 			}
 
+			layout = _layoutLocalService.updateLayout(
+				layout.getGroupId(), layout.isPrivateLayout(),
+				layout.getLayoutId(), unicodeProperties.toString());
+
 			layout.setTypeSettingsProperties(unicodeProperties);
 		}
+
+		String themeId = layout.getThemeId();
 
 		String themeName = settingsJSONObject.getString("themeName");
 
 		if (Validator.isNotNull(themeName)) {
-			String themeId = _getThemeId(layout.getCompanyId(), themeName);
-
-			layout.setThemeId(themeId);
+			themeId = _getThemeId(layout.getCompanyId(), themeName);
 		}
 
 		String colorSchemeName = settingsJSONObject.getString(
-			"colorSchemeName");
+			"colorSchemeName", layout.getColorSchemeId());
 
-		if (Validator.isNotNull(colorSchemeName)) {
-			layout.setColorSchemeId(colorSchemeName);
-		}
+		String css = settingsJSONObject.getString("css", layout.getCss());
 
-		String css = settingsJSONObject.getString("css");
-
-		if (Validator.isNotNull(css)) {
-			layout.setCss(css);
-		}
+		layout = _layoutLocalService.updateLookAndFeel(
+			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
+			themeId, colorSchemeName, css);
 
 		JSONObject masterPageJSONObject = settingsJSONObject.getJSONObject(
 			"masterPage");
@@ -1018,12 +999,14 @@ public class InsuranceSiteInitializer implements SiteInitializer {
 						masterPageJSONObject.getString("key"));
 
 			if (masterLayoutPageTemplateEntry != null) {
-				layout.setMasterLayoutPlid(
+				layout = _layoutLocalService.updateMasterLayoutPlid(
+					layout.getGroupId(), layout.isPrivateLayout(),
+					layout.getLayoutId(),
 					masterLayoutPageTemplateEntry.getPlid());
 			}
 		}
 
-		return _layoutLocalService.updateLayout(layout);
+		return layout;
 	}
 
 	private static final String _PATH =

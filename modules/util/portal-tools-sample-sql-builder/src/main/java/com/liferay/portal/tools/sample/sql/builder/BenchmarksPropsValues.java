@@ -140,6 +140,9 @@ public class BenchmarksPropsValues {
 	public static final int MAX_MB_THREAD_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_MB_THREAD_COUNT));
 
+	public static final int MAX_SEGMENTS_ENTRY_COUNT = GetterUtil.getInteger(
+		PropertiesHolder._get(BenchmarksPropsKeys.MAX_SEGMENTS_ENTRY_COUNT));
+
 	public static final int MAX_USER_COUNT = GetterUtil.getInteger(
 		PropertiesHolder._get(BenchmarksPropsKeys.MAX_USER_COUNT));
 
@@ -169,6 +172,9 @@ public class BenchmarksPropsValues {
 
 	public static final String SCRIPT = PropertiesHolder._get(
 		BenchmarksPropsKeys.SCRIPT);
+
+	public static final boolean SEARCH_BAR_ENABLED = GetterUtil.getBoolean(
+		PropertiesHolder._get(BenchmarksPropsKeys.SEARCH_BAR_ENABLED));
 
 	public static final String VIRTUAL_HOST_NAME = PropertiesHolder._get(
 		BenchmarksPropsKeys.VIRTUAL_HOST_NAME);

@@ -28,9 +28,8 @@ exports[`Field Paragraph has a label 1`] = `
     data-field-name="textField"
   >
     <label
-      aria-labelledby="textField_fieldDetails"
+      aria-describedby="textField_fieldDetails"
       class="ddm-label"
-      for="textField"
       tabindex="0"
     >
       label
@@ -44,8 +43,7 @@ exports[`Field Paragraph has a label 1`] = `
       />
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="textField_fieldDetails"
     >
       label
@@ -167,9 +165,8 @@ exports[`Field Paragraph renders Label if showLabel is true 1`] = `
     data-field-name="textField"
   >
     <label
-      aria-labelledby="textField_fieldDetails"
+      aria-describedby="textField_fieldDetails"
       class="ddm-label"
-      for="textField"
       tabindex="0"
     >
       text
@@ -183,8 +180,7 @@ exports[`Field Paragraph renders Label if showLabel is true 1`] = `
       />
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="textField_fieldDetails"
     >
       text

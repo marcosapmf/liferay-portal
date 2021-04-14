@@ -269,6 +269,26 @@ public class CommerceShippingFixedOptionServiceSoap {
 		}
 	}
 
+	public static long getCommerceShippingFixedOptionsCount(
+			long companyId, long groupId, long commerceShippingMethodId,
+			String keywords)
+		throws RemoteException {
+
+		try {
+			long returnValue =
+				CommerceShippingFixedOptionServiceUtil.
+					getCommerceShippingFixedOptionsCount(
+						companyId, groupId, commerceShippingMethodId, keywords);
+
+			return returnValue;
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
 	public static com.liferay.commerce.shipping.engine.fixed.model.
 		CommerceShippingFixedOptionSoap updateCommerceShippingFixedOption(
 				long commerceShippingFixedOptionId, String[] nameMapLanguageIds,

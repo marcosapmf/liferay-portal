@@ -106,6 +106,9 @@ public class BundleManagerImpl implements BundleManager {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -209,7 +212,8 @@ public class BundleManagerImpl implements BundleManager {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to read liferay-marketplace.properties from " +
-						file.getName());
+						file.getName(),
+					exception);
 			}
 		}
 

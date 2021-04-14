@@ -106,13 +106,27 @@ exports[`EditFormView renders 1`] = `
             <div
               class="pr-2 autofit-col autofit-col-expand"
             >
-              <h4
-                class="list-group-title text-truncate"
+              <div
+                class="d-flex list-group-title"
               >
-                <span>
+                <span
+                  class="text-truncate"
+                >
                   Name
                 </span>
-              </h4>
+                <span
+                  class="reference-mark"
+                >
+                  <svg
+                    class="lexicon-icon lexicon-icon-asterisk"
+                    role="presentation"
+                  >
+                    <use
+                      xlink:href="#asterisk"
+                    />
+                  </svg>
+                </span>
+              </div>
               <p
                 class="list-group-subtitle text-truncate"
               >
@@ -185,13 +199,27 @@ exports[`EditFormView renders 1`] = `
             <div
               class="pr-2 autofit-col autofit-col-expand"
             >
-              <h4
-                class="list-group-title text-truncate"
+              <div
+                class="d-flex list-group-title"
               >
-                <span>
+                <span
+                  class="text-truncate"
+                >
                   Options
                 </span>
-              </h4>
+                <span
+                  class="reference-mark"
+                >
+                  <svg
+                    class="lexicon-icon lexicon-icon-asterisk"
+                    role="presentation"
+                  >
+                    <use
+                      xlink:href="#asterisk"
+                    />
+                  </svg>
+                </span>
+              </div>
               <p
                 class="list-group-subtitle text-truncate"
               >
@@ -271,13 +299,15 @@ exports[`EditFormView renders 1`] = `
                 <div
                   class="pr-2 autofit-col autofit-col-expand"
                 >
-                  <h4
-                    class="list-group-title text-truncate"
+                  <div
+                    class="d-flex list-group-title"
                   >
-                    <span>
+                    <span
+                      class="text-truncate"
+                    >
                       Address
                     </span>
-                  </h4>
+                  </div>
                   <p
                     class="list-group-subtitle text-truncate"
                   >
@@ -360,13 +390,15 @@ exports[`EditFormView renders 1`] = `
                       <div
                         class="pr-2 autofit-col autofit-col-expand"
                       >
-                        <h4
-                          class="list-group-title text-truncate"
+                        <div
+                          class="d-flex list-group-title"
                         >
-                          <span>
+                          <span
+                            class="text-truncate"
+                          >
                             Text Field
                           </span>
-                        </h4>
+                        </div>
                         <p
                           class="list-group-subtitle text-truncate"
                         >
@@ -397,6 +429,45 @@ exports[`EditFormView renders 1`] = `
       <ul
         class="tbar-nav"
       >
+        <li
+          class="tbar-item"
+        >
+          <div
+            class="tbar-section"
+          >
+            <div
+              class="input-group"
+            >
+              <div
+                class="dropdown localizable-dropdown"
+              >
+                <button
+                  class="dropdown-toggle btn btn-monospaced btn-secondary"
+                  symbol="en-US"
+                  type="button"
+                >
+                  <span
+                    class="inline-item"
+                  >
+                    <svg
+                      class="lexicon-icon lexicon-icon-en-us"
+                      role="presentation"
+                    >
+                      <use
+                        xlink:href="#en-us"
+                      />
+                    </svg>
+                  </span>
+                  <span
+                    class="btn-section"
+                  >
+                    en-US
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </li>
         <li
           class="tbar-item tbar-item-expand"
         >
@@ -430,24 +501,29 @@ exports[`EditFormView renders 1`] = `
               class="input-group"
             >
               <div
-                class="input-group-item"
+                class="btn-group"
+                role="group"
               >
-                <button
-                  class="ml-3 btn btn-sm btn-secondary"
-                  type="button"
+                <div
+                  class="btn-group-item"
                 >
-                  cancel
-                </button>
-              </div>
-              <div
-                class="input-group-item"
-              >
-                <button
-                  class="ml-3 btn btn-sm btn-primary"
-                  type="button"
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                  >
+                    cancel
+                  </button>
+                </div>
+                <div
+                  class="btn-group-item"
                 >
-                  save
-                </button>
+                  <button
+                    class="m-0 btn btn-primary"
+                    type="button"
+                  >
+                    save
+                  </button>
+                </div>
               </div>
             </div>
           </div>

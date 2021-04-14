@@ -647,11 +647,12 @@ public class ServiceBuilder {
 					"The package-path attribute is required");
 			}
 
-			_apiPackagePath = GetterUtil.getString(
-				rootElement.attributeValue("api-package-path"), packagePath);
 			_databaseNameMaxLength = GetterUtil.getInteger(
 				rootElement.attributeValue("database-name-max-length"),
 				databaseNameMaxLength);
+
+			_apiPackagePath = GetterUtil.getString(
+				rootElement.attributeValue("api-package-path"), packagePath);
 			_oldServiceOutputPath =
 				_apiDirName + "/" + StringUtil.replace(packagePath, '.', '/');
 			_outputPath =
@@ -2032,6 +2033,16 @@ public class ServiceBuilder {
 		return false;
 	}
 
+	public boolean isVersionLTE_7_3_0() {
+		if (_dtdVersion.isPreviousVersionThan("7.3.0") ||
+			_dtdVersion.isSameVersionAs("7.3.0")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public String javaAnnotationToString(JavaAnnotation javaAnnotation) {
 		StringBundler sb = new StringBundler();
 
@@ -2208,6 +2219,24 @@ public class ServiceBuilder {
 		}
 	}
 
+	private boolean _containSpecialCharacter(String name) {
+		for (char c : name.toCharArray()) {
+			if (((c >= CharPool.LOWER_CASE_A) &&
+				 (c <= CharPool.LOWER_CASE_Z)) ||
+				((c >= CharPool.UPPER_CASE_A) &&
+				 (c <= CharPool.UPPER_CASE_Z)) ||
+				((c >= CharPool.NUMBER_0) && (c <= CharPool.NUMBER_9)) ||
+				(c == CharPool.UNDERLINE)) {
+
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private void _createBaseUADAnonymizer(Entity entity) throws Exception {
 		Map<String, Object> context = _getContext();
 
@@ -2362,50 +2391,52 @@ public class ServiceBuilder {
 					String sqlType = getSqlType(
 						name, entityColumn.getName(), entityColumn.getType());
 
-					Map<String, String> column = HashMapBuilder.put(
-						"dbName", entityColumn.getDBName()
-					).put(
-						"flag",
-						() -> {
-							if (entityColumn.isPrimary()) {
-								return "FLAG_PRIMARY";
+					columns.add(
+						HashMapBuilder.put(
+							"dbName", entityColumn.getDBName()
+						).put(
+							"flag",
+							() -> {
+								if (entityColumn.isPrimary()) {
+									return "FLAG_PRIMARY";
+								}
+
+								if (changeTrackingEnabled &&
+									Objects.equals(
+										entityColumn.getName(),
+										"ctCollectionId")) {
+
+									return "FLAG_PRIMARY";
+								}
+
+								if (Objects.equals(
+										entityColumn.getName(),
+										"mvccVersion")) {
+
+									return "FLAG_NULLITY";
+								}
+
+								return "FLAG_DEFAULT";
 							}
+						).put(
+							"javaType",
+							() -> {
+								if (entityColumn.isPrimitiveType()) {
+									return getPrimitiveObj(
+										entityColumn.getType());
+								}
 
-							if (changeTrackingEnabled &&
-								Objects.equals(
-									entityColumn.getName(), "ctCollectionId")) {
+								if (Objects.equals("CLOB", sqlType)) {
+									return "Clob";
+								}
 
-								return "FLAG_PRIMARY";
+								return entityColumn.getGenericizedType();
 							}
-
-							if (Objects.equals(
-									entityColumn.getName(), "mvccVersion")) {
-
-								return "FLAG_NULLITY";
-							}
-
-							return "FLAG_DEFAULT";
-						}
-					).put(
-						"javaType",
-						() -> {
-							if (entityColumn.isPrimitiveType()) {
-								return getPrimitiveObj(entityColumn.getType());
-							}
-
-							if (Objects.equals("CLOB", sqlType)) {
-								return "Clob";
-							}
-
-							return entityColumn.getGenericizedType();
-						}
-					).put(
-						"name", entityColumn.getName()
-					).put(
-						"sqlType", sqlType
-					).build();
-
-					columns.add(column);
+						).put(
+							"name", entityColumn.getName()
+						).put(
+							"sqlType", sqlType
+						).build());
 				}
 
 				return columns;
@@ -2626,9 +2657,7 @@ public class ServiceBuilder {
 		Map<String, JavaMethod> methods = new LinkedHashMap<>();
 
 		for (JavaMethod method : _getMethods(modelImplJavaClass)) {
-			String methodSignature = _getMethodSignature(method, false);
-
-			methods.put(methodSignature, method);
+			methods.put(_getMethodSignature(method, false), method);
 		}
 
 		Set<Map.Entry<String, JavaMethod>> entrySet = methods.entrySet();
@@ -2652,9 +2681,7 @@ public class ServiceBuilder {
 				_serviceOutputPath, "/model/", entity.getName(), "Model.java"));
 
 		for (JavaMethod method : _getMethods(modelJavaClass)) {
-			String methodSignature = _getMethodSignature(method, false);
-
-			methods.remove(methodSignature);
+			methods.remove(_getMethodSignature(method, false));
 		}
 
 		Map<String, Object> context = _getContext();
@@ -3283,12 +3310,7 @@ public class ServiceBuilder {
 				_testOutputPath, "/service/persistence/test/", entity.getName(),
 				"PersistenceTest.java"));
 
-		if (entity.isDeprecated() || !entity.hasPersistence()) {
-			System.out.println("Removing " + file);
-
-			file.delete();
-		}
-		else {
+		if (entity.hasPersistence() && !entity.isDeprecated()) {
 			Map<String, Object> context = _getContext();
 
 			context.put("entity", entity);
@@ -3303,6 +3325,11 @@ public class ServiceBuilder {
 			String content = _processTemplate(_tplPersistenceTest, context);
 
 			_write(file, content, _modifiedFileNames);
+		}
+		else if (file.exists()) {
+			System.out.println("Removing " + file);
+
+			file.delete();
 		}
 
 		file = new File(
@@ -3717,9 +3744,8 @@ public class ServiceBuilder {
 			return;
 		}
 
-		Map<String, Object> context = _getContext();
-
-		String content = _processTemplate(_tplServletContextUtil, context);
+		String content = _processTemplate(
+			_tplServletContextUtil, _getContext());
 
 		File file = new File(
 			_serviceOutputPath + "/service/ServletContextUtil.java");
@@ -5954,8 +5980,15 @@ public class ServiceBuilder {
 			entityElement.attributeValue("uuid"));
 		boolean uuidAccessor = GetterUtil.getBoolean(
 			entityElement.attributeValue("uuid-accessor"));
-		boolean externalReferenceCode = GetterUtil.getBoolean(
-			entityElement.attributeValue("external-reference-code"));
+
+		String externalReferenceCode = GetterUtil.getString(
+			entityElement.attributeValue("external-reference-code"), "none");
+
+		externalReferenceCode = StringUtil.replace(
+			externalReferenceCode, "false", "none");
+		externalReferenceCode = StringUtil.replace(
+			externalReferenceCode, "true", "company");
+
 		boolean localService = GetterUtil.getBoolean(
 			entityElement.attributeValue("local-service"));
 		boolean remoteService = GetterUtil.getBoolean(
@@ -6122,7 +6155,13 @@ public class ServiceBuilder {
 			derivedColumnElements.add(columnElement);
 		}
 
-		if (externalReferenceCode) {
+		if (columnElements.contains(
+				new EntityColumn(this, "externalReferenceCode"))) {
+
+			externalReferenceCode = "none";
+		}
+
+		if (!StringUtil.equals(externalReferenceCode, "none")) {
 			Element columnElement = DocumentHelper.createElement("column");
 
 			columnElement.addAttribute("name", "externalReferenceCode");
@@ -6434,18 +6473,22 @@ public class ServiceBuilder {
 			finderElements.add(0, finderElement);
 		}
 
-		if (externalReferenceCode &&
-			entityColumns.contains(new EntityColumn(this, "companyId"))) {
-
+		if (!StringUtil.equals(externalReferenceCode, "none")) {
 			Element finderElement = DocumentHelper.createElement("finder");
 
-			finderElement.addAttribute("name", "C_ERC");
+			String externalReferenceCodeUpperCase = StringUtil.toUpperCase(
+				externalReferenceCode);
+
+			finderElement.addAttribute(
+				"name", externalReferenceCodeUpperCase.charAt(0) + "_ERC");
+
 			finderElement.addAttribute("return-type", entityName);
 
 			Element finderColumnElement = finderElement.addElement(
 				"finder-column");
 
-			finderColumnElement.addAttribute("name", "companyId");
+			finderColumnElement.addAttribute(
+				"name", externalReferenceCode + "Id");
 
 			finderColumnElement = finderElement.addElement("finder-column");
 
@@ -6519,10 +6562,20 @@ public class ServiceBuilder {
 				for (EntityColumn column : entityColumns) {
 					String name = column.getName();
 
-					finderWhere = StringUtil.replace(
-						finderWhere, name, alias + "." + name);
-					finderDBWhere = StringUtil.replace(
-						finderDBWhere, name, alias + "." + column.getDBName());
+					if (_containSpecialCharacter(name)) {
+						finderWhere = StringUtil.replace(
+							finderWhere, name, alias + "." + name);
+						finderDBWhere = StringUtil.replace(
+							finderDBWhere, name,
+							alias + "." + column.getDBName());
+					}
+					else {
+						finderWhere = finderWhere.replaceAll(
+							"\\b" + name + "\\b", alias + "." + name);
+						finderDBWhere = finderDBWhere.replaceAll(
+							"\\b" + name + "\\b",
+							alias + "." + column.getDBName());
+					}
 				}
 			}
 
@@ -7101,10 +7154,8 @@ public class ServiceBuilder {
 			}
 		}
 
-		Entity localizedEntity = _parseEntity(newLocalizedEntityElement);
-
 		entity.setLocalizedEntityColumns(localizedEntityColumns);
-		entity.setLocalizedEntity(localizedEntity);
+		entity.setLocalizedEntity(_parseEntity(newLocalizedEntityElement));
 	}
 
 	private void _parseVersionEntity(

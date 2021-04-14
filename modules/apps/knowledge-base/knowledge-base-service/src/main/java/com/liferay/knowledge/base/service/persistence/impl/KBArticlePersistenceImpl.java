@@ -45,11 +45,12 @@ import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -63,7 +64,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,7 +89,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = KBArticlePersistence.class)
+@Component(service = {KBArticlePersistence.class, BasePersistence.class})
 public class KBArticlePersistenceImpl
 	extends BasePersistenceImpl<KBArticle> implements KBArticlePersistence {
 
@@ -209,7 +209,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -570,7 +570,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -706,7 +706,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -1086,7 +1086,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1216,7 +1216,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof KBArticle) {
@@ -1327,7 +1327,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1493,7 +1493,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -1905,7 +1905,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, companyId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -2070,7 +2070,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -2800,7 +2800,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -2973,8 +2973,7 @@ public class KBArticlePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByR_V, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByR_V, finderArgs);
 		}
 
 		if (result instanceof KBArticle) {
@@ -3072,7 +3071,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, version};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -3224,7 +3223,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -3699,7 +3698,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByR_L, finderArgs, this);
+				_finderPathWithPaginationFindByR_L, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -3811,7 +3810,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -3873,7 +3872,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByR_L, finderArgs, this);
+			_finderPathWithPaginationCountByR_L, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -4041,7 +4040,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -4515,7 +4514,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByR_M, finderArgs, this);
+				_finderPathWithPaginationFindByR_M, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -4627,7 +4626,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, main};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -4689,7 +4688,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByR_M, finderArgs, this);
+			_finderPathWithPaginationCountByR_M, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -4858,7 +4857,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -5332,7 +5331,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByR_S, finderArgs, this);
+				_finderPathWithPaginationFindByR_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -5444,7 +5443,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -5506,7 +5505,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByR_S, finderArgs, this);
+			_finderPathWithPaginationCountByR_S, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -5672,7 +5671,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -6394,7 +6393,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -6596,7 +6595,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -7317,7 +7316,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, main};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -7519,7 +7518,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -8241,7 +8240,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -8444,7 +8443,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -8831,7 +8830,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -8980,7 +8979,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -9366,7 +9365,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, main};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -9516,7 +9515,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -9903,7 +9902,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -10057,7 +10056,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -10538,7 +10537,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByP_L, finderArgs, this);
+				_finderPathWithPaginationFindByP_L, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -10651,7 +10650,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {parentResourcePrimKey, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -10714,7 +10713,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByP_L, finderArgs, this);
+			_finderPathWithPaginationCountByP_L, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -10883,7 +10882,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -11362,7 +11361,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByP_M, finderArgs, this);
+				_finderPathWithPaginationFindByP_M, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -11475,7 +11474,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {parentResourcePrimKey, main};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -11538,7 +11537,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByP_M, finderArgs, this);
+			_finderPathWithPaginationCountByP_M, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -11707,7 +11706,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -12188,7 +12187,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByP_S, finderArgs, this);
+				_finderPathWithPaginationFindByP_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -12301,7 +12300,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {parentResourcePrimKey, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -12364,7 +12363,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByP_S, finderArgs, this);
+			_finderPathWithPaginationCountByP_S, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -12511,8 +12510,7 @@ public class KBArticlePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByR_G_V, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByR_G_V, finderArgs);
 		}
 
 		if (result instanceof KBArticle) {
@@ -12618,7 +12616,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, groupId, version};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -12785,7 +12783,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -13810,7 +13808,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByR_G_L, finderArgs, this);
+				_finderPathWithPaginationFindByR_G_L, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -13933,7 +13931,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, groupId, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -14002,7 +14000,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByR_G_L, finderArgs, this);
+			_finderPathWithPaginationCountByR_G_L, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -14325,7 +14323,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -15346,7 +15344,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByR_G_M, finderArgs, this);
+				_finderPathWithPaginationFindByR_G_M, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -15467,7 +15465,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, groupId, main};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -15536,7 +15534,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByR_G_M, finderArgs, this);
+			_finderPathWithPaginationCountByR_G_M, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -15859,7 +15857,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -16881,7 +16879,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByR_G_S, finderArgs, this);
+				_finderPathWithPaginationFindByR_G_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -17000,7 +16998,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {resourcePrimKey, groupId, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -17067,7 +17065,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByR_G_S, finderArgs, this);
+			_finderPathWithPaginationCountByR_G_S, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -17395,7 +17393,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -18424,7 +18422,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_P_L, finderArgs, this);
+				_finderPathWithPaginationFindByG_P_L, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -18550,7 +18548,7 @@ public class KBArticlePersistenceImpl
 			groupId, parentResourcePrimKey, latest
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -18620,7 +18618,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_P_L, finderArgs, this);
+			_finderPathWithPaginationCountByG_P_L, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -18949,7 +18947,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -19978,7 +19976,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_P_M, finderArgs, this);
+				_finderPathWithPaginationFindByG_P_M, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -20104,7 +20102,7 @@ public class KBArticlePersistenceImpl
 			groupId, parentResourcePrimKey, main
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -20174,7 +20172,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_P_M, finderArgs, this);
+			_finderPathWithPaginationCountByG_P_M, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -20503,7 +20501,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -21532,7 +21530,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_P_S, finderArgs, this);
+				_finderPathWithPaginationFindByG_P_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -21658,7 +21656,7 @@ public class KBArticlePersistenceImpl
 			groupId, parentResourcePrimKey, status
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -21728,7 +21726,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_P_S, finderArgs, this);
+			_finderPathWithPaginationCountByG_P_S, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -22052,7 +22050,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -22875,7 +22873,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, kbFolderId, urlTitle};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -23126,7 +23124,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -23895,7 +23893,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, kbFolderId, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -24119,7 +24117,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -24886,7 +24884,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, kbFolderId, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -25101,7 +25099,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -26190,7 +26188,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_S_L, finderArgs, this);
+				_finderPathWithPaginationFindByG_S_L, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -26326,7 +26324,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, sections, latest};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -26408,7 +26406,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_S_L, finderArgs, this);
+			_finderPathWithPaginationCountByG_S_L, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -26773,7 +26771,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -27862,7 +27860,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_S_M, finderArgs, this);
+				_finderPathWithPaginationFindByG_S_M, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -27998,7 +27996,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, sections, main};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -28080,7 +28078,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_S_M, finderArgs, this);
+			_finderPathWithPaginationCountByG_S_M, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -28443,7 +28441,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -29532,7 +29530,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_S_S, finderArgs, this);
+				_finderPathWithPaginationFindByG_S_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -29668,7 +29666,7 @@ public class KBArticlePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, sections, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -29750,7 +29748,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_S_S, finderArgs, this);
+			_finderPathWithPaginationCountByG_S_S, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -30133,7 +30131,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -31212,7 +31210,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_P_L_S, finderArgs, this);
+				_finderPathWithPaginationFindByG_P_L_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -31346,7 +31344,7 @@ public class KBArticlePersistenceImpl
 			groupId, parentResourcePrimKey, latest, status
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -31422,7 +31420,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_P_L_S, finderArgs, this);
+			_finderPathWithPaginationCountByG_P_L_S, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -31777,7 +31775,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -32909,7 +32907,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_KBFI_UT_ST, finderArgs, this);
+				_finderPathWithPaginationFindByG_KBFI_UT_ST, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KBArticle kbArticle : list) {
@@ -33052,7 +33050,7 @@ public class KBArticlePersistenceImpl
 			groupId, kbFolderId, urlTitle, status
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -33139,7 +33137,7 @@ public class KBArticlePersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_KBFI_UT_ST, finderArgs, this);
+			_finderPathWithPaginationCountByG_KBFI_UT_ST, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -33477,9 +33475,7 @@ public class KBArticlePersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(KBArticleImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(KBArticleImpl.class);
 	}
 
 	/**
@@ -33503,9 +33499,7 @@ public class KBArticlePersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(KBArticleImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(KBArticleImpl.class, primaryKey);
@@ -33519,30 +33513,26 @@ public class KBArticlePersistenceImpl
 			kbArticleModelImpl.getUuid(), kbArticleModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, kbArticleModelImpl, false);
+			_finderPathFetchByUUID_G, args, kbArticleModelImpl);
 
 		args = new Object[] {
 			kbArticleModelImpl.getResourcePrimKey(),
 			kbArticleModelImpl.getVersion()
 		};
 
-		finderCache.putResult(
-			_finderPathCountByR_V, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByR_V, args, kbArticleModelImpl, false);
+		finderCache.putResult(_finderPathCountByR_V, args, Long.valueOf(1));
+		finderCache.putResult(_finderPathFetchByR_V, args, kbArticleModelImpl);
 
 		args = new Object[] {
 			kbArticleModelImpl.getResourcePrimKey(),
 			kbArticleModelImpl.getGroupId(), kbArticleModelImpl.getVersion()
 		};
 
+		finderCache.putResult(_finderPathCountByR_G_V, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByR_G_V, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByR_G_V, args, kbArticleModelImpl, false);
+			_finderPathFetchByR_G_V, args, kbArticleModelImpl);
 	}
 
 	/**
@@ -33892,7 +33882,7 @@ public class KBArticlePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KBArticle>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -33962,7 +33952,7 @@ public class KBArticlePersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -34022,22 +34012,21 @@ public class KBArticlePersistenceImpl
 
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class, new KBArticleModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", KBArticle.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByResourcePrimKey = _createFinderPath(
+		_finderPathWithPaginationFindByResourcePrimKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByResourcePrimKey",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -34045,17 +34034,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey"}, true);
 
-		_finderPathWithoutPaginationFindByResourcePrimKey = _createFinderPath(
+		_finderPathWithoutPaginationFindByResourcePrimKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByResourcePrimKey",
 			new String[] {Long.class.getName()},
 			new String[] {"resourcePrimKey"}, true);
 
-		_finderPathCountByResourcePrimKey = _createFinderPath(
+		_finderPathCountByResourcePrimKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByResourcePrimKey",
 			new String[] {Long.class.getName()},
 			new String[] {"resourcePrimKey"}, false);
 
-		_finderPathWithPaginationFindByUuid = _createFinderPath(
+		_finderPathWithPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -34063,27 +34052,27 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			true);
 
-		_finderPathCountByUuid = _createFinderPath(
+		_finderPathCountByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
-		_finderPathFetchByUUID_G = _createFinderPath(
+		_finderPathFetchByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = _createFinderPath(
+		_finderPathCountByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
@@ -34092,17 +34081,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = _createFinderPath(
+		_finderPathCountByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByR_G = _createFinderPath(
+		_finderPathWithPaginationFindByR_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34111,27 +34100,27 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId"}, true);
 
-		_finderPathWithoutPaginationFindByR_G = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_G",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"resourcePrimKey", "groupId"}, true);
 
-		_finderPathCountByR_G = _createFinderPath(
+		_finderPathCountByR_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_G",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"resourcePrimKey", "groupId"}, false);
 
-		_finderPathFetchByR_V = _createFinderPath(
+		_finderPathFetchByR_V = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByR_V",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"resourcePrimKey", "version"}, true);
 
-		_finderPathCountByR_V = _createFinderPath(
+		_finderPathCountByR_V = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_V",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"resourcePrimKey", "version"}, false);
 
-		_finderPathWithPaginationFindByR_L = _createFinderPath(
+		_finderPathWithPaginationFindByR_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_L",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34140,22 +34129,22 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByR_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"resourcePrimKey", "latest"}, true);
 
-		_finderPathCountByR_L = _createFinderPath(
+		_finderPathCountByR_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"resourcePrimKey", "latest"}, false);
 
-		_finderPathWithPaginationCountByR_L = _createFinderPath(
+		_finderPathWithPaginationCountByR_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByR_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"resourcePrimKey", "latest"}, false);
 
-		_finderPathWithPaginationFindByR_M = _createFinderPath(
+		_finderPathWithPaginationFindByR_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_M",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34164,22 +34153,22 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "main"}, true);
 
-		_finderPathWithoutPaginationFindByR_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"resourcePrimKey", "main"}, true);
 
-		_finderPathCountByR_M = _createFinderPath(
+		_finderPathCountByR_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"resourcePrimKey", "main"}, false);
 
-		_finderPathWithPaginationCountByR_M = _createFinderPath(
+		_finderPathWithPaginationCountByR_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByR_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"resourcePrimKey", "main"}, false);
 
-		_finderPathWithPaginationFindByR_S = _createFinderPath(
+		_finderPathWithPaginationFindByR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -34188,22 +34177,22 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "status"}, true);
 
-		_finderPathWithoutPaginationFindByR_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"resourcePrimKey", "status"}, true);
 
-		_finderPathCountByR_S = _createFinderPath(
+		_finderPathCountByR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"resourcePrimKey", "status"}, false);
 
-		_finderPathWithPaginationCountByR_S = _createFinderPath(
+		_finderPathWithPaginationCountByR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByR_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"resourcePrimKey", "status"}, false);
 
-		_finderPathWithPaginationFindByG_L = _createFinderPath(
+		_finderPathWithPaginationFindByG_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_L",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34212,17 +34201,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByG_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "latest"}, true);
 
-		_finderPathCountByG_L = _createFinderPath(
+		_finderPathCountByG_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "latest"}, false);
 
-		_finderPathWithPaginationFindByG_M = _createFinderPath(
+		_finderPathWithPaginationFindByG_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_M",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34231,17 +34220,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "main"}, true);
 
-		_finderPathWithoutPaginationFindByG_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "main"}, true);
 
-		_finderPathCountByG_M = _createFinderPath(
+		_finderPathCountByG_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"groupId", "main"}, false);
 
-		_finderPathWithPaginationFindByG_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -34250,17 +34239,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"groupId", "status"}, true);
 
-		_finderPathCountByG_S = _createFinderPath(
+		_finderPathCountByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"groupId", "status"}, false);
 
-		_finderPathWithPaginationFindByC_L = _createFinderPath(
+		_finderPathWithPaginationFindByC_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_L",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34269,17 +34258,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"companyId", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByC_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"companyId", "latest"}, true);
 
-		_finderPathCountByC_L = _createFinderPath(
+		_finderPathCountByC_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"companyId", "latest"}, false);
 
-		_finderPathWithPaginationFindByC_M = _createFinderPath(
+		_finderPathWithPaginationFindByC_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_M",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34288,17 +34277,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"companyId", "main"}, true);
 
-		_finderPathWithoutPaginationFindByC_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"companyId", "main"}, true);
 
-		_finderPathCountByC_M = _createFinderPath(
+		_finderPathCountByC_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"companyId", "main"}, false);
 
-		_finderPathWithPaginationFindByC_S = _createFinderPath(
+		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -34307,17 +34296,17 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"companyId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByC_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"companyId", "status"}, true);
 
-		_finderPathCountByC_S = _createFinderPath(
+		_finderPathCountByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"companyId", "status"}, false);
 
-		_finderPathWithPaginationFindByP_L = _createFinderPath(
+		_finderPathWithPaginationFindByP_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_L",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34326,22 +34315,22 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"parentResourcePrimKey", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByP_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByP_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByP_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"parentResourcePrimKey", "latest"}, true);
 
-		_finderPathCountByP_L = _createFinderPath(
+		_finderPathCountByP_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByP_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"parentResourcePrimKey", "latest"}, false);
 
-		_finderPathWithPaginationCountByP_L = _createFinderPath(
+		_finderPathWithPaginationCountByP_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByP_L",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"parentResourcePrimKey", "latest"}, false);
 
-		_finderPathWithPaginationFindByP_M = _createFinderPath(
+		_finderPathWithPaginationFindByP_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_M",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -34350,22 +34339,22 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"parentResourcePrimKey", "main"}, true);
 
-		_finderPathWithoutPaginationFindByP_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByP_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByP_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"parentResourcePrimKey", "main"}, true);
 
-		_finderPathCountByP_M = _createFinderPath(
+		_finderPathCountByP_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByP_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"parentResourcePrimKey", "main"}, false);
 
-		_finderPathWithPaginationCountByP_M = _createFinderPath(
+		_finderPathWithPaginationCountByP_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByP_M",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"parentResourcePrimKey", "main"}, false);
 
-		_finderPathWithPaginationFindByP_S = _createFinderPath(
+		_finderPathWithPaginationFindByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -34374,22 +34363,22 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"parentResourcePrimKey", "status"}, true);
 
-		_finderPathWithoutPaginationFindByP_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByP_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"parentResourcePrimKey", "status"}, true);
 
-		_finderPathCountByP_S = _createFinderPath(
+		_finderPathCountByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByP_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"parentResourcePrimKey", "status"}, false);
 
-		_finderPathWithPaginationCountByP_S = _createFinderPath(
+		_finderPathWithPaginationCountByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByP_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"parentResourcePrimKey", "status"}, false);
 
-		_finderPathFetchByR_G_V = _createFinderPath(
+		_finderPathFetchByR_G_V = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByR_G_V",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34397,7 +34386,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "version"}, true);
 
-		_finderPathCountByR_G_V = _createFinderPath(
+		_finderPathCountByR_G_V = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_G_V",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34405,7 +34394,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "version"}, false);
 
-		_finderPathWithPaginationFindByR_G_L = _createFinderPath(
+		_finderPathWithPaginationFindByR_G_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34414,7 +34403,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByR_G_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_G_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_G_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34422,7 +34411,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "latest"}, true);
 
-		_finderPathCountByR_G_L = _createFinderPath(
+		_finderPathCountByR_G_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_G_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34430,7 +34419,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "latest"}, false);
 
-		_finderPathWithPaginationCountByR_G_L = _createFinderPath(
+		_finderPathWithPaginationCountByR_G_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByR_G_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34438,7 +34427,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "latest"}, false);
 
-		_finderPathWithPaginationFindByR_G_M = _createFinderPath(
+		_finderPathWithPaginationFindByR_G_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34447,7 +34436,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "main"}, true);
 
-		_finderPathWithoutPaginationFindByR_G_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_G_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_G_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34455,7 +34444,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "main"}, true);
 
-		_finderPathCountByR_G_M = _createFinderPath(
+		_finderPathCountByR_G_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_G_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34463,7 +34452,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "main"}, false);
 
-		_finderPathWithPaginationCountByR_G_M = _createFinderPath(
+		_finderPathWithPaginationCountByR_G_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByR_G_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34471,7 +34460,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "main"}, false);
 
-		_finderPathWithPaginationFindByR_G_S = _createFinderPath(
+		_finderPathWithPaginationFindByR_G_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_G_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34480,7 +34469,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByR_G_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByR_G_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_G_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34488,7 +34477,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "status"}, true);
 
-		_finderPathCountByR_G_S = _createFinderPath(
+		_finderPathCountByR_G_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_G_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34496,7 +34485,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "status"}, false);
 
-		_finderPathWithPaginationCountByR_G_S = _createFinderPath(
+		_finderPathWithPaginationCountByR_G_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByR_G_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34504,7 +34493,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"resourcePrimKey", "groupId", "status"}, false);
 
-		_finderPathWithPaginationFindByG_P_L = _createFinderPath(
+		_finderPathWithPaginationFindByG_P_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34513,7 +34502,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByG_P_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_P_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34521,7 +34510,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "latest"}, true);
 
-		_finderPathCountByG_P_L = _createFinderPath(
+		_finderPathCountByG_P_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34529,7 +34518,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "latest"}, false);
 
-		_finderPathWithPaginationCountByG_P_L = _createFinderPath(
+		_finderPathWithPaginationCountByG_P_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_P_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34537,7 +34526,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "latest"}, false);
 
-		_finderPathWithPaginationFindByG_P_M = _createFinderPath(
+		_finderPathWithPaginationFindByG_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34546,7 +34535,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "main"}, true);
 
-		_finderPathWithoutPaginationFindByG_P_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34554,7 +34543,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "main"}, true);
 
-		_finderPathCountByG_P_M = _createFinderPath(
+		_finderPathCountByG_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34562,7 +34551,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "main"}, false);
 
-		_finderPathWithPaginationCountByG_P_M = _createFinderPath(
+		_finderPathWithPaginationCountByG_P_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_P_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34570,7 +34559,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "main"}, false);
 
-		_finderPathWithPaginationFindByG_P_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_P_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34579,7 +34568,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_P_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_P_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34587,7 +34576,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "status"}, true);
 
-		_finderPathCountByG_P_S = _createFinderPath(
+		_finderPathCountByG_P_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34595,7 +34584,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "status"}, false);
 
-		_finderPathWithPaginationCountByG_P_S = _createFinderPath(
+		_finderPathWithPaginationCountByG_P_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34603,7 +34592,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "parentResourcePrimKey", "status"}, false);
 
-		_finderPathWithPaginationFindByG_KBFI_UT = _createFinderPath(
+		_finderPathWithPaginationFindByG_KBFI_UT = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_KBFI_UT",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34612,7 +34601,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "urlTitle"}, true);
 
-		_finderPathWithoutPaginationFindByG_KBFI_UT = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_KBFI_UT = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_KBFI_UT",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34620,7 +34609,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "urlTitle"}, true);
 
-		_finderPathCountByG_KBFI_UT = _createFinderPath(
+		_finderPathCountByG_KBFI_UT = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_KBFI_UT",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34628,7 +34617,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "urlTitle"}, false);
 
-		_finderPathWithPaginationFindByG_KBFI_L = _createFinderPath(
+		_finderPathWithPaginationFindByG_KBFI_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_KBFI_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34637,7 +34626,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "latest"}, true);
 
-		_finderPathWithoutPaginationFindByG_KBFI_L = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_KBFI_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_KBFI_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34645,7 +34634,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "latest"}, true);
 
-		_finderPathCountByG_KBFI_L = _createFinderPath(
+		_finderPathCountByG_KBFI_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_KBFI_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34653,7 +34642,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "latest"}, false);
 
-		_finderPathWithPaginationFindByG_KBFI_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_KBFI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_KBFI_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34662,7 +34651,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_KBFI_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_KBFI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_KBFI_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34670,7 +34659,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "status"}, true);
 
-		_finderPathCountByG_KBFI_S = _createFinderPath(
+		_finderPathCountByG_KBFI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_KBFI_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34678,7 +34667,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "status"}, false);
 
-		_finderPathWithPaginationFindByG_S_L = _createFinderPath(
+		_finderPathWithPaginationFindByG_S_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S_L",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -34687,7 +34676,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "sections", "latest"}, true);
 
-		_finderPathWithPaginationCountByG_S_L = _createFinderPath(
+		_finderPathWithPaginationCountByG_S_L = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_S_L",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -34695,7 +34684,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "sections", "latest"}, false);
 
-		_finderPathWithPaginationFindByG_S_M = _createFinderPath(
+		_finderPathWithPaginationFindByG_S_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S_M",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -34704,7 +34693,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "sections", "main"}, true);
 
-		_finderPathWithPaginationCountByG_S_M = _createFinderPath(
+		_finderPathWithPaginationCountByG_S_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_S_M",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -34712,7 +34701,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "sections", "main"}, false);
 
-		_finderPathWithPaginationFindByG_S_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_S_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -34721,7 +34710,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "sections", "status"}, true);
 
-		_finderPathWithPaginationCountByG_S_S = _createFinderPath(
+		_finderPathWithPaginationCountByG_S_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_S_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -34729,7 +34718,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "sections", "status"}, false);
 
-		_finderPathWithPaginationFindByG_P_L_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_P_L_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_L_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34742,7 +34731,7 @@ public class KBArticlePersistenceImpl
 			},
 			true);
 
-		_finderPathWithoutPaginationFindByG_P_L_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_P_L_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P_L_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34753,7 +34742,7 @@ public class KBArticlePersistenceImpl
 			},
 			true);
 
-		_finderPathCountByG_P_L_S = _createFinderPath(
+		_finderPathCountByG_P_L_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_L_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34764,7 +34753,7 @@ public class KBArticlePersistenceImpl
 			},
 			false);
 
-		_finderPathWithPaginationCountByG_P_L_S = _createFinderPath(
+		_finderPathWithPaginationCountByG_P_L_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_P_L_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34775,7 +34764,7 @@ public class KBArticlePersistenceImpl
 			},
 			false);
 
-		_finderPathWithPaginationFindByG_KBFI_UT_ST = _createFinderPath(
+		_finderPathWithPaginationFindByG_KBFI_UT_ST = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_KBFI_UT_ST",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34785,7 +34774,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "urlTitle", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_KBFI_UT_ST = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_KBFI_UT_ST = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_KBFI_UT_ST",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34793,7 +34782,7 @@ public class KBArticlePersistenceImpl
 			},
 			new String[] {"groupId", "kbFolderId", "urlTitle", "status"}, true);
 
-		_finderPathCountByG_KBFI_UT_ST = _createFinderPath(
+		_finderPathCountByG_KBFI_UT_ST = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_KBFI_UT_ST",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34802,7 +34791,7 @@ public class KBArticlePersistenceImpl
 			new String[] {"groupId", "kbFolderId", "urlTitle", "status"},
 			false);
 
-		_finderPathWithPaginationCountByG_KBFI_UT_ST = _createFinderPath(
+		_finderPathWithPaginationCountByG_KBFI_UT_ST = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_KBFI_UT_ST",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -34817,12 +34806,6 @@ public class KBArticlePersistenceImpl
 		entityCache.removeCache(KBArticleImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -34908,36 +34891,13 @@ public class KBArticlePersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
 
-	static {
-		try {
-			Class.forName(KBPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class KBArticleModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -34986,6 +34946,16 @@ public class KBArticlePersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return KBArticleImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return KBArticleTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

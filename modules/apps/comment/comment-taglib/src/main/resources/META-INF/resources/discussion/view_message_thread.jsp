@@ -33,9 +33,7 @@ DiscussionComment rootDiscussionComment = discussion.getRootDiscussionComment();
 
 DiscussionRequestHelper discussionRequestHelper = new DiscussionRequestHelper(request);
 
-DiscussionPermission discussionPermission = CommentManagerUtil.getDiscussionPermission(discussionRequestHelper.getPermissionChecker());
-
-CommentTreeDisplayContext commentTreeDisplayContext = CommentDisplayContextProviderUtil.getCommentTreeDisplayContext(request, response, discussionPermission, discussionComment);
+CommentTreeDisplayContext commentTreeDisplayContext = CommentDisplayContextProviderUtil.getCommentTreeDisplayContext(request, response, CommentManagerUtil.getDiscussionPermission(discussionRequestHelper.getPermissionChecker()), discussionComment);
 
 Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 %>
@@ -95,18 +93,13 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 									<liferay-util:buffer
 										var="parentCommentUserBuffer"
 									>
-
-										<%
-										User parentMessageUser = parentDiscussionComment.getUser();
-										%>
-
 										<clay:content-row
 											noGutters="x"
 										>
 											<clay:content-col>
 												<liferay-ui:user-portrait
 													cssClass="sticker-lg"
-													user="<%= parentMessageUser %>"
+													user="<%= parentDiscussionComment.getUser() %>"
 												/>
 											</clay:content-col>
 

@@ -38,7 +38,7 @@ AUI.add(
 			'<span class="collapse-icon-closed"><span class="icon-caret-right"></span></span>';
 
 		var TPL_LAYOUTS_NAVBAR =
-			'<nav class="navbar navbar-default">' +
+			'<nav class="navbar navbar-collapse-absolute navbar-expand-md navbar-underline navigation-bar navigation-bar-light">' +
 			'<div class="collapse navbar-collapse">' +
 			'<ul class="nav navbar-nav">' +
 			'<li class="public {publicLayoutClass}"><a href="javascript:;">' +
@@ -216,6 +216,8 @@ AUI.add(
 
 				var container = instance.get('container');
 
+				var dataType = instance.get('dataType');
+
 				var templateResourceParameters = {
 					doAsGroupId: instance.get('doAsGroupId'),
 					fieldName: instance.get('name'),
@@ -225,11 +227,25 @@ AUI.add(
 					p_p_auth: container.getData('ddmAuthToken'),
 					p_p_id: Liferay.PortletKeys.DYNAMIC_DATA_MAPPING,
 					p_p_isolated: true,
-					p_p_resource_id: 'renderStructureField',
+					p_p_resource_id:
+						'/dynamic_data_mapping/render_structure_field',
 					p_p_state: 'pop_up',
 					portletNamespace: instance.get('portletNamespace'),
 					readOnly: instance.get('readOnly'),
 				};
+
+				if (dataType && dataType === 'html') {
+					delete templateResourceParameters.doAsGroupId;
+				}
+
+				var fields = instance._valueFields();
+
+				if (fields && fields.length) {
+					instance._removeDoAsGroupIdParam(
+						fields,
+						templateResourceParameters
+					);
+				}
 
 				var templateResourceURL = Liferay.Util.PortletURL.createResourceURL(
 					themeDisplay.getLayoutURL(),
@@ -237,6 +253,33 @@ AUI.add(
 				);
 
 				return templateResourceURL.toString();
+			},
+
+			_removeDoAsGroupIdParam(fields, templateResourceParameters) {
+				var instance = this;
+
+				fields.forEach((field) => {
+					if (!templateResourceParameters.doAsGroupId) {
+						return;
+					}
+
+					var dataType = field.get('dataType');
+
+					if (dataType && dataType === 'html') {
+						delete templateResourceParameters.doAsGroupId;
+
+						return;
+					}
+
+					var nestedFields = field.get('fields');
+
+					if (nestedFields && nestedFields.length) {
+						instance._removeDoAsGroupIdParam(
+							nestedFields,
+							templateResourceParameters
+						);
+					}
+				});
 			},
 
 			_valueDisplayLocale() {
@@ -812,7 +855,13 @@ AUI.add(
 							predefinedValue = field.predefinedValue[locale];
 						}
 
-						if (type === 'select' && predefinedValue === '[""]') {
+						var localizationMap = instance.get('localizationMap');
+
+						if (
+							type === 'select' &&
+							(predefinedValue === '[""]' ||
+								!A.Object.isEmpty(localizationMap))
+						) {
 							predefinedValue = '';
 						}
 					}
@@ -1048,24 +1097,28 @@ AUI.add(
 							selectorInput.attr('disabled', readOnly);
 						}
 
-						var checkboxInput = container.one(
-							'input[type="checkbox"]'
-						);
+						if (instance.getFieldDefinition().type === 'checkbox') {
+							var checkboxInput = container.one(
+								'input[type="checkbox"][name*="' +
+									instance.getFieldDefinition().name +
+									'"]'
+							);
 
-						if (checkboxInput) {
-							checkboxInput.attr('disabled', readOnly);
-						}
+							if (checkboxInput) {
+								checkboxInput.attr('disabled', readOnly);
+							}
 
-						var disableCheckboxInput = container.one(
-							'input[type="checkbox"][name$="disable"]'
-						);
+							var disableCheckboxInput = container.one(
+								'input[type="checkbox"][name$="disable"]'
+							);
 
-						if (
-							inputNode &&
-							disableCheckboxInput &&
-							disableCheckboxInput.get('checked')
-						) {
-							inputNode.attr('disabled', true);
+							if (
+								inputNode &&
+								disableCheckboxInput &&
+								disableCheckboxInput.get('checked')
+							) {
+								inputNode.attr('disabled', true);
+							}
 						}
 					}
 				},
@@ -1077,9 +1130,17 @@ AUI.add(
 
 					var siblings = instance.getRepeatedSiblings();
 
+					var parentField = siblings[0];
+
 					container
 						.one('.lfr-ddm-repeatable-delete-button')
-						.toggle(siblings.length > 1);
+						.toggle(
+							siblings.length > 1 &&
+								siblings.includes(instance) &&
+								!parentField
+									.get('container')
+									.compareTo(container)
+						);
 				},
 
 				syncValueUI() {
@@ -1127,10 +1188,6 @@ AUI.add(
 					var fields = instance.get('fields');
 
 					if (dataType || fields.length) {
-						instance.updateLocalizationMap(
-							instance.get('displayLocale')
-						);
-
 						fieldJSON.value = instance.get('localizationMap');
 
 						if (instance.get('localizable')) {
@@ -4060,6 +4117,22 @@ AUI.add(
 					instance.updateDDMFormInputValue();
 				},
 
+				_updateNestedLocalizationMaps(fields) {
+					var instance = this;
+
+					fields.forEach((field) => {
+						var nestedFields = field.get('fields');
+
+						field.updateLocalizationMap(field.get('displayLocale'));
+
+						if (nestedFields.length) {
+							instance._updateNestedLocalizationMaps(
+								nestedFields
+							);
+						}
+					});
+				},
+
 				_valueFormNode() {
 					var instance = this;
 
@@ -4504,6 +4577,10 @@ AUI.add(
 					var instance = this;
 
 					instance.toJSON();
+
+					var fields = instance.get('fields');
+
+					instance._updateNestedLocalizationMaps(fields);
 
 					instance.fillEmptyLocales(
 						instance,

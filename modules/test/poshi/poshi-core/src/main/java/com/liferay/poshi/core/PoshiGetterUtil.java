@@ -374,12 +374,14 @@ public class PoshiGetterUtil {
 	public static Element getRootElementFromURL(URL url, boolean addLineNumbers)
 		throws Exception {
 
-		String fileContent = FileUtil.read(url);
+		if (Dom4JUtil.isValidDocument(url)) {
+			return _preparePoshiXMLElement(url, addLineNumbers);
+		}
+
 		String filePath = url.getFile();
 
-		if (fileContent.endsWith("}") &&
-			(filePath.endsWith(".function") || filePath.endsWith(".macro") ||
-			 filePath.endsWith(".testcase"))) {
+		if (filePath.endsWith(".function") || filePath.endsWith(".macro") ||
+			filePath.endsWith(".testcase")) {
 
 			PoshiNode<?, ?> poshiNode = PoshiNodeFactory.newPoshiNodeFromFile(
 				url);
@@ -391,16 +393,49 @@ public class PoshiGetterUtil {
 
 		if (filePath.endsWith(".prose")) {
 			PoshiProseDefinition poshiProseDefinition =
-				new PoshiProseDefinition(
-					getFileNameFromFilePath(filePath), fileContent);
+				new PoshiProseDefinition(url);
 
-			fileContent = Dom4JUtil.format(poshiProseDefinition.toElement());
+			return _preparePoshiXMLElement(
+				url, Dom4JUtil.format(poshiProseDefinition.toElement()),
+				addLineNumbers);
 		}
+
+		throw new Exception("Unable to parse Poshi file: " + filePath);
+	}
+
+	public static String getUtilityClassName(String simpleClassName) {
+		if (_utilityClassMap.containsKey(simpleClassName)) {
+			return _utilityClassMap.get(simpleClassName);
+		}
+
+		throw new IllegalArgumentException(
+			simpleClassName + " is not a valid simple class name");
+	}
+
+	public static boolean isValidUtilityClass(String className) {
+		if (_utilityClassMap.containsValue(className)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private static Element _preparePoshiXMLElement(
+			URL url, boolean addLineNumbers)
+		throws Exception {
+
+		return _preparePoshiXMLElement(url, FileUtil.read(url), addLineNumbers);
+	}
+
+	private static Element _preparePoshiXMLElement(
+			URL url, String fileContent, boolean addLineNumbers)
+		throws Exception {
 
 		BufferedReader bufferedReader = new BufferedReader(
 			new StringReader(fileContent));
 
 		boolean cdata = false;
+		String filePath = url.getFile();
 		String line = null;
 		int lineNumber = 1;
 		StringBuilder sb = new StringBuilder();
@@ -499,23 +534,6 @@ public class PoshiGetterUtil {
 		}
 
 		return document.getRootElement();
-	}
-
-	public static String getUtilityClassName(String simpleClassName) {
-		if (_utilityClassMap.containsKey(simpleClassName)) {
-			return _utilityClassMap.get(simpleClassName);
-		}
-
-		throw new IllegalArgumentException(
-			simpleClassName + " is not a valid simple class name");
-	}
-
-	public static boolean isValidUtilityClass(String className) {
-		if (_utilityClassMap.containsValue(className)) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private static final Pattern _namespacedClassCommandNamePattern =

@@ -14,6 +14,7 @@
 
 package com.liferay.dispatch.service.test.util;
 
+import com.liferay.dispatch.executor.DispatchTaskClusterMode;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -41,10 +42,11 @@ public class DispatchTriggerTestUtil {
 
 		return _randomDispatchTrigger(
 			RandomTestUtil.randomBoolean(), dispatchTrigger.getCompanyId(),
-			_randomCronExpression(), dispatchTrigger.getTaskType(),
-			dispatchTrigger.getTaskSettingsUnicodeProperties(),
-			_randomName(dispatchTrigger.getUserId(), nameSalt),
-			dispatchTrigger.isSystem(), dispatchTrigger.getUserId());
+			CronExpressionUtil.getCronExpression(), _randomTaskClusterMode(),
+			dispatchTrigger.getDispatchTaskExecutorType(),
+			dispatchTrigger.getDispatchTaskSettingsUnicodeProperties(),
+			_randomName(nameSalt), dispatchTrigger.isSystem(),
+			dispatchTrigger.getUserId());
 	}
 
 	public static DispatchTrigger randomDispatchTrigger(
@@ -54,20 +56,17 @@ public class DispatchTriggerTestUtil {
 
 		return _randomDispatchTrigger(
 			RandomTestUtil.randomBoolean(), user.getCompanyId(),
-			_randomCronExpression(), RandomTestUtil.randomString(20),
+			CronExpressionUtil.getCronExpression(), 0,
+			RandomTestUtil.randomString(20),
 			RandomTestUtil.randomUnicodeProperties(
 				RandomTestUtil.randomInt(10, 30), 32, 64),
-			_randomName(user.getUserId(), nameSalt),
-			RandomTestUtil.randomBoolean(), user.getUserId());
-	}
-
-	private static String _randomCronExpression() {
-		return String.format(
-			"0 0 0 ? %d/2 * 2077", RandomTestUtil.randomInt(1, 12));
+			_randomName(nameSalt), RandomTestUtil.randomBoolean(),
+			user.getUserId());
 	}
 
 	private static DispatchTrigger _randomDispatchTrigger(
-		boolean active, long companyId, String cronExpression, String taskType,
+		boolean active, long companyId, String cronExpression,
+		int dispatchTaskClusterMode, String dispatchTaskExecutorType,
 		UnicodeProperties unicodeProperties, String name, boolean system,
 		long userId) {
 
@@ -101,6 +100,28 @@ public class DispatchTriggerTestUtil {
 			@Override
 			public String getCronExpression() {
 				return _cronExpression;
+			}
+
+			@Override
+			public int getDispatchTaskClusterMode() {
+				return _dispatchTaskClusterMode;
+			}
+
+			@Override
+			public String getDispatchTaskExecutorType() {
+				return _dispatchTaskExecutorType;
+			}
+
+			@Override
+			public String getDispatchTaskSettings() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public UnicodeProperties
+				getDispatchTaskSettingsUnicodeProperties() {
+
+				return _dispatchTaskSettingsUnicodeProperties;
 			}
 
 			@Override
@@ -149,6 +170,11 @@ public class DispatchTriggerTestUtil {
 			}
 
 			@Override
+			public boolean getOverlapAllowed() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
 			public long getPrimaryKey() {
 				return 0;
 			}
@@ -166,21 +192,6 @@ public class DispatchTriggerTestUtil {
 			@Override
 			public boolean getSystem() {
 				return _system;
-			}
-
-			@Override
-			public String getTaskSettings() {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public UnicodeProperties getTaskSettingsUnicodeProperties() {
-				return _taskSettingsUnicodeProperties;
-			}
-
-			@Override
-			public String getTaskType() {
-				return _taskType;
 			}
 
 			@Override
@@ -229,6 +240,11 @@ public class DispatchTriggerTestUtil {
 			}
 
 			@Override
+			public boolean isOverlapAllowed() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
 			public boolean isSystem() {
 				return _system;
 			}
@@ -265,6 +281,32 @@ public class DispatchTriggerTestUtil {
 
 			@Override
 			public void setCronExpression(String cronExpression) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void setDispatchTaskClusterMode(
+				int dispatchTaskClusterMode) {
+
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void setDispatchTaskExecutorType(
+				String dispatchTaskExecutorType) {
+
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void setDispatchTaskSettings(String dispatchTaskSettings) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public void setDispatchTaskSettingsUnicodeProperties(
+				UnicodeProperties dispatchTaskSettingsUnicodeProperties) {
+
 				throw new UnsupportedOperationException();
 			}
 
@@ -323,6 +365,11 @@ public class DispatchTriggerTestUtil {
 			}
 
 			@Override
+			public void setOverlapAllowed(boolean overlapAllowed) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
 			public void setPrimaryKey(long primaryKey) {
 				throw new UnsupportedOperationException();
 			}
@@ -339,23 +386,6 @@ public class DispatchTriggerTestUtil {
 
 			@Override
 			public void setSystem(boolean system) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public void setTaskSettings(String taskSettings) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public void setTaskSettingsUnicodeProperties(
-				UnicodeProperties taskSettingsUnicodeProperties) {
-
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public void setTaskType(String taskType) {
 				throw new UnsupportedOperationException();
 			}
 
@@ -397,22 +427,37 @@ public class DispatchTriggerTestUtil {
 			private final boolean _active = active;
 			private final long _companyId = companyId;
 			private final String _cronExpression = cronExpression;
+			private final int _dispatchTaskClusterMode =
+				dispatchTaskClusterMode;
+			private final String _dispatchTaskExecutorType =
+				dispatchTaskExecutorType;
+			private final UnicodeProperties
+				_dispatchTaskSettingsUnicodeProperties = unicodeProperties;
 			private final String _name = name;
 			private final boolean _system = system;
-			private final UnicodeProperties _taskSettingsUnicodeProperties =
-				unicodeProperties;
-			private final String _taskType = taskType;
 			private final long _userId = userId;
 
 		};
 	}
 
-	private static String _randomName(long userId, int nameSalt) {
+	private static String _randomName(int nameSalt) {
 		if (nameSalt < 0) {
 			return null;
 		}
 
-		return String.format("TEST-TRIGGER-%06d-%06d", userId, nameSalt);
+		return String.format("TEST-TRIGGER-%06d", nameSalt);
+	}
+
+	private static int _randomTaskClusterMode() {
+		DispatchTaskClusterMode[] dispatchTaskClusterModes =
+			DispatchTaskClusterMode.values();
+
+		DispatchTaskClusterMode dispatchTaskClusterMode =
+			dispatchTaskClusterModes
+				[RandomTestUtil.randomInt(
+					0, dispatchTaskClusterModes.length - 1)];
+
+		return dispatchTaskClusterMode.getMode();
 	}
 
 }

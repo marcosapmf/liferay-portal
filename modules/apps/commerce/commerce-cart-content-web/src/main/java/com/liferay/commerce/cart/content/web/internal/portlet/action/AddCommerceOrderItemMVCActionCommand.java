@@ -62,7 +62,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_CART_CONTENT,
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_CART_CONTENT_MINI,
-		"mvc.command.name=addCommerceOrderItem"
+		"mvc.command.name=/commerce_cart_content/add_commerce_order_item"
 	},
 	service = MVCActionCommand.class
 )
@@ -81,8 +81,6 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 		HttpServletResponse httpServletResponse =
 			_portal.getHttpServletResponse(actionResponse);
 
-		long cpDefinitionId = ParamUtil.getLong(
-			actionRequest, "cpDefinitionId");
 		int quantity = ParamUtil.getInteger(actionRequest, "quantity");
 		String ddmFormValues = ParamUtil.getString(
 			actionRequest, "ddmFormValues");
@@ -90,6 +88,9 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 		long cpInstanceId = ParamUtil.getLong(actionRequest, "cpInstanceId");
 
 		if (cpInstanceId == 0) {
+			long cpDefinitionId = ParamUtil.getLong(
+				actionRequest, "cpDefinitionId");
+
 			CPInstance cpInstance = _cpInstanceHelper.fetchCPInstance(
 				cpDefinitionId, ddmFormValues);
 
@@ -117,8 +118,9 @@ public class AddCommerceOrderItemMVCActionCommand extends BaseMVCActionCommand {
 
 			CommerceOrderItem commerceOrderItem =
 				_commerceOrderItemService.upsertCommerceOrderItem(
-					commerceOrder.getCommerceOrderId(), cpInstanceId, quantity,
-					0, ddmFormValues, commerceContext, serviceContext);
+					commerceOrder.getCommerceOrderId(), cpInstanceId,
+					ddmFormValues, quantity, 0, commerceContext,
+					serviceContext);
 
 			int commerceOrderItemsQuantity =
 				_commerceOrderItemService.getCommerceOrderItemsQuantity(

@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -87,7 +88,7 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(
@@ -121,7 +122,7 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(
@@ -213,7 +214,7 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(
@@ -259,30 +260,21 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 			CommercePriceEntry commercePriceEntry)
 		throws Exception {
 
-		CommercePriceList commercePriceList =
-			commercePriceEntry.getCommercePriceList();
-
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
 			addAction(
-				"UPDATE", commercePriceList.getCommercePriceListId(),
-				"deletePriceEntry", commercePriceEntry.getUserId(),
-				"com.liferay.commerce.price.list.model.CommercePriceList",
-				commercePriceList.getGroupId())
+				"UPDATE", commercePriceEntry.getCommercePriceEntryId(),
+				"deletePriceEntry", _commercePriceEntryModelResourcePermission)
 		).put(
 			"get",
 			addAction(
-				"VIEW", commercePriceList.getCommercePriceListId(),
-				"getPriceEntry", commercePriceEntry.getUserId(),
-				"com.liferay.commerce.price.list.model.CommercePriceList",
-				commercePriceList.getGroupId())
+				"VIEW", commercePriceEntry.getCommercePriceEntryId(),
+				"getPriceEntry", _commercePriceEntryModelResourcePermission)
 		).put(
 			"update",
 			addAction(
-				"UPDATE", commercePriceList.getCommercePriceListId(),
-				"patchPriceEntry", commercePriceEntry.getUserId(),
-				"com.liferay.commerce.price.list.model.CommercePriceList",
-				commercePriceList.getGroupId())
+				"UPDATE", commercePriceEntry.getCommercePriceEntryId(),
+				"patchPriceEntry", _commercePriceEntryModelResourcePermission)
 		).build();
 	}
 
@@ -291,9 +283,8 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 			return new DateConfig(CalendarFactoryUtil.getCalendar(timeZone));
 		}
 
-		long time = date.getTime();
-
-		Calendar calendar = CalendarFactoryUtil.getCalendar(time, timeZone);
+		Calendar calendar = CalendarFactoryUtil.getCalendar(
+			date.getTime(), timeZone);
 
 		return new DateConfig(calendar);
 	}
@@ -308,9 +299,8 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 			return new DateConfig(expirationCalendar);
 		}
 
-		long time = date.getTime();
-
-		Calendar calendar = CalendarFactoryUtil.getCalendar(time, timeZone);
+		Calendar calendar = CalendarFactoryUtil.getCalendar(
+			date.getTime(), timeZone);
 
 		return new DateConfig(calendar);
 	}
@@ -446,9 +436,9 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryService.upsertCommercePriceEntry(
+				priceEntry.getExternalReferenceCode(),
 				GetterUtil.getLong(priceEntry.getPriceEntryId()), cProductId,
 				cpInstanceUuid, commercePriceList.getCommercePriceListId(),
-				priceEntry.getExternalReferenceCode(),
 				BigDecimal.valueOf(priceEntry.getPrice()),
 				GetterUtil.getBoolean(priceEntry.getDiscountDiscovery(), true),
 				priceEntry.getDiscountLevel1(), priceEntry.getDiscountLevel2(),
@@ -470,6 +460,12 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 	}
 
 	private static final EntityModel _entityModel = new PriceEntryEntityModel();
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.price.list.model.CommercePriceEntry)"
+	)
+	private ModelResourcePermission<CommercePriceEntry>
+		_commercePriceEntryModelResourcePermission;
 
 	@Reference
 	private CommercePriceEntryService _commercePriceEntryService;

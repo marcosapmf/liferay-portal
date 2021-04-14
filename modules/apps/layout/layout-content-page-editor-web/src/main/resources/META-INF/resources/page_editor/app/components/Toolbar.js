@@ -174,8 +174,12 @@ function ToolbarBody() {
 	}
 
 	return (
-		<ClayLayout.ContainerFluid onClick={deselectItem} ref={dropClearRef}>
-			<ul className="navbar-nav responsive-mode" onClick={deselectItem}>
+		<ClayLayout.ContainerFluid
+			className="page-editor__theme-adapter-buttons"
+			onClick={deselectItem}
+			ref={dropClearRef}
+		>
+			<ul className="navbar-nav start" onClick={deselectItem}>
 				{config.toolbarPlugins.map(
 					({loadingPlaceholder, pluginEntryPoint}) => {
 						return (
@@ -217,19 +221,29 @@ function ToolbarBody() {
 							/>
 						</li>
 					)}
+			</ul>
+
+			<ul className="middle navbar-nav" onClick={deselectItem}>
 				<li className="nav-item">
 					<ViewportSizeSelector
-						onSizeSelected={(size) =>
-							dispatch(Actions.switchViewportSize({size}))
-						}
+						onSizeSelected={(size) => {
+							if (size !== selectedViewportSize) {
+								dispatch(Actions.switchViewportSize({size}));
+							}
+						}}
 						selectedSize={selectedViewportSize}
 					/>
 				</li>
 			</ul>
 
-			<ul className="navbar-nav" onClick={deselectItem}>
-				<NetworkStatusBar {...network} />
-				<Undo onRedo={onRedo} onUndo={onUndo} />
+			<ul className="end navbar-nav" onClick={deselectItem}>
+				<div className="nav-item">
+					<NetworkStatusBar {...network} />
+				</div>
+
+				<div className="nav-item">
+					<Undo onRedo={onRedo} onUndo={onUndo} />
+				</div>
 
 				<li className="nav-item">
 					<EditModeSelector />
@@ -237,7 +251,7 @@ function ToolbarBody() {
 
 				<li className="nav-item">
 					<ClayButtonWithIcon
-						className="btn btn-secondary mr-3"
+						className="btn btn-secondary"
 						displayType="secondary"
 						onClick={() => setOpenPreviewModal(true)}
 						small
@@ -258,7 +272,7 @@ function ToolbarBody() {
 							/>
 
 							<ClayButton
-								className="btn btn-secondary mr-3"
+								className="btn btn-secondary"
 								displayType="secondary"
 								onClick={handleDiscardVariant}
 								small

@@ -27,13 +27,13 @@ definition {
 		}
 
 		if ((isSet(installXuggler)) && (IsElementNotPresent(locator1 = "ServerAdministrationExternalServices#XUGGLER_ENABLED_CHECKBOX"))) {
-			Panel.expandPanel(panel = "Enabling Xuggler provides video conversion functionality.");
+			Panel.expandUnstyledPanel(panel = "Enabling Xuggler provides video conversion functionality.");
 
 			AssertClick(
 				locator1 = "ServerAdministrationExternalServices#XUGGLER_INSTALL_BUTTON",
 				value1 = "Install");
 
-			Panel.expandPanel(panel = "Enabling Xuggler provides video conversion functionality.");
+			Panel.expandUnstyledPanel(panel = "Enabling Xuggler provides video conversion functionality.");
 
 			AssertTextNotEquals(
 				locator1 = "Message#INFO",
@@ -140,6 +140,13 @@ definition {
 			locator1 = "ServerAdministrationScript#LANGUAGE_SELECT",
 			value1 = "${language}");
 
+		if ("${htmlOutput}" == "true") {
+			Select(
+				key_selectFieldLabel = "Output",
+				locator1 = "Select#ANY",
+				value1 = "HTML");
+		}
+
 		Type(
 			locator1 = "ServerAdministrationScript#SCRIPT_TEXT",
 			value1 = "${script}");
@@ -170,7 +177,9 @@ definition {
 	}
 
 	macro openServerAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_server_admin_web_portlet_ServerAdminPortlet");
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_server_admin_web_portlet_ServerAdminPortlet");
 	}
 
 	macro tearDownDMFileUploadSettings {

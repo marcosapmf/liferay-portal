@@ -161,12 +161,9 @@ public class CommerceTestUtil {
 
 		CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
-				serviceContext);
+				ServiceContextTestUtil.getServiceContext(groupId));
 
 		CommerceChannel commerceChannel =
 			CommerceChannelLocalServiceUtil.getCommerceChannelByOrderGroupId(
@@ -227,9 +224,7 @@ public class CommerceTestUtil {
 
 		CPInstance cpInstance = CPTestUtil.addCPInstanceWithRandomSku(groupId);
 
-		BigDecimal price = BigDecimal.valueOf(RandomTestUtil.randomDouble());
-
-		cpInstance.setPrice(price);
+		cpInstance.setPrice(BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		if (paymentSubscription) {
 			cpInstance.setOverrideSubscriptionInfo(true);
@@ -250,12 +245,9 @@ public class CommerceTestUtil {
 
 		CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
-				serviceContext);
+				ServiceContextTestUtil.getServiceContext(groupId));
 
 		CommerceChannel commerceChannel =
 			CommerceChannelLocalServiceUtil.getCommerceChannelByOrderGroupId(
@@ -392,7 +384,7 @@ public class CommerceTestUtil {
 				commerceOrder.getGroupId());
 
 		return CommerceOrderItemLocalServiceUtil.addCommerceOrderItem(
-			commerceOrderId, cpInstanceId, quantity, 0, null, commerceContext,
+			commerceOrderId, cpInstanceId, null, quantity, 0, commerceContext,
 			serviceContext);
 	}
 

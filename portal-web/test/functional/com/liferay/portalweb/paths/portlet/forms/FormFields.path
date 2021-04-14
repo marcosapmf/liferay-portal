@@ -24,6 +24,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FIELD_REMOVE</td>
+	<td>xpath=(//div[contains(@class,'ddm-field')][contains(@data-field-name,'${key_fieldReference}')][not(contains(@class,'container'))])[${key_index}]//button[contains(@class,'ddm-form-field-repeatable-delete-button')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FIELD_NAME_EDIT</td>
 	<td>//input[contains(@name,'name') and contains(@class,'ddm-field-text')]</td>
 	<td></td>
@@ -72,6 +77,27 @@
 <tr>
 	<td>CHECKBOX_OPTION_LABEL</td>
 	<td>//div[contains(@data-field-name,'${key_fieldName}')]//label[contains(.,'${key_checkboxOption}')]/input[@type='checkbox' and contains(@name,'${key_fieldName}')]/../span</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
+<!--COLOR-->
+<tr>
+	<td>COLOR_FIELD</td>
+	<td>//div[contains(@data-field-name,'${key_fieldName}')]//div[contains(@class,'color-picker')]//div[contains(@class,'color')]//input[@type='text']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLOR_PICKER</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div[contains(@class,'color-picker')]//button[contains(@class,'clay-color-btn')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLOR_SWATCH_ITEM</td>
+	<td>//div[contains(@class,'dropdown-menu') and contains(@class,'show')]//button[contains(@class,'color')][@*='${key_colorSwatchItem}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -166,6 +192,11 @@
 <tr>
 	<td>GRID_OPTIONS_OPTION_NAME_FIELD</td>
 	<td>//div[contains(@data-field-name,'${key_gridField}sOption')]/../../div[${key_rowNumber}]//div[contains(@class, 'key-value-editor')] | //div[contains(@class,'form-group') and contains(.//label, '${key_gridField}')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'key-value-input')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GRID_OPTIONS_OPTION_REFERENCE_FIELD</td>
+	<td>//div[contains(@data-field-name,'${key_gridField}sOption')]/../../div[${key_rowNumber}]//div[contains(@class, 'key-value-editor')] | //div[contains(@class,'form-group') and contains(.//label, '${key_gridField}')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'key-value-reference-input')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -389,7 +420,7 @@
 </tr>
 <tr>
 	<td>CAPTCHA_LABEL</td>
-	<td>//div[@class='taglib-captcha']//label[@class='control-label']</td>
+	<td>//div[@class='taglib-captcha']//label[contains(@class,'control-label')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -422,6 +453,11 @@
 <tr>
 	<td>UPLOAD_FIELD</td>
 	<td>//div[contains(@data-field-name,'${key_fieldName}')]//input[contains(@id,'inputFile')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>UPLOAD_FIELD_GUEST</td>
+	<td>//div[contains(@data-field-name,'${key_fieldName}')]//input[@type='file']</td>
 	<td></td>
 </tr>
 <tr>

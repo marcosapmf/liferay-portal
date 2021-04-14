@@ -107,6 +107,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -198,7 +199,11 @@ import org.osgi.service.component.annotations.Reference;
 />
 
 <#if dependencyInjectorDS>
-	@Component(service = ${entity.name}Persistence.class)
+	<#if serviceBuilder.isVersionGTE_7_4_0()>
+		@Component(service = {${entity.name}Persistence.class, BasePersistence.class})
+	<#else>
+		@Component(service = ${entity.name}Persistence.class)
+	</#if>
 
 	<#assign
 		columnBitmaskCacheEnabled = "_columnBitmaskEnabled"
@@ -387,9 +392,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	public void clearCache() {
 		${entityCache}.clearCache(${entity.name}Impl.class);
 
-		${finderCache}.clearCache(FINDER_CLASS_NAME_ENTITY);
-		${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		<#if serviceBuilder.isVersionGTE_7_4_0()>
+			${finderCache}.clearCache(${entity.name}Impl.class);
+		<#else>
+			${finderCache}.clearCache(FINDER_CLASS_NAME_ENTITY);
+			${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+			${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		</#if>
 	}
 
 	/**
@@ -439,9 +448,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		@Override
 	</#if>
 	public void clearCache(Set<Serializable> primaryKeys) {
-		${finderCache}.clearCache(FINDER_CLASS_NAME_ENTITY);
-		${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		<#if serviceBuilder.isVersionGTE_7_4_0()>
+			${finderCache}.clearCache(${entity.name}Impl.class);
+		<#else>
+			${finderCache}.clearCache(FINDER_CLASS_NAME_ENTITY);
+			${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+			${finderCache}.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		</#if>
 
 		for (Serializable primaryKey : primaryKeys) {
 			${entityCache}.removeResult(
@@ -476,8 +489,16 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					</#list>
 				};
 
-				${finderCache}.putResult(_finderPathCountBy${uniqueEntityFinder.name}, args, Long.valueOf(1), false);
-				${finderCache}.putResult(_finderPathFetchBy${uniqueEntityFinder.name}, args, ${entity.variableName}ModelImpl, false);
+				${finderCache}.putResult(_finderPathCountBy${uniqueEntityFinder.name}, args, Long.valueOf(1)
+					<#if serviceBuilder.isVersionLTE_7_3_0()>
+						, false
+					</#if>
+					);
+				${finderCache}.putResult(_finderPathFetchBy${uniqueEntityFinder.name}, args, ${entity.variableName}ModelImpl
+					<#if serviceBuilder.isVersionLTE_7_3_0()>
+						, false
+					</#if>
+					);
 			</#list>
 		}
 
@@ -1420,7 +1441,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		List<${entity.name}> list = null;
 
 		if (${useCache}) {
-			list = (List<${entity.name}>)${finderCache}.getResult(finderPath, finderArgs, this);
+			list = (List<${entity.name}>)${finderCache}.getResult(finderPath, finderArgs
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					, this
+				</#if>
+				);
 		}
 
 		if (list == null) {
@@ -1498,10 +1523,18 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			Long count = null;
 
 			if (productionMode) {
-				count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY
+					<#if serviceBuilder.isVersionLTE_7_3_0()>
+						, this
+					</#if>
+					);
 			}
 		<#else>
-			Long count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			Long count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY
+					<#if serviceBuilder.isVersionLTE_7_3_0()>
+						, this
+					</#if>
+					);
 		</#if>
 
 		if (count == null) {
@@ -2007,7 +2040,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		public long countAncestors(${entity.name} ${entity.variableName}) {
 			Object[] finderArgs = new Object[] {${entity.variableName}.get${scopeEntityColumn.methodName}(), ${entity.variableName}.getLeft${pkEntityColumn.methodName}(), ${entity.variableName}.getRight${pkEntityColumn.methodName}()};
 
-			Long count = (Long)${finderCache}.getResult(_finderPathWithPaginationCountAncestors, finderArgs, this);
+			Long count = (Long)${finderCache}.getResult(_finderPathWithPaginationCountAncestors, finderArgs
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					, this
+				</#if>
+				);
 
 			if (count == null) {
 				try {
@@ -2031,7 +2068,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		public long countDescendants(${entity.name} ${entity.variableName}) {
 			Object[] finderArgs = new Object[] {${entity.variableName}.get${scopeEntityColumn.methodName}(), ${entity.variableName}.getLeft${pkEntityColumn.methodName}(), ${entity.variableName}.getRight${pkEntityColumn.methodName}()};
 
-			Long count = (Long)${finderCache}.getResult(_finderPathWithPaginationCountDescendants, finderArgs, this);
+			Long count = (Long)${finderCache}.getResult(_finderPathWithPaginationCountDescendants, finderArgs
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					, this
+				</#if>
+				);
 
 			if (count == null) {
 				try {
@@ -2055,7 +2096,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		public List<${entity.name}> getAncestors(${entity.name} ${entity.variableName}) {
 			Object[] finderArgs = new Object[] {${entity.variableName}.get${scopeEntityColumn.methodName}(), ${entity.variableName}.getLeft${pkEntityColumn.methodName}(), ${entity.variableName}.getRight${pkEntityColumn.methodName}()};
 
-			List<${entity.name}> list = (List<${entity.name}>)${finderCache}.getResult(_finderPathWithPaginationGetAncestors, finderArgs, this);
+			List<${entity.name}> list = (List<${entity.name}>)${finderCache}.getResult(_finderPathWithPaginationGetAncestors, finderArgs
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					, this
+				</#if>
+				);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (${entity.name} temp${entity.name} : list) {
@@ -2091,7 +2136,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		public List<${entity.name}> getDescendants(${entity.name} ${entity.variableName}) {
 			Object[] finderArgs = new Object[] {${entity.variableName}.get${scopeEntityColumn.methodName}(), ${entity.variableName}.getLeft${pkEntityColumn.methodName}(), ${entity.variableName}.getRight${pkEntityColumn.methodName}()};
 
-			List<${entity.name}> list = (List<${entity.name}>)${finderCache}.getResult(_finderPathWithPaginationGetDescendants, finderArgs, this);
+			List<${entity.name}> list = (List<${entity.name}>)${finderCache}.getResult(_finderPathWithPaginationGetDescendants, finderArgs
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					, this
+				</#if>
+				);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (${entity.name} temp${entity.name} : list) {
@@ -2250,15 +2299,25 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					_bundleContext = bundle.getBundleContext();
 				</#if>
 
-				_argumentsResolverServiceRegistration = _bundleContext.registerService(ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver(), MapUtil.singletonDictionary("model.class.name", ${entity.name}.class.getName()));
+				_argumentsResolverServiceRegistration = _bundleContext.registerService(
+					ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver(),
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						new HashMapDictionary<>()
+					<#else>
+						MapUtil.singletonDictionary("model.class.name", ${entity.name}.class.getName())
+					</#if>
+				);
 			<#else>
 				Registry registry = RegistryUtil.getRegistry();
 
 				_argumentsResolverServiceRegistration = registry.registerService(
-					ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver(),
-					HashMapBuilder.<String, Object>put(
-						"model.class.name", ${entity.name}.class.getName()
-					).build());
+					ArgumentsResolver.class, new ${entity.name}ModelArgumentsResolver()
+					<#if serviceBuilder.isVersionLTE_7_3_0()>
+						,
+						HashMapBuilder.<String, Object>put(
+							"model.class.name", ${entity.name}.class.getName()
+						).build()
+					</#if>);
 			</#if>
 		</#if>
 
@@ -2281,7 +2340,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		</#list>
 
 		_finderPathWithPaginationFindAll =
-			<#if serviceBuilder.isVersionGTE_7_3_0()>
+			<#if serviceBuilder.isVersionGTE_7_4_0()>
+				new FinderPath(
+			<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 				_createFinderPath(
 			<#else>
 				new FinderPath(
@@ -2297,7 +2358,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			);
 
 		_finderPathWithoutPaginationFindAll =
-			<#if serviceBuilder.isVersionGTE_7_3_0()>
+			<#if serviceBuilder.isVersionGTE_7_4_0()>
+				new FinderPath(
+			<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 				_createFinderPath(
 			<#else>
 				new FinderPath(
@@ -2313,7 +2376,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			);
 
 		_finderPathCountAll =
-			<#if serviceBuilder.isVersionGTE_7_3_0()>
+			<#if serviceBuilder.isVersionGTE_7_4_0()>
+				new FinderPath(
+			<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 				_createFinderPath(
 			<#else>
 				new FinderPath(
@@ -2330,7 +2395,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 		<#if entity.isHierarchicalTree()>
 			_finderPathWithPaginationCountAncestors =
-				<#if serviceBuilder.isVersionGTE_7_3_0()>
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					new FinderPath(
+				<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 					_createFinderPath(
 				<#else>
 					new FinderPath(
@@ -2347,7 +2414,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				);
 
 			_finderPathWithPaginationCountDescendants =
-				<#if serviceBuilder.isVersionGTE_7_3_0()>
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					new FinderPath(
+				<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 					_createFinderPath(
 				<#else>
 					new FinderPath(
@@ -2364,7 +2433,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				);
 
 			_finderPathWithPaginationGetAncestors =
-				<#if serviceBuilder.isVersionGTE_7_3_0()>
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					new FinderPath(
+				<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 					_createFinderPath(
 				<#else>
 					new FinderPath(
@@ -2381,7 +2452,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 				);
 
 			_finderPathWithPaginationGetDescendants =
-				<#if serviceBuilder.isVersionGTE_7_3_0()>
+				<#if serviceBuilder.isVersionGTE_7_4_0()>
+					new FinderPath(
+				<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 					_createFinderPath(
 				<#else>
 					new FinderPath(
@@ -2403,7 +2476,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 			<#if entityFinder.isCollection()>
 				_finderPathWithPaginationFindBy${entityFinder.name} =
-					<#if serviceBuilder.isVersionGTE_7_3_0()>
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						new FinderPath(
+					<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 						_createFinderPath(
 					<#else>
 						new FinderPath(
@@ -2437,7 +2512,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				<#if !entityFinder.hasCustomComparator()>
 					_finderPathWithoutPaginationFindBy${entityFinder.name} =
-						<#if serviceBuilder.isVersionGTE_7_3_0()>
+						<#if serviceBuilder.isVersionGTE_7_4_0()>
+							new FinderPath(
+						<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 							_createFinderPath(
 						<#else>
 							new FinderPath(
@@ -2498,7 +2575,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 			<#if !entityFinder.isCollection() || entityFinder.isUnique()>
 				_finderPathFetchBy${entityFinder.name} =
-					<#if serviceBuilder.isVersionGTE_7_3_0()>
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						new FinderPath(
+					<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 						_createFinderPath(
 					<#else>
 						new FinderPath(
@@ -2546,7 +2625,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 			<#if !entityFinder.hasCustomComparator()>
 				_finderPathCountBy${entityFinder.name} =
-					<#if serviceBuilder.isVersionGTE_7_3_0()>
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						new FinderPath(
+					<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 						_createFinderPath(
 					<#else>
 						new FinderPath(
@@ -2583,7 +2664,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 			<#if entityFinder.hasArrayableOperator() || entityFinder.hasCustomComparator()>
 				_finderPathWithPaginationCountBy${entityFinder.name} =
-					<#if serviceBuilder.isVersionGTE_7_3_0()>
+					<#if serviceBuilder.isVersionGTE_7_4_0()>
+						new FinderPath(
+					<#elseif serviceBuilder.isVersionGTE_7_3_0()>
 						_createFinderPath(
 					<#else>
 						new FinderPath(
@@ -2632,11 +2715,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		<#if serviceBuilder.isVersionGTE_7_3_0()>
 			_argumentsResolverServiceRegistration.unregister();
 
-			for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
+			<#if !serviceBuilder.isVersionGTE_7_4_0()>
+				for (ServiceRegistration<FinderPath> serviceRegistration :
+					_serviceRegistrations) {
 
-				serviceRegistration.unregister();
-			}
+					serviceRegistration.unregister();
+				}
+			</#if>
 		<#else>
 			${finderCache}.removeCache(FINDER_CLASS_NAME_ENTITY);
 			${finderCache}.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
@@ -2816,44 +2901,49 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			});
 	</#if>
 
-	<#if dependencyInjectorDS>
-		static {
-			try {
-				Class.forName(${portletShortName}PersistenceConstants.class.getName());
-			}
-			catch (ClassNotFoundException classNotFoundException) {
-				throw new ExceptionInInitializerError(classNotFoundException);
-			}
+	<#if serviceBuilder.isVersionGTE_7_4_0()>
+		@Override
+		protected FinderCache getFinderCache() {
+			<#if !entity.isCacheEnabled()>
+				return dummyFinderCache;
+			<#elseif osgiModule>
+				return finderCache;
+			<#else>
+				return FinderCacheUtil.getFinderCache();
+			</#if>
 		}
 	</#if>
 
 	<#if serviceBuilder.isVersionGTE_7_3_0()>
-		private FinderPath _createFinderPath(
-			String cacheName, String methodName, String[] params,
-			String[] columnNames, boolean baseModelResult) {
+		<#if serviceBuilder.isVersionLTE_7_3_0()>
+			private FinderPath _createFinderPath(
+				String cacheName, String methodName, String[] params,
+				String[] columnNames, boolean baseModelResult) {
 
-			FinderPath finderPath = new FinderPath(cacheName, methodName, params, columnNames, baseModelResult);
+				FinderPath finderPath = new FinderPath(cacheName, methodName, params, columnNames, baseModelResult);
 
-			if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-				<#if osgiModule>
-					_serviceRegistrations.add(_bundleContext.registerService(FinderPath.class, finderPath, MapUtil.singletonDictionary("cache.name", cacheName)));
-				<#else>
-					Registry registry = RegistryUtil.getRegistry();
+				if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
+					<#if osgiModule>
+						_serviceRegistrations.add(_bundleContext.registerService(FinderPath.class, finderPath, MapUtil.singletonDictionary("cache.name", cacheName)));
+					<#else>
+						Registry registry = RegistryUtil.getRegistry();
 
-					_serviceRegistrations.add(
-						registry.registerService(
-							FinderPath.class, finderPath,
-							HashMapBuilder.<String, Object>put(
-								"cache.name", cacheName
-							).build()));
-				</#if>
+						_serviceRegistrations.add(
+							registry.registerService(
+								FinderPath.class, finderPath,
+								HashMapBuilder.<String, Object>put(
+									"cache.name", cacheName
+								).build()));
+					</#if>
+				}
+
+				return finderPath;
 			}
 
-			return finderPath;
-		}
+			private Set<ServiceRegistration<FinderPath>> _serviceRegistrations = new HashSet<>();
+		</#if>
 
 		private ServiceRegistration<ArgumentsResolver> _argumentsResolverServiceRegistration;
-		private Set<ServiceRegistration<FinderPath>> _serviceRegistrations = new HashSet<>();
 
 		private static class ${entity.name}ModelArgumentsResolver implements ArgumentsResolver {
 
@@ -2906,6 +2996,18 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				return null;
 			}
+
+			<#if serviceBuilder.isVersionGTE_7_4_0()>
+				@Override
+				public String getClassName() {
+					return ${entity.name}Impl.class.getName();
+				}
+
+				@Override
+				public String getTableName() {
+					return ${entity.name}Table.INSTANCE.getTableName();
+				}
+			</#if>
 
 			private Object[] _getValue(${entity.name}ModelImpl ${entity.variableName}ModelImpl, String[] columnNames, boolean original) {
 				Object[] arguments = new Object[columnNames.length];

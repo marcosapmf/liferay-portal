@@ -40,7 +40,7 @@ page import="com.liferay.portal.search.tuning.rankings.web.internal.exception.Du
 RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDisplayContext)request.getAttribute(ResultRankingsPortletKeys.RESULT_RANKINGS_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= rankingPortletDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= rankingPortletDisplayContext.getClearResultsURL() %>"
 	componentId="resultsRankingEntriesManagementToolbar"
@@ -53,7 +53,7 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 	showSearch="<%= false %>"
 />
 
-<aui:form cssClass="container-fluid-1280" method="post" name="resultsRankingEntriesFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="resultsRankingEntriesFm">
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 	<liferay-ui:search-container
@@ -71,7 +71,7 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 			%>
 
 			<portlet:renderURL var="rowURL">
-				<portlet:param name="mvcRenderCommandName" value="editResultsRankingEntry" />
+				<portlet:param name="mvcRenderCommandName" value="/result_rankings/edit_results_rankings" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
 				<portlet:param name="resultsRankingUid" value="<%= rankingEntryDisplayContext.getUid() %>" />
 				<portlet:param name="aliases" value="<%= rankingEntryDisplayContext.getAliases() %>" />
@@ -158,7 +158,7 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 	};
 
 	var activateResultsRankingsEntries = function () {
-		<portlet:actionURL name="/results_ranking/edit" var="activateResultsRankingEntryURL">
+		<portlet:actionURL name="/result_rankings/edit_ranking" var="activateResultsRankingEntryURL">
 			<portlet:param name="<%= Constants.CMD %>" value="<%= ResultRankingsConstants.ACTIVATE %>" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 		</portlet:actionURL>
@@ -167,7 +167,7 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 	};
 
 	var deactivateResultsRankingsEntries = function () {
-		<portlet:actionURL name="/results_ranking/edit" var="deactivateResultsRankingEntryURL">
+		<portlet:actionURL name="/result_rankings/edit_ranking" var="deactivateResultsRankingEntryURL">
 			<portlet:param name="<%= Constants.CMD %>" value="<%= ResultRankingsConstants.DEACTIVATE %>" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 		</portlet:actionURL>
@@ -181,7 +181,7 @@ RankingPortletDisplayContext rankingPortletDisplayContext = (RankingPortletDispl
 				'<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />'
 			)
 		) {
-			<portlet:actionURL name="/results_ranking/edit" var="deleteResultsRankingEntryURL">
+			<portlet:actionURL name="/result_rankings/edit_ranking" var="deleteResultsRankingEntryURL">
 				<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE %>" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
 			</portlet:actionURL>

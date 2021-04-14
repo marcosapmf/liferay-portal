@@ -52,7 +52,7 @@
 </tr>
 <tr>
 	<td>FIELDS_FIELD</td>
-	<td>//div[@class='tab-content']/div/ul/li[@title='${key_field}' and contains(@class,'property-builder-field-draggable')]/div</td>
+	<td>//li[@title='${key_field}' and contains(@class,'property-builder-field-draggable')]/div</td>
 	<td></td>
 </tr>
 <tr>
@@ -102,6 +102,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SETTINGS_TEXT</td>
+	<td>//*[contains(.,'${key_fieldFieldLabel}')]//following-sibling::span[contains(@class,'form-text')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SETTINGS_TIP</td>
 	<td>//td[contains(@class,'table-col-name') and contains(.,'Tip')]//following-sibling::td[contains(@class,'table-col-value')]</td>
 	<td></td>
@@ -134,7 +139,7 @@
 <!--FORM-->
 <tr>
 	<td>FORM_BUILDER</td>
-	<td>//ul[contains(@class,'property-builder-fields-container')]</td>
+	<td>//div[contains(@class,'property-builder-content-container')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -145,6 +150,21 @@
 <tr>
 	<td>FORM_FIELD</td>
 	<td>//div[contains(@class,'component form-builder-field')]/div/label[.='${key_fieldFieldLabel}']/../../div</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']/parent::div[contains(@class,'form-group')] | //legend[normalize-space(text())='${key_fieldFieldLabel}']/parent::fieldset/parent::div[contains(@class,'form-group')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_CONTAINER_LABEL</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}'] | //legend[normalize-space(text())='${key_fieldFieldLabel}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_SETS_CONTAINER_LABEL</td>
+	<td>//div[contains(@class,'fieldset')]//label[text()='${key_fieldsetLabel}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -175,6 +195,11 @@
 <tr>
 	<td>FORM_FIELD_NESTED</td>
 	<td>//div[contains(@class,'form-builder-drop-zone')]//div/label</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FORM_FIELD_NESTED_ANY</td>
+	<td>//div[contains(@class,'form-builder-drop-zone')]//div/label[.='${key_nestedFieldLabel}']/../../../div[contains(@class,'dd-draggable')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -234,6 +259,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SETTINGS_CELL_EDITOR_SELECT_BUTTON</td>
+	<td>//div[contains(@class,'component btn-toolbar')]//button[contains(.,'Select')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SETTINGS_CELL_EDITOR_SELECT_FIELD</td>
+	<td>//div[contains(@class,'celleditor-focused')]//select</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SETTINGS_CELL_EDITOR_OPTIONS_NAME_1</td>
 	<td>//div[contains(@class,'celleditor-edit-option-row')][1]//input[contains(@class,'celleditor-edit-input-name')]</td>
 	<td></td>
@@ -261,6 +296,31 @@
 <tr>
 	<td>SETTINGS_CELL_EDITOR_OPTIONS_VALUE_3</td>
 	<td>xPath=(//div[contains(@class,'celleditor-edit-option-row')])[3]//input[contains(@class,'celleditor-edit-input-value')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SETTINGS_CELL_EDITOR_WEB_CONTENT_ARTICLE_CONTENT</td>
+	<td>//form[contains(@class,'journal-article-cell-editor-content')]/span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GRID_OPTIONS_OPTION_VALUE_FIELD</td>
+	<td>//div[contains(@class,'form-group') and contains(.//label, '${key_gridField}')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'ddm-field-text')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OPTION_VALUE_FIELD</td>
+	<td>//div[contains(@class,'form-group')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'ddm-field-text')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GRID_OPTIONS_OPTION_NAME_FIELD</td>
+	<td>//div[contains(@data-field-name,'${key_gridField}sOption')]/../../div[${key_rowNumber}]//div[contains(@class, 'key-value-editor')] | //div[contains(@class,'form-group') and contains(.//label, '${key_gridField}')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'key-value-input')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GRID_OPTIONS_OPTION_REFERENCE_FIELD</td>
+	<td>//div[contains(@data-field-name,'${key_gridField}sOption')]/../../div[${key_rowNumber}]//div[contains(@class, 'key-value-editor')] | //div[contains(@class,'form-group') and contains(.//label, '${key_gridField}')]//div[@class='ddm-field-options'][${key_rowNumber}]//input[contains(@class,'key-value-reference-input')]</td>
 	<td></td>
 </tr>
 <tr>

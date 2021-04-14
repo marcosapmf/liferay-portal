@@ -21,7 +21,7 @@ List<RedirectEntry> redirectEntries = (List<RedirectEntry>)GetterUtil.getObject(
 %>
 
 <div class="sidebar-header">
-	<h1 class="sidebar-title">
+	<h1 class="component-title">
 		<liferay-ui:message key="info" />
 	</h1>
 </div>
@@ -33,7 +33,7 @@ List<RedirectEntry> redirectEntries = (List<RedirectEntry>)GetterUtil.getObject(
 				add(
 					navigationItem -> {
 						navigationItem.setActive(true);
-						navigationItem.setLabel(LanguageUtil.get(request, "details"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "details"));
 					});
 			}
 		}
@@ -57,7 +57,7 @@ List<RedirectEntry> redirectEntries = (List<RedirectEntry>)GetterUtil.getObject(
 			RedirectEntry redirectEntry = redirectEntries.get(0);
 			%>
 
-			<dl class="sidebar-block">
+			<dl class="sidebar-dl sidebar-section">
 				<dt class="sidebar-dt">
 					<liferay-ui:message key="created-by" />
 				</dt>

@@ -16,12 +16,14 @@ package com.liferay.portal.cache.internal.dao.orm;
 
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.ProxyFactory;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.registry.BasicRegistryImpl;
 import com.liferay.registry.RegistryUtil;
@@ -68,15 +70,16 @@ public class EntityCacheImplTest {
 			new MultiVMPoolInvocationHandler(_classLoader, true));
 
 		ReflectionTestUtil.setFieldValue(
+			entityCacheImpl, "_clusterExecutor",
+			ProxyFactory.newDummyInstance(ClusterExecutor.class));
+		ReflectionTestUtil.setFieldValue(
 			entityCacheImpl, "_multiVMPool", multiVMPool);
-
 		ReflectionTestUtil.setFieldValue(entityCacheImpl, "_props", _props);
 
 		FinderCacheImpl finderCacheImpl = new FinderCacheImpl();
 
 		ReflectionTestUtil.setFieldValue(
 			entityCacheImpl, "_finderCacheImpl", finderCacheImpl);
-
 		ReflectionTestUtil.setFieldValue(
 			finderCacheImpl, "_multiVMPool", multiVMPool);
 

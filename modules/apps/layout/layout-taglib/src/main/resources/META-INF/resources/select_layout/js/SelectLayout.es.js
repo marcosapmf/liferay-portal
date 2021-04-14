@@ -45,8 +45,9 @@ const SelectLayout = ({
 	multiSelection,
 	namespace,
 	nodes,
+	selectedLayoutIds,
 }) => {
-	const [filterQuery, setFilterQuery] = useState();
+	const [filter, setFilter] = useState();
 
 	const handleSelectionChange = (selectedNodeIds) => {
 		if (!selectedNodeIds.size) {
@@ -100,9 +101,7 @@ const SelectLayout = ({
 								className="form-control input-group-inset input-group-inset-after"
 								name={`${namespace}filterKeywords`}
 								onInput={(event) => {
-									setFilterQuery(
-										event.target.value.toLowerCase()
-									);
+									setFilter(event.target.value.toLowerCase());
 								}}
 								placeholder={Liferay.Language.get('search-for')}
 								type="text"
@@ -135,7 +134,8 @@ const SelectLayout = ({
 					>
 						<Treeview
 							NodeComponent={Treeview.Card}
-							filterQuery={filterQuery}
+							filter={filter}
+							initialSelectedNodeIds={selectedLayoutIds}
 							multiSelection={multiSelection}
 							nodes={nodes}
 							onSelectedNodesChange={handleSelectionChange}

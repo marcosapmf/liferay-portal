@@ -180,13 +180,13 @@ definition {
 
 		for (var i : list "1,2,3") {
 			AssertVisible(
-				key_colPosition = "${i}",
-				key_rowPosition = "1",
+				key_colPosition = "1",
+				key_rowPosition = "${i}",
 				locator1 = "PageEditor#COLLECTION_ITEM_RATING_STAR_DISABLE");
 
 			AssertVisible(
-				key_colPosition = "${i}",
-				key_rowPosition = "1",
+				key_colPosition = "1",
+				key_rowPosition = "${i}",
 				locator1 = "PageEditor#COLLECTION_ITEM_AVERAGE_STAR");
 
 			AssertVisible(
@@ -198,9 +198,9 @@ definition {
 
 		for (var content : list "Web Content Content 3,Web Content Content 2,Web Content Content 1") {
 			AssertVisible(
-				key_colPosition = "${n}",
+				key_colPosition = "1",
 				key_entryContent = "${content}",
-				key_rowPosition = "1",
+				key_rowPosition = "${n}",
 				locator1 = "Fragment#CONTENT_DISPLAY_FRAGMENT_CONTENT");
 
 			var n = ${n} + 1;
@@ -216,13 +216,13 @@ definition {
 
 		for (var i : list "1,2,3") {
 			AssertVisible(
-				key_colPosition = "${i}",
-				key_rowPosition = "1",
+				key_colPosition = "1",
+				key_rowPosition = "${i}",
 				locator1 = "PageEditor#COLLECTION_ITEM_RATING_STAR_EMPTY");
 
 			AssertVisible(
-				key_colPosition = "${i}",
-				key_rowPosition = "1",
+				key_colPosition = "1",
+				key_rowPosition = "${i}",
 				locator1 = "PageEditor#COLLECTION_ITEM_AVERAGE_STAR");
 
 			AssertVisible(
@@ -234,9 +234,9 @@ definition {
 
 		for (var content : list "Web Content Content 3,Web Content Content 2,Web Content Content 1") {
 			AssertVisible(
-				key_colPosition = "${n}",
+				key_colPosition = "1",
 				key_entryContent = "${content}",
-				key_rowPosition = "1",
+				key_rowPosition = "${n}",
 				locator1 = "Fragment#CONTENT_DISPLAY_FRAGMENT_CONTENT");
 
 			var n = ${n} + 1;
@@ -364,6 +364,163 @@ definition {
 				key_content = "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
 				key_fragmentClass = "rich-text",
 				locator1 = "Fragment#FRAGMENT");
+		}
+	}
+
+	@description = "This is a test for LPS-97189. Editing a web content in the contents panel in a content page editor survives staging."
+	@priority = "2"
+	test EditWebContentViaContentsPanel {
+		task ("Add a web content based on Basic Web Content") {
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = "Test Site Name (Staging)",
+				site = "false",
+				title = "Web Content Title");
+		}
+
+		task ("Add a content page based on Blank") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name-staging",
+				layoutName = "Test Page Name",
+				site = "false",
+				type = "content");
+		}
+
+		task ("Add a Web Content Display to content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name Staging");
+
+			PageEditor.addWidget(portletName = "Web Content Display");
+		}
+
+		task ("Select the web content in Web Content Display") {
+			WebContentDisplayPortlet.selectWebContent(
+				contentPage = "true",
+				webContentTitle = "Web Content Title");
+
+			Refresh();
+		}
+
+		task ("Assert the web content is shown in Web Content Display") {
+			AssertVisible(
+				key_portletName = "Web Content Content",
+				locator1 = "Portlet#BODY");
+		}
+
+		task ("Edit the web content via Contents panel") {
+			WebContent.editViaContentPanel(
+				webContentContentEdit = "Web Content Content Edit",
+				webContentTitle = "Web Content Title",
+				webContentTitleEdit = "Web Content Title Edit");
+		}
+
+		task ("Assert the edited web content is shown in Web Content Display") {
+			AssertVisible(
+				key_portletName = "Web Content Content Edit",
+				locator1 = "Portlet#BODY");
+		}
+	}
+
+	@description = "This is a test for LPS-98030. A mapped editable background image of a fragment survives local staging."
+	@priority = "2"
+	test MapWebContentImageToBackgroundImageOfBannerCenter {
+		task ("Add a web content structure with an Image field") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-staging");
+
+			NavItem.gotoStructures();
+
+			WebContentStructures.addCP(structureName = "WC Structure Name");
+
+			DataEngine.addField(
+				fieldFieldLabel = "Image",
+				fieldName = "Image");
+
+			WebContentStructures.saveCP(structureName = "WC Structure Name");
+		}
+
+		task ("Add a web content based on new structure") {
+			NavItem.click(navItem = "Web Content");
+
+			WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+		}
+
+		task ("Upload an image from Image field") {
+			WebContent.addWithStructureCP(
+				navTab = "Web Content Images",
+				structureName = "WC Structure Name",
+				webContentImage = "Document_2.jpeg",
+				webContentTitle = "Web Content Title");
+
+			PortletEntry.publish();
+		}
+
+		task ("Add a content page based on Blank") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name-staging",
+				layoutName = "Test Page Name",
+				site = "false",
+				type = "content");
+		}
+
+		task ("Add a Banner Center to content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name Staging");
+
+			PageEditor.addFragment(
+				collectionName = "Featured Content",
+				fragmentName = "Banner Center");
+		}
+
+		task ("Map web content image to background image field of Banner Center") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Banner Center",
+				id = "banner-center");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Web Content Title",
+				navItem = "Web Content");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Image");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Assert the mapped image is shown in background image field") {
+			AssertVisible(
+				key_imageName = "Document_2.jpeg",
+				locator1 = "Fragment#FRAGMENT_SECTION_BACKGROUND_IMAGE");
+
+			PageEditor.clickPublish();
+		}
+
+		task ("Assert the mapped image is shown in view mode in staging site") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name Staging");
+
+			AssertVisible(
+				key_imageName = "Document_2.jpeg",
+				locator1 = "Fragment#FRAGMENT_SECTION_BACKGROUND_IMAGE");
+		}
+
+		task ("Publish to Live") {
+			Staging.gotoPublishToLive();
+
+			Staging.publishToLive();
+		}
+
+		task ("Assert the mapped image is shown in view mode in live site") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			AssertVisible(
+				key_imageName = "Document_2.jpeg",
+				locator1 = "Fragment#FRAGMENT_SECTION_BACKGROUND_IMAGE");
 		}
 	}
 
@@ -626,6 +783,73 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-101248. Can select a custom web content template as a "Template" for web content selected in Content Display when enable live."
+	@priority = "2"
+	test SelectCustomWebContentTemplateInContentDisplay {
+		task ("Add a web content based on Basic Web Content") {
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = "Test Site Name (Staging)",
+				site = "false",
+				title = "Web Content Title");
+		}
+
+		task ("Add a new template for Basic Web Content") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name-staging");
+
+			NavItem.gotoTemplates();
+
+			var templateScript = '''<a>${content.getData()}</a>''';
+
+			WebContentTemplates.addCP(
+				structureName = "Basic Web Content",
+				templateName = "WC Template Name",
+				templateScript = "${templateScript}");
+		}
+
+		task ("Add a content page based on Blank") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name-staging",
+				layoutName = "Test Page Name",
+				site = "false",
+				type = "content");
+		}
+
+		task ("Add a Content Display to page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name Staging");
+
+			PageEditor.addFragment(
+				collectionName = "Content Display",
+				fragmentName = "Content Display");
+		}
+
+		task ("Select the web content and custom template in Content Display") {
+			PageEditor.editContentDisplay(
+				customWebcontenttemplate = "WC Template Name",
+				fragmentName = "Content Display",
+				webcontent = "true",
+				webContentTitle = "Web Content Title");
+
+			AssertVisible(
+				key_content = "//a[contains(.,'Web Content Content')]",
+				locator1 = "WCD#WEB_CONTENT_CONTENT_ANY");
+
+			PageEditor.clickPublish();
+		}
+
+		task ("View the web content is shown in Content Display") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name Staging");
+
+			AssertVisible(
+				key_content = "//a[contains(.,'Web Content Content')]",
+				locator1 = "WCD#WEB_CONTENT_CONTENT_ANY");
+		}
+	}
+
 	@description = "This is a test for LPS-111946. Undo can bring deleted fragments back in Staging site."
 	@priority = "3"
 	test UndoDeletedFragmentInStagingSite {
@@ -759,9 +983,9 @@ definition {
 
 		for (var content : list "Web Content Content 3,Web Content Content 2,Web Content Content 1") {
 			AssertVisible(
-				key_colPosition = "${n}",
+				key_colPosition = "1",
 				key_entryContent = "${content}",
-				key_rowPosition = "1",
+				key_rowPosition = "${n}",
 				locator1 = "Fragment#CONTENT_DISPLAY_FRAGMENT_CONTENT");
 
 			var n = ${n} + 1;
@@ -779,9 +1003,9 @@ definition {
 
 		for (var content : list "Web Content Content 3,Web Content Content 2,Web Content Content 1") {
 			AssertVisible(
-				key_colPosition = "${n}",
+				key_colPosition = "1",
 				key_entryContent = "${content}",
-				key_rowPosition = "1",
+				key_rowPosition = "${n}",
 				locator1 = "Fragment#CONTENT_DISPLAY_FRAGMENT_CONTENT");
 
 			var n = ${n} + 1;

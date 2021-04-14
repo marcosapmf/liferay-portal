@@ -34,7 +34,7 @@ else {
 
 <div class="card-horizontal main-content-card">
 	<div class="card-body">
-		<div id="<portlet:namespace />themeContainer">
+		<div id="<portlet:namespace />currentThemeContainer">
 			<liferay-util:include page="/look_and_feel_theme_details.jsp" servletContext="<%= application %>" />
 		</div>
 
@@ -44,57 +44,28 @@ else {
 
 <aui:button cssClass="btn btn-secondary" id="changeTheme" value="change-current-theme" />
 
-<aui:script use="aui-parse-content">
-	var Util = Liferay.Util;
+<portlet:renderURL var="selectThemeURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+	<portlet:param name="mvcPath" value="/select_theme.jsp" />
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+</portlet:renderURL>
 
-	var selThemeId = '<%= selTheme.getThemeId() %>';
+<portlet:renderURL copyCurrentRenderParameters="<%= true %>" var="lookAndFeelDetailURL" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>">
+	<portlet:param name="mvcPath" value="/look_and_feel_theme_details.jsp" />
+</portlet:renderURL>
 
-	var themeContainer = A.one('#<portlet:namespace />themeContainer');
-
-	<portlet:renderURL var="selectThemeURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-		<portlet:param name="mvcPath" value="/select_theme.jsp" />
-		<portlet:param name="redirect" value="<%= currentURL %>" />
-	</portlet:renderURL>
-
-	A.one('#<portlet:namespace />changeTheme').on('click', function (event) {
-		event.preventDefault();
-
-		Util.openSelectionModal({
-			onSelect: function (selectedItem) {
-				var themeId = selectedItem.themeid;
-
-				if (themeId && selThemeId != themeId) {
-					themeContainer.html('<div class="loading-animation"></div>');
-
-					var data = Util.ns('<portlet:namespace />', {
-						themeId: themeId,
-					});
-
-					Liferay.Util.fetch(
-						'<portlet:renderURL windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcPath" value="/look_and_feel_theme_details.jsp" /></portlet:renderURL>',
-						{
-							body: Liferay.Util.objectToFormData(data),
-							method: 'POST',
-						}
-					)
-						.then(function (response) {
-							return response.text();
-						})
-						.then(function (responseData) {
-							themeContainer.plug(A.Plugin.ParseContent);
-
-							themeContainer.setContent(responseData);
-
-							selThemeId = selectedItem;
-						});
-				}
-			},
-			selectEventName: '<portlet:namespace />selectTheme',
-			title: '<liferay-ui:message key="available-themes" />',
-			url: Util.addParams(
-				'<portlet:namespace />themeId=' + selThemeId,
-				'<%= selectThemeURL %>'
-			),
-		});
-	});
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"changeThemeButtonId", liferayPortletResponse.getNamespace() + "changeTheme"
+		).put(
+			"initialSelectedThemeId", selTheme.getThemeId()
+		).put(
+			"lookAndFeelDetailURL", lookAndFeelDetailURL
+		).put(
+			"selectThemeURL", selectThemeURL
+		).put(
+			"themeContainerId", liferayPortletResponse.getNamespace() + "currentThemeContainer"
+		).build()
+	%>'
+	module="js/LookAndFeelThemeEdit"
+/>

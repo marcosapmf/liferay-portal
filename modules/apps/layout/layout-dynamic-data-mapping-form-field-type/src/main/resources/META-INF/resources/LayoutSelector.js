@@ -15,8 +15,23 @@
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import {ReactFieldBase} from 'dynamic-data-mapping-form-field-type';
-import {openSelectionDialog} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
+
+function getInputValue(value, predefinedValue) {
+	if (!value || value === '') {
+		return predefinedValue;
+	}
+
+	if (value && typeof value !== 'string') {
+		try {
+			return JSON.stringify(value);
+		}
+		catch (error) {}
+	}
+
+	return value;
+}
 
 const LayoutSelector = ({
 	disabled,
@@ -29,7 +44,7 @@ const LayoutSelector = ({
 	const [layout, setLayout] = useState(() => JSON.parse(inputValue || '{}'));
 
 	useEffect(() => {
-		setLayout(JSON.parse(inputValue || '{}'));
+		setLayout(JSON.parse(getInputValue(inputValue, '{}')));
 	}, [inputValue]);
 
 	const handleClearClick = () => {
@@ -37,9 +52,7 @@ const LayoutSelector = ({
 		onChange('');
 	};
 
-	const handleFieldChanged = (event) => {
-		const selectedItem = event.selectedItem;
-
+	const handleFieldChanged = (selectedItem) => {
 		if (selectedItem && selectedItem.layoutId) {
 			setLayout(selectedItem);
 			onChange(JSON.stringify(selectedItem));
@@ -49,7 +62,7 @@ const LayoutSelector = ({
 	const handleItemSelectorTriggerClick = (event) => {
 		event.preventDefault();
 
-		openSelectionDialog({
+		openSelectionModal({
 			onSelect: handleFieldChanged,
 			selectEventName: `${portletNamespace}selectLayout`,
 			title: Liferay.Language.get('page'),
@@ -118,7 +131,7 @@ const Main = ({
 	<ReactFieldBase {...otherProps} name={name} readOnly={readOnly}>
 		<LayoutSelector
 			disabled={readOnly}
-			inputValue={value && value !== '' ? value : predefinedValue}
+			inputValue={getInputValue(value, predefinedValue)}
 			itemSelectorURL={itemSelectorURL}
 			name={name}
 			onChange={(value) => onChange({}, value)}

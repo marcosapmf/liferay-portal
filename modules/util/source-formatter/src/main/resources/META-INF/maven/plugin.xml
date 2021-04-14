@@ -7,7 +7,7 @@
 	<description/>
 	<groupId>com.liferay</groupId>
 	<artifactId>com.liferay.source.formatter</artifactId>
-	<version>1.0.1058</version>
+	<version>1.0.1085</version>
 	<goalPrefix>source-formatter</goalPrefix>
 	<isolatedRealm>false</isolatedRealm>
 	<inheritedByDefault>true</inheritedByDefault>
@@ -100,6 +100,13 @@
 				<parameter>
 					<name>maxLineLength</name>
 					<type>int</type>
+					<required>false</required>
+					<editable>true</editable>
+					<description/>
+				</parameter>
+				<parameter>
+					<name>outputFileName</name>
+					<type>java.lang.String</type>
 					<required>false</required>
 					<editable>true</editable>
 					<description/>
@@ -304,7 +311,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<type>jar</type>
-			<version>4.12</version>
+			<version>4.13.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>

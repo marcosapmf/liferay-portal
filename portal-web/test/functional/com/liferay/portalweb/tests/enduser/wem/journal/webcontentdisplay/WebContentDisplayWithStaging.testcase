@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Display";
+
 	var pageName = "Web Content Display Page";
 	var portletName = "Web Content Display";
 
@@ -105,7 +106,7 @@ definition {
 	@description = "This is a use case for LPS-77769."
 	@priority = "5"
 	test StagingPublishWCWithImageFieldEdit {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -133,8 +134,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Image",
+		DataEngine.addField(
 			fieldFieldLabel = "Image",
 			fieldName = "Image");
 
@@ -155,6 +155,7 @@ definition {
 		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
 		WebContent.addWithStructureCP(
+			navTab = "Web Content Images",
 			structureName = "WC Structure Name",
 			templateName = "WC Template Name",
 			webContentImage = "Document_2.jpeg",
@@ -192,9 +193,10 @@ definition {
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
 
-		FormFields.editTextAlt(
-			fieldName = "Image",
-			fieldValue = "Web Content Image Description");
+		Type(
+			key_fieldFieldLabel = "Image",
+			locator1 = "WCEditWebContent#IMAGE_DESCRPTION",
+			value1 = "Web Content Image Description");
 
 		PortletEntry.publish();
 
@@ -213,6 +215,126 @@ definition {
 		AssertHTMLSourceTextPresent(value1 = "Web Content Image Description");
 
 		AssertConsoleTextNotPresent(value1 = "DuplicateFileEntryException");
+	}
+
+	@description = "This is a use case for LPS-101289."
+	@priority = "4"
+	test ViewCommentAfterEditingViaStage {
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Staging Test Page");
+
+		Staging.openStagingAdmin(siteURLKey = "site-name");
+
+		Staging.activateStagingCP(siteName = "Site Name");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content");
+
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addCP(
+			webContentContent = "WC WebContent Content",
+			webContentTitle = "WC WebContent Title");
+
+		PortletEntry.publish();
+
+		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
+
+		SitePages.addPublicPage(pageName = "Web Content Page");
+
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Web Content Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Web Content Page",
+			siteName = "Site Name");
+
+		Portlet.addPG(portletName = "Web Content Display");
+
+		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
+
+		WebContentDisplayPortlet.configureSetupPG(
+			enableViewCountIncrement = "true",
+			metadataNameList = "Comments");
+
+		WebContentDisplayPortlet.saveConfiguration();
+
+		AssertTextEquals.assertPartialText(
+			key_portletName = "Web Content Display",
+			locator1 = "Portlet#BODY",
+			value1 = "Comments are unavailable in staged sites.");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Web Content Page",
+			siteName = "Site Name");
+
+		Staging.gotoPublishToLive();
+
+		Staging.publishToLive();
+
+		Navigator.gotoSitePage(
+			pageName = "Web Content Page",
+			siteName = "Site Name");
+
+		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Content");
+
+		Comments.addPG(entryComment = "WC WebContent Content Comment");
+
+		Comments.viewPG(
+			commentCount = "1",
+			entryComment = "WC WebContent Content Comment",
+			userFullName = "Test Test (You)");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content");
+
+		WebContent.moveToRecycleBinViaDeleteIconCP();
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Web Content Page",
+			siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+
+		WebContent.editCP(
+			webContentContentEdit = "WC WebContent Content Edit",
+			webContentTitle = "WC WebContent Title",
+			webContentTitleEdit = "WC WebContent Title Edit");
+
+		WebContent.viewTitle(webContentTitle = "WC WebContent Title Edit");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Web Content Page",
+			siteName = "Site Name");
+
+		Staging.gotoPublishToLive();
+
+		Staging.publishToLive();
+
+		Navigator.gotoSitePage(
+			pageName = "Web Content Page",
+			siteName = "Site Name");
+
+		Comments.viewPG(
+			commentCount = "1",
+			entryComment = "WC WebContent Content Comment",
+			userFullName = "Test Test (You)");
 	}
 
 }

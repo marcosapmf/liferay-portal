@@ -47,7 +47,7 @@ CPTaxCategoryDisplayContext cpTaxCategoryDisplayContext = (CPTaxCategoryDisplayC
 			/>
 
 			<portlet:renderURL var="addCPTaxCategoryURL">
-				<portlet:param name="mvcRenderCommandName" value="editCPTaxCategory" />
+				<portlet:param name="mvcRenderCommandName" value="/cp_tax_category/edit_cp_tax_category" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
 			</portlet:renderURL>
 
@@ -70,8 +70,8 @@ CPTaxCategoryDisplayContext cpTaxCategoryDisplayContext = (CPTaxCategoryDisplayC
 		</liferay-frontend:management-bar-action-buttons>
 	</liferay-frontend:management-bar>
 
-	<div class="container-fluid-1280">
-		<portlet:actionURL name="editCPTaxCategory" var="editCPTaxCategoryActionURL" />
+	<div class="container-fluid container-fluid-max-xl">
+		<portlet:actionURL name="/cp_tax_category/edit_cp_tax_category" var="editCPTaxCategoryActionURL" />
 
 		<aui:form action="<%= editCPTaxCategoryActionURL %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
@@ -91,26 +91,26 @@ CPTaxCategoryDisplayContext cpTaxCategoryDisplayContext = (CPTaxCategoryDisplayC
 					<%
 					PortletURL rowURL = renderResponse.createRenderURL();
 
-					rowURL.setParameter("mvcRenderCommandName", "editCPTaxCategory");
+					rowURL.setParameter("mvcRenderCommandName", "/cp_tax_category/edit_cp_tax_category");
 					rowURL.setParameter("redirect", currentURL);
 					rowURL.setParameter("cpTaxCategoryId", String.valueOf(cpTaxCategory.getCPTaxCategoryId()));
 					%>
 
 					<liferay-ui:search-container-column-text
-						cssClass="important table-cell-content"
+						cssClass="important table-cell-expand"
 						href="<%= rowURL %>"
 						name="name"
 						value="<%= HtmlUtil.escape(cpTaxCategory.getName(languageId)) %>"
 					/>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="description"
 						value="<%= HtmlUtil.escape(cpTaxCategory.getDescription(languageId)) %>"
 					/>
 
 					<liferay-ui:search-container-column-date
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="create-date"
 						property="createDate"
 					/>

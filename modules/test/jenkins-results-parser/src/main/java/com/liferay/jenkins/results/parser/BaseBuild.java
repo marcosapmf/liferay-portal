@@ -333,6 +333,27 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public Job.BuildProfile getBuildProfile() {
+		String buildProfile = getParameterValue("TEST_PORTAL_BUILD_PROFILE");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(buildProfile)) {
+			if (buildProfile.equals("dxp")) {
+				return Job.BuildProfile.DXP;
+			}
+
+			return Job.BuildProfile.PORTAL;
+		}
+
+		String branchName = getBranchName();
+
+		if (!branchName.equals("master") && !branchName.startsWith("ee-")) {
+			return Job.BuildProfile.DXP;
+		}
+
+		return Job.BuildProfile.PORTAL;
+	}
+
+	@Override
 	public String getBuildURL() {
 		String jobURL = getJobURL();
 
@@ -604,6 +625,29 @@ public abstract class BaseBuild implements Build {
 		return upstreamJobFailureMessageElement;
 	}
 
+	public Map<String, String> getInjectedEnvironmentVariablesMap()
+		throws IOException {
+
+		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
+			getBuildURL());
+
+		JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
+			localBuildURL + "/injectedEnvVars/api/json", false);
+
+		JSONObject envMapJSONObject = jsonObject.getJSONObject("envMap");
+
+		Set<String> envMapJSONObjectKeySet = envMapJSONObject.keySet();
+
+		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
+
+		for (String key : envMapJSONObjectKeySet) {
+			injectedEnvironmentVariablesMap.put(
+				key, envMapJSONObject.getString(key));
+		}
+
+		return injectedEnvironmentVariablesMap;
+	}
+
 	@Override
 	public String getInvocationURL() {
 		String jobURL = getJobURL();
@@ -697,19 +741,7 @@ public abstract class BaseBuild implements Build {
 			return _job;
 		}
 
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-		String topLevelJobName = topLevelBuild.getJobName();
-
-		String repositoryName = null;
-
-		if (topLevelJobName.contains("subrepository")) {
-			repositoryName = topLevelBuild.getBaseGitRepositoryName();
-		}
-
-		_job = JobFactory.newJob(
-			topLevelJobName, topLevelBuild.getTestSuiteName(),
-			topLevelBuild.getBranchName(), repositoryName);
+		_job = JobFactory.newJob(this);
 
 		return _job;
 	}
@@ -1176,6 +1208,12 @@ public abstract class BaseBuild implements Build {
 	}
 
 	public List<TestResult> getTestResults(
+		Build build, JSONArray suitesJSONArray) {
+
+		return getTestResults(build, suitesJSONArray, null);
+	}
+
+	public List<TestResult> getTestResults(
 		Build build, JSONArray suitesJSONArray, String testStatus) {
 
 		List<TestResult> testResults = new ArrayList<>();
@@ -1404,6 +1442,25 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public boolean isCompareToUpstream() {
+		TopLevelBuild topLevelBuild = getTopLevelBuild();
+
+		return topLevelBuild.isCompareToUpstream();
+	}
+
+	@Override
+	public boolean isCompleted() {
+		String result = getResult();
+		String status = getStatus();
+
+		if ((result == null) || (status == null)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	public boolean isFromArchive() {
 		return fromArchive;
 	}
@@ -1480,6 +1537,11 @@ public abstract class BaseBuild implements Build {
 		System.out.println(getReinvokedMessage());
 
 		reset();
+	}
+
+	@Override
+	public void removeDownstreamBuild(Build build) {
+		downstreamBuilds.remove(build);
 	}
 
 	@Override
@@ -2047,7 +2109,7 @@ public abstract class BaseBuild implements Build {
 			return JenkinsResultsParserUtil.combine(
 				getName(), " started at ",
 				JenkinsResultsParserUtil.toDateString(
-					new Date(getStartTimestamp()), "America/Los_Angeles"),
+					new Date(getStartTimestamp())),
 				" and ran for ",
 				JenkinsResultsParserUtil.toDurationString(getDuration()), ".");
 		}
@@ -2372,8 +2434,8 @@ public abstract class BaseBuild implements Build {
 
 		try {
 			content = JenkinsResultsParserUtil.toString(
-				JenkinsResultsParserUtil.getLocalURL(urlString), false, 0, 0,
-				0);
+				JenkinsResultsParserUtil.getLocalURL(urlString), false, 0, 0, 0,
+				true);
 		}
 		catch (IOException ioException) {
 			if (required) {
@@ -2684,29 +2746,6 @@ public abstract class BaseBuild implements Build {
 		boolean showCommonFailuresCount) {
 
 		return getGitHubMessageJobResultsElement();
-	}
-
-	protected Map<String, String> getInjectedEnvironmentVariablesMap()
-		throws IOException {
-
-		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
-			getBuildURL());
-
-		JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-			localBuildURL + "/injectedEnvVars/api/json", false);
-
-		JSONObject envMapJSONObject = jsonObject.getJSONObject("envMap");
-
-		Set<String> envMapJSONObjectKeySet = envMapJSONObject.keySet();
-
-		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
-
-		for (String key : envMapJSONObjectKeySet) {
-			injectedEnvironmentVariablesMap.put(
-				key, envMapJSONObject.getString(key));
-		}
-
-		return injectedEnvironmentVariablesMap;
 	}
 
 	protected String getJenkinsReportBuildInfoCellElementTagName() {
@@ -3185,7 +3224,8 @@ public abstract class BaseBuild implements Build {
 		Map<String, String> tempMap = new HashMap<>();
 
 		if (!fromArchive) {
-			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
+				this);
 
 			Properties properties = buildDatabase.getProperties(tempMapName);
 
@@ -3225,12 +3265,6 @@ public abstract class BaseBuild implements Build {
 		}
 
 		throw new IllegalArgumentException("Invalid status: " + status);
-	}
-
-	protected boolean isCompareToUpstream() {
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-		return topLevelBuild.isCompareToUpstream();
 	}
 
 	protected boolean isParentBuildRoot() {
@@ -3324,9 +3358,9 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected void reset() {
-		setResult(null);
-
 		badBuildNumbers.add(getBuildNumber());
+
+		setResult(null);
 
 		setBuildNumber(-1);
 
@@ -3335,6 +3369,8 @@ public abstract class BaseBuild implements Build {
 
 	protected void setBuildNumber(int buildNumber) {
 		if (_buildNumber != buildNumber) {
+			int previousBuildNumber = _buildNumber;
+
 			_buildNumber = buildNumber;
 
 			consoleReadCursor = 0;
@@ -3342,7 +3378,7 @@ public abstract class BaseBuild implements Build {
 			if (_buildNumber == -1) {
 				setStatus("starting");
 			}
-			else {
+			else if (!badBuildNumbers.contains(previousBuildNumber)) {
 				setStatus("running");
 			}
 		}
@@ -3496,7 +3532,9 @@ public abstract class BaseBuild implements Build {
 				_previousStatus,
 				statusModifiedTime - previousStatusModifiedTime);
 
-			if (isParentBuildRoot()) {
+			if (isParentBuildRoot() &&
+				!badBuildNumbers.contains(_buildNumber)) {
+
 				System.out.println(getBuildMessage());
 			}
 		}

@@ -12,13 +12,14 @@
  * details.
  */
 
-window.Liferay = {
+const Liferay = {
 	Language: {
-		get(v) {
-			const charZero = v.charAt(0).toUpperCase(),
-				rest = v.substring(1, v.length).split('-').join(' ');
+		get: (key) => {
+			let counter = 0;
 
-			return `${charZero}${rest}`;
+			return key.replace(new RegExp('(^x-)|(-x-)|(-x$)', 'gm'), (match) =>
+				match.replace('x', `{${counter++}}`)
+			);
 		},
 	},
 	ThemeDisplay: {
@@ -26,6 +27,16 @@ window.Liferay = {
 		getDefaultLanguageId: () => 'en_US',
 		getLanguageId: () => 'it_IT',
 		getPathThemeImages: () => '/assets',
+		getPortalURL: () => window.location.origin,
+		getScopeGroupId: () => '123',
+	},
+	Util: {
+		sub: (key, ...values) => {
+			return values.reduce(
+				(acc, value, i) => acc.replace(new RegExp(`{[${i}]}`), value),
+				key
+			);
+		},
 	},
 	component: () => {},
 	detach: (name, fn) => {
@@ -44,9 +55,26 @@ window.Liferay = {
 	on: (name, fn) => {
 		window.addEventListener(name, fn);
 	},
-	staticEnvHeaders: new Headers({
+	staticEnvTestUtils: {
+		print: (message, type) => ({message, type}),
+	},
+};
+
+window.defaultFetch = fetch;
+
+window.fetch = (resource, {headers, ...init}) => {
+	headers = new Headers({
 		Accept: 'application/json',
 		Authorization: `Basic ${window.btoa('test@liferay.com:test')}`,
 		'Content-Type': 'application/json',
-	}),
+	});
+
+	// eslint-disable-next-line @liferay/portal/no-global-fetch
+	return window.defaultFetch(resource, {
+		...init,
+		headers,
+	});
 };
+
+window.Liferay = Liferay;
+window.themeDisplay = Liferay.ThemeDisplay;

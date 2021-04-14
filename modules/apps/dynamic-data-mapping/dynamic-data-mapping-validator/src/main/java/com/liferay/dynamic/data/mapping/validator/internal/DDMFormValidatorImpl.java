@@ -20,7 +20,6 @@ import com.liferay.dynamic.data.mapping.expression.DDMExpressionException;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueValidationException;
-import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueValidator;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
@@ -146,16 +145,6 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 		}
 	}
 
-	protected void validateDDMFormFieldGrid(DDMFormField ddmFormField)
-		throws DDMFormFieldValueValidationException {
-
-		String fieldType = ddmFormField.getType();
-
-		if (fieldType.equals(DDMFormFieldType.GRID)) {
-			_ddmFormFieldValueValidator.validate(ddmFormField, null);
-		}
-	}
-
 	protected void validateDDMFormFieldIndexType(DDMFormField ddmFormField)
 		throws DDMFormValidationException {
 
@@ -194,6 +183,15 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 
 		String fieldType = ddmFormField.getType();
 
+		if (fieldType.equals(DDMFormFieldType.GRID)) {
+			validateDDMFormFieldOptionsProperties(
+				ddmFormField, "columns", ddmFormAvailableLocales,
+				ddmFormDefaultLocale);
+			validateDDMFormFieldOptionsProperties(
+				ddmFormField, "rows", ddmFormAvailableLocales,
+				ddmFormDefaultLocale);
+		}
+
 		if (!fieldType.equals(DDMFormFieldType.CHECKBOX_MULTIPLE) &&
 			!fieldType.equals(DDMFormFieldType.RADIO) &&
 			!fieldType.equals(DDMFormFieldType.SELECT)) {
@@ -201,12 +199,29 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 			return;
 		}
 
-		if (!Objects.equals(ddmFormField.getDataSourceType(), "manual")) {
+		if (!Validator.isBlank(ddmFormField.getDataSourceType()) &&
+			!Objects.equals(ddmFormField.getDataSourceType(), "manual")) {
+
 			return;
 		}
 
+		validateDDMFormFieldOptionsProperties(
+			ddmFormField, "options", ddmFormAvailableLocales,
+			ddmFormDefaultLocale);
+	}
+
+	protected void validateDDMFormFieldOptionsProperties(
+			DDMFormField ddmFormField, String propertyName,
+			Set<Locale> ddmFormAvailableLocales, Locale ddmFormDefaultLocale)
+		throws DDMFormValidationException {
+
 		DDMFormFieldOptions ddmFormFieldOptions =
 			ddmFormField.getDDMFormFieldOptions();
+
+		if (!propertyName.equals("options")) {
+			ddmFormFieldOptions = (DDMFormFieldOptions)ddmFormField.getProperty(
+				propertyName);
+		}
 
 		Set<String> optionsValues = Collections.emptySet();
 
@@ -215,7 +230,11 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 		}
 
 		if (optionsValues.isEmpty()) {
-			throw new MustSetOptionsForField(ddmFormField.getName());
+			LocalizedValue localizedValue = ddmFormField.getLabel();
+
+			throw new MustSetOptionsForField(
+				localizedValue.getString(ddmFormDefaultLocale),
+				ddmFormField.getName());
 		}
 
 		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
@@ -223,7 +242,7 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 				optionValue);
 
 			validateDDMFormFieldPropertyValue(
-				ddmFormField.getName(), "options", localizedValue,
+				ddmFormField.getName(), propertyName, localizedValue,
 				ddmFormAvailableLocales, ddmFormDefaultLocale);
 		}
 	}
@@ -261,8 +280,6 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 
 			validateDDMFormFieldOptions(
 				ddmFormField, ddmFormAvailableLocales, ddmFormDefaultLocale);
-
-			validateDDMFormFieldGrid(ddmFormField);
 
 			validateOptionalDDMFormFieldLocalizedProperty(
 				ddmFormField, "label", ddmFormAvailableLocales,
@@ -453,8 +470,5 @@ public class DDMFormValidatorImpl implements DDMFormValidator {
 
 	private DDMExpressionFactory _ddmExpressionFactory;
 	private DDMFormFieldTypeServicesTracker _ddmFormFieldTypeServicesTracker;
-
-	@Reference(target = "(ddm.form.field.type.name=grid)")
-	private DDMFormFieldValueValidator _ddmFormFieldValueValidator;
 
 }

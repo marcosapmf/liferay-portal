@@ -61,6 +61,7 @@ const SaveFragmentCompositionModal = ({onCloseModal}) => {
 		},
 	});
 
+	const [loading, setLoading] = useState(false);
 	const [thumbnail, setThumbnail] = useState({});
 
 	const handleSubmit = (event) => {
@@ -104,14 +105,12 @@ const SaveFragmentCompositionModal = ({onCloseModal}) => {
 		setThumbnail(image);
 	};
 
-	const [loading, setLoading] = useState(false);
-
 	const nameInputId = `${config.portletNamespace}fragmentCompositionName`;
 	const descriptionInputId = `${config.portletNamespace}fragmentCompositionDescription`;
 
 	return (
 		<ClayModal
-			className="page-editor__save-fragment-composition-modal"
+			className="page-editor__save-fragment-composition-modal page-editor__theme-adapter-buttons page-editor__theme-adapter-forms"
 			observer={observer}
 			size="lg"
 		>

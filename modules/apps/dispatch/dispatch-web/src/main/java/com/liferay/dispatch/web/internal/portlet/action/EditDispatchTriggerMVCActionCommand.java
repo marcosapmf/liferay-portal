@@ -16,8 +16,10 @@ package com.liferay.dispatch.web.internal.portlet.action;
 
 import com.liferay.dispatch.constants.DispatchConstants;
 import com.liferay.dispatch.constants.DispatchPortletKeys;
+import com.liferay.dispatch.executor.DispatchTaskClusterMode;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchTriggerService;
+import com.liferay.dispatch.web.internal.security.permisison.resource.DispatchTriggerPermission;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -28,18 +30,22 @@ import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
 import java.util.Calendar;
+import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -55,7 +61,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + DispatchPortletKeys.DISPATCH,
-		"mvc.command.name=editDispatchTrigger"
+		"mvc.command.name=/dispatch/edit_dispatch_trigger"
 	},
 	service = MVCActionCommand.class
 )
@@ -86,19 +92,20 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 
 	@Override
 	protected void doProcessAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
+		ActionRequest actionRequest, ActionResponse actionResponse) {
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		try {
-			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
+			if (Objects.equals(cmd, Constants.ADD) ||
+				Objects.equals(cmd, Constants.UPDATE)) {
+
 				updateDispatchTrigger(actionRequest, actionResponse);
 			}
-			else if (cmd.equals(Constants.DELETE)) {
+			else if (Objects.equals(cmd, Constants.DELETE)) {
 				deleteDispatchTrigger(actionRequest);
 			}
-			else if (cmd.equals("runProcess")) {
+			else if (Objects.equals(cmd, "runProcess")) {
 				HttpServletResponse httpServletResponse =
 					_portal.getHttpServletResponse(actionResponse);
 
@@ -109,7 +116,7 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 
 				hideDefaultSuccessMessage(actionRequest);
 			}
-			else if (cmd.equals("schedule")) {
+			else if (Objects.equals(cmd, "schedule")) {
 				scheduleDispatchTrigger(actionRequest);
 			}
 		}
@@ -120,11 +127,15 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		}
 	}
 
-	protected JSONObject runProcess(ActionRequest actionRequest) {
-		JSONObject jsonObject = _jsonFactory.createJSONObject();
+	protected JSONObject runProcess(ActionRequest actionRequest)
+		throws PortalException {
 
 		long dispatchTriggerId = ParamUtil.getLong(
 			actionRequest, "dispatchTriggerId");
+
+		_checkPermission(actionRequest, dispatchTriggerId);
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
 		try {
 			_sendMessage(dispatchTriggerId);
@@ -155,6 +166,9 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		boolean active = ParamUtil.getBoolean(actionRequest, "active");
 		String cronExpression = ParamUtil.getString(
 			actionRequest, "cronExpression");
+		DispatchTaskClusterMode dispatchTaskClusterMode =
+			DispatchTaskClusterMode.valueOf(
+				ParamUtil.getInteger(actionRequest, "dispatchTaskClusterMode"));
 		int endDateMonth = ParamUtil.getInteger(actionRequest, "endDateMonth");
 		int endDateDay = ParamUtil.getInteger(actionRequest, "endDateDay");
 		int endDateYear = ParamUtil.getInteger(actionRequest, "endDateYear");
@@ -169,6 +183,8 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		boolean neverEnd = ParamUtil.getBoolean(actionRequest, "neverEnd");
+		boolean overlapAllowed = ParamUtil.getBoolean(
+			actionRequest, "overlapAllowed");
 
 		int startDateMonth = ParamUtil.getInteger(
 			actionRequest, "startDateMonth");
@@ -188,9 +204,10 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		_dispatchTriggerService.updateDispatchTrigger(
-			dispatchTriggerId, active, cronExpression, endDateMonth, endDateDay,
-			endDateYear, endDateHour, endDateMinute, neverEnd, startDateMonth,
-			startDateDay, startDateYear, startDateHour, startDateMinute);
+			dispatchTriggerId, active, cronExpression, dispatchTaskClusterMode,
+			endDateMonth, endDateDay, endDateYear, endDateHour, endDateMinute,
+			neverEnd, overlapAllowed, startDateMonth, startDateDay,
+			startDateYear, startDateHour, startDateMinute);
 	}
 
 	protected DispatchTrigger updateDispatchTrigger(
@@ -201,25 +218,25 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, "dispatchTriggerId");
 
 		String name = ParamUtil.getString(actionRequest, "name");
+		String dispatchTaskExecutorType = ParamUtil.getString(
+			actionRequest, "dispatchTaskExecutorType");
 
-		UnicodeProperties taskSettingsUnicodeProperties = new UnicodeProperties(
-			true);
+		UnicodeProperties dispatchTaskSettingsUnicodeProperties =
+			new UnicodeProperties(true);
 
-		taskSettingsUnicodeProperties.fastLoad(
-			ParamUtil.getString(actionRequest, "taskSettings"));
-
-		String taskType = ParamUtil.getString(actionRequest, "taskType");
+		dispatchTaskSettingsUnicodeProperties.fastLoad(
+			ParamUtil.getString(actionRequest, "dispatchTaskSettings"));
 
 		DispatchTrigger dispatchTrigger = null;
 
 		if (dispatchTriggerId > 0) {
 			dispatchTrigger = _dispatchTriggerService.updateDispatchTrigger(
-				dispatchTriggerId, name, taskSettingsUnicodeProperties);
+				dispatchTriggerId, dispatchTaskSettingsUnicodeProperties, name);
 		}
 		else {
 			dispatchTrigger = _dispatchTriggerService.addDispatchTrigger(
-				_portal.getUserId(actionRequest), name,
-				taskSettingsUnicodeProperties, taskType);
+				_portal.getUserId(actionRequest), dispatchTaskExecutorType,
+				dispatchTaskSettingsUnicodeProperties, name);
 		}
 
 		return dispatchTrigger;
@@ -236,6 +253,18 @@ public class EditDispatchTriggerMVCActionCommand extends BaseMVCActionCommand {
 		ServletResponseUtil.write(httpServletResponse, object.toString());
 
 		httpServletResponse.flushBuffer();
+	}
+
+	private void _checkPermission(
+			ActionRequest actionRequest, long dispatchTriggerId)
+		throws PortalException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		DispatchTriggerPermission.contains(
+			themeDisplay.getPermissionChecker(), dispatchTriggerId,
+			ActionKeys.UPDATE);
 	}
 
 	private void _sendMessage(long dispatchTriggerId) {

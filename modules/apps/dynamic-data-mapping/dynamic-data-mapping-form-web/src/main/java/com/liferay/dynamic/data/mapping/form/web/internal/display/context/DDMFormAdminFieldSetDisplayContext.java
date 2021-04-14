@@ -153,6 +153,24 @@ public class DDMFormAdminFieldSetDisplayContext
 	}
 
 	@Override
+	public Map<String, Object> getDDMFormSettingsContext(
+			PageContext pageContext)
+		throws Exception {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		DDMFormLayout ddmFormLayout = DDMFormLayoutFactory.create(
+			DDMFormInstanceSettings.class);
+
+		ddmFormLayout.setPaginationMode(DDMFormLayout.TABBED_MODE);
+
+		return ddmFormRenderer.getDDMFormTemplateContext(
+			createSettingsDDMForm(0L, themeDisplay), ddmFormLayout,
+			createDDMFormRenderingContext(pageContext, renderRequest));
+	}
+
+	@Override
 	public DDMStructure getDDMStructure() {
 		if (_structure != null) {
 			return _structure;
@@ -361,23 +379,6 @@ public class DDMFormAdminFieldSetDisplayContext
 	@Override
 	public String getSearchContainerId() {
 		return "structure";
-	}
-
-	@Override
-	public String serializeSettingsForm(PageContext pageContext)
-		throws PortalException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		DDMFormLayout ddmFormLayout = DDMFormLayoutFactory.create(
-			DDMFormInstanceSettings.class);
-
-		ddmFormLayout.setPaginationMode(DDMFormLayout.TABBED_MODE);
-
-		return ddmFormRenderer.render(
-			createSettingsDDMForm(0L, themeDisplay), ddmFormLayout,
-			createDDMFormRenderingContext(pageContext, renderRequest));
 	}
 
 	protected UnsafeConsumer<DropdownItem, Exception>

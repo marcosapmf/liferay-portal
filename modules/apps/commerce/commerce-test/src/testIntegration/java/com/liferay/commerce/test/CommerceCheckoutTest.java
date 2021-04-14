@@ -113,7 +113,7 @@ public class CommerceCheckoutTest {
 		Settings settings = _settingsFactory.getSettings(
 			new GroupServiceSettingsLocator(
 				_commerceChannel.getGroupId(),
-				CommerceConstants.ORDER_SERVICE_NAME));
+				CommerceConstants.SERVICE_NAME_ORDER));
 
 		ModifiableSettings modifiableSettings =
 			settings.getModifiableSettings();
@@ -271,7 +271,7 @@ public class CommerceCheckoutTest {
 			Settings settings = _settingsFactory.getSettings(
 				new GroupServiceSettingsLocator(
 					_commerceChannel.getGroupId(),
-					CommerceConstants.ORDER_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_ORDER));
 
 			ModifiableSettings modifiableSettings =
 				settings.getModifiableSettings();
@@ -372,10 +372,8 @@ public class CommerceCheckoutTest {
 
 			BigDecimal price = commercePriceEntry.getPrice();
 
-			int quantity = commerceOrderItem.getQuantity();
-
 			BigDecimal totalItemPrice = price.multiply(
-				BigDecimal.valueOf(quantity));
+				BigDecimal.valueOf(commerceOrderItem.getQuantity()));
 
 			expectedSubtotal = expectedSubtotal.add(totalItemPrice);
 		}

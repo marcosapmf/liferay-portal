@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.entry.Value;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.filter.AndNode;
@@ -71,11 +70,19 @@ public class SearchLdapHandler extends BaseLdapHandler {
 			responses.add(getResultResponse(searchRequest));
 		}
 		catch (SearchSizeLimitException searchSizeLimitException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(searchSizeLimitException, searchSizeLimitException);
+			}
+
 			responses.add(
 				getResultResponse(
 					searchRequest, ResultCodeEnum.SIZE_LIMIT_EXCEEDED));
 		}
 		catch (SearchTimeLimitException searchTimeLimitException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(searchTimeLimitException, searchTimeLimitException);
+			}
+
 			responses.add(
 				getResultResponse(
 					searchRequest, ResultCodeEnum.TIME_LIMIT_EXCEEDED));
@@ -148,9 +155,8 @@ public class SearchLdapHandler extends BaseLdapHandler {
 		SearchResultEntry searchResponseEntry = new SearchResultEntryImpl(
 			searchRequest.getMessageId());
 
-		Entry entry = directory.toEntry(searchRequest.getAttributes());
-
-		searchResponseEntry.setEntry(entry);
+		searchResponseEntry.setEntry(
+			directory.toEntry(searchRequest.getAttributes()));
 
 		if (responses.size() >= getSizeLimit(searchRequest)) {
 			throw new SearchSizeLimitException();

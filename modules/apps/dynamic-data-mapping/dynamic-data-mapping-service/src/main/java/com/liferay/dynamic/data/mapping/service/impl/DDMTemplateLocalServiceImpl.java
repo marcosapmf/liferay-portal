@@ -242,34 +242,10 @@ public class DDMTemplateLocalServiceImpl
 			nameMap, script, smallImage, smallImageURL, smallImageFile,
 			smallImageBytes);
 
-		long templateId = counterLocalService.increment();
-
-		DDMTemplate template = ddmTemplatePersistence.create(templateId);
-
-		template.setUuid(serviceContext.getUuid());
-		template.setGroupId(groupId);
-		template.setCompanyId(user.getCompanyId());
-		template.setUserId(user.getUserId());
-		template.setUserName(user.getFullName());
-		template.setVersionUserId(user.getUserId());
-		template.setVersionUserName(user.getFullName());
-		template.setClassNameId(classNameId);
-		template.setClassPK(classPK);
-		template.setResourceClassNameId(resourceClassNameId);
-		template.setTemplateKey(templateKey);
-		template.setVersion(DDMTemplateConstants.VERSION_DEFAULT);
-		template.setNameMap(nameMap);
-		template.setDescriptionMap(descriptionMap);
-		template.setType(type);
-		template.setMode(mode);
-		template.setLanguage(language);
-		template.setScript(script);
-		template.setCacheable(cacheable);
-		template.setSmallImage(smallImage);
-		template.setSmallImageId(counterLocalService.increment());
-		template.setSmallImageURL(smallImageURL);
-
-		template = ddmTemplatePersistence.update(template);
+		DDMTemplate template = addTemplate(
+			user, groupId, classNameId, classPK, resourceClassNameId,
+			templateKey, nameMap, descriptionMap, type, mode, language, script,
+			cacheable, smallImage, smallImageURL, serviceContext);
 
 		// Resources
 
@@ -362,6 +338,7 @@ public class DDMTemplateLocalServiceImpl
 	 * @return the new template
 	 * @throws PortalException if a portal exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DDMTemplate copyTemplate(
 			long userId, long templateId, Map<Locale, String> nameMap,
@@ -376,6 +353,7 @@ public class DDMTemplateLocalServiceImpl
 			serviceContext);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DDMTemplate copyTemplate(
 			long userId, long templateId, ServiceContext serviceContext)
@@ -407,6 +385,7 @@ public class DDMTemplateLocalServiceImpl
 	 * @return the new templates
 	 * @throws PortalException if a portal exception occurred
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public List<DDMTemplate> copyTemplates(
 			long userId, long classNameId, long oldClassPK, long newClassPK,
@@ -1467,6 +1446,9 @@ public class DDMTemplateLocalServiceImpl
 
 		byte[] smallImageBytes = null;
 
+		DDMTemplate template = ddmTemplateLocalService.getDDMTemplate(
+			templateId);
+
 		if (smallImage) {
 			try {
 				smallImageBytes = FileUtil.getBytes(smallImageFile);
@@ -1477,13 +1459,12 @@ public class DDMTemplateLocalServiceImpl
 				}
 			}
 
-			if ((smallImageBytes == null) && !Validator.isUrl(smallImageURL)) {
+			if (!template.isSmallImage() && (smallImageBytes == null) &&
+				!Validator.isUrl(smallImageURL)) {
+
 				smallImage = false;
 			}
 		}
-
-		DDMTemplate template = ddmTemplateLocalService.getDDMTemplate(
-			templateId);
 
 		validate(
 			template.getGroupId(),
@@ -1592,6 +1573,45 @@ public class DDMTemplateLocalServiceImpl
 			DDMWebConfiguration.class, properties);
 	}
 
+	protected DDMTemplate addTemplate(
+			User user, long groupId, long classNameId, long classPK,
+			long resourceClassNameId, String templateKey,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			String type, String mode, String language, String script,
+			boolean cacheable, boolean smallImage, String smallImageURL,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		long templateId = counterLocalService.increment();
+
+		DDMTemplate template = ddmTemplatePersistence.create(templateId);
+
+		template.setUuid(serviceContext.getUuid());
+		template.setGroupId(groupId);
+		template.setCompanyId(user.getCompanyId());
+		template.setUserId(user.getUserId());
+		template.setUserName(user.getFullName());
+		template.setVersionUserId(user.getUserId());
+		template.setVersionUserName(user.getFullName());
+		template.setClassNameId(classNameId);
+		template.setClassPK(classPK);
+		template.setResourceClassNameId(resourceClassNameId);
+		template.setTemplateKey(templateKey);
+		template.setVersion(DDMTemplateConstants.VERSION_DEFAULT);
+		template.setNameMap(nameMap);
+		template.setDescriptionMap(descriptionMap);
+		template.setType(type);
+		template.setMode(mode);
+		template.setLanguage(language);
+		template.setScript(script);
+		template.setCacheable(cacheable);
+		template.setSmallImage(smallImage);
+		template.setSmallImageId(counterLocalService.increment());
+		template.setSmallImageURL(smallImageURL);
+
+		return ddmTemplatePersistence.update(template);
+	}
+
 	protected DDMTemplateVersion addTemplateVersion(
 		User user, DDMTemplate template, String version,
 		ServiceContext serviceContext) {
@@ -1634,15 +1654,71 @@ public class DDMTemplateLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		// Template
+
+		if (!ddmWebConfiguration.enableTemplateCreation()) {
+			throw new TemplateCreationDisabledException();
+		}
+
+		User user = userLocalService.getUser(userId);
+		String templateKey = String.valueOf(counterLocalService.increment());
+
+		boolean smallImage = template.isSmallImage();
+
 		File smallImageFile = getSmallImageFile(template);
 
-		return ddmTemplateLocalService.addTemplate(
-			userId, template.getGroupId(), template.getClassNameId(), classPK,
-			template.getResourceClassNameId(), null, nameMap, descriptionMap,
-			template.getType(), template.getMode(), template.getLanguage(),
-			template.getScript(), template.isCacheable(),
-			template.isSmallImage(), template.getSmallImageURL(),
-			smallImageFile, serviceContext);
+		byte[] smallImageBytes = null;
+
+		if (template.isSmallImage()) {
+			try {
+				smallImageBytes = FileUtil.getBytes(smallImageFile);
+			}
+			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException, ioException);
+				}
+			}
+
+			if ((smallImageBytes == null) &&
+				!Validator.isUrl(template.getSmallImageURL())) {
+
+				smallImage = false;
+			}
+		}
+
+		validate(
+			template.getGroupId(), template.getClassNameId(), templateKey,
+			LocaleUtil.getSiteDefault(), nameMap, template.getScript(),
+			smallImage, template.getSmallImageURL(), smallImageFile,
+			smallImageBytes);
+
+		DDMTemplate newTemplate = addTemplate(
+			user, template.getGroupId(), template.getClassNameId(), classPK,
+			template.getResourceClassNameId(), templateKey, nameMap,
+			descriptionMap, template.getType(), template.getMode(),
+			template.getLanguage(), template.getScript(),
+			template.isCacheable(), smallImage, template.getSmallImageURL(),
+			serviceContext);
+
+		// Resources
+
+		resourceLocalService.copyModelResources(
+			template.getCompanyId(), DDMTemplate.class.getName(),
+			template.getPrimaryKey(), newTemplate.getPrimaryKey());
+
+		// Small image
+
+		saveImages(
+			smallImage, newTemplate.getSmallImageId(), smallImageFile,
+			smallImageBytes);
+
+		// Template version
+
+		addTemplateVersion(
+			user, newTemplate, DDMTemplateConstants.VERSION_DEFAULT,
+			serviceContext);
+
+		return newTemplate;
 	}
 
 	protected String formatScript(String type, String language, String script)
@@ -1834,14 +1910,17 @@ public class DDMTemplateLocalServiceImpl
 
 	private long[] _getAncestorSiteAndDepotGroupIds(long groupId) {
 		try {
-			if (_depotEntryLocalService == null) {
+			DepotEntryLocalService depotEntryLocalService =
+				_depotEntryLocalService;
+
+			if (depotEntryLocalService == null) {
 				return _portal.getAncestorSiteGroupIds(groupId);
 			}
 
 			return ArrayUtil.append(
 				_portal.getAncestorSiteGroupIds(groupId),
 				ListUtil.toLongArray(
-					_depotEntryLocalService.getGroupConnectedDepotEntries(
+					depotEntryLocalService.getGroupConnectedDepotEntries(
 						groupId, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
 					DepotEntry::getGroupId));
 		}
@@ -1874,7 +1953,7 @@ public class DDMTemplateLocalServiceImpl
 		cardinality = ReferenceCardinality.OPTIONAL,
 		policyOption = ReferencePolicyOption.GREEDY
 	)
-	private DepotEntryLocalService _depotEntryLocalService;
+	private volatile DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
 	private Portal _portal;

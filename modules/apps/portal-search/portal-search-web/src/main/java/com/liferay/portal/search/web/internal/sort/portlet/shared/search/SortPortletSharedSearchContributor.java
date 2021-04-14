@@ -14,7 +14,13 @@
 
 package com.liferay.portal.search.web.internal.sort.portlet.shared.search;
 
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.sort.Sort;
 import com.liferay.portal.search.sort.SortBuilder;
@@ -29,7 +35,10 @@ import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchSe
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Stream;
+
+import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -87,9 +96,9 @@ public class SortPortletSharedSearchContributor
 		PortletSharedSearchSettings portletSharedSearchSettings,
 		SortPortletPreferences sortPortletPreferences) {
 
-		List<String> fieldValues = Arrays.asList(
-			portletSharedSearchSettings.getParameterValues(
-				sortPortletPreferences.getParameterName()));
+		List<String> fieldValues = getFieldValues(
+			sortPortletPreferences.getParameterName(),
+			portletSharedSearchSettings);
 
 		ThemeDisplay themeDisplay =
 			portletSharedSearchSettings.getThemeDisplay();
@@ -101,6 +110,43 @@ public class SortPortletSharedSearchContributor
 		).map(
 			fieldValue -> buildSort(fieldValue, themeDisplay.getLocale())
 		);
+	}
+
+	protected List<String> getFieldValues(
+		String parameterName,
+		PortletSharedSearchSettings portletSharedSearchSettings) {
+
+		String[] fieldValues = portletSharedSearchSettings.getParameterValues(
+			parameterName);
+
+		if (ArrayUtil.isNotEmpty(fieldValues)) {
+			return Arrays.asList(fieldValues);
+		}
+
+		String portletId = portletSharedSearchSettings.getPortletId();
+		ThemeDisplay themeDisplay =
+			portletSharedSearchSettings.getThemeDisplay();
+
+		try {
+			PortletPreferences portletPreferences =
+				PortletPreferencesFactoryUtil.getExistingPortletSetup(
+					themeDisplay.getLayout(), portletId);
+
+			SortPortletPreferences sortPortletPreferences =
+				new SortPortletPreferencesImpl(Optional.of(portletPreferences));
+
+			JSONArray fieldsJSONArray =
+				sortPortletPreferences.getFieldsJSONArray();
+
+			JSONObject jsonObject = fieldsJSONArray.getJSONObject(0);
+
+			String fieldValue = jsonObject.getString("field");
+
+			return ListUtil.fromArray(fieldValue);
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
 	}
 
 	@Reference

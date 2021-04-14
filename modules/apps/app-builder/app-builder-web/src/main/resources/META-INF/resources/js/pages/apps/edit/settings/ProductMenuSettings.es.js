@@ -125,7 +125,7 @@ export default () => {
 						className="form-control"
 						id="scope"
 						onChange={onScopeChange}
-						value={scope}
+						value={scope.join()}
 					>
 						{SCOPES.map(({label, value}, index) => (
 							<option key={index} value={value}>

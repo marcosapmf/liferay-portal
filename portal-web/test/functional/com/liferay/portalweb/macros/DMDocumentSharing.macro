@@ -17,15 +17,13 @@ definition {
 			dmDocumentTitle = "${dmDocumentTitle}",
 			viewableBy = "Owner");
 
-		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "${dmDocumentTitle}");
+		PermissionsInline.gotoDocumentsAndMediaDocumentPG(dmDocumentTitle = "${dmDocumentTitle}");
 
 		Role.removePermissionPG(
 			permissionDefinitionKey = "INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX",
 			roleTitle = "Guest");
 
-		IFrame.closeFrame();
-
-		Pause(locator1 = "5000");
+		Pause(locator1 = "3000");
 	}
 
 	macro changePermission {

@@ -145,7 +145,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 		else if (type.equals("document_library") || type.equals("image")) {
 			return _getFileEntryData();
 		}
-		else if (type.equals("link_to_layout")) {
+		else if (type.equals("ddm-link-to-page") ||
+				 type.equals("link_to_layout")) {
+
 			return _getLinkToLayoutData();
 		}
 
@@ -160,7 +162,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 			return _getDDMJournalArticleFriendlyURL();
 		}
-		else if (type.equals("link_to_layout")) {
+		else if (type.equals("ddm-link-to-page") ||
+				 type.equals("link_to_layout")) {
+
 			return _getLinkToLayoutFriendlyURL();
 		}
 
@@ -168,7 +172,13 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	}
 
 	public String getName() {
-		return (String)get("name");
+		Object name = get("name");
+
+		if ((name == null) || (name instanceof String)) {
+			return (String)name;
+		}
+
+		return "name";
 	}
 
 	public List<String> getOptions() {
@@ -190,13 +200,15 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 	public String getUrl() {
 		String type = getType();
 
-		if (!type.equals("link_to_layout")) {
+		if (!type.equals("ddm-link-to-page") &&
+			!type.equals("link_to_layout")) {
+
 			return StringPool.BLANK;
 		}
 
-		long layoutGroupId = getLayoutGroupId();
-		long layoutId = getLayoutId();
-		String layoutType = getLayoutType();
+		long layoutGroupId = 0;
+		long layoutId = 0;
+		String layoutType = StringPool.BLANK;
 
 		String data = (String)get("data");
 
@@ -221,6 +233,11 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 				return StringPool.BLANK;
 			}
+		}
+		else {
+			layoutGroupId = getLayoutGroupId();
+			layoutId = getLayoutId();
+			layoutType = getLayoutType();
 		}
 
 		if (Validator.isNull(layoutType)) {
@@ -254,6 +271,10 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 			sb.append(name);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			sb.append("@group_id@");
 		}
 
@@ -348,6 +369,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 				StringPool.BLANK);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -375,6 +399,9 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 				false, true);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return StringPool.BLANK;
@@ -462,6 +489,12 @@ public class TemplateNode extends LinkedHashMap<String, Object> {
 
 	private String _getLinkToLayoutFriendlyURL() {
 		if (_themeDisplay == null) {
+			return getUrl();
+		}
+
+		String data = (String)get("data");
+
+		if (JSONUtil.isValid(data)) {
 			return getUrl();
 		}
 

@@ -18,7 +18,6 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
-import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -32,6 +31,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -54,9 +54,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v1_0/cart-item.properties",
-	scope = ServiceScope.PROTOTYPE, service = CartItemResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {CartItemResource.class, NestedFieldSupport.class}
 )
-public class CartItemResourceImpl extends BaseCartItemResourceImpl {
+public class CartItemResourceImpl
+	extends BaseCartItemResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public Response deleteCartItem(@NotNull Long cartItemId) throws Exception {
@@ -106,8 +108,6 @@ public class CartItemResourceImpl extends BaseCartItemResourceImpl {
 		ServiceContext serviceContext = _serviceContextHelper.getServiceContext(
 			commerceOrder.getGroupId());
 
-		_cpInstanceService.getCPInstance(cartItem.getSkuId());
-
 		CommerceContext commerceContext = _commerceContextFactory.create(
 			contextCompany.getCompanyId(), commerceOrder.getGroupId(),
 			contextUser.getUserId(), cartId,
@@ -116,7 +116,7 @@ public class CartItemResourceImpl extends BaseCartItemResourceImpl {
 		return _toCartItem(
 			_commerceOrderItemService.upsertCommerceOrderItem(
 				commerceOrder.getCommerceOrderId(), cartItem.getSkuId(),
-				cartItem.getQuantity(), 0, cartItem.getOptions(),
+				cartItem.getOptions(), cartItem.getQuantity(), 0,
 				commerceContext, serviceContext));
 	}
 
@@ -201,9 +201,6 @@ public class CartItemResourceImpl extends BaseCartItemResourceImpl {
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;
-
-	@Reference
-	private CPInstanceService _cpInstanceService;
 
 	@Reference
 	private CartItemDTOConverter _orderItemDTOConverter;

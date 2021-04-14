@@ -19,17 +19,28 @@ import {UPDATE_DATA_DEFINITION, UPDATE_FIELDSETS} from '../../../actions.es';
 import DataLayoutBuilderContext from '../../../data-layout-builder/DataLayoutBuilderContext.es';
 import {updateItem} from '../../../utils/client.es';
 import {getDataDefinitionFieldSet} from '../../../utils/dataDefinition.es';
+import {containsField} from '../../../utils/dataLayoutVisitor.es';
 import {
-	containsField,
+	normalizeDataDefinition,
+	normalizeDataLayout,
 	normalizeDataLayoutRows,
-} from '../../../utils/dataLayoutVisitor.es';
+} from '../../../utils/normalizers.es';
 import {errorToast, successToast} from '../../../utils/toast.es';
 
-export default ({availableLanguageIds, childrenContext, fieldSet}) => {
+export default ({
+	availableLanguageIds,
+	childrenContext,
+	defaultLanguageId,
+	fieldSet,
+	onEditingLanguageIdChange: setEditingLanguageId,
+}) => {
 	const [context, dispatch] = useContext(AppContext);
 	const [dataLayoutBuilder] = useContext(DataLayoutBuilderContext);
 	const {dataDefinition, dataLayout, fieldSets} = context;
 	const {state: childrenState} = childrenContext;
+	const {
+		contentTypeConfig: {allowInvalidAvailableLocalesForProperty},
+	} = dataLayoutBuilder.props;
 
 	return (name) => {
 		const {
@@ -37,15 +48,37 @@ export default ({availableLanguageIds, childrenContext, fieldSet}) => {
 			dataLayout: {dataLayoutPages},
 		} = childrenState;
 
-		const normalizedFieldSet = {
+		let newDataDefinition = {
 			...fieldSet,
 			availableLanguageIds,
 			dataDefinitionFields,
-			defaultDataLayout: {
-				...fieldSet.defaultDataLayout,
-				dataLayoutPages,
-			},
 			name,
+		};
+
+		if (!newDataDefinition.name[defaultLanguageId]) {
+			setEditingLanguageId(defaultLanguageId);
+
+			return Promise.reject(
+				new Error(Liferay.Language.get('please-enter-a-valid-title'))
+			);
+		}
+
+		if (!allowInvalidAvailableLocalesForProperty) {
+			newDataDefinition = normalizeDataDefinition(
+				newDataDefinition,
+				fieldSet.defaultLanguageId
+			);
+		}
+
+		const normalizedFieldSet = {
+			...newDataDefinition,
+			defaultDataLayout: normalizeDataLayout(
+				{
+					...fieldSet.defaultDataLayout,
+					dataLayoutPages,
+				},
+				fieldSet.defaultLanguageId
+			),
 		};
 
 		return updateItem(
@@ -57,22 +90,6 @@ export default ({availableLanguageIds, childrenContext, fieldSet}) => {
 					dataDefinition.dataDefinitionFields,
 					fieldSet.id
 				);
-
-				const normalizedDataDefinitionFields = () =>
-					dataDefinition.dataDefinitionFields.map((field) => {
-						const {
-							customProperties: {ddmStructureId},
-						} = field;
-
-						if (ddmStructureId == fieldSet.id) {
-							return {
-								...field,
-								nestedDataDefinitionFields: dataDefinitionFields,
-							};
-						}
-
-						return field;
-					});
 
 				if (dataDefinitionFieldSet) {
 					const fieldName = dataDefinitionFieldSet.name;
@@ -105,7 +122,24 @@ export default ({availableLanguageIds, childrenContext, fieldSet}) => {
 							payload: {
 								dataDefinition: {
 									...dataDefinition,
-									dataDefinitionFields: normalizedDataDefinitionFields(),
+									dataDefinitionFields: dataDefinition.dataDefinitionFields.map(
+										(field) => {
+											const {
+												customProperties: {
+													ddmStructureId,
+												},
+											} = field;
+
+											if (ddmStructureId == fieldSet.id) {
+												return {
+													...field,
+													nestedDataDefinitionFields: dataDefinitionFields,
+												};
+											}
+
+											return field;
+										}
+									),
 								},
 							},
 							type: UPDATE_DATA_DEFINITION,

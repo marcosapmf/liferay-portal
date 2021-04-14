@@ -10,7 +10,7 @@
 <tbody>
 <tr>
 	<td>ADD_BLOGS_ENTRY</td>
-	<td>//a[contains(@aria-label,'Add Blog Entry')]</td>
+	<td>//a[contains(@class,'nav-btn') and *[contains(@class,'icon-plus')]][*[name()='svg'][contains(@class,'lexicon-icon-plus')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -52,12 +52,12 @@
 <!--ICON_VIEW-->
 <tr>
 	<td>ICON_VIEW_ENTRY_TITLE</td>
-	<td>//div[contains(@id,'blogEntriesSearchContainer')]//li[contains(.,'${key_entryTitle}')]//div[contains(@class,'card-title')]</td>
+	<td>//div[contains(@id,'blogEntriesSearchContainer')]//p[contains(@class,'card-title') and @title='${key_entryTitle}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ICON_VIEW_ENTRY_TITLE_2</td>
-	<td>//div[contains(@id,'blogEntriesSearchContainer')]//li[contains(.,'${key_entryTitle}') and contains(.,'${key_entryStatus}')]//a[contains(@class,'card-title')]</td>
+	<td>//div[contains(@id,'blogEntriesSearchContainer')]//li[contains(.,'${key_entryStatus}')]//p[contains(@class,'card-title') and @title='${key_entryTitle}']</td>
 	<td></td>
 </tr>
 <tr>

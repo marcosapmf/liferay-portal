@@ -674,16 +674,15 @@ AUI.add(
 
 						if (instance._exportLAR) {
 							redirectParameters.mvcRenderCommandName =
-								'editExportConfiguration';
+								'/export_import/edit_export_configuration';
 							redirectParameters.tabs2 = 'new-export-process';
 							redirectParameters.exportConfigurationButtons =
 								'custom';
 						}
 						else {
 							redirectParameters.mvcRenderCommandName =
-								'editPublishConfiguration';
-							redirectParameters.tabs2 =
-								'new-publication-process';
+								'/staging_processes/edit_publish_configuration';
+							redirectParameters.tabs2 = 'new-publish-process';
 							redirectParameters.publishConfigurationButtons =
 								'custom';
 						}

@@ -38,7 +38,7 @@ PortletURL portletURL = commerceAccountGroupAdminDisplayContext.getPortletURL();
 				selectedDisplayStyle="list"
 			/>
 
-			<portlet:actionURL name="editCommerceAccountGroupCommerceAccountRel" var="addCommerceAccountGroupCommerceAccountRelURL" />
+			<portlet:actionURL name="/commerce_account_group_admin/edit_commerce_account_group_commerce_account_rel" var="addCommerceAccountGroupCommerceAccountRelURL" />
 
 			<aui:form action="<%= addCommerceAccountGroupCommerceAccountRelURL %>" cssClass="hide" name="addCommerceAccountGroupCommerceAccountRelFm">
 				<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD_MULTIPLE %>" />
@@ -74,7 +74,7 @@ PortletURL portletURL = commerceAccountGroupAdminDisplayContext.getPortletURL();
 		</liferay-frontend:management-bar-action-buttons>
 	</liferay-frontend:management-bar>
 
-	<div class="container-fluid-1280">
+	<div class="container-fluid container-fluid-max-xl">
 		<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" />
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -87,7 +87,6 @@ PortletURL portletURL = commerceAccountGroupAdminDisplayContext.getPortletURL();
 			>
 				<liferay-ui:search-container-row
 					className="com.liferay.commerce.account.model.CommerceAccountGroupCommerceAccountRel"
-					cssClass="entry-display-style"
 					keyProperty="commerceAccountGroupCommerceAccountRelId"
 					modelVar="commerceAccountGroupCommerceAccountRel"
 				>
@@ -97,13 +96,13 @@ PortletURL portletURL = commerceAccountGroupAdminDisplayContext.getPortletURL();
 					%>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="id"
 						value="<%= String.valueOf(commerceAccount.getCommerceAccountId()) %>"
 					/>
 
 					<liferay-ui:search-container-column-text
-						cssClass="important table-cell-content"
+						cssClass="important table-cell-expand"
 						name="name"
 						value="<%= HtmlUtil.escape(commerceAccount.getName()) %>"
 					/>
@@ -142,7 +141,7 @@ PortletURL portletURL = commerceAccountGroupAdminDisplayContext.getPortletURL();
 
 				submitForm(
 					form,
-					'<portlet:actionURL name="editCommerceAccountGroupCommerceAccountRel" />'
+					'<portlet:actionURL name="/commerce_account_group_admin/edit_commerce_account_group_commerce_account_rel" />'
 				);
 			}
 		}

@@ -65,15 +65,11 @@ import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
@@ -217,6 +213,11 @@ public class RESTBuilder {
 			Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(
 				openAPIYAML);
 
+			Map<String, Schema> allExternalSchemas =
+				OpenAPIUtil.getAllExternalSchemas(openAPIYAML);
+
+			context.put("allExternalSchemas", allExternalSchemas);
+
 			context.put("allSchemas", allSchemas);
 
 			String escapedVersion = OpenAPIUtil.escapeVersion(openAPIYAML);
@@ -228,6 +229,9 @@ public class RESTBuilder {
 
 			context.put("globalEnumSchemas", globalEnumSchemas);
 
+			context.put(
+				"javaDataTypeMap",
+				OpenAPIParserUtil.getJavaDataTypeMap(_configYAML, openAPIYAML));
 			context.put("openAPIYAML", openAPIYAML);
 
 			if (_configYAML.isGenerateGraphQL()) {
@@ -245,7 +249,7 @@ public class RESTBuilder {
 				openAPIYAML);
 
 			_createExternalSchemaFiles(
-				schemas, context, escapedVersion, openAPIYAML);
+				allExternalSchemas, context, escapedVersion);
 
 			Set<Map.Entry<String, Schema>> set = new HashSet<>(
 				allSchemas.entrySet());
@@ -868,14 +872,9 @@ public class RESTBuilder {
 	}
 
 	private void _createExternalSchemaFiles(
-			Map<String, Schema> allSchemas, Map<String, Object> context,
-			String escapedVersion, OpenAPIYAML openAPIYAML)
+			Map<String, Schema> allExternalSchemas, Map<String, Object> context,
+			String escapedVersion)
 		throws Exception {
-
-		Map<String, Schema> allExternalSchemas = _getAllExternalSchemas(
-			allSchemas, openAPIYAML);
-
-		context.put("allExternalSchemas", allExternalSchemas);
 
 		for (Map.Entry<String, Schema> entry : allExternalSchemas.entrySet()) {
 			String schemaName = entry.getKey();
@@ -1669,15 +1668,15 @@ public class RESTBuilder {
 					continue;
 				}
 
+				String propertyName = entry2.getKey();
+				String schemaVarName = _getSchemaVarName(
+					freeMarkerTool, reference);
+
 				int x = yamlString.indexOf(' ' + entry1.getKey() + ':');
 
 				int y = yamlString.indexOf(' ' + entry2.getKey() + ':', x);
 
 				int z = yamlString.indexOf(':', y);
-
-				String propertyName = entry2.getKey();
-				String schemaVarName = freeMarkerTool.getSchemaVarName(
-					reference.substring(reference.lastIndexOf('/') + 1));
 
 				if (Objects.equals(propertySchema.getType(), "array")) {
 					String plural = TextFormatter.formatPlural(schemaVarName);
@@ -1744,83 +1743,6 @@ public class RESTBuilder {
 		return descriton.substring(0, x) + "\n" + _formatDescrition(indent, s);
 	}
 
-	private Map<String, Schema> _getAllExternalSchemas(
-			Map<String, Schema> allSchemas, OpenAPIYAML openAPIYAML)
-		throws Exception {
-
-		List<String> externalReferences =
-			OpenAPIParserUtil.getExternalReferences(openAPIYAML);
-
-		Map<String, Schema> allExternalSchemas = new HashMap<>();
-
-		Map<String, Schema> externalSchemas =
-			OpenAPIParserUtil.getExternalSchemas(openAPIYAML);
-
-		for (String externalReference : externalReferences) {
-			String referenceName = OpenAPIParserUtil.getReferenceName(
-				externalReference);
-
-			allExternalSchemas.put(
-				referenceName, externalSchemas.get(referenceName));
-		}
-
-		Queue<Map<String, Schema>> queue = new LinkedList<>();
-
-		queue.add(allExternalSchemas);
-
-		Map<String, Schema> map = null;
-
-		while ((map = queue.poll()) != null) {
-			for (Map.Entry<String, Schema> entry : map.entrySet()) {
-				Schema schema = entry.getValue();
-
-				Map<String, Schema> propertySchemas = null;
-
-				Items items = schema.getItems();
-
-				if (items != null) {
-					propertySchemas = items.getPropertySchemas();
-				}
-				else if (schema.getReference() != null) {
-					String referenceName = OpenAPIParserUtil.getReferenceName(
-						schema.getReference());
-
-					if (allSchemas.get(referenceName) == null) {
-						Schema externalSchema = externalSchemas.get(
-							referenceName);
-
-						Map<String, Schema> externalSchemaMap =
-							Collections.singletonMap(
-								referenceName, externalSchema);
-
-						allExternalSchemas.putAll(externalSchemaMap);
-						queue.add(externalSchemaMap);
-					}
-				}
-				else {
-					propertySchemas = schema.getPropertySchemas();
-				}
-
-				if (propertySchemas == null) {
-					continue;
-				}
-
-				String schemaName = StringUtil.upperCaseFirstLetter(
-					entry.getKey());
-
-				if (items != null) {
-					schemaName = OpenAPIUtil.formatSingular(schemaName);
-				}
-
-				allExternalSchemas.put(schemaName, schema);
-
-				queue.add(propertySchemas);
-			}
-		}
-
-		return allExternalSchemas;
-	}
-
 	private String _getClientMavenGroupId(String apiPackagePath) {
 		if (apiPackagePath.startsWith("com.liferay.commerce")) {
 			return "com.liferay.commerce";
@@ -1884,6 +1806,15 @@ public class RESTBuilder {
 		}
 
 		return relatedSchemaNames;
+	}
+
+	private String _getSchemaVarName(
+		FreeMarkerTool freeMarkerTool, String reference) {
+
+		int index = Math.max(
+			reference.lastIndexOf('#'), reference.lastIndexOf('/'));
+
+		return freeMarkerTool.getSchemaVarName(reference.substring(index + 1));
 	}
 
 	private OpenAPIYAML _loadOpenAPIYAML(String yamlString) {

@@ -82,7 +82,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "merge-tags"));
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script require="metal-dom/src/all/dom as dom">
+<aui:script sandbox="<%= true %>">
 	var targetTagNameSelect = document.getElementById(
 		'<portlet:namespace />targetTagName'
 	);
@@ -92,8 +92,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "merge-tags"));
 			var value = item.value;
 
 			if (value !== undefined) {
-				dom.append(
-					targetTagNameSelect,
+				targetTagNameSelect.append(
 					Liferay.Util.sub(
 						'<option value="{0}">{1}</option>',
 						value,
@@ -111,7 +110,9 @@ renderResponse.setTitle(LanguageUtil.get(request, "merge-tags"));
 					'option[value="' + value + '"]'
 				);
 
-				dom.exitDocument(targetTagNameOption);
+				if (targetTagNameOption) {
+					targetTagNameOption.remove();
+				}
 			}
 		};
 	}

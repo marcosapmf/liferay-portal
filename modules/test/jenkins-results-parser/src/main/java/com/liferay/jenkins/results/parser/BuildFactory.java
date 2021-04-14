@@ -46,7 +46,11 @@ public class BuildFactory {
 				return new CucumberAxisBuild(url, (BatchBuild)parentBuild);
 			}
 
-			if ((jobVariant != null) && jobVariant.contains("functional")) {
+			if ((jobVariant != null) &&
+				(jobVariant.contains("functional") ||
+				 jobVariant.contains("test-portal-environment") ||
+				 jobVariant.contains("test-portal-fixpack-environment"))) {
+
 				return new PoshiAxisBuild(url, (BatchBuild)parentBuild);
 			}
 
@@ -126,8 +130,29 @@ public class BuildFactory {
 				url, (TopLevelBuild)parentBuild);
 		}
 
+		if (jobName.equals("test-portal-app-release")) {
+			return new PortalAppReleaseTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.startsWith("test-portal-aws(")) {
+			return new PortalAWSTopLevelBuild(url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.startsWith("test-portal-environment(") ||
+			jobName.startsWith("test-portal-environment-release(") ||
+			jobName.startsWith("test-portal-fixpack-environment(")) {
+
+			return new PortalEnvironmentBuild(url, (TopLevelBuild)parentBuild);
+		}
+
 		if (jobName.equals("test-portal-fixpack-release")) {
 			return new PortalFixpackReleasePortalTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("test-portal-hotfix-release")) {
+			return new PortalHotfixReleasePortalTopLevelBuild(
 				url, (TopLevelBuild)parentBuild);
 		}
 
@@ -179,7 +204,7 @@ public class BuildFactory {
 				"(?<queryString>.*))/?");
 
 	private static final String[] _TOKENS_BATCH = {
-		"-batch", "-dist", "environment-"
+		"-batch", "-chrome", "-dist", "-edge", "-firefox", "-ie11", "-safari"
 	};
 
 	private static final MultiPattern _buildURLMultiPattern = new MultiPattern(
@@ -187,7 +212,7 @@ public class BuildFactory {
 			"\\w+://(?<master>[^/]+)/+job/+(?<jobName>[^/]+)/?",
 			_BUILD_URL_SUFFIX_REGEX),
 		JenkinsResultsParserUtil.combine(
-			".*?Test/+[^/]+/+test-[0-9]-[0-9]{1,2}/", "(?<jobName>[^/]+)/?",
-			_BUILD_URL_SUFFIX_REGEX));
+			".*?Test/+[^/]+/+(?<master>test-[0-9]-[0-9]{1,2})/",
+			"(?<jobName>[^/]+)/?", _BUILD_URL_SUFFIX_REGEX));
 
 }

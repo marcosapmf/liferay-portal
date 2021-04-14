@@ -59,7 +59,7 @@ if (parentOrganizationId > 0) {
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280">
+<div class="container-fluid container-fluid-max-xl">
 	<liferay-ui:search-container
 		searchContainer="<%= new OrganizationSearch(renderRequest, portletURL) %>"
 		var="organizationSearchContainer"
@@ -76,15 +76,16 @@ if (parentOrganizationId > 0) {
 		}
 
 		if (portletName.equals(PortletKeys.MY_SITES_DIRECTORY)) {
-			LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
-				"inherit", Boolean.FALSE
-			).put(
-				"site", Boolean.TRUE
-			).put(
-				"usersGroups", user.getUserId()
-			).build();
-
-			List<Group> groups = GroupLocalServiceUtil.search(user.getCompanyId(), groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			List<Group> groups = GroupLocalServiceUtil.search(
+				user.getCompanyId(),
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", Boolean.FALSE
+				).put(
+					"site", Boolean.TRUE
+				).put(
+					"usersGroups", user.getUserId()
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 			organizationParams.put("organizationsGroups", SitesUtil.filterGroups(groups, PropsValues.MY_SITES_DIRECTORY_SITE_EXCLUDES));
 		}
@@ -99,13 +100,54 @@ if (parentOrganizationId > 0) {
 
 			organizationParams.put("organizationsTree", ListUtil.fromArray(parentOrganization));
 		}
+
+		Indexer<?> indexer = IndexerRegistryUtil.nullSafeGetIndexer(Organization.class);
 		%>
 
-		<liferay-ui:organization-search-container-results
-			forceDatabase="<%= !portletName.equals(PortletKeys.DIRECTORY) %>"
-			organizationParams="<%= organizationParams %>"
-			parentOrganizationId="<%= parentOrganizationId %>"
-		/>
+		<liferay-ui:search-container-results>
+			<c:choose>
+				<c:when test="<%= portletName.equals(PortletKeys.DIRECTORY) && indexer.isIndexerEnabled() && PropsValues.ORGANIZATIONS_SEARCH_WITH_INDEX %>">
+
+					<%
+					organizationParams.put("expandoAttributes", searchTerms.getKeywords());
+
+					Sort sort = SortFactoryUtil.getSort(Organization.class, organizationSearchContainer.getOrderByCol(), organizationSearchContainer.getOrderByType());
+
+					BaseModelSearchResult<Organization> baseModelSearchResult = null;
+
+					if (searchTerms.isAdvancedSearch()) {
+						baseModelSearchResult = OrganizationLocalServiceUtil.searchOrganizations(company.getCompanyId(), parentOrganizationId, searchTerms.getName(), searchTerms.getType(), searchTerms.getStreet(), searchTerms.getCity(), searchTerms.getZip(), searchTerms.getRegionName(), searchTerms.getCountryName(), organizationParams, searchTerms.isAndOperator(), organizationSearchContainer.getStart(), organizationSearchContainer.getEnd(), sort);
+					}
+					else {
+						baseModelSearchResult = OrganizationLocalServiceUtil.searchOrganizations(company.getCompanyId(), parentOrganizationId, searchTerms.getKeywords(), organizationParams, organizationSearchContainer.getStart(), organizationSearchContainer.getEnd(), sort);
+					}
+
+					organizationSearchContainer.setResults(baseModelSearchResult.getBaseModels());
+					organizationSearchContainer.setTotal(baseModelSearchResult.getLength());
+					%>
+
+				</c:when>
+				<c:otherwise>
+
+					<%
+					if (searchTerms.isAdvancedSearch()) {
+						total = OrganizationLocalServiceUtil.searchCount(company.getCompanyId(), parentOrganizationId, searchTerms.getName(), searchTerms.getType(), searchTerms.getStreet(), searchTerms.getCity(), searchTerms.getZip(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams, searchTerms.isAndOperator());
+
+						results = OrganizationLocalServiceUtil.search(company.getCompanyId(), parentOrganizationId, searchTerms.getName(), searchTerms.getType(), searchTerms.getStreet(), searchTerms.getCity(), searchTerms.getZip(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams, searchTerms.isAndOperator(), organizationSearchContainer.getStart(), organizationSearchContainer.getEnd(), organizationSearchContainer.getOrderByComparator());
+					}
+					else {
+						total = OrganizationLocalServiceUtil.searchCount(company.getCompanyId(), parentOrganizationId, searchTerms.getKeywords(), searchTerms.getType(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams);
+
+						results = OrganizationLocalServiceUtil.search(company.getCompanyId(), parentOrganizationId, searchTerms.getKeywords(), searchTerms.getType(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams, organizationSearchContainer.getStart(), organizationSearchContainer.getEnd(), organizationSearchContainer.getOrderByComparator());
+					}
+
+					organizationSearchContainer.setTotal(total);
+					organizationSearchContainer.setResults(results);
+					%>
+
+				</c:otherwise>
+			</c:choose>
+		</liferay-ui:search-container-results>
 
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.kernel.model.Organization"

@@ -15,8 +15,8 @@
 package com.liferay.account.admin.web.internal.display;
 
 import com.liferay.account.model.AccountGroup;
-import com.liferay.account.service.AccountGroupAccountEntryRelLocalServiceUtil;
 import com.liferay.account.service.AccountGroupLocalServiceUtil;
+import com.liferay.account.service.AccountGroupRelLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 
 /**
@@ -61,16 +61,16 @@ public class AccountGroupDisplay {
 	}
 
 	private AccountGroupDisplay(AccountGroup accountGroup) {
-		_accountEntriesCount = _getAccountEntriesCount();
+		_accountEntriesCount = _getAccountEntriesCount(accountGroup);
 		_accountGroupId = accountGroup.getAccountGroupId();
 		_description = accountGroup.getDescription();
 		_name = accountGroup.getName();
 	}
 
-	private long _getAccountEntriesCount() {
-		return AccountGroupAccountEntryRelLocalServiceUtil.
-			getAccountGroupAccountEntryRelsCountByAccountGroupId(
-				_accountGroupId);
+	private long _getAccountEntriesCount(AccountGroup accountGroup) {
+		return AccountGroupRelLocalServiceUtil.
+			getAccountGroupRelsCountByAccountGroupId(
+				accountGroup.getAccountGroupId());
 	}
 
 	private static final AccountGroupDisplay _EMPTY_INSTANCE =

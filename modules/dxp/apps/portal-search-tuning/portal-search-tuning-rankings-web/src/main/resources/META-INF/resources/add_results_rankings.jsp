@@ -54,7 +54,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-ranking"));
 	<liferay-ui:error-principal />
 </clay:sheet>
 
-<portlet:actionURL name="/results_ranking/edit" var="addResultsRankingEntryURL" />
+<portlet:actionURL name="/result_rankings/edit_ranking" var="addResultsRankingEntryURL" />
 
 <liferay-frontend:edit-form
 	action="<%= addResultsRankingEntryURL %>"

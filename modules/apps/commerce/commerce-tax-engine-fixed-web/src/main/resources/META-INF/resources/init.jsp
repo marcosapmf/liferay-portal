@@ -32,7 +32,7 @@ page import="com.liferay.commerce.tax.engine.fixed.model.CommerceTaxFixedRateAdd
 page import="com.liferay.commerce.tax.engine.fixed.web.internal.display.context.CommerceTaxFixedRateAddressRelsDisplayContext" %><%@
 page import="com.liferay.commerce.tax.engine.fixed.web.internal.display.context.CommerceTaxFixedRatesDisplayContext" %><%@
 page import="com.liferay.commerce.tax.engine.fixed.web.internal.frontend.CommerceTaxRateClayTable" %><%@
-page import="com.liferay.commerce.tax.engine.fixed.web.internal.frontend.CommerceTaxRateSettingDataSetConstants" %><%@
+page import="com.liferay.commerce.tax.engine.fixed.web.internal.frontend.constants.CommerceTaxRateSettingDataSetConstants" %><%@
 page import="com.liferay.commerce.tax.model.CommerceTaxMethod" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
@@ -41,8 +41,7 @@ page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %>
 
-<%@ page import="java.util.List" %><%@
-page import="java.util.Map" %>
+<%@ page import="java.util.List" %>
 
 <liferay-frontend:defineObjects />
 

@@ -37,9 +37,7 @@ List<Role> defaultSiteRoles = new ArrayList<>();
 long[] defaultSiteRoleIds = StringUtil.split(groupTypeSettings.getProperty("defaultSiteRoleIds"), 0L);
 
 for (long defaultSiteRoleId : defaultSiteRoleIds) {
-	Role role = RoleLocalServiceUtil.getRole(defaultSiteRoleId);
-
-	defaultSiteRoles.add(role);
+	defaultSiteRoles.add(RoleLocalServiceUtil.getRole(defaultSiteRoleId));
 }
 
 List<Team> defaultTeams = new ArrayList<>();
@@ -47,9 +45,7 @@ List<Team> defaultTeams = new ArrayList<>();
 long[] defaultTeamIds = StringUtil.split(groupTypeSettings.getProperty("defaultTeamIds"), 0L);
 
 for (long defaultTeamId : defaultTeamIds) {
-	Team team = TeamLocalServiceUtil.getTeam(defaultTeamId);
-
-	defaultTeams.add(team);
+	defaultTeams.add(TeamLocalServiceUtil.getTeam(defaultTeamId));
 }
 %>
 
@@ -102,7 +98,7 @@ for (long defaultTeamId : defaultTeamIds) {
 	/>
 </liferay-ui:search-container>
 
-<div class="button-holder">
+<div class="button-holder form-group">
 	<aui:button cssClass="modify-link" id="selectSiteRoleLink" value="select" />
 </div>
 

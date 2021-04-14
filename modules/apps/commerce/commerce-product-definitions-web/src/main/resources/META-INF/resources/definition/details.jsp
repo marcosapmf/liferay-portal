@@ -42,7 +42,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 	</div>
 </c:if>
 
-<portlet:actionURL name="editProductDefinition" var="editProductDefinitionActionURL" />
+<portlet:actionURL name="/cp_definitions/edit_cp_definition" var="editProductDefinitionActionURL" />
 
 <aui:form action="<%= editProductDefinitionActionURL %>" cssClass="pt-4" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (cpDefinition == null) ? Constants.ADD : Constants.UPDATE %>" />
@@ -111,7 +111,6 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 					<div class="entry-content form-group">
 						<liferay-ui:input-localized
 							defaultLanguageId="<%= defaultLanguageId %>"
-							editorName="alloyeditor"
 							name="descriptionMapAsXML"
 							type="editor"
 							xml="<%= descriptionMapAsXML %>"

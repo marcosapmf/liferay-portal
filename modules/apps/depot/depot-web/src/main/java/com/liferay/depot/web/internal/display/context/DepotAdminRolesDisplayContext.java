@@ -109,7 +109,8 @@ public class DepotAdminRolesDisplayContext {
 		PortletURL portletURL = requestBackedPortletURLFactory.createRenderURL(
 			DepotPortletKeys.DEPOT_ADMIN);
 
-		portletURL.setParameter("mvcRenderCommandName", "/depot/select_role");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/depot/select_depot_role");
 		portletURL.setParameter(
 			"p_u_i_d",
 			Optional.ofNullable(
@@ -130,9 +131,7 @@ public class DepotAdminRolesDisplayContext {
 	public List<UserGroupRole> getUserGroupRoles(int start, int end)
 		throws PortalException {
 
-		List<UserGroupRole> userGroupRoles = _getUserGroupRoles();
-
-		return ListUtil.subList(userGroupRoles, start, end);
+		return ListUtil.subList(_getUserGroupRoles(), start, end);
 	}
 
 	public int getUserGroupRolesCount() throws PortalException {

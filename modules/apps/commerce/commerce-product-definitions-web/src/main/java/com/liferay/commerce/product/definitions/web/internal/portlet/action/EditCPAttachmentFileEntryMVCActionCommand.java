@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editCPAttachmentFileEntry"
+		"mvc.command.name=/cp_definitions/edit_cp_attachment_file_entry"
 	},
 	service = MVCActionCommand.class
 )
@@ -206,16 +206,14 @@ public class EditCPAttachmentFileEntryMVCActionCommand
 				serviceContext);
 		}
 		else {
-			long classNameId = _portal.getClassNameId(CPDefinition.class);
-
 			_cpAttachmentFileEntryService.addCPAttachmentFileEntry(
 				serviceContext.getUserId(), serviceContext.getScopeGroupId(),
-				classNameId, cpDefinitionId, fileEntryId, displayDateMonth,
-				displayDateDay, displayDateYear, displayDateHour,
-				displayDateMinute, expirationDateMonth, expirationDateDay,
-				expirationDateYear, expirationDateHour, expirationDateMinute,
-				neverExpire, titleMap, ddmFormValues, priority, type,
-				serviceContext);
+				_portal.getClassNameId(CPDefinition.class), cpDefinitionId,
+				fileEntryId, displayDateMonth, displayDateDay, displayDateYear,
+				displayDateHour, displayDateMinute, expirationDateMonth,
+				expirationDateDay, expirationDateYear, expirationDateHour,
+				expirationDateMinute, neverExpire, titleMap, ddmFormValues,
+				priority, type, serviceContext);
 		}
 	}
 

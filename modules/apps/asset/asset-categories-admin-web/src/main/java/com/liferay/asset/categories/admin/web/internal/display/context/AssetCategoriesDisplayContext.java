@@ -105,6 +105,27 @@ public class AssetCategoriesDisplayContext {
 			WebKeys.THEME_DISPLAY);
 	}
 
+	public String getAddCategoryRedirect() throws PortalException {
+		PortletURL addCategoryURL = _renderResponse.createRenderURL();
+
+		addCategoryURL.setParameter("mvcPath", "/edit_category.jsp");
+
+		long parentCategoryId = BeanParamUtil.getLong(
+			getCategory(), _httpServletRequest, "parentCategoryId");
+
+		if (parentCategoryId > 0) {
+			addCategoryURL.setParameter(
+				"parentCategoryId", String.valueOf(parentCategoryId));
+		}
+
+		if (getVocabularyId() > 0) {
+			addCategoryURL.setParameter(
+				"vocabularyId", String.valueOf(getVocabularyId()));
+		}
+
+		return addCategoryURL.toString();
+	}
+
 	public String getAssetType(AssetVocabulary vocabulary)
 		throws PortalException {
 
@@ -352,6 +373,9 @@ public class AssetCategoriesDisplayContext {
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;

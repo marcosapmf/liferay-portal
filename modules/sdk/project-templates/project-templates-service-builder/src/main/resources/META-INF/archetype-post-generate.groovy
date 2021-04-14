@@ -30,3 +30,30 @@ Files.deleteIfExists apiBuildGradlePath
 Files.deleteIfExists buildGradlePath
 Files.deleteIfExists serviceBuildGradlePath
 Files.deleteIfExists serviceBuildSettingsPath
+
+Properties properties = request.properties
+
+String addOns = properties.get("addOns")
+
+String liferayVersion = properties.get("liferayVersion")
+
+if (addOns.equals("true") && (liferayVersion.startsWith("7.0") || (liferayVersion.startsWith("7.1")))) {
+	throw new IllegalArgumentException(
+		"Add Ons are not supported in 7.0 or 7.1")
+}
+
+Path uadPath = projectPath.resolve(request.artifactId + "-uad")
+
+Path uadBuildGradlePath = uadPath.resolve("build.gradle")
+Path uadBndPath = uadPath.resolve("bnd.bnd")
+Path uadPomPath = uadPath.resolve("pom.xml")
+
+if (addOns.equals("false")) {
+	Files.deleteIfExists uadBuildGradlePath
+	Files.deleteIfExists uadBndPath
+	Files.deleteIfExists uadPomPath
+	Files.deleteIfExists uadPath
+}
+else {
+	Files.deleteIfExists uadBuildGradlePath
+}

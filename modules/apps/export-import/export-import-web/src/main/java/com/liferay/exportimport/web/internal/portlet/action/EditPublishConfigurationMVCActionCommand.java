@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT_IMPORT,
-		"mvc.command.name=editPublishConfiguration"
+		"mvc.command.name=/export_import/edit_publish_configuration"
 	},
 	service = MVCActionCommand.class
 )
@@ -213,9 +213,8 @@ public class EditPublishConfigurationMVCActionCommand
 
 		parameterMap.put("name", new String[] {name});
 
-		String settings = JSONFactoryUtil.serialize(settingsMap);
-
-		exportImportConfiguration.setSettings(settings);
+		exportImportConfiguration.setSettings(
+			JSONFactoryUtil.serialize(settingsMap));
 
 		exportImportConfigurationLocalService.updateExportImportConfiguration(
 			exportImportConfiguration);

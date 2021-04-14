@@ -22,6 +22,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 DDMStructure structure = ddmFormAdminDisplayContext.getDDMStructure();
 
 long groupId = BeanParamUtil.getLong(structure, request, "groupId", scopeGroupId);
+
 long structureId = ParamUtil.getLong(request, "structureId");
 
 if (structure != null) {
@@ -36,19 +37,21 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-element-set") : LanguageUtil.get(request, "edit-element-set"));
 %>
 
-<portlet:actionURL name="saveStructure" var="saveStructureURL">
+<portlet:actionURL name="/dynamic_data_mapping_form/save_structure" var="saveStructureURL">
 	<portlet:param name="mvcRenderCommandName" value="/admin/edit_element_set" />
 </portlet:actionURL>
 
 <div class="portlet-forms" id="<portlet:namespace />formContainer">
-	<clay:navigation-bar
-		inverted="<%= true %>"
-		navigationItems="<%= ddmFormAdminDisplayContext.getElementSetBuilderNavigationItems() %>"
-	/>
+	<div class="forms-navigation-bar">
+		<clay:navigation-bar
+			inverted="<%= true %>"
+			navigationItems="<%= ddmFormAdminDisplayContext.getElementSetBuilderNavigationItems() %>"
+		/>
+	</div>
 
 	<nav class="management-bar management-bar-light navbar navbar-expand-md toolbar-group-field">
 		<clay:container-fluid
-			cssClass="toolbar"
+			cssClass="d-flex justify-content-between toolbar"
 		>
 			<ul class="navbar-nav toolbar-group-field"></ul>
 			<ul class="navbar-nav toolbar-group-field">
@@ -87,29 +90,13 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 		<div class="ddm-form-basic-info">
 			<clay:container-fluid>
 				<h1>
-					<liferay-editor:editor
-						autoCreate="<%= false %>"
-						contents="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormName()) %>"
-						cssClass="ddm-form-name"
-						editorName="alloyeditor"
-						name="nameEditor"
-						placeholder="untitled-element-set"
-						showSource="<%= false %>"
-					/>
+					<aui:input autoSize="<%= true %>" cssClass="ddm-form-name ddm-placeholder hidden" label="" name="nameEditor" placeholder='<%= LanguageUtil.get(request, "untitled-element-set") %>' type="textarea" value="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormName()) %>" />
 				</h1>
 
 				<aui:input name="name" type="hidden" />
 
 				<h5>
-					<liferay-editor:editor
-						autoCreate="<%= false %>"
-						contents="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormDescription()) %>"
-						cssClass="ddm-form-description h5"
-						editorName="alloyeditor"
-						name="descriptionEditor"
-						placeholder="add-a-short-description-for-this-element-set"
-						showSource="<%= false %>"
-					/>
+					<aui:input autoSize="<%= true %>" cssClass="ddm-form-description ddm-placeholder hidden" label="" name="descriptionEditor" placeholder='<%= LanguageUtil.get(request, "add-a-short-description-for-this-element-set") %>' type="textarea" value="<%= HtmlUtil.escape(ddmFormAdminDisplayContext.getFormDescription()) %>" />
 				</h5>
 
 				<aui:input name="description" type="hidden" />
@@ -121,7 +108,10 @@ renderResponse.setTitle((structure == null) ? LanguageUtil.get(request, "new-ele
 </div>
 
 <div class="hide">
-	<%= ddmFormAdminDisplayContext.serializeSettingsForm(pageContext) %>
+	<react:component
+		module="admin/js/index.es"
+		props="<%= ddmFormAdminDisplayContext.getDDMFormSettingsContext(pageContext) %>"
+	/>
 </div>
 
 <aui:script>

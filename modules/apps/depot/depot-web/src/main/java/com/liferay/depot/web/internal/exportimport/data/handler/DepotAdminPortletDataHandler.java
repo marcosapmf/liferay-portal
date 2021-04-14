@@ -22,6 +22,7 @@ import com.liferay.exportimport.kernel.lar.BasePortletDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportDateUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
+import com.liferay.exportimport.kernel.lar.PortletDataHandlerBoolean;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.exportimport.kernel.staging.Staging;
@@ -78,9 +79,15 @@ public class DepotAdminPortletDataHandler extends BasePortletDataHandler {
 
 	@Activate
 	protected void activate() {
+		setDataAlwaysStaged(true);
 		setDeletionSystemEventStagedModelTypes(
 			new StagedModelType(DepotEntryGroupRel.class));
+		setExportControls(
+			new PortletDataHandlerBoolean(
+				getNamespace(), "site-connections", true, true, null,
+				DepotEntryGroupRel.class.getName()));
 		setPublishToLiveByDefault(true);
+		setStagingControls(getExportControls());
 	}
 
 	@Override
@@ -103,6 +110,9 @@ public class DepotAdminPortletDataHandler extends BasePortletDataHandler {
 		Element rootElement = addExportDataRootElement(portletDataContext);
 
 		portletDataContext.addPortletPermissions(DepotConstants.RESOURCE_NAME);
+
+		rootElement.addAttribute(
+			"group-id", String.valueOf(portletDataContext.getScopeGroupId()));
 
 		ActionableDynamicQuery actionableDynamicQuery =
 			_depotEntryGroupRelLocalService.getExportActionableDynamicQuery(

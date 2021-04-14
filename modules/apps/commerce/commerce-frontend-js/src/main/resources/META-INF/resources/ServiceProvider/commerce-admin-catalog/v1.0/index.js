@@ -12,6 +12,5 @@
  * details.
  */
 
-export {default as catalogAPI} from './Catalog';
+export {default as optionAPI} from './Option';
 export {default as productAPI} from './Product';
-export {default as productGroupsAPI} from './ProductGroups';

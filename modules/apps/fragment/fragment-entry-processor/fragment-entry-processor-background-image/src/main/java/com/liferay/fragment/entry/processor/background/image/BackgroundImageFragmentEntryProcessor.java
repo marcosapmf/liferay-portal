@@ -21,6 +21,7 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.info.type.WebImage;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -30,14 +31,13 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -148,17 +148,29 @@ public class BackgroundImageFragmentEntryProcessor
 			}
 
 			if (Validator.isNotNull(value)) {
+				long fileEntryId = 0;
+
 				if (JSONUtil.isValid(value)) {
 					JSONObject valueJSONObject =
 						JSONFactoryUtil.createJSONObject(value);
 
+					fileEntryId = valueJSONObject.getLong("fileEntryId");
 					value = valueJSONObject.getString("url", value);
 				}
 
-				element.attr(
-					"style",
-					"background-image: url(" + value +
-						"); background-size: cover");
+				StringBundler sb = new StringBundler(6);
+
+				sb.append("background-image: url(");
+				sb.append(value);
+				sb.append("); background-size: cover;");
+
+				if (fileEntryId > 0) {
+					sb.append(" --background-image-file-entry-id: ");
+					sb.append(fileEntryId);
+					sb.append(StringPool.SEMICOLON);
+				}
+
+				element.attr("style", sb.toString());
 			}
 		}
 
@@ -189,20 +201,13 @@ public class BackgroundImageFragmentEntryProcessor
 
 		Elements elements = document.select("[data-lfr-background-image-id]");
 
-		Stream<Element> uniqueElementsStream = elements.stream();
+		Set<String> ids = new HashSet<>();
 
-		Map<String, Long> idsMap = uniqueElementsStream.collect(
-			Collectors.groupingBy(
-				element -> element.attr("data-lfr-background-image-id"),
-				Collectors.counting()));
+		for (Element element : elements) {
+			if (ids.add(element.attr("data-lfr-background-image-id"))) {
+				continue;
+			}
 
-		Collection<String> ids = idsMap.keySet();
-
-		Stream<String> idsStream = ids.stream();
-
-		idsStream = idsStream.filter(id -> idsMap.get(id) > 1);
-
-		if (idsStream.count() > 0) {
 			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 				"content.Language", getClass());
 

@@ -1,6 +1,7 @@
 @component-name = "portal-upgrades"
 definition {
 
+	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Upgrades WEM";
 
@@ -56,6 +57,52 @@ definition {
 		property portal.version = "7.2.10.1";
 
 		Upgrade.viewContributedFragmentStyle();
+	}
+
+	@description = "This is a use case for LPS-123098."
+	@priority = "4"
+	test ViewEditableFieldValueAfterUpgrade721 {
+		property data.archive.type = "data-archive-modify-editable-field-value";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.2.1";
+
+		Navigator.gotoSitePage(
+			pageName = "Test Page Name",
+			siteName = "Guest");
+
+		AssertTextEquals(
+			locator1 = "//div[contains(@class,'banner')]//h1",
+			value1 = "Edited Banner Title");
+
+		ContentPages.clickPencil();
+
+		PageEditor.viewFragmentEditableText(
+			editableText = "Edited Banner Title",
+			fragmentName = "Banner Center",
+			id = "01-title");
+	}
+
+	@description = "This is a use case for LPS-123098."
+	@priority = "4"
+	test ViewEditableFieldValueAfterUpgrade72101 {
+		property data.archive.type = "data-archive-modify-editable-field-value";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property portal.version = "7.2.10.1";
+
+		Navigator.gotoSitePage(
+			pageName = "Test Page Name",
+			siteName = "Guest");
+
+		AssertTextEquals(
+			locator1 = "//div[contains(@class,'banner')]//h1",
+			value1 = "Edited Banner Title");
+
+		ContentPages.clickPencil();
+
+		PageEditor.viewFragmentEditableText(
+			editableText = "Edited Banner Title",
+			fragmentName = "Banner Center",
+			id = "01-title");
 	}
 
 }

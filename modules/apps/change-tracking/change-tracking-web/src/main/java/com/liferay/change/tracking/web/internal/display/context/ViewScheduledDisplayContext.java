@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -101,8 +102,9 @@ public class ViewScheduledDisplayContext {
 		List<CTCollection> ctCollections =
 			_ctCollectionService.getCTCollections(
 				_themeDisplay.getCompanyId(),
-				WorkflowConstants.STATUS_SCHEDULED, displayTerms.getKeywords(),
-				QueryUtil.ALL_POS, QueryUtil.ALL_POS, _getOrderByComparator());
+				new int[] {WorkflowConstants.STATUS_SCHEDULED},
+				displayTerms.getKeywords(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, _getOrderByComparator());
 
 		searchContainer.setTotal(ctCollections.size());
 
@@ -162,11 +164,12 @@ public class ViewScheduledDisplayContext {
 					_language.get(_httpServletRequest, "ongoing"));
 			}
 		).add(
+			() -> PropsValues.SCHEDULER_ENABLED,
 			navigationItem -> {
 				navigationItem.setActive(true);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/publications/view_scheduled", "displayStyle",
+					"/change_tracking/view_scheduled", "displayStyle",
 					getDisplayStyle());
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "scheduled"));
@@ -176,7 +179,7 @@ public class ViewScheduledDisplayContext {
 				navigationItem.setActive(false);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/publications/view_history", "displayStyle",
+					"/change_tracking/view_history", "displayStyle",
 					getDisplayStyle());
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "history"));

@@ -51,7 +51,7 @@ public class AnalyticsSettingsUtil {
 				null, companyId,
 				new HttpGet(
 					String.format(
-						"%s/%s", getAsahFaroBackendURL(companyId), path)));
+						"%s/%s", getFaroBackendURL(companyId), path)));
 		}
 		catch (IOException ioException) {
 			throw new PortalException(ioException);
@@ -67,7 +67,7 @@ public class AnalyticsSettingsUtil {
 				bodyJSONObject, companyId,
 				new HttpPatch(
 					String.format(
-						"%s/%s", getAsahFaroBackendURL(companyId), path)));
+						"%s/%s", getFaroBackendURL(companyId), path)));
 		}
 		catch (IOException ioException) {
 			throw new PortalException(ioException);
@@ -83,7 +83,27 @@ public class AnalyticsSettingsUtil {
 				bodyJSONObject, companyId,
 				new HttpPost(
 					String.format(
-						"%s/%s", getAsahFaroBackendURL(companyId), path)));
+						"%s/%s", getFaroBackendURL(companyId), path)));
+		}
+		catch (IOException ioException) {
+			throw new PortalException(ioException);
+		}
+	}
+
+	public static HttpResponse doPost(
+			JSONObject bodyJSONObject, long companyId, String faroBackendURL,
+			String path, String projectId)
+		throws PortalException {
+
+		if (Validator.isNull(faroBackendURL)) {
+			return doPost(bodyJSONObject, companyId, path);
+		}
+
+		try {
+			return _request(
+				bodyJSONObject, companyId,
+				new HttpPost(String.format("%s/%s", faroBackendURL, path)),
+				projectId);
 		}
 		catch (IOException ioException) {
 			throw new PortalException(ioException);
@@ -99,26 +119,11 @@ public class AnalyticsSettingsUtil {
 				bodyJSONObject, companyId,
 				new HttpPut(
 					String.format(
-						"%s/%s", getAsahFaroBackendURL(companyId), path)));
+						"%s/%s", getFaroBackendURL(companyId), path)));
 		}
 		catch (IOException ioException) {
 			throw new PortalException(ioException);
 		}
-	}
-
-	public static String getAsahFaroBackendDataSourceId(long companyId) {
-		return PrefsPropsUtil.getString(
-			companyId, "liferayAnalyticsDataSourceId");
-	}
-
-	public static String getAsahFaroBackendSecuritySignature(long companyId) {
-		return PrefsPropsUtil.getString(
-			companyId, "liferayAnalyticsFaroBackendSecuritySignature");
-	}
-
-	public static String getAsahFaroBackendURL(long companyId) {
-		return PrefsPropsUtil.getString(
-			companyId, "liferayAnalyticsFaroBackendURL");
 	}
 
 	public static String getConnectionType(long companyId) {
@@ -126,10 +131,29 @@ public class AnalyticsSettingsUtil {
 			companyId, "liferayAnalyticsConnectionType");
 	}
 
+	public static String getDataSourceId(long companyId) {
+		return PrefsPropsUtil.getString(
+			companyId, "liferayAnalyticsDataSourceId");
+	}
+
+	public static String getFaroBackendSecuritySignature(long companyId) {
+		return PrefsPropsUtil.getString(
+			companyId, "liferayAnalyticsFaroBackendSecuritySignature");
+	}
+
+	public static String getFaroBackendURL(long companyId) {
+		return PrefsPropsUtil.getString(
+			companyId, "liferayAnalyticsFaroBackendURL");
+	}
+
+	public static String getProjectId(long companyId) {
+		return PrefsPropsUtil.getString(companyId, "liferayAnalyticsProjectId");
+	}
+
 	public static boolean isAnalyticsEnabled(long companyId) {
-		if (Validator.isNull(getAsahFaroBackendDataSourceId(companyId)) ||
-			Validator.isNull(getAsahFaroBackendSecuritySignature(companyId)) ||
-			Validator.isNull(getAsahFaroBackendURL(companyId))) {
+		if (Validator.isNull(getDataSourceId(companyId)) ||
+			Validator.isNull(getFaroBackendSecuritySignature(companyId)) ||
+			Validator.isNull(getFaroBackendURL(companyId))) {
 
 			return false;
 		}
@@ -140,6 +164,14 @@ public class AnalyticsSettingsUtil {
 	private static HttpResponse _request(
 			JSONObject bodyJSONObject, long companyId,
 			HttpRequestBase httpRequestBase)
+		throws IOException {
+
+		return _request(bodyJSONObject, companyId, httpRequestBase, null);
+	}
+
+	private static HttpResponse _request(
+			JSONObject bodyJSONObject, long companyId,
+			HttpRequestBase httpRequestBase, String projectId)
 		throws IOException {
 
 		HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
@@ -164,7 +196,15 @@ public class AnalyticsSettingsUtil {
 				"Content-type", ContentType.APPLICATION_JSON.toString());
 			httpRequestBase.setHeader(
 				"OSB-Asah-Faro-Backend-Security-Signature",
-				getAsahFaroBackendSecuritySignature(companyId));
+				getFaroBackendSecuritySignature(companyId));
+
+			if (projectId == null) {
+				projectId = getProjectId(companyId);
+			}
+
+			if (projectId != null) {
+				httpRequestBase.setHeader("OSB-Asah-Project-ID", projectId);
+			}
 
 			HttpResponse httpResponse = closeableHttpClient.execute(
 				httpRequestBase);

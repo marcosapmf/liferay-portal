@@ -127,7 +127,7 @@ public class BlogsEntryInfoItemFormProvider
 	private InfoFieldSet _getDisplayPageInfoFieldSet() {
 		return InfoFieldSet.builder(
 		).infoFieldSetEntry(
-			BlogsEntryInfoItemFields.displayPageUrlInfoField
+			BlogsEntryInfoItemFields.displayPageURLInfoField
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.localize(getClass(), "configuration")
 		).name(

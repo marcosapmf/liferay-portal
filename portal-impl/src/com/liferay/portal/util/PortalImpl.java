@@ -331,6 +331,9 @@ public class PortalImpl implements Portal {
 				computerName = inetAddress.getHostName();
 			}
 			catch (UnknownHostException unknownHostException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(unknownHostException, unknownHostException);
+				}
 			}
 		}
 
@@ -563,6 +566,9 @@ public class PortalImpl implements Portal {
 			commentsStrutsActionServiceTracker.open();
 		}
 		catch (NullPointerException nullPointerException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(nullPointerException, nullPointerException);
+			}
 		}
 	}
 
@@ -1040,7 +1046,8 @@ public class PortalImpl implements Portal {
 			catch (UnknownHostException unknownHostException) {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
-						"Unable to determine IP for redirect URL " + url);
+						"Unable to determine IP for redirect URL " + url,
+						unknownHostException);
 				}
 			}
 
@@ -1542,7 +1549,7 @@ public class PortalImpl implements Portal {
 
 		Company company = getCompany(httpServletRequest);
 
-		if (httpServletRequest.isSecure()) {
+		if (isSecure(httpServletRequest)) {
 			cdnHost = getCDNHostHttps(company.getCompanyId());
 		}
 		else {
@@ -1569,6 +1576,9 @@ public class PortalImpl implements Portal {
 				companyId, PropsKeys.CDN_HOST_HTTP, PropsValues.CDN_HOST_HTTP);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if ((cdnHostHttp == null) || cdnHostHttp.startsWith("${") ||
@@ -3313,6 +3323,9 @@ public class PortalImpl implements Portal {
 				return null;
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 		}
 
@@ -3341,6 +3354,9 @@ public class PortalImpl implements Portal {
 				groupId = getSiteGroupId(getScopeGroupId(httpServletRequest));
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 		}
 
@@ -3408,6 +3424,9 @@ public class PortalImpl implements Portal {
 				user = getUser(httpServletRequest);
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 		}
 
@@ -3491,6 +3510,9 @@ public class PortalImpl implements Portal {
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 		}
 
@@ -3502,6 +3524,9 @@ public class PortalImpl implements Portal {
 			company = getCompany(httpServletRequest);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (company == null) {
@@ -3514,6 +3539,9 @@ public class PortalImpl implements Portal {
 			defaultUser = company.getDefaultUser();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (defaultUser == null) {
@@ -3538,12 +3566,19 @@ public class PortalImpl implements Portal {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		try {
 			return getSiteDefaultLocale(groupId);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return LocaleUtil.getDefault();
 		}
 	}
@@ -3858,6 +3893,9 @@ public class PortalImpl implements Portal {
 				companyId, StringPool.SLASH + urlParts[2]);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (group == null) {
@@ -3889,6 +3927,9 @@ public class PortalImpl implements Portal {
 			return layout.getPlid();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return LayoutConstants.DEFAULT_PLID;
@@ -3937,6 +3978,9 @@ public class PortalImpl implements Portal {
 				}
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 
 			if (!validPlid) {
@@ -4442,6 +4486,10 @@ public class PortalImpl implements Portal {
 			return portletLongTitle;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return getPortletTitle(portlet, servletContext, locale);
 		}
 	}
@@ -4761,6 +4809,9 @@ public class PortalImpl implements Portal {
 						scopeGroupId = stagingGroup.getGroupId();
 					}
 					catch (Exception exception) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(exception, exception);
+						}
 					}
 				}
 			}
@@ -4842,6 +4893,9 @@ public class PortalImpl implements Portal {
 			layout = LayoutLocalServiceUtil.getLayout(plid);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return getScopeGroupId(layout);
@@ -5847,6 +5901,9 @@ public class PortalImpl implements Portal {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return userName;
@@ -7584,7 +7641,8 @@ public class PortalImpl implements Portal {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Unable to impersonate " + doAsUserIdString +
-							" because the string cannot be decrypted");
+							" because the string cannot be decrypted",
+						exception);
 				}
 
 				return 0;
@@ -7714,8 +7772,10 @@ public class PortalImpl implements Portal {
 			}
 
 			for (Portlet portlet : layoutTypePortlet.getAllPortlets()) {
-				if (portletId.equals(portlet.getPortletId()) ||
-					portletId.equals(portlet.getRootPortletId())) {
+				if ((portletId.equals(portlet.getPortletId()) ||
+					 portletId.equals(portlet.getRootPortletId())) &&
+					!layout.isPortletEmbedded(portletId, layout.getGroupId()) &&
+					!layoutTypePortlet.isPortletCustomizable(portletId)) {
 
 					return layout.getPlid();
 				}
@@ -7874,6 +7934,10 @@ public class PortalImpl implements Portal {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return false;
 		}
 
@@ -7998,6 +8062,9 @@ public class PortalImpl implements Portal {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return false;
@@ -8124,7 +8191,8 @@ public class PortalImpl implements Portal {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Unable to get default locale from group: " +
-						group.getGroupId() + ".  Using portal defaults.");
+						group.getGroupId() + ".  Using portal defaults.",
+					exception);
 			}
 
 			siteDefaultLocale = LocaleUtil.getDefault();
@@ -8656,6 +8724,10 @@ public class PortalImpl implements Portal {
 			return scopeGroup.getGroupId();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return layout.getGroupId();
 		}
 	}

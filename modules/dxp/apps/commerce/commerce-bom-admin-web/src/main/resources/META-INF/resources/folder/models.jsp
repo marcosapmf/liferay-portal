@@ -69,9 +69,9 @@ CommerceBOMFolder commerceBOMFolder = commerceBOMAdminDisplayContext.getCommerce
 	</liferay-frontend:management-bar-action-buttons>
 </liferay-frontend:management-bar>
 
-<portlet:actionURL name="editCommerceBOMFolderApplicationRel" var="editCommerceBOMFolderApplicationRelActionURL" />
+<portlet:actionURL name="/commerce_bom_admin/edit_commerce_bom_folder_application_rel" var="editCommerceBOMFolderApplicationRelActionURL" />
 
-<div class="container-fluid-1280" id="<portlet:namespace />commerceBOMFolderApplicationRelContainer">
+<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />commerceBOMFolderApplicationRelContainer">
 	<aui:form action="<%= editCommerceBOMFolderApplicationRelActionURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD_MULTIPLE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -85,7 +85,6 @@ CommerceBOMFolder commerceBOMFolder = commerceBOMAdminDisplayContext.getCommerce
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.commerce.bom.model.CommerceBOMFolderApplicationRel"
-				cssClass="entry-display-style"
 				keyProperty="commerceBOMFolderApplicationRelId"
 				modelVar="commerceBOMFolderApplicationRel"
 			>
@@ -95,13 +94,13 @@ CommerceBOMFolder commerceBOMFolder = commerceBOMAdminDisplayContext.getCommerce
 				%>
 
 				<liferay-ui:search-container-column-text
-					cssClass="important table-cell-content"
+					cssClass="important table-cell-expand"
 					name="name"
 					value="<%= HtmlUtil.escape(commerceApplicationModel.getName()) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="year"
 					value="<%= HtmlUtil.escape(commerceApplicationModel.getYear()) %>"
 				/>

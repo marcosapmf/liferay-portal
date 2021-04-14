@@ -52,18 +52,8 @@ import java.util.Map;
  */
 public class SampleSQLBuilder {
 
-	public static void main(String[] args) {
+	public SampleSQLBuilder() {
 		ToolDependencies.wireBasic();
-
-		try {
-			new SampleSQLBuilder();
-		}
-		catch (Exception exception) {
-			exception.printStackTrace();
-		}
-	}
-
-	public SampleSQLBuilder() throws Exception {
 
 		// Generic
 
@@ -104,16 +94,19 @@ public class SampleSQLBuilder {
 					FileUtil.copyDirectory(tempDir, outputDir);
 				}
 			}
+
+			FileUtil.write(
+				new File(
+					BenchmarksPropsValues.OUTPUT_DIR,
+					"benchmarks-actual.properties"),
+				BenchmarksPropsValues.ACTUAL_PROPERTIES_CONTENT);
+		}
+		catch (Exception exception) {
+			exception.printStackTrace();
 		}
 		finally {
 			FileUtil.deltree(tempDir);
 		}
-
-		FileUtil.write(
-			new File(
-				BenchmarksPropsValues.OUTPUT_DIR,
-				"benchmarks-actual.properties"),
-			BenchmarksPropsValues.ACTUAL_PROPERTIES_CONTENT);
 	}
 
 	protected void compressSQL(
@@ -181,6 +174,21 @@ public class SampleSQLBuilder {
 
 				if (s.length() > 0) {
 					if (s.startsWith("insert into ")) {
+						if (!s.endsWith(");")) {
+							StringBundler sb = new StringBundler();
+
+							while (!s.endsWith(");")) {
+								sb.append(s);
+								sb.append(StringPool.NEW_LINE);
+
+								s = unsyncBufferedReader.readLine();
+							}
+
+							sb.append(s);
+
+							s = sb.toString();
+						}
+
 						compressSQL(
 							db, dir, insertSQLWriters, insertSQLs,
 							s.substring(12));

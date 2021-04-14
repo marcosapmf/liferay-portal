@@ -202,8 +202,9 @@ public interface WikiPageAttachmentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/wiki-page-attachments/{wikiPageAttachmentId}",
-				wikiPageAttachmentId);
+						"/o/headless-delivery/v1.0/wiki-page-attachments/{wikiPageAttachmentId}");
+
+			httpInvoker.path("wikiPageAttachmentId", wikiPageAttachmentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -324,8 +325,9 @@ public interface WikiPageAttachmentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/wiki-page-attachments/{wikiPageAttachmentId}",
-				wikiPageAttachmentId);
+						"/o/headless-delivery/v1.0/wiki-page-attachments/{wikiPageAttachmentId}");
+
+			httpInvoker.path("wikiPageAttachmentId", wikiPageAttachmentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -388,8 +390,9 @@ public interface WikiPageAttachmentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/wiki-pages/{wikiPageId}/wiki-page-attachments",
-				wikiPageId);
+						"/o/headless-delivery/v1.0/wiki-pages/{wikiPageId}/wiki-page-attachments");
+
+			httpInvoker.path("wikiPageId", wikiPageId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -466,8 +469,9 @@ public interface WikiPageAttachmentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/wiki-pages/{wikiPageId}/wiki-page-attachments",
-				wikiPageId);
+						"/o/headless-delivery/v1.0/wiki-pages/{wikiPageId}/wiki-page-attachments");
+
+			httpInvoker.path("wikiPageId", wikiPageId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -533,8 +537,9 @@ public interface WikiPageAttachmentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/wiki-pages/{wikiPageId}/wiki-page-attachments/batch",
-				wikiPageId);
+						"/o/headless-delivery/v1.0/wiki-pages/{wikiPageId}/wiki-page-attachments/batch");
+
+			httpInvoker.path("wikiPageId", wikiPageId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

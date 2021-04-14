@@ -63,7 +63,7 @@ int totalItems = ddmFormReportDisplayContext.getTotalItems();
 					add(
 						navigationItem -> {
 							navigationItem.setActive(true);
-							navigationItem.setLabel(LanguageUtil.get(request, "summary"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "summary"));
 						});
 				}
 			}
@@ -77,13 +77,15 @@ int totalItems = ddmFormReportDisplayContext.getTotalItems();
 	</div>
 </div>
 
-<aui:script require="metal-dom/src/dom as dom">
-	dom.delegate(
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+	var delegate = delegateModule.default;
+
+	delegate(
 		document.querySelector('.portlet-ddm-form-report-tabs'),
 		'click',
 		'li',
 		function (event) {
-			var navItem = dom.closest(event.delegateTarget, '.nav-item');
+			var navItem = event.delegateTarget.closest('.nav-item');
 			var navItemIndex = Number(navItem.dataset.navItemIndex);
 			var navLink = navItem.querySelector('.nav-link');
 

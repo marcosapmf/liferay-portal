@@ -52,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/get_info_item_field_value"
+		"mvc.command.name=/layout_content_page_editor/get_info_item_field_value"
 	},
 	service = MVCResourceCommand.class
 )
@@ -86,18 +86,19 @@ public class GetInfoItemFieldValueMVCResourceCommand
 			return;
 		}
 
-		InfoItemObjectProvider<Object> infoItemObjectProvider =
-			_infoItemServiceTracker.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className);
-
-		if (infoItemObjectProvider == null) {
-			return;
-		}
-
 		long classPK = ParamUtil.getLong(resourceRequest, "classPK");
 
 		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
 			classPK);
+
+		InfoItemObjectProvider<Object> infoItemObjectProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemObjectProvider.class, className,
+				infoItemIdentifier.getInfoItemServiceFilter());
+
+		if (infoItemObjectProvider == null) {
+			return;
+		}
 
 		Object object = infoItemObjectProvider.getInfoItem(infoItemIdentifier);
 

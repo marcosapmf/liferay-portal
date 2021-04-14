@@ -15,6 +15,7 @@
 package com.liferay.multi.factor.authentication.fido2.credential.internal.upgrade;
 
 import com.liferay.multi.factor.authentication.fido2.credential.internal.upgrade.v1_0_0.UpgradeSchema;
+import com.liferay.multi.factor.authentication.fido2.credential.internal.upgrade.v2_0_0.MFAFIDO2CredentialUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
@@ -29,6 +30,9 @@ public class MFAFIDO2CredentialServiceUpgrade
 	@Override
 	public void register(Registry registry) {
 		registry.register("1.0.0", "2.0.0", new UpgradeSchema());
+
+		registry.register(
+			"2.0.0", "3.0.0", new MFAFIDO2CredentialUpgradeProcess());
 	}
 
 }

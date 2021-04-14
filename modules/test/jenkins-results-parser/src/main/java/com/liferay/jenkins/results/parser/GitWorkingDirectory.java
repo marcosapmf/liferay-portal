@@ -147,6 +147,10 @@ public class GitWorkingDirectory {
 
 		checkoutLocalGitBranch(localGitBranch);
 
+		createLocalGitBranch(
+			branchInformation.getUpstreamBranchName(), true,
+			branchInformation.getUpstreamBranchSHA());
+
 		return localGitBranch;
 	}
 
@@ -1974,6 +1978,18 @@ public class GitWorkingDirectory {
 					"Unable to abort rebase\n",
 					executionResult.getStandardError()));
 		}
+	}
+
+	public boolean refContainsSHA(String ref, String sha) {
+		GitUtil.ExecutionResult executionResult = executeBashCommands(
+			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 2,
+			"git merge-base --is-ancestor " + sha + " " + ref);
+
+		if (executionResult.getExitValue() == 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean remoteGitBranchExists(

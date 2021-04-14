@@ -31,7 +31,7 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 </liferay-util:include>
 
 <div id="<portlet:namespace />processesContainer">
-	<div class="closed container-fluid-1280" id="<portlet:namespace />infoPanelId">
+	<div class="closed container-fluid container-fluid-max-xl" id="<portlet:namespace />infoPanelId">
 		<div class="container">
 			<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
 				<aui:input name="<%= Constants.CMD %>" type="hidden" />
@@ -45,7 +45,6 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 					>
 						<liferay-ui:search-container-row
 							className="com.liferay.commerce.data.integration.model.CommerceDataIntegrationProcess"
-							cssClass="entry-display-style"
 							keyProperty="CDataIntegrationProcessId"
 							modelVar="commerceDataIntegrationProcess"
 						>
@@ -53,36 +52,36 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 							<%
 							PortletURL rowURL = renderResponse.createRenderURL();
 
-							rowURL.setParameter("mvcRenderCommandName", "editCommerceDataIntegrationProcess");
+							rowURL.setParameter("mvcRenderCommandName", "/commerce_data_integration/edit_commerce_data_integration_process");
 							rowURL.setParameter("redirect", currentURL);
 							rowURL.setParameter("commerceDataIntegrationProcessId", String.valueOf(commerceDataIntegrationProcess.getCommerceDataIntegrationProcessId()));
 							%>
 
 							<liferay-ui:search-container-column-text
-								cssClass="important table-cell-content"
+								cssClass="important table-cell-expand"
 								href="<%= rowURL %>"
 								property="name"
 							/>
 
 							<liferay-ui:search-container-column-text
-								cssClass="table-cell-content"
+								cssClass="table-cell-expand"
 								property="type"
 							/>
 
 							<liferay-ui:search-container-column-text
-								cssClass="table-cell-content"
+								cssClass="table-cell-expand"
 								name="system"
 								value='<%= commerceDataIntegrationProcess.isSystem() ? LanguageUtil.get(request, "yes") : LanguageUtil.get(request, "no") %>'
 							/>
 
 							<liferay-ui:search-container-column-text
-								cssClass="table-cell-content"
+								cssClass="table-cell-expand"
 								name="next-fire-date"
 								value="<%= commerceDataIntegrationProcessDisplayContext.getNextFireDate(commerceDataIntegrationProcess.getCommerceDataIntegrationProcessId()) %>"
 							/>
 
 							<liferay-ui:search-container-column-jsp
-								cssClass="table-cell-content"
+								cssClass="table-cell-expand"
 								path="/process/buttons.jsp"
 							/>
 

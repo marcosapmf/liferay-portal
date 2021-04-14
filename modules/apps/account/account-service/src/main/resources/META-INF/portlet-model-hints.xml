@@ -10,18 +10,25 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="defaultBillingAddressId" type="long" />
+		<field name="defaultShippingAddressId" type="long" />
 		<field name="parentAccountEntryId" type="long" />
-		<field name="name" type="String">
-			<hint name="max-length">100</hint>
-			<validator name="required" />
-		</field>
 		<field name="description" type="String">
 			<hint-collection name="TEXTAREA" />
 		</field>
 		<field name="domains" type="String">
 			<hint name="max-length">4000</hint>
 		</field>
+		<field name="emailAddress" type="String">
+			<hint-collection name="EMAIL-ADDRESS" />
+			<validator name="email" />
+		</field>
 		<field name="logoId" type="long" />
+		<field name="name" type="String">
+			<hint name="max-length">100</hint>
+			<validator name="required" />
+		</field>
+		<field name="taxExemptionCode" type="String" />
 		<field name="taxIdNumber" type="String" />
 		<field name="type" type="String" />
 		<field name="status" type="int" />
@@ -49,15 +56,17 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
-		<field name="name" type="String" />
+		<field name="defaultAccountGroup" type="boolean" />
 		<field name="description" type="String" />
+		<field name="name" type="String" />
 	</model>
-	<model name="com.liferay.account.model.AccountGroupAccountEntryRel">
+	<model name="com.liferay.account.model.AccountGroupRel">
 		<field name="mvccVersion" type="long" />
-		<field name="AccountGroupAccountEntryRelId" type="long" />
+		<field name="AccountGroupRelId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="accountGroupId" type="long" />
-		<field name="accountEntryId" type="long" />
+		<field name="classNameId" type="long" />
+		<field name="classPK" type="long" />
 	</model>
 	<model name="com.liferay.account.model.AccountRole">
 		<field name="mvccVersion" type="long" />

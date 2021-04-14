@@ -29,11 +29,12 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.DiscountProduct
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -51,10 +52,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/discount-product-group.properties",
-	scope = ServiceScope.PROTOTYPE, service = DiscountProductGroupResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {DiscountProductGroupResource.class, NestedFieldSupport.class}
 )
 public class DiscountProductGroupResourceImpl
-	extends BaseDiscountProductGroupResourceImpl {
+	extends BaseDiscountProductGroupResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public void deleteDiscountProductGroup(Long id) throws Exception {
@@ -69,7 +71,7 @@ public class DiscountProductGroupResourceImpl
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -125,7 +127,7 @@ public class DiscountProductGroupResourceImpl
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -162,22 +164,12 @@ public class DiscountProductGroupResourceImpl
 			CommerceDiscountRel commerceDiscountRel)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			_serviceContextHelper.getServiceContext();
-
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> {
-				CommerceDiscount commerceDiscount =
-					commerceDiscountRel.getCommerceDiscount();
-
-				return addAction(
-					"UPDATE", commerceDiscount.getCommerceDiscountId(),
-					"deleteDiscountProductGroup",
-					commerceDiscountRel.getUserId(),
-					"com.liferay.commerce.discount.model.CommerceDiscount",
-					serviceContext.getScopeGroupId());
-			}
+			addAction(
+				"UPDATE", commerceDiscountRel.getCommerceDiscountRelId(),
+				"deleteDiscountProductGroup",
+				_commerceDiscountRelModelResourcePermission)
 		).build();
 	}
 
@@ -212,6 +204,12 @@ public class DiscountProductGroupResourceImpl
 
 		return discountProductGroups;
 	}
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.discount.model.CommerceDiscountRel)"
+	)
+	private ModelResourcePermission<CommerceDiscountRel>
+		_commerceDiscountRelModelResourcePermission;
 
 	@Reference
 	private CommerceDiscountRelService _commerceDiscountRelService;

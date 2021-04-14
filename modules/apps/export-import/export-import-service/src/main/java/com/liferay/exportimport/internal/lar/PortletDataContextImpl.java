@@ -1507,6 +1507,9 @@ public class PortletDataContextImpl implements PortletDataContext {
 			group = GroupLocalServiceUtil.getGroup(getGroupId());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (ExportImportThreadLocal.isStagingInProcess() && (group != null) &&
@@ -2064,7 +2067,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to find group " + groupId);
+					_log.warn("Unable to find group " + groupId, exception);
 				}
 			}
 		}
@@ -2374,7 +2377,8 @@ public class PortletDataContextImpl implements PortletDataContext {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to load class com.sybase.jdbc4.tds.SybTimestamp " +
-						"because the Sybase driver is not available");
+						"because the Sybase driver is not available",
+					classNotFoundException);
 			}
 		}
 
@@ -2733,7 +2737,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 	private transient List<Layout> _newLayouts;
 	private final Map<String, Map<?, ?>> _newPrimaryKeysMaps = new HashMap<>();
 	private final Set<String> _notUniquePerLayout = new HashSet<>();
-	private Map<String, Object> _objectsMap = new HashMap<>();
+	private final Map<String, Object> _objectsMap = new HashMap<>();
 	private Map<String, String[]> _parameterMap;
 	private final Map<String, List<KeyValuePair>> _permissionsMap =
 		new HashMap<>();

@@ -31,11 +31,11 @@ long commerceWishListId = commerceWishListDisplayContext.getCommerceWishListId()
 	</c:when>
 	<c:otherwise>
 		<c:if test="<%= !commerceWishList.isGuestWishList() %>">
-			<div class="container-fluid-1280">
+			<div class="container-fluid container-fluid-max-xl">
 				<h3 class="d-inline"><%= HtmlUtil.escape(commerceWishList.getName()) %></h3>
 
 				<portlet:renderURL var="editCommerceWishListURL">
-					<portlet:param name="mvcRenderCommandName" value="editCommerceWishList" />
+					<portlet:param name="mvcRenderCommandName" value="/commerce_wish_list_content/edit_commerce_wish_list" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="commerceWishListId" value="<%= String.valueOf(commerceWishListId) %>" />
 				</portlet:renderURL>
@@ -44,9 +44,9 @@ long commerceWishListId = commerceWishListDisplayContext.getCommerceWishListId()
 			</div>
 		</c:if>
 
-		<portlet:actionURL name="editCommerceWishListItem" var="editCommerceWishListItemActionURL" />
+		<portlet:actionURL name="/commerce_wish_list_content/edit_commerce_wish_list_item" var="editCommerceWishListItemActionURL" />
 
-		<div class="container-fluid-1280">
+		<div class="container-fluid container-fluid-max-xl">
 			<aui:form action="<%= editCommerceWishListItemActionURL %>" method="post" name="fm">
 				<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
 				<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -72,7 +72,7 @@ long commerceWishListId = commerceWishListDisplayContext.getCommerceWishListId()
 						/>
 
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							name="description"
 						>
 							<a class="font-weight-bold" href="<%= commerceWishListDisplayContext.getCPDefinitionURL(cpDefinition.getCPDefinitionId(), themeDisplay) %>">
@@ -90,7 +90,7 @@ long commerceWishListId = commerceWishListDisplayContext.getCommerceWishListId()
 						/>
 
 						<liferay-ui:search-container-column-text>
-							<portlet:actionURL name="editCommerceWishListItem" var="deleteURL">
+							<portlet:actionURL name="/commerce_wish_list_content/edit_commerce_wish_list_item" var="deleteURL">
 								<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE %>" />
 								<portlet:param name="redirect" value="<%= currentURL %>" />
 								<portlet:param name="commerceWishListItemId" value="<%= String.valueOf(commerceWishListItem.getCommerceWishListItemId()) %>" />

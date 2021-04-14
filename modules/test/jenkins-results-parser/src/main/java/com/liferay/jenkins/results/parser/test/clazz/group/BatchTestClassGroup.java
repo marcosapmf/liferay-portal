@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 
 import com.liferay.jenkins.results.parser.JenkinsMaster;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.Job;
 import com.liferay.jenkins.results.parser.PortalGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
 import com.liferay.jenkins.results.parser.TestSuiteJob;
@@ -70,8 +71,35 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return axisTestClassGroups.get(axisId);
 	}
 
+	public List<AxisTestClassGroup> getAxisTestClassGroups() {
+		return axisTestClassGroups;
+	}
+
+	public String getBatchJobName() {
+		String topLevelJobName = portalTestClassJob.getJobName();
+
+		Matcher jobNameMatcher = _jobNamePattern.matcher(topLevelJobName);
+
+		if (jobNameMatcher.find()) {
+			return JenkinsResultsParserUtil.combine(
+				jobNameMatcher.group("jobBaseName"), "-batch",
+				jobNameMatcher.group("jobVariant"));
+		}
+
+		return topLevelJobName + "-batch";
+	}
+
 	public String getBatchName() {
 		return batchName;
+	}
+
+	@Override
+	public Job getJob() {
+		return portalTestClassJob;
+	}
+
+	public Properties getJobProperties() {
+		return jobProperties;
 	}
 
 	public Integer getMaximumSlavesPerHost() {
@@ -100,6 +128,18 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return portalGitWorkingDirectory;
 	}
 
+	public int getSegmentCount() {
+		return _segmentTestClassGroups.size();
+	}
+
+	public SegmentTestClassGroup getSegmentTestClassGroup(int segmentId) {
+		return _segmentTestClassGroups.get(segmentId);
+	}
+
+	public List<SegmentTestClassGroup> getSegmentTestClassGroups() {
+		return _segmentTestClassGroups;
+	}
+
 	public static class BatchTestClass extends BaseTestClass {
 
 		protected static BatchTestClass getInstance(
@@ -121,37 +161,11 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 	}
 
-	public static enum BuildProfile {
-
-		DXP {
-
-			private static final String _TEXT = "dxp";
-
-			@Override
-			public String toString() {
-				return _TEXT;
-			}
-
-		},
-		PORTAL {
-
-			private static final String _TEXT = "portal";
-
-			@Override
-			public String toString() {
-				return _TEXT;
-			}
-
-		}
-
-	}
-
 	protected BatchTestClassGroup(
-		String batchName, BuildProfile buildProfile,
-		PortalTestClassJob portalTestClassJob) {
+		String batchName, PortalTestClassJob portalTestClassJob) {
 
 		this.batchName = batchName;
-		this.buildProfile = buildProfile;
+		this.portalTestClassJob = portalTestClassJob;
 
 		portalGitWorkingDirectory =
 			portalTestClassJob.getPortalGitWorkingDirectory();
@@ -318,6 +332,10 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return null;
 	}
 
+	protected String getJobName() {
+		return portalTestClassJob.getJobName();
+	}
+
 	protected List<PathMatcher> getPathMatchers(
 		String relativeGlobs, File workingDirectory) {
 
@@ -392,6 +410,23 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		return _getRequiredModuleDirs(moduleDirs, new ArrayList<>(moduleDirs));
 	}
 
+	protected int getSegmentMaxChildren() {
+		String segmentMaxChildren = getFirstPropertyValue(
+			"test.batch.segment.max.children");
+
+		if ((segmentMaxChildren == null) ||
+			!segmentMaxChildren.matches("\\d+")) {
+
+			return _SEGMENT_MAX_CHILDREN_DEFAULT;
+		}
+
+		return Integer.valueOf(segmentMaxChildren);
+	}
+
+	protected String getTestSuiteName() {
+		return testSuiteName;
+	}
+
 	protected boolean isIntegrationUnitTestFileModifiedOnly() {
 		List<PathMatcher> relevantIntegrationUnitIncludePathMatchers =
 			getRelevantIntegrationUnitIncludePathMatchers();
@@ -432,35 +467,80 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		int axisSize = (int)Math.ceil((double)testClassCount / axisCount);
 
-		int id = 0;
-
 		for (List<TestClass> axisTestClasses :
 				Lists.partition(testClasses, axisSize)) {
 
-			AxisTestClassGroup axisTestClassGroup = new AxisTestClassGroup(
-				this, id);
+			AxisTestClassGroup axisTestClassGroup =
+				TestClassGroupFactory.newAxisTestClassGroup(this);
 
 			for (TestClass axisTestClass : axisTestClasses) {
 				axisTestClassGroup.addTestClass(axisTestClass);
 			}
 
-			axisTestClassGroups.put(id, axisTestClassGroup);
+			axisTestClassGroups.add(axisTestClassGroup);
+		}
+	}
 
-			id++;
+	protected void setSegmentTestClassGroups() {
+		if (!_segmentTestClassGroups.isEmpty()) {
+			return;
+		}
+
+		if (axisTestClassGroups.isEmpty()) {
+			return;
+		}
+
+		Map<Integer, List<AxisTestClassGroup>> axisTestClassGroupsMap =
+			new HashMap<>();
+
+		for (AxisTestClassGroup axisTestClassGroup : axisTestClassGroups) {
+			Integer minimumSlaveRAM = axisTestClassGroup.getMinimumSlaveRAM();
+
+			List<AxisTestClassGroup> axisTestClassGroups =
+				axisTestClassGroupsMap.get(minimumSlaveRAM);
+
+			if (axisTestClassGroups == null) {
+				axisTestClassGroups = new ArrayList<>();
+			}
+
+			axisTestClassGroups.add(axisTestClassGroup);
+
+			axisTestClassGroupsMap.put(minimumSlaveRAM, axisTestClassGroups);
+		}
+
+		for (List<AxisTestClassGroup> axisTestClassGroupsMapValue :
+				axisTestClassGroupsMap.values()) {
+
+			for (List<AxisTestClassGroup> axisTestClassGroups :
+					Lists.partition(
+						axisTestClassGroupsMapValue, getSegmentMaxChildren())) {
+
+				SegmentTestClassGroup segmentTestClassGroup =
+					TestClassGroupFactory.newSegmentTestClassGroup(this);
+
+				for (AxisTestClassGroup axisTestClassGroup :
+						axisTestClassGroups) {
+
+					segmentTestClassGroup.addAxisTestClassGroup(
+						axisTestClassGroup);
+				}
+
+				_segmentTestClassGroups.add(segmentTestClassGroup);
+			}
 		}
 	}
 
 	protected static final String NAME_STABLE_TEST_SUITE = "stable";
 
-	protected final Map<Integer, AxisTestClassGroup> axisTestClassGroups =
-		new HashMap<>();
+	protected final List<AxisTestClassGroup> axisTestClassGroups =
+		new ArrayList<>();
 	protected final String batchName;
-	protected final BuildProfile buildProfile;
 	protected final List<PathMatcher> excludesPathMatchers = new ArrayList<>();
 	protected final List<PathMatcher> includesPathMatchers = new ArrayList<>();
 	protected boolean includeStableTestSuite;
 	protected final Properties jobProperties;
 	protected final PortalGitWorkingDirectory portalGitWorkingDirectory;
+	protected final PortalTestClassJob portalTestClassJob;
 	protected List<String> stableTestSuiteBatchNames = new ArrayList<>();
 	protected boolean testPrivatePortalBranch;
 	protected boolean testReleaseBundle;
@@ -611,5 +691,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	private static final boolean _ENABLE_TEST_RELEASE_BUNDLE_DEFAULT = false;
 
 	private static final boolean _ENABLE_TEST_RELEVANT_CHANGES_DEFAULT = false;
+
+	private static final int _SEGMENT_MAX_CHILDREN_DEFAULT = 25;
+
+	private static final Pattern _jobNamePattern = Pattern.compile(
+		"(?<jobBaseName>.*)(?<jobVariant>\\([^\\)]+\\))");
+
+	private final List<SegmentTestClassGroup> _segmentTestClassGroups =
+		new ArrayList<>();
 
 }

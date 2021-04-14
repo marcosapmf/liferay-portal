@@ -20,6 +20,43 @@ definition {
 		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
 	}
 
+	@description = "This is a test for LPS-125933. Upgrade 7.0 to Master with a Web Content, a Structure, a WC Template and a page with Web Content Display and Asset Publisher"
+	@ignore = "true"
+	@priority = "5"
+	test ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher70 {
+		property portal.acceptance = "false";
+
+		// TODO LPS-125933 ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher70 pending implementation
+
+	}
+
+	@description = "This is a test for LPS-125933. Upgrade 7.1 to Master with a Web Content, a Structure, a WC Template and a page with Web Content Display and Asset Publisher"
+	@ignore = "true"
+	@priority = "5"
+	test ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher71 {
+		property portal.acceptance = "false";
+
+		// TODO LPS-125933 ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher71 pending implementation
+	}
+
+	@description = "This is a test for LPS-125933. Upgrade 7.2 to Master with a Web Content, a Structure, a WC Template and a page with Web Content Display and Asset Publisher"
+	@ignore = "true"
+	@priority = "5"
+	test ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher72 {
+		property portal.acceptance = "false";
+
+		// TODO LPS-125933 ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher72 pending implementation
+	}
+
+	@description = "This is a test for LPS-125933. Upgrade 7.3 to Master with a Web Content, a Structure, a WC Template and a page with Web Content Display and Asset Publisher"
+	@ignore = "true"
+	@priority = "5"
+	test ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher73 {
+		property portal.acceptance = "false";
+
+		// TODO LPS-125933 ViewAndEditWebContentWCStructureWCTemplateWCDAndAssetPublisher73 pending implementation
+	}
+
 	@description = "This is a use case for LPS-75561."
 	@priority = "5"
 	test ViewLayoutArchive625 {
@@ -137,6 +174,16 @@ definition {
 		Upgrade.publishWCDraft();
 	}
 
+	@description = "This is a use case for LRQA-62720. View web content with all fields and value after upgrade from 6.2."
+	@priority = "4"
+	test ViewWebContentWithAllFieldsArchive621021 {
+		property data.archive.type = "data-archive-web-content-with-all-fields";
+		property database.types = "mysql,oracle,postgresql,sybase";
+		property portal.version = "6.2.10.21";
+
+		Upgrade.viewWebContentWithAllFields();
+	}
+
 	@description = "This is a use case for LPS-98619."
 	@priority = "3"
 	test ViewWebContentWithImageArchive704 {
@@ -151,13 +198,9 @@ definition {
 			portlet = "Web Content",
 			site = "${siteName}");
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
-
-		AssertTextEquals(
-			locator1 = "TextInput#TITLE",
-			value1 = "WC WebContent Title");
-
-		AssertVisible(locator1 = "Button#PREVIEW");
+		WebContentUpgrade.viewWithStructureCP(
+			webContentImage = "Document_1.jpg",
+			webContentTitle = "WC WebContent Title");
 	}
 
 	@description = "This is a use case for LPS-98619."
@@ -174,36 +217,69 @@ definition {
 			portlet = "Web Content",
 			site = "${siteName}");
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
-
-		AssertTextEquals(
-			locator1 = "TextInput#TITLE",
-			value1 = "WC WebContent Title");
-
-		AssertVisible(locator1 = "Button#PREVIEW");
+		WebContentUpgrade.viewWithStructureCP(
+			webContentImage = "Document_1.jpg",
+			webContentTitle = "WC WebContent Title");
 	}
 
-	@description = "This is a use case for LPS-98619."
-	@priority = "3"
-	test ViewWebContentWithImageArchive621021 {
-		property data.archive.type = "data-archive-web-content-with-image";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
-		property portal.version = "6.2.10.21";
+	@description = "This is a use case for LRQA-62830."
+	@priority = "4"
+	test ViewWebContentWithPredefinedValueInWebContentFieldArchive713 {
+		property data.archive.type = "data-archive-web-content-with-predefined-value-in-web-content-field";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.1.3";
 
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		Upgrade.viewWebContentWithPredefinedValueInWebContentField();
+	}
 
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Web Content",
-			site = "${siteName}");
+	@description = "This is a use case for LRQA-62834."
+	@priority = "4"
+	test ViewWebContentWithPredefinedValueInWebContentFieldArchive721 {
+		property data.archive.type = "data-archive-web-content-with-predefined-value-in-web-content-field";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.2.1";
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+		Upgrade.viewWebContentWithPredefinedValueInWebContentField();
+	}
 
-		AssertTextEquals(
-			locator1 = "TextInput#TITLE",
-			value1 = "Web Content Title");
+	@description = "This is a use case for LRQA-62836."
+	@priority = "4"
+	test ViewWebContentWithPredefinedValueInWebContentFieldArchive730 {
+		property data.archive.type = "data-archive-web-content-with-predefined-value-in-web-content-field";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.3.0";
 
-		AssertVisible(locator1 = "Button#PREVIEW");
+		Upgrade.viewWebContentWithPredefinedValueInWebContentField();
+	}
+
+	@description = "This is a use case for LRQA-62830."
+	@priority = "4"
+	test ViewWebContentWithPredefinedValueInWebContentFieldArchive71103 {
+		property data.archive.type = "data-archive-web-content-with-predefined-value-in-web-content-field";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property portal.version = "7.1.10.3";
+
+		Upgrade.viewWebContentWithPredefinedValueInWebContentField();
+	}
+
+	@description = "This is a use case for LRQA-62834."
+	@priority = "4"
+	test ViewWebContentWithPredefinedValueInWebContentFieldArchive72101 {
+		property data.archive.type = "data-archive-web-content-with-predefined-value-in-web-content-field";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property portal.version = "7.2.10.1";
+
+		Upgrade.viewWebContentWithPredefinedValueInWebContentField();
+	}
+
+	@description = "This is a use case for LRQA-62801."
+	@priority = "4"
+	test ViewWebContentWithPredefinedValueInWebContentFieldArchive701014 {
+		property data.archive.type = "data-archive-web-content-with-predefined-value-in-web-content-field";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property portal.version = "7.0.10.14";
+
+		Upgrade.viewWebContentWithPredefinedValueInWebContentField();
 	}
 
 }

@@ -22,7 +22,7 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 
 <liferay-util:include page="/document_library/navigation.jsp" servletContext="<%= application %>" />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= dlViewFileEntryTypesDisplayContext.getClearResultsURL() %>"
 	creationMenu="<%= dlViewFileEntryTypesDisplayContext.getCreationMenu() %>"
 	disabled="<%= dlViewFileEntryTypesDisplayContext.getTotalItems() == 0 %>"
@@ -32,9 +32,7 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 	selectable="<%= false %>"
 />
 
-<clay:container-fluid
-	cssClass="main-content-body"
->
+<clay:container-fluid>
 	<liferay-ui:breadcrumb
 		showLayout="<%= false %>"
 	/>
@@ -54,13 +52,7 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 			<%
 			PortletURL rowURL = liferayPortletResponse.createRenderURL();
 
-			if (dlViewFileEntryTypesDisplayContext.useDataEngineEditor()) {
-				rowURL.setParameter("mvcRenderCommandName", "/document_library/edit_file_entry_type_data_definition");
-			}
-			else {
-				rowURL.setParameter("mvcRenderCommandName", "/document_library/edit_file_entry_type");
-			}
-
+			rowURL.setParameter("mvcRenderCommandName", "/document_library/edit_file_entry_type");
 			rowURL.setParameter("redirect", currentURL);
 			rowURL.setParameter("fileEntryTypeId", String.valueOf(fileEntryType.getFileEntryTypeId()));
 			%>
@@ -88,20 +80,10 @@ DLViewFileEntryTypesDisplayContext dlViewFileEntryTypesDisplayContext = new DLVi
 				value="<%= fileEntryType.getModifiedDate() %>"
 			/>
 
-			<c:choose>
-				<c:when test="<%= dlViewFileEntryTypesDisplayContext.useDataEngineEditor() %>">
-					<liferay-ui:search-container-column-jsp
-						cssClass="entry-action"
-						path="/document_library/file_entry_type_action_data_definition.jsp"
-					/>
-				</c:when>
-				<c:otherwise>
-					<liferay-ui:search-container-column-jsp
-						cssClass="entry-action"
-						path="/document_library/file_entry_type_action.jsp"
-					/>
-				</c:otherwise>
-			</c:choose>
+			<liferay-ui:search-container-column-jsp
+				cssClass="entry-action"
+				path="/document_library/file_entry_type_action.jsp"
+			/>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator

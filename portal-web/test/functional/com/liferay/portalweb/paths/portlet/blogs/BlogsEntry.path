@@ -109,6 +109,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CONTENT_SMALL_IMAGE</td>
+	<td>//div[contains(@class,'asset-small-image')]//img[contains(@src,'${key_imageFileName}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CONTENT_VIDEO</td>
 	<td>//div[contains(@class,'embed')]//iframe[contains(@src,'${key_service}')]</td>
 	<td></td>
@@ -146,6 +151,11 @@
 <tr>
 	<td>SMALL_IMAGE</td>
 	<td>//div[@class='current-image' and contains(@src,'${key_smallImage}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SMALL_IMAGE_BROWSE_IMAGE</td>
+	<td>//div[contains(@class,'blogs-small-image')]//button[contains(@class,'browse-image')]</td>
 	<td></td>
 </tr>
 <tr>

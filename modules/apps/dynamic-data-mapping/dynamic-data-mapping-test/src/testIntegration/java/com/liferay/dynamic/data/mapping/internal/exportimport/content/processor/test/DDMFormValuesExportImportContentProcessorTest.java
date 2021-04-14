@@ -42,6 +42,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataContextFactoryUtil;
 import com.liferay.exportimport.test.util.TestReaderWriter;
 import com.liferay.exportimport.test.util.TestUserIdStrategy;
+import com.liferay.journal.article.dynamic.data.mapping.form.field.type.constants.JournalArticleDDMFormFieldTypeConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
@@ -326,9 +327,11 @@ public class DDMFormValuesExportImportContentProcessorTest {
 		List<DDMFormField> ddmFormFields = journalDDMForm.getDDMFormFields();
 
 		DDMFormField webContentFormField = new DDMFormField(
-			"WebContenttest", "ddm-journal-article");
+			"WebContenttest",
+			JournalArticleDDMFormFieldTypeConstants.JOURNAL_ARTICLE);
 
-		webContentFormField.setDataType("journal-article");
+		webContentFormField.setDataType(
+			JournalArticleDDMFormFieldTypeConstants.JOURNAL_ARTICLE);
 		webContentFormField.setLocalizable(true);
 		webContentFormField.setShowLabel(true);
 		webContentFormField.setDDMForm(journalDDMForm);

@@ -14,8 +14,6 @@
 
 package com.liferay.talend.properties.batch;
 
-import static org.talend.daikon.properties.presentation.Widget.widget;
-
 import com.liferay.talend.LiferayDefinition;
 import com.liferay.talend.common.daikon.DaikonUtil;
 import com.liferay.talend.common.oas.OASException;
@@ -286,14 +284,14 @@ public class LiferayBatchFileProperties
 
 		form.addRow(entitySelectWidget);
 
-		Widget bulkFilePathWidget = widget(batchFilePath);
+		Widget bulkFilePathWidget = Widget.widget(batchFilePath);
 
 		bulkFilePathWidget.setWidgetType(Widget.FILE_WIDGET_TYPE);
 
 		form.addRow(bulkFilePathWidget);
 	}
 
-	private transient OASExplorer _oasExplorer = new OASExplorer();
+	private final transient OASExplorer _oasExplorer = new OASExplorer();
 	private transient JsonObject _oasJsonObject;
 
 }

@@ -23,9 +23,9 @@ String emailSubjectParam = "emailSubject_" + currentLanguageId;
 String emailBodyParam = "emailBody_" + currentLanguageId;
 
 String defaultEmailSubject = ContentUtil.get(PowwowUtil.class.getClassLoader(), PortletPropsValues.POWWOW_INVITATION_EMAIL_SUBJECT);
+
 String defaultEmailBody = ContentUtil.get(PowwowUtil.class.getClassLoader(), PortletPropsValues.POWWOW_INVITATION_EMAIL_BODY);
 
-String emailSubject = PrefsParamUtil.getString(portletPreferences, request, emailSubjectParam, defaultEmailSubject);
 String emailBody = PrefsParamUtil.getString(portletPreferences, request, emailBodyParam, defaultEmailBody);
 %>
 
@@ -56,7 +56,7 @@ String emailBody = PrefsParamUtil.getString(portletPreferences, request, emailBo
 
 		</aui:select>
 
-		<aui:input cssClass="lfr-input-text-container" label="subject" name='<%= "preferences--" + emailSubjectParam + "--" %>' value="<%= emailSubject %>" />
+		<aui:input cssClass="lfr-input-text-container" label="subject" name='<%= "preferences--" + emailSubjectParam + "--" %>' value="<%= PrefsParamUtil.getString(portletPreferences, request, emailSubjectParam, defaultEmailSubject) %>" />
 
 		<aui:field-wrapper label="body">
 			<liferay-ui:input-editor

@@ -29,6 +29,14 @@ public class PullRequestPluginsTopLevelBuild extends PluginsTopLevelBuild {
 	}
 
 	@Override
+	public String getBranchName() {
+		String jobName = getJobName();
+
+		return jobName.substring(
+			jobName.indexOf("(") + 1, jobName.indexOf(")"));
+	}
+
+	@Override
 	public String getPluginName() {
 		for (Build downstreamBuild : getDownstreamBuilds(null)) {
 			String jobVariant = downstreamBuild.getParameterValue(
@@ -48,6 +56,17 @@ public class PullRequestPluginsTopLevelBuild extends PluginsTopLevelBuild {
 		}
 
 		return null;
+	}
+
+	@Override
+	public String getTestSuiteName() {
+		String ciTestSuite = getParameterValue("CI_TEST_SUITE");
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(ciTestSuite)) {
+			ciTestSuite = "default";
+		}
+
+		return ciTestSuite;
 	}
 
 	private static final Pattern _pattern = Pattern.compile(

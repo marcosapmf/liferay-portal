@@ -20,6 +20,56 @@ import {DEFAULT_FIELD_NAME_REGEX} from '../../../../../src/main/resources/META-I
 import mockFieldTypes from '../../../__mock__/mockFieldTypes.es';
 import mockPages from '../../../__mock__/mockPages.es';
 
+const addField = (props, state) => {
+	return handleFieldAdded(props, state, {
+		data: {},
+		fieldType: mockFieldTypes[0],
+		indexes: {
+			columnIndex: 0,
+			pageIndex: 0,
+			rowIndex: 0,
+		},
+	});
+};
+
+const editField = (props, state, value) => {
+	return handleFieldEdited(props, state, {
+		propertyName: 'fieldReference',
+		propertyValue: value,
+	});
+};
+
+const getFieldReferenceSettingsProperty = (propertyName, state) => {
+	return settingsContextUtil.getSettingsContextProperty(
+		state.focusedField.settingsContext,
+		'fieldReference',
+		propertyName
+	);
+};
+
+const getInitialFormContext = () => {
+	const state = {
+		focusedField: {},
+		pages: [{rows: [{columns: [{fields: []}]}]}],
+		rules: [],
+	};
+
+	const props = {
+		defaultLanguageId: 'en_US',
+		editingLanguageId: 'en_US',
+		fieldNameGenerator: (desiredName, currentName) => {
+			const {pages} = state;
+
+			return generateFieldName(pages, desiredName, currentName);
+		},
+	};
+
+	return {
+		props,
+		state,
+	};
+};
+
 describe('LayoutProvider/handlers/fieldEditedHandler', () => {
 	describe('handleFieldEdited(props, state, event)', () => {
 		it('updates the field label', () => {
@@ -178,6 +228,62 @@ describe('LayoutProvider/handlers/fieldEditedHandler', () => {
 			expect(updateFieldSpy).not.toHaveBeenCalled();
 
 			updateFieldSpy.mockRestore();
+		});
+
+		it('updates the field reference', () => {
+			const formContext = getInitialFormContext();
+
+			const {props} = formContext;
+
+			let {state} = formContext;
+
+			state = addField(props, state);
+
+			state = editField(props, state, 'NewReference');
+
+			expect(state.focusedField.fieldReference).toEqual('NewReference');
+
+			expect(getFieldReferenceSettingsProperty('value', state)).toEqual(
+				'NewReference'
+			);
+		});
+
+		it('shows an error message if field reference already exists', () => {
+			const formContext = getInitialFormContext();
+
+			const {props} = formContext;
+
+			let {state} = formContext;
+
+			state = addField(props, state);
+
+			state = editField(props, state, 'NewReference');
+
+			let valid = getFieldReferenceSettingsProperty('valid', state);
+
+			let displayErrors = getFieldReferenceSettingsProperty(
+				'displayErrors',
+				state
+			);
+
+			expect(valid).toEqual(true);
+
+			expect(displayErrors).toEqual(false);
+
+			state = addField(props, state);
+
+			state = editField(props, state, 'NewReference');
+
+			valid = getFieldReferenceSettingsProperty('valid', state);
+
+			displayErrors = getFieldReferenceSettingsProperty(
+				'displayErrors',
+				state
+			);
+
+			expect(valid).toEqual(false);
+
+			expect(displayErrors).toEqual(true);
 		});
 	});
 });

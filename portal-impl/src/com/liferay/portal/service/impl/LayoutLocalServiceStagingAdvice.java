@@ -560,12 +560,9 @@ public class LayoutLocalServiceStagingAdvice implements BeanFactoryAware {
 
 		Layout firstLayout = layouts.get(0);
 
-		if ((!firstLayout.isTypeContent() &&
-			 (wrapLayout(firstLayout) == firstLayout)) ||
-			(firstLayout.isTypeContent() &&
-			 !LayoutStagingUtil.isBranchingLayoutSet(
-				 firstLayout.getGroup(), firstLayout.isPrivateLayout()))) {
+		Layout wrappedFirstLayout = wrapLayout(firstLayout);
 
+		if (wrappedFirstLayout == firstLayout) {
 			return layouts;
 		}
 
@@ -588,7 +585,9 @@ public class LayoutLocalServiceStagingAdvice implements BeanFactoryAware {
 			}
 			catch (Exception exception) {
 				if (_log.isDebugEnabled()) {
-					_log.debug("No layout set branch found for user " + userId);
+					_log.debug(
+						"No layout set branch found for user " + userId,
+						exception);
 				}
 			}
 		}
@@ -596,12 +595,6 @@ public class LayoutLocalServiceStagingAdvice implements BeanFactoryAware {
 		List<Layout> wrappedLayouts = new ArrayList<>(layouts.size());
 
 		for (Layout layout : layouts) {
-			if (layout.isTypeContent()) {
-				wrappedLayouts.add(layout);
-
-				continue;
-			}
-
 			Layout wrappedLayout = wrapLayout(layout);
 
 			if (showIncomplete ||
@@ -810,6 +803,11 @@ public class LayoutLocalServiceStagingAdvice implements BeanFactoryAware {
 					throw invocationTargetException.getTargetException();
 				}
 				catch (NoSuchMethodException noSuchMethodException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							noSuchMethodException, noSuchMethodException);
+					}
+
 					returnValue = _invoke(method, arguments);
 				}
 			}

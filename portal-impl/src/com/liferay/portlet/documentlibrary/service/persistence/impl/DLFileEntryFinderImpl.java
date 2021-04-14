@@ -534,10 +534,6 @@ public class DLFileEntryFinderImpl
 
 			queryPos.add(queryDefinition.getStatus());
 
-			for (Long folderId : folderIds) {
-				queryPos.add(folderId);
-			}
-
 			Iterator<Long> iterator = sqlQuery.iterate();
 
 			if (iterator.hasNext()) {
@@ -598,10 +594,6 @@ public class DLFileEntryFinderImpl
 
 			for (Long repositoryId : repositoryIds) {
 				queryPos.add(repositoryId);
-			}
-
-			for (Long folderId : folderIds) {
-				queryPos.add(folderId);
 			}
 
 			if (mimeTypes != null) {
@@ -672,10 +664,6 @@ public class DLFileEntryFinderImpl
 
 			for (Long repositoryId : repositoryIds) {
 				queryPos.add(repositoryId);
-			}
-
-			for (Long folderId : folderIds) {
-				queryPos.add(folderId);
 			}
 
 			if (mimeTypes != null) {
@@ -790,7 +778,8 @@ public class DLFileEntryFinderImpl
 
 		for (int i = 0; i < folderIds.size(); i++) {
 			sb.append(tableName);
-			sb.append(".folderId = ? ");
+			sb.append(".folderId = ");
+			sb.append(folderIds.get(i));
 
 			if ((i + 1) != folderIds.size()) {
 				sb.append(WHERE_OR);

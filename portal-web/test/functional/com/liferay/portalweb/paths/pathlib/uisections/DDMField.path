@@ -10,17 +10,17 @@
 <tbody>
 <tr>
 	<td>BOOLEAN</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//label[@class='checkbox']</td>
-	<td></td>
-</tr>
-<tr>
-	<td>COLOR_PICKER_COLOR</td>
-	<td>//a[@class='palette-item-inner'][@title='#${key_colorCode}']</td>
+	<td>//div[@data-field-name='${key_fieldName}']//label[contains(.,'Boolean')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>DDM_INPUT</td>
 	<td>//div[contains(@data-fieldname,'${key_fieldDefaultValue}')]//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FIELD_DUPLICATE</td>
+	<td>//label[contains(.,'${key_fieldName}')]/..//button[@*='Duplicate']</td>
 	<td></td>
 </tr>
 <tr>
@@ -39,8 +39,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>NESTED</td>
-	<td>//div[@data-fieldname='${key_fieldName}']/div[@data-fieldname='${key_nestedFieldName}']//input</td>
+	<td>MULTIPLE_LINES</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::textarea</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NESTED_INPUT</td>
+	<td>//div[contains(@class,'nested-separator')][//following-sibling::div[1][//label[normalize-space(text())='${key_fieldName}']]]//following-sibling::div[2]//label[normalize-space(text())='${key_nestedFieldName}']//following-sibling::input</td>
 	<td></td>
 </tr>
 <tr>
@@ -51,6 +56,16 @@
 <tr>
 	<td>SELECT</td>
 	<td>//div[@data-fieldname='${key_fieldName}']//select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_FROM_LIST</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div[contains(@class,'form-builder-select-field')]//div[contains(@class,'option-selected')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEPARATOR</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']/following-sibling::div[contains(@class,'separator')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -66,6 +81,11 @@
 <tr>
 	<td>WEB_CONTENT_TITLE_SELECTED</td>
 	<td>//div[@data-fieldname='${key_fieldName}']//input[@value='${key_fieldData}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REMOVE_REPEATED_FIELD</td>
+	<td>//button[@class= 'ddm-form-field-repeatable-delete-button p-0 btn btn-sm btn-primary']</td>
 	<td></td>
 </tr>
 </tbody>

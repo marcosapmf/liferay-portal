@@ -13,11 +13,15 @@
  */
 
 function defineServerResponses(app) {
+	app.post('/account-selector/setCurrentAccounts', (_, res) => {
+		res.json({});
+	});
+
 	app.get('/dataset-display-nested-items', (_, res) => {
 		res.json({
 			items: [
 				{
-					actionItems: [
+					actionDropdownItems: [
 						{
 							href: '/view/url',
 							icon: 'view',
@@ -58,11 +62,6 @@ function defineServerResponses(app) {
 						src: '//via.placeholder.com/250x250',
 					},
 					name: 'ABS Sensor',
-					price: {
-						final: {
-							value: '12 Gazillions',
-						},
-					},
 					productPage: '/test/link/1',
 					skuId: 7654,
 					testLink: {
@@ -77,7 +76,7 @@ function defineServerResponses(app) {
 					},
 					testSubItems: [
 						{
-							actionItems: [
+							actionDropdownItems: [
 								{
 									href: '/view/url',
 									icon: 'view',
@@ -118,11 +117,7 @@ function defineServerResponses(app) {
 								src: '//via.placeholder.com/250x250',
 							},
 							name: 'Sub item 1',
-							price: {
-								final: {
-									value: '12 Gazillions',
-								},
-							},
+							price: '$ 123.40',
 							productPage: '/test/link/1',
 							skuId: 35663,
 							testLink: {
@@ -131,7 +126,7 @@ function defineServerResponses(app) {
 							},
 						},
 						{
-							actionItems: [
+							actionDropdownItems: [
 								{
 									href: '/view/url',
 									icon: 'view',
@@ -172,11 +167,7 @@ function defineServerResponses(app) {
 								src: '//via.placeholder.com/250x250',
 							},
 							name: 'Sub item 2',
-							price: {
-								final: {
-									value: '12 Gazillions',
-								},
-							},
+							price: '$ 709.90',
 							productPage: '/test/link/1',
 							skuId: 356637,
 							testLink: {
@@ -190,11 +181,7 @@ function defineServerResponses(app) {
 								src: '//via.placeholder.com/250x250',
 							},
 							name: 'Sub item 3',
-							price: {
-								final: {
-									value: '12 Gazillions',
-								},
-							},
+							price: '$ 10.00',
 							productPage: '/test/link/1',
 							skuId: 356638,
 							testLink: {
@@ -208,11 +195,7 @@ function defineServerResponses(app) {
 								src: '//via.placeholder.com/250x250',
 							},
 							name: 'Sub item 4',
-							price: {
-								final: {
-									value: '12 Gazillions',
-								},
-							},
+							price: '$ 90.00',
 							productPage: '/test/link/1',
 							skuId: 3566312,
 							testLink: {
@@ -223,7 +206,7 @@ function defineServerResponses(app) {
 					],
 				},
 				{
-					actionItems: [
+					actionDropdownItems: [
 						{
 							href: '/view/url',
 							icon: 'view',
@@ -264,30 +247,6 @@ function defineServerResponses(app) {
 						src: '//via.placeholder.com/500x500',
 					},
 					name: 'SBA Sensor',
-					price: {
-						details: [
-							{
-								label: 'Catalog price',
-								value: '$ 15',
-							},
-							{
-								label: 'Final price',
-								value: '$ 31.123',
-							},
-							{
-								label: 'Promo price',
-								value: '$ 15.600',
-							},
-							{
-								label: 'Discounts',
-								value: [40, 30, 20, 10],
-							},
-						],
-						final: {
-							label: 'Final price',
-							value: '12.000 $',
-						},
-					},
 					productPage: '/test/link/1',
 					skuId: 345345,
 					testLink: {
@@ -307,7 +266,10 @@ function defineServerResponses(app) {
 					},
 				},
 			],
-			totalItems: 50,
+			lastPage: 6,
+			page: 1,
+			pageSize: 10,
+			totalCount: 52,
 		});
 	});
 
@@ -420,7 +382,10 @@ function defineServerResponses(app) {
 					],
 				},
 			],
-			totalItems: 5,
+			lastPage: 1,
+			page: 1,
+			pageSize: 10,
+			totalCount: 2,
 		});
 	});
 
@@ -428,7 +393,7 @@ function defineServerResponses(app) {
 		res.json({
 			items: [
 				{
-					actionItems: [
+					actionDropdownItems: [
 						{
 							href: '/delete/action/url',
 							icon: 'trash',
@@ -452,7 +417,7 @@ function defineServerResponses(app) {
 						'Pellentesque in ipsum id orci porta dapibus. Vivamus magna justo, lacinia eget consectetur sed, convallis at tellus. Nulla quis lorem ut libero malesuada feugiat. Pellentesque in ipsum id orci porta dapibus...',
 				},
 				{
-					actionItems: [
+					actionDropdownItems: [
 						{
 							href: '/delete/action/url',
 							icon: 'trash',
@@ -476,15 +441,24 @@ function defineServerResponses(app) {
 						'Cras ultricies ligula sed magna dictum porta. Donec rutrum congue leo eget malesuada. Proin eget tortor risus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Quisque velit nisi, pretium ut lacinia in, elementum id enim...',
 				},
 			],
-			totalItems: 2,
+			lastPage: 1,
+			page: 1,
+			pageSize: 10,
+			totalCount: 2,
 		});
+	});
+
+	app.post('/o/fake-new-inline-item-endpoint', (_, res) => {
+		setTimeout(() => {
+			return res.json({});
+		}, 500);
 	});
 
 	let timeoutOn = false;
 	let processEnded = false;
 	let success = false;
 
-	app.delete('/o/fake-bulk-action/v1.0/products/0/batch', (req, res) => {
+	app.delete('/o/fake-bulk-action/v1.0/products/0/batch', (_, res) => {
 		if (!timeoutOn) {
 			timeoutOn = true;
 			success = !success;

@@ -16,6 +16,7 @@ package com.liferay.asset.publisher.web.internal.messaging;
 
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
+import com.liferay.asset.kernel.util.NotifiedAssetEntryThreadLocal;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfiguration;
@@ -25,12 +26,12 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchContextFactory;
@@ -38,6 +39,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -62,6 +64,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletPreferences;
@@ -112,12 +116,8 @@ public class AssetEntriesCheckerHelper {
 		}
 
 		PortletPreferences portletPreferences =
-			PortletPreferencesFactoryUtil.fromXML(
-				layout.getCompanyId(), portletPreferencesModel.getOwnerId(),
-				portletPreferencesModel.getOwnerType(),
-				portletPreferencesModel.getPlid(),
-				portletPreferencesModel.getPortletId(),
-				portletPreferencesModel.getPreferences());
+			_portletPreferenceValueLocalService.getPreferences(
+				portletPreferencesModel);
 
 		if (!_assetPublisherWebHelper.getEmailAssetEntryAddedEnabled(
 				portletPreferences)) {
@@ -131,6 +131,13 @@ public class AssetEntriesCheckerHelper {
 		if (assetEntries.isEmpty()) {
 			return;
 		}
+
+		Stream<AssetEntry> stream = assetEntries.stream();
+
+		assetEntries = stream.distinct(
+		).collect(
+			Collectors.toList()
+		);
 
 		long[] notifiedAssetEntryIds = GetterUtil.getLongValues(
 			portletPreferences.getValues("notifiedAssetEntryIds", null));
@@ -160,6 +167,8 @@ public class AssetEntriesCheckerHelper {
 
 		_notifySubscribers(subscriptions, portletPreferences, newAssetEntries);
 
+		NotifiedAssetEntryThreadLocal.setNotifiedAssetEntryIdsModified(true);
+
 		try {
 			portletPreferences.setValues(
 				"notifiedAssetEntryIds",
@@ -171,6 +180,10 @@ public class AssetEntriesCheckerHelper {
 		}
 		catch (IOException | PortletException exception) {
 			throw new PortalException(exception);
+		}
+		finally {
+			NotifiedAssetEntryThreadLocal.setNotifiedAssetEntryIdsModified(
+				false);
 		}
 	}
 
@@ -221,9 +234,16 @@ public class AssetEntriesCheckerHelper {
 			_assetPublisherHelper.getAssetEntryQuery(
 				portletPreferences, layout.getGroupId(), layout, null, null);
 
-		assetEntryQuery.setEnd(
-			assetPublisherWebConfiguration.dynamicSubscriptionLimit());
-		assetEntryQuery.setStart(0);
+		int end = assetPublisherWebConfiguration.dynamicSubscriptionLimit();
+		int start = 0;
+
+		if (end == 0) {
+			end = QueryUtil.ALL_POS;
+			start = QueryUtil.ALL_POS;
+		}
+
+		assetEntryQuery.setEnd(end);
+		assetEntryQuery.setStart(start);
 
 		try {
 			SearchContext searchContext = SearchContextFactory.getInstance(
@@ -234,8 +254,7 @@ public class AssetEntriesCheckerHelper {
 
 			BaseModelSearchResult<AssetEntry> baseModelSearchResult =
 				_assetHelper.searchAssetEntries(
-					searchContext, assetEntryQuery, 0,
-					assetPublisherWebConfiguration.dynamicSubscriptionLimit());
+					searchContext, assetEntryQuery, start, end);
 
 			return baseModelSearchResult.getBaseModels();
 		}
@@ -365,6 +384,10 @@ public class AssetEntriesCheckerHelper {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

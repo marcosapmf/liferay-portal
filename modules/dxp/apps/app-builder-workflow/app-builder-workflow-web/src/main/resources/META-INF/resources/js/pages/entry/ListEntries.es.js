@@ -12,6 +12,7 @@
 import ClayLabel from '@clayui/label';
 import {AppContext} from 'app-builder-web/js/AppContext.es';
 import Button from 'app-builder-web/js/components/button/Button.es';
+import NoPermissionState from 'app-builder-web/js/components/empty-state/NoPermissionState.es';
 import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
 import ManagementToolbar from 'app-builder-web/js/components/management-toolbar/ManagementToolbar.es';
 import ManagementToolbarResultsBar from 'app-builder-web/js/components/management-toolbar/ManagementToolbarResultsBar.es';
@@ -37,11 +38,12 @@ import React, {useCallback, useContext, useEffect, useState} from 'react';
 import useAppWorkflow from '../../hooks/useAppWorkflow.es';
 import useDataRecordApps from '../../hooks/useDataRecordApps.es';
 import ReassignEntryModal from './ReassignEntryModal.es';
+import {METRIC_INDEXES_KEY, refreshIndex} from './actions.es';
 
 const WORKFLOW_COLUMNS = [
 	{key: 'status', value: Liferay.Language.get('status')},
 	{key: 'taskNames', value: Liferay.Language.get('step')},
-	{key: 'assignees', value: Liferay.Language.get('assignee')},
+	{key: 'assignee', value: Liferay.Language.get('assignee')},
 ];
 
 export default function ListEntries({history}) {
@@ -61,14 +63,14 @@ export default function ListEntries({history}) {
 
 	const {appWorkflowDefinitionId} = useAppWorkflow(appId);
 	const dataRecordApps = useDataRecordApps(appId, dataRecordIds);
+	const permissions = usePermissions();
 
 	const {
 		columns,
 		dataDefinition,
 		dataListView: {fieldNames},
 		isLoading,
-	} = useDataListView(dataListViewId, dataDefinitionId);
-	const permissions = usePermissions();
+	} = useDataListView(dataListViewId, dataDefinitionId, permissions.view);
 
 	const [{isFetching, items, totalCount}, setFetchState] = useState({
 		isFetching: true,
@@ -95,7 +97,7 @@ export default function ListEntries({history}) {
 
 	const previousQuery = usePrevious(query);
 
-	const doFetch = (query, workflowDefinitionId) => {
+	const doFetch = (query, workflowDefinitionId, refreshIndexes) => {
 		if (workflowDefinitionId) {
 			setFetchState((prevState) => ({
 				...prevState,
@@ -117,40 +119,56 @@ export default function ListEntries({history}) {
 
 						setDataRecordIds(classPKs);
 
-						getItem(
-							`/o/portal-workflow-metrics/v1.0/processes/${workflowDefinitionId}/instances`,
-							{classPKs, page: 1, pageSize: response.items.length}
-						).then((workflowResponse) => {
-							let items = response.items;
+						const getWorkflowInfo = () => {
+							return getItem(
+								`/o/portal-workflow-metrics/v1.0/processes/${workflowDefinitionId}/instances`,
+								{
+									classPKs,
+									page: 1,
+									pageSize: response.items.length,
+								}
+							).then((workflowResponse) => {
+								let items = response.items;
 
-							if (workflowResponse.totalCount > 0) {
-								items = response.items.map((item) => {
-									const {
-										assignees,
-										completed,
-										id: instanceId,
-										taskNames,
-									} =
-										workflowResponse.items.find(
-											({classPK}) => classPK === item.id
-										) || {};
+								if (workflowResponse.totalCount > 0) {
+									items = response.items.map((item) => {
+										const {
+											assignees,
+											completed,
+											id: instanceId,
+											taskNames,
+										} =
+											workflowResponse.items.find(
+												({classPK}) =>
+													classPK === item.id
+											) || {};
 
-									return {
-										...item,
-										assignees,
-										completed,
-										instanceId,
-										taskNames,
-									};
-								});
-							}
+										return {
+											...item,
+											assignees,
+											completed,
+											instanceId,
+											taskNames,
+										};
+									});
+								}
 
-							setFetchState((prevState) => ({
-								...prevState,
-								isFetching: false,
-								items,
-							}));
-						});
+								setFetchState((prevState) => ({
+									...prevState,
+									isFetching: false,
+									items,
+								}));
+							});
+						};
+
+						if (refreshIndexes) {
+							refreshIndex(METRIC_INDEXES_KEY)
+								.then(getWorkflowInfo)
+								.catch(getWorkflowInfo);
+						}
+						else {
+							getWorkflowInfo();
+						}
 					}
 				})
 				.catch(() => {
@@ -169,13 +187,12 @@ export default function ListEntries({history}) {
 			languageId: userLanguageId,
 		});
 
-	const onCloseModal = (isRefetch) => {
+	const refetch = (refreshIndexes) =>
+		doFetch(query, appWorkflowDefinitionId, refreshIndexes);
+
+	const onCloseModal = () => {
 		setModalVisible(false);
 		setSelectedEntry();
-
-		if (isRefetch) {
-			refetch();
-		}
 	};
 
 	const buildWorkflowItems = (items) => {
@@ -185,7 +202,7 @@ export default function ListEntries({history}) {
 					dataDefinition,
 					fieldNames,
 					permissions,
-					scope: appId,
+					query,
 				})
 			)
 			.map((entry) => {
@@ -194,10 +211,10 @@ export default function ListEntries({history}) {
 
 				WORKFLOW_COLUMNS.forEach(({key}) => {
 					switch (key) {
-						case 'assignees': {
+						case 'assignee': {
 							const {assignees = [], taskNames = []} = entry;
 
-							const {id, name = emptyValue, reviewer} =
+							const {id = -1, name = emptyValue, reviewer} =
 								assignees[0] || {};
 
 							if (id === -1) {
@@ -259,8 +276,6 @@ export default function ListEntries({history}) {
 			});
 	};
 
-	const refetch = () => doFetch(query, appWorkflowDefinitionId);
-
 	useEffect(() => {
 		if (!isEqualObjects(query, previousQuery)) {
 			refetch();
@@ -285,7 +300,9 @@ export default function ListEntries({history}) {
 			show: ({canReassign}) => canReassign,
 		},
 		...useEntriesActions({
-			update: ({completed}) => completed === false,
+			update: ({assignees, completed}) =>
+				completed === false &&
+				assignees?.[0]?.id === Number(themeDisplay.getUserId()),
 		}),
 	];
 
@@ -313,6 +330,10 @@ export default function ListEntries({history}) {
 				}
 			}),
 	}));
+
+	if (!permissions.view) {
+		return <NoPermissionState />;
+	}
 
 	return (
 		<Loading isLoading={isLoading}>
@@ -368,6 +389,7 @@ export default function ListEntries({history}) {
 				<ReassignEntryModal
 					entry={selectedEntry}
 					onCloseModal={onCloseModal}
+					refetch={refetch}
 				/>
 			)}
 		</Loading>

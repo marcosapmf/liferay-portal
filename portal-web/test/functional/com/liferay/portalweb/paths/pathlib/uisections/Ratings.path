@@ -51,11 +51,6 @@
 </tr>
 <!--YOUR_RATING-->
 <tr>
-	<td>YOUR_RATING_LABEL</td>
-	<td>xPath=(//div[@class='rating-label'])[1]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>YOUR_RATING_LIKE_COUNT</td>
 	<td>//div[contains(@class,'ratings-like')]//button[contains(@title,'Unlike This')]//span[contains(@class,'current')]</td>
 	<td></td>
@@ -83,6 +78,11 @@
 <tr>
 	<td>YOUR_RATING_STAR_COUNT</td>
 	<td>//div[contains(@class,'ratings-stars-dropdown')]//button[contains(.,'Rate this ${key_ratingStarCount} stars out of 5')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YOUR_RATING_STAR_COUNT_ANY</td>
+	<td>//div[contains(@class,'ratings-stars-dropdown')][contains(@class,'show')]//button[contains(.,'Rate this ${key_ratingStar} out of 5')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -121,16 +121,21 @@
 	<td></td>
 </tr>
 <tr>
+	<td>YOUR_RATING_STAR_RESULT_SPECIFIC_ASSET</td>
+	<td>//div[contains(@class,'asset-abstract')][contains(.,'${key_assetTitle}')]//div[contains(@class,'ratings-stars')]//button[@*='You have rated this ${key_ratingStar} out of 5.']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YOUR_RATING_STAR_SPECIFIC_ASSET</td>
+	<td>//div[contains(@class,'asset-abstract')][contains(.,'${key_assetTitle}')]//div[contains(@class,'ratings-stars')]//button[contains(@class,'dropdown-toggle')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
 </tr>
 <!--AVERAGE-->
-<tr>
-	<td>AVERAGE_LABEL</td>
-	<td>xPath=(//div[@class='rating-label'])[2]</td>
-	<td></td>
-</tr>
 <tr>
 	<td>AVERAGE_STAR</td>
 	<td>//div[contains(@class,'ratings-stars')]//*[name()='svg'][contains(@class,'ratings-stars-average-icon')]</td>

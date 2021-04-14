@@ -1167,7 +1167,8 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 				params2.remove("usersGroups");
 
 				if (PropsValues.ORGANIZATIONS_MEMBERSHIP_STRICT) {
-					params2.put("usersOrgs", organizationIds);
+					params2.put(
+						"usersOrgs", organizationIds.toArray(new Long[0]));
 				}
 				else {
 					Map<Serializable, Organization> organizations =
@@ -1291,6 +1292,13 @@ public class UserFinderImpl extends UserFinderBaseImpl implements UserFinder {
 				params1.remove("socialRelationType");
 
 				params2.remove("usersGroups");
+
+				params3 = new LinkedHashMap<>(params1);
+
+				params3.remove("socialRelationType");
+				params3.remove("usersGroups");
+
+				params3.put("groupsUserGroups", groupIds);
 			}
 		}
 

@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.checkout.web.internal.portlet;
 
+import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.checkout.web.internal.display.context.CheckoutDisplayContext;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
@@ -50,6 +51,7 @@ import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
@@ -109,23 +111,34 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 			CommerceOrder commerceOrder = getCommerceOrder(renderRequest);
 
 			if (commerceOrder != null) {
+				HttpServletRequest httpServletRequest =
+					_portal.getHttpServletRequest(renderRequest);
 				HttpServletResponse httpServletResponse =
 					_portal.getHttpServletResponse(renderResponse);
 
-				if (commerceOrder.isGuestOrder()) {
-					boolean continueAsGuest = GetterUtil.getBoolean(
-						CookieKeys.getCookie(
-							_portal.getHttpServletRequest(renderRequest),
-							"continueAsGuest"));
+				boolean continueAsGuest = GetterUtil.getBoolean(
+					CookieKeys.getCookie(
+						_portal.getHttpServletRequest(renderRequest),
+						"continueAsGuest"));
 
-					if (!continueAsGuest) {
-						httpServletResponse.sendRedirect(
-							getCheckoutURL(renderRequest));
-					}
+				if ((commerceOrder.getCommerceAccountId() ==
+						CommerceAccountConstants.ACCOUNT_ID_GUEST) &&
+					!continueAsGuest) {
+
+					httpServletResponse.sendRedirect(
+						getCheckoutURL(renderRequest));
 				}
-				else if (!isOrderApproved(commerceOrder)) {
+				else if (commerceOrder.isOpen() &&
+						 !isOrderApproved(commerceOrder)) {
+
 					httpServletResponse.sendRedirect(
 						getOrderDetailsURL(renderRequest));
+				}
+				else if (!commerceOrder.isOpen() && continueAsGuest) {
+					CookieKeys.deleteCookies(
+						httpServletRequest, httpServletResponse,
+						CookieKeys.getDomain(httpServletRequest),
+						"continueAsGuest");
 				}
 
 				renderRequest.setAttribute(

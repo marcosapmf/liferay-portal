@@ -194,9 +194,11 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 
 	@Override
 	public boolean isEmpty() {
-		if (CommerceOrderItemLocalServiceUtil.getCommerceOrderItemsCount(
-				getCommerceOrderId()) > 0) {
+		int count =
+			CommerceOrderItemLocalServiceUtil.getCommerceOrderItemsCount(
+				getCommerceOrderId());
 
+		if (count > 0) {
 			return false;
 		}
 
@@ -260,12 +262,12 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 		BigDecimal shippingDiscountPercentageLevel4 = BigDecimal.ZERO;
 
 		if (commerceDiscountValue != null) {
-			CommerceMoney discountAmount =
+			CommerceMoney discountAmountCommerceMoney =
 				commerceDiscountValue.getDiscountAmount();
 
 			BigDecimal[] percentages = commerceDiscountValue.getPercentages();
 
-			shippingDiscountAmount = discountAmount.getPrice();
+			shippingDiscountAmount = discountAmountCommerceMoney.getPrice();
 
 			if ((percentages != null) && (percentages.length > 0)) {
 				shippingDiscountPercentageLevel1 = percentages[0];
@@ -302,12 +304,12 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 		BigDecimal subtotalDiscountPercentageLevel4 = BigDecimal.ZERO;
 
 		if (commerceDiscountValue != null) {
-			CommerceMoney discountAmount =
+			CommerceMoney discountAmountCommerceMoney =
 				commerceDiscountValue.getDiscountAmount();
 
 			BigDecimal[] percentages = commerceDiscountValue.getPercentages();
 
-			subtotalDiscountAmount = discountAmount.getPrice();
+			subtotalDiscountAmount = discountAmountCommerceMoney.getPrice();
 
 			if ((percentages != null) && (percentages.length > 0)) {
 				subtotalDiscountPercentageLevel1 = percentages[0];
@@ -342,12 +344,12 @@ public class CommerceOrderImpl extends CommerceOrderBaseImpl {
 		BigDecimal totalDiscountPercentageLevel4 = BigDecimal.ZERO;
 
 		if (commerceDiscountValue != null) {
-			CommerceMoney discountAmount =
+			CommerceMoney discountAmountCommerceMoney =
 				commerceDiscountValue.getDiscountAmount();
 
 			BigDecimal[] percentages = commerceDiscountValue.getPercentages();
 
-			totalDiscountAmount = discountAmount.getPrice();
+			totalDiscountAmount = discountAmountCommerceMoney.getPrice();
 
 			if ((percentages != null) && (percentages.length > 0)) {
 				totalDiscountPercentageLevel1 = percentages[0];

@@ -4,15 +4,11 @@ definition {
 		if (IsElementPresent(locator1 = "UserBar#USER_AVATAR_PORTRAIT")) {
 			Click.waitForPersonalMenuJSClick(locator1 = "UserBar#USER_AVATAR_PORTRAIT");
 		}
+		else if (IsElementPresent(locator1 = "UserBar#USER_AVATAR_TOGGLE")) {
+			Click.waitForMenuToggleJSClick(locator1 = "UserBar#USER_AVATAR_TOGGLE");
+		}
 		else {
-			var browserType = PropsUtil.get("browser.type");
-
-			if ("${browserType}" == "internetexplorer") {
-				Click.waitForPersonalMenuJSClick(locator1 = "UserBar#USER_AVATAR_ICON_IE");
-			}
-			else {
-				Click.waitForPersonalMenuJSClick(locator1 = "UserBar#USER_AVATAR_ICON");
-			}
+			Click.waitForPersonalMenuJSClick(locator1 = "UserBar#USER_AVATAR_ICON");
 		}
 
 		AssertVisible(locator1 = "UserBar#USER_AVATAR_DROPDOWN_PORTAL_OPEN");
@@ -48,6 +44,12 @@ definition {
 		AssertTextEquals(
 			locator1 = "UserBar#USER_FULL_NAME",
 			value1 = "${userName}");
+	}
+
+	macro viewNoDropdownItem {
+		AssertElementNotPresent(
+			key_dropdownItem = "${dropdownItem}",
+			locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM");
 	}
 
 	macro viewUserDefaultIcon {

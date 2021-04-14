@@ -37,12 +37,11 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 			<c:when test="<%= ddmFormAdminDisplayContext.hasResults() %>">
 				<liferay-ui:search-container
 					id="<%= ddmFormAdminDisplayContext.getSearchContainerId() %>"
-					rowChecker="<%= new EmptyOnClickRowChecker(renderResponse) %>"
+					rowChecker="<%= new DDMFormInstanceRowChecker(renderResponse) %>"
 					searchContainer="<%= ddmFormAdminDisplayContext.getSearch() %>"
 				>
 					<liferay-ui:search-container-row
 						className="com.liferay.dynamic.data.mapping.model.DDMFormInstance"
-						cssClass="entry-display-style"
 						keyProperty="formInstanceId"
 						modelVar="formInstance"
 					>
@@ -162,7 +161,7 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 	</aui:form>
 </clay:container-fluid>
 
-<aui:script require='<%= "metal-dom/src/all/dom as dom, " + mainRequire + "/admin/js/components/ShareFormModal/ShareFormModal.es as ShareFormModal" %>'>
+<aui:script require='<%= mainRequire + "/admin/js/components/ShareFormModal/ShareFormModal.es as ShareFormModal" %>'>
 	var spritemap = themeDisplay.getPathThemeImages() + '/clay/icons.svg';
 
 	var afterOpenShareFormModal = function (data) {
@@ -180,7 +179,10 @@ FormInstancePermissionCheckerHelper formInstancePermissionCheckerHelper = ddmFor
 					event.stopPropagation();
 
 					var overlayElement = document.querySelector('.modal-backdrop');
-					dom.exitDocument(overlayElement);
+
+					if (overlayElement) {
+						overlayElement.remove();
+					}
 
 					shareFormModal.dispose();
 				},

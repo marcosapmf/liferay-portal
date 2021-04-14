@@ -48,6 +48,10 @@ public abstract class BaseClusterReceiver implements ClusterReceiver {
 			hasDoViewAccepted = true;
 		}
 		catch (ReflectiveOperationException reflectiveOperationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					reflectiveOperationException, reflectiveOperationException);
+			}
 		}
 
 		_hasDoViewAccepted = hasDoViewAccepted;
@@ -61,6 +65,10 @@ public abstract class BaseClusterReceiver implements ClusterReceiver {
 			hasDoCoordinatorAddressUpdated = true;
 		}
 		catch (ReflectiveOperationException reflectiveOperationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					reflectiveOperationException, reflectiveOperationException);
+			}
 		}
 
 		_hasDoCoordinatorAddressUpdated = hasDoCoordinatorAddressUpdated;
@@ -91,7 +99,8 @@ public abstract class BaseClusterReceiver implements ClusterReceiver {
 		catch (InterruptedException interruptedException) {
 			_log.error(
 				"Latch opened prematurely by interruption. Dependence may " +
-					"not be ready.");
+					"not be ready.",
+				interruptedException);
 		}
 		catch (RejectedExecutionException rejectedExecutionException) {
 			_log.error(
@@ -128,7 +137,8 @@ public abstract class BaseClusterReceiver implements ClusterReceiver {
 		catch (InterruptedException interruptedException) {
 			_log.error(
 				"Latch opened prematurely by interruption. Dependence may " +
-					"not be ready.");
+					"not be ready.",
+				interruptedException);
 		}
 		catch (RejectedExecutionException rejectedExecutionException) {
 			_log.error(
@@ -165,7 +175,8 @@ public abstract class BaseClusterReceiver implements ClusterReceiver {
 		catch (InterruptedException interruptedException) {
 			_log.error(
 				"Latch opened prematurely by interruption. Dependence may " +
-					"not be ready.");
+					"not be ready.",
+				interruptedException);
 		}
 		catch (RejectedExecutionException rejectedExecutionException) {
 			_log.error(

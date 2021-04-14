@@ -20,6 +20,7 @@
 DispatchLogDisplayContext dispatchLogDisplayContext = (DispatchLogDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 DispatchTrigger dispatchTrigger = dispatchLogDisplayContext.getDispatchTrigger();
+
 PortletURL portletURL = dispatchLogDisplayContext.getPortletURL();
 
 portletURL.setParameter("searchContainerId", "dispatchLogs");
@@ -32,7 +33,7 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 </liferay-util:include>
 
 <div id="<portlet:namespace />triggerLogsContainer">
-	<div class="closed container-fluid-1280" id="<portlet:namespace />infoPanelId">
+	<div class="closed container-fluid container-fluid-max-xl" id="<portlet:namespace />infoPanelId">
 		<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" />
 			<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
@@ -45,7 +46,6 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 				>
 					<liferay-ui:search-container-row
 						className="com.liferay.dispatch.model.DispatchLog"
-						cssClass="entry-display-style"
 						keyProperty="dispatchLogId"
 						modelVar="dispatchLog"
 					>
@@ -53,13 +53,13 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 						<%
 						PortletURL rowURL = renderResponse.createRenderURL();
 
-						rowURL.setParameter("mvcRenderCommandName", "viewDispatchLog");
+						rowURL.setParameter("mvcRenderCommandName", "/dispatch/view_dispatch_log");
 						rowURL.setParameter("redirect", currentURL);
 						rowURL.setParameter("dispatchLogId", String.valueOf(dispatchLog.getDispatchLogId()));
 						%>
 
 						<liferay-ui:search-container-column-text
-							cssClass="important table-cell-content"
+							cssClass="important table-cell-expand"
 							href="<%= rowURL %>"
 							name="start-date"
 						>
@@ -67,14 +67,14 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							name="runtime"
 						>
 							<%= (dispatchLog.getEndDate() == null) ? StringPool.DASH : String.valueOf(dispatchLog.getEndDate().getTime() - dispatchLog.getStartDate().getTime()) + " ms" %>
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							name="trigger"
 							value="<%= HtmlUtil.escape(dispatchTrigger.getName()) %>"
 						/>
@@ -82,8 +82,13 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 						<liferay-ui:search-container-column-text
 							name="status"
 						>
-							<h6 class="background-task-status-row background-task-status-<%= BackgroundTaskConstants.getStatusLabel(dispatchLog.getStatus()) %> <%= BackgroundTaskConstants.getStatusCssClass(dispatchLog.getStatus()) %>">
-								<liferay-ui:message key="<%= BackgroundTaskConstants.getStatusLabel(dispatchLog.getStatus()) %>" />
+
+							<%
+							DispatchTaskStatus dispatchTaskStatus = DispatchTaskStatus.valueOf(dispatchLog.getStatus());
+							%>
+
+							<h6 class="background-task-status-row background-task-status-<%= dispatchTaskStatus.getLabel() %> <%= dispatchTaskStatus.getCssClass() %>">
+								<liferay-ui:message key="<%= dispatchTaskStatus.getLabel() %>" />
 							</h6>
 						</liferay-ui:search-container-column-text>
 

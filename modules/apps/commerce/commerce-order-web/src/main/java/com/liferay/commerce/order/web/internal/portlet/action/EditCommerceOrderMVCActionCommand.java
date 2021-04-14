@@ -62,7 +62,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
-		"mvc.command.name=editCommerceOrder"
+		"mvc.command.name=/commerce_order/edit_commerce_order"
 	},
 	service = MVCActionCommand.class
 )
@@ -329,8 +329,13 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			actionRequest, CommercePortletKeys.COMMERCE_SHIPMENT,
 			PortletRequest.RENDER_PHASE);
 
+		String redirect = ParamUtil.getString(actionRequest, "redirect");
+
+		shipmentPortletURL.setParameter("redirect", redirect);
+
 		shipmentPortletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceShipment");
+			"mvcRenderCommandName",
+			"/commerce_shipment/edit_commerce_shipment");
 		shipmentPortletURL.setParameter(
 			"commerceShipmentId", String.valueOf(commerceShipmentId));
 

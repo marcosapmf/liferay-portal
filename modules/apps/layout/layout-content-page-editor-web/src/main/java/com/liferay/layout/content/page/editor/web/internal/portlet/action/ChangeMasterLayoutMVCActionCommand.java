@@ -60,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/change_master_layout"
+		"mvc.command.name=/layout_content_page_editor/change_master_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -139,6 +139,25 @@ public class ChangeMasterLayoutMVCActionCommand
 			Layout layout, ThemeDisplay themeDisplay)
 		throws Exception {
 
+		StyleBookEntry defaultMasterStyleBookEntry =
+			DefaultStyleBookEntryUtil.getDefaultMasterStyleBookEntry(layout);
+
+		String defaultStyleBookEntryName = StringPool.BLANK;
+		String defaultStyleBookEntryImagePreviewURL = StringPool.BLANK;
+
+		if (defaultMasterStyleBookEntry != null) {
+			defaultStyleBookEntryName = defaultMasterStyleBookEntry.getName();
+			defaultStyleBookEntryImagePreviewURL =
+				defaultMasterStyleBookEntry.getImagePreviewURL(themeDisplay);
+		}
+
+		JSONObject jsonObject = JSONUtil.put(
+			"defaultStyleBookEntryImagePreviewURL",
+			defaultStyleBookEntryImagePreviewURL
+		).put(
+			"defaultStyleBookEntryName", defaultStyleBookEntryName
+		);
+
 		StyleBookEntry styleBookEntry =
 			DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(layout);
 
@@ -148,21 +167,7 @@ public class ChangeMasterLayoutMVCActionCommand
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
 				layoutSet.getThemeId());
 
-		String defaultStyleBookEntryName = StringPool.BLANK;
-		String defaultStyleBookEntryImagePreviewURL = StringPool.BLANK;
-
-		if (styleBookEntry != null) {
-			defaultStyleBookEntryName = styleBookEntry.getName();
-			defaultStyleBookEntryImagePreviewURL =
-				styleBookEntry.getImagePreviewURL(themeDisplay);
-		}
-
-		return JSONUtil.put(
-			"defaultStyleBookEntryImagePreviewURL",
-			defaultStyleBookEntryImagePreviewURL
-		).put(
-			"defaultStyleBookEntryName", defaultStyleBookEntryName
-		).put(
+		return jsonObject.put(
 			"styleBookEntryId", layout.getStyleBookEntryId()
 		).put(
 			"tokenValues",

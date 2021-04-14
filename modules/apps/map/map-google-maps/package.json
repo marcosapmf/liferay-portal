@@ -1,6 +1,5 @@
 {
 	"dependencies": {
-		"metal-dom": "2.16.8",
 		"metal-state": "2.16.8"
 	},
 	"name": "map-google-maps",
@@ -10,5 +9,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "4.0.13"
+	"version": "5.0.0"
 }

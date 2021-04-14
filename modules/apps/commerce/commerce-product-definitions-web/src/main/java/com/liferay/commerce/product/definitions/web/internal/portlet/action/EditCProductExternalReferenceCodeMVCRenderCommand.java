@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editCProductExternalReferenceCode"
+		"mvc.command.name=/cp_definitions/edit_c_product_external_reference_code"
 	},
 	service = MVCRenderCommand.class
 )
@@ -62,7 +62,7 @@ public class EditCProductExternalReferenceCodeMVCRenderCommand
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpDefinitionsDisplayContext);
 
-		return "/definition/external_reference_code.jsp";
+		return "/definition/edit_c_product_external_reference_code.jsp";
 	}
 
 	@Reference

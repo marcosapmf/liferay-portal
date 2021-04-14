@@ -29,7 +29,7 @@ import {
 	YAxis,
 } from 'recharts';
 
-import {BAR_CHART, COLORS} from '../utils/constants';
+import {BAR_CHART, COLORS, DEFAULT_COLOR} from '../utils/constants';
 import {shortenNumber} from '../utils/shortenNumber';
 
 export default function AuditBarChart({rtl, vocabularies}) {
@@ -57,6 +57,14 @@ export default function AuditBarChart({rtl, vocabularies}) {
 
 			return acc.concat(newBar);
 		}, []);
+
+		const noneBarIndex = bars.findIndex((bar) => bar.dataKey === 'none');
+
+		if (noneBarIndex !== -1) {
+			const noneBar = bars.splice(noneBarIndex, 1)[0];
+
+			bars.push(noneBar);
+		}
 
 		const data = vocabularies.map((category) => {
 			if (!category.categories) {
@@ -86,7 +94,10 @@ export default function AuditBarChart({rtl, vocabularies}) {
 			(acc, {dataKey}, index) => ({
 				colors: {
 					...acc.colors,
-					[dataKey]: COLORS[index % COLORS.length],
+					[dataKey]:
+						dataKey === 'none'
+							? DEFAULT_COLOR
+							: COLORS[index % COLORS.length],
 				},
 				legendCheckboxes: {
 					...acc.legendCheckboxes,
@@ -183,7 +194,10 @@ export default function AuditBarChart({rtl, vocabularies}) {
 
 	const axisNames = {
 		x: vocabularies[0]?.vocabularyName,
-		y: showLegend && vocabularies[0]?.categories?.[0]?.vocabularyName,
+		y:
+			showLegend &&
+			vocabularies.find(({categories}) => categories)?.categories[0]
+				.vocabularyName,
 	};
 
 	const noCheckboxesChecked = Object.keys(checkboxes).every(
@@ -342,7 +356,7 @@ function CustomTooltip(props) {
 		return null;
 	}
 
-	for (var i = 0; i <= payload.length; i++) {
+	for (var i = 0; i < payload.length; i++) {
 		if (payload[i].dataKey === tooltip.dataKey) {
 			return (
 				<ClayLayout.ContentRow

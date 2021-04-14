@@ -153,9 +153,7 @@ definition {
 	test AddKBArticleWithBlogsEntryRelatedAssetViaKBAdmin {
 		property test.name.skip.portal.instance = "CPKnowledgebase#AddKBArticleWithBlogsEntryRelatedAssetViaKBAdmin";
 
-		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
-
-		Blogs.addEntry(
+		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title");
 
@@ -224,7 +222,6 @@ definition {
 
 	@priority = "4"
 	test AddKBArticleWithHTMLViaKBAdmin {
-
 		var kbArticleContentSource = '''<b>Knowledge Base&rsquo;s Article Content</b>''';
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
@@ -252,15 +249,15 @@ definition {
 			configurationName = "Upload Servlet Request",
 			configurationScope = "System Scope");
 
-		ServerAdministration.configureFileUploadOverallMaximumFileSize(maxFileSize = "65536");
+		ServerAdministration.configureFileUploadOverallMaximumFileSize(maxFileSize = "102400");
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
 		KBArticle.addCPWithInvalidAttachmentSize(
-			kbArticleAttachment = "high_resolution_photo.jpg",
+			kbArticleAttachment = "Document_1.ppt",
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title",
-			maxFileSize = "64");
+			maxFileSize = "100");
 
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 

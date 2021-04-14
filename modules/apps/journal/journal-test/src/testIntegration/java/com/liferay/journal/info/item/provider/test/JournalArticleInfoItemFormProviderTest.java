@@ -22,11 +22,11 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.CategoriesInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.ImageInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
+import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TagsInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.field.type.URLInfoFieldType;
@@ -98,9 +98,8 @@ public class JournalArticleInfoItemFormProviderTest {
 				_infoItemServiceTracker.getFirstInfoItemService(
 					InfoItemFormProvider.class, JournalArticle.class.getName());
 
-		JournalArticle journalArticle = _getJournalArticle();
-
-		InfoForm infoForm = infoItemFormProvider.getInfoForm(journalArticle);
+		InfoForm infoForm = infoItemFormProvider.getInfoForm(
+			_getJournalArticle());
 
 		List<InfoField> infoFields = infoForm.getAllInfoFields();
 
@@ -129,7 +128,7 @@ public class JournalArticleInfoItemFormProviderTest {
 		infoField = iterator.next();
 
 		Assert.assertEquals(
-			BooleanInfoFieldType.INSTANCE, infoField.getInfoFieldType());
+			SelectInfoFieldType.INSTANCE, infoField.getInfoFieldType());
 		Assert.assertEquals("boolean", infoField.getName());
 		Assert.assertFalse(infoField.isLocalizable());
 

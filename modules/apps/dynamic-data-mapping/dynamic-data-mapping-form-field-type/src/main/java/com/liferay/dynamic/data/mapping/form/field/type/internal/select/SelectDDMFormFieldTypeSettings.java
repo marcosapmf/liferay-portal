@@ -86,11 +86,12 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 						@DDMFormLayoutColumn(
 							size = 12,
 							value = {
-								"name", "predefinedValue",
+								"name", "fieldReference", "predefinedValue",
 								"visibilityExpression", "validation",
 								"fieldNamespace", "indexType", "localizable",
 								"nativeField", "readOnly", "dataType", "type",
-								"showLabel", "repeatable", "multiple"
+								"showLabel", "repeatable", "multiple",
+								"alphabeticalOrder"
 							}
 						)
 					}
@@ -101,6 +102,12 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 )
 public interface SelectDDMFormFieldTypeSettings
 	extends DefaultDDMFormFieldTypeSettings {
+
+	@DDMFormField(
+		label = "%order-options-alphabetically",
+		properties = "showAsSwitcher=true"
+	)
+	public boolean alphabeticalOrder();
 
 	@DDMFormField(
 		label = "%create-list",

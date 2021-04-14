@@ -27,6 +27,9 @@ import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureVersionLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -58,17 +61,24 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 
 		DDMStructure ddmStructure = ddmStructureVersion.getStructure();
 
+		_ddmStructureModelResourcePermission.check(
+			GuestOrUserUtil.getPermissionChecker(),
+			ddmStructure.getPrimaryKey(), ActionKeys.VIEW);
+
 		DDMForm ddmForm = ddmStructure.getDDMForm();
 
 		return _ddmFormRenderer.render(
 			ddmForm, ddmStructureLayout.getDDMFormLayout(),
 			_toDDMFormRenderingContext(
-				dataLayoutId, dataLayoutRendererContext, ddmForm));
+				dataLayoutId, dataLayoutRendererContext, ddmForm,
+				ddmStructure.getGroupId()));
 	}
 
 	private DDMFormRenderingContext _toDDMFormRenderingContext(
-		Long dataLayoutId, DataLayoutRendererContext dataLayoutRendererContext,
-		DDMForm ddmForm) {
+			Long dataLayoutId,
+			DataLayoutRendererContext dataLayoutRendererContext,
+			DDMForm ddmForm, long groupId)
+		throws Exception {
 
 		DDMFormRenderingContext ddmFormRenderingContext =
 			new DDMFormRenderingContext();
@@ -80,6 +90,7 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 				dataLayoutRendererContext.getDataRecordValues(), ddmForm,
 				null));
 		ddmFormRenderingContext.setDDMStructureLayoutId(dataLayoutId);
+		ddmFormRenderingContext.setGroupId(groupId);
 		ddmFormRenderingContext.setHttpServletRequest(
 			dataLayoutRendererContext.getHttpServletRequest());
 		ddmFormRenderingContext.setHttpServletResponse(
@@ -92,8 +103,7 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 			StringPool.BLANK);
 
 		if (Validator.isNull(languageId)) {
-			locale = _portal.getLocale(
-				dataLayoutRendererContext.getHttpServletRequest());
+			locale = ddmForm.getDefaultLocale();
 		}
 		else {
 			locale = LocaleUtil.fromLanguageId(languageId);
@@ -119,6 +129,12 @@ public class DataLayoutRendererImpl implements DataLayoutRenderer {
 
 	@Reference
 	private DDMStructureLayoutLocalService _ddmStructureLayoutLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMStructure)"
+	)
+	private ModelResourcePermission<DDMStructure>
+		_ddmStructureModelResourcePermission;
 
 	@Reference
 	private DDMStructureVersionLocalService _ddmStructureVersionLocalService;

@@ -163,6 +163,9 @@ public class DDMFormContextToDDMForm
 				ddmFormFieldOptions.addOptionLabel(
 					optionJSONObject.getString("value"), availableLocale,
 					optionJSONObject.getString("label"));
+				ddmFormFieldOptions.addOptionReference(
+					optionJSONObject.getString("value"),
+					optionJSONObject.getString("reference"));
 			}
 		}
 
@@ -378,9 +381,7 @@ public class DDMFormContextToDDMForm
 	protected void setDDMFormDefaultLocale(
 		String defaultLanguageId, DDMForm ddmForm) {
 
-		Locale defaultLocale = LocaleUtil.fromLanguageId(defaultLanguageId);
-
-		ddmForm.setDefaultLocale(defaultLocale);
+		ddmForm.setDefaultLocale(LocaleUtil.fromLanguageId(defaultLanguageId));
 	}
 
 	protected void setDDMFormFields(JSONArray jsonArray, DDMForm ddmForm) {

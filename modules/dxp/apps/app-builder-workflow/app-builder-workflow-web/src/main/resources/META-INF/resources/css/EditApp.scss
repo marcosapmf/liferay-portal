@@ -37,10 +37,6 @@ $navbarHeight: 120px;
 				}
 			}
 
-			.arrow-plus-button-ie {
-				margin-left: -15px;
-			}
-
 			.arrow-body {
 				display: flex;
 				justify-content: center;
@@ -52,10 +48,6 @@ $navbarHeight: 120px;
 					margin: auto;
 					margin-bottom: -4px;
 					margin-top: 4px;
-				}
-
-				.arrow-head-ie {
-					margin-left: -9px;
 				}
 
 				.arrow-tail {
@@ -71,10 +63,6 @@ $navbarHeight: 120px;
 				background-color: #fff;
 				border-radius: 50%;
 				font-size: 6px;
-			}
-
-			.arrow-point-ie {
-				margin-left: -2px;
 			}
 
 			.icon {
@@ -187,7 +175,7 @@ $navbarHeight: 120px;
 
 .button-info {
 	color: #6b6c7e;
-	word-break: break-all;
+	word-break: break-word;
 }
 
 .circle-icon {
@@ -254,6 +242,50 @@ $navbarHeight: 120px;
 
 .dropdown-button-asset {
 	margin-top: 0.25rem;
+
+	&.help-cursor {
+		display: flex;
+		justify-content: center;
+		margin-top: unset;
+		position: absolute;
+		right: 12px;
+		width: 2rem;
+
+		.icon {
+			border: 5px solid;
+			border-radius: 50%;
+			font-size: 1.75em;
+
+			&.text-danger {
+				border-color: #fde7e8;
+				fill: #da1414;
+			}
+
+			&.text-info {
+				border-color: #eef2fa;
+				fill: #2e5aac;
+			}
+		}
+	}
+}
+
+.dropdown-button-title {
+	max-width: 200px;
+}
+
+.dropdown-popover-form-view {
+	&.popover {
+		max-width: 262px;
+
+		.popover-body {
+			display: flex;
+			flex-wrap: wrap;
+		}
+	}
+}
+
+.help-cursor {
+	cursor: help;
 }
 
 .outline-text {
@@ -264,6 +296,7 @@ $navbarHeight: 120px;
 	position: absolute;
 	z-index: 50;
 }
+
 .save-app-modal {
 	.modal-dialog {
 		width: 416px;
@@ -286,21 +319,29 @@ $navbarHeight: 120px;
 	padding: 1rem 1rem 0;
 }
 
+.tap-ahead-icon-wrapper .lexicon-icon-tap-ahead {
+	transform: scaleX(-1);
+}
+
 .tooltip-icon:hover {
 	fill: #6b6c7e;
 }
 
-.tooltip-icon-error {
+.tooltip-popover-icon {
 	align-self: center;
-	border: 5px solid #fde7e8;
 	border-radius: 50%;
-	fill: #da1414;
 	margin-left: auto;
 	min-width: 1em;
-}
 
-.tooltip-icon:hover {
-	fill: #6b6c7e;
+	&.error {
+		border: 5px solid #fde7e8;
+		fill: #da1414;
+	}
+
+	&.info {
+		border: 5px solid #eef2fa;
+		fill: #2e5aac;
+	}
 }
 
 .version-badge {

@@ -14,26 +14,22 @@
 
 package com.liferay.frontend.js.spa.web.internal.servlet.taglib;
 
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.frontend.js.module.launcher.JSModuleLauncher;
 import com.liferay.frontend.js.spa.web.internal.servlet.taglib.helper.SPAHelper;
-import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.servlet.taglib.BaseJSPDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
-import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
-
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,79 +52,57 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		if (_spaHelper.isDisabled(httpServletRequest)) {
-			return;
-		}
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Map<String, String> values = HashMapBuilder.put(
-			"cacheExpirationTime",
-			String.valueOf(
-				_spaHelper.getCacheExpirationTime(themeDisplay.getCompanyId()))
-		).put(
-			"clearScreensCache",
-			String.valueOf(
-				_spaHelper.isClearScreensCache(
-					httpServletRequest, httpServletRequest.getSession()))
-		).put(
-			"debugEnabled", String.valueOf(_spaHelper.isDebugEnabled())
-		).put(
-			"excludedPaths", _spaHelper.getExcludedPaths()
-		).put(
-			"loginRedirect",
-			_html.escapeJS(_spaHelper.getLoginRedirect(httpServletRequest))
-		).put(
+		JSONObject userNotificationJSONObject = JSONUtil.put(
 			"message",
 			_language.get(
 				_spaHelper.getLanguageResourceBundle(
 					"frontend-js-spa-web", themeDisplay.getLocale()),
 				"it-looks-like-this-is-taking-longer-than-expected")
 		).put(
-			"navigationExceptionSelectors",
-			_spaHelper.getNavigationExceptionSelectors()
-		).put(
-			"portletsBlacklist", _spaHelper.getPortletsBlacklist(themeDisplay)
-		).put(
-			"requestTimeout", String.valueOf(_spaHelper.getRequestTimeout())
-		).put(
-			"timeout", String.valueOf(_spaHelper.getUserNotificationTimeout())
+			"timeout", _spaHelper.getUserNotificationTimeout()
 		).put(
 			"title",
 			_language.get(
 				_spaHelper.getLanguageResourceBundle(
 					"frontend-js-spa-web", themeDisplay.getLocale()),
 				"oops")
+		);
+
+		JSONObject configJSONObject = JSONUtil.put(
+			"cacheExpirationTime",
+			_spaHelper.getCacheExpirationTime(themeDisplay.getCompanyId())
 		).put(
-			"validStatusCodes", _spaHelper.getValidStatusCodes()
-		).build();
+			"clearScreensCache",
+			_spaHelper.isClearScreensCache(
+				httpServletRequest, httpServletRequest.getSession())
+		).put(
+			"debugEnabled", _spaHelper.isDebugEnabled()
+		).put(
+			"excludedPaths", _spaHelper.getExcludedPathsJSONArray()
+		).put(
+			"loginRedirect",
+			_html.escapeJS(_spaHelper.getLoginRedirect(httpServletRequest))
+		).put(
+			"navigationExceptionSelectors",
+			_spaHelper.getNavigationExceptionSelectors()
+		).put(
+			"portletsBlacklist",
+			_spaHelper.getPortletsBlacklistJSONArray(themeDisplay)
+		).put(
+			"requestTimeout", _spaHelper.getRequestTimeout()
+		).put(
+			"userNotification", userNotificationJSONObject
+		).put(
+			"validStatusCodes", _spaHelper.getValidStatusCodesJSONArray()
+		);
 
-		ScriptData configScriptData = new ScriptData();
-
-		configScriptData.append(
-			null,
-			StringUtil.replaceToStringBundler(
-				_CONFIG_TMPL_CONTENT, StringPool.POUND, StringPool.POUND,
-				values),
-			null, null);
-
-		configScriptData.writeTo(httpServletResponse.getWriter());
-
-		String initModuleName = _npmResolver.resolveModuleName(
-			"frontend-js-spa-web/liferay/init.es");
-
-		ScriptData initScriptData = new ScriptData();
-
-		initScriptData.append(
-			null,
-			StringUtil.replaceToStringBundler(
-				_INIT_TMPL_CONTENT, StringPool.POUND, StringPool.POUND, values),
-			initModuleName + " as frontendJsSpaWebLiferayInitEs",
-			ScriptData.ModulesType.ES6);
-
-		initScriptData.writeTo(httpServletResponse.getWriter());
+		_jsModuleLauncher.writeModuleInvocation(
+			httpServletResponse.getWriter(), "frontend-js-spa-web",
+			configJSONObject.toJSONString());
 	}
 
 	@Override
@@ -152,20 +126,14 @@ public class SPATopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		return null;
 	}
 
-	private static final String _CONFIG_TMPL_CONTENT = StringUtil.read(
-		SPATopHeadJSPDynamicInclude.class, "/META-INF/resources/config.tmpl");
-
-	private static final String _INIT_TMPL_CONTENT = StringUtil.read(
-		SPATopHeadJSPDynamicInclude.class, "/META-INF/resources/init.tmpl");
-
 	@Reference
 	private Html _html;
 
 	@Reference
-	private Language _language;
+	private JSModuleLauncher _jsModuleLauncher;
 
 	@Reference
-	private NPMResolver _npmResolver;
+	private Language _language;
 
 	@Reference
 	private Props _props;

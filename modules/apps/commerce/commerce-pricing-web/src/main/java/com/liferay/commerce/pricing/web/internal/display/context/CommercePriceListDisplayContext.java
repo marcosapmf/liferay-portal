@@ -26,7 +26,7 @@ import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.commerce.pricing.service.CommercePriceModifierService;
 import com.liferay.commerce.pricing.type.CommercePriceModifierType;
 import com.liferay.commerce.pricing.type.CommercePriceModifierTypeRegistry;
-import com.liferay.commerce.pricing.web.internal.servlet.taglib.ui.CommercePriceListScreenNavigationConstants;
+import com.liferay.commerce.pricing.web.internal.servlet.taglib.ui.constants.CommercePriceListScreenNavigationConstants;
 import com.liferay.commerce.product.display.context.util.CPRequestHelper;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogService;
@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.URLCodec;
@@ -88,7 +89,9 @@ public class CommercePriceListDisplayContext
 	public String getAddCommercePriceListRenderURL() throws Exception {
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "addCommercePriceList");
+		portletURL.setParameter(
+			"mvcRenderCommandName",
+			"/commerce_price_list/add_commerce_price_list");
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return portletURL.toString();
@@ -98,7 +101,8 @@ public class CommercePriceListDisplayContext
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "addCommercePriceModifier");
+			"mvcRenderCommandName",
+			"/commerce_price_list/add_commerce_price_modifier");
 		portletURL.setParameter(
 			"commercePriceListId", String.valueOf(getCommercePriceListId()));
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
@@ -185,7 +189,8 @@ public class CommercePriceListDisplayContext
 		ActionURL actionURL = renderResponse.createActionURL();
 
 		actionURL.setParameter(
-			ActionRequest.ACTION_NAME, "editCommercePriceList");
+			ActionRequest.ACTION_NAME,
+			"/commerce_price_list/edit_commerce_price_list");
 
 		String saveButtonLabel = "save";
 
@@ -266,7 +271,8 @@ public class CommercePriceListDisplayContext
 		RenderURL portletURL = renderResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommercePriceList");
+			"mvcRenderCommandName",
+			"/commerce_price_list/edit_commerce_price_list");
 		portletURL.setParameter(
 			"redirect", commercePricingRequestHelper.getCurrentURL());
 		portletURL.setParameter("commercePriceListId", "{id}");
@@ -334,16 +340,11 @@ public class CommercePriceListDisplayContext
 	public List<ClayDataSetActionDropdownItem>
 		getPriceModifierCategoryClayDataSetActionDropdownItems() {
 
-		List<ClayDataSetActionDropdownItem> clayDataSetActionDropdownItems =
-			new ArrayList<>();
-
-		clayDataSetActionDropdownItems.add(
+		return ListUtil.fromArray(
 			new ClayDataSetActionDropdownItem(
 				null, "trash", "remove",
 				LanguageUtil.get(httpServletRequest, "remove"), "delete",
 				"delete", "headless"));
-
-		return clayDataSetActionDropdownItems;
 	}
 
 	public String getPriceModifierCPDefinitionApiUrl() throws PortalException {
@@ -355,31 +356,21 @@ public class CommercePriceListDisplayContext
 	public List<ClayDataSetActionDropdownItem>
 		getPriceModifierCPDefinitionClayDataSetActionDropdownItems() {
 
-		List<ClayDataSetActionDropdownItem> clayDataSetActionDropdownItem =
-			new ArrayList<>();
-
-		clayDataSetActionDropdownItem.add(
+		return ListUtil.fromArray(
 			new ClayDataSetActionDropdownItem(
 				null, "trash", "remove",
 				LanguageUtil.get(httpServletRequest, "remove"), "delete",
 				"delete", "headless"));
-
-		return clayDataSetActionDropdownItem;
 	}
 
 	public List<ClayDataSetActionDropdownItem>
 		getPriceModifierPricingClassClayDataSetActionDropdownItems() {
 
-		List<ClayDataSetActionDropdownItem> clayDataSetActionDropdownItems =
-			new ArrayList<>();
-
-		clayDataSetActionDropdownItems.add(
+		return ListUtil.fromArray(
 			new ClayDataSetActionDropdownItem(
 				null, "trash", "remove",
 				LanguageUtil.get(httpServletRequest, "remove"), "delete",
 				"delete", "headless"));
-
-		return clayDataSetActionDropdownItems;
 	}
 
 	public String getPriceModifierPricingClassesApiUrl()

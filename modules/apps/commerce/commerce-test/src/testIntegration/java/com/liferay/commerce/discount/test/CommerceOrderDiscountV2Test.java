@@ -47,6 +47,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -77,6 +78,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Luca Pellizzon
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommerceOrderDiscountV2Test {
 
@@ -156,9 +158,9 @@ public class CommerceOrderDiscountV2Test {
 		CPDefinition cpDefinition = cpInstanceDiscount.getCPDefinition();
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(),
+			"", cpDefinition.getCProductId(),
 			cpInstanceDiscount.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), "",
+			commercePriceList.getCommercePriceListId(),
 			BigDecimal.valueOf(0.9));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -194,11 +196,12 @@ public class CommerceOrderDiscountV2Test {
 		commerceOrder = _commerceOrderLocalService.applyCouponCode(
 			commerceOrder.getCommerceOrderId(), couponCode, commerceContext);
 
-		CommerceMoney total = _commerceOrderPriceCalculation.getTotal(
-			commerceOrder, commerceContext);
+		CommerceMoney totalCommerceMoney =
+			_commerceOrderPriceCalculation.getTotal(
+				commerceOrder, commerceContext);
 
 		BigDecimal price = BigDecimal.ZERO;
-		BigDecimal totalPrice = total.getPrice();
+		BigDecimal totalPrice = totalCommerceMoney.getPrice();
 
 		Assert.assertEquals(
 			price.stripTrailingZeros(), totalPrice.stripTrailingZeros());
@@ -253,16 +256,16 @@ public class CommerceOrderDiscountV2Test {
 
 		CommercePriceEntry commercePriceEntryDiscount =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(),
+				"", cpDefinition.getCProductId(),
 				cpInstanceDiscount.getCPInstanceUuid(),
-				commercePriceList.getCommercePriceListId(), "",
+				commercePriceList.getCommercePriceListId(),
 				BigDecimal.valueOf(25));
 
 		CommercePriceEntry commercePriceEntryPlain =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinitionPlan.getCProductId(),
+				"", cpDefinitionPlan.getCProductId(),
 				cpInstancePlain.getCPInstanceUuid(),
-				commercePriceList.getCommercePriceListId(), "",
+				commercePriceList.getCommercePriceListId(),
 				BigDecimal.valueOf(10));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -307,10 +310,12 @@ public class CommerceOrderDiscountV2Test {
 			_commerceCurrency, null, _user, _group, _commerceAccount,
 			commerceOrder);
 
-		CommerceMoney total = _commerceOrderPriceCalculation.getTotal(
-			commerceOrder, commerceContext);
-		CommerceMoney subtotal = _commerceOrderPriceCalculation.getSubtotal(
-			commerceOrder, commerceContext);
+		CommerceMoney totalCommerceMoney =
+			_commerceOrderPriceCalculation.getTotal(
+				commerceOrder, commerceContext);
+		CommerceMoney subtotalCommerceMoney =
+			_commerceOrderPriceCalculation.getSubtotal(
+				commerceOrder, commerceContext);
 
 		BigDecimal prod1Price = commercePriceEntryDiscount.getPrice();
 		BigDecimal prod2Price = commercePriceEntryPlain.getPrice();
@@ -330,8 +335,8 @@ public class CommerceOrderDiscountV2Test {
 
 		BigDecimal expectedTotal = expectedSubtotal.subtract(discount2Level1);
 
-		BigDecimal subtotalPrice = subtotal.getPrice();
-		BigDecimal totalPrice = total.getPrice();
+		BigDecimal subtotalPrice = subtotalCommerceMoney.getPrice();
+		BigDecimal totalPrice = totalCommerceMoney.getPrice();
 
 		Assert.assertEquals(
 			expectedSubtotal.stripTrailingZeros(),
@@ -389,16 +394,16 @@ public class CommerceOrderDiscountV2Test {
 
 		CommercePriceEntry commercePriceEntryDiscount =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(),
+				"", cpDefinition.getCProductId(),
 				cpInstanceDiscount.getCPInstanceUuid(),
-				commercePriceList.getCommercePriceListId(), "",
+				commercePriceList.getCommercePriceListId(),
 				BigDecimal.valueOf(25));
 
 		CommercePriceEntry commercePriceEntryPlain =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinitionPlan.getCProductId(),
+				"", cpDefinitionPlan.getCProductId(),
 				cpInstancePlain.getCPInstanceUuid(),
-				commercePriceList.getCommercePriceListId(), "",
+				commercePriceList.getCommercePriceListId(),
 				BigDecimal.valueOf(10));
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
@@ -450,10 +455,12 @@ public class CommerceOrderDiscountV2Test {
 		commerceOrder = _commerceOrderLocalService.applyCouponCode(
 			commerceOrder.getCommerceOrderId(), couponCode, commerceContext);
 
-		CommerceMoney total = _commerceOrderPriceCalculation.getTotal(
-			commerceOrder, commerceContext);
-		CommerceMoney subtotal = _commerceOrderPriceCalculation.getSubtotal(
-			commerceOrder, commerceContext);
+		CommerceMoney totalCommerceMoney =
+			_commerceOrderPriceCalculation.getTotal(
+				commerceOrder, commerceContext);
+		CommerceMoney subtotalCommerceMoney =
+			_commerceOrderPriceCalculation.getSubtotal(
+				commerceOrder, commerceContext);
 
 		BigDecimal prod1Price = commercePriceEntryDiscount.getPrice();
 		BigDecimal prod2Price = commercePriceEntryPlain.getPrice();
@@ -473,8 +480,8 @@ public class CommerceOrderDiscountV2Test {
 
 		BigDecimal expectedTotal = expectedSubtotal.subtract(discount2Level1);
 
-		BigDecimal subtotalPrice = subtotal.getPrice();
-		BigDecimal totalPrice = total.getPrice();
+		BigDecimal subtotalPrice = subtotalCommerceMoney.getPrice();
+		BigDecimal totalPrice = totalCommerceMoney.getPrice();
 
 		Assert.assertEquals(
 			expectedSubtotal.stripTrailingZeros(),

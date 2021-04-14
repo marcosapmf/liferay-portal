@@ -20,6 +20,7 @@ import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.document.library.configuration.DLConfiguration;
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.exception.DLStorageQuotaExceededException;
 import com.liferay.document.library.kernel.antivirus.AntivirusScannerException;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.DuplicateFolderNameException;
@@ -42,11 +43,11 @@ import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService;
 import com.liferay.document.library.kernel.service.DLTrashService;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.DLValidator;
-import com.liferay.document.library.web.internal.configuration.FFDocumentLibraryDDMEditorConfigurationUtil;
+import com.liferay.document.library.web.internal.exception.FileNameExtensionException;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
 import com.liferay.dynamic.data.mapping.exception.StorageFieldRequiredException;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
-import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -89,6 +90,7 @@ import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.KeyValuePair;
@@ -431,8 +433,8 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			FileEntry fileEntry = _dlAppService.addFileEntry(
 				repositoryId, folderId, uniqueFileName, mimeType,
-				uniqueFileName, description, changeLog, inputStream, size,
-				serviceContext);
+				FileUtil.stripExtension(uniqueFileName), description, changeLog,
+				inputStream, size, serviceContext);
 
 			_assetDisplayPageEntryFormProcessor.process(
 				FileEntry.class.getName(), fileEntry.getFileEntryId(),
@@ -662,6 +664,10 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			jsonObject.put("deleted", Boolean.TRUE);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			String errorMessage = themeDisplay.translate(
 				"an-unexpected-error-occurred-while-deleting-the-file");
 
@@ -845,6 +851,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
 		else if (exception instanceof AntivirusScannerException ||
+				 exception instanceof DLStorageQuotaExceededException ||
 				 exception instanceof DuplicateFileEntryException ||
 				 exception instanceof DuplicateFolderNameException ||
 				 exception instanceof FileExtensionException ||
@@ -958,12 +965,6 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 	private void _setUpDDMFormValues(ServiceContext serviceContext)
 		throws PortalException {
 
-		if (!FFDocumentLibraryDDMEditorConfigurationUtil.
-				useDataEngineEditor()) {
-
-			return;
-		}
-
 		long fileEntryTypeId = ParamUtil.getLong(
 			serviceContext, "fileEntryTypeId", -1);
 
@@ -974,9 +975,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		DLFileEntryType dlFileEntryType =
 			_dlFileEntryTypeLocalService.getDLFileEntryType(fileEntryTypeId);
 
-		for (com.liferay.dynamic.data.mapping.kernel.DDMStructure ddmStructure :
-				dlFileEntryType.getDDMStructures()) {
-
+		for (DDMStructure ddmStructure : dlFileEntryType.getDDMStructures()) {
 			String className =
 				com.liferay.dynamic.data.mapping.kernel.DDMFormValues.class.
 					getName();
@@ -1009,7 +1008,9 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 		long repositoryId = ParamUtil.getLong(
 			uploadPortletRequest, "repositoryId");
 		long folderId = ParamUtil.getLong(uploadPortletRequest, "folderId");
-		String sourceFileName = uploadPortletRequest.getFileName("file");
+		String sourceFileName = ParamUtil.getString(
+			uploadPortletRequest, "fileName",
+			uploadPortletRequest.getFileName("file"));
 		String title = ParamUtil.getString(uploadPortletRequest, "title");
 		String description = ParamUtil.getString(
 			uploadPortletRequest, "description");
@@ -1042,8 +1043,15 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				 cmd.equals(Constants.ADD_DYNAMIC)) &&
 				(size == 0)) {
 
-				contentType = MimeTypesUtil.getContentType(title);
+				contentType = MimeTypesUtil.getContentType(sourceFileName);
+
+				if (Validator.isNotNull(contentType)) {
+					contentType = MimeTypesUtil.getContentType(title);
+				}
 			}
+
+			contentType = ParamUtil.getString(
+				uploadPortletRequest, "contentType", contentType);
 
 			if (cmd.equals(Constants.ADD) ||
 				cmd.equals(Constants.ADD_DYNAMIC) || (size > 0)) {
@@ -1078,6 +1086,11 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 				// Add file entry
 
+				_validateFileName(
+					sourceFileName,
+					FileUtil.getExtension(
+						uploadPortletRequest.getFileName("file")));
+
 				fileEntry = _dlAppService.addFileEntry(
 					repositoryId, folderId, sourceFileName, contentType, title,
 					description, changeLog, inputStream, size, serviceContext);
@@ -1087,12 +1100,12 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				// Add file entry
 
 				String uniqueFileName = DLUtil.getUniqueFileName(
-					themeDisplay.getScopeGroupId(), folderId, title);
+					themeDisplay.getScopeGroupId(), folderId, sourceFileName);
 
 				fileEntry = _dlAppService.addFileEntry(
 					repositoryId, folderId, uniqueFileName, contentType,
-					uniqueFileName, description, changeLog, inputStream, size,
-					serviceContext);
+					FileUtil.stripExtension(uniqueFileName), description,
+					changeLog, inputStream, size, serviceContext);
 
 				JSONObject jsonObject = JSONUtil.put(
 					"fileEntryId", fileEntry.getFileEntryId());
@@ -1100,23 +1113,29 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				JSONPortletResponseUtil.writeJSON(
 					actionRequest, actionResponse, jsonObject);
 			}
-			else if (cmd.equals(Constants.UPDATE_AND_CHECKIN)) {
-
-				// Update file entry and checkin
-
-				fileEntry = _dlAppService.updateFileEntryAndCheckIn(
-					fileEntryId, sourceFileName, contentType, title,
-					description, changeLog, dlVersionNumberIncrease,
-					inputStream, size, serviceContext);
-			}
 			else {
+				fileEntry = _dlAppService.getFileEntry(fileEntryId);
 
-				// Update file entry
+				_validateFileName(sourceFileName, fileEntry.getExtension());
 
-				fileEntry = _dlAppService.updateFileEntry(
-					fileEntryId, sourceFileName, contentType, title,
-					description, changeLog, dlVersionNumberIncrease,
-					inputStream, size, serviceContext);
+				if (cmd.equals(Constants.UPDATE_AND_CHECKIN)) {
+
+					// Update file entry and checkin
+
+					fileEntry = _dlAppService.updateFileEntryAndCheckIn(
+						fileEntryId, sourceFileName, contentType, title,
+						description, changeLog, dlVersionNumberIncrease,
+						inputStream, size, serviceContext);
+				}
+				else {
+
+					// Update file entry
+
+					fileEntry = _dlAppService.updateFileEntry(
+						fileEntryId, sourceFileName, contentType, title,
+						description, changeLog, dlVersionNumberIncrease,
+						inputStream, size, serviceContext);
+				}
 			}
 
 			_assetDisplayPageEntryFormProcessor.process(
@@ -1132,6 +1151,22 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			return fileEntry;
+		}
+	}
+
+	private void _validateFileName(String sourceFileName, String extension)
+		throws FileNameExtensionException {
+
+		if (Validator.isNotNull(extension)) {
+			if (Validator.isNull(sourceFileName)) {
+				throw new FileNameExtensionException(
+					"The file name cannot be empty or without extension");
+			}
+
+			if (Validator.isNull(FileUtil.getExtension(sourceFileName))) {
+				throw new FileNameExtensionException(
+					"The file name cannot be empty or without extension");
+			}
 		}
 	}
 

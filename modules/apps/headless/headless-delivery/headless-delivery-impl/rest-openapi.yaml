@@ -128,8 +128,8 @@ components:
                         contentValue:
                             # @review
                             description:
-                                "optional field with the content of the image in Base64,
-                                can be embedded with nestedFields"
+                                "optional field with the content of the image in Base64, can be embedded with
+                                nestedFields"
                             readOnly: true
                             type: string
                         imageId:
@@ -450,8 +450,8 @@ components:
         ContentFieldValue:
             description:
                 # @review
-                Represents the value of a content field. Can contain different information types
-                (e.g., geolocation, documents, etc.).
+                Represents the value of a content field. Can contain different information types (e.g., geolocation,
+                documents, etc.).
             properties:
                 data:
                     description:
@@ -511,6 +511,124 @@ components:
                                 The resource's title.
                             type: string
                     type: object
+        ContentPage:
+            description:
+                Represents a content page that has fields and is rendered by a template backed by a `PageTemplate`. This
+                is modeled internally as a `Layout`.
+            properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    readOnly: true
+                    type: object
+                aggregateRating:
+                    $ref: "#/components/schemas/AggregateRating"
+                availableLanguages:
+                    description:
+                        The list of languages the content page has a translation for.
+                    items:
+                        description:
+                            The list of languages the content page has a translation for.
+                        type: string
+                    readOnly: true
+                    type: array
+                creator:
+                    $ref: "#/components/schemas/Creator"
+                customFields:
+                    items:
+                        $ref: "#/components/schemas/CustomField"
+                    type: array
+                dateCreated:
+                    description:
+                        The content page's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description:
+                        The last time any field of the content page was changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                datePublished:
+                    description:
+                        The content page's most recent publication date.
+                    format: date-time
+                    type: string
+                experience:
+                    $ref: "#/components/schemas/Experience"
+                friendlyUrlPath:
+                    description:
+                        A relative URL to the content page's rendered content.
+                    type: string
+                friendlyUrlPath_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                id:
+                    description:
+                        The page's ID.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                keywords:
+                    description:
+                        A list of keywords describing the structured content.
+                    items:
+                        description:
+                            A list of keywords describing the structured content.
+                        type: string
+                    type: array
+                pageDefinition:
+                    $ref: "#/components/schemas/PageDefinition"
+                pageSettings:
+                    $ref: "#/components/schemas/PageSettings"
+                renderedPage:
+                    $ref: "#/components/schemas/RenderedPage"
+                siteId:
+                    description:
+                        The ID of the site to which this content page is scoped.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                taxonomyCategoryBriefs:
+                    description:
+                        The categories associated with this structured content.
+                    items:
+                        $ref: "#/components/schemas/TaxonomyCategoryBrief"
+                    readOnly: true
+                    type: array
+                taxonomyCategoryIds:
+                    items:
+                        format: int64
+                        type: integer
+                    type: array
+                    writeOnly: true
+                title:
+                    description:
+                        the title of the content page
+                    type: string
+                title_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                uuid:
+                    description:
+                        A valid external identifier to reference this content page.
+                    readOnly: true
+                    type: string
+                viewableBy:
+                    enum:
+                        - Anyone
+                        - Members
+                        - Owner
+                    type: string
+                    writeOnly: true
+            required:
+                - title
+            type: object
         ContentSetElement:
             description:
                 Represents each member of a content set and can contain different types of assets.
@@ -820,8 +938,7 @@ components:
                 profileURL:
                     # @review
                     description:
-                        "A relative URL to the author's user profile.
-                        Optional field, can be embedded with nestedFields"
+                        "A relative URL to the author's user profile. Optional field, can be embedded with nestedFields"
                     format: uri
                     readOnly: true
                     type: string
@@ -861,31 +978,7 @@ components:
                 geolocation, strings, etc.).
             properties:
                 customValue:
-                    properties:
-                        data:
-                            description:
-                                The field's content for simple types.
-                            type: object
-                        data_i18n:
-                            additionalProperties:
-                                type: string
-                            type: object
-                        geo:
-                            description:
-                                A point determined by latitude and longitude.
-                            properties:
-                                latitude:
-                                    description:
-                                        The latitude of a point in space.
-                                    format: double
-                                    type: number
-                                longitude:
-                                    description:
-                                        The longitude of a point in space.
-                                    format: double
-                                    type: number
-                            type: object
-                    type: object
+                    $ref: "#/components/schemas/CustomValue"
                 dataType:
                     description:
                         The field type (e.g., image, text, etc.).
@@ -895,6 +988,37 @@ components:
                     description:
                         The field's internal name. This is valid for comparisons and unique in the structured content.
                     type: string
+        CustomMetaTag:
+            description:
+                ""
+            properties:
+                key:
+                    type: string
+                value:
+                    type: string
+                value_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+            type: object
+        CustomValue:
+            description:
+                ""
+            properties:
+                data:
+                    description:
+                        The field's content for simple types.
+                    type: object
+                data_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                geo:
+                    allOf:
+                        - $ref: "#/components/schemas/Geo"
+                    description:
+                        A point determined by latitude and longitude.
+            type: object
         DisplayPageTemplate:
             description:
                 ""
@@ -940,8 +1064,8 @@ components:
                             contentValue:
                                 # @review
                                 description:
-                                    "optional field with the content of the image in Base64,
-                                    can be embedded with nestedFields"
+                                    "optional field with the content of the image in Base64, can be embedded with
+                                    nestedFields"
                                 readOnly: true
                                 type: string
                             height:
@@ -1194,6 +1318,28 @@ components:
             required:
                 - name
             type: object
+        Experience:
+            description:
+                # @review
+                Represents a customized experience for a given page.
+            properties:
+                key:
+                    description:
+                        the key of the experience
+                    type: string
+                name:
+                    description:
+                        the name of the experience
+                    type: string
+                name_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                segments:
+                    items:
+                        $ref: "../../headless-admin-user/headless-admin-user-impl/rest-openapi.yaml#Segment"
+                    type: array
+            type: object
         Fragment:
             properties:
                 collectionName:
@@ -1263,6 +1409,8 @@ components:
                 description:
                     oneOf:
                         - $ref: "#/components/schemas/FragmentInlineValue"
+                fragmentImageClassPKReference:
+                    $ref: "#/components/schemas/FragmentImageClassPKReference"
                 title:
                     oneOf:
                         - $ref: "#/components/schemas/FragmentInlineValue"
@@ -1270,6 +1418,27 @@ components:
                     oneOf:
                         - $ref: "#/components/schemas/FragmentInlineValue"
                         - $ref: "#/components/schemas/FragmentMappedValue"
+            type: object
+        FragmentImageClassPKReference:
+            properties:
+                classPKReferences:
+                    additionalProperties:
+                        $ref: "#/components/schemas/ClassPKReference"
+                    type: object
+                fragmentImageConfiguration:
+                    $ref: "#/components/schemas/FragmentImageConfiguration"
+            type: object
+        FragmentImageConfiguration:
+            # @review
+            description:
+                Represents the Adaptive Media fragment image configuration for different viewports.
+            properties:
+                landscapeMobile:
+                    type: string
+                portraitMobile:
+                    type: string
+                tablet:
+                    type: string
             type: object
         FragmentInlineValue:
             properties:
@@ -1281,6 +1450,23 @@ components:
                     type: object
             type: object
         FragmentLink:
+            properties:
+                href:
+                    deprecated: true
+                    oneOf:
+                        - $ref: "#/components/schemas/FragmentInlineValue"
+                        - $ref: "#/components/schemas/FragmentMappedValue"
+                target:
+                    deprecated: true
+                    enum: [Blank, Parent, Self, Top]
+                    type: string
+                value:
+                    $ref: "#/components/schemas/FragmentLinkValue"
+                value_i18n:
+                    additionalProperties:
+                        $ref: "#/components/schemas/FragmentLinkValue"
+                    type: object
+        FragmentLinkValue:
             properties:
                 href:
                     oneOf:
@@ -1418,6 +1604,21 @@ components:
             required:
                 - fragmentViewportStyle
                 - id
+            type: object
+        Geo:
+            description:
+                A point determined by latitude and longitude.
+            properties:
+                latitude:
+                    description:
+                        The latitude of a point in space.
+                    format: double
+                    type: number
+                longitude:
+                    description:
+                        The longitude of a point in space.
+                    format: double
+                    type: number
             type: object
         KnowledgeBaseArticle:
             description:
@@ -1695,6 +1896,28 @@ components:
                     writeOnly: true
             required:
                 - name
+            type: object
+        Language:
+            # @review
+            description:
+                Describes a specific language in the platform
+            properties:
+                countryName:
+                    type: string
+                countryName_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                id:
+                    type: string
+                markedAsDefault:
+                    type: boolean
+                name:
+                    type: string
+                name_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
             type: object
         MasterPage:
             description:
@@ -2180,6 +2403,23 @@ components:
                     type: string
                 useCustomName:
                     type: boolean
+        OpenGraphSettings:
+            properties:
+                description:
+                    type: string
+                description_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                image:
+                    $ref: "#/components/schemas/ContentDocument"
+                title:
+                    type: string
+                title_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+            type: object
         PageCollectionDefinition:
             description:
                 ""
@@ -2266,20 +2506,7 @@ components:
                 pageElement:
                     $ref: "#/components/schemas/PageElement"
                 settings:
-                    properties:
-                        colorSchemeName:
-                            type: string
-                        css:
-                            type: string
-                        javascript:
-                            type: string
-                        masterPage:
-                            $ref: "#/components/schemas/MasterPage"
-                        themeName:
-                            type: string
-                        themeSettings:
-                            type: object
-                    type: object
+                    $ref: "#/components/schemas/Settings"
             type: object
         PageDropZoneDefinition:
             properties:
@@ -2487,6 +2714,21 @@ components:
                             type: string
                     type: object
             type: object
+        PageSettings:
+            description:
+                ""
+            properties:
+                customMetaTags:
+                    items:
+                        $ref: "#/components/schemas/CustomMetaTag"
+                    type: array
+                hiddenFromNavigation:
+                    type: boolean
+                openGraphSettings:
+                    $ref: "#/components/schemas/OpenGraphSettings"
+                seoSettings:
+                    $ref: "#/components/schemas/SEOSettings"
+            type: object
         PageTemplate:
             description:
                 ""
@@ -2654,6 +2896,34 @@ components:
                         The title of the content.
                     readOnly: true
                     type: string
+        RenderedPage:
+            description:
+                A list of rendered pages, which results from using a page template and the appropriate viewport to
+                process the page and return HTML.
+            properties:
+                masterPageId:
+                    readOnly: true
+                    type: string
+                masterPageName:
+                    description:
+                        The name of the master page used to render the content.
+                    type: string
+                pageTemplateId:
+                    readOnly: true
+                    type: string
+                pageTemplateName:
+                    description:
+                        The name of the template used to render the content.
+                    type: string
+                renderedPageURL:
+                    description:
+                        An absolute URL to the rendered page.
+                    type: string
+                viewPortType:
+                    description:
+                        The viewport for which this rendered page has been designed.
+                    type: string
+            type: object
         RowViewport:
             additionalProperties: false
             properties:
@@ -2672,6 +2942,58 @@ components:
             required:
                 - id
                 - rowViewportDefinition
+            type: object
+        SEOSettings:
+            properties:
+                customCanonicalURL:
+                    type: string
+                customCanonicalURL_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                description:
+                    type: string
+                    description:
+                        The page's description.
+                description_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                htmlTitle:
+                    description:
+                        The page's main title.
+                    type: string
+                htmlTitle_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                robots:
+                    type: string
+                robots_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+                seoKeywords:
+                    type: string
+                seoKeywords_i18n:
+                    additionalProperties:
+                        type: string
+                    type: object
+            type: object
+        Settings:
+            properties:
+                colorSchemeName:
+                    type: string
+                css:
+                    type: string
+                javascript:
+                    type: string
+                masterPage:
+                    $ref: "#/components/schemas/MasterPage"
+                themeName:
+                    type: string
+                themeSettings:
+                    type: object
             type: object
         StructuredContent:
             description:
@@ -2950,8 +3272,7 @@ components:
                     type: object
                 taxonomyCategoryId:
                     description:
-                        The category's ID. This can be used to retrieve more information in the
-                        `TaxonomyCategory` API.
+                        The category's ID. This can be used to retrieve more information in the `TaxonomyCategory` API.
                     format: int64
                     readOnly: true
                     type: integer
@@ -3219,7 +3540,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.delivery.client', and version '3.0.6'."
+        'com.liferay.headless.delivery.client', and version '4.0.0'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -3634,6 +3955,35 @@ paths:
                     description:
                         ""
             tags: ["Document"]
+    "/asset-libraries/{assetLibraryId}/languages":
+        get:
+            # @review
+            description:
+                Retrieves the asset libraries languages.
+            operationId: getAssetLibraryLanguagesPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Language"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Language"
+                                type: array
+                    description:
+                        ""
+            tags: [ "Language" ]
     "/asset-libraries/{assetLibraryId}/structured-content-folders":
         get:
             operationId: getAssetLibraryStructuredContentFoldersPage
@@ -7026,8 +7376,8 @@ paths:
         put:
             # @review
             description:
-                Replaces the navigation menu with the information sent in the request body.
-                Any missing fields are deleted, unless they are required.
+                Replaces the navigation menu with the information sent in the request body. Any missing fields are
+                deleted, unless they are required.
             operationId: putNavigationMenu
             parameters:
                 - in: path
@@ -7318,6 +7668,229 @@ paths:
                     description:
                         ""
             tags: ["ContentElement"]
+    "/sites/{siteId}/content-pages":
+        get:
+            # @review
+            description:
+                Retrieves the public content pages of the site
+            operationId: getSiteContentPagesPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentPage"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentPage"
+                                type: array
+                    description:
+                        ""
+            tags: ["ContentPage"]
+    "/sites/{siteId}/content-pages/{friendlyUrlPath}":
+        get:
+            # @review
+            description:
+                Retrieves a specific public content page of a site
+            operationId: getSiteContentPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: friendlyUrlPath
+                  required: true
+                  schema:
+                      type: string
+                - in: header
+                  name: Accept-Language
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentPage"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentPage"
+                    description:
+                        ""
+            tags: ["ContentPage"]
+    "/sites/{siteId}/content-pages/{friendlyUrlPath}/experiences":
+        get:
+            # @review
+            description:
+                Retrieves the experiences of a given Content Page
+            operationId: getSiteContentPageFriendlyUrlPathExperiencesPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: friendlyUrlPath
+                  required: true
+                  schema:
+                      type: string
+                - in: header
+                  name: Accept-Language
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Experience"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Experience"
+                                type: array
+                    description:
+                        ""
+            tags: [ "Experience" ]
+    "/sites/{siteId}/content-pages/{friendlyUrlPath}/experiences/{experienceKey}":
+        get:
+            # @review
+            description:
+                Retrieves a specific public content page of a site for a given experience
+            operationId: getSiteContentPageExperienceExperienceKey
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: friendlyUrlPath
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: experienceKey
+                  required: true
+                  schema:
+                      type: string
+                - in: header
+                  name: Accept-Language
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ContentPage"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ContentPage"
+                    description:
+                        ""
+            tags: [ "ContentPage" ]
+    "/sites/{siteId}/content-pages/{friendlyUrlPath}/experiences/{experienceKey}/rendered-page":
+        get:
+            description:
+                Retrieves the rendered content of a given public page for a given experience.
+            operationId: getSiteContentPageExperienceExperienceKeyRenderedPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: friendlyUrlPath
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: experienceKey
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        text/html:
+                            schema:
+                                type: string
+                    description:
+                        ""
+            tags: [ "ContentPage" ]
+    "/sites/{siteId}/content-pages/{friendlyUrlPath}/rendered-page":
+        get:
+            description:
+                Retrieves the rendered content of a given public page.
+            operationId: getSiteContentPageRenderedPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: friendlyUrlPath
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        text/html:
+                            schema:
+                                type: string
+                    description:
+                        ""
+            tags: [ "ContentPage" ]
     "/sites/{siteId}/content-sets/by-key/{key}/content-set-elements":
         get:
             description:
@@ -7910,6 +8483,35 @@ paths:
                     description:
                         ""
             tags: ["KnowledgeBaseFolder"]
+    "/sites/{siteId}/languages":
+        get:
+            # @review
+            description:
+                Retrieves the site's languages.
+            operationId: getSiteLanguagesPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Language"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/Language"
+                                type: array
+                    description:
+                        ""
+            tags: [ "Language" ]
     "/sites/{siteId}/message-board-messages":
         # @review
         get:

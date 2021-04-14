@@ -52,9 +52,10 @@ public class DLViewFileEntryMetadataSetsManagementToolbarDisplayContext
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			dlViewFileEntryMetadataSetsDisplayContext.getStructureSearch());
 
-		_dlRequestHelper = new DLRequestHelper(httpServletRequest);
 		_dlViewFileEntryMetadataSetsDisplayContext =
 			dlViewFileEntryMetadataSetsDisplayContext;
+
+		_dlRequestHelper = new DLRequestHelper(httpServletRequest);
 	}
 
 	@Override
@@ -77,12 +78,12 @@ public class DLViewFileEntryMetadataSetsManagementToolbarDisplayContext
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(),
 					"mvcRenderCommandName",
-					"/document_library/ddm/edit_ddm_structure", "redirect",
+					"/document_library/edit_ddm_structure", "redirect",
 					themeDisplay.getURLCurrent(), "groupId",
 					String.valueOf(_dlRequestHelper.getScopeGroupId()));
 
 				dropdownItem.setLabel(
-					LanguageUtil.get(_dlRequestHelper.getRequest(), "add"));
+					LanguageUtil.get(_dlRequestHelper.getRequest(), "new"));
 			}
 		).build();
 	}

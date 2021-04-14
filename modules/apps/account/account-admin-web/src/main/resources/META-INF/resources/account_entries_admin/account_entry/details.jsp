@@ -31,6 +31,7 @@ renderResponse.setTitle((accountEntryDisplay.getAccountEntryId() == 0) ? Languag
 
 <liferay-frontend:edit-form
 	action="<%= editAccountURL %>"
+	cssClass="container-form-lg"
 >
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (accountEntryDisplay.getAccountEntryId() == 0) ? Constants.ADD : Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -55,6 +56,10 @@ renderResponse.setTitle((accountEntryDisplay.getAccountEntryId() == 0) ? Languag
 					</div>
 				</c:when>
 			</c:choose>
+
+			<c:if test="<%= accountEntryDisplay.getAccountEntryId() > 0 %>">
+				<liferay-util:include page="/account_entries_admin/account_entry/default_addresses.jsp" servletContext="<%= application %>" />
+			</c:if>
 
 			<liferay-util:include page="/account_entries_admin/account_entry/categorization.jsp" servletContext="<%= application %>" />
 		</liferay-frontend:fieldset-group>

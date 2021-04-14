@@ -34,6 +34,7 @@ const parseProps = ({
 	...props
 }) => ({
 	...props,
+	context: {...props.context, defaultLanguageId: props.defaultLanguageId},
 	dataDefinitionId: Number(dataDefinitionId),
 	dataLayoutId: Number(dataLayoutId),
 	fieldTypesModules: fieldTypesModules.split(','),
@@ -83,11 +84,31 @@ const AppContent = ({
 					dataLayoutBuilder={dataLayoutBuilder}
 				>
 					<MultiPanelSidebar
+						createPlugin={({
+							panel,
+							sidebarOpen,
+							sidebarPanelId,
+						}) => ({
+							dispatch,
+							panel,
+							sidebarOpen,
+							sidebarPanelId,
+						})}
+						currentPanelId={state.sidebarPanelId}
+						onChange={({sidebarOpen, sidebarPanelId}) =>
+							dispatch({
+								payload: {
+									sidebarOpen,
+									sidebarPanelId,
+								},
+								type: 'SWITCH_SIDEBAR_PANEL',
+							})
+						}
+						open={state.sidebarOpen}
 						panels={panels}
 						sidebarPanels={sidebarPanels}
 						variant={sidebarVariant}
 					/>
-
 					<DragLayer />
 				</DataLayoutBuilderContextProvider>
 			)}
@@ -102,41 +123,31 @@ const App = (props) => {
 		dataDefinitionId,
 		dataLayoutId,
 		fieldSetContentType,
-		fieldTypesModules,
 		groupId,
 	} = parseProps(props);
 
 	const sidebarConfig = initializeSidebarConfig(props);
-	const [loaded, setLoaded] = useState(false);
 	const [dataLayoutBuilder, setDataLayoutBuilder] = useState(null);
-
-	useEffect(() => {
-		Liferay.Loader.require(...fieldTypesModules, () => {
-			setLoaded(true);
-		});
-	}, [fieldTypesModules]);
 
 	return (
 		<DndProvider backend={HTML5Backend}>
 			<ClayModalProvider>
-				{loaded && (
-					<AppContextProvider
-						config={config}
-						contentType={contentType}
-						dataDefinitionId={dataDefinitionId}
+				<AppContextProvider
+					config={config}
+					contentType={contentType}
+					dataDefinitionId={dataDefinitionId}
+					dataLayoutBuilder={dataLayoutBuilder}
+					dataLayoutId={dataLayoutId}
+					fieldSetContentType={fieldSetContentType}
+					groupId={groupId}
+				>
+					<AppContent
 						dataLayoutBuilder={dataLayoutBuilder}
-						dataLayoutId={dataLayoutId}
-						fieldSetContentType={fieldSetContentType}
-						groupId={groupId}
-					>
-						<AppContent
-							dataLayoutBuilder={dataLayoutBuilder}
-							setDataLayoutBuilder={setDataLayoutBuilder}
-							sidebarConfig={sidebarConfig}
-							{...props}
-						/>
-					</AppContextProvider>
-				)}
+						setDataLayoutBuilder={setDataLayoutBuilder}
+						sidebarConfig={sidebarConfig}
+						{...props}
+					/>
+				</AppContextProvider>
 			</ClayModalProvider>
 		</DndProvider>
 	);

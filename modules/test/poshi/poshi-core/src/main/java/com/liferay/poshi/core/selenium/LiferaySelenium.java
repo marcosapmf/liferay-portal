@@ -20,6 +20,8 @@ package com.liferay.poshi.core.selenium;
 @SuppressWarnings("deprecation")
 public interface LiferaySelenium {
 
+	public void acceptAlert();
+
 	public void addSelection(String locator, String optionLocator);
 
 	public void antCommand(String fileName, String target) throws Exception;
@@ -29,6 +31,8 @@ public interface LiferaySelenium {
 	public void assertAlert(String pattern) throws Exception;
 
 	public void assertAlertNotPresent() throws Exception;
+
+	public void assertAlertText(String pattern) throws Exception;
 
 	public void assertAttributeNotPresent(String attribute, String locator)
 		throws Exception;
@@ -164,6 +168,8 @@ public interface LiferaySelenium {
 
 	public void deleteAllEmails() throws Exception;
 
+	public void dismissAlert();
+
 	public void doubleClick(String locator);
 
 	public void doubleClickAt(String locator, String coordString);
@@ -180,8 +186,6 @@ public interface LiferaySelenium {
 		String javaScript, String argument1, String argument2);
 
 	public void fail(String message);
-
-	public String getAlert();
 
 	public String getAttribute(String attributeLocator);
 
@@ -215,6 +219,10 @@ public interface LiferaySelenium {
 	public String getNumberDecrement(String value);
 
 	public String getNumberIncrement(String value);
+
+	public String getOcularResultImageDirName();
+
+	public String getOcularSnapImageDirName();
 
 	public String getOutputDirName();
 
@@ -351,6 +359,8 @@ public interface LiferaySelenium {
 
 	public void mouseUpAt(String locator, String coordString);
 
+	public void ocularAssertElementImage(String locator) throws Exception;
+
 	public void open(String url) throws Exception;
 
 	public void openWindow(String url, String windowID) throws Exception;
@@ -462,9 +472,13 @@ public interface LiferaySelenium {
 
 	public void stopLogger();
 
+	public void tripleClick(String locator);
+
 	public void type(String locator, String value) throws Exception;
 
 	public void typeAceEditor(String locator, String value);
+
+	public void typeAlert(String value);
 
 	public void typeAlloyEditor(String locator, String value);
 

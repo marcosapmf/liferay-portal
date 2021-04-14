@@ -25,10 +25,10 @@ import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryBookedQuantityLocalService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemLocalService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseLocalService;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.model.CommerceChannelConstants;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelRelLocalServiceUtil;
@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -72,6 +73,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Luca Pellizzon
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommerceInventoryEngineTest {
 
@@ -435,10 +437,8 @@ public class CommerceInventoryEngineTest {
 				addCommerceInventoryWarehouseWithExternalReferenceCode(
 					_user.getGroupId(), name);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_user.getGroupId());
-
 		_commerceInventoryWarehouseLocalService.addCommerceInventoryWarehouse(
+			commerceInventoryWarehouse.getExternalReferenceCode(),
 			commerceInventoryWarehouse.getName(),
 			commerceInventoryWarehouse.getDescription(),
 			commerceInventoryWarehouse.isActive(),
@@ -451,8 +451,7 @@ public class CommerceInventoryEngineTest {
 			commerceInventoryWarehouse.getCountryTwoLettersISOCode(),
 			commerceInventoryWarehouse.getLatitude(),
 			commerceInventoryWarehouse.getLongitude(),
-			commerceInventoryWarehouse.getExternalReferenceCode(),
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(_user.getGroupId()));
 	}
 
 	@Test

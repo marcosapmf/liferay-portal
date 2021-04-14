@@ -17,35 +17,17 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-long repositoryId = GetterUtil.getLong((String)request.getAttribute("view.jsp-repositoryId"), ParamUtil.getLong(request, "repositoryId"));
+DLInfoPanelDisplayContext dlInfoPanelDisplayContext = new DLInfoPanelDisplayContext(request);
 
-request.setAttribute("view.jsp-repositoryId", String.valueOf(repositoryId));
+request.setAttribute("view.jsp-repositoryId", String.valueOf(dlInfoPanelDisplayContext.getRepositoryId()));
 
-List<Folder> folders = (List<Folder>)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_FOLDERS);
-List<FileEntry> fileEntries = (List<FileEntry>)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_FILE_ENTRIES);
-List<FileShortcut> fileShortcuts = (List<FileShortcut>)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_FILE_SHORTCUTS);
-
-if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmpty(fileShortcuts)) {
-	long folderId = GetterUtil.getLong((String)request.getAttribute("view.jsp-folderId"), ParamUtil.getLong(request, "folderId"));
-
-	folders = new ArrayList<>();
-
-	Folder folder = (Folder)request.getAttribute("view.jsp-folder");
-
-	if (folder != null) {
-		folders.add(folder);
-	}
-	else if (folderId != DLFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
-		folders.add(DLAppLocalServiceUtil.getFolder(folderId));
-	}
-	else {
-		folders.add(null);
-	}
-}
+List<FileEntry> fileEntries = dlInfoPanelDisplayContext.getFileEntries();
+List<FileShortcut> fileShortcuts = dlInfoPanelDisplayContext.getFileShortcuts();
+List<Folder> folders = dlInfoPanelDisplayContext.getFolders();
 %>
 
 <c:choose>
-	<c:when test="<%= ListUtil.isEmpty(fileEntries) && ListUtil.isEmpty(fileShortcuts) && ListUtil.isNotEmpty(folders) && (folders.size() == 1) %>">
+	<c:when test="<%= dlInfoPanelDisplayContext.isFolderSelected() %>">
 
 		<%
 		Folder folder = folders.get(0);
@@ -54,22 +36,35 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 		%>
 
 		<div class="sidebar-header">
-			<ul class="sidebar-actions">
-				<li>
-					<liferay-util:include page="/document_library/subscribe.jsp" servletContext="<%= application %>" />
-				</li>
-				<li>
-					<liferay-util:include page="/document_library/folder_action.jsp" servletContext="<%= application %>" />
-				</li>
-			</ul>
+			<div class="autofit-row sidebar-section">
+				<div class="autofit-col autofit-col-expand">
+					<h1 class="component-title">
+						<%= (folder != null) ? HtmlUtil.escape(folder.getName()) : LanguageUtil.get(request, "home") %>
+					</h1>
 
-			<h1 class="sidebar-title">
-				<%= (folder != null) ? HtmlUtil.escape(folder.getName()) : LanguageUtil.get(request, "home") %>
-			</h1>
+					<h2 class="component-subtitle">
+						<liferay-ui:message key="folder" />
+					</h2>
+				</div>
 
-			<h2 class="sidebar-subtitle">
-				<liferay-ui:message key="folder" />
-			</h2>
+				<div class="autofit-col">
+					<ul class="autofit-padded-no-gutters autofit-row">
+						<li class="autofit-col">
+							<liferay-util:include page="/document_library/subscribe.jsp" servletContext="<%= application %>" />
+						</li>
+
+						<%
+						FolderActionDisplayContext folderActionDisplayContext = new FolderActionDisplayContext(dlTrashHelper, request, liferayPortletResponse);
+						%>
+
+						<c:if test="<%= folderActionDisplayContext.isShowActions() %>">
+							<li class="autofit-col">
+								<liferay-util:include page="/document_library/folder_action.jsp" servletContext="<%= application %>" />
+							</li>
+						</c:if>
+					</ul>
+				</div>
+			</div>
 		</div>
 
 		<div class="sidebar-body">
@@ -79,21 +74,12 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 				refresh="<%= false %>"
 			>
 				<liferay-ui:section>
-					<dl class="sidebar-block">
+					<dl class="sidebar-dl sidebar-section">
 						<dt class="sidebar-dt">
 							<liferay-ui:message key="num-of-items" />
 						</dt>
-
-						<%
-						long folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
-
-						if (folder != null) {
-							folderId = folder.getFolderId();
-						}
-						%>
-
 						<dd class="sidebar-dd">
-							<%= DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcutsCount(repositoryId, folderId, WorkflowConstants.STATUS_APPROVED, true) %>
+							<%= DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcutsCount(dlInfoPanelDisplayContext.getRepositoryId(), dlInfoPanelDisplayContext.getFolderId(folder), WorkflowConstants.STATUS_APPROVED, true) %>
 						</dd>
 
 						<c:if test="<%= folder != null %>">
@@ -115,27 +101,18 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 			</liferay-ui:tabs>
 		</div>
 	</c:when>
-	<c:when test="<%= ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileShortcuts) && ListUtil.isNotEmpty(fileEntries) && (fileEntries.size() == 1) %>">
+	<c:when test="<%= dlInfoPanelDisplayContext.isFileEntrySelected() %>">
 
 		<%
 		FileEntry fileEntry = fileEntries.get(0);
 
-		FileVersion fileVersion = null;
-
-		if ((user.getUserId() == fileEntry.getUserId()) || permissionChecker.isContentReviewer(user.getCompanyId(), scopeGroupId) || DLFileEntryPermission.contains(permissionChecker, fileEntry, ActionKeys.UPDATE)) {
-			fileVersion = fileEntry.getLatestFileVersion();
-		}
-		else {
-			fileVersion = fileEntry.getFileVersion();
-		}
-
 		request.setAttribute("info_panel.jsp-fileEntry", fileEntry);
-		request.setAttribute("info_panel.jsp-fileVersion", fileVersion);
+		request.setAttribute("info_panel.jsp-fileVersion", dlInfoPanelDisplayContext.getFileVersion(fileEntry));
 		%>
 
 		<liferay-util:include page="/document_library/info_panel_file_entry.jsp" servletContext="<%= application %>" />
 	</c:when>
-	<c:when test="<%= ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isNotEmpty(fileShortcuts) && (fileShortcuts.size() == 1) %>">
+	<c:when test="<%= dlInfoPanelDisplayContext.isFileShortcutSelected() %>">
 
 		<%
 		FileShortcut fileShortcut = fileShortcuts.get(0);
@@ -144,19 +121,25 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 		%>
 
 		<div class="sidebar-header">
-			<ul class="sidebar-actions">
-				<li>
-					<liferay-util:include page="/document_library/file_entry_action.jsp" servletContext="<%= application %>" />
-				</li>
-			</ul>
+			<div class="autofit-row sidebar-section">
+				<div class="autofit-col autofit-col-expand">
+					<h1 class="component-title">
+						<%= HtmlUtil.escape(fileShortcut.getToTitle()) %>
+					</h1>
 
-			<h1 class="sidebar-title">
-				<%= HtmlUtil.escape(fileShortcut.getToTitle()) %>
-			</h1>
+					<h2 class="component-subtitle">
+						<liferay-ui:message key="shortcut" />
+					</h2>
+				</div>
 
-			<h2 class="sidebar-subtitle">
-				<liferay-ui:message key="shortcut" />
-			</h2>
+				<div class="autofit-col">
+					<ul class="autofit-padded-no-gutters autofit-row">
+						<li class="autofit-col">
+							<liferay-util:include page="/document_library/file_entry_action.jsp" servletContext="<%= application %>" />
+						</li>
+					</ul>
+				</div>
+			</div>
 		</div>
 
 		<div class="sidebar-body">
@@ -171,7 +154,7 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 					FileEntry fileEntry = DLAppServiceUtil.getFileEntry(fileShortcut.getToFileEntryId());
 					%>
 
-					<dl class="sidebar-block">
+					<dl class="sidebar-dl sidebar-section">
 						<dt class="sidebar-dt">
 							<liferay-ui:message key="description" />
 						</dt>
@@ -180,21 +163,25 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 						</dd>
 
 						<%
-						Group fileEntryGroup = GroupLocalServiceUtil.getGroup(fileEntry.getGroupId());
-
-						Group fileEntrySiteGroup = fileEntryGroup;
-
-						while ((fileEntrySiteGroup != null) && !fileEntrySiteGroup.isSite()) {
-							fileEntrySiteGroup = fileEntrySiteGroup.getParentGroup();
-						}
+						Group fileEntryGroup = dlInfoPanelDisplayContext.getFileEntryGroup(fileEntry.getGroupId());
 						%>
 
-						<c:if test="<%= fileEntrySiteGroup != null %>">
-							<dt class="sidebar-dt">
-								<liferay-ui:message key="target-site" />
-							</dt>
+						<c:if test="<%= fileEntryGroup != null %>">
+							<c:choose>
+								<c:when test="<%= fileEntryGroup.isSite() %>">
+									<dt class="sidebar-dt">
+										<liferay-ui:message key="target-site" />
+									</dt>
+								</c:when>
+								<c:when test="<%= fileEntryGroup.isDepot() %>">
+									<dt class="sidebar-dt">
+										<liferay-ui:message key="target-asset-library" />
+									</dt>
+								</c:when>
+							</c:choose>
+
 							<dd class="sidebar-dd">
-								<%= HtmlUtil.escape(fileEntrySiteGroup.getName(locale)) %>
+								<%= HtmlUtil.escape(fileEntryGroup.getName(locale)) %>
 							</dd>
 						</c:if>
 
@@ -231,18 +218,11 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 						</dd>
 
 						<c:if test="<%= fileEntry.getModel() instanceof DLFileEntry %>">
-
-							<%
-							DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
-
-							DLFileEntryType dlFileEntryType = dlFileEntry.getDLFileEntryType();
-							%>
-
 							<dt class="sidebar-dt">
 								<liferay-ui:message key="document-type" />
 							</dt>
 							<dd class="sidebar-dd">
-								<%= HtmlUtil.escape(dlFileEntryType.getName(locale)) %>
+								<%= dlInfoPanelDisplayContext.getFileEntryTypeName(fileEntry, locale) %>
 							</dd>
 						</c:if>
 
@@ -259,9 +239,13 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(fileEntries) && ListUtil.isEmp
 	</c:when>
 	<c:otherwise>
 		<div class="sidebar-header">
-			<h1 class="sidebar-title">
-				<liferay-ui:message key="selection" />
-			</h1>
+			<div class="autofit-row sidebar-section">
+				<div class="autofit-col autofit-col-expand">
+					<h1 class="component-title">
+						<liferay-ui:message key="selection" />
+					</h1>
+				</div>
+			</div>
 		</div>
 
 		<div class="sidebar-body">

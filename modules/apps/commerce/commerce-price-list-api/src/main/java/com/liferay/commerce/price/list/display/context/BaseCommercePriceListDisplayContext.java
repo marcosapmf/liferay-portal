@@ -25,7 +25,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -108,7 +108,8 @@ public abstract class BaseCommercePriceListDisplayContext<T> {
 
 		if (commercePriceList != null) {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "editCommercePriceList");
+				"mvcRenderCommandName",
+				"/commerce_price_list/edit_commerce_price_list");
 			portletURL.setParameter(
 				"commercePriceListId",
 				String.valueOf(getCommercePriceListId()));
@@ -178,8 +179,12 @@ public abstract class BaseCommercePriceListDisplayContext<T> {
 	}
 
 	public boolean hasPermission(String actionId) {
-		return PortalPermissionUtil.contains(
-			_cpRequestHelper.getPermissionChecker(), actionId);
+		PortletResourcePermission portletResourcePermission =
+			commercePriceListModelResourcePermission.
+				getPortletResourcePermission();
+
+		return portletResourcePermission.contains(
+			_cpRequestHelper.getPermissionChecker(), null, actionId);
 	}
 
 	public boolean isSearch() {

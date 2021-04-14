@@ -19,6 +19,7 @@ import com.liferay.commerce.frontend.model.ImageField;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceSubscriptionEntry;
+import com.liferay.commerce.order.web.internal.frontend.constants.CommerceOrderDataSetConstants;
 import com.liferay.commerce.order.web.internal.model.OrderItem;
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
@@ -125,7 +126,7 @@ public class CommerceOrderItemDataSetDataProvider
 			end = pagination.getEndPosition();
 		}
 
-		return _commerceOrderItemService.search(
+		return _commerceOrderItemService.searchCommerceOrderItems(
 			commerceOrderId, 0, filter.getKeywords(), start, end, sort);
 	}
 
@@ -145,10 +146,10 @@ public class CommerceOrderItemDataSetDataProvider
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
 
-		CommerceMoney discountAmount =
+		CommerceMoney discountAmountCommerceMoney =
 			commerceOrderItemPrice.getDiscountAmount();
 
-		return HtmlUtil.escape(discountAmount.format(locale));
+		return HtmlUtil.escape(discountAmountCommerceMoney.format(locale));
 	}
 
 	private String _getImage(CommerceOrderItem commerceOrderItem)
@@ -170,11 +171,11 @@ public class CommerceOrderItemDataSetDataProvider
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		List<OrderItem> orderItems = new ArrayList<>();
-
 		if (commerceOrderItems.isEmpty()) {
 			return Collections.emptyList();
 		}
+
+		List<OrderItem> orderItems = new ArrayList<>();
 
 		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
 			ThemeDisplay themeDisplay =
@@ -248,9 +249,10 @@ public class CommerceOrderItemDataSetDataProvider
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
 
-		CommerceMoney unitPrice = commerceOrderItemPrice.getUnitPrice();
+		CommerceMoney unitPriceCommerceMoney =
+			commerceOrderItemPrice.getUnitPrice();
 
-		return HtmlUtil.escape(unitPrice.format(locale));
+		return HtmlUtil.escape(unitPriceCommerceMoney.format(locale));
 	}
 
 	private String _getRequestedDeliveryDateTime(
@@ -425,9 +427,10 @@ public class CommerceOrderItemDataSetDataProvider
 			CommerceOrderItemPrice commerceOrderItemPrice, Locale locale)
 		throws Exception {
 
-		CommerceMoney finalPrice = commerceOrderItemPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceOrderItemPrice.getFinalPrice();
 
-		return HtmlUtil.escape(finalPrice.format(locale));
+		return HtmlUtil.escape(finalPriceCommerceMoney.format(locale));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -25,7 +25,7 @@ public class PoshiSourceProcessorTest extends BaseSourceProcessorTestCase {
 	public void testDuplicatedParameters() throws Exception {
 		test(
 			"PoshiDuplicatedParameters.testmacro",
-			"Duplicate parameter 'userScreenName'", 5);
+			"Duplicate parameter 'userScreenName'", 4);
 	}
 
 	@Test
@@ -60,7 +60,7 @@ public class PoshiSourceProcessorTest extends BaseSourceProcessorTestCase {
 				"There should be a line break after ';'",
 				"There should be a line break after ';'"
 			},
-			new Integer[] {3, 4, 18, 19});
+			new Integer[] {4, 5, 18, 20});
 	}
 
 	@Test

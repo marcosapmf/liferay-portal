@@ -17,6 +17,7 @@ package com.liferay.commerce.product.service.impl;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetLinkConstants;
 import com.liferay.commerce.product.configuration.CProductVersionConfiguration;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.CPDefinitionDisplayDateException;
 import com.liferay.commerce.product.exception.CPDefinitionExpirationDateException;
 import com.liferay.commerce.product.exception.CPDefinitionIgnoreSKUCombinationsException;
@@ -25,7 +26,6 @@ import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
 import com.liferay.commerce.product.model.CPDefinitionLocalization;
@@ -271,7 +271,7 @@ public class CPDefinitionLocalServiceImpl
 		// Friendly URL
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
-			PortalUtil.getDefaultCompanyId());
+			cpDefinition.getCompanyId());
 
 		Map<String, String> newURLTitleMap = new HashMap<>();
 
@@ -723,7 +723,7 @@ public class CPDefinitionLocalServiceImpl
 		// Commerce product friendly URL entries
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
-			PortalUtil.getDefaultCompanyId());
+			cpDefinition.getCompanyId());
 
 		_friendlyURLEntryLocalService.deleteFriendlyURLEntry(
 			companyGroup.getGroupId(), CProduct.class,
@@ -1142,9 +1142,7 @@ public class CPDefinitionLocalServiceImpl
 					LongStream longStream = stream.mapToLong(
 						GetterUtil::getLong);
 
-					long[] assetCategoryIds = longStream.toArray();
-
-					searchContext.setAssetCategoryIds(assetCategoryIds);
+					searchContext.setAssetCategoryIds(longStream.toArray());
 				}
 
 				facets.add(multiValueFacet);
@@ -1198,6 +1196,10 @@ public class CPDefinitionLocalServiceImpl
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return Collections.emptyMap();
 		}
 
@@ -1220,15 +1222,21 @@ public class CPDefinitionLocalServiceImpl
 			return friendlyURLEntry.getUrlTitleMapAsXML();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return StringPool.BLANK;
 		}
 	}
 
 	@Override
 	public boolean hasChildCPDefinitions(long cpDefinitionId) {
-		if (cpDefinitionOptionRelLocalService.getCPDefinitionOptionRelsCount(
-				cpDefinitionId) <= 0) {
+		int count =
+			cpDefinitionOptionRelLocalService.getCPDefinitionOptionRelsCount(
+				cpDefinitionId);
 
+		if (count <= 0) {
 			return false;
 		}
 
@@ -1521,8 +1529,12 @@ public class CPDefinitionLocalServiceImpl
 				friendlyURLEntry.getDefaultLanguageId(), newUrlTitleMap);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			Group companyGroup = _groupLocalService.getCompanyGroup(
-				PortalUtil.getDefaultCompanyId());
+				cpDefinition.getCompanyId());
 
 			_friendlyURLEntryLocalService.addFriendlyURLEntry(
 				companyGroup.getGroupId(), classNameId, classPK, newUrlTitleMap,
@@ -2411,7 +2423,7 @@ public class CPDefinitionLocalServiceImpl
 		Map<String, String> newURLTitleMap = new HashMap<>();
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
-			PortalUtil.getDefaultCompanyId());
+			cpDefinition.getCompanyId());
 
 		long classNameId = classNameLocalService.getClassNameId(CProduct.class);
 

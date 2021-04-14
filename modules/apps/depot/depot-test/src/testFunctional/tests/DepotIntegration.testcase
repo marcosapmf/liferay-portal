@@ -24,13 +24,15 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			JSONDepot.deleteDepot(depotName = "Test Depot Name");
+
+			Site.tearDownCP();
+
 			DMDocument.tearDownCP();
 
 			DMFolder.tearDownCP();
 
 			User.logoutPG();
-
-			Site.tearDownCP();
 		}
 	}
 
@@ -38,6 +40,10 @@ definition {
 	@priority = "5"
 	test AddMultipleSites {
 		Site.openSitesAdmin();
+
+		JSONGroup.addChildSite(
+			groupName = "Child Site Name",
+			parentGroupName = "Site Name");
 
 		Site.addBlankCP(
 			membershipType = "Private",
@@ -65,10 +71,14 @@ definition {
 
 		Depot.connectSite(siteList = "Site Name,Private Site Name,Restricted Site Name");
 
+		Depot.connectSite(
+			parentSiteName = "Site Name",
+			siteList = "Child Site Name");
+
 		DepotNavigator.openDepotAdmin();
 
 		Depot.viewConnectedSiteNumber(
-			connectedSiteNumber = "3",
+			connectedSiteNumber = "4",
 			depotName = "Test Depot Name");
 
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
@@ -77,7 +87,45 @@ definition {
 
 		Depot.viewConnectedSite(
 			depotName = "Test Depot Name",
-			siteList = "Site Name,Private Site Name,Restricted Site Name");
+			siteList = "Site Name,Private Site Name,Restricted Site Name,Child Site Name");
+	}
+
+	@description = "This ensures that an asset library can not be connected to a staged site."
+	@priority = "4"
+	test ConnectStagedSite {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		Navigator.openSiteURL(siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Publishing",
+			portlet = "Staging");
+
+		Staging.activateStagingCP(siteName = "Site Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+
+		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+
+		Button.clickAdd();
+
+		SelectFrame(locator1 = "IFrame#SELECT_SITES");
+
+		Pause(locator1 = "3000");
+
+		Navigator.gotoNavItem(navItem = "My Sites");
+
+		SiteSelector.selectSite(site = "Site Name");
+
+		SelectFrame(value1 = "relative=top");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "Message#ERROR",
+			value1 = "An unstaged asset library cannot be connected to a staged site.");
 	}
 
 	@description = "This asserts that a deactivated site is still shown in connected sites and a deleted site is removed from connected sites."
@@ -158,8 +206,6 @@ definition {
 		DepotNavigator.gotoSites(depotName = "Test Depot Name");
 
 		Depot.connectSite(siteList = "Site Name");
-
-		Navigator.openSiteURL(siteName = "Site Name");
 
 		DepotNavigator.openDepotAdmin();
 
@@ -409,6 +455,56 @@ definition {
 		Search.searchCP(searchTerm = "DM Document Title");
 
 		SearchResultPortlet.viewNoSearchResults(searchTerm = "DM Document Title");
+	}
+
+	@description = "This ensures that a depot document associated with a tag cannot be searched on a connected site when searching is disabled."
+	@priority = "5"
+	test SearchForUnsearchableTag {
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Page Name",
+			widgetName = "Search Bar");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Page Name",
+			widgetName = "Search Results");
+
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Depot Name");
+
+		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "Document_1.doc",
+			tagNameList = "depot");
+
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+
+		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+
+		Depot.connectSite(siteList = "Site Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		Depot.configureSearch(
+			depotName = "Test Depot Name",
+			item = "Make Unsearchable",
+			siteList = "Site Name",
+			tableEntryText = "No");
+
+		Navigator.gotoSitePage(
+			pageName = "Page Name",
+			siteName = "Site Name");
+
+		Search.searchCP(searchTerm = "depot");
+
+		SearchResultPortlet.viewNoSearchResults(searchTerm = "depot");
 	}
 
 	@description = "This ensures that a depot content associated with the user cannot be searched on a connected site when searching is disabled."

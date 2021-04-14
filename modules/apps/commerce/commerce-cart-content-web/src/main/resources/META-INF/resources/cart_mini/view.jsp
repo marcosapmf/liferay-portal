@@ -23,28 +23,29 @@ Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
 	"commerceCartContentMiniDisplayContext", commerceCartContentMiniDisplayContext
 ).build();
 
-CommerceMoney subtotal = null;
-CommerceDiscountValue subtotalDiscountValue = null;
-CommerceMoney taxValue = null;
-CommerceDiscountValue totalDiscountValue = null;
-CommerceMoney totalOrder = null;
+CommerceMoney subtotalCommerceMoney = null;
+CommerceDiscountValue subtotalCommerceDiscountValue = null;
+CommerceMoney taxValueCommerceMoney = null;
+CommerceDiscountValue totalCommerceDiscountValue = null;
+CommerceMoney totalOrderCommerceMoney = null;
 
 String priceDisplayType = commerceCartContentMiniDisplayContext.getCommercePriceDisplayType();
 
 CommerceOrderPrice commerceOrderPrice = commerceCartContentMiniDisplayContext.getCommerceOrderPrice();
 
 if (commerceOrderPrice != null) {
-	subtotal = commerceOrderPrice.getSubtotal();
-	subtotalDiscountValue = commerceOrderPrice.getSubtotalDiscountValue();
-	taxValue = commerceOrderPrice.getTaxValue();
-	totalDiscountValue = commerceOrderPrice.getTotalDiscountValue();
-	totalOrder = commerceOrderPrice.getTotal();
+	subtotalCommerceMoney = commerceOrderPrice.getSubtotal();
+	subtotalCommerceDiscountValue = commerceOrderPrice.getSubtotalDiscountValue();
+	taxValueCommerceMoney = commerceOrderPrice.getTaxValue();
+
+	totalCommerceDiscountValue = commerceOrderPrice.getTotalDiscountValue();
+	totalOrderCommerceMoney = commerceOrderPrice.getTotal();
 
 	if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-		subtotal = commerceOrderPrice.getSubtotalWithTaxAmount();
-		subtotalDiscountValue = commerceOrderPrice.getSubtotalDiscountValueWithTaxAmount();
-		totalDiscountValue = commerceOrderPrice.getTotalDiscountValueWithTaxAmount();
-		totalOrder = commerceOrderPrice.getTotalWithTaxAmount();
+		subtotalCommerceMoney = commerceOrderPrice.getSubtotalWithTaxAmount();
+		subtotalCommerceDiscountValue = commerceOrderPrice.getSubtotalDiscountValueWithTaxAmount();
+		totalCommerceDiscountValue = commerceOrderPrice.getTotalDiscountValueWithTaxAmount();
+		totalOrderCommerceMoney = commerceOrderPrice.getTotalWithTaxAmount();
 	}
 }
 
@@ -96,7 +97,6 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.commerce.model.CommerceOrderItem"
-				cssClass="entry-display-style"
 				keyProperty="CommerceOrderItemId"
 				modelVar="commerceOrderItem"
 			>
@@ -154,18 +154,26 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 					</div>
 				</liferay-ui:search-container-column-text>
 
-				<c:if test="<%= commerceCartContentMiniDisplayContext.hasViewPricePermission() %>">
+				<liferay-ui:search-container-column-text
+					name="price"
+				>
+					<c:if test="<%= commerceCartContentMiniDisplayContext.hasViewPricePermission() %>">
 
-					<%
-					CommerceMoney unitPriceMoney = commerceOrderItem.getUnitPriceMoney();
-					%>
+						<%
+						CommerceMoney unitPriceCommerceMoney = commerceCartContentMiniDisplayContext.getUnitPriceCommerceMoney(commerceOrderItem);
+						CommerceMoney unitPromoPriceCommerceMoney = commerceCartContentMiniDisplayContext.getUnitPromoPriceCommerceMoney(commerceOrderItem);
+						%>
 
-					<liferay-ui:search-container-column-text>
-						<div class="mt-3">
-							<%= HtmlUtil.escape(unitPriceMoney.format(locale)) %>
-						</div>
-					</liferay-ui:search-container-column-text>
-				</c:if>
+						<c:choose>
+							<c:when test="<%= commerceCartContentMiniDisplayContext.isUnitPromoPriceActive(commerceOrderItem) %>">
+								<%= HtmlUtil.escape(unitPromoPriceCommerceMoney.format(locale)) %>
+							</c:when>
+							<c:otherwise>
+								<%= HtmlUtil.escape(unitPriceCommerceMoney.format(locale)) %>
+							</c:otherwise>
+						</c:choose>
+					</c:if>
+				</liferay-ui:search-container-column-text>
 			</liferay-ui:search-container-row>
 
 			<liferay-ui:search-iterator
@@ -189,20 +197,20 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 
 	<ul class="commerce-order-items-footer">
 		<li class="autofit-row commerce-tax">
-			<c:if test="<%= subtotal != null %>">
+			<c:if test="<%= subtotalCommerceMoney != null %>">
 				<div class="autofit-col autofit-col-expand">
 					<div class="commerce-description"><liferay-ui:message key="subtotal" /></div>
 				</div>
 
 				<div class="autofit-col">
-					<div class="commerce-value"><%= HtmlUtil.escape(subtotal.format(locale)) %></div>
+					<div class="commerce-value"><%= HtmlUtil.escape(subtotalCommerceMoney.format(locale)) %></div>
 				</div>
 			</c:if>
 
-			<c:if test="<%= subtotalDiscountValue != null %>">
+			<c:if test="<%= subtotalCommerceDiscountValue != null %>">
 
 				<%
-				CommerceMoney subtotalDiscountAmount = subtotalDiscountValue.getDiscountAmount();
+				CommerceMoney subtotalDiscountAmountCommerceMoney = subtotalCommerceDiscountValue.getDiscountAmount();
 				%>
 
 				<div class="autofit-col autofit-col-expand">
@@ -210,30 +218,30 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 				</div>
 
 				<div class="commerce-value">
-					<%= HtmlUtil.escape(subtotalDiscountAmount.format(locale)) %>
+					<%= HtmlUtil.escape(subtotalDiscountAmountCommerceMoney.format(locale)) %>
 				</div>
 
 				<div class="commerce-value pl-1">
-					(<%= HtmlUtil.escape(commerceCartContentMiniDisplayContext.getLocalizedPercentage(subtotalDiscountValue.getDiscountPercentage(), locale)) %>)
+					(<%= HtmlUtil.escape(commerceCartContentMiniDisplayContext.getLocalizedPercentage(subtotalCommerceDiscountValue.getDiscountPercentage(), locale)) %>)
 				</div>
 			</c:if>
 		</li>
 		<li class="autofit-row commerce-tax">
-			<c:if test="<%= (taxValue != null) && priceDisplayType.equals(CommercePricingConstants.TAX_EXCLUDED_FROM_PRICE) %>">
+			<c:if test="<%= (taxValueCommerceMoney != null) && priceDisplayType.equals(CommercePricingConstants.TAX_EXCLUDED_FROM_PRICE) %>">
 				<div class="autofit-col autofit-col-expand">
 					<div class="commerce-description"><liferay-ui:message key="tax" /></div>
 				</div>
 
 				<div class="autofit-col">
-					<div class="commerce-value"><%= HtmlUtil.escape(taxValue.format(locale)) %></div>
+					<div class="commerce-value"><%= HtmlUtil.escape(taxValueCommerceMoney.format(locale)) %></div>
 				</div>
 			</c:if>
 		</li>
 		<li class="autofit-row commerce-total">
-			<c:if test="<%= totalDiscountValue != null %>">
+			<c:if test="<%= totalCommerceDiscountValue != null %>">
 
 				<%
-				CommerceMoney totalDiscountAmount = totalDiscountValue.getDiscountAmount();
+				CommerceMoney totalDiscountAmountCommerceMoney = totalCommerceDiscountValue.getDiscountAmount();
 				%>
 
 				<div class="autofit-col autofit-col-expand">
@@ -241,21 +249,21 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 				</div>
 
 				<div class="commerce-value">
-					<%= HtmlUtil.escape(totalDiscountAmount.format(locale)) %>
+					<%= HtmlUtil.escape(totalDiscountAmountCommerceMoney.format(locale)) %>
 				</div>
 
 				<div class="commerce-value pl-1">
-					(<%= HtmlUtil.escape(commerceCartContentMiniDisplayContext.getLocalizedPercentage(totalDiscountValue.getDiscountPercentage(), locale)) %>)
+					(<%= HtmlUtil.escape(commerceCartContentMiniDisplayContext.getLocalizedPercentage(totalCommerceDiscountValue.getDiscountPercentage(), locale)) %>)
 				</div>
 			</c:if>
 
-			<c:if test="<%= totalOrder != null %>">
+			<c:if test="<%= totalOrderCommerceMoney != null %>">
 				<div class="autofit-col autofit-col-expand">
 					<div class="commerce-description"><liferay-ui:message key="total" /></div>
 				</div>
 
 				<div class="autofit-col">
-					<div class="commerce-value"><%= HtmlUtil.escape(totalOrder.format(locale)) %></div>
+					<div class="commerce-value"><%= HtmlUtil.escape(totalOrderCommerceMoney.format(locale)) %></div>
 				</div>
 			</c:if>
 		</li>
@@ -278,7 +286,7 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 	</aui:script>
 
 	<aui:script>
-		Liferay.after('commerce:productAddedToCart', function (event) {
+		Liferay.after('current-order-updated', function (event) {
 			Liferay.Portlet.refresh('#p_p_id<portlet:namespace />');
 		});
 	</aui:script>

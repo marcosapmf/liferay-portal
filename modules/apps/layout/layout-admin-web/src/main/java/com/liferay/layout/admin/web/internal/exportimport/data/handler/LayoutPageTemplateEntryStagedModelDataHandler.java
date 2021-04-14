@@ -34,6 +34,8 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutPrototype;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -118,6 +120,15 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
 				portletDataContext, layoutPageTemplateEntry, layoutPrototype,
 				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+		}
+
+		if (layoutPageTemplateEntry.getPreviewFileEntryId() > 0) {
+			FileEntry fileEntry = PortletFileRepositoryUtil.getPortletFileEntry(
+				layoutPageTemplateEntry.getPreviewFileEntryId());
+
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, layoutPageTemplateEntry, fileEntry,
+				PortletDataContext.REFERENCE_TYPE_WEAK);
 		}
 
 		_exportReferenceLayout(layoutPageTemplateEntry, portletDataContext);
@@ -336,6 +347,23 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 		else {
 			importedLayoutPageTemplateEntry = _addStagedModel(
 				portletDataContext, importedLayoutPageTemplateEntry);
+		}
+
+		if (layoutPageTemplateEntry.getPreviewFileEntryId() > 0) {
+			Map<Long, Long> fileEntryIds =
+				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+					FileEntry.class);
+
+			long previewFileEntryId = MapUtil.getLong(
+				fileEntryIds, layoutPageTemplateEntry.getPreviewFileEntryId(),
+				0);
+
+			importedLayoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					updateLayoutPageTemplateEntry(
+						importedLayoutPageTemplateEntry.
+							getLayoutPageTemplateEntryId(),
+						previewFileEntryId);
 		}
 
 		portletDataContext.importClassedModel(

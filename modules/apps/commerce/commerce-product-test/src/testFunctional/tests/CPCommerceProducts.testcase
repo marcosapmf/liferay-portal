@@ -9,6 +9,15 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		CommerceConfiguration.commerceStoreFrontSetUp();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Search");
+
+		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
 	}
 
 	tearDown {
@@ -20,12 +29,81 @@ definition {
 		else {
 			Navigator.openURL();
 
-			CommerceConfiguration.commerceAdminTearDown(userScreenName = "buyer");
+			CommerceConfiguration.commerceAdminTearDown();
 
 			CommerceConfiguration.commerceInitializersTearDown();
 
 			User.logoutPG();
 		}
+	}
+
+	test CreateProductBundleWithPriceTypeDynamic {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "CPCommerceProducts#CreateProductBundle";
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Options");
+
+		CPCommerceCatalog.newOptionsEntry(
+			optionDescription = "Option Description",
+			optionFieldType = "Select from List",
+			optionName = "Color",
+			optionValuesList = "Black",
+			valuePriority = "1");
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
+
+		CPCommerceCatalog.newProductsEntry(
+			productCatalog = "Master",
+			productName = "Shoes",
+			productType = "Simple");
+
+		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+		CommerceSKUs.addSKU(optionValuesList = "Shoes:50.0");
+
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
+
+		CPCommerceCatalog.newProductsEntry(
+			productCatalog = "Master",
+			productName = "Simple T-Shirt",
+			productType = "Simple");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Options");
+
+		CommerceRelations.assignSingleRelationToProductsEntry(
+			entryName = "Color",
+			title = "Add Option");
+
+		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+		CommerceSKUs.addSKU(optionValuesList = "Black:10.0");
+
+		CommerceEntry.gotoMenuTab(menuTab = "Options");
+
+		CommerceNavigator.gotoEntry(entryName = "Color");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+		Select(
+			key_fieldLabel = "Price Type",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Dynamic");
+
+		Button.clickSave();
+
+		CommerceNavigator.gotoEntry(entryName = "Black");
+
+		CommerceEntry.selectAutoCompleteField(
+			entryName = "SHOESSKU",
+			label = "SKU");
+
+		Button.clickSave();
 	}
 
 	test ProductPublishing {
@@ -35,9 +113,7 @@ definition {
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
-			portlet = "Products");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Options");
+			portlet = "Options");
 
 		Pause(locator1 = "2000");
 
@@ -48,7 +124,9 @@ definition {
 			optionValuesList = "Black,Blue,White",
 			valuePriority = "1");
 
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Products");
+		CommerceNavigator.gotoPortlet(
+			category = "Product Management",
+			portlet = "Products");
 
 		CPCommerceCatalog.newProductsEntry(
 			productName = "Simple T-Shirt",
@@ -70,9 +148,7 @@ definition {
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
-			portlet = "Products");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Specifications");
+			portlet = "Specifications");
 
 		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Specification Groups");
 
@@ -82,9 +158,7 @@ definition {
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
-			portlet = "Products");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Specifications");
+			portlet = "Specifications");
 
 		CommerceEntry.createNewSpecificationLabels(
 			specificationDescription = "SpecificationLabel",
@@ -100,8 +174,6 @@ definition {
 		CommerceRelations.assignSingleRelationToProductsEntry(
 			entryName = "SpecificationLabel",
 			title = "Specifications");
-
-		Refresh();
 
 		CommerceEntry.gotoMenuTab(menuTab = "Options");
 
@@ -154,7 +226,7 @@ definition {
 
 		LanguagePortlet.selectLanguagePG(
 			locale = "en_US",
-			textIcon = "English-United States");
+			textIcon = "english-United States");
 	}
 
 }

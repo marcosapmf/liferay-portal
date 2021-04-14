@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcher;
 import com.liferay.portal.kernel.search.facet.faceted.searcher.FacetedSearcherManagerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.EmailAddressValidator;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -350,11 +351,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 					companyId);
 		}
 
-		Long currentCompanyId = CompanyThreadLocal.getCompanyId();
 		boolean deleteInProcess = CompanyThreadLocal.isDeleteInProcess();
 
 		try {
-			CompanyThreadLocal.setCompanyId(companyId);
 			CompanyThreadLocal.setDeleteInProcess(true);
 
 			return doDeleteCompany(companyId);
@@ -367,7 +366,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 			throw portalException;
 		}
 		finally {
-			CompanyThreadLocal.setCompanyId(currentCompanyId);
 			CompanyThreadLocal.setDeleteInProcess(deleteInProcess);
 		}
 	}
@@ -1138,6 +1136,21 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		final Company company = companyPersistence.findByPrimaryKey(companyId);
 
 		if (DBPartitionUtil.removeDBPartition(companyId)) {
+			_clearCompanyCache(companyId);
+
+			Callable<Void> callable = new Callable<Void>() {
+
+				@Override
+				public Void call() throws Exception {
+					PortalInstances.removeCompany(company.getCompanyId());
+
+					return null;
+				}
+
+			};
+
+			TransactionCommitCallbackUtil.registerCallback(callable);
+
 			return company;
 		}
 
@@ -1145,13 +1158,11 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		companyPersistence.remove(company);
 
+		companyInfoPersistence.remove(company.getCompanyInfo());
+
 		// Account
 
 		accountLocalService.deleteAccount(company.getAccountId());
-
-		// Company info
-
-		companyInfoPersistence.remove(company.getCompanyInfo());
 
 		// Expando
 
@@ -1254,32 +1265,33 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		portalPreferencesLocalService.deletePortalPreferences(
 			portalPreferences);
 
-		// Portlet
-
-		List<Portlet> portlets = portletPersistence.findByCompanyId(companyId);
-
-		for (Portlet portlet : portlets) {
-			portletLocalService.deletePortlet(portlet.getId());
-		}
-
-		portletLocalService.removeCompanyPortletsPool(companyId);
-
 		// User
 
-		ActionableDynamicQuery userActionableDynamicQuery =
-			userLocalService.getActionableDynamicQuery();
+		User defaultUser = userLocalService.getDefaultUser(companyId);
 
-		userActionableDynamicQuery.setCompanyId(companyId);
-		userActionableDynamicQuery.setPerformActionMethod(
-			(User user) -> {
-				if (!user.isDefaultUser()) {
-					userLocalService.deleteUser(user.getUserId());
-				}
-			});
+		String name = PrincipalThreadLocal.getName();
 
-		userActionableDynamicQuery.performActions();
+		try {
+			PrincipalThreadLocal.setName(defaultUser.getUserId());
 
-		userLocalService.deleteUser(userLocalService.getDefaultUser(companyId));
+			ActionableDynamicQuery userActionableDynamicQuery =
+				userLocalService.getActionableDynamicQuery();
+
+			userActionableDynamicQuery.setCompanyId(companyId);
+			userActionableDynamicQuery.setPerformActionMethod(
+				(User user) -> {
+					if (!user.isDefaultUser()) {
+						userLocalService.deleteUser(user.getUserId());
+					}
+				});
+
+			userActionableDynamicQuery.performActions();
+		}
+		finally {
+			PrincipalThreadLocal.setName(name);
+		}
+
+		userLocalService.deleteUser(defaultUser);
 
 		// Role
 
@@ -1292,13 +1304,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		roleActionableDynamicQuery.performActions();
 
-		// Virtual host
-
-		VirtualHost companyVirtualHost =
-			virtualHostLocalService.fetchVirtualHost(companyId, 0);
-
-		virtualHostLocalService.deleteVirtualHost(companyVirtualHost);
-
 		// System event
 
 		DeleteSystemEventActionableDynamicQuery
@@ -1308,28 +1313,20 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 		deleteSystemEventActionableDynamicQuery.performActions();
 
-		// Portal instance
-
-		Callable<Void> callable = new Callable<Void>() {
-
-			@Override
-			public Void call() throws Exception {
-				PortalInstances.removeCompany(companyId);
-
-				unregisterCompany(company);
-
-				return null;
-			}
-
-		};
-
-		TransactionCommitCallbackUtil.registerCallback(callable);
+		_deletePortalInstance(company);
 
 		return company;
 	}
 
 	protected void preregisterCompany(long companyId) {
-		SearchEngineHelperUtil.initialize(companyId);
+		try {
+			SearchEngineHelperUtil.initialize(companyId);
+		}
+		catch (Exception exception) {
+			_log.error(
+				"Unable to initialize search engine for company " + companyId,
+				exception);
+		}
 	}
 
 	protected void preunregisterCompany(Company company) {
@@ -1961,6 +1958,44 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			companyPersistence.clearCache(company);
 		}
+	}
+
+	private void _deletePortalInstance(Company company) throws PortalException {
+
+		// Portlet
+
+		List<Portlet> portlets = portletPersistence.findByCompanyId(
+			company.getCompanyId());
+
+		for (Portlet portlet : portlets) {
+			portletLocalService.deletePortlet(portlet.getId());
+		}
+
+		portletLocalService.removeCompanyPortletsPool(company.getCompanyId());
+
+		// Virtual host
+
+		VirtualHost companyVirtualHost =
+			virtualHostLocalService.fetchVirtualHost(company.getCompanyId(), 0);
+
+		virtualHostLocalService.deleteVirtualHost(companyVirtualHost);
+
+		// Portal instance
+
+		Callable<Void> callable = new Callable<Void>() {
+
+			@Override
+			public Void call() throws Exception {
+				PortalInstances.removeCompany(company.getCompanyId());
+
+				unregisterCompany(company);
+
+				return null;
+			}
+
+		};
+
+		TransactionCommitCallbackUtil.registerCallback(callable);
 	}
 
 	private static final String _DEFAULT_VIRTUAL_HOST = "localhost";

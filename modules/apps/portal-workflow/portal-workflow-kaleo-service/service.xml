@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.3.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_3_0.dtd">
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.4.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_4_0.dtd">
 
 <service-builder auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.portal.workflow.kaleo">
 	<namespace>Kaleo</namespace>
@@ -158,6 +158,10 @@
 		<finder name="C_N" return-type="KaleoDefinition">
 			<finder-column name="companyId" />
 			<finder-column name="name" />
+		</finder>
+		<finder name="C_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="scope" />
 		</finder>
 		<finder name="C_A" return-type="Collection">
 			<finder-column name="companyId" />

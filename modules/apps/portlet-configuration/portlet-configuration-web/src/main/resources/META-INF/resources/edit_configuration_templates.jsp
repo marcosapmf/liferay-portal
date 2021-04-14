@@ -32,7 +32,7 @@ PortletConfigurationTemplatesManagementToolbarDisplayContext portletConfiguratio
 
 	<aui:form action="<%= deleteArchivedSetupsURL %>" name="fm">
 		<div class="portlet-configuration-body-content">
-			<clay:management-toolbar
+			<clay:management-toolbar-v2
 				displayContext="<%= portletConfigurationTemplatesManagementToolbarDisplayContext %>"
 			/>
 
@@ -84,11 +84,6 @@ PortletConfigurationTemplatesManagementToolbarDisplayContext portletConfiguratio
 								</liferay-ui:search-container-column-text>
 							</c:when>
 							<c:when test='<%= Objects.equals(portletConfigurationTemplatesDisplayContext.getDisplayStyle(), "icon") %>'>
-
-								<%
-								row.setCssClass("entry-card lfr-asset-item");
-								%>
-
 								<liferay-ui:search-container-column-text>
 									<clay:vertical-card
 										verticalCard="<%= new ArchivedSettingsVerticalCard(archivedSettings, renderRequest, renderResponse) %>"

@@ -1,15 +1,14 @@
 {
 	"dependencies": {
-		"frontend-js-web": "*",
-		"metal": "2.16.8",
-		"metal-dom": "2.16.8",
-		"senna": "2.7.9"
+		"frontend-js-web": "*"
 	},
+	"main": "init.js",
 	"name": "frontend-js-spa-web",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"format": "liferay-npm-scripts fix",
+		"test": "liferay-npm-scripts test"
 	},
-	"version": "4.0.18"
+	"version": "5.0.0"
 }

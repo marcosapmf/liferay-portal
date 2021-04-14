@@ -417,6 +417,49 @@ public class CommerceShippingFixedOptionServiceHttp {
 		}
 	}
 
+	public static long getCommerceShippingFixedOptionsCount(
+			HttpPrincipal httpPrincipal, long companyId, long groupId,
+			long commerceShippingMethodId, String keywords)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		try {
+			MethodKey methodKey = new MethodKey(
+				CommerceShippingFixedOptionServiceUtil.class,
+				"getCommerceShippingFixedOptionsCount",
+				_getCommerceShippingFixedOptionsCountParameterTypes8);
+
+			MethodHandler methodHandler = new MethodHandler(
+				methodKey, companyId, groupId, commerceShippingMethodId,
+				keywords);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception exception) {
+				if (exception instanceof
+						com.liferay.portal.kernel.exception.PortalException) {
+
+					throw (com.liferay.portal.kernel.exception.PortalException)
+						exception;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(
+					exception);
+			}
+
+			return ((Long)returnObj).longValue();
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException
+					systemException) {
+
+			_log.error(systemException, systemException);
+
+			throw systemException;
+		}
+	}
+
 	public static
 		com.liferay.commerce.shipping.engine.fixed.model.
 			CommerceShippingFixedOption updateCommerceShippingFixedOption(
@@ -431,7 +474,7 @@ public class CommerceShippingFixedOptionServiceHttp {
 			MethodKey methodKey = new MethodKey(
 				CommerceShippingFixedOptionServiceUtil.class,
 				"updateCommerceShippingFixedOption",
-				_updateCommerceShippingFixedOptionParameterTypes8);
+				_updateCommerceShippingFixedOptionParameterTypes9);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, commerceShippingFixedOptionId, nameMap,
@@ -507,7 +550,11 @@ public class CommerceShippingFixedOptionServiceHttp {
 			long.class
 		};
 	private static final Class<?>[]
-		_updateCommerceShippingFixedOptionParameterTypes8 = new Class[] {
+		_getCommerceShippingFixedOptionsCountParameterTypes8 = new Class[] {
+			long.class, long.class, long.class, String.class
+		};
+	private static final Class<?>[]
+		_updateCommerceShippingFixedOptionParameterTypes9 = new Class[] {
 			long.class, java.util.Map.class, java.util.Map.class,
 			java.math.BigDecimal.class, double.class
 		};

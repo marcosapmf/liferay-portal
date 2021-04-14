@@ -16,6 +16,7 @@ package com.liferay.project.templates.service.builder.internal;
 
 import com.liferay.project.templates.extensions.ProjectTemplateCustomizer;
 import com.liferay.project.templates.extensions.ProjectTemplatesArgs;
+import com.liferay.project.templates.extensions.util.FileUtil;
 import com.liferay.project.templates.extensions.util.WorkspaceUtil;
 
 import java.io.File;
@@ -43,6 +44,27 @@ public class ServiceBuilderProjectTemplateCustomizer
 			ProjectTemplatesArgs projectTemplatesArgs, File destinationDir,
 			ArchetypeGenerationResult archetypeGenerationResult)
 		throws Exception {
+
+		ServiceBuilderProjectTemplatesArgs serviceBuilderProjectTemplatesArgs =
+			(ServiceBuilderProjectTemplatesArgs)
+				projectTemplatesArgs.getProjectTemplatesArgsExt();
+
+		String addOns = serviceBuilderProjectTemplatesArgs.getAddOns();
+
+		if (addOns.equals("false")) {
+			Path destinationDirPath = destinationDir.toPath();
+
+			Path projectPath = destinationDirPath.resolve(
+				projectTemplatesArgs.getName());
+
+			File projectDir = projectPath.toFile();
+
+			String artifactId = projectTemplatesArgs.getName();
+
+			File uadDir = new File(projectDir, artifactId + "-uad");
+
+			FileUtil.deleteDir(uadDir.toPath());
+		}
 	}
 
 	@Override
@@ -88,6 +110,21 @@ public class ServiceBuilderProjectTemplateCustomizer
 			(ServiceBuilderProjectTemplatesArgs)
 				projectTemplatesArgs.getProjectTemplatesArgsExt();
 
+		String addOns = serviceBuilderProjectTemplatesArgs.getAddOns();
+
+		String liferayVersion = projectTemplatesArgs.getLiferayVersion();
+
+		if (addOns.equals("true") &&
+			(liferayVersion.startsWith("7.0") ||
+			 liferayVersion.startsWith("7.1"))) {
+
+			throw new IllegalArgumentException(
+				"Add Ons are not supported in 7.0 or 7.1");
+		}
+
+		setProperty(
+			properties, "addOns",
+			serviceBuilderProjectTemplatesArgs.getAddOns());
 		setProperty(
 			properties, "dependencyInjector",
 			serviceBuilderProjectTemplatesArgs.getDependencyInjector());

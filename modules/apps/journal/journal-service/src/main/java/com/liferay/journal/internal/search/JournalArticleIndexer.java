@@ -31,6 +31,7 @@ import com.liferay.journal.util.JournalContent;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -49,7 +50,6 @@ import com.liferay.portal.kernel.search.ParseException;
 import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
@@ -99,8 +99,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -324,6 +322,10 @@ public class JournalArticleIndexer extends BaseIndexer<JournalArticle> {
 				ddmStructure, fields);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return;
 		}
 
@@ -662,6 +664,10 @@ public class JournalArticleIndexer extends BaseIndexer<JournalArticle> {
 				ddmStructure, fields);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return StringPool.BLANK;
 		}
 
@@ -961,17 +967,14 @@ public class JournalArticleIndexer extends BaseIndexer<JournalArticle> {
 	}
 
 	private void _deleteDocument(JournalArticle article) throws Exception {
+		if ((article.getCtCollectionId() == 0) &&
+			!CTCollectionThreadLocal.isProductionMode()) {
+
+			return;
+		}
+
 		deleteDocument(
 			article.getCompanyId(), "UID=" + uidFactory.getUID(article));
-	}
-
-	private Document _getDocument(JournalArticle journalArticle) {
-		try {
-			return getDocument(journalArticle);
-		}
-		catch (SearchException searchException) {
-			throw new RuntimeException(searchException);
-		}
 	}
 
 	private void _reindexEveryVersionOfResourcePrimKey(long resourcePrimKey)
@@ -996,15 +999,24 @@ public class JournalArticleIndexer extends BaseIndexer<JournalArticle> {
 		}
 
 		if (isIndexAllArticleVersions()) {
-			Stream<JournalArticle> stream = journalArticles.stream();
+			List<Document> documents = new ArrayList<>(journalArticles.size());
 
-			_updateDocuments(
-				article.getCompanyId(),
-				stream.map(
-					this::_getDocument
-				).collect(
-					Collectors.toList()
-				));
+			if (CTCollectionThreadLocal.isProductionMode()) {
+				for (JournalArticle journalArticle : journalArticles) {
+					documents.add(getDocument(journalArticle));
+				}
+			}
+			else {
+				for (JournalArticle journalArticle : journalArticles) {
+					if (journalArticle.getCtCollectionId() != 0) {
+						documents.add(getDocument(journalArticle));
+					}
+				}
+			}
+
+			_indexWriterHelper.updateDocuments(
+				getSearchEngineId(), article.getCompanyId(), documents,
+				isCommitImmediately());
 		}
 		else {
 			JournalArticle latestIndexableArticle =
@@ -1012,7 +1024,9 @@ public class JournalArticleIndexer extends BaseIndexer<JournalArticle> {
 
 			for (JournalArticle journalArticle : journalArticles) {
 				if (journalArticle.getId() == latestIndexableArticle.getId()) {
-					_updateDocument(journalArticle);
+					_indexWriterHelper.updateDocument(
+						getSearchEngineId(), article.getCompanyId(),
+						getDocument(journalArticle), isCommitImmediately());
 				}
 				else {
 					_deleteDocument(journalArticle);
@@ -1031,28 +1045,6 @@ public class JournalArticleIndexer extends BaseIndexer<JournalArticle> {
 			text, _ESCAPE_SAFE_HIGHLIGHTS, _HIGHLIGHT_TAGS);
 
 		return text;
-	}
-
-	private void _updateDocument(JournalArticle article) {
-		try {
-			_indexWriterHelper.updateDocument(
-				getSearchEngineId(), article.getCompanyId(),
-				_getDocument(article), isCommitImmediately());
-		}
-		catch (SearchException searchException) {
-			throw new RuntimeException(searchException);
-		}
-	}
-
-	private void _updateDocuments(long companyId, List<Document> documents) {
-		try {
-			_indexWriterHelper.updateDocuments(
-				getSearchEngineId(), companyId, documents,
-				isCommitImmediately());
-		}
-		catch (SearchException searchException) {
-			throw new RuntimeException(searchException);
-		}
 	}
 
 	private static final String[] _ESCAPE_SAFE_HIGHLIGHTS = {

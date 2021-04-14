@@ -29,8 +29,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.workflow.kaleo.forms.exception.NoSuchKaleoProcessLinkException;
@@ -45,7 +46,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,7 +71,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcellus Tavares
  * @generated
  */
-@Component(service = KaleoProcessLinkPersistence.class)
+@Component(service = {KaleoProcessLinkPersistence.class, BasePersistence.class})
 public class KaleoProcessLinkPersistenceImpl
 	extends BasePersistenceImpl<KaleoProcessLink>
 	implements KaleoProcessLinkPersistence {
@@ -192,7 +192,7 @@ public class KaleoProcessLinkPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KaleoProcessLink>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (KaleoProcessLink kaleoProcessLink : list) {
@@ -562,7 +562,7 @@ public class KaleoProcessLinkPersistenceImpl
 
 		Object[] finderArgs = new Object[] {kaleoProcessId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -682,7 +682,7 @@ public class KaleoProcessLinkPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByKPI_WTN, finderArgs, this);
+				_finderPathFetchByKPI_WTN, finderArgs);
 		}
 
 		if (result instanceof KaleoProcessLink) {
@@ -796,7 +796,7 @@ public class KaleoProcessLinkPersistenceImpl
 
 		Object[] finderArgs = new Object[] {kaleoProcessId, workflowTaskName};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -914,9 +914,7 @@ public class KaleoProcessLinkPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(KaleoProcessLinkImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(KaleoProcessLinkImpl.class);
 	}
 
 	/**
@@ -941,9 +939,7 @@ public class KaleoProcessLinkPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(KaleoProcessLinkImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(KaleoProcessLinkImpl.class, primaryKey);
@@ -958,10 +954,9 @@ public class KaleoProcessLinkPersistenceImpl
 			kaleoProcessLinkModelImpl.getWorkflowTaskName()
 		};
 
+		finderCache.putResult(_finderPathCountByKPI_WTN, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByKPI_WTN, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByKPI_WTN, args, kaleoProcessLinkModelImpl, false);
+			_finderPathFetchByKPI_WTN, args, kaleoProcessLinkModelImpl);
 	}
 
 	/**
@@ -1261,7 +1256,7 @@ public class KaleoProcessLinkPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<KaleoProcessLink>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1331,7 +1326,7 @@ public class KaleoProcessLinkPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1387,22 +1382,21 @@ public class KaleoProcessLinkPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new KaleoProcessLinkModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", KaleoProcessLink.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByKaleoProcessId = _createFinderPath(
+		_finderPathWithPaginationFindByKaleoProcessId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByKaleoProcessId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1410,22 +1404,22 @@ public class KaleoProcessLinkPersistenceImpl
 			},
 			new String[] {"kaleoProcessId"}, true);
 
-		_finderPathWithoutPaginationFindByKaleoProcessId = _createFinderPath(
+		_finderPathWithoutPaginationFindByKaleoProcessId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByKaleoProcessId",
 			new String[] {Long.class.getName()},
 			new String[] {"kaleoProcessId"}, true);
 
-		_finderPathCountByKaleoProcessId = _createFinderPath(
+		_finderPathCountByKaleoProcessId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKaleoProcessId",
 			new String[] {Long.class.getName()},
 			new String[] {"kaleoProcessId"}, false);
 
-		_finderPathFetchByKPI_WTN = _createFinderPath(
+		_finderPathFetchByKPI_WTN = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByKPI_WTN",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"kaleoProcessId", "workflowTaskName"}, true);
 
-		_finderPathCountByKPI_WTN = _createFinderPath(
+		_finderPathCountByKPI_WTN = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByKPI_WTN",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"kaleoProcessId", "workflowTaskName"}, false);
@@ -1436,12 +1430,6 @@ public class KaleoProcessLinkPersistenceImpl
 		entityCache.removeCache(KaleoProcessLinkImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -1501,36 +1489,13 @@ public class KaleoProcessLinkPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		KaleoProcessLinkPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(KaleoFormsPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class KaleoProcessLinkModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1581,6 +1546,16 @@ public class KaleoProcessLinkPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return KaleoProcessLinkImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return KaleoProcessLinkTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

@@ -56,7 +56,6 @@ page import="com.liferay.document.library.kernel.exception.FileNameException" %>
 page import="com.liferay.document.library.kernel.exception.FileSizeException" %><%@
 page import="com.liferay.document.library.kernel.model.DLFileEntry" %><%@
 page import="com.liferay.document.library.kernel.util.DLValidatorUtil" %><%@
-page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.JSPNavigationItemList" %><%@
 page import="com.liferay.message.boards.constants.MBCategoryConstants" %><%@
 page import="com.liferay.message.boards.constants.MBConstants" %><%@
 page import="com.liferay.message.boards.constants.MBMessageConstants" %><%@
@@ -105,7 +104,10 @@ page import="com.liferay.message.boards.web.internal.dao.search.MBResultRowSplit
 page import="com.liferay.message.boards.web.internal.display.MBCategoryDisplay" %><%@
 page import="com.liferay.message.boards.web.internal.display.context.MBBannedUsersManagementToolbarDisplayContext" %><%@
 page import="com.liferay.message.boards.web.internal.display.context.MBDisplayContextProvider" %><%@
+page import="com.liferay.message.boards.web.internal.display.context.MBEditMessageDisplayContext" %><%@
 page import="com.liferay.message.boards.web.internal.display.context.MBEntriesManagementToolbarDisplayContext" %><%@
+page import="com.liferay.message.boards.web.internal.display.context.MBNavigationDisplayContext" %><%@
+page import="com.liferay.message.boards.web.internal.display.context.MBViewStatisticsDisplayContext" %><%@
 page import="com.liferay.message.boards.web.internal.display.context.util.MBRequestHelper" %><%@
 page import="com.liferay.message.boards.web.internal.portlet.action.ActionUtil" %><%@
 page import="com.liferay.message.boards.web.internal.search.EntriesChecker" %><%@
@@ -207,6 +209,7 @@ AssetHelper assetHelper = (AssetHelper)request.getAttribute(AssetWebKeys.ASSET_H
 String currentLanguageId = LanguageUtil.getLanguageId(request);
 
 Locale currentLocale = LocaleUtil.fromLanguageId(currentLanguageId);
+
 Locale defaultLocale = themeDisplay.getSiteDefaultLocale();
 
 String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);

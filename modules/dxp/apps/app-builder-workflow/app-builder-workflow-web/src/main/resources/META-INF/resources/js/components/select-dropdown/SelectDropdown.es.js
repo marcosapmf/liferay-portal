@@ -11,16 +11,32 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import DropDownWithSearch from 'app-builder-web/js/pages/apps/DropDownWithSearch.es';
+import DropDownWithSearch from 'app-builder-web/js/components/dropdown-with-search/DropDownWithSearch.es';
 import React from 'react';
+
+const DropdownIcons = ({children, warningIcon}) => {
+	if (warningIcon) {
+		return (
+			<div className="d-flex">
+				<ClayIcon {...warningIcon} />
+
+				{children}
+			</div>
+		);
+	}
+
+	return children;
+};
 
 export default function SelectDropdown({
 	ariaLabelId,
+	children,
 	emptyResultMessage,
 	items = [],
 	label,
 	onSelect,
 	selectedValue,
+	warningIcon,
 	...otherProps
 }) {
 	const itemName = selectedValue || label;
@@ -28,6 +44,7 @@ export default function SelectDropdown({
 	return (
 		<>
 			<DropDownWithSearch
+				className="w-100"
 				isEmpty={items.length === 0}
 				label={label}
 				trigger={
@@ -37,16 +54,18 @@ export default function SelectDropdown({
 						displayType="secondary"
 					>
 						<span
-							className="float-left text-left text-truncate w90"
+							className="dropdown-button-title float-left text-left text-truncate"
 							title={itemName}
 						>
 							{itemName}
 						</span>
 
-						<ClayIcon
-							className="dropdown-button-asset float-right"
-							symbol="caret-bottom"
-						/>
+						<DropdownIcons warningIcon={warningIcon}>
+							<ClayIcon
+								className="dropdown-button-asset float-right"
+								symbol="caret-bottom"
+							/>
+						</DropdownIcons>
 					</ClayButton>
 				}
 				{...otherProps}
@@ -55,7 +74,9 @@ export default function SelectDropdown({
 					emptyResultMessage={emptyResultMessage}
 					items={items}
 					onSelect={onSelect}
-				/>
+				>
+					{children}
+				</DropDownWithSearch.Items>
 			</DropDownWithSearch>
 		</>
 	);

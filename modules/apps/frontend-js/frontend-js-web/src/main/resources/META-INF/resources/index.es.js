@@ -26,9 +26,14 @@ export {default as autoSize} from './liferay/autosize/autosize.es';
 
 export {cancelDebounce, debounce} from './liferay/debounce/debounce.es';
 
+// Delegate API
+
+export {default as delegate} from './liferay/delegate/delegate.es';
+
 // Form API
 
 export {default as objectToFormData} from './liferay/util/form/object_to_form_data.es';
+export {default as postForm} from './liferay/util/form/post_form.es';
 
 // Liferay API
 
@@ -56,6 +61,16 @@ export {default as createRenderURL} from './liferay/util/portlet_url/create_rend
 
 export {default as createResourceURL} from './liferay/util/portlet_url/create_resource_url.es';
 
+// Align API
+
+export {
+	ALIGN_POSITIONS,
+	align,
+	getAlignBestRegion,
+	getAlignRegion,
+	suggestAlignBestRegion,
+} from './liferay/align';
+
 // Session API
 
 export {getSessionValue, setSessionValue} from './liferay/util/session.es';
@@ -71,12 +86,15 @@ export {default as throttle} from './liferay/throttle.es';
 // Util API
 
 export {default as addParams} from './liferay/util/add_params';
+export {default as buildFragment} from './liferay/util/build_fragment';
 export {default as fetch} from './liferay/util/fetch.es';
 export {default as focusFormField} from './liferay/util/focus_form_field';
 export {default as getPortletId} from './liferay/util/get_portlet_id';
 export {default as inBrowserView} from './liferay/util/in_browser_view';
+export {default as isObject} from './liferay/util/is_object';
 export {default as isPhone} from './liferay/util/is_phone';
 export {default as isTablet} from './liferay/util/is_tablet';
 export {default as navigate} from './liferay/util/navigate.es';
 export {default as normalizeFriendlyURL} from './liferay/util/normalize_friendly_url';
+export {default as runScriptsInElement} from './liferay/util/run_scripts_in_element.es';
 export {default as toggleDisabled} from './liferay/util/toggle_disabled';

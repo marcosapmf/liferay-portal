@@ -22,6 +22,8 @@ import com.liferay.gradle.plugins.jasper.jspc.JspCPlugin;
 
 import java.io.File;
 
+import java.nio.file.Path;
+
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -354,9 +356,22 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 
 					findSecurityBugsJavaExec.systemProperty(
 						"findsecbugs.injection.customconfigfile." +
+							"PathTraversalDetector",
+						"liferay-config/liferay-PathTraversalDetector-" +
+							"PATH_TRAVERSAL_IN.txt|PATH_TRAVERSAL_IN:" +
+								"liferay-config/liferay-" +
+									"PathTraversalDetector-" +
+										"PATH_TRAVERSAL_OUT.txt|" +
+											"PATH_TRAVERSAL_OUT");
+					findSecurityBugsJavaExec.systemProperty(
+						"findsecbugs.injection.customconfigfile." +
 							"SqlInjectionDetector",
 						"liferay-config/liferay-SqlInjectionDetector.txt|" +
 							"SQL_INJECTION_HIBERNATE");
+					findSecurityBugsJavaExec.systemProperty(
+						"findsecbugs.injection.customconfigfile.SSRFDetector",
+						"liferay-config/liferay-SSRFDetector.txt|" +
+							"URLCONNECTION_SSRF_FD");
 					findSecurityBugsJavaExec.systemProperty(
 						"findsecbugs.injection.customconfigfile.XssJspDetector",
 						"liferay-config/liferay-XssJspDetector.txt|" +
@@ -372,25 +387,24 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 
 					String customConfigFile = "liferay-config/liferay.txt";
 
-					File derivedSummariesTxtFile = project.file(
-						"derived-config.txt");
+					File directoryFile = project.file(".");
 
-					if (derivedSummariesTxtFile.exists()) {
-						String absolutePath = FileUtil.getAbsolutePath(
-							derivedSummariesTxtFile);
+					Path directoryPath = directoryFile.toPath();
 
-						customConfigFile =
-							customConfigFile + File.pathSeparator +
-								absolutePath;
-					}
+					while (directoryPath != null) {
+						File falsePositivesTxtFile = new File(
+							directoryPath.toFile(),
+							"find-security-bugs-false-positives.txt");
 
-					File falsePositivesTxtFile = project.file(
-						"find-security-bugs-false-positives.txt");
+						if (falsePositivesTxtFile.exists()) {
+							String absolutePath = FileUtil.getAbsolutePath(
+								falsePositivesTxtFile);
 
-					if (falsePositivesTxtFile.exists()) {
-						customConfigFile =
-							customConfigFile + File.pathSeparator +
-								FileUtil.getAbsolutePath(falsePositivesTxtFile);
+							customConfigFile +=
+								File.pathSeparator + absolutePath;
+						}
+
+						directoryPath = directoryPath.getParent();
 					}
 
 					findSecurityBugsJavaExec.systemProperty(
@@ -536,7 +550,7 @@ public class FindSecurityBugsPlugin implements Plugin<Project> {
 	private static final String _FIND_SECURITY_BUGS_INCLUDE_FILE_NAME =
 		"fsb-include.xml";
 
-	private static final String _VERSION = "1.10.1.LIFERAY-PATCHED-1";
+	private static final String _VERSION = "1.10.1.LIFERAY-PATCHED-2";
 
 	private static final Transformer<File, Task> _reportsFileGetter =
 		new Transformer<File, Task>() {

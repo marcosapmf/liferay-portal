@@ -1,7 +1,4 @@
 {
-	"dependencies": {
-		"metal-dom": "2.16.8"
-	},
 	"name": "frontend-js-collapse-support-web",
 	"private": true,
 	"scripts": {
@@ -9,5 +6,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.11"
+	"version": "2.0.0"
 }

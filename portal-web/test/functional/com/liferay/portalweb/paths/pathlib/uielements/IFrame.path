@@ -29,6 +29,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ASSET_DETAILS_IFRAME</td>
+	<td>//div[contains(@class,'preview-file-container')]//iframe</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ASSIGN_USER</td>
 	<td>//div[contains(.,'Assign User')]//iframe</td>
 	<td></td>
@@ -85,7 +90,12 @@
 </tr>
 <tr>
 	<td>EMBEDDED_VIDEO_IFRAME</td>
-	<td>//iframe[contains(@src,'embed')]</td>
+	<td>//iframe[contains(@src,'embed') or contains(@src,'Embed')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EXTERNAL_VIDEO_IFRAME</td>
+	<td>//div[contains(@class,'video-preview-aspect-ratio')]//iframe</td>
 	<td></td>
 </tr>
 <tr>
@@ -206,11 +216,6 @@
 <tr>
 	<td>SELECT_ORGANIZATION_ROLE</td>
 	<td>//iframe[contains(@id,'selectOrganizationRole_iframe_')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SELECT_PUBLICATION</td>
-	<td>//iframe[contains(@id,'selectPublication_iframe')]</td>
 	<td></td>
 </tr>
 <tr>

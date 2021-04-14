@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -56,6 +57,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Riccardo Alberti
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommercePricingClassLocalServiceTest {
 
@@ -143,21 +145,21 @@ public class CommercePricingClassLocalServiceTest {
 			"The count of pricing classes shall increase to 1"
 		);
 
-		int commercePricingClassCount =
+		int commercePricingClassesCount =
 			_commercePricingClassLocalService.getCommercePricingClassesCount(
 				_user.getCompanyId());
 
-		Assert.assertEquals(0, commercePricingClassCount);
+		Assert.assertEquals(0, commercePricingClassesCount);
 
 		_commercePricingClassLocalService.addCommercePricingClass(
 			_user.getUserId(), RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), _serviceContext);
 
-		commercePricingClassCount =
+		commercePricingClassesCount =
 			_commercePricingClassLocalService.getCommercePricingClassesCount(
 				_user.getCompanyId());
 
-		Assert.assertEquals(1, commercePricingClassCount);
+		Assert.assertEquals(1, commercePricingClassesCount);
 	}
 
 	@Test(expected = CommercePricingClassTitleException.class)

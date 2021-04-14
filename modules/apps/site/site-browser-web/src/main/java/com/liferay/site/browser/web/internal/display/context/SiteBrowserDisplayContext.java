@@ -240,8 +240,7 @@ public class SiteBrowserDisplayContext {
 			return NavigationItemListBuilder.add(
 				navigationItem -> {
 					navigationItem.setActive(true);
-					navigationItem.setHref(
-						_liferayPortletResponse.createRenderURL());
+					navigationItem.setHref(getPortletURL());
 					navigationItem.setLabel(
 						LanguageUtil.get(_httpServletRequest, "sites"));
 				}
@@ -379,6 +378,9 @@ public class SiteBrowserDisplayContext {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return false;

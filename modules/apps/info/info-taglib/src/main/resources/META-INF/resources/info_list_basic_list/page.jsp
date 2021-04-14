@@ -31,14 +31,14 @@
 							<%
 							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
 
-							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, response);
+							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, PipingServletResponse.createPipingServletResponse(pageContext));
 							%>
 
 						</c:when>
 						<c:otherwise>
 
 							<%
-							infoItemRenderer.render(infoListObject, request, response);
+							infoItemRenderer.render(infoListObject, request, PipingServletResponse.createPipingServletResponse(pageContext));
 							%>
 
 						</c:otherwise>
@@ -65,14 +65,14 @@
 							<%
 							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
 
-							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, response);
+							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, PipingServletResponse.createPipingServletResponse(pageContext));
 							%>
 
 						</c:when>
 						<c:otherwise>
 
 							<%
-							infoItemRenderer.render(infoListObject, request, response);
+							infoItemRenderer.render(infoListObject, request, PipingServletResponse.createPipingServletResponse(pageContext));
 							%>
 
 						</c:otherwise>

@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=cpDefinitionGroupedEntryInfoPanel"
+		"mvc.command.name=/cp_definitions/cp_definition_grouped_entry_info_panel"
 	},
 	service = MVCResourceCommand.class
 )
@@ -57,7 +57,7 @@ public class CPDefinitionGroupedEntryInfoPanelMVCResourceCommand
 
 		include(
 			resourceRequest, resourceResponse,
-			"/definition_grouped_entry_info_panel.jsp");
+			"/cp_definition_grouped_entry_info_panel.jsp");
 	}
 
 	protected List<CPDefinitionGroupedEntry> getCPDefinitionGroupedEntries(

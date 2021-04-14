@@ -70,15 +70,14 @@ if (fieldsJSONArray != null) {
 	fieldsJSONArrayString = fieldsJSONArray.toString();
 }
 
-boolean saveAndContinue = ParamUtil.getBoolean(request, "saveAndContinue");
 boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
 %>
 
-<portlet:actionURL name="addStructure" var="addStructureURL">
+<portlet:actionURL name="/dynamic_data_mapping/add_structure" var="addStructureURL">
 	<portlet:param name="mvcPath" value="/edit_structure.jsp" />
 </portlet:actionURL>
 
-<portlet:actionURL name="updateStructure" var="updateStructureURL">
+<portlet:actionURL name="/dynamic_data_mapping/update_structure" var="updateStructureURL">
 	<portlet:param name="mvcPath" value="/edit_structure.jsp" />
 </portlet:actionURL>
 
@@ -100,7 +99,7 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 		<aui:input name="scopeClassNameId" type="hidden" value="<%= scopeClassNameId %>" />
 		<aui:input name="definition" type="hidden" />
 		<aui:input name="status" type="hidden" />
-		<aui:input name="saveAndContinue" type="hidden" value="<%= saveAndContinue %>" />
+		<aui:input name="saveAndContinue" type="hidden" value='<%= ParamUtil.getBoolean(request, "saveAndContinue") %>' />
 
 		<liferay-ui:error exception="<%= DDMFormLayoutValidationException.class %>" message="please-enter-a-valid-form-layout" />
 
@@ -317,7 +316,7 @@ if (Validator.isNotNull(requestUpdateStructureURL)) {
 						</aui:field-wrapper>
 
 						<c:if test="<%= structure != null %>">
-							<portlet:resourceURL id="getStructure" var="getStructureURL">
+							<portlet:resourceURL id="/dynamic_data_mapping/get_structure" var="getStructureURL">
 								<portlet:param name="structureId" value="<%= String.valueOf(classPK) %>" />
 							</portlet:resourceURL>
 

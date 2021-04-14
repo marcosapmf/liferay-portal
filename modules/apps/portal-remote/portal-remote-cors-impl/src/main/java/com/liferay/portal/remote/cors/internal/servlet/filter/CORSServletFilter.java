@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.servlet.BaseFilter;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.remote.cors.internal.CORSSupport;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.Map;
 
@@ -42,11 +43,7 @@ public class CORSServletFilter extends BaseFilter {
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
-		if (corsSupport.isCORSRequest(httpServletRequest::getHeader)) {
-			return true;
-		}
-
-		return false;
+		return CORSSupport.isCORSRequest(httpServletRequest::getHeader);
 	}
 
 	public void processCORSRequest(
@@ -71,8 +68,9 @@ public class CORSServletFilter extends BaseFilter {
 		if (corsSupport.isValidCORSRequest(
 				httpServletRequest.getMethod(),
 				httpServletRequest::getHeader) &&
-			(OAuth2ProviderScopeLiferayAccessControlContext.
-				isOAuth2AuthVerified() ||
+			(PropsValues.CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK ||
+			 OAuth2ProviderScopeLiferayAccessControlContext.
+				 isOAuth2AuthVerified() ||
 			 _isGuest())) {
 
 			corsSupport.writeResponseHeaders(

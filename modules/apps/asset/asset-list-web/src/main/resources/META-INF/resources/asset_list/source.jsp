@@ -23,6 +23,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 <liferay-frontend:fieldset-group>
 	<liferay-frontend:fieldset
 		cssClass="source-container"
+		disabled="<%= editAssetListDisplayContext.isLiveGroup() %>"
 	>
 
 		<%
@@ -34,9 +35,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 		long[] classNameIds = editAssetListDisplayContext.getClassNameIds();
 
 		for (long classNameId : classNameIds) {
-			String className = PortalUtil.getClassName(classNameId);
-
-			typesLeftList.add(new KeyValuePair(String.valueOf(classNameId), ResourceActionsUtil.getModelResource(locale, className)));
+			typesLeftList.add(new KeyValuePair(String.valueOf(classNameId), ResourceActionsUtil.getModelResource(locale, PortalUtil.getClassName(classNameId))));
 		}
 
 		// Right list
@@ -178,7 +177,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 
 				<c:if test="<%= editAssetListDisplayContext.isShowSubtypeFieldsFilter() && (assetListDisplayContext.getAssetListEntryType() == AssetListEntryTypeConstants.TYPE_DYNAMIC) %>">
 					<div class="asset-subtypefields-wrapper-enable hide" id="<portlet:namespace /><%= className %>subtypeFieldsFilterEnableWrapper">
-						<aui:input label="filter-by-field" name='<%= "TypeSettingsProperties--subtypeFieldsFilterEnabled" + className + "--" %>' type="toggle-switch" value="<%= editAssetListDisplayContext.isSubtypeFieldsFilterEnabled() %>" />
+						<aui:input inlineLabel="right" label="filter-by-field" labelCssClass="simple-toggle-switch" name='<%= "TypeSettingsProperties--subtypeFieldsFilterEnabled" + className + "--" %>' type="toggle-switch" value="<%= editAssetListDisplayContext.isSubtypeFieldsFilterEnabled() %>" />
 					</div>
 
 					<span class="asset-subtypefields-message" id="<portlet:namespace /><%= className %>ddmStructureFieldMessage">
@@ -247,7 +246,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 	</liferay-frontend:fieldset>
 </liferay-frontend:fieldset-group>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule, frontend-js-web/liferay/util/build_fragment as buildFragmentModule">
 	var Util = Liferay.Util;
 
 	var MAP_DDM_STRUCTURES = {};
@@ -318,7 +317,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 				Array.prototype.forEach.call(
 					orderingPanel.querySelectorAll('.order-by-subtype'),
 					function (option) {
-						dom.exitDocument(option);
+						option.remove();
 					}
 				);
 			}
@@ -399,6 +398,8 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 			'<portlet:namespace />anyClassType<%= className %>'
 		);
 
+		var buildFragment = buildFragmentModule.default;
+
 		<c:if test="<%= editAssetListDisplayContext.isShowSubtypeFieldsFilter() %>">
 			function <%= className %>toggleSubclassesFields(
 				hideSubtypeFilterEnableWrapper
@@ -425,7 +426,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 							Array.prototype.forEach.call(
 								orderingPanel.querySelectorAll('.order-by-subtype'),
 								function (option) {
-									dom.exitDocument(option);
+									option.remove();
 								}
 							);
 
@@ -437,7 +438,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 								];
 
 							if (optTextOrderByColumn1) {
-								dom.append(orderByColumn1, optTextOrderByColumn1);
+								orderByColumn1.append(buildFragment(optTextOrderByColumn1));
 							}
 
 							var optTextOrderByColumn2 =
@@ -448,7 +449,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 								];
 
 							if (optTextOrderByColumn2) {
-								dom.append(orderByColumn2, optTextOrderByColumn2);
+								orderByColumn2.append(buildFragment(optTextOrderByColumn2));
 							}
 						}
 
@@ -544,7 +545,9 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 		});
 	}
 
-	dom.delegate(
+	var delegate = delegateModule.default;
+
+	delegate(
 		sourcePanel,
 		'click',
 		'.asset-subtypefields-wrapper-enable label',
@@ -585,9 +588,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = new ArrayList<>
 		'<portlet:namespace />ddmStructureDisplayFieldValue'
 	);
 
-	dom.delegate(sourcePanel, 'click', '.asset-subtypefields-popup', function (
-		event
-	) {
+	delegate(sourcePanel, 'click', '.asset-subtypefields-popup', function (event) {
 		var delegateTarget = event.delegateTarget;
 
 		var btn = delegateTarget.querySelector('.btn');

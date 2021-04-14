@@ -12,42 +12,55 @@
  * details.
  */
 
+import classNames from 'classnames';
 import React, {useCallback} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
 import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
-import Layout from '../Layout';
+import {useSelector} from '../../store/index';
+import {getFrontendTokenValue} from '../../utils/getFrontendTokenValue';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import Topper from '../Topper';
 import FragmentContent from '../fragment-content/FragmentContent';
 import FragmentContentInteractionsFilter from '../fragment-content/FragmentContentInteractionsFilter';
 import FragmentContentProcessor from '../fragment-content/FragmentContentProcessor';
+import getAllPortals from './getAllPortals';
 
 const FragmentWithControls = React.forwardRef(({item}, ref) => {
-	const [setRef, itemElement] = useSetRef(ref);
-
-	const getPortals = useCallback(
-		(element) =>
-			Array.from(element.querySelectorAll('lfr-drop-zone')).map(
-				(dropZoneElement) => {
-					const mainItemId =
-						dropZoneElement.getAttribute('uuid') || '';
-
-					const Component = () =>
-						mainItemId ? <Layout mainItemId={mainItemId} /> : null;
-
-					Component.displayName = `DropZone(${mainItemId})`;
-
-					return {
-						Component,
-						element: dropZoneElement,
-					};
-				}
-			),
-		[]
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
 	);
 
+	const getPortals = useCallback((element) => getAllPortals(element), []);
+	const itemConfig = getResponsiveConfig(item.config, selectedViewportSize);
+	const [setRef, itemElement] = useSetRef(ref);
+
+	const {
+		marginLeft,
+		marginRight,
+		maxWidth,
+		minWidth,
+		shadow,
+		width,
+	} = itemConfig.styles;
+
+	const style = {};
+
+	style.boxShadow = getFrontendTokenValue(shadow);
+	style.maxWidth = maxWidth;
+	style.minWidth = minWidth;
+	style.width = width;
+
 	return (
-		<Topper item={item} itemElement={itemElement}>
+		<Topper
+			className={classNames({
+				[`ml-${marginLeft}`]: marginLeft != null,
+				[`mr-${marginRight}`]: marginRight != null,
+			})}
+			item={item}
+			itemElement={itemElement}
+			style={style}
+		>
 			<FragmentContentInteractionsFilter
 				fragmentEntryLinkId={item.config.fragmentEntryLinkId}
 				itemId={item.itemId}

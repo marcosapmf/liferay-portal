@@ -37,6 +37,7 @@ import {
 import {
 	getBasePath,
 	historyPushWithSlug,
+	isWebCrawler,
 	slugToText,
 	useDebounceCallback,
 } from '../../utils/utils.es';
@@ -198,8 +199,18 @@ export default withRouter(
 			siteKey,
 		]);
 
-		function buildURL(search, page, pageSize) {
-			let url = '/questions';
+		function buildURL(needHashtag, search, page, pageSize) {
+			let pathname = window.location.pathname;
+
+			pathname = pathname.endsWith('/')
+				? pathname.slice(0, -1)
+				: pathname;
+
+			let url = isWebCrawler()
+				? pathname + '/-/questions'
+				: needHashtag
+				? pathname + '/#/questions'
+				: '/questions';
 
 			if (sectionTitle || sectionTitle === '0') {
 				url += `/${sectionTitle}`;
@@ -223,14 +234,13 @@ export default withRouter(
 			return url;
 		}
 
-		const changePage = (page, pageSize) => {
-			historyPushParser(buildURL(search, page, pageSize));
-		};
-
-		const [debounceCallback] = useDebounceCallback((search) => {
-			setLoading(true);
-			historyPushParser(buildURL(search, 1, 20));
-		}, 500);
+		const [debounceCallback] = useDebounceCallback(
+			(needHashtag, search) => {
+				setLoading(true);
+				historyPushParser(buildURL(needHashtag, search, 1, 20));
+			},
+			500
+		);
 
 		useEffect(() => {
 			if (sectionTitle && sectionTitle !== '0') {
@@ -261,87 +271,82 @@ export default withRouter(
 			return false;
 		};
 
+		const hrefConstructor = (page) =>
+			buildURL(true, search, page, pageSize);
+
 		return (
 			<section className="questions-section questions-section-list">
 				<Breadcrumb
 					allowCreateTopicInRootTopic={allowCreateTopicInRootTopic}
 					section={section}
 				/>
-				<div className="questions-container">
-					<div className="row">
-						<div className="c-mt-3 col col-xl-12">
-							<QuestionsNavigationBar />
-						</div>
+				<div className="questions-container row">
+					<div className="c-mt-3 col col-xl-12">
+						<QuestionsNavigationBar />
+					</div>
 
-						{!!search && !loading && (
-							<ResultsMessage
-								maxNumberOfSearchResults={
-									MAX_NUMBER_OF_QUESTIONS
-								}
-								searchCriteria={search}
-								totalCount={totalCount}
-							/>
-						)}
+					{!!search && !loading && (
+						<ResultsMessage
+							maxNumberOfSearchResults={MAX_NUMBER_OF_QUESTIONS}
+							searchCriteria={search}
+							totalCount={totalCount}
+						/>
+					)}
 
-						<div className="c-mx-auto c-px-0 col-xl-10">
-							<PaginatedList
-								activeDelta={pageSize}
-								activePage={page}
-								changeDelta={(pageSize) =>
-									changePage(page, pageSize)
-								}
-								changePage={(page) =>
-									changePage(page, pageSize)
-								}
-								data={questions}
-								emptyState={
-									!search && !filter ? (
-										<ClayEmptyState
-											description={Liferay.Language.get(
-												'there-are-no-questions-inside-this-topic-be-the-first-to-ask-something'
-											)}
-											imgSrc={
-												context.includeContextPath +
-												'/assets/empty_questions_list.png'
-											}
-											title={Liferay.Language.get(
-												'this-topic-is-empty'
-											)}
-										>
-											<ClayButton
-												displayType="primary"
-												onClick={navigateToNewQuestion}
-											>
-												{Liferay.Language.get(
-													'ask-question'
-												)}
-											</ClayButton>
-										</ClayEmptyState>
-									) : (
-										<ClayEmptyState
-											title={Liferay.Language.get(
-												'there-are-no-results'
-											)}
-										/>
-									)
-								}
-								loading={loading}
-								totalCount={totalCount}
-							>
-								{(question) => (
-									<QuestionRow
-										currentSection={sectionTitle}
-										key={question.id}
-										question={question}
-										showSectionLabel={
-											!!section.numberOfMessageBoardSections
+					<div className="c-mx-auto c-px-0 col-xl-10">
+						<PaginatedList
+							activeDelta={pageSize}
+							activePage={page}
+							changeDelta={setPageSize}
+							data={questions}
+							emptyState={
+								!search && !filter ? (
+									<ClayEmptyState
+										description={Liferay.Language.get(
+											'there-are-no-questions-inside-this-topic-be-the-first-to-ask-something'
+										)}
+										imgSrc={
+											context.includeContextPath +
+											'/assets/empty_questions_list.png'
 										}
+										title={Liferay.Language.get(
+											'this-topic-is-empty'
+										)}
+									>
+										<ClayButton
+											displayType="primary"
+											onClick={navigateToNewQuestion}
+										>
+											{Liferay.Language.get(
+												'ask-question'
+											)}
+										</ClayButton>
+									</ClayEmptyState>
+								) : (
+									<ClayEmptyState
+										title={Liferay.Language.get(
+											'there-are-no-results'
+										)}
 									/>
-								)}
-							</PaginatedList>
+								)
+							}
+							hrefConstructor={hrefConstructor}
+							loading={loading}
+							totalCount={totalCount}
+						>
+							{(question) => (
+								<QuestionRow
+									currentSection={sectionTitle}
+									key={question.id}
+									question={question}
+									showSectionLabel={
+										!!section.numberOfMessageBoardSections
+									}
+								/>
+							)}
+						</PaginatedList>
 
-							<Alert info={error} />
-						</div>
+						<Alert info={error} />
 					</div>
 				</div>
 			</section>
@@ -411,7 +416,10 @@ export default withRouter(
 											!questions.items.length
 										}
 										onChange={(event) =>
-											debounceCallback(event.target.value)
+											debounceCallback(
+												false,
+												event.target.value
+											)
 										}
 										placeholder={Liferay.Language.get(
 											'search'
@@ -440,9 +448,9 @@ export default withRouter(
 												<ClayButtonWithIcon
 													displayType="unstyled"
 													onClick={() => {
-														setLoading(true);
-														historyPushParser(
-															buildURL('', 1, 20)
+														debounceCallback(
+															false,
+															''
 														);
 													}}
 													symbol="times-circle"

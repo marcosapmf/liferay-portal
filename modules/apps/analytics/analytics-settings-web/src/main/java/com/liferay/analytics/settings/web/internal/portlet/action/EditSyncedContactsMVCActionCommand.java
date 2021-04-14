@@ -74,13 +74,6 @@ public class EditSyncedContactsMVCActionCommand
 		if (!syncAllContacts) {
 			String referrer = ParamUtil.getString(actionRequest, "referrer");
 
-			boolean includeSyncContactsFields = ParamUtil.getBoolean(
-				actionRequest, "includeSyncContactsFields");
-
-			if (!includeSyncContactsFields) {
-				referrer = cmd;
-			}
-
 			if (Objects.equals(referrer, "update_synced_groups")) {
 				configurationProperties.put(
 					"syncedUserGroupIds", syncedUserGroupIds);
@@ -171,7 +164,7 @@ public class EditSyncedContactsMVCActionCommand
 			themeDisplay.getCompanyId(),
 			String.format(
 				"api/1.0/data-sources/%s/details",
-				AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+				AnalyticsSettingsUtil.getDataSourceId(
 					themeDisplay.getCompanyId())));
 
 		StatusLine statusLine = httpResponse.getStatusLine();

@@ -14,6 +14,8 @@
 
 package com.liferay.content.dashboard.web.internal.dao.search;
 
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
@@ -36,6 +38,7 @@ import com.liferay.portal.search.searcher.Searcher;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,6 +53,8 @@ import javax.portlet.RenderResponse;
 public class ContentDashboardItemSearchContainerFactory {
 
 	public static ContentDashboardItemSearchContainerFactory getInstance(
+		AssetCategoryLocalService assetCategoryLocalService,
+		AssetVocabularyLocalService assetVocabularyLocalService,
 		ContentDashboardItemFactoryTracker contentDashboardItemFactoryTracker,
 		ContentDashboardSearchRequestBuilderFactory
 			contentDashboardSearchRequestBuilderFactory,
@@ -57,6 +62,7 @@ public class ContentDashboardItemSearchContainerFactory {
 		RenderResponse renderResponse, Searcher searcher) {
 
 		return new ContentDashboardItemSearchContainerFactory(
+			assetCategoryLocalService, assetVocabularyLocalService,
 			contentDashboardItemFactoryTracker,
 			contentDashboardSearchRequestBuilderFactory, portal, renderRequest,
 			renderResponse, searcher);
@@ -88,12 +94,16 @@ public class ContentDashboardItemSearchContainerFactory {
 	}
 
 	private ContentDashboardItemSearchContainerFactory(
+		AssetCategoryLocalService assetCategoryLocalService,
+		AssetVocabularyLocalService assetVocabularyLocalService,
 		ContentDashboardItemFactoryTracker contentDashboardItemFactoryTracker,
 		ContentDashboardSearchRequestBuilderFactory
 			contentDashboardSearchRequestBuilderFactory,
 		Portal portal, RenderRequest renderRequest,
 		RenderResponse renderResponse, Searcher searcher) {
 
+		_assetCategoryLocalService = assetCategoryLocalService;
+		_assetVocabularyLocalService = assetVocabularyLocalService;
 		_contentDashboardItemFactoryTracker =
 			contentDashboardItemFactoryTracker;
 		_contentDashboardSearchRequestBuilderFactory =
@@ -129,16 +139,32 @@ public class ContentDashboardItemSearchContainerFactory {
 	}
 
 	private String _getOrderByType() {
-		return ParamUtil.getString(
-			_renderRequest, SearchContainer.DEFAULT_ORDER_BY_TYPE_PARAM,
-			"desc");
+		String orderByCol = _getOrderByCol();
+
+		String orderByType = ParamUtil.getString(
+			_renderRequest, SearchContainer.DEFAULT_ORDER_BY_TYPE_PARAM);
+
+		if (Objects.equals(orderByCol, "title")) {
+			if (Objects.equals("desc", orderByType)) {
+				return "desc";
+			}
+
+			return "asc";
+		}
+
+		if (Objects.equals("asc", orderByType)) {
+			return "asc";
+		}
+
+		return "desc";
 	}
 
 	private SearchResponse _getSearchResponse(int end, int start) {
 		return _searcher.search(
 			_contentDashboardSearchRequestBuilderFactory.builder(
 				new ContentDashboardSearchContextBuilder(
-					_portal.getHttpServletRequest(_renderRequest)
+					_portal.getHttpServletRequest(_renderRequest),
+					_assetCategoryLocalService, _assetVocabularyLocalService
 				).withEnd(
 					end
 				).withSort(
@@ -199,6 +225,8 @@ public class ContentDashboardItemSearchContainerFactory {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentDashboardItemSearchContainerFactory.class);
 
+	private final AssetCategoryLocalService _assetCategoryLocalService;
+	private final AssetVocabularyLocalService _assetVocabularyLocalService;
 	private final ContentDashboardItemFactoryTracker
 		_contentDashboardItemFactoryTracker;
 	private final ContentDashboardSearchRequestBuilderFactory

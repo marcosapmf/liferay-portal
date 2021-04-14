@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -126,30 +125,6 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		}
 	}
 
-	public static SpiraCustomProperty.Value createSpiraCustomPropertyValue(
-		SpiraCustomProperty spiraCustomProperty, String value) {
-
-		SpiraCustomProperty.Value spiraCustomPropertyValue =
-			spiraCustomProperty.getSpiraCustomPropertyValue(value);
-
-		if (spiraCustomPropertyValue != null) {
-			return spiraCustomPropertyValue;
-		}
-
-		SpiraCustomList.Value spiraCustomListValue =
-			SpiraCustomList.createSpiraCustomListValue(
-				spiraCustomProperty.getSpiraProject(),
-				spiraCustomProperty.getSpiraCustomList(), value);
-
-		spiraCustomPropertyValue = new SpiraCustomProperty.Value(
-			spiraCustomListValue, spiraCustomProperty);
-
-		spiraCustomProperty._addSpiraCustomPropertyValue(
-			spiraCustomPropertyValue);
-
-		return spiraCustomPropertyValue;
-	}
-
 	public static void deleteSpiraCustomPropertyByName(
 		final SpiraProject spiraProject,
 		final Class<? extends SpiraArtifact> spiraArtifactClass,
@@ -190,62 +165,35 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		return jsonObject.getInt("ArtifactTypeId");
 	}
 
+	public String getFieldName() {
+		return jsonObject.getString("CustomPropertyFieldName");
+	}
+
 	public int getPropertyNumber() {
 		return jsonObject.getInt("PropertyNumber");
 	}
 
+	public Class<? extends SpiraArtifact> getSpiraArtifactClass() {
+		return _spiraArtifactClass;
+	}
+
 	public SpiraCustomList getSpiraCustomList() {
-		if (!_hasCustomList()) {
+		if ((getType() != Type.LIST) && (getType() != Type.MULTILIST)) {
 			return null;
 		}
 
-		JSONObject customListJSONObject = jsonObject.getJSONObject(
+		JSONObject customListJSONObject = jsonObject.optJSONObject(
 			"CustomList");
+
+		if ((customListJSONObject == null) ||
+			(customListJSONObject == JSONObject.NULL)) {
+
+			return null;
+		}
 
 		return SpiraCustomList.createSpiraCustomListByName(
 			getSpiraProject(), _spiraArtifactClass,
 			customListJSONObject.getString("Name"));
-	}
-
-	public SpiraCustomProperty.Value getSpiraCustomPropertyValue(String value) {
-		if (!_hasCustomList()) {
-			return new SpiraCustomProperty.Value(value, this);
-		}
-
-		for (SpiraCustomProperty.Value spiraCustomPropertyValue :
-				getSpiraCustomPropertyValues()) {
-
-			if (!Objects.equals(value, spiraCustomPropertyValue.getName())) {
-				continue;
-			}
-
-			return spiraCustomPropertyValue;
-		}
-
-		return null;
-	}
-
-	public List<SpiraCustomProperty.Value> getSpiraCustomPropertyValues() {
-		if (!_hasCustomList()) {
-			return null;
-		}
-
-		if (_spiraCustomPropertyValues != null) {
-			return _spiraCustomPropertyValues;
-		}
-
-		_spiraCustomPropertyValues = new ArrayList<>();
-
-		SpiraCustomList spiraCustomList = getSpiraCustomList();
-
-		for (SpiraCustomList.Value spiraCustomListValue :
-				spiraCustomList.getSpiraCustomListValues()) {
-
-			_spiraCustomPropertyValues.add(
-				new SpiraCustomProperty.Value(spiraCustomListValue, this));
-		}
-
-		return _spiraCustomPropertyValues;
 	}
 
 	public SpiraCustomProperty.Type getType() {
@@ -265,8 +213,9 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 
 	public static enum Type {
 
-		BOOLEAN(4), DATE(5), DECIMAL(3), INTEGER(2), LIST(6), MULTILIST(7),
-		TEXT(1), USER(8);
+		BOOLEAN(4, "Boolean"), DATE(5, "Date"), DECIMAL(3, "Decimal"),
+		INTEGER(2, "Integer"), LIST(6, "List"), MULTILIST(7, "MultiList"),
+		TEXT(1, "Text"), USER(8, "User");
 
 		public static Type get(Integer id) {
 			return _types.get(id);
@@ -276,8 +225,13 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 			return _id;
 		}
 
-		private Type(Integer id) {
+		public String getName() {
+			return _name;
+		}
+
+		private Type(Integer id, String name) {
 			_id = id;
+			_name = name;
 		}
 
 		private static Map<Integer, Type> _types = new HashMap<>();
@@ -289,40 +243,7 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		}
 
 		private final Integer _id;
-
-	}
-
-	public static class Value extends BaseSpiraArtifact {
-
-		public SpiraCustomProperty getSpiraCustomProperty() {
-			return _spiraCustomProperty;
-		}
-
-		@Override
-		public String getURL() {
-			SpiraCustomProperty spiraCustomProperty = getSpiraCustomProperty();
-
-			return spiraCustomProperty.getURL();
-		}
-
-		protected Value(
-			SpiraCustomList.Value spiraCustomValue,
-			SpiraCustomProperty spiraCustomProperty) {
-
-			super(spiraCustomValue.toJSONObject());
-
-			_spiraCustomProperty = spiraCustomProperty;
-		}
-
-		protected Value(String name, SpiraCustomProperty spiraCustomProperty) {
-			super(new JSONObject("{\"Name\":\"" + name + "\"}"));
-
-			_spiraCustomProperty = spiraCustomProperty;
-		}
-
-		protected static final String KEY_ID = "CustomPropertyValueId";
-
-		private final SpiraCustomProperty _spiraCustomProperty;
+		private final String _name;
 
 	}
 
@@ -364,25 +285,6 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 
 			},
 			customSearchParameters);
-	}
-
-	protected void addSpiraCustomListValue(
-		SpiraCustomList.Value spiraCustomListValue) {
-
-		JSONObject customListJSONObject = jsonObject.optJSONObject(
-			"CustomList");
-
-		if (customListJSONObject == null) {
-			customListJSONObject = new JSONObject();
-
-			customListJSONObject.put("Values", new JSONArray());
-
-			jsonObject.put("CustomList", customListJSONObject);
-		}
-
-		JSONArray valuesJSONArray = customListJSONObject.getJSONArray("Values");
-
-		valuesJSONArray.put(spiraCustomListValue.toJSONObject());
 	}
 
 	protected static final String ARTIFACT_TYPE_NAME = "customproperty";
@@ -467,28 +369,6 @@ public class SpiraCustomProperty extends BaseSpiraArtifact {
 		cacheSpiraArtifact(SpiraCustomProperty.class, this);
 	}
 
-	private void _addSpiraCustomPropertyValue(
-		SpiraCustomProperty.Value spiraCustomPropertyValue) {
-
-		List<SpiraCustomProperty.Value> spiraCustomPropertyValues =
-			getSpiraCustomPropertyValues();
-
-		spiraCustomPropertyValues.add(spiraCustomPropertyValue);
-	}
-
-	private boolean _hasCustomList() {
-		if ((getType() != Type.LIST) && (getType() != Type.MULTILIST)) {
-			return false;
-		}
-
-		if (jsonObject.optJSONObject("CustomList") == null) {
-			return false;
-		}
-
-		return true;
-	}
-
 	private final Class<? extends SpiraArtifact> _spiraArtifactClass;
-	private List<SpiraCustomProperty.Value> _spiraCustomPropertyValues;
 
 }

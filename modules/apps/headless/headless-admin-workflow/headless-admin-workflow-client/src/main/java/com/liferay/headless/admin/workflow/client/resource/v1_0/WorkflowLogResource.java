@@ -189,8 +189,9 @@ public interface WorkflowLogResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-admin-workflow/v1.0/workflow-instances/{workflowInstanceId}/workflow-logs",
-				workflowInstanceId);
+						"/o/headless-admin-workflow/v1.0/workflow-instances/{workflowInstanceId}/workflow-logs");
+
+			httpInvoker.path("workflowInstanceId", workflowInstanceId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -250,8 +251,9 @@ public interface WorkflowLogResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-admin-workflow/v1.0/workflow-logs/{workflowLogId}",
-				workflowLogId);
+						"/o/headless-admin-workflow/v1.0/workflow-logs/{workflowLogId}");
+
+			httpInvoker.path("workflowLogId", workflowLogId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -329,8 +331,9 @@ public interface WorkflowLogResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-admin-workflow/v1.0/workflow-tasks/{workflowTaskId}/workflow-logs",
-				workflowTaskId);
+						"/o/headless-admin-workflow/v1.0/workflow-tasks/{workflowTaskId}/workflow-logs");
+
+			httpInvoker.path("workflowTaskId", workflowTaskId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

@@ -41,10 +41,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 /**
  * @author Chema Balsas
  */
-@Component(
-	configurationPid = "com.liferay.layout.configuration.LayoutAdaptiveMediaConfiguration",
-	immediate = true, service = {}
-)
+@Component(immediate = true, service = {})
 public class ServletContextUtil {
 
 	public static final String getContextPath() {

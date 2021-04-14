@@ -27,19 +27,18 @@ if (commerceAddress != null) {
 	selectedType = commerceAddress.getType();
 }
 
-long commerceAddressId = commerceAccountAddressAdminDisplayContext.getCommerceAddressId();
 long commerceCountryId = commerceAccountAddressAdminDisplayContext.getCommerceCountryId();
 long commerceRegionId = commerceAccountAddressAdminDisplayContext.getCommerceRegionId();
 %>
 
-<portlet:actionURL name="editCommerceAddress" var="editCommerceAddressActionURL" />
+<portlet:actionURL name="/commerce_account_admin/edit_commerce_address" var="editCommerceAddressActionURL" />
 
-<div class="container-fluid-1280 mt-4 sheet">
+<div class="container-fluid container-fluid-max-xl mt-4 sheet">
 	<aui:form action="<%= editCommerceAddressActionURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commerceAddress == null) ? Constants.ADD : Constants.UPDATE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 		<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
-		<aui:input name="commerceAddressId" type="hidden" value="<%= commerceAddressId %>" />
+		<aui:input name="commerceAddressId" type="hidden" value="<%= commerceAccountAddressAdminDisplayContext.getCommerceAddressId() %>" />
 		<aui:input name="commerceAccountId" type="hidden" value="<%= (commerceAddress == null) ? commerceAccountAddressAdminDisplayContext.getCommerceAccountId() : commerceAddress.getClassPK() %>" />
 
 		<aui:model-context bean="<%= commerceAddress %>" model="<%= CommerceAddress.class %>" />

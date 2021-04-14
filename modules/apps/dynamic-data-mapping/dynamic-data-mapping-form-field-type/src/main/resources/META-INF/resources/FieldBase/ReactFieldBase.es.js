@@ -38,6 +38,7 @@ const convertInputValue = (fieldType, value) => {
 	}
 	else if (
 		fieldType === 'document_library' ||
+		fieldType === 'geolocation' ||
 		fieldType === 'grid' ||
 		fieldType === 'image'
 	) {
@@ -68,18 +69,14 @@ const FieldProperties = ({required, tooltip}) => {
 	return (
 		<>
 			{required && (
-				<span className="reference-mark">
+				<span className="ddm-label-required reference-mark">
 					<ClayIcon symbol="asterisk" />
 				</span>
 			)}
 
 			{tooltip && (
 				<span className="ddm-tooltip">
-					<ClayIcon
-						data-tooltip-align="right"
-						symbol="question-circle-full"
-						title={tooltip}
-					/>
+					<ClayIcon symbol="question-circle-full" title={tooltip} />
 				</span>
 			)}
 		</>
@@ -90,12 +87,12 @@ function FieldBase({
 	children,
 	displayErrors,
 	errorMessage,
-	id,
 	label,
 	localizedValue = {},
 	name,
 	nestedFields,
 	onClick,
+	overMaximumRepetitionsLimit = false,
 	readOnly,
 	repeatable,
 	required,
@@ -159,8 +156,7 @@ function FieldBase({
 	}
 
 	if (text) {
-		fieldDetails +=
-			(typeof text === 'object' ? text.content : text) + '<br>';
+		fieldDetails += text + '<br>';
 	}
 
 	if (hasError) {
@@ -204,7 +200,12 @@ function FieldBase({
 						)}
 
 						<ClayButton
-							className="ddm-form-field-repeatable-add-button p-0"
+							className={classNames(
+								'ddm-form-field-repeatable-add-button p-0',
+								{
+									hide: overMaximumRepetitionsLimit,
+								}
+							)}
 							disabled={readOnly}
 							onClick={() =>
 								dispatch({
@@ -242,12 +243,11 @@ function FieldBase({
 						) : (
 							<>
 								<label
-									aria-labelledby={fieldDetailsId}
+									aria-describedby={fieldDetailsId}
 									className={classNames({
 										'ddm-empty': !showLabel && !required,
 										'ddm-label': showLabel || required,
 									})}
-									htmlFor={id ? id : name}
 									tabIndex="0"
 								>
 									{label && showLabel && label}
@@ -279,7 +279,7 @@ function FieldBase({
 						/>
 					))}
 
-				{tip && (
+				{typeof tip === 'string' && (
 					<span aria-hidden="true" className="form-text">
 						{tip}
 					</span>
@@ -295,11 +295,10 @@ function FieldBase({
 
 				{fieldDetails && (
 					<span
-						aria-hidden="false"
+						className="sr-only"
 						dangerouslySetInnerHTML={{
 							__html: fieldDetails,
 						}}
-						hidden
 						id={fieldDetailsId}
 					/>
 				)}

@@ -142,6 +142,17 @@ public class CommerceShippingFixedOptionServiceWrapper
 			getCommerceShippingFixedOptionsCount(commerceShippingMethodId);
 	}
 
+	@Override
+	public long getCommerceShippingFixedOptionsCount(
+			long companyId, long groupId, long commerceShippingMethodId,
+			String keywords)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShippingFixedOptionService.
+			getCommerceShippingFixedOptionsCount(
+				companyId, groupId, commerceShippingMethodId, keywords);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

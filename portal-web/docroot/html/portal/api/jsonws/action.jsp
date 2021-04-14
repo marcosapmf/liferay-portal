@@ -28,16 +28,21 @@ String signature = ParamUtil.getString(request, "signature");
 			JSONWebServiceActionMapping jsonWebServiceActionMapping = JSONWebServiceActionsManagerUtil.getJSONWebServiceActionMapping(signature);
 			%>
 
-			<h2><%= jsonWebServiceActionMapping.getPath() %></h2>
+			<div class="align-items-center d-flex justify-content-between lfr-api-title-method mb-3">
+				<h2 class="mb-0"><%= jsonWebServiceActionMapping.getPath() %></h2>
 
-			<dl class="lfr-api-http-method">
-				<dt>
-					<liferay-ui:message key="http-method" />
-				</dt>
-				<dd class="lfr-action-label">
-					<%= jsonWebServiceActionMapping.getMethod() %>
-				</dd>
-			</dl>
+				<dl class="align-items-center d-flex lfr-api-http-method mb-0">
+					<h4 class="mb-0 text-secondary">
+						<liferay-ui:message key="http-method" />
+					</h4>
+
+					<span class="label label-inverse-success label-lg ml-3">
+						<span class="label-item label-item-expand">
+							<%= jsonWebServiceActionMapping.getMethod() %>
+						</span>
+					</span>
+				</dl>
+			</div>
 
 			<%
 			Class<?> actionClass = jsonWebServiceActionMapping.getActionClass();
@@ -363,11 +368,9 @@ String signature = ParamUtil.getString(request, "signature");
 					<%
 					}
 					else {
-						String objectMethodParameterName = "+" + methodParameterName;
-						int size = 10;
 					%>
 
-						<aui:input id='<%= "field" + i %>' label="<%= methodParameterName %>" name="<%= objectMethodParameterName %>" size="<%= size %>" suffix="<%= methodParameterTypeClassName %>" />
+						<aui:input id='<%= "field" + i %>' label="<%= methodParameterName %>" name='<%= "+" + methodParameterName %>' size="<%= 10 %>" suffix="<%= methodParameterTypeClassName %>" />
 
 					<%
 					}

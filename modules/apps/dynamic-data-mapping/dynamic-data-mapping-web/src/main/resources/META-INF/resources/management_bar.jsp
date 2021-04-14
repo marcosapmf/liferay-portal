@@ -16,7 +16,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems='<%= ddmDisplayContext.getActionItemsDropdownItems("deleteStructures") %>'
 	clearResultsURL="<%= ddmDisplayContext.getClearResultsURL() %>"
 	componentId="ddmStructureManagementToolbar"
@@ -45,7 +45,7 @@
 			);
 
 			if (searchContainer) {
-				<portlet:actionURL name="deleteStructure" var="deleteStructuresURL">
+				<portlet:actionURL name="/dynamic_data_mapping/delete_structure" var="deleteStructuresURL">
 					<portlet:param name="mvcPath" value="/view.jsp" />
 				</portlet:actionURL>
 

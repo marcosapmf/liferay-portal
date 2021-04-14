@@ -51,6 +51,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SPECIFIC_ASSET_EDIT</td>
+	<td>//a[contains(@class,'asset-title')][normalize-space(text())='${key_assetTitle}']/following-sibling::span//*[*[name()='svg'][contains(@class,'lexicon-icon-pencil')]]</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -93,6 +98,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ASSET_ORDER</td>
+	<td>xpath=(//div[contains(@class,'asset-abstract')])[${key_index}]//*[contains(@class,'asset-title')][normalize-space(text())='${key_assetTitle}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -101,6 +111,16 @@
 <tr>
 	<td>ASSET_ABSTRACT_DETAIL_CONTENT</td>
 	<td>//div[contains(@class,'asset-content')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_ABSTRACT_DETAIL_WEB_CONTENT_FOLDER_CONTENT</td>
+	<td>//div[contains(@class,'asset-details')][${key_position}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSET_ABSTRACT_DETAIL_EXTERNAL_VIDEO_THUMBNAIL</td>
+	<td>//div[contains(@class,'aspect-ratio') and contains(@style,'${key_thumbnailName}')]</td>
 	<td></td>
 </tr>
 <tr>

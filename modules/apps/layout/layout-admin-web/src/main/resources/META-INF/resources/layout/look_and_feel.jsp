@@ -147,19 +147,10 @@ else {
 %>
 
 <clay:sheet-section
-	className='<%= (selLayout.getMasterLayoutPlid() <= 0) ? StringPool.BLANK : "hide" %>'
+	cssClass='<%= (selLayout.getMasterLayoutPlid() <= 0) ? StringPool.BLANK : "hide" %>'
 	id='<%= liferayPortletResponse.getNamespace() + "themeContainer" %>'
 >
 	<h3 class="sheet-subtitle"><liferay-ui:message key="theme" /></h3>
-
-	<c:if test="<%= hasStyleBooks %>">
-		<clay:alert
-			displayType="warning"
-			elementClasses="hide"
-			id='<%= liferayPortletResponse.getNamespace() + "styleBookWarning" %>'
-			message="style-book-may-not-work-as-expected-if-the-theme-is-changed"
-		/>
-	</c:if>
 
 	<aui:input checked="<%= selLayout.isInheritLookAndFeel() %>" id="regularInheritLookAndFeel" label="<%= taglibLabel %>" name="regularInheritLookAndFeel" type="radio" value="<%= true %>" />
 

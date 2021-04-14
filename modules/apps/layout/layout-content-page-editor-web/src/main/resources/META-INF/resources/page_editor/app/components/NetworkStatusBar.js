@@ -22,19 +22,19 @@ import {SERVICE_NETWORK_STATUS_TYPES} from '../config/constants/serviceNetworkSt
 
 const LoadingText = ({children}) => (
 	<>
-		<span className="m-0 navbar-text page-editor__status-bar text-info">
+		<span className="d-none d-sm-block m-0 navbar-text page-editor__status-bar text-info">
 			{children}
 		</span>
-		<ClayLoadingIndicator className={'mr-3 my-0'} small />
+		<ClayLoadingIndicator className={'my-0'} small />
 	</>
 );
 
 const SuccessText = ({children}) => (
 	<>
-		<span className="m-0 navbar-text page-editor__status-bar text-success">
+		<span className="d-none d-sm-block m-0 navbar-text page-editor__status-bar text-success">
 			{children}
 		</span>
-		<ClayIcon className={'mr-3 text-success'} symbol={'check-circle'} />
+		<ClayIcon className={'text-success'} symbol={'check-circle'} />
 	</>
 );
 
@@ -77,9 +77,9 @@ const NetworkStatusBar = ({error, status}) => {
 	const content = getContent(isOnline, status);
 
 	return (
-		<li className="d-flex flex-direction-row nav-item text-truncate">
+		<span className="align-items-center d-flex h-100 text-truncate">
 			{content}
-		</li>
+		</span>
 	);
 };
 

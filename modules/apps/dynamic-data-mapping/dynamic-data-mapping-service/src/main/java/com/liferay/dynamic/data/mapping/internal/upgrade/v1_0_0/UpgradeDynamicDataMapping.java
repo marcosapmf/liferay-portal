@@ -34,8 +34,6 @@ import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializer;
-import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeRequest;
-import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeRequest;
@@ -43,6 +41,7 @@ import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeRespo
 import com.liferay.dynamic.data.mapping.model.DDMContent;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -56,6 +55,7 @@ import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.dynamic.data.mapping.util.DDMFieldsCounter;
 import com.liferay.dynamic.data.mapping.util.DDMFormDeserializeUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormFieldValueTransformer;
+import com.liferay.dynamic.data.mapping.util.DDMFormSerializeUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesDeserializeUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesTransformer;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException.MustNotDuplicateFieldName;
@@ -93,6 +93,7 @@ import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
@@ -554,7 +555,7 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 		if (classPK == 0) {
 			return PortalUtil.getClassNameId(
-				"com.liferay.portlet.journal.model.JournalArticle");
+				"com.liferay.journal.model.JournalArticle");
 		}
 
 		return _structureClassNameIds.get(classPK);
@@ -652,16 +653,6 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 				"com.liferay.portlet.dynamicdatamapping.storage." +
 					"ExpandoStorageAdapter");
 		}
-	}
-
-	protected String toJSON(DDMForm ddmForm) {
-		DDMFormSerializerSerializeRequest.Builder builder =
-			DDMFormSerializerSerializeRequest.Builder.newBuilder(ddmForm);
-
-		DDMFormSerializerSerializeResponse ddmFormSerializerSerializeResponse =
-			_ddmFormSerializer.serialize(builder.build());
-
-		return ddmFormSerializerSerializeResponse.getContent();
 	}
 
 	protected String toJSON(DDMFormValues ddmFormValues) {
@@ -1244,7 +1235,8 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 				populateStructureInvalidDDMFormFieldNamesMap(
 					structureId, ddmForm);
 
-				String definition = toJSON(ddmForm);
+				String definition = DDMFormSerializeUtil.serialize(
+					ddmForm, _ddmFormSerializer);
 
 				ps2.setString(1, definition);
 
@@ -1429,7 +1421,8 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 					ddmForm = updateDDMFormFields(ddmForm);
 
-					updatedScript = toJSON(ddmForm);
+					updatedScript = DDMFormSerializeUtil.serialize(
+						ddmForm, _ddmFormSerializer);
 
 					language = "json";
 				}
@@ -1591,61 +1584,55 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 	}
 
 	private void _initModelResourceNames(ResourceActions resourceActions) {
-		_structureModelResourceNames.put(
+		_structureModelResourceNames = HashMapBuilder.put(
 			"com.liferay.document.library.kernel.model.DLFileEntry",
 			resourceActions.getCompositeModelName(
 				"com.liferay.document.library.kernel.model.DLFileEntry",
-				_CLASS_NAME_DDM_STRUCTURE));
-
-		_structureModelResourceNames.put(
+				_CLASS_NAME_DDM_STRUCTURE)
+		).put(
 			"com.liferay.document.library.kernel.model.DLFileEntryMetadata",
 			resourceActions.getCompositeModelName(
 				"com.liferay.document.library.kernel.model.DLFileEntryMetadata",
-				_CLASS_NAME_DDM_STRUCTURE));
-
-		_structureModelResourceNames.put(
+				_CLASS_NAME_DDM_STRUCTURE)
+		).put(
 			"com.liferay.document.library.kernel.util.RawMetadataProcessor",
-			_CLASS_NAME_DDM_STRUCTURE);
-
-		_structureModelResourceNames.put(
+			_CLASS_NAME_DDM_STRUCTURE
+		).put(
 			"com.liferay.dynamic.data.lists.model.DDLRecordSet",
 			resourceActions.getCompositeModelName(
 				"com.liferay.dynamic.data.lists.model.DDLRecordSet",
-				_CLASS_NAME_DDM_STRUCTURE));
-
-		_structureModelResourceNames.put(
+				_CLASS_NAME_DDM_STRUCTURE)
+		).put(
+			"com.liferay.journal.model.JournalArticle",
+			resourceActions.getCompositeModelName(
+				"com.liferay.journal.model.JournalArticle",
+				_CLASS_NAME_DDM_STRUCTURE)
+		).put(
 			"com.liferay.portlet.dynamicdatalists.model.DDLRecordSet",
 			resourceActions.getCompositeModelName(
 				"com.liferay.dynamic.data.lists.model.DDLRecordSet",
-				_CLASS_NAME_DDM_STRUCTURE));
+				_CLASS_NAME_DDM_STRUCTURE)
+		).build();
 
-		_structureModelResourceNames.put(
-			"com.liferay.portlet.journal.model.JournalArticle",
-			resourceActions.getCompositeModelName(
-				"com.liferay.journal.model.JournalArticle",
-				_CLASS_NAME_DDM_STRUCTURE));
-
-		_templateModelResourceNames.put(
+		_templateModelResourceNames = HashMapBuilder.put(
 			"com.liferay.dynamic.data.lists.model.DDLRecordSet",
 			resourceActions.getCompositeModelName(
 				"com.liferay.dynamic.data.lists.model.DDLRecordSet",
-				_CLASS_NAME_DDM_TEMPLATE));
-
-		_templateModelResourceNames.put(
+				_CLASS_NAME_DDM_TEMPLATE)
+		).put(
+			"com.liferay.journal.model.JournalArticle",
+			resourceActions.getCompositeModelName(
+				"com.liferay.journal.model.JournalArticle",
+				_CLASS_NAME_DDM_TEMPLATE)
+		).put(
 			"com.liferay.portlet.display.template.PortletDisplayTemplate",
-			_CLASS_NAME_DDM_TEMPLATE);
-
-		_templateModelResourceNames.put(
+			_CLASS_NAME_DDM_TEMPLATE
+		).put(
 			"com.liferay.portlet.dynamicdatalists.model.DDLRecordSet",
 			resourceActions.getCompositeModelName(
 				"com.liferay.dynamic.data.lists.model.DDLRecordSet",
-				_CLASS_NAME_DDM_TEMPLATE));
-
-		_templateModelResourceNames.put(
-			"com.liferay.portlet.journal.model.JournalArticle",
-			resourceActions.getCompositeModelName(
-				"com.liferay.journal.model.JournalArticle",
-				_CLASS_NAME_DDM_TEMPLATE));
+				_CLASS_NAME_DDM_TEMPLATE)
+		).build();
 	}
 
 	private static final String _CLASS_NAME_DDM_STRUCTURE =
@@ -1701,10 +1688,8 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 	private final Map<Long, Long> _structureClassNameIds = new HashMap<>();
 	private final Map<Long, Map<String, String>>
 		_structureInvalidDDMFormFieldNamesMap = new HashMap<>();
-	private final Map<String, String> _structureModelResourceNames =
-		new HashMap<>();
-	private final Map<String, String> _templateModelResourceNames =
-		new HashMap<>();
+	private Map<String, String> _structureModelResourceNames;
+	private Map<String, String> _templateModelResourceNames;
 	private final Map<Long, Long> _templateResourceClassNameIds =
 		new HashMap<>();
 	private final ViewCountEntryLocalService _viewCountEntryLocalService;
@@ -1714,7 +1699,7 @@ public class UpgradeDynamicDataMapping extends UpgradeProcess {
 
 		@Override
 		public String getFieldType() {
-			return DDMImpl.TYPE_DDM_DATE;
+			return DDMFormFieldType.DATE;
 		}
 
 		@Override

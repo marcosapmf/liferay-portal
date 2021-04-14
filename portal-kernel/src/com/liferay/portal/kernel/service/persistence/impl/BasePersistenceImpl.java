@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.dao.orm.Dialect;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
+import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Projection;
@@ -79,6 +80,7 @@ import java.sql.Connection;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -162,20 +164,61 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <R> R dslQuery(DSLQuery dslQuery) {
+		DefaultASTNodeListener defaultASTNodeListener =
+			new DefaultASTNodeListener();
+
+		StringBundler sb = new StringBundler();
+
+		dslQuery.toSQL(sb::append, defaultASTNodeListener);
+
+		String[] tableNames = defaultASTNodeListener.getTableNames();
+
+		Select select = null;
+
+		ASTNode astNode = dslQuery;
+
+		while (astNode instanceof BaseASTNode) {
+			if (astNode instanceof Select) {
+				select = (Select)astNode;
+
+				break;
+			}
+
+			BaseASTNode baseASTNode = (BaseASTNode)astNode;
+
+			astNode = baseASTNode.getChild();
+		}
+
+		if (select == null) {
+			throw new IllegalArgumentException(
+				"No Select found for " + dslQuery);
+		}
+
+		ProjectionType projectionType = _getProjectionType(
+			tableNames, select.getExpressions());
+
+		FinderCache finderCache = getFinderCache();
+
+		FinderPath finderPath = new FinderPath(
+			FinderPath.encodeDSLQueryCacheName(tableNames), "dslQuery",
+			sb.getStrings(), new String[0],
+			projectionType == ProjectionType.MODELS);
+
+		Object[] arguments = _getArguments(defaultASTNodeListener);
+
+		Object cacheResult = finderCache.getResult(finderPath, arguments);
+
+		if (cacheResult != null) {
+			return (R)cacheResult;
+		}
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			DefaultASTNodeListener defaultASTNodeListener =
-				new DefaultASTNodeListener();
-
-			String sql = dslQuery.toSQL(defaultASTNodeListener);
-
-			String[] tableNames = defaultASTNodeListener.getTableNames();
-
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(
-				sql, true, tableNames);
+				sb.toString(), true, tableNames);
 
 			List<Object> scalarValues =
 				defaultASTNodeListener.getScalarValues();
@@ -187,30 +230,6 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 					queryPos.add(value);
 				}
 			}
-
-			Select select = null;
-
-			ASTNode astNode = dslQuery;
-
-			while (astNode instanceof BaseASTNode) {
-				if (astNode instanceof Select) {
-					select = (Select)astNode;
-
-					break;
-				}
-
-				BaseASTNode baseASTNode = (BaseASTNode)astNode;
-
-				astNode = baseASTNode.getChild();
-			}
-
-			if (select == null) {
-				throw new IllegalArgumentException(
-					"No Select found for " + dslQuery);
-			}
-
-			ProjectionType projectionType = _getProjectionType(
-				tableNames, select.getExpressions());
 
 			if (projectionType == ProjectionType.COUNT) {
 				sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
@@ -238,19 +257,27 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 				}
 			}
 
+			Object result = null;
+
 			if (projectionType == ProjectionType.COUNT) {
 				List<?> results = sqlQuery.list();
 
 				if (results.isEmpty()) {
-					return (R)(Long)0L;
+					result = 0L;
 				}
-
-				return (R)results.get(0);
+				else {
+					result = results.get(0);
+				}
+			}
+			else {
+				result = QueryUtil.list(
+					sqlQuery, getDialect(), defaultASTNodeListener.getStart(),
+					defaultASTNodeListener.getEnd());
 			}
 
-			return (R)QueryUtil.list(
-				sqlQuery, getDialect(), defaultASTNodeListener.getStart(),
-				defaultASTNodeListener.getEnd());
+			finderCache.putResult(finderPath, arguments, result);
+
+			return (R)result;
 		}
 		catch (Exception exception) {
 			throw processException(exception);
@@ -802,6 +829,10 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 		throw new UnsupportedOperationException();
 	}
 
+	protected FinderCache getFinderCache() {
+		throw new UnsupportedOperationException();
+	}
+
 	protected String getPKDBName() {
 		throw new UnsupportedOperationException();
 	}
@@ -920,6 +951,33 @@ public class BasePersistenceImpl<T extends BaseModel<T>>
 	 */
 	@Deprecated
 	protected boolean finderCacheEnabled = true;
+
+	private Object[] _getArguments(
+		DefaultASTNodeListener defaultASTNodeListener) {
+
+		List<Object> arguments = new ArrayList<>();
+
+		for (Object object : defaultASTNodeListener.getScalarValues()) {
+			if (object instanceof Date) {
+				Date date = (Date)object;
+
+				arguments.add(date.getTime());
+			}
+			else {
+				arguments.add(object);
+			}
+		}
+
+		int start = defaultASTNodeListener.getStart();
+		int end = defaultASTNodeListener.getEnd();
+
+		if ((start != QueryUtil.ALL_POS) || (end != QueryUtil.ALL_POS)) {
+			arguments.add(start);
+			arguments.add(end);
+		}
+
+		return arguments.toArray(new Object[0]);
+	}
 
 	private ProjectionType _getProjectionType(
 		String[] tableNames, Collection<? extends Expression<?>> expressions) {

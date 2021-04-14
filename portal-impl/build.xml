@@ -182,17 +182,6 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 		</if>
 	</target>
 
-	<target if="release.info" name="build-releaseinfo">
-		<java
-			classname="com.liferay.portal.tools.ReleaseInfoBuilder"
-			classpathref="project.classpath"
-			fork="true"
-			newenvironment="true"
-		>
-			<jvmarg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
-		</java>
-	</target>
-
 	<target name="build-service">
 		<path id="service.builder.classpath">
 			<fileset
@@ -737,7 +726,7 @@ svn://svn.liferay.com/repos/public/alloy/trunk/sandbox/taglibs.
 					<arg value="source.file.extensions=${source.file.extensions}" />
 					<arg value="source.files=${source.files}" />
 					<arg value="source.print.errors=${source.print.errors}" />
-					<arg value="validate.commit.messages=${source.formatter.validate.commit.messages}" />
+					<arg value="validate.commit.messages=${validate.commit.messages}" />
 				</java>
 
 				<delete file="ServiceBuilder.temp" />

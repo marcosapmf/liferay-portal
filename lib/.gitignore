@@ -6,6 +6,7 @@
 /development/appium.jar
 /development/catalina.jar
 /development/com.liferay.jenkins.results.parser.jar
+/development/com.liferay.poshi.core.jar
 /development/db2jcc.jar
 /development/db2jcc_license_cu.jar
 /development/deployment.jar
@@ -128,6 +129,7 @@
 /portal/commons-validator.jar
 /portal/concurrent.jar
 /portal/crypt.jar
+/portal/curvesapi.jar
 /portal/daisydiff.jar
 /portal/displaytag.jar
 /portal/dom4j.jar
@@ -210,6 +212,7 @@
 /portal/mime4j-dom.jar
 /portal/mimepull.jar
 /portal/monte-cc.jar
+/portal/mp4parser.jar
 /portal/nekohtml.jar
 /portal/netcdf.jar
 /portal/netty-all.jar

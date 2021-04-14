@@ -70,22 +70,21 @@ PortletURL portletURL = userGroupItemSelectorViewDisplayContext.getPortletURL();
 		>
 
 			<%
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"id", userGroup.getUserGroupId()
-			).put(
-				"name", userGroup.getName()
-			).build();
-
-			row.setData(data);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"id", userGroup.getUserGroupId()
+				).put(
+					"name", userGroup.getName()
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				property="name"
 			/>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				property="description"
 			/>
 		</liferay-ui:search-container-row>

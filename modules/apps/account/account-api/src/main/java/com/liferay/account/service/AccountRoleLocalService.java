@@ -87,6 +87,10 @@ public interface AccountRoleLocalService
 			long accountEntryId, long accountRoleId, long userId)
 		throws PortalException;
 
+	public void associateUser(
+			long accountEntryId, long[] accountRoleIds, long userId)
+		throws PortalException;
+
 	/**
 	 * Creates a new account role with the primary key. Does not add the account role to the database.
 	 *
@@ -283,10 +287,33 @@ public interface AccountRoleLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public boolean hasUserAccountRole(
+			long accountEntryId, long accountRoleId, long userId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BaseModelSearchResult<AccountRole> searchAccountRoles(
+		long companyId, long accountEntryId, String keywords, int start,
+		int end, OrderByComparator<?> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BaseModelSearchResult<AccountRole> searchAccountRoles(
+		long companyId, long[] accountEntryIds, String keywords, int start,
+		int end, OrderByComparator<?> orderByComparator);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BaseModelSearchResult<AccountRole> searchAccountRoles(
 		long accountEntryId, String keywords, int start, int end,
 		OrderByComparator<?> orderByComparator);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BaseModelSearchResult<AccountRole> searchAccountRoles(
 		long[] accountEntryIds, String keywords, int start, int end,

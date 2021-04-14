@@ -54,7 +54,7 @@ import org.osgi.annotation.versioning.ProviderType;
 							value = {
 								"requireAuthentication", "requireCaptcha",
 								"autosaveEnabled", "redirectURL", "storageType",
-								"workflowDefinition"
+								"workflowDefinition", "submitLabel"
 							}
 						)
 					}
@@ -139,7 +139,7 @@ public interface DDMFormInstanceSettings {
 	public boolean sendEmailNotification();
 
 	@DDMFormField(
-		label = "%select-a-storage-type", predefinedValue = "[\"json\"]",
+		label = "%select-a-storage-type", predefinedValue = "[\"default\"]",
 		properties = {
 			"dataSourceType=data-provider",
 			"ddmDataProviderInstanceId=ddm-storage-types"
@@ -147,6 +147,12 @@ public interface DDMFormInstanceSettings {
 		type = "select"
 	)
 	public String storageType();
+
+	@DDMFormField(
+		label = "%submit-button-label", properties = "placeholder=%submit-form",
+		type = "localizable_text"
+	)
+	public String submitLabel();
 
 	@DDMFormField(
 		label = "%select-a-workflow", predefinedValue = "[\"no-workflow\"]",

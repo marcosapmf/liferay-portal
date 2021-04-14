@@ -54,7 +54,8 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 							size = 12,
 							value = {
 								"dataType", "name", "showLabel", "repeatable",
-								"type", "validation", "visibilityExpression"
+								"type", "validation", "visibilityExpression",
+								"visualProperty"
 							}
 						)
 					}
@@ -80,7 +81,8 @@ public interface DefaultDDMFormFieldTypeSettings
 		label = "%label",
 		properties = {
 			"autoFocus=true", "placeholder=%enter-a-field-label",
-			"tooltip=%enter-a-descriptive-field-label-that-guides-users-to-enter-the-information-you-want"
+			"tooltip=%enter-a-descriptive-field-label-that-guides-users-to-enter-the-information-you-want",
+			"visualProperty=true"
 		},
 		type = "text"
 	)
@@ -101,7 +103,8 @@ public interface DefaultDDMFormFieldTypeSettings
 		label = "%predefined-value",
 		properties = {
 			"placeholder=%enter-a-default-value",
-			"tooltip=%enter-a-default-value-that-is-submitted-if-no-other-value-is-entered"
+			"tooltip=%enter-a-default-value-that-is-submitted-if-no-other-value-is-entered",
+			"visualProperty=true"
 		},
 		type = "text"
 	)
@@ -113,18 +116,24 @@ public interface DefaultDDMFormFieldTypeSettings
 	@DDMFormField(label = "%repeatable", properties = "showAsSwitcher=true")
 	public boolean repeatable();
 
-	@DDMFormField(label = "%required-field", properties = "showAsSwitcher=true")
+	@DDMFormField(
+		label = "%required-field",
+		properties = {"showAsSwitcher=true", "visualProperty=true"}
+	)
 	public boolean required();
 
 	@DDMFormField(
 		label = "%show-label", predefinedValue = "true",
-		properties = "showAsSwitcher=true"
+		properties = {"showAsSwitcher=true", "visualProperty=true"}
 	)
 	public boolean showLabel();
 
 	@DDMFormField(
 		label = "%help-text",
-		properties = "tooltip=%add-a-comment-to-help-users-understand-the-field-label",
+		properties = {
+			"tooltip=%add-a-comment-to-help-users-understand-the-field-label",
+			"visualProperty=true"
+		},
 		type = "text"
 	)
 	public LocalizedValue tip();
@@ -143,5 +152,10 @@ public interface DefaultDDMFormFieldTypeSettings
 		visibilityExpression = "FALSE"
 	)
 	public String visibilityExpression();
+
+	@DDMFormField(visibilityExpression = "FALSE")
+	public default boolean visualProperty() {
+		return false;
+	}
 
 }

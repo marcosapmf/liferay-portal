@@ -39,11 +39,11 @@ sortingURL.setParameter("displayStyle", displayStyle);
 sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	creationMenu='<%=
 		new JSPCreationMenu(pageContext) {
 			{
-				addPrimaryDropdownItem(dropdownItem -> dropdownItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/edit_entry.jsp", "redirect", PortalUtil.getCurrentURL(request)));
+				addPrimaryDropdownItem(dropdownItem -> dropdownItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/edit_entry.jsp", "redirect", PortalUtil.getCurrentURL(httpServletRequest)));
 			}
 		}
 	%>'
@@ -79,7 +79,7 @@ sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 			</portlet:renderURL>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				href="<%= rowURL %>"
 				name="name"
 			>
@@ -87,7 +87,7 @@ sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 			</liferay-ui:search-container-column-text>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="description"
 				value="<%= sapEntry.getTitle(locale) %>"
 			/>

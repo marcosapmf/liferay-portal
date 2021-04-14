@@ -35,17 +35,14 @@ definition {
 	test AddAndRemoveImageAutoTagViaGogoShell {
 		property test.name.skip.portal.instance = "DMAutoTagging#AddAndRemoveImageAutoTagViaGogoShell";
 
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
 		for (var documentNumber : list "_1,_2,_3") {
-			JSONDocument.addFileWithUploadedFile(
-				dmDocumentDescription = "DM Document Description",
-				dmDocumentTitle = "DM Document JPG${documentNumber}",
-				groupName = "Guest",
-				mimeType = "image/jpeg",
-				sourceFileName = "Document_4.jpg");
-
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentFile = "Document_4.jpg",
+				dmDocumentFileName = "Document${documentNumber}.jpg",
+				dmDocumentTitle = "DM Document JPG${documentNumber}");
 
 			DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document JPG${documentNumber}");
 
@@ -180,7 +177,7 @@ definition {
 		Navigator.openSiteURL(siteName = "Site AutoTag Disabled");
 
 		AutoTagging.disableAutoTagging(
-			disableAutoTaggingFor = "Settings",
+			disableAutoTaggingFor = "Site Settings",
 			site = "Site AutoTag Disabled");
 
 		JSONDocument.addFileWithUploadedFile(
@@ -298,7 +295,6 @@ definition {
 	test OpenNLPSmoke {
 		property environment.acceptance = "true";
 		property portal.acceptance = "true";
-
 		property test.name.skip.portal.instance = "DMAutoTagging#OpenNLPSmoke";
 
 		AutoTagging.enableOpenNLP(

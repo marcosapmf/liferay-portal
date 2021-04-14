@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
-		"mvc.command.name=editCommerceShippingMethod"
+		"mvc.command.name=/commerce_shipping_methods/edit_commerce_shipping_method"
 	},
 	service = MVCActionCommand.class
 )
@@ -85,7 +85,8 @@ public class EditCommerceShippingMethodMVCActionCommand
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "editCommerceShippingMethod");
+					"mvcRenderCommandName",
+					"/commerce_shipping_methods/edit_commerce_shipping_method");
 			}
 			else {
 				throw exception;
@@ -100,9 +101,6 @@ public class EditCommerceShippingMethodMVCActionCommand
 		UploadPortletRequest uploadPortletRequest =
 			_portal.getUploadPortletRequest(actionRequest);
 
-		long commerceChannelId = ParamUtil.getLong(
-			actionRequest, "commerceChannelId");
-
 		long commerceShippingMethodId = ParamUtil.getLong(
 			actionRequest, "commerceShippingMethodId");
 
@@ -112,17 +110,21 @@ public class EditCommerceShippingMethodMVCActionCommand
 			LocalizationUtil.getLocalizationMap(
 				actionRequest, "descriptionMapAsXML");
 		File imageFile = uploadPortletRequest.getFile("imageFile");
-		String commerceShippingMethodEngineKey = ParamUtil.getString(
-			actionRequest, "commerceShippingMethodEngineKey");
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
 		boolean active = ParamUtil.getBoolean(actionRequest, "active");
-
-		CommerceChannel commerceChannel =
-			_commerceChannelService.getCommerceChannel(commerceChannelId);
 
 		CommerceShippingMethod commerceShippingMethod = null;
 
 		if (commerceShippingMethodId <= 0) {
+			long commerceChannelId = ParamUtil.getLong(
+				actionRequest, "commerceChannelId");
+
+			CommerceChannel commerceChannel =
+				_commerceChannelService.getCommerceChannel(commerceChannelId);
+
+			String commerceShippingMethodEngineKey = ParamUtil.getString(
+				actionRequest, "commerceShippingMethodEngineKey");
+
 			commerceShippingMethod =
 				_commerceShippingMethodService.addCommerceShippingMethod(
 					_portal.getUserId(actionRequest),

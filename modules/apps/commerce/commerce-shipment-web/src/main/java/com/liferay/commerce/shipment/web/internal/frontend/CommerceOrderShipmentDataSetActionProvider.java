@@ -15,6 +15,7 @@
 package com.liferay.commerce.shipment.web.internal.frontend;
 
 import com.liferay.commerce.constants.CommerceActionKeys;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceShipmentDataSetConstants;
 import com.liferay.commerce.frontend.model.Shipment;
@@ -27,7 +28,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -62,8 +63,8 @@ public class CommerceOrderShipmentDataSetActionProvider
 		Shipment shipment = (Shipment)model;
 
 		return DropdownItemListBuilder.add(
-			() -> PortalPermissionUtil.contains(
-				PermissionThreadLocal.getPermissionChecker(),
+			() -> _portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
 				CommerceActionKeys.MANAGE_COMMERCE_SHIPMENTS),
 			dropdownItem -> {
 				dropdownItem.setHref(
@@ -73,8 +74,8 @@ public class CommerceOrderShipmentDataSetActionProvider
 					LanguageUtil.get(httpServletRequest, "edit"));
 			}
 		).add(
-			() -> PortalPermissionUtil.contains(
-				PermissionThreadLocal.getPermissionChecker(),
+			() -> _portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
 				CommerceActionKeys.MANAGE_COMMERCE_SHIPMENTS),
 			dropdownItem -> {
 				dropdownItem.setHref(
@@ -94,7 +95,8 @@ public class CommerceOrderShipmentDataSetActionProvider
 			ActionRequest.RENDER_PHASE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "deleteCommerceShipment");
+			"mvcRenderCommandName",
+			"/commerce_shipment/delete_commerce_shipment");
 		portletURL.setParameter(
 			"redirect", _portal.getCurrentURL(httpServletRequest));
 		portletURL.setParameter(
@@ -119,7 +121,9 @@ public class CommerceOrderShipmentDataSetActionProvider
 
 		portletURL.setParameter("backURL", portletURL.toString());
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceShipment");
+		portletURL.setParameter(
+			"mvcRenderCommandName",
+			"/commerce_shipment/edit_commerce_shipment");
 
 		String redirect = ParamUtil.getString(
 			httpServletRequest, "currentUrl",
@@ -138,5 +142,10 @@ public class CommerceOrderShipmentDataSetActionProvider
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_SHIPMENT + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

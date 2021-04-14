@@ -19,9 +19,6 @@
 <%
 long assetCategoryId = ParamUtil.getLong(request, "categoryId");
 String assetTagName = ParamUtil.getString(request, "tag");
-
-String orderByCol = ParamUtil.getString(request, "orderByCol");
-String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 %>
 
 <div class="kb-search-header">
@@ -36,8 +33,8 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 
 <liferay-ui:search-container
 	iteratorURL="<%= iteratorURL %>"
-	orderByCol="<%= orderByCol %>"
-	orderByType="<%= orderByType %>"
+	orderByCol='<%= ParamUtil.getString(request, "orderByCol") %>'
+	orderByType='<%= ParamUtil.getString(request, "orderByType", "desc") %>'
 >
 
 	<%
@@ -113,6 +110,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 				long viewCount = (kbArticle != null) ? kbArticle.getViewCount() : 0;
 
 				buffer.append(viewCount);
+
 				buffer.append(StringPool.SPACE);
 				buffer.append((viewCount == 1) ? LanguageUtil.get(request, "view") : LanguageUtil.get(request, "views"));
 				%>

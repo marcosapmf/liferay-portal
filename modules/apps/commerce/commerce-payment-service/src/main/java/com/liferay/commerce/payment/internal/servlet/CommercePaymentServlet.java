@@ -47,7 +47,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,16 +72,23 @@ public class CommercePaymentServlet extends HttpServlet {
 		throws IOException, ServletException {
 
 		try {
-			HttpSession httpSession = httpServletRequest.getSession();
-
 			if (PortalSessionThreadLocal.getHttpSession() == null) {
-				PortalSessionThreadLocal.setHttpSession(httpSession);
+				PortalSessionThreadLocal.setHttpSession(
+					httpServletRequest.getSession());
 			}
 
 			CommerceOrder commerceOrder =
 				_commercePaymentHttpHelper.getCommerceOrder(httpServletRequest);
 
+			URL portalURL = new URL(_portal.getPortalURL(httpServletRequest));
+
 			_nextUrl = ParamUtil.getString(httpServletRequest, "nextStep");
+
+			URL nextURL = new URL(_nextUrl);
+
+			if (!Objects.equals(portalURL.getHost(), nextURL.getHost())) {
+				throw new ServletException();
+			}
 
 			_commerceOrderId = commerceOrder.getCommerceOrderId();
 
@@ -105,9 +111,6 @@ public class CommercePaymentServlet extends HttpServlet {
 			}
 
 			if (commercePaymentResult.isOnlineRedirect()) {
-				URL portalURL = new URL(
-					_portal.getPortalURL(httpServletRequest));
-
 				URL redirectURL = new URL(
 					commercePaymentResult.getRedirectUrl());
 

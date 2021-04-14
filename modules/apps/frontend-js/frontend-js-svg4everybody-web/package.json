@@ -1,12 +1,11 @@
 {
-	"dependencies": {
-		"svg4everybody": "2.1.9"
-	},
+	"main": "index.js",
 	"name": "frontend-js-svg4everybody-web",
 	"private": true,
 	"scripts": {
+		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "1.0.3"
+	"version": "2.0.0"
 }

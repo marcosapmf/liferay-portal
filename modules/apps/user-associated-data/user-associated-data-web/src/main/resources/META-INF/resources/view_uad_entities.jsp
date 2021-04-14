@@ -36,7 +36,7 @@ if (parentContainerId > 0) {
 long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= new ViewUADEntitiesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, viewUADEntitiesDisplay) %>"
 />
 
@@ -70,10 +70,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</c:otherwise>
 	</c:choose>
 
-	<clay:container-fluid
-		cssClass="closed sidenav-container sidenav-right"
-		id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
-	>
+	<div class="closed sidenav-container sidenav-right" id="<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>">
 		<div id="breadcrumb">
 			<liferay-ui:breadcrumb
 				showCurrentGroup="<%= false %>"
@@ -88,7 +85,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</liferay-ui:error>
 
 		<c:if test="<%= !Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) %>">
-			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= true %>" id="/info_panel" var="entityTypeSidebarURL">
+			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= true %>" id="/user_associated_data/info_panel" var="entityTypeSidebarURL">
 				<liferay-portlet:param name="hierarchyView" value="<%= String.valueOf(viewUADEntitiesDisplay.isHierarchy()) %>" />
 				<liferay-portlet:param name="topLevelView" value="<%= String.valueOf(topLevelView) %>" />
 			</liferay-portlet:resourceURL>
@@ -102,89 +99,91 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</c:if>
 
 		<div class="sidenav-content">
-			<liferay-ui:search-container
-				searchContainer="<%= viewUADEntitiesDisplay.getSearchContainer() %>"
-			>
-				<liferay-ui:search-container-row
-					className="com.liferay.user.associated.data.web.internal.display.UADEntity"
-					escapedModel="<%= true %>"
-					keyProperty="primaryKey"
-					modelVar="uadEntity"
+			<clay:container-fluid>
+				<liferay-ui:search-container
+					searchContainer="<%= viewUADEntitiesDisplay.getSearchContainer() %>"
 				>
+					<liferay-ui:search-container-row
+						className="com.liferay.user.associated.data.web.internal.display.UADEntity"
+						escapedModel="<%= true %>"
+						keyProperty="primaryKey"
+						modelVar="uadEntity"
+					>
 
-					<%
-					List<KeyValuePair> columnEntries = uadEntity.getColumnEntries();
+						<%
+						List<KeyValuePair> columnEntries = uadEntity.getColumnEntries();
 
-					String uadEntityHref = uadEntity.getViewURL();
+						String uadEntityHref = uadEntity.getViewURL();
 
-					if (uadEntityHref == null) {
-						uadEntityHref = uadEntity.getEditURL();
-					}
-
-					boolean showUserIcon = false;
-
-					if ((uadEntity.getViewURL() != null) && !uadEntity.isUserOwned()) {
-						showUserIcon = true;
-					}
-
-					for (KeyValuePair columnEntry : columnEntries) {
-						String columnEntryKey = columnEntry.getKey();
-
-						String cssClass = "table-cell-expand";
-
-						if (columnEntry.equals(columnEntries.get(0))) {
-							cssClass = "table-cell-expand table-list-title";
+						if (uadEntityHref == null) {
+							uadEntityHref = uadEntity.getEditURL();
 						}
-					%>
 
-						<liferay-ui:search-container-column-text
-							cssClass="<%= cssClass %>"
-							name="<%= columnEntryKey %>"
-						>
-							<aui:a href="<%= uadEntityHref %>"><%= StringUtil.shorten(columnEntry.getValue(), 200) %></aui:a>
+						boolean showUserIcon = false;
 
-							<c:if test='<%= columnEntryKey.equals("name") || columnEntryKey.equals("title") %>'>
-								<c:if test="<%= uadEntity.isInTrash() %>">
-									<clay:label
-										label="in-trash"
-									/>
+						if ((uadEntity.getViewURL() != null) && !uadEntity.isUserOwned()) {
+							showUserIcon = true;
+						}
+
+						for (KeyValuePair columnEntry : columnEntries) {
+							String columnEntryKey = columnEntry.getKey();
+
+							String cssClass = "table-cell-expand";
+
+							if (columnEntry.equals(columnEntries.get(0))) {
+								cssClass = "table-cell-expand table-list-title";
+							}
+						%>
+
+							<liferay-ui:search-container-column-text
+								cssClass="<%= cssClass %>"
+								name="<%= columnEntryKey %>"
+							>
+								<aui:a href="<%= uadEntityHref %>"><%= StringUtil.shorten(columnEntry.getValue(), 200) %></aui:a>
+
+								<c:if test='<%= columnEntryKey.equals("name") || columnEntryKey.equals("title") %>'>
+									<c:if test="<%= uadEntity.isInTrash() %>">
+										<clay:label
+											label="in-trash"
+										/>
+									</c:if>
+
+									<c:if test="<%= showUserIcon %>">
+										<liferay-ui:icon
+											cssClass="disabled"
+											icon="user"
+											markupView="lexicon"
+											message="this-parent-item-does-not-belong-to-the-user-but-contains-children-items-belonging-to-the-user"
+											toolTip="<%= true %>"
+										/>
+									</c:if>
 								</c:if>
+							</liferay-ui:search-container-column-text>
 
-								<c:if test="<%= showUserIcon %>">
-									<liferay-ui:icon
-										cssClass="disabled"
-										icon="user"
-										markupView="lexicon"
-										message="this-parent-item-does-not-belong-to-the-user-but-contains-children-items-belonging-to-the-user"
-										toolTip="<%= true %>"
-									/>
-								</c:if>
-							</c:if>
-						</liferay-ui:search-container-column-text>
+						<%
+						}
+						%>
 
-					<%
-					}
-					%>
+						<liferay-ui:search-container-column-jsp
+							cssClass="entry-action-column"
+							path="/uad_entity_action.jsp"
+						/>
+					</liferay-ui:search-container-row>
 
-					<liferay-ui:search-container-column-jsp
-						cssClass="entry-action-column"
-						path="/uad_entity_action.jsp"
+					<liferay-ui:search-iterator
+						markupView="lexicon"
+						resultRowSplitter="<%= viewUADEntitiesDisplay.getResultRowSplitter() %>"
 					/>
-				</liferay-ui:search-container-row>
-
-				<liferay-ui:search-iterator
-					markupView="lexicon"
-					resultRowSplitter="<%= viewUADEntitiesDisplay.getResultRowSplitter() %>"
-				/>
-			</liferay-ui:search-container>
+				</liferay-ui:search-container>
+			</clay:container-fluid>
 		</div>
-	</clay:container-fluid>
+	</div>
 </aui:form>
 
 <aui:script>
 	function <portlet:namespace />doAnonymizeMultiple() {
 		<portlet:namespace />doMultiple(
-			'<portlet:actionURL name='<%= Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) ? "/anonymize_uad_applications" : "/anonymize_uad_entities" %>' />',
+			'<portlet:actionURL name='<%= Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) ? "/user_associated_data/anonymize_uad_applications" : "/user_associated_data/anonymize_uad_entities" %>' />',
 			'<liferay-ui:message key="are-you-sure-you-want-to-anonymize-the-selected-items" />',
 			'<liferay-ui:message key="only-items-belonging-to-the-user-will-be-anonymized" />'
 		);
@@ -192,7 +191,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 
 	function <portlet:namespace />doDeleteMultiple() {
 		<portlet:namespace />doMultiple(
-			'<portlet:actionURL name='<%= Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) ? "/delete_uad_applications" : "/delete_uad_entities" %>' />',
+			'<portlet:actionURL name='<%= Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) ? "/user_associated_data/delete_uad_applications" : "/user_associated_data/delete_uad_entities" %>' />',
 			'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-items" />',
 			'<liferay-ui:message key="only-items-belonging-to-the-user-will-be-deleted" />'
 		);

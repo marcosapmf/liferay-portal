@@ -14,6 +14,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ARTICLE_BAREBONE_ELLIPSIS_ICON</td>
+	<td>//section[contains(@id,'JournalContentPortlet')]//div[contains(@class,'portlet-content')][div//div[contains(@data-analytics-asset-title,'${key_webContentTitle}')]]//a[contains(@id,'JournalContentPortlet')][span/*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ADD_STRUCTURED_WEB_CONTENT</td>
 	<td>//span[contains(@class,'taglib-text-icon') and contains(.,'${key_structureName}')]</td>
 	<td></td>
@@ -46,6 +51,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>WEB_CONTENT_CONTENT_ANY</td>
+	<td>//div[contains(@class,'journal-content-article')]${key_content}</td>
+	<td></td>
+</tr>
+<tr>
 	<td>WEB_CONTENT_CONTENT_2</td>
 	<td>xPath=(//div[contains(@class,'journal-content-article')])[2]</td>
 	<td></td>
@@ -57,7 +67,7 @@
 </tr>
 <tr>
 	<td>WEB_CONTENT_CONTENT_IMAGE</td>
-	<td>//div[@class='journal-content-article']/img</td>
+	<td>//div[contains(@class,'journal-content-article')]//img[contains(@src,'${key_image}')] | //img[contains(@src,'${key_image}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -92,7 +102,7 @@
 </tr>
 <tr>
 	<td>WEB_CONTENT_VIDEO</td>
-	<td>//div[contains(@class,'video-content')]/video[@class='video-node']</td>
+	<td>//div[contains(@class,'VideoPortlet')]//video[contains(@poster,'${key_videoShortcutTitle}')]</td>
 	<td></td>
 </tr>
 <tr>

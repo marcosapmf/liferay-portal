@@ -1,10 +1,4 @@
-configJSModules {
-	dependsOn = []
-	enabled = false
-}
-
 dependencies {
-	testCompile group: "com.google.template", name: "soy", version: "2015-04-10"
 	testCompile group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	testCompile group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	testCompile group: "com.liferay.portal", name: "com.liferay.util.java", version: "default"
@@ -29,7 +23,6 @@ dependencies {
 	testCompile project(":apps:journal:journal-api")
 	testCompile project(":apps:portal-search:portal-search-api")
 	testCompile project(":apps:portal-search:portal-search-test-util")
-	testCompile project(":apps:portal-template:portal-template-soy-api")
 	testCompile project(":apps:portal:portal-aop-api")
 	testCompile project(":apps:view-count:view-count-api")
 	testCompile project(":core:petra:petra-concurrent")
@@ -39,13 +32,16 @@ dependencies {
 	testCompile project(":core:petra:petra-sql-dsl-api")
 	testCompile project(":core:petra:petra-string")
 
+	testIntegrationCompile group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.10.3"
+	testIntegrationCompile group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.10.3"
 	testIntegrationCompile group: "org.osgi", name: "org.osgi.service.cm", version: "1.5.0"
 	testIntegrationCompile group: "org.springframework", name: "spring-web", version: "5.2.2.RELEASE"
 	testIntegrationCompile project(":apps:dynamic-data-mapping:dynamic-data-mapping-form-builder")
 	testIntegrationCompile project(":apps:export-import:export-import-test-util")
+	testIntegrationCompile project(":apps:journal:journal-article-dynamic-data-mapping-form-field-type-api")
 	testIntegrationCompile project(":apps:journal:journal-test-util")
 	testIntegrationCompile project(":apps:portal-configuration:portal-configuration-test-util")
-	testIntegrationCompile project(":apps:portal:portal-upgrade-api")
+	testIntegrationCompile project(":apps:static:portal:portal-upgrade-api")
 	testIntegrationCompile project(":core:registry-api")
 	testIntegrationCompile project(":test:arquillian-extension-junit-bridge")
 }

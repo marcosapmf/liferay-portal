@@ -20,7 +20,7 @@
 PortletURL portletURL = ddmDataProviderDisplayContext.getPortletURL();
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= ddmDataProviderDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= ddmDataProviderDisplayContext.getClearResultsURL() %>"
 	componentId="ddmDataProviderManagementToolbar"
@@ -59,7 +59,7 @@ PortletURL portletURL = ddmDataProviderDisplayContext.getPortletURL();
 							),
 						},
 
-						<portlet:actionURL name="deleteDataProvider" var="deleteDataProviderURL">
+						<portlet:actionURL name="/dynamic_data_mapping_data_provider/delete_data_provider" var="deleteDataProviderURL">
 							<portlet:param name="mvcPath" value="/view.jsp" />
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 						</portlet:actionURL>

@@ -47,8 +47,8 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 		<clay:col
 			lg="12"
 		>
-			<portlet:actionURL name="/admin/assign_scopes" var="assignScopesURL">
-				<portlet:param name="mvcRenderCommandName" value="/admin/assign_scopes" />
+			<portlet:actionURL name="/oauth2_provider/assign_scopes" var="assignScopesURL">
+				<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/assign_scopes" />
 				<portlet:param name="navigation" value="assign_scopes" />
 				<portlet:param name="backURL" value="<%= redirect %>" />
 				<portlet:param name="oAuth2ApplicationId" value="<%= String.valueOf(oAuth2Application.getOAuth2ApplicationId()) %>" />
@@ -92,7 +92,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 	</clay:row>
 </clay:container-fluid>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script sandbox="<%= true %>">
 	AUI().use('node', 'aui-modal', function (A) {
 		if (A.all('#<portlet:namespace />navGlobalScopes .panel').size() > 0) {
 			A.one('#<portlet:namespace />navScopeTypes').toggleClass(
@@ -159,7 +159,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 					);
 
 					if (navGlobalScopes && globalAccordion) {
-						dom.append(navGlobalScopes, globalAccordion);
+						navGlobalScopes.append(globalAccordion);
 					}
 				});
 
@@ -211,7 +211,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 				);
 
 				if (globalAccordion && modalBody) {
-					dom.append(modalBody, globalAccordion);
+					modalBody.append(globalAccordion);
 				}
 
 				event.preventDefault();

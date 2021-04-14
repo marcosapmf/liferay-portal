@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.COMMERCE_CHANNELS,
-		"mvc.command.name=editCategoryDisplayLayout"
+		"mvc.command.name=/commerce_channels/edit_cp_display_layout"
 	},
 	service = MVCRenderCommand.class
 )
@@ -62,7 +62,7 @@ public class EditCPDisplayLayoutMVCRenderCommand implements MVCRenderCommand {
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(
-				"/display_layout/edit_category_display_page.jsp");
+				"/display_layout/edit_cp_display_layout.jsp");
 
 		try {
 			HttpServletRequest httpServletRequest =

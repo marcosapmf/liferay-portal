@@ -18,17 +18,20 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalServiceUtil;
+import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil;
 import com.liferay.commerce.model.CPDefinitionInventory;
+import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceEntryLocalServiceUtil;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalServiceUtil;
 import com.liferay.commerce.product.configuration.CPOptionConfiguration;
 import com.liferay.commerce.product.constants.CPConstants;
+import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
 import com.liferay.commerce.product.model.CPInstance;
-import com.liferay.commerce.product.model.CPInstanceConstants;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.model.CPOptionValue;
 import com.liferay.commerce.product.model.CommerceCatalog;
@@ -358,7 +361,7 @@ public class CPTestUtil {
 		CPInstance cpInstance = CPInstanceLocalServiceUtil.getCPInstance(
 			cpDefinition.getCPDefinitionId(), CPInstanceConstants.DEFAULT_SKU);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
 	}
@@ -373,7 +376,7 @@ public class CPTestUtil {
 		CPInstance cpInstance = CPInstanceLocalServiceUtil.getCPInstance(
 			cpDefinition.getCPDefinitionId(), CPInstanceConstants.DEFAULT_SKU);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
 	}
@@ -399,7 +402,7 @@ public class CPTestUtil {
 
 		cpInstance = CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
 	}
@@ -415,7 +418,7 @@ public class CPTestUtil {
 
 		cpInstance = CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
 	}
@@ -448,7 +451,7 @@ public class CPTestUtil {
 		CPInstance cpInstance = CPInstanceLocalServiceUtil.getCPInstance(
 			cpDefinition.getCPDefinitionId(), sku);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
 	}
@@ -468,7 +471,7 @@ public class CPTestUtil {
 
 		cpInstance.setPrice(price);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return cpInstance;
 	}
@@ -486,21 +489,23 @@ public class CPTestUtil {
 			cpDefinition.getCPDefinitionId(), sku);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), use addCPInstanceWithRandomSku
+	 */
+	@Deprecated
 	public static CPInstance addCPInstanceWithSku(long groupId)
 		throws PortalException {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(groupId);
-
 		CPDefinition cpDefinition = _addCPDefinition(
-			SimpleCPTypeConstants.NAME, true, true, serviceContext);
+			SimpleCPTypeConstants.NAME, true, true,
+			ServiceContextTestUtil.getServiceContext(groupId));
 
 		CPInstance cpInstance = addCPDefinitionCPInstance(
 			cpDefinition.getCPDefinitionId(), Collections.emptyMap());
 
 		cpInstance.setStatus(WorkflowConstants.STATUS_APPROVED);
 
-		_addBasePriceEntry(cpInstance);
+		_addCommercePriceEntry(cpInstance);
 
 		return CPInstanceLocalServiceUtil.updateCPInstance(cpInstance);
 	}
@@ -562,11 +567,10 @@ public class CPTestUtil {
 	public static void buildCPInstances(CPDefinition cpDefinition)
 		throws PortalException {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(cpDefinition.getGroupId());
-
 		CPInstanceLocalServiceUtil.buildCPInstances(
-			cpDefinition.getCPDefinitionId(), serviceContext);
+			cpDefinition.getCPDefinitionId(),
+			ServiceContextTestUtil.getServiceContext(
+				cpDefinition.getGroupId()));
 	}
 
 	public static String[] getCPOptionFieldTypes()
@@ -684,7 +688,28 @@ public class CPTestUtil {
 		return bigDecimal.stripTrailingZeros();
 	}
 
-	private static void _addBasePriceEntry(CPInstance cpInstance)
+	private static void _addCatalogBaseCommercePriceList(
+			long groupId, String currencyCode, String type,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		CommercePriceList commerceCatalogBasePriceList =
+			CommercePriceListLocalServiceUtil.
+				fetchCatalogBaseCommercePriceListByType(groupId, type);
+
+		if (commerceCatalogBasePriceList == null) {
+			CommerceCurrency commerceCurrency =
+				CommerceCurrencyLocalServiceUtil.getCommerceCurrency(
+					serviceContext.getCompanyId(), currencyCode);
+
+			CommercePriceListLocalServiceUtil.addCatalogBaseCommercePriceList(
+				groupId, serviceContext.getUserId(),
+				commerceCurrency.getCommerceCurrencyId(), type,
+				RandomTestUtil.randomString(), serviceContext);
+		}
+	}
+
+	private static void _addCommercePriceEntry(CPInstance cpInstance)
 		throws PortalException {
 
 		CommercePriceList commercePriceList =
@@ -698,9 +723,10 @@ public class CPTestUtil {
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
 		CommercePriceEntryLocalServiceUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), StringPool.BLANK,
-			cpInstance.getPrice(), null,
+			StringPool.BLANK, cpDefinition.getCProductId(),
+			cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), cpInstance.getPrice(),
+			null,
 			ServiceContextTestUtil.getServiceContext(cpInstance.getGroupId()));
 	}
 
@@ -732,6 +758,16 @@ public class CPTestUtil {
 				user.getCompanyId(), true);
 
 		CommerceCatalog commerceCatalog = commerceCatalogs.get(0);
+
+		_addCatalogBaseCommercePriceList(
+			commerceCatalog.getGroupId(),
+			commerceCatalog.getCommerceCurrencyCode(),
+			CommercePriceListConstants.TYPE_PRICE_LIST, serviceContext);
+
+		_addCatalogBaseCommercePriceList(
+			commerceCatalog.getGroupId(),
+			commerceCatalog.getCommerceCurrencyCode(),
+			CommercePriceListConstants.TYPE_PROMOTION, serviceContext);
 
 		return _addCPDefinition(
 			commerceCatalog.getGroupId(), productTypeName,
@@ -851,6 +887,16 @@ public class CPTestUtil {
 
 		CommerceCatalog commerceCatalog = commerceCatalogs.get(0);
 
+		_addCatalogBaseCommercePriceList(
+			commerceCatalog.getGroupId(),
+			commerceCatalog.getCommerceCurrencyCode(),
+			CommercePriceListConstants.TYPE_PRICE_LIST, serviceContext);
+
+		_addCatalogBaseCommercePriceList(
+			commerceCatalog.getGroupId(),
+			commerceCatalog.getCommerceCurrencyCode(),
+			CommercePriceListConstants.TYPE_PROMOTION, serviceContext);
+
 		long now = System.currentTimeMillis();
 
 		Map<Locale, String> titleMap = RandomTestUtil.randomLocaleStringMap();
@@ -867,7 +913,7 @@ public class CPTestUtil {
 		Map<Locale, String> urlTitleMap =
 			RandomTestUtil.randomLocaleStringMap();
 		boolean shippable = true;
-		boolean freeShipping = RandomTestUtil.randomBoolean();
+		boolean freeShipping = false;
 		boolean shipSeparately = RandomTestUtil.randomBoolean();
 		double shippingExtraPrice = RandomTestUtil.randomDouble();
 		double width = RandomTestUtil.randomDouble();

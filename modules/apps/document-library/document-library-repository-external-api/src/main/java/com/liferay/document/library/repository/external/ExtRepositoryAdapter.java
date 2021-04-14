@@ -880,6 +880,12 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 				}
 				catch (UnsupportedOperationException
 							unsupportedOperationException) {
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							unsupportedOperationException,
+							unsupportedOperationException);
+					}
 				}
 			}
 
@@ -898,6 +904,12 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 				}
 				catch (UnsupportedOperationException
 							unsupportedOperationException) {
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							unsupportedOperationException,
+							unsupportedOperationException);
+					}
 				}
 			}
 		}
@@ -956,6 +968,10 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 				extRepositorySearchResults) {
 
 			try {
+				if (extRepositorySearchResult.getObject() == null) {
+					continue;
+				}
+
 				ExtRepositoryObjectAdapter<?> extRepositoryEntryAdapter =
 					_toExtRepositoryObjectAdapter(
 						ExtRepositoryObjectAdapterType.OBJECT,

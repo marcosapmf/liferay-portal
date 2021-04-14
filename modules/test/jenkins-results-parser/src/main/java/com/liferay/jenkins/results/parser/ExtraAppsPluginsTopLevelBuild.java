@@ -29,6 +29,22 @@ public class ExtraAppsPluginsTopLevelBuild extends PluginsTopLevelBuild {
 	}
 
 	@Override
+	public String getBaseGitRepositoryName() {
+		String branchName = getBranchName();
+
+		if (branchName.equals("master")) {
+			return "liferay-portal";
+		}
+
+		return "liferay-portal-ee";
+	}
+
+	@Override
+	public String getBranchName() {
+		return getParameterValue("TEST_PORTAL_BRANCH_NAME");
+	}
+
+	@Override
 	public String getPluginName() {
 		String testBuildExtraAppsZipURLString = getParameterValue(
 			"TEST_BUILD_EXTRAAPPS_ZIP_URL");

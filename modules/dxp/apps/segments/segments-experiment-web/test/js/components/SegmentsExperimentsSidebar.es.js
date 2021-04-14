@@ -85,8 +85,12 @@ describe('SegmentsExperimentsSidebar', () => {
 		expect(defaultExperience).not.toBe(null);
 
 		getByText(segmentsExperiment.name);
-		getByText('review-and-run-test');
+
 		getByText('edit');
+		getByText('delete');
+
+		getByText('review-and-run-test');
+		getByText('view-data-in-analytics-cloud');
 	});
 
 	it('Renders modal to create experiment when the user clicks on create test button', async () => {
@@ -285,7 +289,7 @@ describe('Review and Run test', () => {
 
 		userEvent.click(reviewAndRunTestButton);
 
-		getByText('an-element-needs-to-be-set');
+		getByText('an-element-needs-to-be-selected');
 	});
 
 	it('Error messages appears when the user clicks in review and run and there is only the control variant created', async () => {
@@ -357,7 +361,7 @@ describe('Review and Run test', () => {
 			...segmentsExperiment,
 			editable: false,
 			status: {
-				label: 'completed',
+				label: 'running',
 				status: STATUS_RUNNING,
 			},
 		};
@@ -392,7 +396,7 @@ describe('Experiment History Tab', () => {
 			...segmentsExperiment,
 			editable: false,
 			status: {
-				label: 'completed',
+				label: 'running',
 				value: STATUS_RUNNING,
 			},
 		};
@@ -411,6 +415,7 @@ describe('Experiment History Tab', () => {
 		expect(window.confirm).toBeCalled();
 		expect(editExperimentStatus).toHaveBeenCalledWith(
 			expect.objectContaining({
+				segmentsExperimentId: segmentsExperiment.segmentsExperimentId,
 				status: STATUS_TERMINATED,
 			})
 		);

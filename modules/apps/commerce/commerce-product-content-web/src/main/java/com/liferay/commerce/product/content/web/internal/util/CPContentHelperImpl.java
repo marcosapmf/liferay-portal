@@ -23,6 +23,7 @@ import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPMedia;
 import com.liferay.commerce.product.catalog.CPSku;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.constants.CPContentContributorConstants;
 import com.liferay.commerce.product.constants.CPOptionCategoryConstants;
 import com.liferay.commerce.product.constants.CPWebKeys;
@@ -31,7 +32,6 @@ import com.liferay.commerce.product.content.render.CPContentRendererRegistry;
 import com.liferay.commerce.product.content.util.CPContentHelper;
 import com.liferay.commerce.product.ddm.DDMHelper;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
@@ -53,10 +53,14 @@ import com.liferay.commerce.product.util.CPContentContributor;
 import com.liferay.commerce.product.util.CPContentContributorRegistry;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.product.util.CPInstanceHelper;
+import com.liferay.commerce.wish.list.model.CommerceWishList;
+import com.liferay.commerce.wish.list.service.CommerceWishListItemService;
+import com.liferay.commerce.wish.list.service.CommerceWishListService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -144,11 +148,9 @@ public class CPContentHelperImpl implements CPContentHelper {
 
 		List<CPMedia> cpMedias = new ArrayList<>();
 
-		long classNameId = _portal.getClassNameId(CPDefinition.class);
-
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryLocalService.getCPAttachmentFileEntries(
-				classNameId, cpDefinitionId,
+				_portal.getClassNameId(CPDefinition.class), cpDefinitionId,
 				CPAttachmentFileEntryConstants.TYPE_OTHER,
 				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS);
@@ -333,11 +335,9 @@ public class CPContentHelperImpl implements CPContentHelper {
 
 		List<CPMedia> cpMedias = new ArrayList<>();
 
-		long classNameId = _portal.getClassNameId(CPDefinition.class);
-
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryLocalService.getCPAttachmentFileEntries(
-				classNameId, cpDefinitionId,
+				_portal.getClassNameId(CPDefinition.class), cpDefinitionId,
 				CPAttachmentFileEntryConstants.TYPE_IMAGE,
 				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS);
@@ -359,6 +359,9 @@ public class CPContentHelperImpl implements CPContentHelper {
 			if (fileEntry != null) {
 				cpMedias.add(new CPMediaImpl(fileEntry, themeDisplay));
 			}
+			else {
+				cpMedias.add(new CPMediaImpl(themeDisplay.getCompanyGroupId()));
+			}
 		}
 
 		return cpMedias;
@@ -374,7 +377,7 @@ public class CPContentHelperImpl implements CPContentHelper {
 	}
 
 	@Override
-	public String getStockQuantityLabel(HttpServletRequest httpServletRequest)
+	public String getStockQuantity(HttpServletRequest httpServletRequest)
 		throws Exception {
 
 		JSONObject stockQuantityJSONObject =
@@ -388,6 +391,25 @@ public class CPContentHelperImpl implements CPContentHelper {
 
 		return stockQuantityJSONObject.getString(
 			CPContentContributorConstants.STOCK_QUANTITY_NAME);
+	}
+
+	@Override
+	public String getStockQuantityLabel(HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		JSONObject stockQuantityJSONObject =
+			(JSONObject)getCPContentContributorValue(
+				CPContentContributorConstants.STOCK_QUANTITY_NAME,
+				httpServletRequest);
+
+		if (stockQuantityJSONObject == null) {
+			return StringPool.BLANK;
+		}
+
+		return LanguageUtil.format(
+			httpServletRequest, "stock-quantity-x",
+			stockQuantityJSONObject.getString(
+				CPContentContributorConstants.STOCK_QUANTITY_NAME));
 	}
 
 	@Override
@@ -425,7 +447,7 @@ public class CPContentHelperImpl implements CPContentHelper {
 				String.valueOf(cpCatalogEntry.getCPDefinitionId()));
 		}
 
-		resourceURL.setResourceID("viewCPAttachments");
+		resourceURL.setResourceID("/cp_content_web/view_cp_attachments");
 
 		return resourceURL;
 	}
@@ -447,6 +469,47 @@ public class CPContentHelperImpl implements CPContentHelper {
 						null);
 
 		return !cpDefinitionSpecificationOptionValues.isEmpty();
+	}
+
+	@Override
+	public boolean isInWishList(
+			CPSku cpSku, CPCatalogEntry cpCatalogEntry,
+			ThemeDisplay themeDisplay)
+		throws Exception {
+
+		CommerceWishList commerceWishList =
+			_commerceWishListService.getDefaultCommerceWishList(
+				themeDisplay.getScopeGroupId(), themeDisplay.getUserId());
+
+		if (commerceWishList != null) {
+			long commerceWishListId = commerceWishList.getCommerceWishListId();
+
+			if (cpSku != null) {
+				int itemByContainsCPInstanceCount =
+					_commerceWishListItemService.
+						getCommerceWishListItemByContainsCPInstanceCount(
+							commerceWishListId, cpSku.getCPInstanceUuid());
+
+				if (itemByContainsCPInstanceCount > 0) {
+					return true;
+				}
+
+				return false;
+			}
+
+			int itemByContainsCProductCount =
+				_commerceWishListItemService.
+					getCommerceWishListItemByContainsCProductCount(
+						commerceWishListId, cpCatalogEntry.getCProductId());
+
+			if (itemByContainsCProductCount > 0) {
+				return true;
+			}
+
+			return false;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -555,6 +618,12 @@ public class CPContentHelperImpl implements CPContentHelper {
 
 	@Reference
 	private CommerceMediaResolver _commerceMediaResolver;
+
+	@Reference
+	private CommerceWishListItemService _commerceWishListItemService;
+
+	@Reference
+	private CommerceWishListService _commerceWishListService;
 
 	@Reference
 	private CPAttachmentFileEntryLocalService

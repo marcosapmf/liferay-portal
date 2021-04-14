@@ -112,6 +112,12 @@ public interface CommerceShippingFixedOptionService extends BaseService {
 			long commerceShippingMethodId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public long getCommerceShippingFixedOptionsCount(
+			long companyId, long groupId, long commerceShippingMethodId,
+			String keywords)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

@@ -22,7 +22,6 @@ import ClaySticker from '@clayui/sticker';
 import classNames from 'classnames';
 import {useTimeout} from 'frontend-js-react-web';
 import {fetch, objectToFormData} from 'frontend-js-web';
-import dom from 'metal-dom';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
@@ -119,8 +118,7 @@ const ManageCollaborators = ({
 		if (
 			invalidElements.indexOf(eventTarget.nodeName.toLowerCase()) === -1
 		) {
-			const collaboratorContainer = dom.closest(
-				eventTarget,
+			const collaboratorContainer = eventTarget.closest(
 				'.list-group-item'
 			);
 
@@ -147,6 +145,21 @@ const ManageCollaborators = ({
 		deleteSharingEntryIds.push(sharingEntryId);
 
 		setDeleteSharingEntryIds(deleteSharingEntryIds);
+	};
+
+	const setCollaborator = (updatedCollaborator) => {
+		setCurrentCollaborators(
+			currentCollaborators.map((collaborator) => {
+				if (collaborator.userId === updatedCollaborator.userId) {
+					return {
+						...collaborator,
+						...updatedCollaborator,
+					};
+				}
+
+				return collaborator;
+			})
+		);
 	};
 
 	const handleExpirationDateCheckboxChange = (event) => {
@@ -208,6 +221,23 @@ const ManageCollaborators = ({
 		}
 
 		delay(() => findExpirationDateError(), 0);
+	};
+
+	const showNotification = (message, error) => {
+		const parentOpenToast = Liferay.Util.getOpener().Liferay.Util.openToast;
+
+		const openToastParams = {
+			message,
+		};
+
+		if (error) {
+			openToastParams.title = Liferay.Language.get('error');
+			openToastParams.type = 'danger';
+		}
+
+		closeDialog();
+
+		parentOpenToast(openToastParams);
 	};
 
 	const handleSaveButtonClick = () => {
@@ -280,38 +310,6 @@ const ManageCollaborators = ({
 			...sharingEntryIdsAndShareables,
 			[sharingEntryId]: shareable,
 		});
-	};
-
-	const setCollaborator = (updatedCollaborator) => {
-		setCurrentCollaborators(
-			currentCollaborators.map((collaborator) => {
-				if (collaborator.userId === updatedCollaborator.userId) {
-					return {
-						...collaborator,
-						...updatedCollaborator,
-					};
-				}
-
-				return collaborator;
-			})
-		);
-	};
-
-	const showNotification = (message, error) => {
-		const parentOpenToast = Liferay.Util.getOpener().Liferay.Util.openToast;
-
-		const openToastParams = {
-			message,
-		};
-
-		if (error) {
-			openToastParams.title = Liferay.Language.get('error');
-			openToastParams.type = 'danger';
-		}
-
-		closeDialog();
-
-		parentOpenToast(openToastParams);
 	};
 
 	useEffect(() => {
@@ -538,7 +536,7 @@ const ManageCollaborators = ({
 						className="empty-collaborators"
 						verticalAlign="center"
 					>
-						<ClayLayout.ContentCol>
+						<ClayLayout.ContentCol expand>
 							<div className="message-content">
 								<h3>
 									{Liferay.Language.get('no-collaborators')}

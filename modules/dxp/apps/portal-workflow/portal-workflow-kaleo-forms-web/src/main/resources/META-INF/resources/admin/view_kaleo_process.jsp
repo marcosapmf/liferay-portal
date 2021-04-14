@@ -45,7 +45,7 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 	navigationItems="<%= kaleoFormsViewRecordsDisplayContext.getNavigationItems() %>"
 />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= kaleoFormsViewRecordsDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= kaleoFormsViewRecordsDisplayContext.getClearResultsURL() %>"
 	componentId="kaleoFormsRecordsManagementToolbar"
@@ -210,7 +210,7 @@ portletURL.setParameter("kaleoProcessId", String.valueOf(kaleoProcess.getKaleoPr
 							),
 						},
 
-						<portlet:actionURL name="deleteDDLRecord" var="deleteDDLRecordURL">
+						<portlet:actionURL name="/kaleo_forms_admin/delete_record" var="deleteDDLRecordURL">
 							<portlet:param name="mvcPath" value="/admin/view_kaleo_process.jsp" />
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 							<portlet:param name="kaleoProcessId" value="<%= String.valueOf(kaleoProcess.getKaleoProcessId()) %>" />

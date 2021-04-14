@@ -18,6 +18,7 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.commerce.service.CommerceShippingMethodService;
@@ -49,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPPING_METHODS,
-		"mvc.command.name=editCommerceShippingFixedOptionRel"
+		"mvc.command.name=/commerce_shipping_methods/edit_commerce_shipping_fixed_option_rel"
 	},
 	service = MVCRenderCommand.class
 )
@@ -63,14 +64,15 @@ public class EditCommerceShippingFixedOptionRelMVCRenderCommand
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(
-				"/edit_shipping_option_setting.jsp");
+				"/edit_commerce_shipping_fixed_option_rel.jsp");
 
 		try {
 			CommerceShippingFixedOptionRelsDisplayContext
 				commerceShippingFixedOptionRelsDisplayContext =
 					new CommerceShippingFixedOptionRelsDisplayContext(
-						_commerceCountryService, _commerceCurrencyLocalService,
-						_commerceRegionService, _commerceShippingMethodService,
+						_commerceChannelLocalService, _commerceCountryService,
+						_commerceCurrencyLocalService, _commerceRegionService,
+						_commerceShippingMethodService,
 						_commerceShippingFixedOptionService,
 						_commerceInventoryWarehouseService,
 						_commerceShippingFixedOptionRelService,
@@ -101,6 +103,9 @@ public class EditCommerceShippingFixedOptionRelMVCRenderCommand
 
 		return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
 	}
+
+	@Reference
+	private CommerceChannelLocalService _commerceChannelLocalService;
 
 	@Reference
 	private CommerceCountryService _commerceCountryService;

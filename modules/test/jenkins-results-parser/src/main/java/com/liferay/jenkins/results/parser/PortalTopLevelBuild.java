@@ -28,6 +28,17 @@ public class PortalTopLevelBuild
 	}
 
 	@Override
+	public String getBaseGitRepositoryName() {
+		String branchName = getBranchName();
+
+		if (branchName.equals("master")) {
+			return "liferay-portal";
+		}
+
+		return "liferay-portal-ee";
+	}
+
+	@Override
 	public BranchInformation getOSBAsahBranchInformation() {
 		return getBranchInformation("osb.asah");
 	}
@@ -46,6 +57,10 @@ public class PortalTopLevelBuild
 	public BranchInformation getPortalBaseBranchInformation() {
 		BranchInformation portalBranchInformation =
 			getPortalBranchInformation();
+
+		if (portalBranchInformation == null) {
+			return null;
+		}
 
 		String upstreamBranchName =
 			portalBranchInformation.getUpstreamBranchName();

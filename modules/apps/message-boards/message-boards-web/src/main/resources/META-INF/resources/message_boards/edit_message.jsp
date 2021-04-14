@@ -376,6 +376,7 @@ if (portletTitleBasedNavigation) {
 
 							try {
 								String priorityName = priority[0];
+
 								double priorityValue = GetterUtil.getDouble(priority[2]);
 
 								if (priorityValue > 0) {
@@ -459,35 +460,12 @@ if (portletTitleBasedNavigation) {
 	</aui:form>
 </clay:container-fluid>
 
-<aui:script require='<%= npmResolvedPackageName + "/message_boards/js/MBPortlet.es as MBPortlet" %>'>
-	new MBPortlet.default({
-		constants: {
-			ACTION_PUBLISH: '<%= WorkflowConstants.ACTION_PUBLISH %>',
-			ACTION_SAVE_DRAFT: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>',
-			CMD: '<%= Constants.CMD %>',
-		},
-		currentAction:
-			'<%= (message == null) ? Constants.ADD : Constants.UPDATE %>',
+<%
+MBEditMessageDisplayContext mbEditMessageDisplayContext = new MBEditMessageDisplayContext(liferayPortletRequest, liferayPortletResponse, message);
+%>
 
-		<c:if test="<%= message != null %>">
-			<portlet:resourceURL id="/message_boards/get_attachments" var="getAttachmentsURL">
-				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
-			</portlet:resourceURL>
-
-			getAttachmentsURL: '<%= getAttachmentsURL %>',
-		</c:if>
-
-		namespace: '<portlet:namespace />',
-		rootNode: '#<portlet:namespace />mbEditPageContainer',
-
-		<c:if test="<%= message != null %>">
-			<portlet:renderURL var="viewTrashAttachmentsURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-				<portlet:param name="mvcRenderCommandName" value="/message_boards/view_deleted_message_attachments" />
-				<portlet:param name="redirect" value="<%= currentURL %>" />
-				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
-			</portlet:renderURL>
-
-			viewTrashAttachmentsURL: '<%= viewTrashAttachmentsURL %>',
-		</c:if>
-	});
-</aui:script>
+<liferay-frontend:component
+	context="<%= mbEditMessageDisplayContext.getMBPortletComponentContext() %>"
+	module="message_boards/js/MBPortlet.es"
+	servletContext="<%= application %>"
+/>

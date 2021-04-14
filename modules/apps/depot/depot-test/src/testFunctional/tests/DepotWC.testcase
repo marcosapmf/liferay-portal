@@ -22,6 +22,10 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			JSONDepot.deleteDepot(depotName = "Test Depot Name");
+
+			Site.tearDownCP();
+
 			User.logoutPG();
 		}
 	}
@@ -81,8 +85,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -122,7 +125,11 @@ definition {
 	@description = "This ensures that a web content folder can be edited in a depot."
 	@priority = "3"
 	test EditFolder {
-		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Edit Folder Depot");
+
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Edit Folder Depot");
 
 		WebContentFolder.addCP(
 			folderDescription = "WC Folder Description",
@@ -153,8 +160,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -181,10 +187,22 @@ definition {
 
 		NavItem.gotoStructures();
 
-		WebContentStructures.editSubstructureDefaultValuesCP(
-			depotName = "Test Depot Name",
-			editSubstructureFieldNames = "Text",
-			substructureName = "WC Structure Name");
+		WebContentStructures.editStructureDefaultValuesCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(webContentText = "Edited Text Field");
+
+		PortletEntry.save();
+
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.editStructureDefaultValuesCP(structureName = "WC Structure Name");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "Edited Text Field");
 	}
 
 	@description = "This ensures that a web content can be edited in a depot."
@@ -204,6 +222,14 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
+		AssertElementNotPresent(
+			key_panel = "Display Page Template",
+			locator1 = "Panel#PANEL_COLLAPSED");
+
+		AssertElementNotPresent(
+			key_panel = "Display Page Template",
+			locator1 = "Panel#PANEL_EXPANDED");
+
 		PortletEntry.publish();
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
@@ -216,6 +242,7 @@ definition {
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title Edit");
 
 		WebContent.viewCP(
+			displayPageTemplateDisabled = "true",
 			webContentContent = "WC WebContent Content Edit",
 			webContentTitle = "WC WebContent Title Edit");
 	}
@@ -223,17 +250,21 @@ definition {
 	@description = "This ensures that a web content can be expired in a depot."
 	@priority = "3"
 	test ExpireWebContent {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Expire WC Depot");
+
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
-			groupName = "Test Depot Name",
+			groupName = "Test Expire WC Depot",
 			site = "false",
 			title = "WC WebContent Title");
 
-		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Expire WC Depot");
 
 		WebContent.expireCP(webContentTitleList = "WC WebContent Title");
 
-		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Expire WC Depot");
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
 
@@ -301,8 +332,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 

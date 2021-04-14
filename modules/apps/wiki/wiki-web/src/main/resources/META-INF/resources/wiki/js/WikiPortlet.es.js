@@ -12,79 +12,110 @@
  * details.
  */
 
-import {PortletBase, fetch} from 'frontend-js-web';
-import core from 'metal';
-import {EventHandler} from 'metal-events';
+import {fetch} from 'frontend-js-web';
+
+const CONFIRM_DISCARD_IMAGES = Liferay.Language.get(
+	'uploads-are-in-progress-confirmation'
+);
+
+const CONFIRM_LOSE_FORMATTING = Liferay.Language.get(
+	'you-may-lose-formatting-when-switching-from-x-to-x'
+);
 
 /**
  * WikiPortlet
  *
- * @abstract
- * @extends {Component}
  */
-class WikiPortlet extends PortletBase {
 
-	/**
-	 * @inheritDoc
-	 */
-	created() {
-		this.eventHandler_ = new EventHandler();
+class WikiPortlet {
+	constructor({
+		constants,
+		currentAction,
+		namespace,
+		renderUrl,
+		rootNodeId,
+		strings = {
+			confirmDiscardImages: CONFIRM_DISCARD_IMAGES,
+			confirmLoseFormatting: CONFIRM_LOSE_FORMATTING,
+		},
+	}) {
+		this._constants = constants;
+		this._currentAction = currentAction;
+		this._namespace = namespace;
+		this._renderUrl = renderUrl;
+		this._strings = strings;
+
+		this.rootNode = document.getElementById(rootNodeId);
+		this.workflowActionInputNode = document.getElementById(
+			`${namespace}workflowAction`
+		);
+
+		this._events = [];
+		this._attachEvents();
 	}
 
-	/**
-	 * @inheritDoc
-	 */
-	attached() {
-		const formatSelect = this.one('#format');
+	dispose() {
+		this._events.forEach(({event, listener, target}) =>
+			target.removeEventListener(event, listener)
+		);
+
+		this._events = [];
+	}
+
+	_addEventListener(target, event, fn) {
+		target.addEventListener(event, fn);
+		this._events.push({event, fn, target});
+	}
+
+	_attachEvents() {
+		const namespace = this._namespace;
+
+		const formatSelect = document.getElementById(`${namespace}format`);
 
 		if (formatSelect) {
-			this.currentFormatLabel = formatSelect.options[
+			this._currentFormatLabel = formatSelect.options[
 				formatSelect.selectedIndex
 			].text.trim();
-			this.currentFormatIndex = formatSelect.selectedIndex;
+			this._currentFormatIndex = formatSelect.selectedIndex;
 
-			this.eventHandler_.add(
-				formatSelect.addEventListener('change', (e) => {
-					this.changeWikiFormat_(e);
-				})
-			);
+			this._addEventListener(formatSelect, 'change', (e) => {
+				this._changeWikiFormat(e);
+			});
 		}
 
-		const publishButton = this.one('#publishButton');
+		const publishButton = document.getElementById(
+			`${namespace}publishButton`
+		);
 
 		if (publishButton) {
-			this.eventHandler_.add(
-				publishButton.addEventListener('click', (e) => {
-					this.publishPage_(e);
-				})
-			);
+			this._addEventListener(publishButton, 'click', () => {
+				this.workflowActionInputNode.value = this._constants.ACTION_PUBLISH;
+				this._save();
+			});
 		}
 
-		const saveButton = this.one('#saveButton');
+		const saveButton = document.getElementById(`${namespace}saveButton`);
 
 		if (saveButton) {
-			this.eventHandler_.add(
-				saveButton.addEventListener('click', (e) => {
-					this.saveDraft_(e);
-				})
-			);
+			this._addEventListener(saveButton, 'click', () => {
+				this.workflowActionInputNode.value = this._constants.ACTION_SAVE_DRAFT;
+				this._save();
+			});
 		}
 
-		const searchContainerId = this.ns('pageAttachments');
+		const searchContainerId = `${namespace}pageAttachments`;
 
 		Liferay.componentReady(searchContainerId).then((searchContainer) => {
-			this.eventHandler_.add(
-				searchContainer
-					.get('contentBox')
-					.delegate(
-						'click',
-						this.removeAttachment_.bind(this),
-						'.delete-attachment'
-					)
-			);
-
-			this.searchContainer_ = searchContainer;
+			searchContainer
+				.get('contentBox')
+				.delegate(
+					'click',
+					this._removeAttachment.bind(this),
+					'.delete-attachment'
+				);
 		});
+
+		this.searchContainerId = searchContainerId;
 	}
 
 	/**
@@ -94,7 +125,7 @@ class WikiPortlet extends PortletBase {
 	 * @protected
 	 * @param {Event} event The select event that triggered the change action
 	 */
-	changeWikiFormat_(event) {
+	_changeWikiFormat(event) {
 		const formatSelect = event.currentTarget;
 
 		const newFormat = formatSelect.options[
@@ -102,36 +133,21 @@ class WikiPortlet extends PortletBase {
 		].text.trim();
 
 		const confirmMessage = Liferay.Util.sub(
-			this.strings.confirmLoseFormatting,
-			this.currentFormatLabel,
+			this._strings.confirmLoseFormatting,
+			this._currentFormatLabel,
 			newFormat
 		);
 
 		if (confirm(confirmMessage)) {
-			this.one('form').setAttribute('action', this.renderUrl);
-			this.save_();
+			const form = this.rootNode.querySelector(
+				`[name="${this._namespace}fm"]`
+			);
+			form.setAttribute('action', this._renderUrl);
+			this._save();
 		}
 		else {
 			formatSelect.selectedIndex = this.currentFormatIndex;
 		}
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	detached() {
-		super.detached();
-		this.eventHandler_.removeAllListeners();
-	}
-
-	/**
-	 * Publish the wiki page.
-	 *
-	 * @protected
-	 */
-	publishPage_() {
-		this.one('#workflowAction').value = this.constants.ACTION_PUBLISH;
-		this.save_();
 	}
 
 	/**
@@ -140,19 +156,21 @@ class WikiPortlet extends PortletBase {
 	 * @protected
 	 * @param {Event} event The click event that triggered the remove action
 	 */
-	removeAttachment_(event) {
+	_removeAttachment(event) {
 		const link = event.currentTarget;
 
 		const deleteURL = link.getAttribute('data-url');
 
 		fetch(deleteURL).then(() => {
-			const searchContainer = this.searchContainer_;
-
-			searchContainer.deleteRow(
-				link.ancestor('tr'),
-				link.getAttribute('data-rowid')
+			Liferay.componentReady(this.searchContainerId).then(
+				(searchContainer) => {
+					searchContainer.deleteRow(
+						link.ancestor('tr'),
+						link.getAttribute('data-rowid')
+					);
+					searchContainer.updateDataStore();
+				}
 			);
-			searchContainer.updateDataStore();
 		});
 	}
 
@@ -165,12 +183,12 @@ class WikiPortlet extends PortletBase {
 	 * @return {Boolean} False if there are temporal images and
 	 * user does not confirm she wants to lose them. True in other case.
 	 */
-	removeTempImages_() {
-		const tempImages = this.all('img[data-random-id]');
+	_removeTempImages() {
+		const tempImages = this.rootNode.querySelector('img[data-random-id]');
 		let discardTempImages = true;
 
-		if (tempImages.length > 0) {
-			if (confirm(this.strings.confirmDiscardImages)) {
+		if (tempImages && tempImages.length > 0) {
+			if (confirm(this._strings.confirmDiscardImages)) {
 				tempImages.forEach((node) => {
 					node.parentElement.remove();
 				});
@@ -188,87 +206,25 @@ class WikiPortlet extends PortletBase {
 	 *
 	 * @protected
 	 */
-	save_() {
-		if (this.removeTempImages_()) {
-			this.one('#' + this.constants.CMD).value = this.currentAction;
+	_save() {
+		const namespace = this._namespace;
 
-			const contentEditor = window[this.ns('contentEditor')];
+		if (this._removeTempImages()) {
+			document.getElementById(
+				namespace + this._constants.CMD
+			).value = this._currentAction;
+
+			const contentEditor = window[`${namespace}contentEditor`];
 
 			if (contentEditor) {
-				this.one('#content').value = contentEditor.getHTML();
+				document.getElementById(
+					`${namespace}content`
+				).value = contentEditor.getHTML();
 			}
 
-			submitForm(document[this.ns('fm')]);
+			submitForm(document[`${namespace}fm`]);
 		}
 	}
-
-	/**
-	 * Saves the wiki page as a draft.
-	 *
-	 * @protected
-	 */
-	saveDraft_() {
-		this.one('#workflowAction').value = this.constants.ACTION_SAVE_DRAFT;
-		this.save_();
-	}
 }
-
-/**
- * WikiPortlet State definition.
- * @ignore
- * @static
- * @type {!Object}
- */
-WikiPortlet.STATE = {
-
-	/**
-	 * Portlet's constants
-	 * @instance
-	 * @memberof WikiPortlet
-	 * @type {!Object}
-	 */
-	constants: {
-		validator: core.isObject,
-	},
-
-	/**
-	 * The current action (CMD.ADD, CMD.UPDATE, ...)
-	 * for the wiki page
-	 * @instance
-	 * @memberof WikiPortlet
-	 * @type {String}
-	 */
-	currentAction: {
-		validator: core.isString,
-	},
-
-	/**
-	 * The render url of the portlet
-	 * @instance
-	 * @memberof WikiPortlet
-	 * @type {String}
-	 */
-	renderUrl: {
-		validator: core.isString,
-	},
-
-	/**
-	 * Portlet's messages
-	 * @instance
-	 * @memberof WikiPortlet
-	 * @type {Object}
-	 */
-	strings: {
-		validator: core.isObject,
-		value: {
-			confirmDiscardImages: Liferay.Language.get(
-				'uploads-are-in-progress-confirmation'
-			),
-			confirmLoseFormatting: Liferay.Language.get(
-				'you-may-lose-formatting-when-switching-from-x-to-x'
-			),
-		},
-	},
-};
 
 export default WikiPortlet;

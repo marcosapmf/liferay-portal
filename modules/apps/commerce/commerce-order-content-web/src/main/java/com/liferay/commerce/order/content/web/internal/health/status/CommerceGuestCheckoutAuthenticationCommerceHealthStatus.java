@@ -20,9 +20,9 @@ import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceHealthStatusConstants;
 import com.liferay.commerce.product.channel.CommerceChannelHealthStatus;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.importer.CPFileImporter;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.model.CommerceChannelConstants;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.model.JournalArticle;
@@ -144,7 +144,7 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 
 			List<JournalArticle> journalArticles =
 				_journalArticleLocalService.getArticlesByStructureId(
-					commerceChannel.getSiteGroupId(),
+					serviceContext.getScopeGroupId(),
 					"guest-checkout-authentication-structure", 0, 1, null);
 
 			JournalArticle journalArticle = journalArticles.get(0);
@@ -228,7 +228,7 @@ public class CommerceGuestCheckoutAuthenticationCommerceHealthStatus
 				CommerceOrderCheckoutConfiguration.class,
 				new GroupServiceSettingsLocator(
 					commerceChannel.getGroupId(),
-					CommerceConstants.ORDER_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_ORDER));
 
 		if (!commerceOrderCheckoutConfiguration.guestCheckoutEnabled()) {
 			return true;

@@ -28,6 +28,7 @@ import com.liferay.headless.delivery.dto.v1_0.PageTemplate;
 import com.liferay.headless.delivery.dto.v1_0.PageTemplateCollection;
 import com.liferay.headless.delivery.dto.v1_0.Settings;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.page.template.admin.web.internal.exception.DropzoneLayoutStructureItemException;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.LayoutStructureItemImporter;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.structure.importer.LayoutStructureItemImporterTracker;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -241,7 +242,8 @@ public class LayoutPageTemplatesImporterImpl
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Invalid display page template for: " +
-							zipEntry.getName());
+							zipEntry.getName(),
+						displayPageTemplateValidatorException);
 				}
 
 				_layoutPageTemplatesImporterResultEntries.add(
@@ -280,7 +282,8 @@ public class LayoutPageTemplatesImporterImpl
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Invalid page definition for: " +
-							displayPageTemplate.getName());
+							displayPageTemplate.getName(),
+						exception);
 				}
 
 				_layoutPageTemplatesImporterResultEntries.add(
@@ -455,7 +458,9 @@ public class LayoutPageTemplatesImporterImpl
 			}
 			catch (MasterPageValidatorException masterPageValidatorException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Invalid master page for: " + zipEntry.getName());
+					_log.warn(
+						"Invalid master page for: " + zipEntry.getName(),
+						masterPageValidatorException);
 				}
 
 				_layoutPageTemplatesImporterResultEntries.add(
@@ -493,7 +498,8 @@ public class LayoutPageTemplatesImporterImpl
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Invalid page definition for: " + masterPage.getName());
+						"Invalid page definition for: " + masterPage.getName(),
+						exception);
 				}
 
 				_layoutPageTemplatesImporterResultEntries.add(
@@ -598,7 +604,8 @@ public class LayoutPageTemplatesImporterImpl
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
-						"Invalid page template for: " + zipEntry.getName());
+						"Invalid page template for: " + zipEntry.getName(),
+						exception);
 				}
 
 				_layoutPageTemplatesImporterResultEntries.add(
@@ -644,7 +651,8 @@ public class LayoutPageTemplatesImporterImpl
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Invalid page definition for: " +
-							pageTemplate.getName());
+							pageTemplate.getName(),
+						exception);
 				}
 
 				_layoutPageTemplatesImporterResultEntries.add(
@@ -965,6 +973,17 @@ public class LayoutPageTemplatesImporterImpl
 								_toTypeName(layoutPageTemplateEntryType)
 							})));
 			}
+		}
+		catch (DropzoneLayoutStructureItemException
+					dropzoneLayoutStructureItemException) {
+
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					dropzoneLayoutStructureItemException,
+					dropzoneLayoutStructureItemException);
+			}
+
+			throw new PortalException();
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {

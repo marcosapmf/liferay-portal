@@ -35,14 +35,14 @@ portletURL.setParameter("eventName", eventName);
 				add(
 					navigationItem -> {
 						navigationItem.setActive(true);
-						navigationItem.setLabel(LanguageUtil.get(request, "document-types"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "document-types"));
 					});
 			}
 		}
 	%>'
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="selectFileEntryTypeFm">
+<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectFileEntryTypeFm">
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
 	>
@@ -61,11 +61,10 @@ portletURL.setParameter("eventName", eventName);
 				row.setCssClass("select-action active");
 			}
 
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"fileEntryTypeId", fileEntryType.getFileEntryTypeId()
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"fileEntryTypeId", fileEntryType.getFileEntryTypeId()
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-icon

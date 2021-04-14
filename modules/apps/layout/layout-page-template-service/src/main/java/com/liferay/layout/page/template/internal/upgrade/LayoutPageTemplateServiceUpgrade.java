@@ -15,6 +15,7 @@
 package com.liferay.layout.page.template.internal.upgrade;
 
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.layout.page.template.internal.upgrade.v1_1_0.UpgradeLayoutPrototype;
 import com.liferay.layout.page.template.internal.upgrade.v1_1_1.UpgradeLayoutPageTemplateEntry;
 import com.liferay.layout.page.template.internal.upgrade.v1_2_0.UpgradeLayoutPageTemplateStructure;
@@ -146,10 +147,21 @@ public class LayoutPageTemplateServiceUpgrade
 			new com.liferay.layout.page.template.internal.upgrade.v3_4_1.
 				UpgradeLayoutPageTemplateEntry(_portal),
 			new UpgradeFragmentEntryLinkEditableValues());
+
+		registry.register(
+			"3.4.1", "3.4.2",
+			new com.liferay.layout.page.template.internal.upgrade.v3_4_2.
+				UpgradeFragmentEntryLinkEditableValues(),
+			new com.liferay.layout.page.template.internal.upgrade.v3_4_2.
+				UpgradeLayoutPageTemplateStructureRel(
+					_fragmentEntryConfigurationParser));
 	}
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;

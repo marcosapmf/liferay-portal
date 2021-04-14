@@ -212,6 +212,11 @@ public class FragmentEntryProcessorHelperImpl
 
 			value = contentAccessor.getContent();
 		}
+		else if (value instanceof WebImage) {
+			WebImage webImage = (WebImage)value;
+
+			return webImage.toJSONObject();
+		}
 
 		return formatMappedValue(
 			value, fragmentEntryProcessorContext.getLocale());
@@ -234,9 +239,15 @@ public class FragmentEntryProcessorHelperImpl
 
 		String className = _portal.getClassName(classNameId);
 
+		long classPK = jsonObject.getLong("classPK");
+
+		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
+			classPK);
+
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			_infoItemServiceTracker.getFirstInfoItemService(
-				InfoItemObjectProvider.class, className);
+				InfoItemObjectProvider.class, className,
+				infoItemIdentifier.getInfoItemServiceFilter());
 
 		if (infoItemObjectProvider == null) {
 			return null;
@@ -245,14 +256,9 @@ public class FragmentEntryProcessorHelperImpl
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
 			className);
 
-		long classPK = jsonObject.getLong("classPK");
-
 		if ((trashHandler != null) && trashHandler.isInTrash(classPK)) {
 			return null;
 		}
-
-		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
-			classPK);
 
 		if (fragmentEntryProcessorContext.getPreviewClassPK() > 0) {
 			infoItemIdentifier = new ClassPKInfoItemIdentifier(

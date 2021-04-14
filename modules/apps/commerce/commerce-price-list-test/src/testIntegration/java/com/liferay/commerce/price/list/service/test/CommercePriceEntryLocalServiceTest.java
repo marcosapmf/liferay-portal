@@ -14,8 +14,6 @@
 
 package com.liferay.commerce.price.list.service.test;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
@@ -34,6 +32,7 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -48,6 +47,8 @@ import java.util.List;
 
 import org.frutilla.FrutillaRule;
 
+import org.hamcrest.CoreMatchers;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,6 +62,7 @@ import org.junit.runner.RunWith;
  * @author Ethan Bustad
  * @author Luca Pellizzon
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommercePriceEntryLocalServiceTest {
 
@@ -130,9 +132,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpInstance.getCPInstanceId(),
-				commercePriceList.getCommercePriceListId(), null, price,
-				promoPrice);
+				null, cpInstance.getCPInstanceId(),
+				commercePriceList.getCommercePriceListId(), price, promoPrice);
 
 		_assertPriceEntryAttributes(
 			cpInstance, price, promoPrice, commercePriceEntry);
@@ -181,15 +182,15 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpInstance.getCPInstanceId(),
-				commercePriceList.getCommercePriceListId(),
-				externalReferenceCode, price, promoPrice);
+				externalReferenceCode, cpInstance.getCPInstanceId(),
+				commercePriceList.getCommercePriceListId(), price, promoPrice);
 
 		_assertPriceEntryAttributes(
 			cpInstance, price, promoPrice, commercePriceEntry);
 		Assert.assertThat(
 			externalReferenceCode,
-			equalTo(commercePriceEntry.getExternalReferenceCode()));
+			CoreMatchers.equalTo(
+				commercePriceEntry.getExternalReferenceCode()));
 	}
 
 	@Test
@@ -220,10 +221,9 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpInstance.getCPInstanceId(),
+				RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
 				commercePriceList.getCommercePriceListId(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomDouble());
+				RandomTestUtil.randomDouble(), RandomTestUtil.randomDouble());
 
 		CommercePriceEntry fetchedCommercePriceEntry =
 			_commercePriceEntryLocalService.fetchCommercePriceEntry(
@@ -232,7 +232,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		Assert.assertThat(
 			commercePriceEntry.getCommercePriceEntryId(),
-			equalTo(fetchedCommercePriceEntry.getCommercePriceEntryId()));
+			CoreMatchers.equalTo(
+				fetchedCommercePriceEntry.getCommercePriceEntryId()));
 	}
 
 	@Test
@@ -305,10 +306,9 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpInstance.getCPInstanceId(),
+				RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
 				parentCommercePriceList.getCommercePriceListId(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomDouble());
+				RandomTestUtil.randomDouble(), RandomTestUtil.randomDouble());
 
 		CommercePriceEntry fetchedCommercePriceEntry =
 			_commercePriceEntryLocalService.fetchCommercePriceEntry(
@@ -317,7 +317,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		Assert.assertThat(
 			commercePriceEntry.getCommercePriceEntryId(),
-			equalTo(fetchedCommercePriceEntry.getCommercePriceEntryId()));
+			CoreMatchers.equalTo(
+				fetchedCommercePriceEntry.getCommercePriceEntryId()));
 	}
 
 	@Test
@@ -358,17 +359,15 @@ public class CommercePriceEntryLocalServiceTest {
 				true, null, null, null);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpInstance.getCPInstanceId(),
+			RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
 			parentCommercePriceList.getCommercePriceListId(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-			RandomTestUtil.randomDouble());
+			RandomTestUtil.randomDouble(), RandomTestUtil.randomDouble());
 
 		CommercePriceEntry childCommercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpInstance.getCPInstanceId(),
+				RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
 				childCommercePriceList.getCommercePriceListId(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomDouble());
+				RandomTestUtil.randomDouble(), RandomTestUtil.randomDouble());
 
 		CommercePriceEntry fetchedCommercePriceEntry =
 			_commercePriceEntryLocalService.fetchCommercePriceEntry(
@@ -377,7 +376,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		Assert.assertThat(
 			childCommercePriceEntry.getCommercePriceEntryId(),
-			equalTo(fetchedCommercePriceEntry.getCommercePriceEntryId()));
+			CoreMatchers.equalTo(
+				fetchedCommercePriceEntry.getCommercePriceEntryId()));
 	}
 
 	@Test
@@ -416,10 +416,9 @@ public class CommercePriceEntryLocalServiceTest {
 				true, null, null, null);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpInstance.getCPInstanceId(),
+			RandomTestUtil.randomString(), cpInstance.getCPInstanceId(),
 			parentCommercePriceList.getCommercePriceListId(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-			RandomTestUtil.randomDouble());
+			RandomTestUtil.randomDouble(), RandomTestUtil.randomDouble());
 
 		CommercePriceEntry fetchedCommercePriceEntry =
 			_commercePriceEntryLocalService.fetchCommercePriceEntry(
@@ -472,8 +471,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-				0L, cpInstance.getCPInstanceId(),
-				commercePriceList.getCommercePriceListId(), null, null, price,
+				null, 0L, cpInstance.getCPInstanceId(),
+				commercePriceList.getCommercePriceListId(), null, price,
 				promoPrice);
 
 		_assertPriceEntryAttributes(
@@ -524,9 +523,9 @@ public class CommercePriceEntryLocalServiceTest {
 		double promoPrice = RandomTestUtil.randomDouble();
 
 		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			0L, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), externalReferenceCode,
-			null, price, promoPrice);
+			externalReferenceCode, 0L, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), null, price,
+			promoPrice);
 
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryLocalService.fetchByExternalReferenceCode(
@@ -580,9 +579,8 @@ public class CommercePriceEntryLocalServiceTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpInstance.getCPInstanceId(),
-				commercePriceList.getCommercePriceListId(), null, price,
-				promoPrice);
+				null, cpInstance.getCPInstanceId(),
+				commercePriceList.getCommercePriceListId(), price, promoPrice);
 
 		long commercePriceEntryId =
 			commercePriceEntry.getCommercePriceEntryId();
@@ -591,9 +589,9 @@ public class CommercePriceEntryLocalServiceTest {
 		double updatedPromoPrice = RandomTestUtil.randomDouble();
 
 		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			commercePriceEntryId, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), null, null,
-			updatedPrice, updatedPromoPrice);
+			null, commercePriceEntryId, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), null, updatedPrice,
+			updatedPromoPrice);
 
 		CommercePriceEntry updatedCommercePriceEntry =
 			_commercePriceEntryLocalService.getCommercePriceEntry(
@@ -644,13 +642,12 @@ public class CommercePriceEntryLocalServiceTest {
 		double promoPrice = RandomTestUtil.randomDouble();
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), null, price,
-			promoPrice);
+			null, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), price, promoPrice);
 
 		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			0L, cpInstance.getCPInstanceId(),
-			commercePriceList.getCommercePriceListId(), null, null, price,
+			null, 0L, cpInstance.getCPInstanceId(),
+			commercePriceList.getCommercePriceListId(), null, price,
 			promoPrice);
 	}
 
@@ -694,7 +691,7 @@ public class CommercePriceEntryLocalServiceTest {
 		double promoPrice = RandomTestUtil.randomDouble();
 
 		CommercePriceEntryTestUtil.upsertCommercePriceEntry(
-			0L, cpInstanceId, commercePriceList.getCommercePriceListId(), null,
+			null, 0L, cpInstanceId, commercePriceList.getCommercePriceListId(),
 			null, price, promoPrice);
 	}
 
@@ -710,13 +707,15 @@ public class CommercePriceEntryLocalServiceTest {
 
 		Assert.assertThat(
 			cpInstance.getCPInstanceId(),
-			equalTo(actualCPInstance.getCPInstanceId()));
+			CoreMatchers.equalTo(actualCPInstance.getCPInstanceId()));
 
 		BigDecimal actualPrice = commercePriceEntry.getPrice();
 		BigDecimal actualPromoPrice = commercePriceEntry.getPromoPrice();
 
-		Assert.assertThat(price, equalTo(actualPrice.doubleValue()));
-		Assert.assertThat(promoPrice, equalTo(actualPromoPrice.doubleValue()));
+		Assert.assertThat(
+			price, CoreMatchers.equalTo(actualPrice.doubleValue()));
+		Assert.assertThat(
+			promoPrice, CoreMatchers.equalTo(actualPromoPrice.doubleValue()));
 	}
 
 	private CommerceCurrency _commerceCurrency;

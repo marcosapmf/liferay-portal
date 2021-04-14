@@ -27,21 +27,15 @@ CommerceSubscriptionContentDisplayContext commerceSubscriptionContentDisplayCont
 		</div>
 	</c:when>
 	<c:otherwise>
-
-		<%
-		SearchContainer<CommerceSubscriptionEntry> commerceSubscriptionEntrySearchContainer = commerceSubscriptionContentDisplayContext.getSearchContainer();
-		%>
-
-		<div class="container-fluid-1280" id="<portlet:namespace />subscriptionEntriesContainer">
+		<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />subscriptionEntriesContainer">
 			<div class="commerce-product-subscription-entries-container" id="<portlet:namespace />entriesContainer">
 				<liferay-ui:search-container
 					id="commerceSubscriptionEntries"
 					iteratorURL="<%= commerceSubscriptionContentDisplayContext.getPortletURL() %>"
-					searchContainer="<%= commerceSubscriptionEntrySearchContainer %>"
+					searchContainer="<%= commerceSubscriptionContentDisplayContext.getSearchContainer() %>"
 				>
 					<liferay-ui:search-container-row
 						className="com.liferay.commerce.model.CommerceSubscriptionEntry"
-						cssClass="entry-display-style"
 						keyProperty="commerceSubscriptionEntryId"
 						modelVar="commerceSubscriptionEntry"
 					>

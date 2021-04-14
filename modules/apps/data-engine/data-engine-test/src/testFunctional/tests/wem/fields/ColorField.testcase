@@ -1,0 +1,325 @@
+@component-name = "portal-wcm"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Web Content Administration";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Structure Description Test",
+			structureName = "Structure Name Test");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+		}
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "5"
+	test AddColorFieldByDragAndDrop {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@ignore = "true"
+	@priority = "3"
+	test CancelChangesOnColorField {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98070 CancelChangesOnColorField pending implementation
+
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "5"
+	test DeleteColorFieldOnBuilder {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.deleteField(fieldFieldLabel = "Color Test");
+
+		AssertElementNotPresent(
+			key_fieldFieldLabel = "Color Test",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@ignore = "true"
+	@priority = "5"
+	test DeleteColorFieldOnSidebar {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98070 DeleteColorFieldOnSidebar pending implementation
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "4"
+	test DisableSearchablePropertyOfColorField {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		DataEngine.editFieldSearchable(
+			fieldFieldLabel = "Color Test",
+			searchableType = "Disable");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.viewFieldSearchable(
+			fieldFieldLabel = "Color Test",
+			searchableType = "Disable");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "4"
+	test DuplicateColorFieldOnBuilder {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentStructures.viewTableEntryCP(
+			structureDescription = "Structure Description Test",
+			structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.duplicateField(fieldFieldLabel = "Color Test");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Copy of Color Test",
+			fieldName = "Color");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@ignore = "true"
+	@priority = "4"
+	test DuplicateColorFieldOnSidebar {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98070 DuplicateColorFieldOnSidebar pending implementation
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "4"
+	test EditColorFieldNameWithInvalidCharacters {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		DataEngine.editFieldReference(
+			assertFieldReference = "ColorTest1",
+			fieldFieldLabel = "Color Test",
+			fieldReference = "%Color*Test @1");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "Color Test",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "Color Test");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		AssertTextEquals.assertValue(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "ColorTest1");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "3"
+	test EditColorFieldNameWithValidCharacters {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "ColorTest",
+			fieldName = "Color");
+
+		DataEngine.editFieldReference(
+			assertFieldReference = "Color_Test",
+			fieldFieldLabel = "ColorTest",
+			fieldReference = "Color_Test");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "ColorTest",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "ColorTest");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		AssertTextEquals.assertValue(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "Color_Test");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "4"
+	test EditHelpTextOfColorField {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Color Test",
+			fieldHelp = "Help Test");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Color Test",
+			fieldHelp = "Help Test",
+			fieldName = "Color");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "5"
+	test EditLabelOfColorField {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Color Test",
+			fieldFieldLabelEdit = "Color Test Edited");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Color Test Edited",
+			fieldName = "Color");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "4"
+	test SetColorFieldAsRequired {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		DataEngine.editFieldRequired(fieldFieldLabel = "Color Test");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Structure Name Test");
+
+		PortletEntry.inputTitle(title = "Web Content Title");
+
+		Button.clickPublish();
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Color Test",
+			locator1 = "WCEditWebContent#FIELD_REQUIRED_ALERT",
+			value1 = "This field is required.");
+	}
+
+	@description = "This is a test for LPS-98070. As a Developer, I want to Implement the color field type"
+	@priority = "4"
+	test SetSearchablePropertyOfColorField {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Color Test",
+			fieldName = "Color");
+
+		DataEngine.editFieldSearchable(
+			fieldFieldLabel = "Color Test",
+			searchableType = "Disable");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.viewFieldSearchable(
+			fieldFieldLabel = "Color Test",
+			searchableType = "Disable");
+
+		DataEngine.editFieldSearchable(
+			fieldFieldLabel = "Color Test",
+			searchableType = "Keyword");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		WebContentNavigator.gotoEditStructure(structureName = "Structure Name Test");
+
+		DataEngine.viewFieldSearchable(
+			fieldFieldLabel = "Color Test",
+			searchableType = "Keyword");
+	}
+
+}

@@ -226,7 +226,7 @@ public class JenkinsCohort {
 		JenkinsResultsParserUtil.write(filePath, sb.toString());
 	}
 
-	private static JSONArray _createJSONArray(Object... items) {
+	private JSONArray _createJSONArray(Object... items) {
 		JSONArray jsonArray = new JSONArray();
 
 		for (Object item : items) {
@@ -284,7 +284,8 @@ public class JenkinsCohort {
 
 	private final Map<String, JenkinsCohortJob> _jenkinsCohortJobsMap =
 		new HashMap<>();
-	private Map<String, JenkinsMaster> _jenkinsMastersMap = new HashMap<>();
+	private final Map<String, JenkinsMaster> _jenkinsMastersMap =
+		new HashMap<>();
 	private final String _name;
 
 	private class JenkinsCohortJob {

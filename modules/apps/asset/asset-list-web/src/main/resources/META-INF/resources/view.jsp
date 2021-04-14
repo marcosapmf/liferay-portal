@@ -25,15 +25,15 @@ AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContex
 	navigationItems='<%= assetListDisplayContext.getNavigationItems("collections") %>'
 />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= assetListManagementToolbarDisplayContext %>"
 />
 
-<portlet:actionURL name="/asset_list/delete_asset_list_entry" var="deleteAssetListEntryURL">
+<portlet:actionURL name="/asset_list/delete_asset_list_entries" var="deleteAssetListEntryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteAssetListEntryURL %>" cssClass="container-fluid-1280" name="fm">
+<aui:form action="<%= deleteAssetListEntryURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
 	<liferay-ui:breadcrumb
 		showLayout="<%= false %>"
 	/>
@@ -53,7 +53,7 @@ AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContex
 					<%
 					String editURL = StringPool.BLANK;
 
-					if (AssetListEntryPermission.contains(permissionChecker, assetListEntry, ActionKeys.UPDATE)) {
+					if (AssetListEntryPermission.contains(permissionChecker, assetListEntry, ActionKeys.UPDATE) || AssetListEntryPermission.contains(permissionChecker, assetListEntry, ActionKeys.VIEW)) {
 						PortletURL editAssetListEntryURL = liferayPortletResponse.createRenderURL();
 
 						editAssetListEntryURL.setParameter("mvcPath", "/edit_asset_list_entry.jsp");
@@ -63,11 +63,10 @@ AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContex
 						editURL = editAssetListEntryURL.toString();
 					}
 
-					Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-						"actions", assetListManagementToolbarDisplayContext.getAvailableActions(assetListEntry)
-					).build();
-
-					row.setData(rowData);
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"actions", assetListManagementToolbarDisplayContext.getAvailableActions(assetListEntry)
+						).build());
 					%>
 
 					<liferay-ui:search-container-column-icon
@@ -98,11 +97,11 @@ AssetListManagementToolbarDisplayContext assetListManagementToolbarDisplayContex
 								AssetRendererFactory<?> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(assetListEntry.getAssetEntryType());
 
 								if ((assetRendererFactory != null) && assetRendererFactory.isSupportsClassTypes()) {
-									ClassTypeReader classTypeReader = assetRendererFactory.getClassTypeReader();
+									ClassType classType = assetListDisplayContext.getClassType(assetRendererFactory.getClassTypeReader(), classTypeId);
 
-									ClassType classType = classTypeReader.getClassType(classTypeId, locale);
-
-									assetEntryTypeLabel = assetEntryTypeLabel + " - " + classType.getName();
+									if (classType != null) {
+										assetEntryTypeLabel = assetEntryTypeLabel + " - " + classType.getName();
+									}
 								}
 							}
 							%>

@@ -16,13 +16,18 @@ package com.liferay.headless.admin.content.internal.graphql.servlet.v1_0;
 
 import com.liferay.headless.admin.content.internal.graphql.mutation.v1_0.Mutation;
 import com.liferay.headless.admin.content.internal.graphql.query.v1_0.Query;
+import com.liferay.headless.admin.content.resource.v1_0.DisplayPageTemplateResource;
+import com.liferay.headless.admin.content.resource.v1_0.PageDefinitionResource;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
 import javax.annotation.Generated;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentServiceObjects;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceScope;
 
 /**
  * @author Javier Gamarra
@@ -34,6 +39,16 @@ public class ServletDataImpl implements ServletData {
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
+		Mutation.setPageDefinitionResourceComponentServiceObjects(
+			_pageDefinitionResourceComponentServiceObjects);
+
+		Query.setDisplayPageTemplateResourceComponentServiceObjects(
+			_displayPageTemplateResourceComponentServiceObjects);
+	}
+
+	@Override
+	public String getGraphQLNamespace() {
+		return "admin";
 	}
 
 	@Override
@@ -50,5 +65,13 @@ public class ServletDataImpl implements ServletData {
 	public Query getQuery() {
 		return new Query();
 	}
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<PageDefinitionResource>
+		_pageDefinitionResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<DisplayPageTemplateResource>
+		_displayPageTemplateResourceComponentServiceObjects;
 
 }

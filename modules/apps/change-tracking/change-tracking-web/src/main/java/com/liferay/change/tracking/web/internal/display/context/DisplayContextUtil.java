@@ -14,20 +14,19 @@
 
 package com.liferay.change.tracking.web.internal.display.context;
 
-import com.liferay.change.tracking.model.CTEntryTable;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.expression.Predicate;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.taglib.ui.UserPortraitTag;
 
 import java.util.List;
 import java.util.Set;
@@ -55,8 +54,9 @@ public class DisplayContextUtil {
 	}
 
 	public static JSONObject getUserInfoJSONObject(
-		Predicate predicate, ThemeDisplay themeDisplay,
-		UserLocalService userLocalService) {
+		Predicate innerJoinPredicate, Table<?> innerJoinTable,
+		ThemeDisplay themeDisplay, UserLocalService userLocalService,
+		Predicate wherePredicate) {
 
 		JSONObject userInfoJSONObject = JSONFactoryUtil.createJSONObject();
 
@@ -66,28 +66,21 @@ public class DisplayContextUtil {
 			).from(
 				UserTable.INSTANCE
 			).innerJoinON(
-				CTEntryTable.INSTANCE,
-				CTEntryTable.INSTANCE.userId.eq(UserTable.INSTANCE.userId)
+				innerJoinTable, innerJoinPredicate
 			).where(
-				predicate
+				wherePredicate
 			));
 
 		for (User user : users) {
-			JSONObject userJSONObject = JSONUtil.put(
-				"userName", user.getFullName());
-
-			if (user.getPortraitId() != 0) {
-				try {
-					userJSONObject.put(
-						"portraitURL", user.getPortraitURL(themeDisplay));
-				}
-				catch (PortalException portalException) {
-					_log.error(portalException, portalException);
-				}
-			}
-
 			userInfoJSONObject.put(
-				String.valueOf(user.getUserId()), userJSONObject);
+				String.valueOf(user.getUserId()),
+				JSONUtil.put(
+					"userName", user.getFullName()
+				).put(
+					"userPortraitHTML",
+					UserPortraitTag.getUserPortraitHTML(
+						StringPool.BLANK, StringPool.BLANK, user, themeDisplay)
+				));
 		}
 
 		return userInfoJSONObject;
@@ -95,8 +88,5 @@ public class DisplayContextUtil {
 
 	private DisplayContextUtil() {
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		DisplayContextUtil.class);
 
 }

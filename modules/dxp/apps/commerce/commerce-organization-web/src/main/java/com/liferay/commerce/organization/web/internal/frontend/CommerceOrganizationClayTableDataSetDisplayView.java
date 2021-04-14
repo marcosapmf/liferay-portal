@@ -105,7 +105,7 @@ public class CommerceOrganizationClayTableDataSetDisplayView
 					_getViewOrganizationDetailURL(
 						organization.getOrganizationId(), httpServletRequest));
 				dropdownItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "view-detail"));
+					LanguageUtil.get(httpServletRequest, "view-details"));
 			}
 		).add(
 			() -> OrganizationPermissionUtil.contains(
@@ -261,7 +261,8 @@ public class CommerceOrganizationClayTableDataSetDisplayView
 			PortletProvider.Action.MANAGE);
 
 		viewURL.setParameter(
-			"mvcRenderCommandName", "viewCommerceOrganization");
+			"mvcRenderCommandName",
+			"/commerce_organization/view_commerce_organization");
 		viewURL.setParameter("organizationId", String.valueOf(organizationId));
 
 		PortletURL backURL = PortletProviderUtil.getPortletURL(

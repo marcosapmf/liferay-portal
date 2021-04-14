@@ -14,12 +14,24 @@
 
 package com.liferay.frontend.token.definition;
 
+import java.util.Collection;
 import java.util.Locale;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Iván Zaera
  */
+@ProviderType
 public interface FrontendTokenDefinition {
+
+	public Collection<FrontendTokenCategory> getFrontendTokenCategories();
+
+	public Collection<FrontendTokenMapping> getFrontendTokenMappings();
+
+	public Collection<FrontendToken> getFrontendTokens();
+
+	public Collection<FrontendTokenSet> getFrontendTokenSets();
 
 	public String getJSON(Locale locale);
 

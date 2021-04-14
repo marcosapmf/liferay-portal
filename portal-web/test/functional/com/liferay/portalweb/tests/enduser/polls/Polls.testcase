@@ -32,6 +32,7 @@ definition {
 
 	@priority = "4"
 	test AddPollsQuestionWithExpirationDate {
+		property test.name.skip.portal.instance = "Polls#AddPollsQuestionWithExpirationDate";
 
 		var pollsQuestionTitle = '''"Derivative"''';
 
@@ -69,6 +70,7 @@ definition {
 	@priority = "4"
 	test AddPollsQuestionWithSpecialCharacters {
 		property portal.upstream = "true";
+		property test.name.skip.portal.instance = "Polls#AddPollsQuestionWithSpecialCharacters";
 
 		var pollsQuestionChoiceA = '''"Black"''';
 
@@ -138,6 +140,8 @@ definition {
 	@description = "This is a use case for LPS-66544."
 	@priority = "3"
 	test AddPollWithEmptyChoicesAndViewErrorMessage {
+		property test.name.skip.portal.instance = "Polls#AddPollWithEmptyChoicesAndViewErrorMessage";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -166,6 +170,8 @@ definition {
 	@description = "This is a use case for LPS-60143."
 	@priority = "4"
 	test AddViaPollDisplay {
+		property test.name.skip.portal.instance = "Polls#AddViaPollDisplay";
+
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -208,6 +214,7 @@ definition {
 	@priority = "4"
 	test ViewChart {
 		property portal.upstream = "true";
+		property test.name.skip.portal.instance = "Polls#ViewChart";
 
 		Navigator.openURL();
 
@@ -264,6 +271,7 @@ definition {
 	@priority = "4"
 	test VotePollsQuestionWithGuestPermissions {
 		property portal.upstream = "true";
+		property test.name.skip.portal.instance = "Polls#VotePollsQuestionWithGuestPermissions";
 
 		Navigator.openURL();
 

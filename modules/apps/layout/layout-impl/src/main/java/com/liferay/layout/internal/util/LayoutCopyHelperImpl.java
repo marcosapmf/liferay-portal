@@ -32,6 +32,8 @@ import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.model.Layout;
@@ -42,10 +44,12 @@ import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ImageLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -55,10 +59,12 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
+import com.liferay.portal.kernel.util.CopyLayoutThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portlet.exportimport.staging.StagingAdvicesThreadLocal;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -90,16 +96,27 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 		Callable<Layout> callable = new CopyLayoutCallable(
 			sourceLayout, targetLayout);
 
+		boolean copyLayout = CopyLayoutThreadLocal.isCopyLayout();
+		boolean stagingAdvicesThreadLocalEnabled =
+			StagingAdvicesThreadLocal.isEnabled();
+
 		ServiceContext currentServiceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
 		try {
+			CopyLayoutThreadLocal.setCopyLayout(true);
+			StagingAdvicesThreadLocal.setEnabled(false);
+
 			return TransactionInvokerUtil.invoke(_transactionConfig, callable);
 		}
 		catch (Throwable throwable) {
 			throw new Exception(throwable);
 		}
 		finally {
+			CopyLayoutThreadLocal.setCopyLayout(copyLayout);
+			StagingAdvicesThreadLocal.setEnabled(
+				stagingAdvicesThreadLocalEnabled);
+
 			ServiceContextThreadLocal.pushServiceContext(currentServiceContext);
 		}
 	}
@@ -360,6 +377,10 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 
 			targetPortletIds.remove(portletPreferences.getPortletId());
 
+			javax.portlet.PortletPreferences jxPortletPreferences =
+				_portletPreferenceValueLocalService.getPreferences(
+					portletPreferences);
+
 			PortletPreferences targetPortletPreferences =
 				_portletPreferencesLocalService.fetchPortletPreferences(
 					PortletKeys.PREFS_OWNER_ID_DEFAULT,
@@ -367,11 +388,12 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 					portletPreferences.getPortletId());
 
 			if (targetPortletPreferences != null) {
-				targetPortletPreferences.setPreferences(
-					portletPreferences.getPreferences());
-
-				_portletPreferencesLocalService.updatePortletPreferences(
-					targetPortletPreferences);
+				_portletPreferencesLocalService.updatePreferences(
+					targetPortletPreferences.getOwnerId(),
+					targetPortletPreferences.getOwnerType(),
+					targetPortletPreferences.getPlid(),
+					targetPortletPreferences.getPortletId(),
+					jxPortletPreferences);
 			}
 			else {
 				_portletPreferencesLocalService.addPortletPreferences(
@@ -381,15 +403,25 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 					portletPreferences.getPortletId(),
 					_portletLocalService.getPortletById(
 						portletPreferences.getPortletId()),
-					portletPreferences.getPreferences());
+					PortletPreferencesFactoryUtil.toXML(jxPortletPreferences));
 			}
 		}
 
 		for (String portletId : targetPortletIds) {
-			_portletPreferencesLocalService.deletePortletPreferences(
-				PortletKeys.PREFS_OWNER_ID_DEFAULT,
-				PortletKeys.PREFS_OWNER_TYPE_LAYOUT, targetLayout.getPlid(),
-				portletId);
+			try {
+				_portletPreferencesLocalService.deletePortletPreferences(
+					PortletKeys.PREFS_OWNER_ID_DEFAULT,
+					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, targetLayout.getPlid(),
+					portletId);
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Unable to delete portlet preferences for portlet " +
+							portletId,
+						exception);
+				}
+			}
 		}
 	}
 
@@ -619,6 +651,9 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 		return layoutStructure.toJSONObject();
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		LayoutCopyHelperImpl.class);
+
 	private static final TransactionConfig _transactionConfig =
 		TransactionConfig.Factory.create(
 			Propagation.REQUIRED, new Class<?>[] {Exception.class});
@@ -663,6 +698,10 @@ public class LayoutCopyHelperImpl implements LayoutCopyHelper {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 	@Reference
 	private PortletRegistry _portletRegistry;

@@ -200,9 +200,10 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePriceList.getCommercePriceListId(), "", price1, false,
-				null, null, null, null, true, true);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList.getCommercePriceListId(), price1, false, null,
+				null, null, null, true, true);
 
 		double netPrice5 = 15;
 
@@ -234,12 +235,13 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), quantity, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
-		CommerceMoney finalGrossPriceMoney =
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
+		CommerceMoney finalGrossPriceCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
-		BigDecimal finalGrossPrice = finalGrossPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
+		BigDecimal finalGrossPrice = finalGrossPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedNetPrice1 = BigDecimal.valueOf(netPrice1);
 
@@ -270,12 +272,12 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), quantity, commerceContext);
 
-		finalPriceMoney = commerceProductPrice.getFinalPrice();
-		finalGrossPriceMoney =
+		finalPriceCommerceMoney = commerceProductPrice.getFinalPrice();
+		finalGrossPriceCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		finalPrice = finalPriceMoney.getPrice();
-		finalGrossPrice = finalGrossPriceMoney.getPrice();
+		finalPrice = finalPriceCommerceMoney.getPrice();
+		finalGrossPrice = finalGrossPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedNetPrice10 = BigDecimal.valueOf(netPrice10);
 
@@ -352,9 +354,9 @@ public class CommerceGrossPricingTest {
 		BigDecimal price1 = BigDecimal.valueOf(grossPrice1);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList1.getCommercePriceListId(), "", price1, false,
-			null, null, null, null, true, true);
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList1.getCommercePriceListId(), price1, false, null,
+			null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
 			_commerceCurrency, _commerceChannel, _user, _group,
@@ -366,12 +368,13 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), quantity, false, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
-		CommerceMoney finalGrossPriceMoney =
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
+		CommerceMoney finalGrossPriceCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
-		BigDecimal finalGrossPrice = finalGrossPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
+		BigDecimal finalGrossPrice = finalGrossPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedGross = price1.multiply(
 			BigDecimal.valueOf(quantity));
@@ -446,8 +449,8 @@ public class CommerceGrossPricingTest {
 		BigDecimal price = BigDecimal.valueOf(grossPrice);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), "", price, false, null,
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), price, false, null,
 			null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
@@ -458,12 +461,13 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 1, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
-		CommerceMoney finalGrossPriceMoney =
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
+		CommerceMoney finalGrossPriceCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
-		BigDecimal finalGrossPrice = finalGrossPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
+		BigDecimal finalGrossPrice = finalGrossPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedNetPrice = BigDecimal.valueOf(netPrice);
 
@@ -535,14 +539,14 @@ public class CommerceGrossPricingTest {
 		BigDecimal promoPrice = BigDecimal.valueOf(grossPrice);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), "", price, false, null,
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), price, false, null,
 			null, null, null, true, true);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePromotion.getCommercePriceListId(), "", promoPrice, false,
-			null, null, null, null, true, true);
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePromotion.getCommercePriceListId(), promoPrice, false, null,
+			null, null, null, true, true);
 
 		CommerceContext commerceContext = new TestCommerceContext(
 			_commerceCurrency, _commerceChannel, _user, _group,
@@ -552,13 +556,14 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 1, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
-		CommerceMoney finalGrossPriceMoney =
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
+		CommerceMoney finalGrossPriceCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
 
-		BigDecimal finalGrossPrice = finalGrossPriceMoney.getPrice();
+		BigDecimal finalGrossPrice = finalGrossPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedNetPrice = BigDecimal.valueOf(netPrice);
 
@@ -631,8 +636,8 @@ public class CommerceGrossPricingTest {
 		BigDecimal price1 = new BigDecimal("20");
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			basePriceList.getCommercePriceListId(), "", price1);
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			basePriceList.getCommercePriceListId(), price1);
 
 		double modifierAmount = -10;
 
@@ -656,10 +661,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPriceMoneyWithTaxAmount =
+		CommerceMoney finalPriceWithTaxAmountCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoneyWithTaxAmount.getPrice();
+		BigDecimal finalPrice = finalPriceWithTaxAmountCommerceMoney.getPrice();
 
 		BigDecimal expectedPrice = BigDecimal.valueOf(200);
 
@@ -753,8 +758,8 @@ public class CommerceGrossPricingTest {
 		BigDecimal price1 = new BigDecimal("20");
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			basePriceList.getCommercePriceListId(), "", price1);
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			basePriceList.getCommercePriceListId(), price1);
 
 		CommercePriceModifier commercePriceModifier1 =
 			_addCommercePriceModifier(
@@ -791,10 +796,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPriceMoneyWithTaxAmount =
+		CommerceMoney finalPriceWithTaxAmountCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoneyWithTaxAmount.getPrice();
+		BigDecimal finalPrice = finalPriceWithTaxAmountCommerceMoney.getPrice();
 
 		BigDecimal expectedPrice = BigDecimal.valueOf(180);
 
@@ -869,8 +874,8 @@ public class CommerceGrossPricingTest {
 		BigDecimal price1 = new BigDecimal("20");
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			basePriceList.getCommercePriceListId(), "", price1);
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			basePriceList.getCommercePriceListId(), price1);
 
 		double modifierAmount = -10;
 
@@ -894,10 +899,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPriceMoneyWithTaxAmount =
+		CommerceMoney finalPriceWithTaxAmountCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		BigDecimal finalPrice = finalPriceMoneyWithTaxAmount.getPrice();
+		BigDecimal finalPrice = finalPriceWithTaxAmountCommerceMoney.getPrice();
 
 		BigDecimal expectedPrice = BigDecimal.valueOf(100);
 
@@ -959,9 +964,10 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePriceList.getCommercePriceListId(), "", price1, false,
-				null, null, null, null, true, true);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList.getCommercePriceListId(), price1, false, null,
+				null, null, null, true, true);
 
 		double netPrice5 = 40;
 
@@ -991,9 +997,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 1, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedNetPrice = BigDecimal.valueOf(netPrice1);
 
@@ -1009,9 +1016,9 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 100, commerceContext);
 
-		finalPriceMoney = commerceProductPrice.getFinalPrice();
+		finalPriceCommerceMoney = commerceProductPrice.getFinalPrice();
 
-		finalPrice = finalPriceMoney.getPrice();
+		finalPrice = finalPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedPrice = BigDecimal.valueOf(3130);
 
@@ -1077,15 +1084,16 @@ public class CommerceGrossPricingTest {
 		BigDecimal promoPrice = BigDecimal.valueOf(grossPrice1);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePriceList.getCommercePriceListId(), "", price1, false, null,
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), price1, false, null,
 			null, null, null, true, true);
 
 		CommercePriceEntry commercePromoEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePromotion.getCommercePriceListId(), "", promoPrice,
-				false, null, null, null, null, true, true);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePromotion.getCommercePriceListId(), promoPrice, false,
+				null, null, null, null, true, true);
 
 		double netPrice5 = 8;
 
@@ -1121,9 +1129,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 1, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedPromoPrice = BigDecimal.valueOf(netPrice1);
 
@@ -1186,8 +1195,9 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePriceList1.getCommercePriceListId(), "", price1);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList1.getCommercePriceListId(), price1);
 
 		double netPrice5 = 18;
 
@@ -1375,8 +1385,9 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePriceList1.getCommercePriceListId(), "", price1);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList1.getCommercePriceListId(), price1);
 
 		double netPrice5 = 18;
 
@@ -1422,9 +1433,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedPrice = BigDecimal.valueOf(185);
 
@@ -1456,17 +1468,17 @@ public class CommerceGrossPricingTest {
 		BigDecimal promoPrice = BigDecimal.valueOf(grossPromoPrice);
 
 		CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commercePromotion.getCommercePriceListId(), "", promoPrice);
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commercePromotion.getCommercePriceListId(), promoPrice);
 
 		commerceProductPrice =
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPromoPriceMoney =
+		CommerceMoney finalPromoPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
 
-		BigDecimal finalPromoPrice = finalPromoPriceMoney.getPrice();
+		BigDecimal finalPromoPrice = finalPromoPriceCommerceMoney.getPrice();
 
 		expectedPrice = BigDecimal.valueOf(100);
 
@@ -1537,8 +1549,9 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePriceList1.getCommercePriceListId(), "", price1);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePriceList1.getCommercePriceListId(), price1);
 
 		double netPrice5 = 18;
 
@@ -1584,9 +1597,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
 
 		BigDecimal expectedPrice = BigDecimal.valueOf(185);
 
@@ -1619,8 +1633,9 @@ public class CommerceGrossPricingTest {
 
 		CommercePriceEntry commercePromotionEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePromotion.getCommercePriceListId(), "", promoPrice);
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commercePromotion.getCommercePriceListId(), promoPrice);
 
 		double netPromoPrice3 = 8;
 
@@ -1644,10 +1659,10 @@ public class CommerceGrossPricingTest {
 			_commerceProductPriceCalculation.getCommerceProductPrice(
 				cpInstance.getCPInstanceId(), 10, false, commerceContext);
 
-		CommerceMoney finalPromoPriceMoney =
+		CommerceMoney finalPromoPriceCommerceMoney =
 			commerceProductPrice.getFinalPrice();
 
-		BigDecimal finalPromoPrice = finalPromoPriceMoney.getPrice();
+		BigDecimal finalPromoPrice = finalPromoPriceCommerceMoney.getPrice();
 
 		expectedPrice = BigDecimal.valueOf(72);
 

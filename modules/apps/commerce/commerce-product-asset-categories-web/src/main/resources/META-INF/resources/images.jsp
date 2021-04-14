@@ -27,11 +27,9 @@ portletURL.setParameter("historyKey", liferayPortletResponse.getNamespace() + "i
 
 SearchContainer<CPAttachmentFileEntry> cpAttachmentFileEntrySearchContainer = new SearchContainer<>(liferayPortletRequest, portletURL, null, null);
 
-int cpAttachmentFileEntriesCount = cpAttachmentFileEntryService.getCPAttachmentFileEntriesCount(PortalUtil.getClassNameId(AssetCategory.class), assetCategory.getCategoryId(), CPAttachmentFileEntryConstants.TYPE_IMAGE, WorkflowConstants.STATUS_ANY);
-
 List<CPAttachmentFileEntry> cpAttachmentFileEntries = cpAttachmentFileEntryService.getCPAttachmentFileEntries(PortalUtil.getClassNameId(AssetCategory.class), assetCategory.getCategoryId(), CPAttachmentFileEntryConstants.TYPE_IMAGE, WorkflowConstants.STATUS_ANY, cpAttachmentFileEntrySearchContainer.getStart(), cpAttachmentFileEntrySearchContainer.getEnd());
 
-cpAttachmentFileEntrySearchContainer.setTotal(cpAttachmentFileEntriesCount);
+cpAttachmentFileEntrySearchContainer.setTotal(cpAttachmentFileEntryService.getCPAttachmentFileEntriesCount(PortalUtil.getClassNameId(AssetCategory.class), assetCategory.getCategoryId(), CPAttachmentFileEntryConstants.TYPE_IMAGE, WorkflowConstants.STATUS_ANY));
 cpAttachmentFileEntrySearchContainer.setResults(cpAttachmentFileEntries);
 %>
 
@@ -46,7 +44,7 @@ cpAttachmentFileEntrySearchContainer.setResults(cpAttachmentFileEntries);
 		/>
 
 		<liferay-portlet:renderURL var="addAttachmentFileEntryURL">
-			<portlet:param name="mvcRenderCommandName" value="editAssetCategoryCPAttachmentFileEntry" />
+			<portlet:param name="mvcRenderCommandName" value="/commerce_product_asset_categories/edit_asset_category_cp_attachment_file_entry" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="categoryId" value="<%= String.valueOf(assetCategory.getCategoryId()) %>" />
 		</liferay-portlet:renderURL>
@@ -78,7 +76,6 @@ cpAttachmentFileEntrySearchContainer.setResults(cpAttachmentFileEntries);
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.commerce.product.model.CPAttachmentFileEntry"
-				cssClass="entry-display-style"
 				keyProperty="CPAttachmentFileEntryId"
 				modelVar="cpAttachmentFileEntry"
 			>
@@ -92,7 +89,7 @@ cpAttachmentFileEntrySearchContainer.setResults(cpAttachmentFileEntries);
 				<c:choose>
 					<c:when test="<%= Validator.isNotNull(thumbnailSrc) %>">
 						<liferay-ui:search-container-column-image
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							name="image"
 							src="<%= thumbnailSrc %>"
 						/>
@@ -105,36 +102,36 @@ cpAttachmentFileEntrySearchContainer.setResults(cpAttachmentFileEntries);
 				</c:choose>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 					value="<%= HtmlUtil.escape(cpAttachmentFileEntry.getTitle(languageId)) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="extension"
 					value="<%= HtmlUtil.escape(fileEntry.getExtension()) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					property="priority"
 				/>
 
 				<liferay-ui:search-container-column-status
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="status"
 					status="<%= cpAttachmentFileEntry.getStatus() %>"
 				/>
 
 				<liferay-ui:search-container-column-date
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="modified-date"
 					property="modifiedDate"
 				/>
 
 				<liferay-ui:search-container-column-date
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="display-date"
 					property="displayDate"
 				/>

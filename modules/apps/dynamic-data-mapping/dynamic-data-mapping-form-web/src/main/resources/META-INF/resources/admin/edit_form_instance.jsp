@@ -37,7 +37,7 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-form") : LanguageUtil.get(request, "edit-form"));
 %>
 
-<portlet:actionURL name="saveFormInstance" var="saveFormInstanceURL">
+<portlet:actionURL name="/dynamic_data_mapping_form/save_form_instance" var="saveFormInstanceURL">
 	<portlet:param name="mvcRenderCommandName" value="/admin/edit_form_instance" />
 </portlet:actionURL>
 
@@ -56,7 +56,7 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 
 	<nav class="hide management-bar management-bar-light navbar navbar-expand-md toolbar-group-field" id="<portlet:namespace />managementToolbar">
 		<clay:container-fluid
-			cssClass="autosave-bar toolbar"
+			cssClass="autosave-bar d-flex justify-content-between toolbar"
 		>
 			<div class="autosave-feedback-container navbar-form navbar-form-autofit navbar-overlay toolbar-group-content">
 				<span class="autosave-feedback management-bar-text" id="<portlet:namespace />autosaveMessage"></span>
@@ -133,27 +133,11 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 		<div class="ddm-form-basic-info">
 			<clay:container-fluid>
 				<h1>
-					<liferay-editor:editor
-						autoCreate="<%= false %>"
-						contents="<%= HtmlUtil.escapeAttribute(ddmFormAdminDisplayContext.getFormName()) %>"
-						cssClass="ddm-form-name"
-						editorName="alloyeditor"
-						name="nameEditor"
-						placeholder="untitled-form"
-						showSource="<%= false %>"
-					/>
+					<aui:input autoSize="<%= true %>" cssClass="ddm-form-name ddm-placeholder hidden" label="" name="nameEditor" placeholder='<%= LanguageUtil.get(request, "untitled-form") %>' type="textarea" value="<%= HtmlUtil.escapeAttribute(ddmFormAdminDisplayContext.getFormName()) %>" />
 				</h1>
 
 				<h5>
-					<liferay-editor:editor
-						autoCreate="<%= false %>"
-						contents="<%= HtmlUtil.escapeAttribute(ddmFormAdminDisplayContext.getFormDescription()) %>"
-						cssClass="ddm-form-description h5"
-						editorName="alloyeditor"
-						name="descriptionEditor"
-						placeholder="add-a-short-description-for-this-form"
-						showSource="<%= false %>"
-					/>
+					<aui:input autoSize="<%= true %>" cssClass="ddm-form-description ddm-placeholder hidden" label="" name="descriptionEditor" placeholder='<%= LanguageUtil.get(request, "add-a-short-description-for-this-form") %>' type="textarea" value="<%= HtmlUtil.escapeAttribute(ddmFormAdminDisplayContext.getFormDescription()) %>" />
 				</h5>
 			</clay:container-fluid>
 		</div>
@@ -165,15 +149,18 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 		cssClass="ddm-form-instance-settings hide"
 		id='<%= liferayPortletResponse.getNamespace() + "settings" %>'
 	>
-		<%= ddmFormAdminDisplayContext.serializeSettingsForm(pageContext) %>
+		<react:component
+			module="admin/js/index.es"
+			props="<%= ddmFormAdminDisplayContext.getDDMFormSettingsContext(pageContext) %>"
+		/>
 	</clay:container-fluid>
 </div>
 
-<portlet:actionURL name="publishFormInstance" var="publishFormInstanceURL">
+<portlet:actionURL name="/dynamic_data_mapping_form/publish_form_instance" var="publishFormInstanceURL">
 	<portlet:param name="mvcRenderCommandName" value="/admin/edit_form_instance" />
 </portlet:actionURL>
 
-<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="saveFormInstance" var="autoSaveFormInstanceURL" />
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_mapping_form/save_form_instance" var="autoSaveFormInstanceURL" />
 
 <liferay-portlet:runtime
 	portletName="<%= DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_REPORT %>"
@@ -303,7 +290,7 @@ renderResponse.setTitle((formInstance == null) ? LanguageUtil.get(request, "new-
 		Liferay.Util.openWindow(
 			{
 				dialog: {
-					cssClass: 'ddm-form-settings-modal',
+					cssClass: 'ddm-form-settings-modal modal-full-screen',
 					height: 700,
 					resizable: false,
 					'toolbars.footer': [

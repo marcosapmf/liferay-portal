@@ -46,7 +46,7 @@ SearchContainer<?> searchContainer = editPasswordPolicyAssignmentsManagementTool
 	navigationItems="<%= passwordPolicyDisplayContext.getSelectMembersNavigationItems() %>"
 />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= editPasswordPolicyAssignmentsManagementToolbarDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= editPasswordPolicyAssignmentsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
@@ -60,7 +60,7 @@ SearchContainer<?> searchContainer = editPasswordPolicyAssignmentsManagementTool
 	viewTypeItems="<%= editPasswordPolicyAssignmentsManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="selectMemberFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectMemberFm">
 	<liferay-ui:search-container
 		id="passwordPolicyMembers"
 		searchContainer="<%= searchContainer %>"

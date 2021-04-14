@@ -19,7 +19,9 @@ import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstance;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstanceSubmit;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.ObjectReviewedUtil;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowInstanceResource;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -64,21 +66,24 @@ public class WorkflowInstanceResourceImpl
 
 	@Override
 	public Page<WorkflowInstance> getWorkflowInstancesPage(
-			String[] assetClassNames, Long[] assetPrimaryKeys,
-			Boolean completed, Pagination pagination)
+			String assetClassName, Long assetPrimaryKey, Boolean completed,
+			Pagination pagination)
 		throws Exception {
 
 		return Page.of(
 			transform(
 				_workflowInstanceManager.getWorkflowInstances(
 					contextCompany.getCompanyId(), contextUser.getUserId(),
-					assetClassNames, completed, pagination.getStartPosition(),
-					pagination.getEndPosition(), null),
+					assetClassName, assetPrimaryKey,
+					GetterUtil.getBoolean(completed),
+					pagination.getStartPosition(), pagination.getEndPosition(),
+					null),
 				this::_toWorkflowInstance),
 			pagination,
 			_workflowInstanceManager.getWorkflowInstanceCount(
 				contextCompany.getCompanyId(), contextUser.getUserId(),
-				assetClassNames, completed));
+				assetClassName, assetPrimaryKey,
+				GetterUtil.getBoolean(completed)));
 	}
 
 	@Override
@@ -138,6 +143,11 @@ public class WorkflowInstanceResourceImpl
 				objectReviewed = ObjectReviewedUtil.toObjectReviewed(
 					contextAcceptLanguage.getPreferredLocale(),
 					workflowInstance.getWorkflowContext());
+				state = _language.get(
+					ResourceBundleUtil.getModuleAndPortalResourceBundle(
+						contextAcceptLanguage.getPreferredLocale(),
+						WorkflowInstanceResourceImpl.class),
+					workflowInstance.getState());
 				workflowDefinitionName =
 					workflowInstance.getWorkflowDefinitionName();
 				workflowDefinitionVersion = String.valueOf(
@@ -145,6 +155,9 @@ public class WorkflowInstanceResourceImpl
 			}
 		};
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private WorkflowInstanceManager _workflowInstanceManager;

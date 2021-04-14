@@ -67,10 +67,12 @@ public class PublicationsManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(),
-					"mvcRenderCommandName", "/publications/add_ct_collection",
-					"redirect", currentURLObj.toString());
+					"mvcRenderCommandName",
+					"/change_tracking/add_ct_collection", "redirect",
+					currentURLObj.toString());
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "create-new-publication"));
+					LanguageUtil.get(
+						httpServletRequest, "create-new-publication"));
 			}
 		).build();
 	}
@@ -89,8 +91,9 @@ public class PublicationsManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (CTPermission.contains(
 				themeDisplay.getPermissionChecker(),

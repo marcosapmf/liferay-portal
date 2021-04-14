@@ -41,6 +41,21 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DOCUMENT_INFO_DOCUMENT_TYPE</td>
+	<td>//dt[contains(@class,'sidebar-dt') and contains (.,'Document Type')]/following-sibling::dd[contains(.,'${key_dmDocumentType}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DOCUMENT_INFO_EXTENSION</td>
+	<td>//dt[contains(@class,'sidebar-dt') and contains (.,'Extension')]/following-sibling::dd[contains(.,'${key_dmDocumentExtension}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DOCUMENT_INFO_FILE_NAME</td>
+	<td>//p[contains(@class,'component-subtitle')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DOCUMENT_INFO_LOCATION</td>
 	<td>//dd[contains(@class,'sidebar-dd')]//a[contains(.,'${key_dmFolderName}')]</td>
 	<td></td>
@@ -132,8 +147,13 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DOCUMENT_DETAILS_EMPTY_STATE_PREVIEW</td>
+	<td>//div[contains(@class,'preview-file-error-container')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DOCUMENT_DETAILS_IMAGE_PREVIEW</td>
-	<td>//div[contains(@class,'preview-file-container')]/img</td>
+	<td>//div[contains(@class,'preview-file-container')]//img[contains(@src,'${key_dmDocumentFileName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -187,6 +207,12 @@
 	<td></td>
 	<td></td>
 </tr>
+<!--DOCUMENT_VIEWPORT-->
+<tr>
+	<td>DOCUMENT_VIEWPORT_PREVIEW</td>
+	<td>//img[contains(@src,'${key_imageSourceURL}')]</td>
+	<td></td>
+</tr>
 <!--MARKETING-->
 <tr>
 	<td>MARKETING_SELECT</td>
@@ -237,12 +263,12 @@
 </tr>
 <tr>
 	<td>METADATA_PANEL_DATE</td>
-	<td>//div[@class='lfr-ddm-container']/div[contains(.,'${key_dateValue}')]</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div[contains(@class,'date-picker')]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>METADATA_PANEL_NUMBER</td>
-	<td>//div[@class='lfr-ddm-container']/div[contains(.,'${key_numberValue}')]</td>
+	<td>METADATA_PANEL_IMAGE</td>
+	<td>//div[contains(@class,'image-picker-preview')]/img[contains(@src,'${key_imageName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -256,8 +282,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>METADATA_PANEL_TEXT</td>
-	<td>//div[@class='lfr-ddm-container']/div[contains(.,'${key_textContent}')]</td>
+	<td>METADATA_PANEL_TEXT_INPUT</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>METADATA_PANEL_UPLOAD</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div//h4</td>
 	<td></td>
 </tr>
 <tr>
@@ -269,6 +300,27 @@
 <tr>
 	<td>VIDEO_GENERATION_THUMBNAIL_RESOLUTION</td>
 	<td>//head/title[contains(.,'${key_videoGenerationThumbnailResolution}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VIDEO_PREVIEW</td>
+	<td>//video[contains(@poster,'${key_videoName}')]</td>
+	<td></td>
+</tr>
+<!--VIDEO_SHORTCUT-->
+<tr>
+	<td>VIDEO_SHORTCUT_PREVIEW</td>
+	<td>//iframe[contains(@src,'${key_videoShortcutPreview}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VIDEO_SHORTCUT_THUMBNAIL_LIST</td>
+	<td>//li[@data-qa-id='row'][contains(.,'${key_list}')]//div[contains(@class,'bg-cover')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TWITCH_VIDEO_INACTIVE</td>
+	<td>//div[contains(@class,'video-player__inactive')]</td>
 	<td></td>
 </tr>
 </tbody>

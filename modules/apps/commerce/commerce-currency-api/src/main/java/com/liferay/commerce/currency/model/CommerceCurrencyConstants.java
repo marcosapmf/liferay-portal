@@ -15,10 +15,15 @@
 package com.liferay.commerce.currency.model;
 
 /**
- * @author Alessio Antonio Rendina
+ * @author     Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ *             com.liferay.commerce.currency.constants.CommerceCurrencyConstants}
  */
+@Deprecated
 public class CommerceCurrencyConstants {
 
 	public static final String DEFAULT_FORMAT_PATTERN = "###,##0.00";
+
+	public static final String RESOURCE_NAME = "com.liferay.commerce.currency";
 
 }

@@ -9,6 +9,31 @@
 </thead>
 <tbody>
 <tr>
+	<td>AUDIT_GRAPH_CATEGORY_CHECKBOX</td>
+	<td>//*[contains(@class, 'inline-item-after') and contains(text(),'${auditGraphCheckboxName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>AUDIT_GRAPH_CONFIGURATION_BUTTON</td>
+	<td>//button[contains(@class, 'btn') and contains(@onclick,'Configuration')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>AUDIT_GRAPH_CONFIGURATION_STAGE_VOCABULARY</td>
+	<td>//option[contains(text(),'Stage')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>AUDIT_GRAPH_CONFIGURATION_UP_ARROW_BUTTON</td>
+	<td>//button[contains(@class, 'reorder-up')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>AUDIT_GRAPH_TITLE</td>
+	<td>//*[contains(@class, 'autofit-col autofit-col-expand') and contains(text(),'${auditGraphTitle}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>AUTHOR_SELECT_DISPLAY_MODE_BUTTON</td>
 	<td>//button[contains(@class, 'dropdown-toggle') and contains(@class, 'btn-unstyled') and contains(@class, 'nav-link-monospaced') and contains(@class, 'btn nav-link')]</td>
 	<td></td>
@@ -19,7 +44,7 @@
 	<td></td>
 </tr>ç<tr>
 	<td>AUTHOR_CARDS_ELEMENT</td>
-	<td>//*[contains(@class, 'aspect-ratio card-item-first')]</td>
+	<td>//*[contains(@class, 'card-item-first')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -39,7 +64,7 @@
 </tr>
 <tr>
 	<td>CATEGORY_NAME_ELEMENT</td>
-	<td>//*[contains(@class, 'text-truncate') and contains(text(),'Category Name')]</td>
+	<td>//*[contains(@class, 'text-truncate') and contains(text(),'${categoryName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -53,6 +78,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DISPLAY_PAGE_TITLE</td>
+	<td>//*[@data-qa-id='headerTitle']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>EDIT_OPTION</td>
 	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Edit')]</td>
 	<td></td>
@@ -63,33 +93,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FILTER_BY_AUTHOR_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Author')]</td>
+	<td>FILTER_BY_OPTION</td>
+	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'${filterOption}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>FILTER_BY_CATEGORY_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Categories')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_MODIFICATION_DATE_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Modified Date')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_TAG_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Tags')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FILTER_BY_TITLE_OPTION</td>
-	<td>//*[contains(@class, 'dropdown-item') and contains(text(),'Title')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FIRST_CHECKBOX_TAGS</td>
-	<td>//*[contains(@title,'Select') and contains(@value,'tag1')]</td>
+	<td>FILTER_TEXT</td>
+	<td>//*[contains(@class, 'label-section')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -98,8 +108,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FIRST_ELEMENT_LISTED_LINK</td>
+	<td>((//*[contains(@class, 'lfr-portal-tooltip')])[4]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FIRST_ELEMENT_LISTED_TAGS</td>
 	<td>//*[contains(@class, 'text-truncate') and contains(text(),'Web Content Title')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FLIP_AXES_BUTTON</td>
+	<td>//button[contains(@class, 'btn-outline-borderless') and contains(@type,'submit')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GLOBAL_SITE_CARD</td>
+	<td>//*[contains(@class, 'card')]//*[contains(@data-groupdescriptivename, 'Global')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -110,6 +135,16 @@
 <tr>
 	<td>INFO_PANEL_TITLE</td>
 	<td>//*[contains(@class, 'text-truncate') and contains(text(),'Content Info')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MY_SITES_TAB</td>
+	<td>//*[contains(@class, 'nav-link') and contains(text(),'My Sites')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NO_CATEGORIES_SELECTED_TEXT</td>
+	<td>//*[contains(@class, 'text-truncate') and contains(text(),'There are no categories selected')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -128,28 +163,38 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SECOND_CHECKBOX_TAGS</td>
-	<td>//*[contains(@title,'Select') and contains(@value,'tag2')]</td>
+	<td>SEARCH_SUBTYPE_FIELD</td>
+	<td>//*[contains(@class,'form-control input-group-inset input-group-inset-after') and contains(@name,'ItemSelector')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SELECT_AUTHOR_BUTTON</td>
-	<td>//button[contains(@class, 'btn btn-primary') and contains(text(),'Select')]</td>
+	<td>SEARCH_TAG_FIELD</td>
+	<td>//*[contains(@class,'form-control input-group-inset input-group-inset-after') and contains(@name,'AssetTagsSelector')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SELECT_CATEGORY_BUTTON</td>
-	<td>//button[contains(@id, 'addButton')]</td>
+	<td>CHECKBOX_TAGS</td>
+	<td>//*[contains(@title,'Select') and contains(@value,'${tagName}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SELECT_TAGS_BUTTON</td>
-	<td>//*[contains(@class,'btn btn-primary') and contains(text(),'Select')]</td>
+	<td>SUBTYPE_ELEMENT_CHECKBOX</td>
+	<td>//*[contains(@type, 'checkbox') and contains(@title,'Select')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SWAP_VOCABULARIES_BUTTON</td>
+	<td>//*[contains(@class,'btn-sm btn-outline-secondary') and contains(@type,'submit')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>WEB_CONTENT_MENU_DROPDOWN_BUTTON</td>
 	<td>//button[contains(@class, 'dropdown-toggle') and contains(@class, 'btn-unstyled') and contains(@class, 'btn-monospaced') and contains(@class, 'component-action')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>X_AXIS_VOCABULARY_NAME</td>
+	<td>//*[contains(@class, 'recharts-layer recharts-cartesian-axis-tick')]//*[contains(text(), '${xAxisCategoryName}')]</td>
 	<td></td>
 </tr>
 </tbody>

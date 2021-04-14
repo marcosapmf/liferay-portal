@@ -12,8 +12,12 @@
  * details.
  */
 
-import getJsModule from '../../../utilities/modules';
-import {DISCOUNT_LEVEL_PREFIX, ORDER_UUID_PARAMETER} from './constants';
+import {
+	DEFAULT_ORDER_DETAILS_PORTLET_ID,
+	DISCOUNT_LEVEL_PREFIX,
+	ORDER_DETAILS_ENDPOINT,
+	ORDER_UUID_PARAMETER,
+} from './constants';
 
 export function isNonnull(...values) {
 	return !!values.find((value) => parseFloat(value) > 0);
@@ -29,11 +33,11 @@ export function collectDiscountLevels(price) {
 	}, []);
 }
 
-export function parseOptions(stringifiedJSON) {
+export function parseOptions(jsonString) {
 	let options;
 
 	try {
-		options = JSON.parse(stringifiedJSON);
+		options = JSON.parse(jsonString);
 	}
 	catch (ignore) {
 		options = '';
@@ -44,20 +48,36 @@ export function parseOptions(stringifiedJSON) {
 		: options;
 }
 
-export function regenerateOrderDetailURL(orderDetailURL, orderUUID) {
-	const originalURL = new URL(orderDetailURL);
+function generatedOrderDetailURL() {
+	const baseURL = new URL(
+		`${Liferay.ThemeDisplay.getCanonicalURL()}${ORDER_DETAILS_ENDPOINT}`
+	);
 
-	originalURL.searchParams.set(ORDER_UUID_PARAMETER, orderUUID);
+	baseURL.searchParams.append('p_p_id', DEFAULT_ORDER_DETAILS_PORTLET_ID);
+	baseURL.searchParams.append('p_p_lifecycle', '0');
+	baseURL.searchParams.append(
+		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_mvcRenderCommandName`,
+		'editCommerceOrder'
+	);
+	baseURL.searchParams.append(
+		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_commerceOrderUuid`,
+		'0'
+	);
 
-	return originalURL.toString();
+	return baseURL;
 }
 
-export function resolveView({component, contentRendererModuleUrl}) {
-	if (component) {
-		return Promise.resolve((props) => component(props));
-	}
+export function regenerateOrderDetailURL(orderDetailURL, orderUUID) {
+	const originalURL = orderDetailURL
+		? new URL(orderDetailURL)
+		: generatedOrderDetailURL();
 
-	return getJsModule(contentRendererModuleUrl);
+	originalURL.searchParams.set(
+		`_${DEFAULT_ORDER_DETAILS_PORTLET_ID}_${ORDER_UUID_PARAMETER}`,
+		orderUUID
+	);
+
+	return originalURL.toString();
 }
 
 export function summaryDataMapper(summary) {
@@ -96,4 +116,8 @@ export function summaryDataMapper(summary) {
 
 		return values;
 	}, []);
+}
+
+export function hasErrors(cartItems) {
+	return !!cartItems.find(({errorMessages}) => !!errorMessages);
 }

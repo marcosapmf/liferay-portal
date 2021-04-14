@@ -70,7 +70,8 @@ public class MasterLayoutManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteSelectedMasterLayouts");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -79,7 +80,8 @@ public class MasterLayoutManagementToolbarDisplayContext
 				dropdownItem.putData(
 					"exportMasterLayoutURL", _getExportMasterLayoutURL());
 				dropdownItem.setIcon("download");
-				dropdownItem.setLabel(LanguageUtil.get(request, "export"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "export"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -128,7 +130,7 @@ public class MasterLayoutManagementToolbarDisplayContext
 
 		addMasterLayoutURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/layout_page_template/add_master_layout");
+			"/layout_page_template_admin/add_master_layout");
 		addMasterLayoutURL.setParameter(
 			"backURL", _themeDisplay.getURLCurrent());
 		addMasterLayoutURL.setParameter(
@@ -145,7 +147,8 @@ public class MasterLayoutManagementToolbarDisplayContext
 						"addMasterLayoutURL", addMasterLayoutURL.toString()
 					).build());
 
-				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add"));
 			}
 		).build();
 	}
@@ -190,7 +193,7 @@ public class MasterLayoutManagementToolbarDisplayContext
 			liferayPortletResponse.createResourceURL();
 
 		exportMasterLayoutURL.setResourceID(
-			"/layout_page_template/export_master_layout");
+			"/layout_page_template_admin/export_master_layouts");
 
 		return exportMasterLayoutURL.toString();
 	}

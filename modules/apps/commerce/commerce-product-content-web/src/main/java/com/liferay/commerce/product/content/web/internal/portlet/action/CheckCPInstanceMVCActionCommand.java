@@ -68,7 +68,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_CONTENT_WEB,
-		"mvc.command.name=checkCPInstance"
+		"mvc.command.name=/cp_content_web/check_cp_instance"
 	},
 	service = MVCActionCommand.class
 )
@@ -128,7 +128,7 @@ public class CheckCPInstanceMVCActionCommand extends BaseMVCActionCommand {
 					_configurationProvider.getConfiguration(
 						CommercePriceConfiguration.class,
 						new SystemSettingsLocator(
-							CommerceConstants.PRICE_SERVICE_NAME));
+							CommerceConstants.SERVICE_NAME_PRICE));
 
 				jsonObject.put(
 					"displayDiscountLevels",

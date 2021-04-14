@@ -10,7 +10,7 @@
 <tbody>
 <tr>
 	<td>AUTOMATICALLY_RESOLVED_TABLE</td>
-	<td>//table[contains(@class,'publications-conflicts-table')]//td[contains(.,'Automatically Resolved')]</td>
+	<td>//div[contains(@class,'publications-conflicts-container')]//span[contains(.,'Automatically Resolved')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -25,32 +25,62 @@
 </tr>
 <tr>
 	<td>COLUMN_VALUE_IN_PRODUCTION</td>
-	<td>//td[contains(@class,'publications-diff-td')][1]//td[contains(.,'${key_columnName}')]//following-sibling::td[contains(.,'${key_columnValueInProduction}')]</td>
+	<td>//td[contains(@class,'publications-key-td') and contains(.,'${key_columnName}')]//following-sibling::td[contains(.,'${key_columnValueInProduction}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>COLUMN_VALUE_IN_PUBLICATION</td>
-	<td>//td[contains(@class,'publications-diff-td')][2]//td[contains(.,'${key_columnName}')]//following-sibling::td[contains(.,'${key_columnValueInPublication}')]</td>
+	<td>//td[contains(@class,'publications-key-td') and contains(.,'${key_columnName}')]//following-sibling::td[contains(.,'${key_columnValueInPublication}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>CONFICTING_CHANGES_DISCARD_BUTTON</td>
-	<td>//div[contains(@class,'autofit-col-expand') and contains(.,'${key_entryTitle}')]//following-sibling::div//a[contains(.,'Discard')]</td>
+	<td>CONFLICTING_CHANGES_CONTENT_LINK</td>
+	<td>//div[contains(@class,'autofit-col-expand') and contains(.,'${key_entryTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>CONFICTING_PUBLICATIONS_SUCCESS_CONTENT</td>
+	<td>CONFLICTING_CHANGES_DIFF_IFRAME_TITLE</td>
+	<td>//div[contains(@class,'modal-header')]/div[@class='modal-title' and contains(.,'${key_iframeTitle}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CONFLICTING_CHANGES_DISCARD_ELLIPSIS</td>
+	<td>//div[contains(@class,'autofit-col-expand') and contains(.,'${key_entryTitle}')]//following-sibling::div//button</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CONFLICTING_CHANGES_SUCCESS_CONTENT</td>
 	<td>//div[contains(.,'${key_entryTitle}')]//following-sibling::div[contains(.,'${key_successMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>CONFICTING_PUBLICATIONS_VIEW_BUTTON</td>
-	<td>//div[contains(@class,'autofit-col-expand') and contains(.,'${key_entryTitle}')]//following-sibling::div//a[contains(.,'View')]</td>
+	<td>CONFLICTING_CHANGES_WARNING_CONTENT</td>
+	<td>//div[contains(.,'${key_entryTitle}')]//following-sibling::div[contains(.,'${key_warningMessage}')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>CONFICTING_PUBLICATIONS_WARNING_CONTENT</td>
-	<td>//div[contains(.,'${key_entryTitle}')]//following-sibling::div[contains(.,'${key_warningMessage}')]</td>
+	<td>CURRENT_DIFF_DISPLAY_ICON</td>
+	<td>//span[contains(@class, 'inline-item inline-item-after')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CURRENT_DIFF_DISPLAY_ITEM</td>
+	<td>//button[contains(@class,'dropdown-toggle') and contains(.,'${key_displayItem}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DELETE_THE_ENTERED_TIME_BUTTON</td>
+	<td>//button[contains(@aria-label,'Delete the entered time')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DIFF_ADDED_VALUE</td>
+	<td>//td[contains(@class,'publications-key-td') and contains(.,'${key_columnName}')]//following-sibling::td//span[contains(@class,'diff-html-added')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DIFF_REMOVED_VALUE</td>
+	<td>//td[contains(@class,'publications-key-td') and contains(.,'${key_columnName}')]//following-sibling::td//span[contains(@class,'diff-html-removed')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -80,12 +110,7 @@
 </tr>
 <tr>
 	<td>NEEDS_MANUAL_RESOLUTION_TABLE</td>
-	<td>//table[contains(@class,'publications-conflicts-table')]//td[contains(.,'Needs Manual Resolution')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NEXT_BUTTON</td>
-	<td>//*[contains(@class,'btn')][normalize-space(text())='Next']</td>
+	<td>//div[contains(@class,'publications-conflicts-container')]//span[contains(.,'Needs Manual Resolution')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -95,7 +120,7 @@
 </tr>
 <tr>
 	<td>LIST_PUBLICATION_ELLIPSIS</td>
-	<td>//li[@data-qa-id='row'][contains(.,'${key_publicationsName}')]//a[contains(@class,'dropdown-toggle')]</td>
+	<td>//li[@data-qa-id='row'][contains(.,'${key_publicationsName}')]//*[contains(@class,'lexicon-icon lexicon-icon-ellipsis-v')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -110,12 +135,22 @@
 </tr>
 <tr>
 	<td>PUBLISH_BUTTON</td>
-	<td>//a[contains(@id,'PublicationsPortlet')]/span[contains(.,'Publish')]</td>
+	<td>//button[contains(.,'Publish')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>PUBLISH_TIME</td>
-	<td>//span[@class='lfr-input-time']/input[contains(@name,'publishTime') and @type='text']</td>
+	<td>PUBLISH_DATE</td>
+	<td>//div[@class='date-picker']//input[contains(@class,'input-group-inset') and @type='text']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLISH_TIME_HOURS</td>
+	<td>//input[contains(@class,'clay-time-hours') and @type='text']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PUBLISH_TIME_MINUTES</td>
+	<td>//input[contains(@class,'clay-time-minutes') and @type='text']</td>
 	<td></td>
 </tr>
 <tr>
@@ -126,6 +161,11 @@
 <tr>
 	<td>PUBLICATIONS_PUBLISHED_BY</td>
 	<td>//td[contains(@class,'published-by')]/span[contains(@title,'${key_publicationPublishedBy}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RESCHEDULE_BUTTON</td>
+	<td>//*[contains(@class,'btn')][normalize-space(text())='Reschedule']</td>
 	<td></td>
 </tr>
 <tr>
@@ -149,8 +189,13 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SCHEDULE_NAV_BAR</td>
+	<td>//li[contains(@class,'tbar-item')]/a[contains(.,'Schedule')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SELECT_PUBLICATION_NAME</td>
-	<td>//a[contains(.,'${key_publicationsName}')]</td>
+	<td>//p[contains(.,'${key_publicationsName}') and contains(@class, 'list-group-title')]</td>
 	<td></td>
 </tr>
 </tbody>

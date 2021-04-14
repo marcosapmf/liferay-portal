@@ -81,8 +81,8 @@ public interface AccountEntryService extends BaseService {
 
 	public AccountEntry addAccountEntry(
 			long userId, long parentAccountEntryId, String name,
-			String description, String[] domains, byte[] logoBytes,
-			String taxIdNumber, String type, int status,
+			String description, String[] domains, String email,
+			byte[] logoBytes, String taxIdNumber, String type, int status,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -100,7 +100,7 @@ public interface AccountEntryService extends BaseService {
 	public String getOSGiServiceIdentifier();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public BaseModelSearchResult<AccountEntry> search(
+	public BaseModelSearchResult<AccountEntry> searchAccountEntries(
 		String keywords, LinkedHashMap<String, Object> params, int cur,
 		int delta, String orderByField, boolean reverse);
 

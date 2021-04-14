@@ -19,7 +19,6 @@
 <%
 LayoutBranch layoutBranch = (LayoutBranch)request.getAttribute(StagingProcessesWebKeys.LAYOUT_BRANCH);
 LayoutRevision layoutRevision = (LayoutRevision)request.getAttribute(WebKeys.LAYOUT_REVISION);
-String stagingURL = (String)request.getAttribute(StagingProcessesWebKeys.STAGING_URL);
 %>
 
 <%
@@ -27,7 +26,13 @@ List<LayoutRevision> layoutRevisions = LayoutRevisionLocalServiceUtil.getChildLa
 %>
 
 <div class="control-menu-label staging-variation-label">
-	<liferay-ui:message key="page-variations" />
+	<liferay-util:buffer
+		var="pageVariationsHelpIcon"
+	>
+		<liferay-ui:icon-help message="page-variations-help" />
+	</liferay-util:buffer>
+
+	<liferay-ui:message arguments="<%= pageVariationsHelpIcon %>" key="page-variations-x" />
 </div>
 
 <div class="dropdown">
@@ -46,8 +51,8 @@ List<LayoutRevision> layoutRevisions = LayoutRevisionLocalServiceUtil.getChildLa
 			boolean selected = curLayoutBranch.getLayoutBranchId() == layoutRevision.getLayoutBranchId();
 		%>
 
-			<portlet:actionURL name="selectLayoutBranch" var="curLayoutBranchURL">
-				<portlet:param name="redirect" value="<%= stagingURL %>" />
+			<portlet:actionURL name="/staging_bar/select_layout_branch" var="curLayoutBranchURL">
+				<portlet:param name="redirect" value="<%= (String)request.getAttribute(StagingProcessesWebKeys.STAGING_URL) %>" />
 				<portlet:param name="groupId" value="<%= String.valueOf(curLayoutBranch.getGroupId()) %>" />
 				<portlet:param name="layoutBranchId" value="<%= String.valueOf(curLayoutBranch.getLayoutBranchId()) %>" />
 				<portlet:param name="layoutSetBranchId" value="<%= String.valueOf(curLayoutBranch.getLayoutSetBranchId()) %>" />

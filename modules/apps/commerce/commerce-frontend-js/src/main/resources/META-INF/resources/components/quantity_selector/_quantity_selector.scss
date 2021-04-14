@@ -1,11 +1,13 @@
-.quantity-selector {
-	.simple {
-		&.input-group {
-			flex-wrap: nowrap;
-		}
+.form-control-lg.quantity-selector {
+	min-width: 8rem;
+}
 
-		input {
-			min-width: 75px;
-		}
+input[type='number'].quantity-selector {
+	padding: 0.25rem 0.5rem 0.25rem 1rem;
+
+	&::-webkit-inner-spin-button,
+	&::-webkit-outer-spin-button {
+		margin: 0;
+		opacity: 1;
 	}
 }

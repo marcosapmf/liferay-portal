@@ -254,6 +254,14 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		User user = userPersistence.findByPrimaryKey(userId);
 
+		if (site && (PropsValues.DATA_LIMIT_MAX_SITE_COUNT > 0) &&
+			(groupPersistence.countByC_S(user.getCompanyId(), site) >=
+				PropsValues.DATA_LIMIT_MAX_SITE_COUNT)) {
+
+			throw new PortalException(
+				"Unable to exceed maximum number of allowed sites");
+		}
+
 		className = GetterUtil.getString(className);
 
 		long classNameId = classNameLocalService.getClassNameId(className);
@@ -928,7 +936,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				catch (Exception exception) {
 					_log.error(
 						"Unable to disable staging for group " +
-							group.getGroupId());
+							group.getGroupId(),
+						exception);
 				}
 			}
 
@@ -967,7 +976,10 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 			// Expando
 
-			expandoRowLocalService.deleteRows(group.getGroupId());
+			expandoRowLocalService.deleteRows(
+				group.getCompanyId(),
+				classNameLocalService.getClassNameId(Group.class.getName()),
+				group.getGroupId());
 
 			// Social
 
@@ -1062,7 +1074,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"No resources found for group " +
-								group.getGroupId());
+								group.getGroupId(),
+							exception);
 					}
 				}
 
@@ -4773,7 +4786,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 		}
 		catch (Exception exception) {
 			_log.error(
-				"Unable to unschedule events for group: " + group.getGroupId());
+				"Unable to unschedule events for group: " + group.getGroupId(),
+				exception);
 		}
 	}
 
@@ -5081,8 +5095,9 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			Group remoteGroup = GroupServiceHttp.getGroup(
 				httpPrincipal, remoteGroupId);
 
-			if (group.isCompany() ^
-				isCompanyGroup(httpPrincipal, remoteGroup)) {
+			if ((group.isCompany() ^
+				 isCompanyGroup(httpPrincipal, remoteGroup)) ||
+				(group.isDepot() ^ remoteGroup.isDepot())) {
 
 				RemoteExportException remoteExportException =
 					new RemoteExportException(

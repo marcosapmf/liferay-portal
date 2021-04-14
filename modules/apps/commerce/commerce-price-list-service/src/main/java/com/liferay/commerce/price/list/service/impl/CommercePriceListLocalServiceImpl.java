@@ -223,6 +223,10 @@ public class CommercePriceListLocalServiceImpl
 			commercePriceList.setStatus(WorkflowConstants.STATUS_EXPIRED);
 		}
 
+		if (catalogBasePriceList) {
+			commercePriceList.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		commercePriceList.setStatusByUserId(user.getUserId());
 		commercePriceList.setStatusDate(serviceContext.getModifiedDate(now));
 		commercePriceList.setExpandoBridgeAttributes(serviceContext);
@@ -1269,7 +1273,8 @@ public class CommercePriceListLocalServiceImpl
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Unable to find price list with ID: " +
-							commercePriceListId);
+							commercePriceListId,
+						noSuchPriceListException);
 				}
 			}
 		}

@@ -34,12 +34,14 @@ import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Price;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Settings;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
 import java.math.BigDecimal;
 
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -77,6 +79,7 @@ public class CartItemDTOConverter
 		return new CartItem() {
 			{
 				customFields = expandoBridge.getAttributes();
+				errorMessages = _getErrorMessages(commerceOrderItem, locale);
 				id = commerceOrderItem.getCommerceOrderItemId();
 				name = commerceOrderItem.getName(languageId);
 				options = commerceOrderItem.getJson();
@@ -95,6 +98,24 @@ public class CartItemDTOConverter
 		};
 	}
 
+	private String[] _getErrorMessages(
+		CommerceOrderItem commerceOrderItem, Locale locale) {
+
+		CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
+
+		if (cpInstance == null) {
+			ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
+				locale);
+
+			return new String[] {
+				LanguageUtil.get(
+					resourceBundle, "the-product-is-no-longer-available")
+			};
+		}
+
+		return null;
+	}
+
 	private Price _getPrice(CommerceOrderItem commerceOrderItem, Locale locale)
 		throws Exception {
 
@@ -106,38 +127,42 @@ public class CartItemDTOConverter
 			_commerceOrderPriceCalculation.getCommerceOrderItemPricePerUnit(
 				commerceCurrency, commerceOrderItem);
 
-		CommerceMoney unitPriceMoney = commerceOrderItemPrice.getUnitPrice();
+		CommerceMoney unitPriceCommerceMoney =
+			commerceOrderItemPrice.getUnitPrice();
 
-		BigDecimal unitPrice = unitPriceMoney.getPrice();
+		BigDecimal unitPrice = unitPriceCommerceMoney.getPrice();
 
 		Price price = new Price() {
 			{
 				currency = commerceCurrency.getName(locale);
 				price = unitPrice.doubleValue();
-				priceFormatted = unitPriceMoney.format(locale);
+				priceFormatted = unitPriceCommerceMoney.format(locale);
 			}
 		};
 
-		CommerceMoney promoPriceMoney = commerceOrderItemPrice.getPromoPrice();
+		CommerceMoney promoPriceCommerceMoney =
+			commerceOrderItemPrice.getPromoPrice();
 
-		if (promoPriceMoney != null) {
-			BigDecimal unitPromoPrice = promoPriceMoney.getPrice();
+		if (promoPriceCommerceMoney != null) {
+			BigDecimal unitPromoPrice = promoPriceCommerceMoney.getPrice();
 
 			if (unitPromoPrice != null) {
 				price.setPromoPrice(unitPromoPrice.doubleValue());
-				price.setPromoPriceFormatted(promoPriceMoney.format(locale));
+				price.setPromoPriceFormatted(
+					promoPriceCommerceMoney.format(locale));
 			}
 		}
 
-		CommerceMoney discountAmountMoney =
+		CommerceMoney discountAmountCommerceMoney =
 			commerceOrderItemPrice.getDiscountAmount();
 
-		if (discountAmountMoney != null) {
-			BigDecimal discountAmount = discountAmountMoney.getPrice();
+		if (discountAmountCommerceMoney != null) {
+			BigDecimal discountAmount = discountAmountCommerceMoney.getPrice();
 
 			if (discountAmount != null) {
 				price.setDiscount(discountAmount.doubleValue());
-				price.setDiscountFormatted(discountAmountMoney.format(locale));
+				price.setDiscountFormatted(
+					discountAmountCommerceMoney.format(locale));
 				price.setDiscountPercentage(
 					_commercePriceFormatter.format(
 						commerceOrderItemPrice.getDiscountPercentage(),
@@ -163,12 +188,14 @@ public class CartItemDTOConverter
 			}
 		}
 
-		CommerceMoney finalPriceMoney = commerceOrderItemPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceOrderItemPrice.getFinalPrice();
 
-		BigDecimal finalPrice = finalPriceMoney.getPrice();
+		BigDecimal finalPrice = finalPriceCommerceMoney.getPrice();
 
 		if (finalPrice != null) {
-			price.setFinalPriceFormatted(finalPriceMoney.format(locale));
+			price.setFinalPriceFormatted(
+				finalPriceCommerceMoney.format(locale));
 			price.setFinalPrice(finalPrice.doubleValue());
 		}
 

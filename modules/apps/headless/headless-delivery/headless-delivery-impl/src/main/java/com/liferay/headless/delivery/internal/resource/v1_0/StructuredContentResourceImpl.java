@@ -29,6 +29,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDM;
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidator;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
@@ -47,6 +48,9 @@ import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RenderedContentValueUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.EntityFieldsProvider;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.StructuredContentEntityModel;
+import com.liferay.headless.delivery.internal.search.aggregation.AggregationUtil;
+import com.liferay.headless.delivery.internal.search.filter.FilterUtil;
+import com.liferay.headless.delivery.internal.search.sort.SortUtil;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentResource;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
@@ -59,6 +63,9 @@ import com.liferay.journal.util.JournalConverter;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Sort;
@@ -83,6 +90,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -403,7 +415,8 @@ public class StructuredContentResourceImpl
 				_journalConverter.getContent(
 					ddmStructure,
 					_toPatchedFields(
-						structuredContent.getContentFields(), journalArticle)),
+						structuredContent.getContentFields(), journalArticle),
+					journalArticle.getGroupId()),
 				journalArticle.getDDMStructureKey(),
 				_getDDMTemplateKey(ddmStructure),
 				journalArticle.getLayoutUuid(),
@@ -512,7 +525,8 @@ public class StructuredContentResourceImpl
 				_journalConverter.getContent(
 					ddmStructure,
 					_toFields(
-						structuredContent.getContentFields(), journalArticle)),
+						structuredContent.getContentFields(), journalArticle),
+					journalArticle.getGroupId()),
 				journalArticle.getDDMStructureKey(),
 				_getDDMTemplateKey(ddmStructure),
 				journalArticle.getLayoutUuid(),
@@ -691,7 +705,8 @@ public class StructuredContentResourceImpl
 
 			return _journalConverter.getContent(
 				ddmStructure,
-				_ddm.getFields(ddmStructure.getStructureId(), serviceContext));
+				_ddm.getFields(ddmStructure.getStructureId(), serviceContext),
+				ddmStructure.getGroupId());
 		}
 		finally {
 			LocaleThreadLocal.setSiteDefaultLocale(originalSiteDefaultLocale);
@@ -720,16 +735,60 @@ public class StructuredContentResourceImpl
 	private DDMFormField _getDDMFormField(
 		DDMStructure ddmStructure, String name) {
 
-		try {
-			return ddmStructure.getDDMFormField(name);
+		DDMFormField ddmFormField = _getDDMFormField(
+			ddmStructure.getDDMFormFields(true), name);
+
+		if (ddmFormField != null) {
+			return ddmFormField;
 		}
-		catch (Exception exception) {
-			throw new BadRequestException(
-				StringBundler.concat(
-					"Unable to get content field value for \"", name,
-					"\" for content structure ", ddmStructure.getStructureId()),
-				exception);
+
+		if (ddmStructure.getParentStructureId() != -1) {
+			try {
+				DDMStructure parentDDMStructure =
+					_ddmStructureService.getStructure(
+						ddmStructure.getParentStructureId());
+
+				ddmFormField = _getDDMFormField(
+					parentDDMStructure.getDDMFormFields(true), name);
+
+				if (ddmFormField != null) {
+					return ddmFormField;
+				}
+			}
+			catch (PortalException portalException) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(portalException, portalException);
+				}
+			}
 		}
+
+		throw new BadRequestException(
+			StringBundler.concat(
+				"Unable to get content field value for \"", name,
+				"\" for content structure ", ddmStructure.getStructureId()));
+	}
+
+	private DDMFormField _getDDMFormField(
+		List<DDMFormField> ddmFormFields, String name) {
+
+		for (DDMFormField ddmFormField : ddmFormFields) {
+			if (name.equals(ddmFormField.getName())) {
+				return ddmFormField;
+			}
+			else if (name.equals(ddmFormField.getFieldReference())) {
+				return ddmFormField;
+			}
+			else {
+				DDMFormField nestedDDMFormField = _getDDMFormField(
+					ddmFormField.getNestedDDMFormFields(), name);
+
+				if (nestedDDMFormField != null) {
+					return null;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	private String _getDDMTemplateKey(DDMStructure ddmStructure) {
@@ -828,7 +887,8 @@ public class StructuredContentResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
-			actions, booleanQueryUnsafeConsumer, filter, JournalArticle.class,
+			actions, booleanQueryUnsafeConsumer,
+			FilterUtil.processFilter(_ddmIndexer, filter), JournalArticle.class,
 			keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				com.liferay.portal.kernel.search.Field.ARTICLE_ID,
@@ -844,6 +904,17 @@ public class StructuredContentResourceImpl
 				if (siteId != null) {
 					searchContext.setGroupIds(new long[] {siteId});
 				}
+
+				SearchRequestBuilder searchRequestBuilder =
+					_searchRequestBuilderFactory.builder(searchContext);
+
+				AggregationUtil.processVulcanAggregation(
+					_aggregations, _ddmIndexer, _queries, searchRequestBuilder,
+					aggregation);
+
+				SortUtil.processSorts(
+					_ddmIndexer, searchRequestBuilder, searchContext.getSorts(),
+					_queries, _sorts);
 			},
 			sorts,
 			document -> _toStructuredContent(
@@ -863,9 +934,6 @@ public class StructuredContentResourceImpl
 
 		DDMStructure ddmStructure = journalArticle.getDDMStructure();
 
-		Fields fields = _journalConverter.getDDMFields(
-			ddmStructure, journalArticle.getContent());
-
 		ServiceContext serviceContext = new ServiceContext();
 
 		DDMFormValues ddmFormValues = DDMFormValuesUtil.toDDMFormValues(
@@ -876,18 +944,7 @@ public class StructuredContentResourceImpl
 
 		serviceContext.setAttribute("ddmFormValues", _toString(ddmFormValues));
 
-		Fields newFields = _ddm.getFields(
-			ddmStructure.getStructureId(), serviceContext);
-
-		for (Field field : fields) {
-			Field newField = newFields.get(field.getName());
-
-			field.setValues(
-				contextAcceptLanguage.getPreferredLocale(),
-				newField.getValues(contextAcceptLanguage.getPreferredLocale()));
-		}
-
-		return fields;
+		return _ddm.getFields(ddmStructure.getStructureId(), serviceContext);
 	}
 
 	private Fields _toPatchedFields(
@@ -1057,6 +1114,12 @@ public class StructuredContentResourceImpl
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		StructuredContentResourceImpl.class);
+
+	@Reference
+	private Aggregations _aggregations;
+
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
@@ -1065,6 +1128,9 @@ public class StructuredContentResourceImpl
 
 	@Reference
 	private DDMFormValuesValidator _ddmFormValuesValidator;
+
+	@Reference
+	private DDMIndexer _ddmIndexer;
 
 	@Reference
 	private DDMStructureService _ddmStructureService;
@@ -1121,7 +1187,16 @@ public class StructuredContentResourceImpl
 	private Portal _portal;
 
 	@Reference
+	private Queries _queries;
+
+	@Reference
 	private RatingsEntryLocalService _ratingsEntryLocalService;
+
+	@Reference
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Reference
+	private Sorts _sorts;
 
 	@Reference
 	private StructuredContentDTOConverter _structuredContentDTOConverter;

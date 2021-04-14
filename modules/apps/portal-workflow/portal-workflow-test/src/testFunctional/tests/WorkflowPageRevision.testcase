@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
+
 	var page = "Public Pages";
 	var pageName = "Site Page Name";
 	var siteName = "Site Name";
@@ -70,7 +71,6 @@ definition {
 
 	@priority = "4"
 	test RejectPageRevisionPG {
-
 		var pageName = "Page Revision Page";
 
 		Navigator.gotoStagedSitePage(
@@ -243,10 +243,8 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-58754"
-	@ignore = "true"
 	@priority = "2"
 	test WithdrawWorkflowSubmissionFromRemovedUser {
-
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
@@ -337,12 +335,6 @@ definition {
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Submissions");
-
-		Workflow.withdrawTaskByActions(
-			workflowAssetTitle = "Site Page Name",
-			workflowAssetType = "Page Revision",
-			workflowDefinition = "Single Approver",
-			workflowTask = "Update");
 
 		Workflow.viewDefaultWorkflowSubmissions();
 	}

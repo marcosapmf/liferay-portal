@@ -147,9 +147,6 @@ public class SegmentsExperimentDisplayContext {
 		).put(
 			"selectedSegmentsExperienceId", _getSelectedSegmentsExperienceId()
 		).put(
-			"viewSegmentsExperimentDetailsURL",
-			_getViewSegmentsExperimentDetailsURL()
-		).put(
 			"winnerSegmentsVariantId", _getWinnerSegmentsExperienceId()
 		).build();
 	}
@@ -201,7 +198,7 @@ public class SegmentsExperimentDisplayContext {
 
 	private String _getCreateSegmentsVariantURL() {
 		return _getContentPageEditorActionURL(
-			"/content_layout/add_segments_experience");
+			"/layout_content_page_editor/add_segments_experience");
 	}
 
 	private String _getDeleteSegmentsExperimentURL() {
@@ -492,26 +489,6 @@ public class SegmentsExperimentDisplayContext {
 		);
 
 		return _segmentsExperienceId;
-	}
-
-	private String _getViewSegmentsExperimentDetailsURL()
-		throws PortalException {
-
-		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment();
-
-		if (segmentsExperiment == null) {
-			return StringPool.BLANK;
-		}
-
-		String liferayAnalyticsURL = getLiferayAnalyticsURL(
-			segmentsExperiment.getCompanyId());
-
-		if (Validator.isNull(liferayAnalyticsURL)) {
-			return StringPool.BLANK;
-		}
-
-		return liferayAnalyticsURL + "/tests/overview/" +
-			segmentsExperiment.getSegmentsExperimentKey();
 	}
 
 	private String _getWinnerSegmentsExperienceId() {

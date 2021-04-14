@@ -15,7 +15,8 @@
 package com.liferay.account.admin.web.internal.portlet.action;
 
 import com.liferay.account.constants.AccountPortletKeys;
-import com.liferay.account.service.AccountGroupAccountEntryRelLocalService;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.petra.lang.SafeClosable;
 import com.liferay.portal.kernel.messaging.proxy.ProxyModeThreadLocal;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -35,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + AccountPortletKeys.ACCOUNT_GROUPS_ADMIN,
-		"mvc.command.name=/account_groups_admin/assign_account_group_account_entries"
+		"mvc.command.name=/account_admin/assign_account_group_account_entries"
 	},
 	service = MVCActionCommand.class
 )
@@ -55,14 +56,12 @@ public class AssignAccountGroupAccountEntriesMVCActionCommand
 		try (SafeClosable safeClosable =
 				ProxyModeThreadLocal.setWithSafeClosable(true)) {
 
-			_accountGroupAccountEntryRelLocalService.
-				addAccountGroupAccountEntryRels(
-					accountGroupId, accountEntryIds);
+			_accountGroupRelLocalService.addAccountGroupRels(
+				accountGroupId, AccountEntry.class.getName(), accountEntryIds);
 		}
 	}
 
 	@Reference
-	private AccountGroupAccountEntryRelLocalService
-		_accountGroupAccountEntryRelLocalService;
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 }

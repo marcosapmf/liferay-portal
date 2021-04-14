@@ -16,6 +16,7 @@ package com.liferay.layout.display.page.internal;
 
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 
@@ -73,7 +74,8 @@ public class LayoutDisplayPageProviderTrackerImpl
 					finally {
 						bundleContext.ungetService(serviceReference);
 					}
-				});
+				},
+				new PropertyServiceReferenceComparator<>("service.ranking"));
 		_layoutDisplayPageProviderByURLSeparatorServiceTrackerMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
 				bundleContext,
@@ -91,7 +93,8 @@ public class LayoutDisplayPageProviderTrackerImpl
 					finally {
 						bundleContext.ungetService(serviceReference);
 					}
-				});
+				},
+				new PropertyServiceReferenceComparator<>("service.ranking"));
 	}
 
 	private ServiceTrackerMap<String, LayoutDisplayPageProvider<?>>

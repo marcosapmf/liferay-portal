@@ -14,7 +14,7 @@
 
 Liferay = window.Liferay || {};
 
-(function (Liferay) {
+(function () {
 	var isFunction = function (val) {
 		return typeof val === 'function';
 	};
@@ -147,10 +147,6 @@ Liferay = window.Liferay || {};
 			ioConfig.cache = false;
 		}
 
-		if (Liferay.PropsValues.NTLM_AUTH_ENABLED && Liferay.Browser.isIe()) {
-			ioConfig.type = 'GET';
-		}
-
 		return ioConfig;
 	};
 
@@ -229,4 +225,4 @@ Liferay = window.Liferay || {};
 		PORTLET:
 			'<div class="portlet"><div class="portlet-topper"><div class="portlet-title"></div></div><div class="portlet-content"></div><div class="forbidden-action"></div></div>',
 	};
-})(Liferay);
+})();

@@ -14,13 +14,15 @@ import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import EditAppContext from 'app-builder-web/js/pages/apps/edit/EditAppContext.es';
+import {sub} from 'app-builder-web/js/utils/lang.es';
 import classNames from 'classnames';
 import {Sidebar} from 'data-engine-taglib';
 import React, {useContext, useEffect, useState} from 'react';
 
 import AutocompleteMultiSelect from '../../../../components/autocomplete/AutocompleteMultiSelect.es';
 import ButtonInfo from '../../../../components/button-info/ButtonInfo.es';
-import {UPDATE_STEP} from '../configReducer.es';
+import IconWithPopover from '../../../../components/icon-with-popover/IconWithPopover.es';
+import {REMOVE_STEP_EMPTY_FORM_VIEWS, UPDATE_STEP} from '../configReducer.es';
 import ActionsTab from './ActionsTab.es';
 import DataAndViewsTab from './DataAndViewsTab.es';
 
@@ -39,14 +41,13 @@ export default function EditAppSidebar() {
 		},
 		dispatchConfig,
 	} = editAppContext;
-
 	const [currentTab, setCurrentTab] = useState();
+	const [showPopover, setShowPopover] = useState(false);
 
 	const {
 		appWorkflowTransitions: [primaryAction, secondaryAction] = [],
 		appWorkflowDataLayoutLinks = [{}],
 	} = currentStep;
-
 	const actionsInfo = [];
 
 	if (primaryAction) {
@@ -101,7 +102,17 @@ export default function EditAppSidebar() {
 										: '',
 							},
 					  ],
+			onClickBack: () => {
+				if (stepIndex > 0) {
+					dispatchConfig({
+						stepIndex,
+						type: REMOVE_STEP_EMPTY_FORM_VIEWS,
+					});
+				}
+			},
 			show: stepIndex !== steps.length - 1,
+			showPopoverIcon:
+				stepIndex == 0 && formView.missingRequiredFields?.missing,
 			title: Liferay.Language.get('data-and-views'),
 		},
 		{
@@ -134,9 +145,34 @@ export default function EditAppSidebar() {
 		});
 	};
 
+	const onClick = () => {
+		setCurrentTab(null);
+		currentTab.onClickBack?.();
+	};
+
 	useEffect(() => {
 		setCurrentTab(null);
 	}, [currentStep]);
+
+	const PopoverHeader = () => {
+		return (
+			<>
+				<ClayIcon className="mr-1 text-info" symbol="info-circle" />
+
+				<span>{Liferay.Language.get('missing-required-fields')}</span>
+			</>
+		);
+	};
+
+	const {custom} = {
+		custom: {
+			triggerProps: {
+				className: 'help-cursor info tooltip-popover-icon',
+				fontSize: '26px',
+				symbol: 'info-circle',
+			},
+		},
+	};
 
 	return (
 		<Sidebar className="app-builder-workflow-app__sidebar">
@@ -149,7 +185,7 @@ export default function EditAppSidebar() {
 					<div className="tab-title">
 						<ClayButton
 							displayType="secondary"
-							onClick={() => setCurrentTab(null)}
+							onClick={onClick}
 							small
 						>
 							<span className="icon-monospaced">
@@ -227,7 +263,14 @@ export default function EditAppSidebar() {
 
 						{tabs.map(
 							(
-								{disabled, error, infoItems, show, title},
+								{
+									disabled,
+									error,
+									infoItems,
+									show,
+									showPopoverIcon,
+									title,
+								},
 								index
 							) =>
 								show && (
@@ -249,11 +292,11 @@ export default function EditAppSidebar() {
 											<ButtonInfo items={infoItems} />
 										</div>
 
-										<div>
+										<div className="d-flex">
 											{error && (
 												<ClayTooltipProvider>
 													<ClayIcon
-														className="mr-2 mt-1 tooltip-icon-error"
+														className="error mr-2 mt-1 tooltip-popover-icon"
 														data-tooltip-align="left"
 														data-tooltip-delay="0"
 														fontSize="26px"
@@ -265,6 +308,44 @@ export default function EditAppSidebar() {
 														)}`}
 													/>
 												</ClayTooltipProvider>
+											)}
+
+											{showPopoverIcon && (
+												<IconWithPopover
+													header={<PopoverHeader />}
+													show={showPopover}
+													trigger={
+														<div className="help-cursor">
+															<IconWithPopover.TriggerIcon
+																iconProps={
+																	custom.triggerProps
+																}
+																onMouseEnter={() =>
+																	setShowPopover(
+																		true
+																	)
+																}
+																onMouseLeave={() =>
+																	setShowPopover(
+																		false
+																	)
+																}
+																onMouseOver={() =>
+																	setShowPopover(
+																		true
+																	)
+																}
+															/>
+														</div>
+													}
+												>
+													{sub(
+														Liferay.Language.get(
+															'this-form-view-does-not-contain-all-required-fields-for-the-x-object'
+														),
+														[dataObject.name]
+													)}
+												</IconWithPopover>
 											)}
 
 											<ClayIcon

@@ -16,6 +16,7 @@ package com.liferay.portal.cache.internal.dao.orm;
 
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
@@ -26,19 +27,26 @@ import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.PortalCacheManagerListener;
+import com.liferay.portal.kernel.cache.key.CacheKeyGenerator;
+import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.servlet.filters.threadlocal.ThreadLocalFilterThreadLocal;
 
 import java.io.Serializable;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -50,10 +58,13 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.collections.map.LRUMap;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Brian Wing Shun Chan
@@ -68,6 +79,16 @@ import org.osgi.service.component.annotations.Reference;
 public class FinderCacheImpl
 	implements CacheRegistryItem, FinderCache, PortalCacheManagerListener {
 
+	public void clearByEntityCache(String className) {
+		clearLocalCache();
+
+		_clearCache(className);
+		_clearCache(_getCacheNameWithPagination(className));
+		_clearCache(_getCacheNameWithoutPagination(className));
+
+		_clearDSLQueryCache(className);
+	}
+
 	@Override
 	public void clearCache() {
 		clearLocalCache();
@@ -78,20 +99,22 @@ public class FinderCacheImpl
 	}
 
 	@Override
+	public void clearCache(Class<?> clazz) {
+		clearByEntityCache(clazz.getName());
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 * 			#clearCache(Class)}
+	 */
+	@Deprecated
+	@Override
 	public void clearCache(String className) {
 		clearLocalCache();
 
 		PortalCache<?, ?> portalCache = _getPortalCache(className);
 
 		portalCache.removeAll();
-	}
-
-	public void clearCacheByEntityCache(Class<?> clazz) {
-		String cacheName = clazz.getName();
-
-		clearCache(cacheName);
-		clearCache(_getCacheNameWithPagination(cacheName));
-		clearCache(_getCacheNameWithoutPagination(cacheName));
 	}
 
 	@Override
@@ -112,15 +135,12 @@ public class FinderCacheImpl
 	}
 
 	@Override
-	public Object getResult(
-		FinderPath finderPath, Object[] args,
-		BasePersistenceImpl<? extends BaseModel<?>> basePersistenceImpl) {
-
+	public Object getResult(FinderPath finderPath, Object[] args) {
 		if (!_valueObjectFinderCacheEnabled || !CacheRegistryUtil.isActive()) {
 			return null;
 		}
 
-		Serializable cacheKey = finderPath.encodeCacheKey(args);
+		Serializable cacheKey = _encodeCacheKey(finderPath, args);
 		Serializable cacheValue = null;
 		Map<LocalCacheKey, Serializable> localCache = null;
 		LocalCacheKey localCacheKey = null;
@@ -163,13 +183,26 @@ public class FinderCacheImpl
 			return cacheValue;
 		}
 
+		Map.Entry<String, Serializable> cacheResultEntry =
+			(Map.Entry<String, Serializable>)cacheValue;
+
+		BasePersistence<?> basePersistence =
+			_basePersistenceServiceTrackerMap.getService(
+				cacheResultEntry.getKey());
+
+		if (basePersistence == null) {
+			return null;
+		}
+
+		cacheValue = cacheResultEntry.getValue();
+
 		if (cacheValue instanceof List<?>) {
 			List<Serializable> primaryKeys = (List<Serializable>)cacheValue;
 
 			Set<Serializable> primaryKeysSet = new HashSet<>(primaryKeys);
 
 			Map<Serializable, ? extends BaseModel<?>> map =
-				basePersistenceImpl.fetchByPrimaryKeys(primaryKeysSet);
+				basePersistence.fetchByPrimaryKeys(primaryKeysSet);
 
 			if (map.size() < primaryKeysSet.size()) {
 				return null;
@@ -184,7 +217,20 @@ public class FinderCacheImpl
 			return Collections.unmodifiableList(list);
 		}
 
-		return basePersistenceImpl.fetchByPrimaryKey(cacheValue);
+		return basePersistence.fetchByPrimaryKey(cacheValue);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 * 			#getResult(FinderPath, Object[])}
+	 */
+	@Deprecated
+	@Override
+	public Object getResult(
+		FinderPath finderPath, Object[] args,
+		BasePersistenceImpl<? extends BaseModel<?>> basePersistenceImpl) {
+
+		return getResult(finderPath, args);
 	}
 
 	@Override
@@ -210,13 +256,6 @@ public class FinderCacheImpl
 
 	@Override
 	public void putResult(FinderPath finderPath, Object[] args, Object result) {
-		putResult(finderPath, args, result, true);
-	}
-
-	@Override
-	public void putResult(
-		FinderPath finderPath, Object[] args, Object result, boolean quiet) {
-
 		if (!_valueObjectFinderCacheEnabled || !CacheRegistryUtil.isActive() ||
 			(result == null)) {
 
@@ -228,7 +267,13 @@ public class FinderCacheImpl
 		if (result instanceof BaseModel<?>) {
 			BaseModel<?> model = (BaseModel<?>)result;
 
-			cacheValue = model.getPrimaryKeyObj();
+			if (finderPath.isBaseModelResult()) {
+				cacheValue = new AbstractMap.SimpleEntry<>(
+					model.getModelClassName(), model.getPrimaryKeyObj());
+			}
+			else {
+				cacheValue = model.getPrimaryKeyObj();
+			}
 		}
 		else if (result instanceof List<?>) {
 			List<?> objects = (List<?>)result;
@@ -244,20 +289,72 @@ public class FinderCacheImpl
 				return;
 			}
 			else if (finderPath.isBaseModelResult()) {
+				String baseModelClassName = null;
 				ArrayList<Serializable> primaryKeys = new ArrayList<>(
 					objects.size());
 
 				for (Object object : objects) {
 					BaseModel<?> baseModel = (BaseModel<?>)object;
 
+					if (baseModelClassName == null) {
+						baseModelClassName = baseModel.getModelClassName();
+					}
+
 					primaryKeys.add(baseModel.getPrimaryKeyObj());
 				}
 
-				cacheValue = primaryKeys;
+				cacheValue = new AbstractMap.SimpleEntry<String, Serializable>(
+					baseModelClassName, primaryKeys);
 			}
 		}
 
-		Serializable cacheKey = finderPath.encodeCacheKey(args);
+		String cacheName = finderPath.getCacheName();
+		String cacheKeyPrefix = finderPath.getCacheKeyPrefix();
+
+		Map<String, FinderPath> finderPaths = _finderPathsMap.get(cacheName);
+
+		if (finderPaths == null) {
+			finderPaths = new ConcurrentHashMap<>();
+
+			Map<String, FinderPath> originalFinderPaths =
+				_finderPathsMap.putIfAbsent(cacheName, finderPaths);
+
+			if (originalFinderPaths != null) {
+				finderPaths = originalFinderPaths;
+			}
+		}
+
+		if (!finderPaths.containsKey(cacheKeyPrefix)) {
+			FinderPath originalFinderPath = finderPaths.putIfAbsent(
+				cacheKeyPrefix, finderPath);
+
+			if ((originalFinderPath == null) &&
+				cacheKeyPrefix.startsWith("dslQuery")) {
+
+				for (String tableName :
+						FinderPath.decodeDSLQueryCacheName(cacheName)) {
+
+					String modelImplClassName = _modelImplClassNames.get(
+						tableName);
+
+					if (Validator.isNull(modelImplClassName)) {
+						throw new IllegalArgumentException(
+							"Unable to find corresponding model impl class " +
+								"for table " + tableName);
+					}
+
+					Set<String> dslQueryCacheNames =
+						_dslQueryCacheNamesMap.computeIfAbsent(
+							modelImplClassName,
+							key -> Collections.newSetFromMap(
+								new ConcurrentHashMap<>()));
+
+					dslQueryCacheNames.add(cacheName);
+				}
+			}
+		}
+
+		Serializable cacheKey = _encodeCacheKey(finderPath, args);
 
 		if (_isLocalCacheEnabled()) {
 			Map<LocalCacheKey, Serializable> localCache = _localCache.get();
@@ -270,26 +367,42 @@ public class FinderCacheImpl
 		PortalCache<Serializable, Serializable> portalCache = _getPortalCache(
 			finderPath.getCacheName());
 
-		if (quiet) {
-			PortalCacheHelperUtil.putWithoutReplicator(
-				portalCache, cacheKey, cacheValue);
-		}
-		else {
-			portalCache.put(cacheKey, cacheValue);
-		}
+		PortalCacheHelperUtil.putWithoutReplicator(
+			portalCache, cacheKey, cacheValue);
 	}
 
-	public void removeByEntityCache(Class<?> clazz, BaseModel<?> baseModel) {
-		String cacheName = clazz.getName();
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 * 			#putResult(FinderPath, Object[], Object)}
+	 */
+	@Deprecated
+	@Override
+	public void putResult(
+		FinderPath finderPath, Object[] args, Object result, boolean quiet) {
 
-		clearCache(_getCacheNameWithPagination(cacheName));
-		clearCache(_getCacheNameWithoutPagination(cacheName));
+		putResult(finderPath, args, result);
+	}
 
-		for (FinderPath finderPath : _getFinderPaths(cacheName)) {
+	public void removeByEntityCache(String className, BaseModel<?> baseModel) {
+		clearLocalCache();
+
+		_clearCache(_getCacheNameWithPagination(className));
+		_clearCache(_getCacheNameWithoutPagination(className));
+
+		_clearDSLQueryCache(className);
+
+		ArgumentsResolver argumentsResolver = _argumentsResolvers.get(
+			className);
+
+		for (FinderPath finderPath : _getFinderPaths(className)) {
 			removeResult(
-				finderPath, _getArguments(finderPath, baseModel, false, false));
+				finderPath,
+				argumentsResolver.getArguments(
+					finderPath, baseModel, false, false));
 			removeResult(
-				finderPath, _getArguments(finderPath, baseModel, true, true));
+				finderPath,
+				argumentsResolver.getArguments(
+					finderPath, baseModel, true, true));
 		}
 	}
 
@@ -300,12 +413,23 @@ public class FinderCacheImpl
 		String groupKey = _GROUP_KEY_PREFIX.concat(className);
 
 		_multiVMPool.removePortalCache(groupKey);
+
+		_finderPathsMap.remove(className);
 	}
 
 	public void removeCacheByEntityCache(String cacheName) {
 		removeCache(cacheName);
 		removeCache(_getCacheNameWithPagination(cacheName));
 		removeCache(_getCacheNameWithoutPagination(cacheName));
+
+		Set<String> dslQueryCacheNames = _dslQueryCacheNamesMap.remove(
+			cacheName);
+
+		if (dslQueryCacheNames != null) {
+			for (String dslQueryCacheName : dslQueryCacheNames) {
+				removeCache(dslQueryCacheName);
+			}
+		}
 	}
 
 	@Override
@@ -317,41 +441,50 @@ public class FinderCacheImpl
 		_removeResult(finderPath, args);
 	}
 
-	public void updateByEntityCache(Class<?> clazz, BaseModel<?> baseModel) {
+	public void updateByEntityCache(String className, BaseModel<?> baseModel) {
 		if (!_valueObjectFinderCacheEnabled) {
 			return;
 		}
 
-		String cacheName = clazz.getName();
+		clearLocalCache();
 
-		clearCache(_getCacheNameWithPagination(cacheName));
+		_clearCache(_getCacheNameWithPagination(className));
 
-		for (FinderPath finderPath :
-				_getFinderPaths(_getCacheNameWithoutPagination(cacheName))) {
+		_clearDSLQueryCache(className);
 
+		ArgumentsResolver argumentsResolver = _argumentsResolvers.get(
+			className);
+
+		Set<FinderPath> finderPaths = new HashSet<>();
+
+		finderPaths.addAll(
+			_getFinderPaths(_getCacheNameWithoutPagination(className)));
+		finderPaths.addAll(_getFinderPaths(className));
+
+		for (FinderPath finderPath : finderPaths) {
 			if (baseModel.isNew()) {
 				_removeResult(
 					finderPath,
-					_getArguments(finderPath, baseModel, false, false));
+					argumentsResolver.getArguments(
+						finderPath, baseModel, false, false));
 			}
 			else {
 				_removeResult(
 					finderPath,
-					_getArguments(finderPath, baseModel, true, false));
+					argumentsResolver.getArguments(
+						finderPath, baseModel, true, false));
 				_removeResult(
 					finderPath,
-					_getArguments(finderPath, baseModel, true, true));
+					argumentsResolver.getArguments(
+						finderPath, baseModel, true, true));
 			}
-		}
-
-		for (FinderPath finderPath : _getFinderPaths(cacheName)) {
-			_removeResult(
-				finderPath, _getArguments(finderPath, baseModel, true, true));
 		}
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
+		_bundleContext = bundleContext;
+
 		_valueObjectFinderCacheEnabled = GetterUtil.getBoolean(
 			_props.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_ENABLED));
 		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
@@ -379,31 +512,97 @@ public class FinderCacheImpl
 
 		portalCacheManager.registerPortalCacheManagerListener(this);
 
-		_finderPathServiceTrackerMap =
-			ServiceTrackerMapFactory.openMultiValueMap(
-				bundleContext, FinderPath.class, "cache.name");
-		_argumentsResolverServiceTrackerMap =
+		_argumentsResolverServiceTracker = ServiceTrackerFactory.open(
+			bundleContext, ArgumentsResolver.class,
+			new ArgumentsResolverServiceTrackerCustomizer());
+
+		_basePersistenceServiceTrackerMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, ArgumentsResolver.class, "model.class.name");
+				bundleContext,
+				(Class<BasePersistence<?>>)(Class<?>)BasePersistence.class,
+				"(|(component.name=*PersistenceImpl)(&(bean.id=*Persistence)" +
+					"(!(bean.id=*Trash*Persistence))))",
+				(serviceReference, emitter) -> {
+					BasePersistence<?> basePersistence =
+						bundleContext.getService(serviceReference);
+
+					Class<?> modelClass = basePersistence.getModelClass();
+
+					emitter.emit(modelClass.getName());
+
+					bundleContext.ungetService(serviceReference);
+				});
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_finderPathServiceTrackerMap.close();
+		_argumentsResolverServiceTracker.close();
 
-		_argumentsResolverServiceTrackerMap.close();
+		_basePersistenceServiceTrackerMap.close();
 	}
 
-	private Object[] _getArguments(
-		FinderPath finderPath, BaseModel<?> baseModel, boolean checkColumn,
-		boolean original) {
+	private void _clearCache(String cacheName) {
+		PortalCache<?, ?> portalCache = _getPortalCache(cacheName);
 
-		ArgumentsResolver argumentsResolver =
-			_argumentsResolverServiceTrackerMap.getService(
-				baseModel.getModelClassName());
+		portalCache.removeAll();
+	}
 
-		return argumentsResolver.getArguments(
-			finderPath, baseModel, checkColumn, original);
+	private void _clearDSLQueryCache(String className) {
+		Set<String> dslQueryCacheNames = _dslQueryCacheNamesMap.get(className);
+
+		if (dslQueryCacheNames != null) {
+			for (String dslQueryCacheName : dslQueryCacheNames) {
+				_clearCache(dslQueryCacheName);
+			}
+		}
+	}
+
+	private Serializable _encodeCacheKey(
+		FinderPath finderPath, Object[] arguments) {
+
+		CacheKeyGenerator cacheKeyGenerator = _getCacheKeyGenerator(
+			finderPath.isBaseModelResult());
+
+		String[] keys = new String[arguments.length * 2];
+
+		for (int i = 0; i < arguments.length; i++) {
+			int index = i * 2;
+
+			keys[index] = StringPool.PERIOD;
+			keys[index + 1] = StringUtil.toHexString(arguments[i]);
+		}
+
+		return cacheKeyGenerator.getCacheKey(
+			new String[] {
+				finderPath.getCacheKeyPrefix(),
+				StringUtil.toHexString(cacheKeyGenerator.getCacheKey(keys))
+			});
+	}
+
+	private CacheKeyGenerator _getCacheKeyGenerator(boolean baseModel) {
+		if (baseModel) {
+			CacheKeyGenerator cacheKeyGenerator = _baseModelCacheKeyGenerator;
+
+			if (cacheKeyGenerator == null) {
+				cacheKeyGenerator = CacheKeyGeneratorUtil.getCacheKeyGenerator(
+					FinderCache.class.getName() + "#BaseModel");
+
+				_baseModelCacheKeyGenerator = cacheKeyGenerator;
+			}
+
+			return cacheKeyGenerator;
+		}
+
+		CacheKeyGenerator cacheKeyGenerator = _cacheKeyGenerator;
+
+		if (cacheKeyGenerator == null) {
+			cacheKeyGenerator = CacheKeyGeneratorUtil.getCacheKeyGenerator(
+				FinderCache.class.getName());
+
+			_cacheKeyGenerator = cacheKeyGenerator;
+		}
+
+		return cacheKeyGenerator;
 	}
 
 	private String _getCacheNameWithoutPagination(String cacheName) {
@@ -414,15 +613,14 @@ public class FinderCacheImpl
 		return cacheName.concat(".List1");
 	}
 
-	private List<FinderPath> _getFinderPaths(String cacheName) {
-		List<FinderPath> finderPaths = _finderPathServiceTrackerMap.getService(
-			cacheName);
+	private Collection<FinderPath> _getFinderPaths(String cacheName) {
+		Map<String, FinderPath> finderPaths = _finderPathsMap.get(cacheName);
 
 		if (finderPaths == null) {
-			return Collections.emptyList();
+			return Collections.emptySet();
 		}
 
-		return finderPaths;
+		return finderPaths.values();
 	}
 
 	private PortalCache<Serializable, Serializable> _getPortalCache(
@@ -464,7 +662,7 @@ public class FinderCacheImpl
 			return;
 		}
 
-		Serializable cacheKey = finderPath.encodeCacheKey(args);
+		Serializable cacheKey = _encodeCacheKey(finderPath, args);
 
 		if (_isLocalCacheEnabled()) {
 			Map<LocalCacheKey, Serializable> localCache = _localCache.get();
@@ -482,11 +680,22 @@ public class FinderCacheImpl
 	private static final String _GROUP_KEY_PREFIX =
 		FinderCache.class.getName() + StringPool.PERIOD;
 
-	private ServiceTrackerMap<String, ArgumentsResolver>
-		_argumentsResolverServiceTrackerMap;
-	private ServiceTrackerMap<String, List<FinderPath>>
-		_finderPathServiceTrackerMap;
+	private final Map<String, ArgumentsResolver> _argumentsResolvers =
+		new ConcurrentHashMap<>();
+	private ServiceTracker<ArgumentsResolver, ArgumentsResolver>
+		_argumentsResolverServiceTracker;
+	private volatile CacheKeyGenerator _baseModelCacheKeyGenerator;
+	private ServiceTrackerMap<String, BasePersistence<?>>
+		_basePersistenceServiceTrackerMap;
+	private BundleContext _bundleContext;
+	private volatile CacheKeyGenerator _cacheKeyGenerator;
+	private final Map<String, Set<String>> _dslQueryCacheNamesMap =
+		new ConcurrentHashMap<>();
+	private final Map<String, Map<String, FinderPath>> _finderPathsMap =
+		new ConcurrentHashMap<>();
 	private ThreadLocal<LRUMap> _localCache;
+	private final Map<String, String> _modelImplClassNames =
+		new ConcurrentHashMap<>();
 
 	@Reference
 	private MultiVMPool _multiVMPool;
@@ -527,6 +736,45 @@ public class FinderCacheImpl
 
 		private final Serializable _cacheKey;
 		private final String _className;
+
+	}
+
+	private class ArgumentsResolverServiceTrackerCustomizer
+		implements ServiceTrackerCustomizer
+			<ArgumentsResolver, ArgumentsResolver> {
+
+		@Override
+		public ArgumentsResolver addingService(
+			ServiceReference<ArgumentsResolver> serviceReference) {
+
+			ArgumentsResolver argumentsResolver = _bundleContext.getService(
+				serviceReference);
+
+			_argumentsResolvers.put(
+				argumentsResolver.getClassName(), argumentsResolver);
+			_modelImplClassNames.put(
+				argumentsResolver.getTableName(),
+				argumentsResolver.getClassName());
+
+			return argumentsResolver;
+		}
+
+		@Override
+		public void modifiedService(
+			ServiceReference<ArgumentsResolver> serviceReference,
+			ArgumentsResolver argumentsResolver) {
+		}
+
+		@Override
+		public void removedService(
+			ServiceReference<ArgumentsResolver> serviceReference,
+			ArgumentsResolver argumentsResolver) {
+
+			_argumentsResolvers.remove(argumentsResolver.getClassName());
+			_modelImplClassNames.remove(argumentsResolver.getTableName());
+
+			_bundleContext.ungetService(serviceReference);
+		}
 
 	}
 

@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.payment.method.paypal.internal;
 
+import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommerceOrderPaymentConstants;
 import com.liferay.commerce.constants.CommercePaymentConstants;
@@ -31,10 +32,8 @@ import com.liferay.commerce.payment.request.CommercePaymentRequest;
 import com.liferay.commerce.payment.result.CommercePaymentResult;
 import com.liferay.commerce.payment.result.CommerceSubscriptionStatusResult;
 import com.liferay.commerce.product.constants.CPConstants;
-import com.liferay.commerce.product.model.CPDefinition;
-import com.liferay.commerce.product.model.CPInstance;
-import com.liferay.commerce.product.model.CPSubscriptionInfo;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.commerce.service.CommerceAddressLocalService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -231,9 +230,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		Capture capture = new Capture();
 
-		Amount amount = _getAmount(commerceOrder);
-
-		capture.setAmount(amount);
+		capture.setAmount(_getAmount(commerceOrder));
 
 		capture.setIsFinalCapture(true);
 
@@ -326,10 +323,9 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 				_commerceOrderLocalService.getCommerceOrder(
 					commercePaymentRequest.getCommerceOrderId());
 
-			APIContext apiContext = _getAPIContext(commerceOrder.getGroupId());
-
 			Agreement activeAgreement = agreement.execute(
-				apiContext, agreement.getToken());
+				_getAPIContext(commerceOrder.getGroupId()),
+				agreement.getToken());
 
 			if (PayPalCommercePaymentMethodConstants.PAYMENT_STATE_FAILED.
 					equals(activeAgreement.getState())) {
@@ -409,10 +405,9 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			_commerceOrderLocalService.getCommerceOrder(
 				commercePaymentRequest.getCommerceOrderId());
 
-		APIContext apiContext = _getAPIContext(commerceOrder.getGroupId());
-
 		Agreement agreement = Agreement.get(
-			apiContext, commercePaymentRequest.getTransactionId());
+			_getAPIContext(commerceOrder.getGroupId()),
+			commercePaymentRequest.getTransactionId());
 
 		AgreementDetails agreementDetails = agreement.getAgreementDetails();
 
@@ -436,10 +431,9 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			_commerceOrderLocalService.getCommerceOrder(
 				commercePaymentRequest.getCommerceOrderId());
 
-		APIContext apiContext = _getAPIContext(commerceOrder.getGroupId());
-
 		Agreement agreement = Agreement.get(
-			apiContext, commercePaymentRequest.getTransactionId());
+			_getAPIContext(commerceOrder.getGroupId()),
+			commercePaymentRequest.getTransactionId());
 
 		String agreementState = agreement.getState();
 
@@ -623,8 +617,6 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 		int status = CommerceOrderPaymentConstants.STATUS_FAILED;
 
 		try {
-			String url = null;
-
 			APIContext apiContext = _getAPIContext(commerceOrder.getGroupId());
 
 			Plan plan = _getPlan(
@@ -634,6 +626,8 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			if (plan == null) {
 				return null;
 			}
+
+			String url = null;
 
 			Agreement agreement = _getAgreement(
 				commerceOrder, apiContext, plan,
@@ -697,9 +691,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		RefundRequest refundRequest = new RefundRequest();
 
-		Amount amount = _getAmount(commerceOrder);
-
-		refundRequest.setAmount(amount);
+		refundRequest.setAmount(_getAmount(commerceOrder));
 
 		DetailedRefund detailedRefund = sale.refund(apiContext, refundRequest);
 
@@ -847,8 +839,21 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		agreement.setPayer(payer);
 
-		ShippingAddress shippingAddress = _getShippingAddress(
-			commerceOrder.getShippingAddress());
+		CommerceAddress commerceAddress = commerceOrder.getShippingAddress();
+
+		if (commerceAddress == null) {
+			CommerceAccount commerceAccount =
+				commerceOrder.getCommerceAccount();
+
+			commerceAddress = _commerceAddressLocalService.fetchCommerceAddress(
+				commerceAccount.getDefaultShippingAddressId());
+		}
+
+		if (commerceAddress == null) {
+			commerceAddress = commerceOrder.getBillingAddress();
+		}
+
+		ShippingAddress shippingAddress = _getShippingAddress(commerceAddress);
 
 		shippingAddress.setRecipientName(null);
 
@@ -947,10 +952,6 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			item.setCurrency(
 				StringUtil.toUpperCase(commerceCurrency.getCode()));
 
-			CPDefinition cpDefinition = commerceOrderItem.getCPDefinition();
-
-			item.setDescription(cpDefinition.getShortDescription(languageId));
-
 			item.setName(commerceOrderItem.getName(languageId));
 
 			/*
@@ -1039,9 +1040,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			_getTransactions(
 				commerceOrder, commercePaymentRequest.getLocale()));
 
-		APIContext apiContext = _getAPIContext(commerceOrder.getGroupId());
-
-		return payment.create(apiContext);
+		return payment.create(_getAPIContext(commerceOrder.getGroupId()));
 	}
 
 	private PayPalGroupServiceConfiguration _getPayPalGroupServiceConfiguration(
@@ -1059,8 +1058,6 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			CommerceOrder commerceOrder, APIContext apiContext, Locale locale)
 		throws PayPalRESTException, PortalException {
 
-		CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
-
 		List<CommerceOrderItem> commerceOrderItems =
 			commerceOrder.getCommerceOrderItems();
 
@@ -1069,16 +1066,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		CommerceOrderItem commerceOrderItem = commerceOrderItems.get(0);
 
-		CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
-
-		if (cpInstance == null) {
-			return null;
-		}
-
-		CPSubscriptionInfo cpSubscriptionInfo =
-			cpInstance.getCPSubscriptionInfo();
-
-		String subscriptionType = cpSubscriptionInfo.getSubscriptionType();
+		String subscriptionType = commerceOrderItem.getSubscriptionType();
 
 		if (subscriptionType.equals(CPConstants.MONTHLY_SUBSCRIPTION_TYPE)) {
 			subscriptionType = PayPalCommercePaymentMethodConstants.MONTH;
@@ -1097,6 +1085,8 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			subscriptionType = PayPalCommercePaymentMethodConstants.YEAR;
 		}
 
+		CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
+
 		Currency amount = new Currency(
 			commerceCurrency.getCode(),
 			_payPalDecimalFormat.format(commerceOrderItem.getFinalPrice()));
@@ -1104,9 +1094,9 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 		PaymentDefinition paymentDefinition = new PaymentDefinition(
 			_getResource(locale, "payment-definition"),
 			PayPalCommercePaymentMethodConstants.PAYMENT_DEFINITION_REGULAR,
-			String.valueOf(cpSubscriptionInfo.getSubscriptionLength()),
+			String.valueOf(commerceOrderItem.getSubscriptionLength()),
 			subscriptionType,
-			String.valueOf(cpSubscriptionInfo.getMaxSubscriptionCycles()),
+			String.valueOf(commerceOrderItem.getMaxSubscriptionCycles()),
 			amount);
 
 		paymentDefinitions.add(paymentDefinition);
@@ -1116,7 +1106,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		String type = PayPalCommercePaymentMethodConstants.PLAN_FIXED;
 
-		if (cpSubscriptionInfo.getMaxSubscriptionCycles() == 0) {
+		if (commerceOrderItem.getMaxSubscriptionCycles() == 0) {
 			type = PayPalCommercePaymentMethodConstants.PLAN_INFINITE;
 		}
 
@@ -1143,6 +1133,10 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			Integer.parseInt(attemptsMaxCount);
 		}
 		catch (NumberFormatException numberFormatException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(numberFormatException, numberFormatException);
+			}
+
 			attemptsMaxCount = "0";
 		}
 
@@ -1160,9 +1154,7 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 			locale = LocaleUtil.getSiteDefault();
 		}
 
-		ResourceBundle resourceBundle = _getResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, key);
+		return LanguageUtil.get(_getResourceBundle(locale), key);
 	}
 
 	private ResourceBundle _getResourceBundle(Locale locale) {
@@ -1176,10 +1168,11 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		BigDecimal shippingAmount = commerceOrder.getShippingAmount();
 
-		CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
-
 		if ((shippingAmount != null) &&
 			(shippingAmount.compareTo(BigDecimal.ZERO) > 0)) {
+
+			CommerceCurrency commerceCurrency =
+				commerceOrder.getCommerceCurrency();
 
 			_addItem(
 				commerceCurrency,
@@ -1210,21 +1203,25 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 
 		ShippingAddress shippingAddress = new ShippingAddress();
 
-		shippingAddress.setCity(commerceAddress.getCity());
+		if (commerceAddress != null) {
+			shippingAddress.setCity(commerceAddress.getCity());
 
-		CommerceCountry commerceCountry = commerceAddress.getCommerceCountry();
+			CommerceCountry commerceCountry =
+				commerceAddress.getCommerceCountry();
 
-		shippingAddress.setCountryCode(commerceCountry.getTwoLettersISOCode());
+			shippingAddress.setCountryCode(
+				commerceCountry.getTwoLettersISOCode());
 
-		shippingAddress.setLine1(commerceAddress.getStreet1());
-		shippingAddress.setLine2(commerceAddress.getStreet2());
-		shippingAddress.setPostalCode(commerceAddress.getZip());
-		shippingAddress.setRecipientName(commerceAddress.getName());
+			shippingAddress.setLine1(commerceAddress.getStreet1());
+			shippingAddress.setLine2(commerceAddress.getStreet2());
+			shippingAddress.setPostalCode(commerceAddress.getZip());
+			shippingAddress.setRecipientName(commerceAddress.getName());
 
-		CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
+			CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
 
-		if (commerceRegion != null) {
-			shippingAddress.setState(commerceRegion.getCode());
+			if (commerceRegion != null) {
+				shippingAddress.setState(commerceRegion.getCode());
+			}
 		}
 
 		return shippingAddress;
@@ -1284,6 +1281,9 @@ public class PayPalCommercePaymentMethod implements CommercePaymentMethod {
 	private static final DecimalFormat _payPalDecimalFormat = new DecimalFormat(
 		"#,###.##");
 	private static final TimeZone _utc = TimeZone.getTimeZone("UTC");
+
+	@Reference
+	private CommerceAddressLocalService _commerceAddressLocalService;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;

@@ -12,152 +12,179 @@
  * details.
  */
 
-import {PortletBase, fetch} from 'frontend-js-web';
-import core from 'metal';
-import {EventHandler} from 'metal-events';
+import {fetch} from 'frontend-js-web';
 
 const RECENTLY_REMOVED_ATTACHMENTS = {
 	multiple: Liferay.Language.get('x-recently-removed-attachments'),
 	single: Liferay.Language.get('x-recently-removed-attachment'),
 };
 
+const CONFIRM_DISCARD_IMAGES = Liferay.Language.get(
+	'uploads-are-in-progress-confirmation'
+);
+
 /**
  * MBPortlet handles the actions of replying or editing a
  * message board.
- *
- * @abstract
- * @extends {PortletBase}
  */
 
-class MBPortlet extends PortletBase {
+class MBPortlet {
+	constructor({
+		constants,
+		currentAction,
+		getAttachmentsURL,
+		namespace,
+		replyToMessageId,
+		rootNodeId,
+		strings = {
+			confirmDiscardImages: CONFIRM_DISCARD_IMAGES,
+		},
+		viewTrashAttachmentsURL,
+	}) {
+		this._namespace = namespace;
+		this._constants = constants;
+		this._currentAction = currentAction;
+		this._getAttachmentsURL = getAttachmentsURL;
+		this._replyToMessageId = replyToMessageId;
+		this._strings = strings;
+		this._viewTrashAttachmentsURL = viewTrashAttachmentsURL;
 
-	/**
-	 * @inheritDoc
-	 */
+		this.rootNode = document.getElementById(rootNodeId);
 
-	created() {
-		this.eventHandler_ = new EventHandler();
+		this.workflowActionInputNode = document.getElementById(
+			`${this._namespace}workflowAction`
+		);
+
+		this._events = [];
+		this._attachEvents();
 	}
 
-	/**
-	 * @inheritDoc
-	 */
+	dispose() {
+		this._events.forEach(({event, listener, target}) =>
+			target.removeEventListener(event, listener)
+		);
 
-	attached() {
-		const publishButton = this.one('.button-holder button[type="submit"]');
+		this._events = [];
+	}
+
+	_addEventListener(target, event, fn) {
+		target.addEventListener(event, fn);
+		this._events.push({event, fn, target});
+	}
+
+	_attachEvents() {
+		const publishButton = this.rootNode.querySelector(
+			'.button-holder button[type="submit"]'
+		);
 
 		if (publishButton) {
-			this.eventHandler_.add(
-				publishButton.addEventListener('click', (e) => {
-					this.publish_(e);
-				})
-			);
+			this._addEventListener(publishButton, 'click', () => {
+				this.workflowActionInputNode.value = this._constants.ACTION_PUBLISH;
+				this._saveFn();
+			});
 		}
 
-		const saveButton = this.one('#saveButton');
+		const saveDrafButton = document.getElementById(
+			`${this._namespace}saveButton`
+		);
 
-		if (saveButton) {
-			this.eventHandler_.add(
-				saveButton.addEventListener('click', (e) => {
-					this.saveDraft_(e);
-				})
-			);
+		if (saveDrafButton) {
+			this._addEventListener(saveDrafButton, 'click', () => {
+				this.workflowActionInputNode.value = this._constants.ACTION_SAVE_DRAFT;
+				this._saveFn();
+			});
 		}
 
-		const advancedReplyLink = this.one('.advanced-reply');
+		const advancedReplyLink = this.rootNode.querySelector(
+			'.advanced-reply'
+		);
 
 		if (advancedReplyLink) {
-			this.eventHandler_.add(
-				advancedReplyLink.addEventListener('click', (e) => {
-					this.openAdvancedReply_(e);
-				})
-			);
+			this._addEventListener(advancedReplyLink, 'click', () => {
+				this._openAdvancedReply();
+			});
 		}
 
-		const searchContainerId = this.ns('messageAttachments');
+		const searchContainerId = `${this._namespace}messageAttachments`;
 
 		Liferay.componentReady(searchContainerId).then((searchContainer) => {
-			this.eventHandler_.add(
-				searchContainer
-					.get('contentBox')
-					.delegate(
-						'click',
-						this.removeAttachment_.bind(this),
-						'.delete-attachment'
-					)
-			);
-
-			this.searchContainer_ = searchContainer;
+			searchContainer
+				.get('contentBox')
+				.delegate(
+					'click',
+					this._removeAttachment.bind(this),
+					'.delete-attachment'
+				);
 		});
+
+		this.searchContainerId = searchContainerId;
 
 		const viewRemovedAttachmentsLink = document.getElementById(
 			'view-removed-attachments-link'
 		);
 
 		if (viewRemovedAttachmentsLink) {
-			viewRemovedAttachmentsLink.addEventListener('click', () => {
-				Liferay.Util.openWindow({
-					dialog: {
-						on: {
-							visibleChange: (event) => {
-								if (!event.newVal) {
-									this.updateRemovedAttachments_();
-								}
-							},
-						},
-					},
-					id: this.namespace + 'openRemovedPageAttachments',
+			this._addEventListener(viewRemovedAttachmentsLink, 'click', () => {
+				Liferay.Util.openModal({
+					id: this._namespace + 'openRemovedPageAttachments',
+					onClose: this._updateRemovedAttachments.bind(this),
 					title: Liferay.Language.get('removed-attachments'),
-					uri: this.viewTrashAttachmentsURL,
+					url: this._viewTrashAttachmentsURL,
 				});
 			});
 		}
 	}
 
 	/**
-	 * @inheritDoc
-	 */
-
-	detached() {
-		super.detached();
-		this.eventHandler_.removeAllListeners();
-	}
-
-	/**
 	 * Redirects to the advanced reply page
 	 * keeping the current message.
 	 *
-	 * @protected
 	 */
+	_openAdvancedReply() {
+		const namespace = this._namespace;
+		const replyToMessageId = this._replyToMessageId;
 
-	openAdvancedReply_() {
-		const inputNode = this.one('#body');
-		inputNode.value = window[
-			this.ns('replyMessageBody' + this.replyToMessageId)
+		const bodyInput = document.getElementById(`${namespace}body`);
+		bodyInput.value = window[
+			`${namespace}replyMessageBody${replyToMessageId}`
 		].getHTML();
 
-		const form = this.one(
-			`[name="${this.ns('advancedReplyFm' + this.replyToMessageId)}"]`
+		const form = this.rootNode.querySelector(
+			`[name="${namespace}advancedReplyFm${replyToMessageId}"]`
 		);
 
 		const advancedReplyInputNode = form.querySelector(
-			`[name="${this.ns('body')}"]`
+			`[name="${namespace}body"]`
 		);
 
-		advancedReplyInputNode.value = inputNode.value;
+		advancedReplyInputNode.value = bodyInput.value;
 
 		submitForm(form);
 	}
 
 	/**
-	 * Publish the message.
+	 * Sends a request to remove the selected attachment.
 	 *
-	 * @protected
+	 * @param {Event} event The click event that triggered the remove action
 	 */
+	_removeAttachment(event) {
+		const link = event.currentTarget;
 
-	publish_() {
-		this.one('#workflowAction').value = this.constants.ACTION_PUBLISH;
-		this.save_();
+		const deleteURL = link.getAttribute('data-url');
+
+		fetch(deleteURL).then(() => {
+			Liferay.componentReady(this.searchContainerId).then(
+				(searchContainer) => {
+					searchContainer.deleteRow(
+						link.ancestor('tr'),
+						link.getAttribute('data-rowid')
+					);
+					searchContainer.updateDataStore();
+				}
+			);
+
+			this._updateRemovedAttachments();
+		});
 	}
 
 	/**
@@ -165,89 +192,137 @@ class MBPortlet extends PortletBase {
 	 * images that have not been uploaded yet. In that case,
 	 * it removes them after asking confirmation to the user.
 	 *
-	 * @protected
 	 */
-
-	save_() {
-		const tempImages = this.all('img[data-random-id]');
+	_saveFn() {
+		const tempImages = this.rootNode.querySelectorAll(
+			'img[data-random-id]'
+		);
 
 		if (tempImages.length > 0) {
-			if (confirm(this.strings.confirmDiscardImages)) {
+			if (confirm(this._strings.confirmDiscardImages)) {
 				tempImages.forEach((node) => {
 					node.parentElement.remove();
 				});
 
-				this.submitForm_();
+				this._submitMBForm();
 			}
 		}
 		else {
-			this.submitForm_();
+			this._submitMBForm();
 		}
 	}
 
 	/**
-	 * Sends a request to remove the selected attachment.
+	 * Submits the message.
 	 *
-	 * @protected
-	 * @param {Event} event The click event that triggered the remove action
+	 */
+	_submitMBForm() {
+		const namespace = this._namespace;
+		const replyToMessageId = this._replyToMessageId;
+
+		document.getElementById(
+			`${namespace}${this._constants.CMD}`
+		).value = this._currentAction;
+
+		this._updateMultipleMBMessageAttachments();
+
+		const bodyInput = document.getElementById(`${namespace}body`);
+
+		if (replyToMessageId) {
+			bodyInput.value = window[
+				`${namespace}replyMessageBody${replyToMessageId}`
+			].getHTML();
+
+			submitForm(
+				document[`${namespace}addQuickReplyFm${replyToMessageId}`]
+			);
+		}
+		else {
+			bodyInput.value = window[`${namespace}bodyEditor`].getHTML();
+
+			submitForm(document[`${namespace}fm`]);
+		}
+	}
+
+	/**
+	 * Updates the attachments to include the checked attachments.
+	 *
 	 */
 
-	removeAttachment_(event) {
-		const link = event.currentTarget;
+	_updateMultipleMBMessageAttachments() {
+		const namespace = this._namespace;
 
-		const deleteURL = link.getAttribute('data-url');
+		const selectedFileNameContainer = document.getElementById(
+			`${namespace}selectedFileNameContainer`
+		);
 
-		fetch(deleteURL).then(() => {
-			const searchContainer = this.searchContainer_;
+		if (selectedFileNameContainer) {
+			const inputName = `${namespace}selectUploadedFile`;
 
-			searchContainer.deleteRow(
-				link.ancestor('tr'),
-				link.getAttribute('data-rowid')
+			const input = [].slice.call(
+				this.rootNode.querySelectorAll(
+					`input[name=${inputName}]:checked`
+				)
 			);
-			searchContainer.updateDataStore();
 
-			this.updateRemovedAttachments_();
-		});
+			const data = input
+				.map((item, index) => {
+					const id = index;
+					const value = item.value;
+
+					return `<input id="${namespace}selectedFileName${id}" name="${namespace}selectedFileName" type="hidden" value="${value}" />`;
+				})
+				.join('');
+
+			selectedFileNameContainer.innerHTML = data;
+		}
 	}
 
 	/**
 	 * Sends a request to retrieve the deleted attachments
 	 *
-	 * @protected
 	 */
-
-	updateRemovedAttachments_() {
-		fetch(this.getAttachmentsURL)
+	_updateRemovedAttachments() {
+		fetch(this._getAttachmentsURL)
 			.then((res) => res.json())
 			.then((attachments) => {
 				if (attachments.active.length > 0) {
-					const searchContainer = this.searchContainer_;
-					const searchContainerData = searchContainer.getData();
+					Liferay.componentReady(this.searchContainerId).then(
+						(searchContainer) => {
+							const searchContainerData = searchContainer.getData();
 
-					document
-						.getElementById(this.namespace + 'fileAttachments')
-						.classList.remove('hide');
+							document
+								.getElementById(
+									this._namespace + 'fileAttachments'
+								)
+								.classList.remove('hide');
 
-					attachments.active.forEach((attachment) => {
-						if (searchContainerData.indexOf(attachment.id) == -1) {
-							searchContainer.addRow(
-								[
-									attachment.title,
-									attachment.size,
-									`<a class="delete-attachment" data-rowId="${
+							attachments.active.forEach((attachment) => {
+								if (
+									searchContainerData.indexOf(
 										attachment.id
-									}" data-url="${
-										attachment.deleteURL
-									}" href="javascript:;">${Liferay.Language.get(
-										'move-to-recycle-bin'
-									)}</a>`,
-								],
-								attachment.id.toString()
-							);
+									) == -1
+								) {
+									searchContainer.addRow(
+										[
+											attachment.title,
+											attachment.size,
+											`<a class="delete-attachment" data-rowId="${
+												attachment.id
+											}" data-url="${
+												attachment.deleteURL
+											}" href="javascript:;">${Liferay.Language.get(
+												'move-to-recycle-bin'
+											)}</a>`,
+										],
+										attachment.id.toString()
+									);
 
-							searchContainer.updateDataStore();
+									searchContainer.updateDataStore();
+								}
+							});
 						}
-					});
+					);
 				}
 
 				const deletedAttachmentsElement = document.getElementById(
@@ -269,159 +344,6 @@ class MBPortlet extends PortletBase {
 				}
 			});
 	}
-
-	/**
-	 * Updates the attachments to include the checked attachments.
-	 *
-	 * @protected
-	 */
-
-	updateMultipleMBMessageAttachments_() {
-		const selectedFileNameContainer = this.one(
-			'#selectedFileNameContainer'
-		);
-
-		if (selectedFileNameContainer) {
-			const inputName = this.ns('selectUploadedFile');
-
-			const input = [].slice.call(
-				this.all(`input[name=${inputName}]:checked`)
-			);
-
-			const data = input
-				.map((item, index) => {
-					const id = index;
-					const namespace = this.namespace;
-					const value = item.value;
-
-					return `<input id="${namespace}selectedFileName${id}" name="${namespace}selectedFileName" type="hidden" value="${value}" />`;
-				})
-				.join('');
-
-			selectedFileNameContainer.innerHTML = data;
-		}
-	}
-
-	/**
-	 * Submits the message.
-	 *
-	 * @protected
-	 */
-
-	submitForm_() {
-		this.one('#' + this.constants.CMD).value = this.currentAction;
-
-		this.updateMultipleMBMessageAttachments_();
-
-		if (this.replyToMessageId) {
-			this.one('#body').value = window[
-				this.ns('replyMessageBody' + this.replyToMessageId)
-			].getHTML();
-
-			submitForm(
-				document[this.ns('addQuickReplyFm' + this.replyToMessageId)]
-			);
-		}
-		else {
-			this.one('#body').value = window[this.ns('bodyEditor')].getHTML();
-
-			submitForm(document[this.ns('fm')]);
-		}
-	}
-
-	/**
-	 * Saves the message as a draft.
-	 *
-	 * @protected
-	 */
-
-	saveDraft_() {
-		this.one('#workflowAction').value = this.constants.ACTION_SAVE_DRAFT;
-		this.save_();
-	}
 }
-
-/**
- * MBPortlet State definition.
- * @ignore
- * @static
- * @type {!Object}
- */
-
-MBPortlet.STATE = {
-
-	/**
-	 * Portlet's constants
-	 * @instance
-	 * @memberof MBPortlet
-	 * @type {!Object}
-	 */
-
-	constants: {
-		validator: core.isObject,
-	},
-
-	/**
-	 * The current action (CMD.ADD, CMD.UPDATE, ...)
-	 * for the message
-	 * @instance
-	 * @memberof MBPortlet
-	 * @type {String}
-	 */
-
-	currentAction: {
-		validator: core.isString,
-	},
-
-	/**
-	 * The URL to get deleted attachments from
-	 * @instance
-	 * @memberof MBPortlet
-	 * @type {String}
-	 */
-
-	getAttachmentsURL: {
-		validator: core.isString,
-	},
-
-	/**
-	 * The id of the message that
-	 * you are replying to
-	 * @instance
-	 * @memberof MBPortlet
-	 * @type {String}
-	 */
-
-	replyToMessageId: {
-		validator: core.isString,
-	},
-
-	/**
-	 * Portlet's messages
-	 * @instance
-	 * @memberof WikiPortlet
-	 * @type {Object}
-	 */
-
-	strings: {
-		validator: core.isObject,
-		value: {
-			confirmDiscardImages: Liferay.Language.get(
-				'uploads-are-in-progress-confirmation'
-			),
-		},
-	},
-
-	/**
-	 * The URL to edit deleted attachments
-	 * @instance
-	 * @memberof MBPortlet
-	 * @type {String}
-	 */
-
-	viewTrashAttachmentsURL: {
-		validator: core.isString,
-	},
-};
 
 export default MBPortlet;

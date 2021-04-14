@@ -45,7 +45,16 @@ else {
 }
 
 PluginPackage selPluginPackage = selTheme.getPluginPackage();
+
+String stylebookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningMessage();
 %>
+
+<c:if test="<%= Validator.isNotNull(stylebookWarningMessage) %>">
+	<clay:alert
+		displayType="info"
+		message="<%= stylebookWarningMessage %>"
+	/>
+</c:if>
 
 <aui:input name="regularThemeId" type="hidden" value="<%= selTheme.getThemeId() %>" />
 <aui:input name="regularColorSchemeId" type="hidden" value="<%= selColorScheme.getColorSchemeId() %>" />
@@ -156,9 +165,11 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 
 	for (Map.Entry<String, ThemeSetting> entry : configurableSettings.entrySet()) {
 		String name = LanguageUtil.get(selThemeResourceBundle, entry.getKey());
+
 		ThemeSetting themeSetting = entry.getValue();
 
 		String type = GetterUtil.getString(themeSetting.getType(), "text");
+
 		String value = StringPool.BLANK;
 
 		if (useDefaultThemeSettings) {
@@ -178,7 +189,7 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 
 		<c:choose>
 			<c:when test='<%= type.equals("checkbox") %>'>
-				<aui:input label="<%= HtmlUtil.escape(name) %>" name="<%= propertyName %>" type="toggle-switch" value="<%= value %>" />
+				<aui:input inlineLabel="right" label="<%= HtmlUtil.escape(name) %>" labelCssClass="simple-toggle-switch" name="<%= propertyName %>" type="toggle-switch" value="<%= value %>" />
 			</c:when>
 			<c:when test='<%= type.equals("text") || type.equals("textarea") %>'>
 				<aui:input label="<%= HtmlUtil.escape(name) %>" name="<%= propertyName %>" type="<%= type %>" value="<%= value %>" />
@@ -213,31 +224,16 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 </c:if>
 
 <c:if test="<%= !colorSchemes.isEmpty() %>">
-	<aui:script use="aui-base,aui-event-key">
-		var colorSchemesContainer = A.one(
-			'#<portlet:namespace />colorSchemesContainer'
-		);
-
-		colorSchemesContainer.delegate(
-			['click', 'keydown'],
-			function (event) {
-				if (!event.keyCode || event.keyCode === 13 || event.keyCode === 32) {
-					event.preventDefault();
-
-					var currentTarget = event.currentTarget;
-
-					colorSchemesContainer
-						.all('.color-scheme-selector')
-						.removeClass('selected');
-
-					currentTarget.addClass('selected');
-
-					A.one('#<portlet:namespace />regularColorSchemeId').val(
-						currentTarget.attr('data-color-scheme-id')
-					);
-				}
-			},
-			'.color-scheme-selector'
-		);
-	</aui:script>
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"buttonCssClass", ".color-scheme-selector"
+			).put(
+				"containerId", liferayPortletResponse.getNamespace() + "colorSchemesContainer"
+			).put(
+				"regularColorSchemeInputId", liferayPortletResponse.getNamespace() + "regularColorSchemeId"
+			).build()
+		%>'
+		module="js/LookAndFeelThemeDetails"
+	/>
 </c:if>

@@ -55,11 +55,13 @@ AssetListEntry assetListEntry = assetListDisplayContext.getAssetListEntry();
 				<liferay-util:include page="/asset_list/source.jsp" servletContext="<%= application %>" />
 			</liferay-frontend:edit-form-body>
 
-			<liferay-frontend:edit-form-footer>
-				<aui:button disabled="<%= editAssetListDisplayContext.isNoAssetTypeSelected() %>" id="saveButton" onClick='<%= liferayPortletResponse.getNamespace() + "saveSelectBoxes();" %>' type="submit" />
+			<c:if test="<%= !editAssetListDisplayContext.isLiveGroup() %>">
+				<liferay-frontend:edit-form-footer>
+					<aui:button disabled="<%= editAssetListDisplayContext.isNoAssetTypeSelected() %>" id="saveButton" onClick='<%= liferayPortletResponse.getNamespace() + "saveSelectBoxes();" %>' type="submit" />
 
-				<aui:button href="<%= backURL %>" type="cancel" />
-			</liferay-frontend:edit-form-footer>
+					<aui:button href="<%= backURL %>" type="cancel" />
+				</liferay-frontend:edit-form-footer>
+			</c:if>
 		</liferay-frontend:edit-form>
 	</c:when>
 	<c:otherwise>
@@ -107,37 +109,39 @@ AssetListEntry assetListEntry = assetListDisplayContext.getAssetListEntry();
 					</span>
 						</clay:content-col>
 
-						<clay:content-col
-							containerElement="span"
-						>
-							<liferay-ui:icon-menu
-								direction="right"
-								message="select"
-								showArrow="<%= false %>"
-								showWhenSingleIcon="<%= true %>"
-								triggerCssClass="btn-sm"
+						<c:if test="<%= !editAssetListDisplayContext.isLiveGroup() %>">
+							<clay:content-col
+								containerElement="span"
 							>
+								<liferay-ui:icon-menu
+									direction="right"
+									message="select"
+									showArrow="<%= false %>"
+									showWhenSingleIcon="<%= true %>"
+									triggerCssClass="btn-sm"
+								>
 
-								<%
-								Map<String, Map<String, Object>> manualAddIconDataMap = editAssetListDisplayContext.getManualAddIconDataMap();
+									<%
+									Map<String, Map<String, Object>> manualAddIconDataMap = editAssetListDisplayContext.getManualAddIconDataMap();
 
-								for (Map.Entry<String, Map<String, Object>> entry : manualAddIconDataMap.entrySet()) {
-								%>
+									for (Map.Entry<String, Map<String, Object>> entry : manualAddIconDataMap.entrySet()) {
+									%>
 
-								<liferay-ui:icon
-									cssClass="asset-selector"
-									data="<%= entry.getValue() %>"
-									id="<%= themeDisplay.getScopeGroupId() + HtmlUtil.getAUICompatibleId(entry.getKey()) %>"
-									message="<%= HtmlUtil.escape(entry.getKey()) %>"
-									url="javascript:;"
-								/>
+									<liferay-ui:icon
+										cssClass="asset-selector"
+										data="<%= entry.getValue() %>"
+										id="<%= themeDisplay.getScopeGroupId() + HtmlUtil.getAUICompatibleId(entry.getKey()) %>"
+										message="<%= HtmlUtil.escape(entry.getKey()) %>"
+										url="javascript:;"
+									/>
 
-								<%
-								}
-								%>
+									<%
+									}
+									%>
 
-							</liferay-ui:icon-menu>
-						</clay:content-col>
+								</liferay-ui:icon-menu>
+							</clay:content-col>
+						</c:if>
 					</clay:content-row>
 				</h3>
 
@@ -189,17 +193,19 @@ AssetListEntry assetListEntry = assetListDisplayContext.getAssetListEntry();
 							value="<%= assetEntry.getModifiedDate() %>"
 						/>
 
-						<liferay-ui:search-container-column-jsp
-							path="/asset_list/asset_selection_order_up_action.jsp"
-						/>
+						<c:if test="<%= !editAssetListDisplayContext.isLiveGroup() %>">
+							<liferay-ui:search-container-column-jsp
+								path="/asset_list/asset_selection_order_up_action.jsp"
+							/>
 
-						<liferay-ui:search-container-column-jsp
-							path="/asset_list/asset_selection_order_down_action.jsp"
-						/>
+							<liferay-ui:search-container-column-jsp
+								path="/asset_list/asset_selection_order_down_action.jsp"
+							/>
 
-						<liferay-ui:search-container-column-jsp
-							path="/asset_list/asset_selection_action.jsp"
-						/>
+							<liferay-ui:search-container-column-jsp
+								path="/asset_list/asset_selection_action.jsp"
+							/>
+						</c:if>
 					</liferay-ui:search-container-row>
 
 					<liferay-ui:search-iterator
@@ -211,8 +217,10 @@ AssetListEntry assetListEntry = assetListDisplayContext.getAssetListEntry();
 	</c:otherwise>
 </c:choose>
 
-<aui:script require="metal-dom/src/dom as dom">
-	var delegateHandler = dom.delegate(
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+	var delegate = delegateModule.default;
+
+	var delegateHandler = delegate(
 		document.body,
 		'click',
 		'.asset-selector a',
@@ -222,6 +230,7 @@ AssetListEntry assetListEntry = assetListDisplayContext.getAssetListEntry();
 			var delegateTarget = event.delegateTarget;
 
 			Liferay.Util.openSelectionModal({
+				customSelectEvent: true,
 				multiple: true,
 				onSelect: function (selectedItems) {
 					if (selectedItems) {
@@ -248,7 +257,7 @@ AssetListEntry assetListEntry = assetListDisplayContext.getAssetListEntry();
 	);
 
 	var onDestroyPortlet = function () {
-		delegateHandler.removeListener();
+		delegateHandler.dispose();
 
 		Liferay.detach('destroyPortlet', onDestroyPortlet);
 	};

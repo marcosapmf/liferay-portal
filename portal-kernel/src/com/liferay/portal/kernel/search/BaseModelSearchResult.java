@@ -40,6 +40,10 @@ public class BaseModelSearchResult<T extends BaseModel<T>>
 		_length = length;
 	}
 
+	public BaseModelSearchResult(List<T> baseModels, Long length) {
+		this(baseModels, length.intValue());
+	}
+
 	public List<T> getBaseModels() {
 		return _baseModels;
 	}

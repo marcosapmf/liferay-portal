@@ -15,10 +15,12 @@
 package com.liferay.document.library.web.internal.display.context.logic;
 
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.web.internal.display.context.util.DLRequestHelper;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -28,6 +30,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.view.count.ViewCountManagerUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
@@ -158,7 +161,10 @@ public class DLPortletInstanceSettingsHelper {
 	private String[] _getAllEntryColumns() {
 		String allEntryColumns = "name,description,size,status";
 
-		if (PropsValues.VIEW_COUNT_ENABLED) {
+		if (ViewCountManagerUtil.isViewCountEnabled(
+				ClassNameLocalServiceUtil.getClassNameId(
+					DLFileEntryConstants.getClassName()))) {
+
 			allEntryColumns += ",downloads";
 		}
 
@@ -219,6 +225,10 @@ public class DLPortletInstanceSettingsHelper {
 		_currentEntryColumns = new ArrayList<>();
 
 		for (String entryColumn : entryColumns) {
+			if (entryColumn.equals("action") && !isShowActions()) {
+				continue;
+			}
+
 			_currentEntryColumns.add(
 				new KeyValuePair(
 					entryColumn,

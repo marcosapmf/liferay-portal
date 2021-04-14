@@ -79,18 +79,18 @@ const getFieldTypes = ({
 			fieldType,
 			label,
 			name,
+			required,
 			nestedDataDefinitionFields = [],
 			repeatable,
 			showLabel,
 		},
 		nested
 	) => {
-		const {ddmStructureId} = customProperties;
-
 		if (fieldType === 'section') {
 			return;
 		}
 
+		const {ddmStructureId} = customProperties;
 		const fieldTypeSettings = fieldTypes.find(({name}) => {
 			return name === fieldType;
 		});
@@ -147,6 +147,7 @@ const getFieldTypes = ({
 			nestedDataDefinitionFields: nestedDataDefinitionFields.map(
 				(nestedField) => setDefinitionField(nestedField, true)
 			),
+			required,
 		};
 
 		if (nested) {
@@ -175,7 +176,7 @@ const FieldCategory = ({categoryName}) => (
 		<div className="autofit-row autofit-row-center">
 			<>
 				<div className="autofit-col autofit-col-expand">
-					<h3 className="category-text">{categoryName}</h3>
+					<span className="category-text">{categoryName}</span>
 				</div>
 			</>
 		</div>
@@ -282,6 +283,7 @@ export default ({keywords}) => {
 			<FieldTypeList
 				{...fieldTypeListProps}
 				fieldTypes={customFieldTypes}
+				showEmptyState={false}
 			/>
 
 			{showCategories && (
@@ -293,6 +295,7 @@ export default ({keywords}) => {
 			<FieldTypeList
 				{...fieldTypeListProps}
 				fieldTypes={nativeFieldTypes}
+				showEmptyState={false}
 			/>
 		</>
 	);

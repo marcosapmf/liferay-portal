@@ -15,6 +15,8 @@
 package com.liferay.frontend.taglib.servlet.taglib;
 
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -68,8 +70,19 @@ public class DefineObjectsTag extends TagSupport {
 				"windowState", liferayPortletRequest.getWindowState());
 		}
 
-		String npmResolvedPackageName = NPMResolvedPackageNameUtil.get(
-			pageContext.getServletContext());
+		String npmResolvedPackageName = null;
+
+		try {
+			npmResolvedPackageName = NPMResolvedPackageNameUtil.get(
+				pageContext.getServletContext());
+		}
+		catch (UnsupportedOperationException unsupportedOperationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					unsupportedOperationException,
+					unsupportedOperationException);
+			}
+		}
 
 		if (Validator.isNotNull(npmResolvedPackageName)) {
 			pageContext.setAttribute(
@@ -95,6 +108,9 @@ public class DefineObjectsTag extends TagSupport {
 
 		_overrideResourceBundle = overrideResourceBundle;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DefineObjectsTag.class);
 
 	private ResourceBundle _overrideResourceBundle;
 

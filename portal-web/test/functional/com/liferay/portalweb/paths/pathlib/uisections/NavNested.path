@@ -10,17 +10,12 @@
 <tbody>
 <tr>
 	<td>ACTIVE_NAV_NESTED_LINK</td>
-	<td>//ul[contains(@class,'nav-nested')]//a[contains(@class,'active') and normalize-space()='${key_navNested}']</td>
+	<td>//ul[contains(@class,'nav-nested')]//a[contains(@class,'active') and normalize-space()='${key_navNested}'] | //ul[contains(@class,'nav-nested')]//a[contains(@class,'active')]//*[normalize-space()='${key_navNested}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>NAV_NESTED_ELLIPSIS</td>
 	<td>//ul[contains(@class,'nav-nested')]//*[*[name()='svg'][contains(@class,'ellipsis-v')]]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NAV_NESTED_ELLIPSIS_IE</td>
-	<td>//*[contains(@class,'nav-nested')]//*[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -31,11 +26,6 @@
 <tr>
 	<td>NAV_NESTED_PLUS</td>
 	<td>//ul[contains(@class,'nav-nested')]//*[*[name()='svg'][contains(@class,'icon-plus')]]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>NAV_NESTED_PLUS_IE</td>
-	<td>//*[contains(@class,'nav-nested')]//a[contains(@class,'btn')]</td>
 	<td></td>
 </tr>
 </tbody>

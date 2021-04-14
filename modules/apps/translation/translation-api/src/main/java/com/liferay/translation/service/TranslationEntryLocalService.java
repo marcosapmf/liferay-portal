@@ -17,7 +17,9 @@ package com.liferay.translation.service;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -31,6 +33,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -54,19 +58,22 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see TranslationEntryLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface TranslationEntryLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<TranslationEntry>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.translation.service.impl.TranslationEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the translation entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link TranslationEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public TranslationEntry addOrUpdateTranslationEntry(
 			long groupId, String languageId,
 			InfoItemReference infoItemReference,
@@ -74,6 +81,7 @@ public interface TranslationEntryLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public TranslationEntry addOrUpdateTranslationEntry(
 			long groupId, String className, long classPK, String content,
 			String contentType, String languageId,
@@ -115,6 +123,10 @@ public interface TranslationEntryLocalService
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
+
+	public void deleteTranslationEntries(long classNameId, long classPK);
+
+	public void deleteTranslationEntries(String className, long classPK);
 
 	/**
 	 * Deletes the translation entry with the primary key from the database. Also notifies the appropriate model listeners.
@@ -334,6 +346,7 @@ public interface TranslationEntryLocalService
 			String uuid, long groupId)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public TranslationEntry updateStatus(
 			long userId, long translationEntryId, int status,
 			ServiceContext serviceContext,
@@ -353,5 +366,20 @@ public interface TranslationEntryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public TranslationEntry updateTranslationEntry(
 		TranslationEntry translationEntry);
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<TranslationEntry> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<TranslationEntry> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<TranslationEntry>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

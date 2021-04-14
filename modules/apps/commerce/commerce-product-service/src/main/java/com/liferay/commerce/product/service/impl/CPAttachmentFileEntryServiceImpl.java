@@ -16,10 +16,10 @@ package com.liferay.commerce.product.service.impl;
 
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.commerce.product.constants.CPActionKeys;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.base.CPAttachmentFileEntryServiceBaseImpl;
@@ -101,7 +101,7 @@ public class CPAttachmentFileEntryServiceImpl
 			if (cpDefinitionClassNameId ==
 					cpAttachmentFileEntry.getClassNameId()) {
 
-				_checkCommerceCatalogPermissionByCPDefinitionId(
+				_checkCommerceCatalog(
 					cpAttachmentFileEntry.getClassPK(), ActionKeys.VIEW);
 			}
 			else {
@@ -131,7 +131,7 @@ public class CPAttachmentFileEntryServiceImpl
 			if (cpDefinitionClassNameId ==
 					cpAttachmentFileEntry.getClassNameId()) {
 
-				_checkCommerceCatalogPermissionByCPDefinitionId(
+				_checkCommerceCatalog(
 					cpAttachmentFileEntry.getClassPK(), ActionKeys.VIEW);
 			}
 			else if (assetCategoryClassNameId ==
@@ -247,7 +247,7 @@ public class CPAttachmentFileEntryServiceImpl
 			if (cpDefinitionClassNameId ==
 					cpAttachmentFileEntry.getClassNameId()) {
 
-				_checkCommerceCatalogPermissionByCPDefinitionId(
+				_checkCommerceCatalog(
 					cpAttachmentFileEntry.getClassPK(), ActionKeys.VIEW);
 			}
 			else if (assetCategoryClassNameId ==
@@ -431,7 +431,7 @@ public class CPAttachmentFileEntryServiceImpl
 			CPDefinition.class);
 
 		if (classNameId == cpDefinitionClassNameId) {
-			_checkCommerceCatalogPermissionByCPDefinitionId(classPK, actionId);
+			_checkCommerceCatalog(classPK, actionId);
 		}
 	}
 
@@ -443,8 +443,7 @@ public class CPAttachmentFileEntryServiceImpl
 		return CPActionKeys.MANAGE_COMMERCE_PRODUCT_IMAGES;
 	}
 
-	private void _checkCommerceCatalogPermissionByCPDefinitionId(
-			long cpDefinitionId, String actionId)
+	private void _checkCommerceCatalog(long cpDefinitionId, String actionId)
 		throws PortalException {
 
 		CPDefinition cpDefinition = cpDefinitionLocalService.fetchCPDefinition(

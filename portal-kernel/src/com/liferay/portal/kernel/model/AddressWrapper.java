@@ -44,6 +44,7 @@ public class AddressWrapper
 
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("addressId", getAddressId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("userId", getUserId());
@@ -52,6 +53,8 @@ public class AddressWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
+		attributes.put("name", getName());
+		attributes.put("description", getDescription());
 		attributes.put("street1", getStreet1());
 		attributes.put("street2", getStreet2());
 		attributes.put("street3", getStreet3());
@@ -59,6 +62,8 @@ public class AddressWrapper
 		attributes.put("zip", getZip());
 		attributes.put("regionId", getRegionId());
 		attributes.put("countryId", getCountryId());
+		attributes.put("latitude", getLatitude());
+		attributes.put("longitude", getLongitude());
 		attributes.put("typeId", getTypeId());
 		attributes.put("mailing", isMailing());
 		attributes.put("primary", isPrimary());
@@ -78,6 +83,13 @@ public class AddressWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long addressId = (Long)attributes.get("addressId");
@@ -128,6 +140,18 @@ public class AddressWrapper
 			setClassPK(classPK);
 		}
 
+		String name = (String)attributes.get("name");
+
+		if (name != null) {
+			setName(name);
+		}
+
+		String description = (String)attributes.get("description");
+
+		if (description != null) {
+			setDescription(description);
+		}
+
 		String street1 = (String)attributes.get("street1");
 
 		if (street1 != null) {
@@ -168,6 +192,18 @@ public class AddressWrapper
 
 		if (countryId != null) {
 			setCountryId(countryId);
+		}
+
+		Double latitude = (Double)attributes.get("latitude");
+
+		if (latitude != null) {
+			setLatitude(latitude);
+		}
+
+		Double longitude = (Double)attributes.get("longitude");
+
+		if (longitude != null) {
+			setLongitude(longitude);
 		}
 
 		Long typeId = (Long)attributes.get("typeId");
@@ -275,6 +311,46 @@ public class AddressWrapper
 	}
 
 	/**
+	 * Returns the description of this address.
+	 *
+	 * @return the description of this address
+	 */
+	@Override
+	public String getDescription() {
+		return model.getDescription();
+	}
+
+	/**
+	 * Returns the external reference code of this address.
+	 *
+	 * @return the external reference code of this address
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
+	}
+
+	/**
+	 * Returns the latitude of this address.
+	 *
+	 * @return the latitude of this address
+	 */
+	@Override
+	public double getLatitude() {
+		return model.getLatitude();
+	}
+
+	/**
+	 * Returns the longitude of this address.
+	 *
+	 * @return the longitude of this address
+	 */
+	@Override
+	public double getLongitude() {
+		return model.getLongitude();
+	}
+
+	/**
 	 * Returns the mailing of this address.
 	 *
 	 * @return the mailing of this address
@@ -302,6 +378,21 @@ public class AddressWrapper
 	@Override
 	public long getMvccVersion() {
 		return model.getMvccVersion();
+	}
+
+	/**
+	 * Returns the name of this address.
+	 *
+	 * @return the name of this address
+	 */
+	@Override
+	public String getName() {
+		return model.getName();
+	}
+
+	@Override
+	public String getPhoneNumber() {
+		return model.getPhoneNumber();
 	}
 
 	/**
@@ -535,6 +626,46 @@ public class AddressWrapper
 	}
 
 	/**
+	 * Sets the description of this address.
+	 *
+	 * @param description the description of this address
+	 */
+	@Override
+	public void setDescription(String description) {
+		model.setDescription(description);
+	}
+
+	/**
+	 * Sets the external reference code of this address.
+	 *
+	 * @param externalReferenceCode the external reference code of this address
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
+	}
+
+	/**
+	 * Sets the latitude of this address.
+	 *
+	 * @param latitude the latitude of this address
+	 */
+	@Override
+	public void setLatitude(double latitude) {
+		model.setLatitude(latitude);
+	}
+
+	/**
+	 * Sets the longitude of this address.
+	 *
+	 * @param longitude the longitude of this address
+	 */
+	@Override
+	public void setLongitude(double longitude) {
+		model.setLongitude(longitude);
+	}
+
+	/**
 	 * Sets whether this address is mailing.
 	 *
 	 * @param mailing the mailing of this address
@@ -562,6 +693,16 @@ public class AddressWrapper
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		model.setMvccVersion(mvccVersion);
+	}
+
+	/**
+	 * Sets the name of this address.
+	 *
+	 * @param name the name of this address
+	 */
+	@Override
+	public void setName(String name) {
+		model.setName(name);
 	}
 
 	/**

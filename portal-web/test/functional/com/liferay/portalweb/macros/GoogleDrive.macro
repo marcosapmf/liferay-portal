@@ -1,7 +1,7 @@
 definition {
 
 	macro gotoDrive {
-		AssertElementPresent(locator1 = "Button#SELECT_FILE");
+		AssertElementPresent.pauseAssertVisible(locator1 = "Button#SELECT_FILE");
 
 		AssertClick(
 			locator1 = "Button#SELECT_FILE",
@@ -40,6 +40,8 @@ definition {
 		if (IsElementNotPresent(locator1 = "GoogleDrive#GOOGLE_DRIVE_IFRAME")) {
 			Refresh();
 
+			AssertElementPresent.pauseAssertVisible(locator1 = "Button#SELECT_FILE");
+
 			AssertClick(
 				locator1 = "Button#SELECT_FILE",
 				value1 = "Select File");
@@ -53,12 +55,6 @@ definition {
 	macro selectDocument {
 		var key_googleDocName = "${googleDocName}";
 
-		Type(
-			locator1 = "GoogleDrive#SEARCH_TERMS",
-			value1 = "${googleDocName}");
-
-		Click(locator1 = "GoogleDrive#SEARCH_BUTTON");
-
 		Click.clickAt(
 			locator1 = "GoogleDrive#LIST_VIEW_DOCUMENT_SPECIFIC",
 			value1 = "${googleDocName}");
@@ -69,11 +65,11 @@ definition {
 
 		SelectFrameTop();
 
-		var key_dmDocumentTitle = "${googleDocName}";
+		var key_dmDocumentTitle = "${googleDocTitle}";
 
 		AssertTextEquals(
 			locator1 = "DocumentsAndMediaEntry#SELECTED_DOCUMENT_TITLE",
-			value1 = "${googleDocName}");
+			value1 = "${googleDocTitle}");
 	}
 
 }

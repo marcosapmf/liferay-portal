@@ -58,13 +58,15 @@ public class DDMStructureDemoDataCreatorImpl
 
 		DDMFormLayout ddmFormLayout = _ddm.getDefaultDDMFormLayout(ddmForm);
 
+		ddmFormLayout.setPaginationMode(DDMFormLayout.WIZARD_MODE);
+
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
 			userId, groupId, 0,
 			_portal.getClassNameId(DDMFormInstance.class.getName()), null,
 			HashMapBuilder.put(
 				LocaleUtil.getSiteDefault(), "Test Structure"
 			).build(),
-			null, ddmForm, ddmFormLayout, StorageType.JSON.getValue(),
+			null, ddmForm, ddmFormLayout, StorageType.DEFAULT.getValue(),
 			DDMStructureConstants.TYPE_DEFAULT, new ServiceContext());
 
 		_ddmStructureIds.add(ddmStructure.getStructureId());

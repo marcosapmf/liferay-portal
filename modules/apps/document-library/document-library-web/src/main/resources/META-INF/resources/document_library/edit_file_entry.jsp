@@ -17,8 +17,6 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-String cmd = ParamUtil.getString(request, Constants.CMD, Constants.EDIT);
-
 String redirect = ParamUtil.getString(request, "redirect");
 
 String uploadProgressId = "dlFileEntryUploadProgress";
@@ -92,9 +90,13 @@ if (fileEntry != null) {
 
 boolean saveAsDraft = false;
 
+DLPortletInstanceSettings dlPortletInstanceSettings = dlRequestHelper.getDLPortletInstanceSettings();
+
 if ((checkedOut || pending) && !dlPortletInstanceSettings.isEnableFileEntryDrafts()) {
 	saveAsDraft = true;
 }
+
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
 
 DLEditFileEntryDisplayContext dlEditFileEntryDisplayContext = null;
 
@@ -188,8 +190,6 @@ renderResponse.setTitle(headerTitle);
 		<aui:input name="workflowAction" type="hidden" value="<%= String.valueOf(WorkflowConstants.ACTION_PUBLISH) %>" />
 
 		<div class="lfr-form-content">
-			<liferay-ui:error exception="<%= RequiredFileException.class %>" message="please-select-the-file-again" />
-
 			<liferay-ui:error exception="<%= AntivirusScannerException.class %>">
 
 				<%
@@ -197,6 +197,10 @@ renderResponse.setTitle(headerTitle);
 				%>
 
 				<liferay-ui:message key="<%= ase.getMessageKey() %>" />
+			</liferay-ui:error>
+
+			<liferay-ui:error exception="<%= DLStorageQuotaExceededException.class %>">
+				<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(PropsValues.DATA_LIMIT_MAX_DL_STORAGE_SIZE, locale) %>" key="you-have-exceeded-the-x-storage-quota-for-this-instance" />
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= DuplicateFileEntryException.class %>" message="please-enter-a-unique-document-name" />
@@ -215,7 +219,9 @@ renderResponse.setTitle(headerTitle);
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= FileNameException.class %>" message="please-enter-a-file-with-a-valid-file-name" />
+			<liferay-ui:error exception="<%= FileNameExtensionException.class %>" message="the-file-name-cannot-be-empty-or-without-extension" />
 			<liferay-ui:error exception="<%= NoSuchFolderException.class %>" message="please-enter-a-valid-folder" />
+			<liferay-ui:error exception="<%= RequiredFileException.class %>" message="please-select-the-file-again" />
 
 			<liferay-ui:error exception="<%= SourceFileNameException.class %>">
 				<liferay-ui:message key="the-source-file-does-not-have-the-same-extension-as-the-original-file" />
@@ -299,6 +305,7 @@ renderResponse.setTitle(headerTitle);
 
 											<liferay-portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 												<portlet:param name="mvcRenderCommandName" value="/document_library/select_folder" />
+												<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
 											</liferay-portlet:renderURL>
 
 											url: '<%= selectFolderURL.toString() %>',
@@ -311,7 +318,26 @@ renderResponse.setTitle(headerTitle);
 
 					<%@ include file="/document_library/edit_file_entry_picker.jspf" %>
 
-					<aui:input label="name" name="title" />
+					<aui:input label="title" name="title" />
+
+					<div>
+						<aui:input label="file-name" name="fileName" type='<%= dlEditFileEntryDisplayContext.isFileNameVisible() ? "text" : "hidden" %>' />
+
+						<c:if test="<%= fileVersion != null %>">
+							<react:component
+								module="document_library/js/FileNameInput.es"
+								props='<%=
+									HashMapBuilder.<String, Object>put(
+										"initialValue", fileVersion.getFileName()
+									).put(
+										"required", Validator.isNotNull(fileVersion.getExtension())
+									).put(
+										"visible", dlEditFileEntryDisplayContext.isFileNameVisible()
+									).build()
+								%>'
+							/>
+						</c:if>
+					</div>
 
 					<c:if test="<%= (folder == null) || folder.isSupportsMetadata() %>">
 						<aui:input name="description" />
@@ -333,7 +359,7 @@ renderResponse.setTitle(headerTitle);
 							%>
 
 							<c:choose>
-								<c:when test="<%= !cmd.equals(Constants.ADD) && (dlFileEntryTypes.size() > 1) %>">
+								<c:when test="<%= dlFileEntryTypes.size() > 1 %>">
 									<aui:select changesContext="<%= true %>" label="document-type" name="fileEntryTypeId" onChange='<%= liferayPortletResponse.getNamespace() + "changeFileEntryType();" %>'>
 
 										<%
@@ -378,39 +404,22 @@ renderResponse.setTitle(headerTitle);
 											<div class="hide">
 										</c:if>
 
-										<c:choose>
-											<c:when test="<%= FFDocumentLibraryDDMEditorConfigurationUtil.useDataEngineEditor() %>">
+										<%
+										DDMFormValuesToMapConverter ddmFormValuesToMapConverter = (DDMFormValuesToMapConverter)request.getAttribute(DDMFormValuesToMapConverter.class.getName());
+										%>
 
-												<%
-												DDMFormValuesToMapConverter ddmFormValuesToMapConverter = (DDMFormValuesToMapConverter)request.getAttribute(DDMFormValuesToMapConverter.class.getName());
-												%>
+										<liferay-data-engine:data-layout-renderer
+											containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" + ddmStructure.getStructureId() %>'
+											dataDefinitionId="<%= ddmStructure.getStructureId() %>"
+											dataRecordValues="<%= ddmFormValuesToMapConverter.convert(ddmFormValues, DDMStructureLocalServiceUtil.getStructure(ddmStructure.getStructureId())) %>"
+											namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() %>"
+										/>
 
-												<liferay-data-engine:data-layout-renderer
-													containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" + ddmStructure.getStructureId() %>'
-													dataDefinitionId="<%= ddmStructure.getStructureId() %>"
-													dataRecordValues="<%= ddmFormValuesToMapConverter.convert(ddmFormValues, DDMStructureLocalServiceUtil.getStructure(ddmStructure.getStructureId())) %>"
-													namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() %>"
-												/>
-
-												<liferay-frontend:component
-													componentId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRendererLanguageProxy" %>'
-													module="document_library/js/dataEngineLayoutRendererLanguageProxy.es"
-													servletContext="<%= application %>"
-												/>
-											</c:when>
-											<c:otherwise>
-												<liferay-ddm:html
-													classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
-													classPK="<%= ddmStructure.getPrimaryKey() %>"
-													ddmFormValues="<%= ddmFormValues %>"
-													defaultEditLocale="<%= LocaleUtil.fromLanguageId(defaultLanguageId) %>"
-													fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
-													groupId="<%= (fileEntry != null) ? fileEntry.getGroupId() : 0 %>"
-													localizable="<%= localizable %>"
-													requestedLocale="<%= locale %>"
-												/>
-											</c:otherwise>
-										</c:choose>
+										<liferay-frontend:component
+											componentId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRendererLanguageProxy" %>'
+											module="document_library/js/dataEngineLayoutRendererLanguageProxy.es"
+											servletContext="<%= application %>"
+										/>
 
 										<c:if test="<%= !dlEditFileEntryDisplayContext.isDDMStructureVisible(ddmStructure) %>">
 											</div>
@@ -433,7 +442,7 @@ renderResponse.setTitle(headerTitle);
 				<c:choose>
 					<c:when test="<%= (fileEntry != null) && !checkedOut && dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
 						<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="versioning">
-							<aui:input label="customize-the-version-number-increment-and-describe-my-changes" name="updateVersionDetails" type="toggle-switch" value="<%= updateVersionDetails %>" />
+							<aui:input inlineLabel="right" label="customize-the-version-number-increment-and-describe-my-changes" labelCssClass="simple-toggle-switch" name="updateVersionDetails" type="toggle-switch" value="<%= updateVersionDetails %>" />
 
 							<div class="<%= updateVersionDetails ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />versionDetails">
 								<aui:input checked="<%= dlVersionNumberIncrease == DLVersionNumberIncrease.MAJOR %>" label="major-version" name="versionIncrease" type="radio" value="<%= DLVersionNumberIncrease.MAJOR %>" />
@@ -569,11 +578,11 @@ renderResponse.setTitle(headerTitle);
 	var form = document.<portlet:namespace />fm;
 
 	function <portlet:namespace />changeFileEntryType() {
-		Liferay.Util.postForm(form, {
-			data: {
-				<%= Constants.CMD %>: '<%= Constants.PREVIEW %>',
-			},
-		});
+		var uri = '<%= themeDisplay.getURLCurrent() %>';
+
+		form.<portlet:namespace />cmd.value = '<%= Constants.PREVIEW %>';
+
+		submitForm(form, uri, false, false);
 	}
 
 	function <portlet:namespace />cancelCheckOut() {
@@ -612,18 +621,18 @@ renderResponse.setTitle(headerTitle);
 			<%= HtmlUtil.escape(uploadProgressId) %>.startProgress();
 		}
 
-		var data = {
+		Liferay.Util.setFormValues(form, {
 			<%= Constants.CMD %>:
 				'<%= (fileEntry == null) ? Constants.ADD : Constants.UPDATE %>',
-		};
+		});
 
 		if (draft) {
-			data.workflowAction = '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>';
+			Liferay.Util.setFormValues(form, {
+				workflowAction: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>',
+			});
 		}
 
-		Liferay.Util.postForm(form, {
-			data: data,
-		});
+		submitForm(form);
 	}
 
 	function <portlet:namespace />showVersionDetailsDialog() {
@@ -642,14 +651,22 @@ renderResponse.setTitle(headerTitle);
 		});
 	}
 
-	function <portlet:namespace />updateTitle() {
+	function <portlet:namespace />updateFileNameAndTitle() {
 		var titleElement = document.getElementById('<portlet:namespace />title');
+		var fileNameElement = document.getElementById(
+			'<portlet:namespace />fileName'
+		);
+		var fileElement = document.getElementById('<portlet:namespace />file');
 
-		if (titleElement && !titleElement.value) {
-			var fileElement = document.getElementById('<portlet:namespace />file');
+		if (fileElement && fileElement.value) {
+			var fileFileName = fileElement.value.replace(/^.*[\\\/]/, '');
 
-			if (fileElement && fileElement.value) {
-				titleElement.value = fileElement.value.replace(/^.*[\\\/]/, '');
+			if (titleElement && !titleElement.value) {
+				titleElement.value = fileFileName.replace(/\.[^.]*$/, '');
+			}
+
+			if (fileNameElement && !fileNameElement.value) {
+				fileNameElement.value = fileFileName;
 			}
 		}
 
@@ -660,7 +677,7 @@ renderResponse.setTitle(headerTitle);
 </script>
 
 <c:if test="<%= (fileEntry != null) && !checkedOut && dlAdminDisplayContext.isVersioningStrategyOverridable() %>">
-	<aui:script require="metal-dom/src/dom as dom">
+	<aui:script>
 		var updateVersionDetailsElement = document.getElementById(
 			'<portlet:namespace />updateVersionDetails'
 		);
@@ -670,7 +687,7 @@ renderResponse.setTitle(headerTitle);
 
 		if (updateVersionDetailsElement && versionDetailsElement) {
 			updateVersionDetailsElement.addEventListener('click', function (event) {
-				dom.toggleClasses(versionDetailsElement, 'hide');
+				versionDetailsElement.classList.toggle('hide');
 			});
 		}
 	</aui:script>

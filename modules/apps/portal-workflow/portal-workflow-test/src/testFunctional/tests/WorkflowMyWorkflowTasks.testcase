@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
+
 	var workflowAssetType = "Blogs Entry";
 
 	setUp {
@@ -158,7 +159,6 @@ definition {
 
 	@priority = "4"
 	test ApproveResubmitTaskByActions {
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -322,14 +322,13 @@ definition {
 
 	@priority = "3"
 	test ReviewerApproveResubmitTaskByActionsUser {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
 		Permissions.setUpRegRoleLoginUserCP(
 			roleTitle = "Regrole Name",
 			userEmailAddress = "userea1@liferay.com",
 			userFirstName = "userfn1",
 			userLastName = "userln1",
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test",
 			userScreenName = "usersn1");
 
 		ApplicationsMenu.gotoPortlet(

@@ -16,6 +16,7 @@ package com.liferay.opensocial.service.persistence.impl;
 
 import com.liferay.opensocial.exception.NoSuchOAuthConsumerException;
 import com.liferay.opensocial.model.OAuthConsumer;
+import com.liferay.opensocial.model.OAuthConsumerTable;
 import com.liferay.opensocial.model.impl.OAuthConsumerImpl;
 import com.liferay.opensocial.model.impl.OAuthConsumerModelImpl;
 import com.liferay.opensocial.service.persistence.OAuthConsumerPersistence;
@@ -23,6 +24,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -36,7 +38,6 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,7 +51,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -188,7 +188,7 @@ public class OAuthConsumerPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<OAuthConsumer>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (OAuthConsumer oAuthConsumer : list) {
@@ -575,8 +575,7 @@ public class OAuthConsumerPersistenceImpl
 
 		Object[] finderArgs = new Object[] {gadgetKey};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -707,7 +706,7 @@ public class OAuthConsumerPersistenceImpl
 
 		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByG_S, finderArgs, this);
+				_finderPathFetchByG_S, finderArgs);
 		}
 
 		if (result instanceof OAuthConsumer) {
@@ -847,8 +846,7 @@ public class OAuthConsumerPersistenceImpl
 
 		Object[] finderArgs = new Object[] {gadgetKey, serviceName};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -928,6 +926,8 @@ public class OAuthConsumerPersistenceImpl
 
 		setModelImplClass(OAuthConsumerImpl.class);
 		setModelPKClass(long.class);
+
+		setTable(OAuthConsumerTable.INSTANCE);
 	}
 
 	/**
@@ -970,23 +970,21 @@ public class OAuthConsumerPersistenceImpl
 	 * Clears the cache for all o auth consumers.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(OAuthConsumerImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OAuthConsumerImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the o auth consumer.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -1004,9 +1002,7 @@ public class OAuthConsumerPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OAuthConsumerImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(OAuthConsumerImpl.class, primaryKey);
@@ -1021,10 +1017,9 @@ public class OAuthConsumerPersistenceImpl
 			oAuthConsumerModelImpl.getServiceName()
 		};
 
+		FinderCacheUtil.putResult(_finderPathCountByG_S, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathCountByG_S, args, Long.valueOf(1), false);
-		FinderCacheUtil.putResult(
-			_finderPathFetchByG_S, args, oAuthConsumerModelImpl, false);
+			_finderPathFetchByG_S, args, oAuthConsumerModelImpl);
 	}
 
 	/**
@@ -1345,7 +1340,7 @@ public class OAuthConsumerPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<OAuthConsumer>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1415,7 +1410,7 @@ public class OAuthConsumerPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1468,24 +1463,21 @@ public class OAuthConsumerPersistenceImpl
 		Registry registry = RegistryUtil.getRegistry();
 
 		_argumentsResolverServiceRegistration = registry.registerService(
-			ArgumentsResolver.class, new OAuthConsumerModelArgumentsResolver(),
-			HashMapBuilder.<String, Object>put(
-				"model.class.name", OAuthConsumer.class.getName()
-			).build());
+			ArgumentsResolver.class, new OAuthConsumerModelArgumentsResolver());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByGadgetKey = _createFinderPath(
+		_finderPathWithPaginationFindByGadgetKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGadgetKey",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -1493,22 +1485,22 @@ public class OAuthConsumerPersistenceImpl
 			},
 			new String[] {"gadgetKey"}, true);
 
-		_finderPathWithoutPaginationFindByGadgetKey = _createFinderPath(
+		_finderPathWithoutPaginationFindByGadgetKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGadgetKey",
 			new String[] {String.class.getName()}, new String[] {"gadgetKey"},
 			true);
 
-		_finderPathCountByGadgetKey = _createFinderPath(
+		_finderPathCountByGadgetKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGadgetKey",
 			new String[] {String.class.getName()}, new String[] {"gadgetKey"},
 			false);
 
-		_finderPathFetchByG_S = _createFinderPath(
+		_finderPathFetchByG_S = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_S",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"gadgetKey", "serviceName"}, true);
 
-		_finderPathCountByG_S = _createFinderPath(
+		_finderPathCountByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"gadgetKey", "serviceName"}, false);
@@ -1518,12 +1510,6 @@ public class OAuthConsumerPersistenceImpl
 		EntityCacheUtil.removeCache(OAuthConsumerImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private static final String _SQL_SELECT_OAUTHCONSUMER =
@@ -1549,31 +1535,13 @@ public class OAuthConsumerPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		OAuthConsumerPersistenceImpl.class);
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			Registry registry = RegistryUtil.getRegistry();
-
-			_serviceRegistrations.add(
-				registry.registerService(
-					FinderPath.class, finderPath,
-					HashMapBuilder.<String, Object>put(
-						"cache.name", cacheName
-					).build()));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class OAuthConsumerModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1622,6 +1590,16 @@ public class OAuthConsumerPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return OAuthConsumerImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return OAuthConsumerTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

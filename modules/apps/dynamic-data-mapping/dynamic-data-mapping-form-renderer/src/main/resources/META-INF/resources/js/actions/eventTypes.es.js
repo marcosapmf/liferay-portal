@@ -16,10 +16,14 @@ const PUBLIC_EVENTS = {
 	CHANGE_ACTIVE_PAGE: 'activePageUpdated',
 	FIELD_BLUR: 'fieldBlurred',
 	FIELD_CHANGE: 'fieldEdited',
+	FIELD_CLICKED: 'fieldClicked',
+	FIELD_DELETED: 'fieldDeleted',
 	FIELD_DROP: 'fieldDrop',
+	FIELD_DUPLICATED: 'fieldDuplicated',
 	FIELD_EVALUATED: 'evaluated',
 	FIELD_EVALUATION_ERROR: 'evaluationError',
 	FIELD_FOCUS: 'fieldFocused',
+	FIELD_HOVERED: 'fieldHovered',
 	FIELD_REMOVED: 'fieldRemoved',
 	FIELD_REPEATED: 'fieldRepeated',
 	PAGE_ADDED: 'pageAdded',
@@ -33,7 +37,6 @@ const PUBLIC_EVENTS = {
 
 const PRIVATE_EVENTS = {
 	ALL: 'all',
-	UPDATE_DATA_RECORD_VALUES: 'update_data_record_values',
 	UPDATE_PAGES: 'update_pages',
 };
 

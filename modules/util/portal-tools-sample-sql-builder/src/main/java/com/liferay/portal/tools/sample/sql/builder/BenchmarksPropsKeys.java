@@ -101,6 +101,9 @@ public interface BenchmarksPropsKeys {
 	public static final String MAX_MB_THREAD_COUNT =
 		"sample.sql.max.mb.thread.count";
 
+	public static final String MAX_SEGMENTS_ENTRY_COUNT =
+		"sample.sql.max.segments.entry.count";
+
 	public static final String MAX_USER_COUNT = "sample.sql.max.user.count";
 
 	public static final String MAX_USER_TO_GROUP_COUNT =
@@ -126,6 +129,9 @@ public interface BenchmarksPropsKeys {
 	public static final String OUTPUT_MERGE = "sample.sql.output.merge";
 
 	public static final String SCRIPT = "sample.sql.script";
+
+	public static final String SEARCH_BAR_ENABLED =
+		"sample.sql.search.bar.enabled";
 
 	public static final String VIRTUAL_HOST_NAME =
 		"sample.sql.virtual.hostname";

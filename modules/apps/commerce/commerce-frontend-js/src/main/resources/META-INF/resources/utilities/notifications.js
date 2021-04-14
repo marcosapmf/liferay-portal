@@ -19,7 +19,7 @@ export function showNotification(
 	duration = 500
 ) {
 	if (!window.AUI) {
-		return;
+		return window.Liferay?.staticEnvTestUtils?.print(message, type);
 	}
 
 	AUI().use('liferay-notification', () => {

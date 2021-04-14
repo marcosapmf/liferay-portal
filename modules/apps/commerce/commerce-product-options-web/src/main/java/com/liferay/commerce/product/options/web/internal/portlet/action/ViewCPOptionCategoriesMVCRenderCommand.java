@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_SPECIFICATION_OPTIONS,
-		"mvc.command.name=viewProductOptionCategories"
+		"mvc.command.name=/cp_specification_options/view_cp_option_categories"
 	},
 	service = MVCRenderCommand.class
 )
@@ -78,7 +78,7 @@ public class ViewCPOptionCategoriesMVCRenderCommand
 			throw new PortletException(exception);
 		}
 
-		return "/view_option_categories.jsp";
+		return "/view_cp_option_categories.jsp";
 	}
 
 	protected void setCPOptionCategoryRequestAttribute(

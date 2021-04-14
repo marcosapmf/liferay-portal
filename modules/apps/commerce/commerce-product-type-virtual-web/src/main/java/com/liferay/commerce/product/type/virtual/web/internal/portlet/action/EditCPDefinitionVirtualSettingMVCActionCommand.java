@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editProductDefinitionVirtualSetting"
+		"mvc.command.name=/cp_definitions/edit_cp_definition_virtual_setting"
 	},
 	service = MVCActionCommand.class
 )
@@ -117,9 +117,6 @@ public class EditCPDefinitionVirtualSettingMVCActionCommand
 		long cpDefinitionVirtualSettingId = ParamUtil.getLong(
 			actionRequest, "cpDefinitionVirtualSettingId");
 
-		String className = ParamUtil.getString(actionRequest, "className");
-		long classPK = ParamUtil.getLong(actionRequest, "classPK");
-
 		long fileEntryId = ParamUtil.getLong(actionRequest, "fileEntryId");
 		String url = ParamUtil.getString(actionRequest, "url");
 		int activationStatus = ParamUtil.getInteger(
@@ -149,6 +146,9 @@ public class EditCPDefinitionVirtualSettingMVCActionCommand
 		if (cpDefinitionVirtualSettingId <= 0) {
 
 			// Add commerce product definition virtual setting
+
+			String className = ParamUtil.getString(actionRequest, "className");
+			long classPK = ParamUtil.getLong(actionRequest, "classPK");
 
 			cpDefinitionVirtualSetting =
 				_cpDefinitionVirtualSettingService.

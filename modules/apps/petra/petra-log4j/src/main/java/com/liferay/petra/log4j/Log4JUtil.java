@@ -18,6 +18,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactory;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -68,12 +69,9 @@ public class Log4JUtil {
 			}
 		}
 		catch (IOException ioException) {
-			java.util.logging.Logger logger =
-				java.util.logging.Logger.getLogger(Log4JUtil.class.getName());
-
-			logger.log(
-				java.util.logging.Level.WARNING,
-				"Unable to load portal-log4j-ext.xml", ioException);
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to load portal-log4j-ext.xml", ioException);
+			}
 		}
 	}
 
@@ -138,7 +136,7 @@ public class Log4JUtil {
 			}
 		}
 		catch (Exception exception) {
-			_logger.error(exception, exception);
+			_log.error(exception, exception);
 		}
 	}
 
@@ -180,7 +178,7 @@ public class Log4JUtil {
 			LogFactoryUtil.setLogFactory(logFactory);
 		}
 		catch (Exception exception) {
-			_logger.error(exception, exception);
+			_log.error(exception, exception);
 		}
 
 		for (Map.Entry<String, String> entry : customLogSettings.entrySet()) {
@@ -259,18 +257,6 @@ public class Log4JUtil {
 	}
 
 	private static String _getURLContent(URL url) {
-		Map<String, String> variables = new HashMap<>();
-
-		variables.put("@liferay.home@", _getLiferayHome());
-
-		String spiId = System.getProperty("spi.id");
-
-		if (spiId == null) {
-			spiId = StringPool.BLANK;
-		}
-
-		variables.put("@spi.id@", spiId);
-
 		String urlContent = null;
 
 		try (InputStream inputStream = url.openStream()) {
@@ -279,15 +265,13 @@ public class Log4JUtil {
 			urlContent = new String(bytes, StringPool.UTF8);
 		}
 		catch (Exception exception) {
-			_logger.error(exception, exception);
+			_log.error(exception, exception);
 
 			return null;
 		}
 
-		for (Map.Entry<String, String> variable : variables.entrySet()) {
-			urlContent = StringUtil.replace(
-				urlContent, variable.getKey(), variable.getValue());
-		}
+		urlContent = StringUtil.replace(
+			urlContent, "@liferay.home@", _getLiferayHome());
 
 		if (ServerDetector.getServerId() != null) {
 			return urlContent;
@@ -315,7 +299,7 @@ public class Log4JUtil {
 			content, "<appender-ref ref=\"" + appenderName + "\" />");
 	}
 
-	private static final Logger _logger = Logger.getRootLogger();
+	private static final Log _log = LogFactoryUtil.getLog(Log4JUtil.class);
 
 	private static final Map<String, String> _customLogSettings =
 		new ConcurrentHashMap<>();

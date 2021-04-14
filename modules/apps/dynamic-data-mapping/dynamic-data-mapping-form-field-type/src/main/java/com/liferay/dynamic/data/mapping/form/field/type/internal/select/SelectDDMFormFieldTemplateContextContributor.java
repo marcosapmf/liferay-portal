@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.select;
 
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldOptionsFactory;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
@@ -47,7 +48,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcellus Tavares
  */
 @Component(
-	immediate = true, property = "ddm.form.field.type.name=select",
+	immediate = true,
+	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.SELECT,
 	service = {
 		DDMFormFieldTemplateContextContributor.class,
 		SelectDDMFormFieldTemplateContextContributor.class
@@ -62,6 +64,9 @@ public class SelectDDMFormFieldTemplateContextContributor
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
 		Map<String, Object> parameters = HashMapBuilder.<String, Object>put(
+			"alphabeticalOrder",
+			GetterUtil.getBoolean(ddmFormField.getProperty("alphabeticalOrder"))
+		).put(
 			"dataSourceType", ddmFormField.getDataSourceType()
 		).put(
 			"multiple", getMultiple(ddmFormField, ddmFormFieldRenderingContext)
@@ -74,7 +79,8 @@ public class SelectDDMFormFieldTemplateContextContributor
 		parameters.put(
 			"options",
 			getOptions(
-				ddmFormFieldOptions, ddmFormFieldRenderingContext.getLocale(),
+				ddmFormField, ddmFormFieldOptions,
+				ddmFormFieldRenderingContext.getLocale(),
 				ddmFormFieldRenderingContext));
 
 		Locale displayLocale = LocaleThreadLocal.getThemeDisplayLocale();
@@ -137,11 +143,12 @@ public class SelectDDMFormFieldTemplateContextContributor
 		return ddmFormField.isMultiple();
 	}
 
-	protected List<Object> getOptions(
-		DDMFormFieldOptions ddmFormFieldOptions, Locale locale,
+	protected List<Map<String, String>> getOptions(
+		DDMFormField ddmFormField, DDMFormFieldOptions ddmFormFieldOptions,
+		Locale locale,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
-		List<Object> options = new ArrayList<>();
+		List<Map<String, String>> options = new ArrayList<>();
 
 		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
 			if (optionValue == null) {
@@ -158,8 +165,24 @@ public class SelectDDMFormFieldTemplateContextContributor
 						return localizedValue.getString(locale);
 					}
 				).put(
+					"reference",
+					ddmFormFieldOptions.getOptionReference(optionValue)
+				).put(
 					"value", optionValue
 				).build());
+		}
+
+		boolean alphabeticalOrder = GetterUtil.getBoolean(
+			ddmFormField.getProperty("alphabeticalOrder"));
+
+		if (alphabeticalOrder) {
+			options.sort(
+				(map1, map2) -> {
+					String label1 = map1.get("label");
+					String label2 = map2.get("label");
+
+					return label1.compareTo(label2);
+				});
 		}
 
 		return options;

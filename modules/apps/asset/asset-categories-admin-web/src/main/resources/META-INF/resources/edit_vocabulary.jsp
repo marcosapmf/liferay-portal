@@ -39,6 +39,7 @@ renderResponse.setTitle((vocabulary == null) ? LanguageUtil.get(request, "add-vo
 
 <liferay-frontend:edit-form
 	action="<%= editVocabularyURL %>"
+	cssClass="container-form-lg"
 	name="fm"
 	onSubmit='<%= liferayPortletResponse.getNamespace() + "confirmation(event);" %>'
 >
@@ -61,7 +62,7 @@ renderResponse.setTitle((vocabulary == null) ? LanguageUtil.get(request, "add-vo
 
 				<aui:input name="description" placeholder="description" />
 
-				<aui:input helpMessage="multi-valued-help" label="allow-multiple-categories" name="multiValued" type="toggle-switch" value="<%= (vocabulary != null) ? vocabulary.isMultiValued() : true %>" />
+				<aui:input helpMessage="multi-valued-help" inlineLabel="right" label="allow-multiple-categories" labelCssClass="simple-toggle-switch" name="multiValued" type="toggle-switch" value="<%= (vocabulary != null) ? vocabulary.isMultiValued() : true %>" />
 
 				<label><liferay-ui:message key="visibility" /> <liferay-ui:icon-help message="visibility-help" /></label>
 

@@ -35,8 +35,9 @@ import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -46,7 +47,6 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,7 +71,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = StatusPersistence.class)
+@Component(service = {StatusPersistence.class, BasePersistence.class})
 public class StatusPersistenceImpl
 	extends BasePersistenceImpl<Status> implements StatusPersistence {
 
@@ -156,7 +156,7 @@ public class StatusPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByUserId, finderArgs, this);
+				_finderPathFetchByUserId, finderArgs);
 		}
 
 		if (result instanceof Status) {
@@ -244,7 +244,7 @@ public class StatusPersistenceImpl
 
 		Object[] finderArgs = new Object[] {userId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -381,8 +381,7 @@ public class StatusPersistenceImpl
 		List<Status> list = null;
 
 		if (useFinderCache) {
-			list = (List<Status>)finderCache.getResult(
-				finderPath, finderArgs, this);
+			list = (List<Status>)finderCache.getResult(finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Status status : list) {
@@ -740,7 +739,7 @@ public class StatusPersistenceImpl
 
 		Object[] finderArgs = new Object[] {modifiedDate};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -871,8 +870,7 @@ public class StatusPersistenceImpl
 		List<Status> list = null;
 
 		if (useFinderCache) {
-			list = (List<Status>)finderCache.getResult(
-				finderPath, finderArgs, this);
+			list = (List<Status>)finderCache.getResult(finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Status status : list) {
@@ -1227,7 +1225,7 @@ public class StatusPersistenceImpl
 
 		Object[] finderArgs = new Object[] {online};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1368,8 +1366,7 @@ public class StatusPersistenceImpl
 		List<Status> list = null;
 
 		if (useFinderCache) {
-			list = (List<Status>)finderCache.getResult(
-				finderPath, finderArgs, this);
+			list = (List<Status>)finderCache.getResult(finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Status status : list) {
@@ -1756,7 +1753,7 @@ public class StatusPersistenceImpl
 
 		Object[] finderArgs = new Object[] {modifiedDate, online};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1859,9 +1856,7 @@ public class StatusPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(StatusImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(StatusImpl.class);
 	}
 
 	/**
@@ -1885,9 +1880,7 @@ public class StatusPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(StatusImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(StatusImpl.class, primaryKey);
@@ -1897,10 +1890,8 @@ public class StatusPersistenceImpl
 	protected void cacheUniqueFindersCache(StatusModelImpl statusModelImpl) {
 		Object[] args = new Object[] {statusModelImpl.getUserId()};
 
-		finderCache.putResult(
-			_finderPathCountByUserId, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUserId, args, statusModelImpl, false);
+		finderCache.putResult(_finderPathCountByUserId, args, Long.valueOf(1));
+		finderCache.putResult(_finderPathFetchByUserId, args, statusModelImpl);
 	}
 
 	/**
@@ -2183,8 +2174,7 @@ public class StatusPersistenceImpl
 		List<Status> list = null;
 
 		if (useFinderCache) {
-			list = (List<Status>)finderCache.getResult(
-				finderPath, finderArgs, this);
+			list = (List<Status>)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -2254,7 +2244,7 @@ public class StatusPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -2314,31 +2304,30 @@ public class StatusPersistenceImpl
 
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class, new StatusModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", Status.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathFetchByUserId = _createFinderPath(
+		_finderPathFetchByUserId = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
-		_finderPathCountByUserId = _createFinderPath(
+		_finderPathCountByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"},
 			false);
 
-		_finderPathWithPaginationFindByModifiedDate = _createFinderPath(
+		_finderPathWithPaginationFindByModifiedDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByModifiedDate",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -2346,17 +2335,17 @@ public class StatusPersistenceImpl
 			},
 			new String[] {"modifiedDate"}, true);
 
-		_finderPathWithoutPaginationFindByModifiedDate = _createFinderPath(
+		_finderPathWithoutPaginationFindByModifiedDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByModifiedDate",
 			new String[] {Long.class.getName()}, new String[] {"modifiedDate"},
 			true);
 
-		_finderPathCountByModifiedDate = _createFinderPath(
+		_finderPathCountByModifiedDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByModifiedDate",
 			new String[] {Long.class.getName()}, new String[] {"modifiedDate"},
 			false);
 
-		_finderPathWithPaginationFindByOnline = _createFinderPath(
+		_finderPathWithPaginationFindByOnline = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByOnline",
 			new String[] {
 				Boolean.class.getName(), Integer.class.getName(),
@@ -2364,17 +2353,17 @@ public class StatusPersistenceImpl
 			},
 			new String[] {"online_"}, true);
 
-		_finderPathWithoutPaginationFindByOnline = _createFinderPath(
+		_finderPathWithoutPaginationFindByOnline = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByOnline",
 			new String[] {Boolean.class.getName()}, new String[] {"online_"},
 			true);
 
-		_finderPathCountByOnline = _createFinderPath(
+		_finderPathCountByOnline = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByOnline",
 			new String[] {Boolean.class.getName()}, new String[] {"online_"},
 			false);
 
-		_finderPathWithPaginationFindByM_O = _createFinderPath(
+		_finderPathWithPaginationFindByM_O = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByM_O",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -2383,12 +2372,12 @@ public class StatusPersistenceImpl
 			},
 			new String[] {"modifiedDate", "online_"}, true);
 
-		_finderPathWithoutPaginationFindByM_O = _createFinderPath(
+		_finderPathWithoutPaginationFindByM_O = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByM_O",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"modifiedDate", "online_"}, true);
 
-		_finderPathCountByM_O = _createFinderPath(
+		_finderPathCountByM_O = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByM_O",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"modifiedDate", "online_"}, false);
@@ -2399,12 +2388,6 @@ public class StatusPersistenceImpl
 		entityCache.removeCache(StatusImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -2467,36 +2450,13 @@ public class StatusPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"online"});
 
-	static {
-		try {
-			Class.forName(ChatPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class StatusModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -2544,6 +2504,16 @@ public class StatusPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return StatusImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return StatusTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

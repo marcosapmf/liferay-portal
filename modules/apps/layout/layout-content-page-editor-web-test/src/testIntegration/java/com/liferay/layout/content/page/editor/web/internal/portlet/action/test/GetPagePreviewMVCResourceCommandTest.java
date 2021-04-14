@@ -14,8 +14,6 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntry;
@@ -47,7 +45,6 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -58,6 +55,8 @@ import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
+
+import org.hamcrest.CoreMatchers;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -98,15 +97,14 @@ public class GetPagePreviewMVCResourceCommandTest {
 
 		_themeDisplay.setCompany(
 			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
-
 		_themeDisplay.setLanguageId(
 			LanguageUtil.getLanguageId(LocaleUtil.getDefault()));
 		_themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
+		_themeDisplay.setRealUser(TestPropsValues.getUser());
 		_themeDisplay.setScopeGroupId(_group.getGroupId());
 		_themeDisplay.setSiteGroupId(_group.getGroupId());
 		_themeDisplay.setUser(TestPropsValues.getUser());
-		_themeDisplay.setRealUser(TestPropsValues.getUser());
 	}
 
 	@Test
@@ -183,7 +181,10 @@ public class GetPagePreviewMVCResourceCommandTest {
 			(MockHttpServletRequest)
 				mockLiferayResourceRequest.getHttpServletRequest();
 
+		httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, _themeDisplay);
 		httpServletRequest.setMethod(HttpMethods.GET);
+
+		_serviceContext.setRequest(httpServletRequest);
 
 		MockLiferayResourceResponse mockLiferayResourceResponse =
 			new MockLiferayResourceResponse();
@@ -199,10 +200,12 @@ public class GetPagePreviewMVCResourceCommandTest {
 
 		String content = mockHttpServletResponse.getContentAsString();
 
-		Assert.assertThat(content, containsString(_fragmentEntryLink.getCss()));
 		Assert.assertThat(
-			content, containsString(_fragmentEntryLink.getHtml()));
-		Assert.assertThat(content, containsString(_fragmentEntryLink.getJs()));
+			content, CoreMatchers.containsString(_fragmentEntryLink.getCss()));
+		Assert.assertThat(
+			content, CoreMatchers.containsString(_fragmentEntryLink.getHtml()));
+		Assert.assertThat(
+			content, CoreMatchers.containsString(_fragmentEntryLink.getJs()));
 	}
 
 	@Inject
@@ -226,11 +229,10 @@ public class GetPagePreviewMVCResourceCommandTest {
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
-	@Inject(filter = "mvc.command.name=/content_layout/get_page_preview")
+	@Inject(
+		filter = "mvc.command.name=/layout_content_page_editor/get_page_preview"
+	)
 	private MVCResourceCommand _mvcResourceCommand;
-
-	@Inject
-	private Portal _portal;
 
 	private ServiceContext _serviceContext;
 	private ThemeDisplay _themeDisplay;

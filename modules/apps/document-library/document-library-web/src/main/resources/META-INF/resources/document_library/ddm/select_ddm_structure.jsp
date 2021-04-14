@@ -22,11 +22,11 @@ DLSelectDDMStructureDisplayContext dlSelectDDMStructureDisplayContext = new DLSe
 SearchContainer<com.liferay.dynamic.data.mapping.model.DDMStructure> ddmStructureSearch = dlSelectDDMStructureDisplayContext.getDDMStructureSearch();
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= new DLSelectDDMStructureManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, dlSelectDDMStructureDisplayContext) %>"
 />
 
-<aui:form cssClass="container-fluid-1280" method="post" name="selectDDMStructureFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="selectDDMStructureFm">
 	<liferay-ui:search-container
 		searchContainer="<%= ddmStructureSearch %>"
 	>
@@ -41,23 +41,24 @@ SearchContainer<com.liferay.dynamic.data.mapping.model.DDMStructure> ddmStructur
 			/>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="name"
 			>
 				<c:choose>
 					<c:when test="<%= ddmStructure.getStructureId() != dlSelectDDMStructureDisplayContext.getDDMStructureId() %>">
-
-						<%
-						Map<String, Object> data = HashMapBuilder.<String, Object>put(
-							"ddmstructureid", ddmStructure.getStructureId()
-						).put(
-							"ddmstructurekey", ddmStructure.getStructureKey()
-						).put(
-							"name", ddmStructure.getName(locale)
-						).build();
-						%>
-
-						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+						<aui:a
+							cssClass="selector-button"
+							data='<%=
+								HashMapBuilder.<String, Object>put(
+									"ddmstructureid", ddmStructure.getStructureId()
+								).put(
+									"ddmstructurekey", ddmStructure.getStructureKey()
+								).put(
+									"name", ddmStructure.getName(locale)
+								).build()
+							%>'
+							href="javascript:;"
+						>
 							<%= HtmlUtil.escape(ddmStructure.getUnambiguousName(ddmStructureSearch.getResults(), themeDisplay.getScopeGroupId(), locale)) %>
 						</aui:a>
 					</c:when>
@@ -68,7 +69,7 @@ SearchContainer<com.liferay.dynamic.data.mapping.model.DDMStructure> ddmStructur
 			</liferay-ui:search-container-column-text>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="description"
 				truncate="<%= true %>"
 				value="<%= HtmlUtil.escape(ddmStructure.getDescription(locale)) %>"

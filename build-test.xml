@@ -308,6 +308,11 @@ jdbc.default.url=${database.url}
 jdbc.default.username=${database.username}
 jdbc.default.password=${database.password}
 
+jdbc.counter.driverClassName=${database.driver}
+jdbc.counter.url=${database.url}
+jdbc.counter.username=${database.username}
+jdbc.counter.password=${database.password}
+
 // HikariCP
 
 jdbc.default.connectionTimeout=600000
@@ -825,7 +830,35 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				src="${tstamp.value}.zip"
 			/>
 
-			<xmlproperty file="${tstamp.value}-dir/fixpack_documentation.xml" />
+			<if>
+				<available file="${tstamp.value}-dir/fixpack_documentation.xml" />
+				<then>
+					<xmlproperty file="${tstamp.value}-dir/fixpack_documentation.xml" />
+				</then>
+				<elseif>
+					<available file="${tstamp.value}-dir/fixpack_documentation.json" />
+					<then>
+						<local name="json.content" />
+
+						<loadfile
+							property="json.content"
+							srcFile="${tstamp.value}-dir/fixpack_documentation.json"
+						/>
+
+						<script language="javascript">
+							var json = project.getProperty("json.content");
+
+							var fixpackDocumentation = JSON.parse(json);
+
+							var patchRequirements = fixpackDocumentation["patch"]["requirements"];
+
+							if (patchRequirements != null) {
+								project.setProperty("patch.requirements", patchRequirements);
+							}
+						</script>
+					</then>
+				</elseif>
+			</if>
 
 			<antelope:stringutil property="patch.requirements" string="${patch.requirements}">
 				<antelope:replace regex="!" replacement="" />
@@ -910,7 +943,7 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				override="true"
 				property="poshi.java.jdk.opts"
 				regexp="(-Xmx)(\d*\w*)"
-				replace="\12048m"
+				replace="\14096m"
 			/>
 
 			<propertyregex
@@ -963,6 +996,109 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 					<var name="poshi.test.name" value="${poshi.class.name}" />
 				</else>
 			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="get-test-case-properties-content">
+		<attribute default="batch-jdk8" name="test.batch.name" />
+
+		<sequential>
+			<var name="test.case.properties.content" unset="true" />
+
+			<local name="test.batch.name" />
+
+			<property name="test.batch.name" value="@{test.batch.name}" />
+
+			<beanshell>
+				<![CDATA[
+					import com.liferay.jenkins.results.parser.Job;
+					import com.liferay.jenkins.results.parser.JobFactory;
+					import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+					import com.liferay.jenkins.results.parser.test.clazz.group.SegmentTestClassGroup;
+					import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
+
+					public String getBranchName() {
+						String branchName = project.getProperty("env.TEST_PORTAL_BRANCH_NAME");
+
+						if ((branchName == null) || branchName.isEmpty()) {
+							branchName = project.getProperty("liferay.portal.branch");
+						}
+
+						return branchName;
+					}
+
+					public Job.BuildProfile getBuildProfile() {
+						String buildProfile = project.getProperty("build.profile");
+
+						if ((buildProfile != null) && buildProfile.equals("dxp")) {
+							return Job.BuildProfile.DXP;
+						}
+
+						return Job.BuildProfile.PORTAL;
+					}
+
+					public String getRepositoryName() {
+						String repositoryName = project.getProperty("env.REPOSITORY_NAME");
+
+						if ((repositoryName != null) && !repositoryName.isEmpty()) {
+							return repositoryName;
+						}
+
+						String branchName = getBranchName();
+
+						if (branchName.equals("master")) {
+							return "liferay-portal";
+						}
+
+						return "liferay-portal-ee";
+					}
+
+					public int getSegmentID() {
+						String jobVariant = project.getProperty("env.JOB_VARIANT");
+
+						String jobVariantRegex = "[^/]+/(\\d+)";
+
+						if ((jobVariant == null) || (!jobVariant.matches(jobVariantRegex))) {
+							return 0;
+						}
+
+						return Integer.valueOf(jobVariant.replaceAll(jobVariantRegex, "$1"));
+					}
+
+					public String getTestSuite() {
+						String testSuite = project.getProperty("env.CI_TEST_SUITE");
+
+						if ((testSuite == null) || testSuite.isEmpty()) {
+							testSuite = "default";
+						}
+
+						return testSuite;
+					}
+
+					public String getTopLevelJobName() {
+						String topLevelJobName = project.getProperty("env.TOP_LEVEL_JOB_NAME");
+
+						if ((topLevelJobName == null) || topLevelJobName.isEmpty()) {
+							topLevelJobName = "default";
+						}
+
+						return topLevelJobName;
+					}
+
+					Job job = JobFactory.newJob(getTopLevelJobName(), getTestSuite(), getBranchName(), getRepositoryName(), getBuildProfile());
+
+					BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), job);
+
+					if (job.isSegmentEnabled()) {
+						SegmentTestClassGroup segmentTestClassGroup = batchTestClassGroup.getSegmentTestClassGroup(getSegmentID());
+
+						project.setProperty("test.case.properties.content", segmentTestClassGroup.getTestCasePropertiesContent());
+					}
+					else {
+						project.setProperty("test.case.properties.content", batchTestClassGroup.getTestCasePropertiesContent());
+					}
+				]]>
+			</beanshell>
 		</sequential>
 	</macrodef>
 
@@ -1385,9 +1521,14 @@ war.path=${app.server.portal.dir}/</echo>
 			<get-patch-requirements patch.file.zip.url="@{patch.file.zip.url}" />
 
 			<if>
-				<not>
-					<equals arg1="${patch.requirements}" arg2="" />
-				</not>
+				<and>
+					<not>
+						<equals arg1="${patch.requirements}" arg2="" />
+					</not>
+					<not>
+						<contains string="${patch.requirements}" substring="base-" />
+					</not>
+				</and>
 				<then>
 					<local name="patch.build.version" />
 					<local name="patch.portal.version" />
@@ -1445,6 +1586,7 @@ war.path=${app.server.portal.dir}/</echo>
 						</then>
 					</if>
 
+					<gradle-execute dir="${test.poshi.core.src.dir}" task="deploy" />
 					<gradle-execute dir="${test.poshi.runner.src.dir}" task="deploy" />
 				</then>
 			</if>
@@ -1677,7 +1819,7 @@ war.path=${app.server.portal.dir}/</echo>
 		<sequential>
 			<var name="blacklistBundleSymbolicNames" value="[&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.api&quot;,&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise&quot;,&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees.enterprise.test.data&quot;,&quot;com.liferay.portal.mobile.device.detection.fiftyonedegrees&quot;]" />
 
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config">blacklistBundleSymbolicNames=${blacklistBundleSymbolicNames}</echo>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.configuration.BundleBlacklistConfiguration.config">blacklistBundleSymbolicNames=${blacklistBundleSymbolicNames}</echo>
 		</sequential>
 	</macrodef>
 
@@ -2273,6 +2415,7 @@ jdbc.default.password=${database.password}</echo>
 			>
 				<filterchain>
 					<filterreader classname="org.apache.tools.ant.filters.LineContains">
+						<param type="contains" value="registry" />
 						<param type="contains" value="resource-root" />
 						<param type="contains" value="petra" />
 					</filterreader>
@@ -2394,7 +2537,13 @@ jdbc.default.password=${database.password}</echo>
 
 	<macrodef name="prepare-portal-search-osgi-configuration">
 		<sequential>
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.internal.index.IndexStatusManagerInternalConfiguration.config">suppressIndexReadOnly=B"true"</echo>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.internal.index.configuration.IndexStatusManagerInternalConfiguration.config">suppressIndexReadOnly=B"true"</echo>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="prepare-portal-template-freemarker-osgi-configuration">
+		<sequential>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.template.freemarker.configuration.FreeMarkerEngineConfiguration.config">asyncRenderTimeout=L"7200000"${line.separator}loopCountThreshold=I"2147483647"</echo>
 		</sequential>
 	</macrodef>
 
@@ -2887,6 +3036,38 @@ tell application "Safari" to quit
 		</sequential>
 	</macrodef>
 
+	<macrodef name="print-files">
+		<attribute name="dir" />
+		<attribute default="" name="exclude" />
+		<attribute name="include" />
+
+		<sequential>
+			<for param="file.name">
+				<fileset
+					dir="@{dir}"
+					excludes="@{exclude}"
+					includes="@{include}"
+				/>
+				<sequential>
+					<echo></echo>
+					<echo>##</echo>
+					<echo>## @{file.name}</echo>
+					<echo>##</echo>
+					<echo></echo>
+
+					<loadfile
+						property="file.content"
+						srcFile="@{file.name}"
+					/>
+
+					<echo>${file.content}</echo>
+
+					<var name="file.content" unset="true" />
+				</sequential>
+			</for>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="print-gc-logs">
 		<attribute name="tomcat.gc.log" />
 		<attribute name="tsant.gc.log" />
@@ -2951,21 +3132,21 @@ ${tomcat-gc-log}
 
 	<macrodef name="print-search-indices">
 		<sequential>
-			<get-testcase-property property.name="solr.enabled" />
-			<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
+			<get-testcase-property property.name="remote.elasticsearch.enabled" />
 
-			<if>
-				<or>
-					<equals arg1="${solr.enabled}" arg2="true" />
-					<equals arg1="${suite.search.engine}" arg2="solr" />
-				</or>
-				<then>
-					<ant antfile="build-test-solr.xml" target="print-solr-indices" />
-				</then>
-				<else>
-					<ant antfile="build-test-elasticsearch7.xml" target="print-elasticsearch-indices" />
-				</else>
-			</if>
+			<condition else="9201" property="elasticsearch.port" value="9200">
+				<equals arg1="${remote.elasticsearch.enabled}" arg2="true" />
+			</condition>
+
+			<ant antfile="build-test-elasticsearch7.xml" target="print-elasticsearch-indices">
+				<property name="elasticsearch.port" value="${elasticsearch.port}" />
+			</ant>
+
+			<get-testcase-property property.name="elasticsearch.multiple.connections" />
+
+			<ant antfile="build-test-elasticsearch7.xml" if:true="${elasticsearch.multiple.connections}" target="print-elasticsearch-indices">
+				<property name="elasticsearch.port" value="9202" />
+			</ant>
 		</sequential>
 	</macrodef>
 
@@ -3044,79 +3225,9 @@ ${tomcat-gc-log}
 		<sequential>
 			<fail message="Please set the property ${test.batch.name}." unless="test.batch.name" />
 
-			<local name="portal.branch.name" />
+			<get-test-case-properties-content test.batch.name="${test.batch.name}" />
 
-			<condition else="${git.working.branch.name}" property="portal.branch.name" value="${env.TEST_PORTAL_BRANCH_NAME}">
-				<isset property="env.TEST_PORTAL_BRANCH_NAME" />
-			</condition>
-
-			<local name="top.level.job.name" />
-
-			<condition else="default" property="top.level.job.name" value="${env.TOP_LEVEL_JOB_NAME}">
-				<isset property="env.TOP_LEVEL_JOB_NAME" />
-			</condition>
-
-			<beanshell>
-				<![CDATA[
-					import com.liferay.jenkins.results.parser.Job;
-					import com.liferay.jenkins.results.parser.JobFactory;
-					import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
-					import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
-					import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
-
-					Job job = JobFactory.newJob(project.getProperty("top.level.job.name"), project.getProperty("env.CI_TEST_SUITE"), project.getProperty("portal.branch.name"), project.getProperty("env.REPOSITORY_NAME"));
-
-					BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
-
-					String testPortalBuildProfile = project.getProperty("build.profile");
-
-					if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
-						buildProfile = BatchTestClassGroup.BuildProfile.DXP;
-					}
-
-					BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), buildProfile, job);
-
-					int axisCount = batchTestClassGroup.getAxisCount();
-
-					StringBuilder sb = new StringBuilder();
-
-					for (i = 0; i < axisCount; i++) {
-						AxisTestClassGroup axisTestClassGroup = batchTestClassGroup.getAxisTestClassGroup(i);
-
-						List testClassGroup = axisTestClassGroup.getTestClassFiles();
-
-						sb.append("TEST_CLASS_GROUP_");
-						sb.append(i);
-						sb.append("=");
-
-						for (File testClass : testClassGroup) {
-							sb.append(testClass.toPath());
-							sb.append(",");
-						}
-
-						if (!testClassGroup.isEmpty()) {
-							sb.setLength(sb.length() - 1);
-						}
-
-						sb.append("\n\n");
-					}
-
-					sb.append("TEST_CLASS_GROUPS=");
-
-					for (int i = 0; i < axisCount; i++) {
-						sb.append(i);
-						sb.append(" ");
-					}
-
-					if (axisCount > 0) {
-						sb.setLength(sb.length() - 1);
-					}
-
-					project.setProperty("test.class.file.names.properties.content", sb.toString());
-				]]>
-			</beanshell>
-
-			<echo file="test.class.file.names.properties">${test.class.file.names.properties.content}</echo>
+			<echo file="test.class.file.names.properties">${test.case.properties.content}</echo>
 
 			<print-file file.name="test.class.file.names.properties" />
 		</sequential>
@@ -3147,18 +3258,20 @@ ${tomcat-gc-log}
 					import com.liferay.jenkins.results.parser.test.clazz.group.NPMTestBatchTestClassGroup;
 					import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
 
-					try {
-						Job job = JobFactory.newJob(project.getProperty("top.level.job.name"));
-
-						BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
-
+					public Job.BuildProfile getBuildProfile() {
 						String testPortalBuildProfile = project.getProperty("build.profile");
 
 						if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
-							buildProfile = BatchTestClassGroup.BuildProfile.DXP;
+							return Job.BuildProfile.DXP;
 						}
 
-						BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), buildProfile, job);
+						return Job.BuildProfile.PORTAL;
+					}
+
+					try {
+						Job job = JobFactory.newJob(project.getProperty("top.level.job.name"), null, null, null, getBuildProfile());
+
+						BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), job);
 
 						if (batchTestClassGroup instanceof JUnitBatchTestClassGroup ||
 							batchTestClassGroup instanceof NPMTestBatchTestClassGroup) {
@@ -3879,6 +3992,7 @@ go</echo>
 						<equals arg1="@{liferay.portal.bundle}" arg2="7.0.10.12" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="7.0.10.13" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="7.0.10.14" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.0.10.15" />
 					</or>
 					<then>
 						<var name="app.server.tomcat.version" value="8.0.53" />
@@ -3933,6 +4047,15 @@ go</echo>
 						<var name="app.server.tomcat.version" value="9.0.33" />
 					</then>
 				</elseif>
+				<elseif>
+					<or>
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.3.5" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.3.10" />
+					</or>
+					<then>
+						<var name="app.server.tomcat.version" value="9.0.37" />
+					</then>
+				</elseif>
 			</if>
 
 			<var name="app.server.tomcat.dir" value="${app.server.parent.dir}/tomcat-${app.server.tomcat.version}" />
@@ -3974,22 +4097,6 @@ go</echo>
 				<then>
 					<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
 				</then>
-			</if>
-
-			<get-testcase-property property.name="solr.enabled" />
-			<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
-
-			<if>
-				<equals arg1="${solr.enabled}" arg2="true" />
-				<then>
-					<ant antfile="build-test-solr.xml" target="start-solr" />
-				</then>
-				<elseif>
-					<equals arg1="${suite.search.engine}" arg2="solr" />
-					<then>
-						<ant antfile="build-test-solr.xml" target="set-up-solr" />
-					</then>
-				</elseif>
 			</if>
 
 			<get-testcase-property property.name="delete.sidecar.bundle" />
@@ -4305,6 +4412,15 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 						</or>
 						<then>
 							<echo file="${test.app.server.deploy.dir}/ROOT.war.dodeploy"></echo>
+						</then>
+					</if>
+
+					<get-testcase-property property.name="commerce.enabled" />
+
+					<if>
+						<equals arg1="${commerce.enabled}" arg2="false" />
+						<then>
+							<delete failonerror="false" file="${liferay.home}/deploy/portal-commerce-license.xml" verbose="true" />
 						</then>
 					</if>
 
@@ -5244,38 +5360,65 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 
 	<macrodef name="stop-remote-search-engine">
 		<sequential>
-			<get-testcase-property property.name="remote.elasticsearch.clusters.enabled" />
 			<get-testcase-property property.name="remote.elasticsearch.enabled" />
-			<get-testcase-property property.name="test.name.skip.portal.instance" />
 
 			<if>
-				<equals arg1="${remote.elasticsearch.enabled}" arg2="true" />
+				<istrue value="${remote.elasticsearch.enabled}" />
 				<then>
-					<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch" />
+					<get-testcase-property property.name="elasticsearch.cluster.size" />
+					<get-testcase-property property.name="elasticsearch.multiple.connections" />
+
+					<local name="stop.type" />
+
+					<property if:set="elasticsearch.cluster.size" name="stop.type" value="elasticsearch.cluster.size" />
+					<property if:true="${elasticsearch.multiple.connections}" name="stop.type" value="elasticsearch.multiple.connections" />
+
+					<switch value="${stop.type}">
+						<case value="elasticsearch.cluster.size">
+							<var name="elasticsearch.node.number" value="2" />
+
+							<antelope:repeat count="${elasticsearch.cluster.size}">
+								<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch">
+									<property name="elasticsearch.bundle.number" value="${elasticsearch.node.number}" />
+								</ant>
+
+								<math
+									datatype="int"
+									operand1="${elasticsearch.node.number}"
+									operand2="1"
+									operation="-"
+									result="elasticsearch.node.number"
+								/>
+							</antelope:repeat>
+						</case>
+						<case value="elasticsearch.multiple.connections">
+							<var name="elasticsearch.cluster.number" value="2" />
+
+							<antelope:repeat count="2">
+								<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch">
+									<property name="elasticsearch.bundle.number" value="${elasticsearch.cluster.number}" />
+								</ant>
+
+								<math
+									datatype="int"
+									operand1="${elasticsearch.cluster.number}"
+									operand2="1"
+									operation="-"
+									result="elasticsearch.cluster.number"
+								/>
+							</antelope:repeat>
+						</case>
+						<default>
+							<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch" />
+						</default>
+					</switch>
 
 					<if>
-						<and>
-							<equals arg1="${remote.elasticsearch.clusters.enabled}" arg2="true" />
-							<not>
-								<contains string="${test.name.skip.portal.instance}" substring="#Smoke" />
-							</not>
-						</and>
+						<socket port="5601" server="localhost" />
 						<then>
-							<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch-local-cluster" />
+							<ant antfile="build-test-elasticsearch7.xml" target="stop-kibana" />
 						</then>
 					</if>
-				</then>
-			</if>
-
-			<get-testcase-property property.name="solr.enabled" />
-
-			<if>
-				<or>
-					<contains string="${env.CI_TEST_SUITE}" substring="solr" />
-					<equals arg1="${solr.enabled}" arg2="true" />
-				</or>
-				<then>
-					<ant antfile="build-test-solr.xml" target="stop-solr-core" />
 				</then>
 			</if>
 		</sequential>
@@ -5308,6 +5451,8 @@ war.path=${app.server.portal.dir}/</echo>
 					</execute>
 				</else>
 			</if>
+
+			<print-file file.name="${patching.tool.dir}/logs/patching-tool.log" />
 
 			<delete file="@{patching.tool.dir}/logs/patching-tool.log" />
 
@@ -5479,23 +5624,22 @@ war.path=${app.server.portal.dir}/</echo>
 
 			<echo>${app.server.waiting.url} has loaded</echo>
 
+			<get-testcase-property property.name="commerce.enabled" />
+
 			<if>
 				<and>
 					<equals arg1="${build.profile}" arg2="dxp" />
-					<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-release" />
+					<not>
+						<equals arg1="${commerce.enabled}" arg2="false" />
+					</not>
+					<or>
+						<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-fixpack-release" />
+						<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-hotfix-release" />
+						<equals arg1="${env.CI_TEST_SUITE}" arg2="portal-release" />
+					</or>
 				</and>
 				<then>
-					<get-commerce-license-product-name />
-
-					<wait-for-app-server-log-message log.message="${commerce.license.product.name} license validation passed" />
-
-					<wait-for-app-server-log-message log.message="License registered for ${commerce.license.product.name}" />
-
-					<get-portal-license-product-name />
-
-					<wait-for-app-server-log-message log.message="${portal.license.product.name} license validation passed" />
-
-					<wait-for-app-server-log-message log.message="License registered for ${portal.license.product.name}" />
+					<wait-for-license-activation />
 				</then>
 			</if>
 		</sequential>
@@ -5685,6 +5829,22 @@ war.path=${app.server.portal.dir}/</echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="wait-for-license-activation">
+		<sequential>
+			<get-commerce-license-product-name />
+
+			<wait-for-app-server-log-message log.message="${commerce.license.product.name} license validation passed" />
+
+			<wait-for-app-server-log-message log.message="License registered for ${commerce.license.product.name}" />
+
+			<get-portal-license-product-name />
+
+			<wait-for-app-server-log-message log.message="${portal.license.product.name} license validation passed" />
+
+			<wait-for-app-server-log-message log.message="License registered for ${portal.license.product.name}" />
+		</sequential>
+	</macrodef>
+
 	<target name="build-sql-file">
 		<get-testcase-property property.name="portal.version" />
 
@@ -5738,6 +5898,12 @@ war.path=${app.server.portal.dir}/</echo>
 							<property name="portal.version.url.path" value="7.3.0-ga1" />
 						</then>
 					</elseif>
+					<elseif>
+						<equals arg1="${portal.version}" arg2="7.3.5" />
+						<then>
+							<property name="portal.version.url.path" value="7.3.5-ga6" />
+						</then>
+					</elseif>
 					<else>
 						<property name="portal.version.url.path" value="${portal.version}" />
 					</else>
@@ -5754,6 +5920,7 @@ war.path=${app.server.portal.dir}/</echo>
 						<equals arg1="${portal.version}" arg2="7.2.0" />
 						<equals arg1="${portal.version}" arg2="7.2.1" />
 						<equals arg1="${portal.version}" arg2="7.3.0" />
+						<equals arg1="${portal.version}" arg2="7.3.5" />
 					</or>
 					<then>
 						<propertycopy from="sql.legacy.base.url[ce]" name="sql.legacy.base.url" />
@@ -5992,6 +6159,21 @@ alter database lportal set read_committed_snapshot on;
 go]]></replacevalue>
 								</replacefilter>
 							</replace>
+
+							<if>
+								<isset property="databases.size" />
+								<then>
+									<echo append="true" file="create.sql">
+create database lportal${databases.size};
+go
+
+alter database lportal${databases.size} set allow_snapshot_isolation on;
+go
+
+alter database lportal${databases.size} set read_committed_snapshot on;
+go</echo>
+								</then>
+							</if>
 						</then>
 					</elseif>
 					<elseif>
@@ -6580,6 +6762,17 @@ go</echo>
 		</if>
 	</target>
 
+	<target name="create-hidden-osgi-file">
+		<get-testcase-property property.name="create.osgi.hidden.file" />
+
+		<if>
+			<isset property="create.osgi.hidden.file" />
+			<then>
+				<touch file="${liferay.home}/osgi/configs/.keep" />
+			</then>
+		</if>
+	</target>
+
 	<target name="curl-execute">
 		<fail message="Please set the property ${curl.args}." unless="curl.args" />
 
@@ -6710,15 +6903,13 @@ go</echo>
 
 				<ant dir="portal-kernel" target="install-portal-snapshot" />
 
-				<mirrors-get
-					dest="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.api.jar"
-					src="${baseline.jar.url}/com/liferay/com.liferay.analytics.demo.data.creator.api/${analytics.cloud.faro.data.creator.api}/com.liferay.analytics.demo.data.creator.api-${analytics.cloud.faro.data.creator.api}.jar"
-				/>
+				<gradle-execute dir="modules/apps/analytics/analytics-demo-data-creator-api" task="deploy">
+					<arg value="clean" />
+				</gradle-execute>
 
-				<mirrors-get
-					dest="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.impl.jar"
-					src="${baseline.jar.url}/com/liferay/com.liferay.analytics.demo.data.creator.impl/${analytics.cloud.faro.data.creator.impl}/com.liferay.analytics.demo.data.creator.impl-${analytics.cloud.faro.data.creator.impl}.jar"
-				/>
+				<gradle-execute dir="modules/apps/analytics/analytics-demo-data-creator-impl" task="deploy">
+					<arg value="clean" />
+				</gradle-execute>
 
 				<property location="${analytics.cloud.faro.data.csv}" name="analytics.cloud.faro.data.csv.file.path" />
 
@@ -7921,6 +8112,10 @@ virtualHostname="localhost"
 				<install-patch patching.tool.dir="${patching.tool.dir}" patch.file.zip.url="${patch.file.zip.url}" />
 
 				<validate-installed-patches patching.tool.dir="${patching.tool.dir}" />
+
+				<print-file file.name="${patching.tool.dir}/logs/patching-tool.log" />
+
+				<delete file="@{patching.tool.dir}/logs/patching-tool.log" />
 			</else>
 		</if>
 	</target>
@@ -8238,7 +8433,7 @@ ${update.properties}</echo>
 	</target>
 
 	<target name="prepare-lcs-portal-bundle">
-		<antcall target="prepare-portal-ext-properties" />
+		<antcall if:set="env.JENKINS_HOME" target="prepare-portal-ext-properties" />
 
 		<antcall inheritAll="false" target="rebuild-database" />
 
@@ -8408,32 +8603,6 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-	<appender class="org.apache.log4j.ConsoleAppender" name="CONSOLE">
-		<layout class="org.apache.log4j.EnhancedPatternLayout">
-			<param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%t][%c{1}:%L] %m%n" />
-		</layout>
-	</appender>
-
-	<appender class="org.apache.log4j.rolling.RollingFileAppender" name="TEXT_FILE">
-		<rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
-			<param name="FileNamePattern" value="@liferay.home@/logs/liferay@spi.id@.%d{yyyy-MM-dd}.log" />
-		</rollingPolicy>
-
-		<layout class="org.apache.log4j.EnhancedPatternLayout">
-			<param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%t][%c{1}:%L] %m%n" />
-		</layout>
-	</appender>
-
-	<appender class="org.apache.log4j.rolling.RollingFileAppender" name="XML_FILE">
-		<rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
-			<param name="FileNamePattern" value="@liferay.home@/logs/liferay@spi.id@.%d{yyyy-MM-dd}.xml" />
-		</rollingPolicy>
-
-		<layout class="org.apache.log4j.xml.XMLLayout">
-			<param name="LocationInfo" value="true" />
-		</layout>
-	</appender>
-
 	<category name="com.liferay.frontend.js.spa.web.internal.servlet.taglib">
 		<priority value="DEBUG" />
 	</category>
@@ -8457,13 +8626,6 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 	<category name="com.zaxxer.hikari.pool.PoolBase">
 		<priority value="ERROR" />
 	</category>
-
-	<root>
-		<priority value="INFO" />
-		<appender-ref ref="CONSOLE" />
-		<appender-ref ref="TEXT_FILE" />
-		<appender-ref ref="XML_FILE" />
-	</root>
 </log4j:configuration>]]></echo>
 
 		<echo file="${liferay.home}/osgi/log4j/com.liferay.portal.osgi.web.wab.generator.impl-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
@@ -8563,7 +8725,7 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 
 		<if>
 			<not>
-				<available file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.BundleBlacklistConfiguration.config" />
+				<available file="${liferay.home}/osgi/configs/com.liferay.portal.bundle.blacklist.internal.configuration.BundleBlacklistConfiguration.config" />
 			</not>
 			<then>
 				<prepare-blacklist-configuration />
@@ -8584,6 +8746,8 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 		<prepare-portal-elasticsearch-osgi-configuration />
 
 		<prepare-portal-search-osgi-configuration/>
+
+		<prepare-portal-template-freemarker-osgi-configuration />
 	</target>
 
 	<target name="prepare-patching-tool">
@@ -8841,11 +9005,7 @@ portal.security.manager.strategy=liferay</echo>
 		</if>
 
 		<if>
-			<or>
-				<equals arg1="${app.server.type}" arg2="weblogic" />
-				<equals arg1="${app.server.type}" arg2="websphere" />
-				<equals arg1="${javascript.fast.load}" arg2="false" />
-			</or>
+			<equals arg1="${javascript.fast.load}" arg2="false" />
 			<then>
 				<echo append="true" file="portal-impl/src/portal-ext.properties">
 
@@ -9104,6 +9264,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 		<get-ip-address />
 
 		<echo append="true" file="${test.ext.properties.file}">
+			app.server.type=${app.server.type}
 			component.names=${component.names}
 			get.location.max.retries=${test.get.location.max.retries}
 			get.location.timeout=${test.get.location.timeout}
@@ -9125,8 +9286,6 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 			test.retry.command.wait.time=${test.retry.command.wait.time}
 		</echo>
 
-		<propertycopy from="browser.firefox.bin.file[${browser.firefox.version}]" name="browser.firefox.bin.file" silent="true" />
-
 		<if>
 			<isset property="browser.chrome.bin.args" />
 			<then>
@@ -9136,6 +9295,8 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 			</then>
 		</if>
 
+		<propertycopy from="browser.chrome.bin.file[${browser.chrome.version}]" name="browser.chrome.bin.file" silent="true" />
+
 		<if>
 			<isset property="browser.chrome.bin.file" />
 			<then>
@@ -9144,6 +9305,8 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 				</echo>
 			</then>
 		</if>
+
+		<propertycopy from="browser.firefox.bin.file[${browser.firefox.version}]" name="browser.firefox.bin.file" silent="true" />
 
 		<if>
 			<isset property="browser.firefox.bin.file" />
@@ -9172,7 +9335,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 			</then>
 			<else>
 				<echo append="true" file="${test.ext.properties.file}">
-					test.base.dir.name=test/
+					test.base.dir.name=${basedir.unix}/portal-web/test/functional/com/liferay/portalweb/
 				</echo>
 			</else>
 		</if>
@@ -9320,6 +9483,37 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 				</echo>
 			</else>
 		</if>
+	</target>
+
+	<target name="prepare-release-bundle">
+		<ant antfile="build-release-slim.xml" dir="${release.tool.dir}" inheritAll="false" target="dist" useNativeBasedir="true">
+			<property name="override.decrement.module.bnd.versions" value="true" />
+			<property name="project.release.dir.native" value="${release.tool.dir}" />
+		</ant>
+
+		<copy
+			overwrite="true"
+			tofile="${project.dir}/liferay-portal-bundle-tomcat.tar.gz"
+		>
+			<fileset
+				dir="dist/"
+				includes="liferay-*-tomcat-*.tar.gz"
+			/>
+		</copy>
+
+		<untar
+			compression="gzip"
+			dest="./bundles"
+			src="liferay-portal-bundle-tomcat.tar.gz"
+		>
+			<cutdirsmapper dirs="1" />
+		</untar>
+
+		<antcall target="deploy-license-xml">
+			<param name="test.build.license.xml.zip.url" value="${test.license.xml.url}" />
+		</antcall>
+
+		<antcall target="deploy-commerce-license-xml" />
 	</target>
 
 	<target name="prepare-selenium">
@@ -9883,55 +10077,28 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 		</if>
 
 		<if>
-			<isset property="lcs.email.id.1" />
+			<isset property="lcs.site.password.1" />
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
-					lcs.email.id.1=${lcs.email.id.1}
+					lcs.site.password.1=${lcs.site.password.1}
 				</echo>
 			</then>
 		</if>
 
 		<if>
-			<isset property="lcs.email.id.2" />
+			<isset property="lcs.site.password.2" />
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
-					lcs.email.id.2=${lcs.email.id.2}
+					lcs.site.password.2=${lcs.site.password.2}
 				</echo>
 			</then>
 		</if>
 
 		<if>
-			<isset property="lcs.email.id.3" />
+			<isset property="lcs.site.password.3" />
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
-					lcs.email.id.3=${lcs.email.id.3}
-				</echo>
-			</then>
-		</if>
-
-		<if>
-			<isset property="lcs.email.password.1" />
-			<then>
-				<echo append="true" file="${test.ext.properties.file}">
-					lcs.email.password.1=${lcs.email.password.1}
-				</echo>
-			</then>
-		</if>
-
-		<if>
-			<isset property="lcs.email.password.2" />
-			<then>
-				<echo append="true" file="${test.ext.properties.file}">
-					lcs.email.password.2=${lcs.email.password.2}
-				</echo>
-			</then>
-		</if>
-
-		<if>
-			<isset property="lcs.email.password.3" />
-			<then>
-				<echo append="true" file="${test.ext.properties.file}">
-					lcs.email.password.3=${lcs.email.password.3}
+					lcs.site.password.3=${lcs.site.password.3}
 				</echo>
 			</then>
 		</if>
@@ -10094,6 +10261,15 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 		</if>
 
 		<if>
+			<isset property="google.api.key.4" />
+			<then>
+				<echo append="true" file="${test.ext.properties.file}">
+					google.api.key.4=${google.api.key.4}
+				</echo>
+			</then>
+		</if>
+
+		<if>
 			<isset property="google.client.id.1" />
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
@@ -10121,6 +10297,15 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 		</if>
 
 		<if>
+			<isset property="google.client.id.4" />
+			<then>
+				<echo append="true" file="${test.ext.properties.file}">
+					google.client.id.4=${google.client.id.4}
+				</echo>
+			</then>
+		</if>
+
+		<if>
 			<isset property="google.client.secret.1" />
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
@@ -10143,6 +10328,15 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
 					google.client.secret.3=${google.client.secret.3}
+				</echo>
+			</then>
+		</if>
+
+		<if>
+			<isset property="google.client.secret.4" />
+			<then>
+				<echo append="true" file="${test.ext.properties.file}">
+					google.client.secret.4=${google.client.secret.4}
 				</echo>
 			</then>
 		</if>
@@ -10833,16 +11027,44 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 					src="${test.build.portal.tools.zip.url}"
 				/>
 
+				<local name="liferay.portal.tools.temp.dir" />
+
+				<property name="liferay.portal.tools.temp.dir" value="liferay-portal-tools-temp" />
+
 				<unzip
-					dest="${liferay.home}/tools"
+					dest="${liferay.portal.tools.temp.dir}"
 					src="liferay-portal-tools.zip"
 				>
 					<mapper
-						from="[^/]+/(tools/)?(.*)"
-						to="\2"
+						from="[^/]+/(.*)"
+						to="\1"
 						type="regexp"
 					/>
 				</unzip>
+
+				<if>
+					<available file="${liferay.portal.tools.temp.dir}/portal-tools-db-upgrade-client" />
+					<then>
+						<move
+							todir="${liferay.home}/tools"
+						>
+							<fileset
+								dir="${liferay.portal.tools.temp.dir}"
+							/>
+						</move>
+					</then>
+					<else>
+						<move
+							todir="${liferay.home}/tools/portal-tools-db-upgrade-client"
+						>
+							<fileset
+								dir="${liferay.portal.tools.temp.dir}"
+							/>
+						</move>
+					</else>
+				</if>
+
+				<delete dir="${liferay.portal.tools.temp.dir}" failonerror="false" />
 
 				<move
 					todir="${liferay.home}/tools"
@@ -10887,7 +11109,10 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				<delete file="liferay-portal-tools.zip" />
 
 				<if>
-					<equals arg1="${app.server.type}" arg2="jboss" />
+					<or>
+						<equals arg1="${app.server.type}" arg2="jboss" />
+						<equals arg1="${app.server.type}" arg2="wildfly" />
+					</or>
 					<then>
 						<prepare-jboss-module-configuration />
 					</then>
@@ -11040,6 +11265,17 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 									<param name="patch.file.zip.url" value="${test.build.fix.pack.zip.url}" />
 								</antcall>
 							</else>
+						</if>
+						<if>
+							<or>
+								<equals arg1="${app.server.type}" arg2="jboss" />
+								<equals arg1="${app.server.type}" arg2="wildfly" />
+							</or>
+							<then>
+								<prepare-jboss-module-configuration />
+
+								<print-file file.name="${app.server.lib.global.dir}/module.xml" />
+							</then>
 						</if>
 					</then>
 				</if>
@@ -12261,79 +12497,9 @@ if (ppstate.equals("normal")) {
 			<isset property="test.batch.name" />
 		</condition>
 
-		<local name="portal.branch.name" />
+		<get-test-case-properties-content test.batch.name="${test.batch.name}" />
 
-		<condition else="${git.working.branch.name}" property="portal.branch.name" value="${env.TEST_PORTAL_BRANCH_NAME}">
-			<isset property="env.TEST_PORTAL_BRANCH_NAME" />
-		</condition>
-
-		<local name="top.level.job.name" />
-
-		<condition else="default" property="top.level.job.name" value="${env.TOP_LEVEL_JOB_NAME}">
-			<isset property="env.TOP_LEVEL_JOB_NAME" />
-		</condition>
-
-		<beanshell>
-			<![CDATA[
-				import com.liferay.jenkins.results.parser.Job;
-				import com.liferay.jenkins.results.parser.JobFactory;
-				import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
-				import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
-				import com.liferay.jenkins.results.parser.test.clazz.group.TestClassGroupFactory;
-
-				Job job = JobFactory.newJob(project.getProperty("top.level.job.name"), project.getProperty("env.CI_TEST_SUITE"), project.getProperty("portal.branch.name"));
-
-				BatchTestClassGroup.BuildProfile buildProfile = BatchTestClassGroup.BuildProfile.PORTAL;
-
-				String testPortalBuildProfile = project.getProperty("build.profile");
-
-				if ((testPortalBuildProfile != null) && testPortalBuildProfile.equals("dxp")) {
-					buildProfile = BatchTestClassGroup.BuildProfile.DXP;
-				}
-
-				BatchTestClassGroup batchTestClassGroup = TestClassGroupFactory.newBatchTestClassGroup(project.getProperty("test.batch.name"), buildProfile, job);
-
-				int axisCount = batchTestClassGroup.getAxisCount();
-
-				StringBuilder sb = new StringBuilder();
-
-				for (i = 0; i < axisCount; i++) {
-					AxisTestClassGroup axisTestClassGroup = batchTestClassGroup.getAxisTestClassGroup(i);
-
-					List testClassGroup = axisTestClassGroup.getTestClassFiles();
-
-					sb.append("TEST_PLUGIN_GROUP_");
-					sb.append(i);
-					sb.append("=");
-
-					for (File testClass : testClassGroup) {
-						sb.append(testClass.getName());
-						sb.append(",");
-					}
-
-					if (!testClassGroup.isEmpty()) {
-						sb.setLength(sb.length() - 1);
-					}
-
-					sb.append("\n\n");
-				}
-
-				sb.append("TEST_PLUGIN_GROUPS=");
-
-				for (int i = 0; i < axisCount; i++) {
-					sb.append(i);
-					sb.append(" ");
-				}
-
-				if (axisCount > 0) {
-					sb.setLength(sb.length() - 1);
-				}
-
-				project.setProperty("test.plugin.names.properties.content", sb.toString());
-			]]>
-		</beanshell>
-
-		<echo file="test.plugin.names.properties">${test.plugin.names.properties.content}</echo>
+		<echo file="test.plugin.names.properties">${test.case.properties.content}</echo>
 
 		<print-file file.name="test.plugin.names.properties" />
 	</target>
@@ -12642,6 +12808,8 @@ module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.pr
 		<antcall target="prepare-ip-address-update" />
 
 		<antcall target="check-inet-address" />
+
+		<antcall target="create-hidden-osgi-file" />
 
 		<get-testcase-property property.name="database.jndi.enabled" />
 

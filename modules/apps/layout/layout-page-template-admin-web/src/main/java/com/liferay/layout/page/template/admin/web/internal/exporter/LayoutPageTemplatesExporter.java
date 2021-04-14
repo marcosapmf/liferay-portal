@@ -26,21 +26,20 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
-import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
-import com.liferay.fragment.renderer.FragmentRendererTracker;
-import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.headless.delivery.dto.v1_0.PageDefinition;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.DisplayPageTemplateDTOConverter;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.MasterPageDTOConverter;
-import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.PageDefinitionDTOConverter;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.PageTemplateCollectionDTOConverter;
 import com.liferay.layout.page.template.admin.web.internal.headless.delivery.dto.v1_0.converter.PageTemplateDTOConverter;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateExportImportConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -51,6 +50,10 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 import java.io.File;
 
@@ -73,6 +76,8 @@ public class LayoutPageTemplatesExporter {
 			List<LayoutPageTemplateEntry> layoutPageTemplateEntries)
 		throws PortletException {
 
+		DTOConverter<LayoutStructure, PageDefinition>
+			pageDefinitionDTOConverter = _getPageDefinitionDTOConverter();
 		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
 		try {
@@ -88,7 +93,8 @@ public class LayoutPageTemplatesExporter {
 				}
 
 				_populateDisplayPagesZipWriter(
-					layoutPageTemplateEntry, zipWriter);
+					layoutPageTemplateEntry, pageDefinitionDTOConverter,
+					zipWriter);
 			}
 
 			return zipWriter.getFile();
@@ -101,14 +107,15 @@ public class LayoutPageTemplatesExporter {
 	public File exportGroupLayoutPageTemplates(long groupId)
 		throws PortletException {
 
+		Map<Long, LayoutPageTemplateCollection>
+			layoutPageTemplateCollectionKeyMap = new HashMap<>();
+		DTOConverter<LayoutStructure, PageDefinition>
+			pageDefinitionDTOConverter = _getPageDefinitionDTOConverter();
+		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
+
 		List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 			_layoutPageTemplateEntryLocalService.getLayoutPageTemplateEntries(
 				groupId);
-
-		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
-
-		Map<Long, LayoutPageTemplateCollection>
-			layoutPageTemplateCollectionKeyMap = new HashMap<>();
 
 		try {
 			for (LayoutPageTemplateEntry layoutPageTemplateEntry :
@@ -127,21 +134,24 @@ public class LayoutPageTemplatesExporter {
 
 					_populatePageTemplatesZipWriter(
 						layoutPageTemplateEntry,
-						layoutPageTemplateCollectionKeyMap, zipWriter);
+						layoutPageTemplateCollectionKeyMap,
+						pageDefinitionDTOConverter, zipWriter);
 				}
 				else if (layoutPageTemplateEntry.getType() ==
 							LayoutPageTemplateEntryTypeConstants.
 								TYPE_DISPLAY_PAGE) {
 
 					_populateDisplayPagesZipWriter(
-						layoutPageTemplateEntry, zipWriter);
+						layoutPageTemplateEntry, pageDefinitionDTOConverter,
+						zipWriter);
 				}
 				else if (layoutPageTemplateEntry.getType() ==
 							LayoutPageTemplateEntryTypeConstants.
 								TYPE_MASTER_LAYOUT) {
 
 					_populateMasterLayoutsZipWriter(
-						layoutPageTemplateEntry, zipWriter);
+						layoutPageTemplateEntry, pageDefinitionDTOConverter,
+						zipWriter);
 				}
 			}
 
@@ -156,6 +166,8 @@ public class LayoutPageTemplatesExporter {
 			List<LayoutPageTemplateEntry> layoutPageTemplateEntries)
 		throws PortletException {
 
+		DTOConverter<LayoutStructure, PageDefinition>
+			pageDefinitionDTOConverter = _getPageDefinitionDTOConverter();
 		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
 		try {
@@ -171,7 +183,8 @@ public class LayoutPageTemplatesExporter {
 				}
 
 				_populateMasterLayoutsZipWriter(
-					layoutPageTemplateEntry, zipWriter);
+					layoutPageTemplateEntry, pageDefinitionDTOConverter,
+					zipWriter);
 			}
 
 			return zipWriter.getFile();
@@ -185,10 +198,11 @@ public class LayoutPageTemplatesExporter {
 			List<LayoutPageTemplateEntry> layoutPageTemplateEntries)
 		throws PortletException {
 
-		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
-
 		Map<Long, LayoutPageTemplateCollection>
 			layoutPageTemplateCollectionKeyMap = new HashMap<>();
+		DTOConverter<LayoutStructure, PageDefinition>
+			pageDefinitionDTOConverter = _getPageDefinitionDTOConverter();
+		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
 		try {
 			for (LayoutPageTemplateEntry layoutPageTemplateEntry :
@@ -207,7 +221,7 @@ public class LayoutPageTemplatesExporter {
 
 				_populatePageTemplatesZipWriter(
 					layoutPageTemplateEntry, layoutPageTemplateCollectionKeyMap,
-					zipWriter);
+					pageDefinitionDTOConverter, zipWriter);
 			}
 
 			return zipWriter.getFile();
@@ -215,6 +229,36 @@ public class LayoutPageTemplatesExporter {
 		catch (Exception exception) {
 			throw new PortletException(exception);
 		}
+	}
+
+	private DTOConverterContext _getDTOConverterContext(
+		Layout layout, LayoutStructure layoutStructure) {
+
+		DTOConverterContext dtoConverterContext =
+			new DefaultDTOConverterContext(
+				_dtoConverterRegistry, layoutStructure.getMainItemId(), null,
+				null, null);
+
+		dtoConverterContext.setAttribute("layout", layout);
+
+		return dtoConverterContext;
+	}
+
+	private LayoutStructure _getLayoutStructure(Layout layout) {
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			_layoutPageTemplateStructureLocalService.
+				fetchLayoutPageTemplateStructure(
+					layout.getGroupId(), layout.getPlid());
+
+		return LayoutStructure.of(layoutPageTemplateStructure.getData(0L));
+	}
+
+	private DTOConverter<LayoutStructure, PageDefinition>
+		_getPageDefinitionDTOConverter() {
+
+		return (DTOConverter<LayoutStructure, PageDefinition>)
+			_dtoConverterRegistry.getDTOConverter(
+				LayoutStructure.class.getName());
 	}
 
 	private FileEntry _getPreviewFileEntry(long previewFileEntryId) {
@@ -237,6 +281,8 @@ public class LayoutPageTemplatesExporter {
 
 	private void _populateDisplayPagesZipWriter(
 			LayoutPageTemplateEntry layoutPageTemplateEntry,
+			DTOConverter<LayoutStructure, PageDefinition>
+				pageDefinitionDTOConverter,
 			ZipWriter zipWriter)
 		throws Exception {
 
@@ -263,8 +309,11 @@ public class LayoutPageTemplatesExporter {
 			layoutPageTemplateEntry.getPlid());
 
 		if (layout != null) {
-			PageDefinition pageDefinition = _pageDefinitionDTOConverter.toDTO(
-				layout);
+			LayoutStructure layoutStructure = _getLayoutStructure(layout);
+
+			PageDefinition pageDefinition = pageDefinitionDTOConverter.toDTO(
+				_getDTOConverterContext(layout, layoutStructure),
+				layoutStructure);
 
 			zipWriter.addEntry(
 				displayPagePath + "/page-definition.json",
@@ -306,6 +355,8 @@ public class LayoutPageTemplatesExporter {
 
 	private void _populateMasterLayoutsZipWriter(
 			LayoutPageTemplateEntry layoutPageTemplateEntry,
+			DTOConverter<LayoutStructure, PageDefinition>
+				pageDefinitionDTOConverter,
 			ZipWriter zipWriter)
 		throws Exception {
 
@@ -330,8 +381,11 @@ public class LayoutPageTemplatesExporter {
 			layoutPageTemplateEntry.getPlid());
 
 		if (layout != null) {
-			PageDefinition pageDefinition = _pageDefinitionDTOConverter.toDTO(
-				layout);
+			LayoutStructure layoutStructure = _getLayoutStructure(layout);
+
+			PageDefinition pageDefinition = pageDefinitionDTOConverter.toDTO(
+				_getDTOConverterContext(layout, layoutStructure),
+				layoutStructure);
 
 			zipWriter.addEntry(
 				masterLayoutPath + "/page-definition.json",
@@ -353,6 +407,8 @@ public class LayoutPageTemplatesExporter {
 			LayoutPageTemplateEntry layoutPageTemplateEntry,
 			Map<Long, LayoutPageTemplateCollection>
 				layoutPageTemplateCollectionKeyMap,
+			DTOConverter<LayoutStructure, PageDefinition>
+				pageDefinitionDTOConverter,
 			ZipWriter zipWriter)
 		throws Exception {
 
@@ -396,8 +452,11 @@ public class LayoutPageTemplatesExporter {
 			layoutPageTemplateEntry.getPlid());
 
 		if (layout != null) {
-			PageDefinition pageDefinition = _pageDefinitionDTOConverter.toDTO(
-				layout);
+			LayoutStructure layoutStructure = _getLayoutStructure(layout);
+
+			PageDefinition pageDefinition = pageDefinitionDTOConverter.toDTO(
+				_getDTOConverterContext(layout, layoutStructure),
+				layoutStructure);
 
 			zipWriter.addEntry(
 				layoutPageTemplateEntryPath + "/page-definition.json",
@@ -433,14 +492,7 @@ public class LayoutPageTemplatesExporter {
 	};
 
 	@Reference
-	private FragmentCollectionContributorTracker
-		_fragmentCollectionContributorTracker;
-
-	@Reference
-	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
-
-	@Reference
-	private FragmentRendererTracker _fragmentRendererTracker;
+	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -454,6 +506,7 @@ public class LayoutPageTemplatesExporter {
 		_layoutPageTemplateEntryLocalService;
 
 	@Reference
-	private PageDefinitionDTOConverter _pageDefinitionDTOConverter;
+	private LayoutPageTemplateStructureLocalService
+		_layoutPageTemplateStructureLocalService;
 
 }

@@ -25,7 +25,9 @@ export function buildLocalizedItems(defaultLanguageId) {
 }
 
 export function getAssigneeRoles() {
-	return getItem('/o/headless-admin-user/v1.0/roles').then(getItems);
+	return getItem('/o/headless-admin-user/v1.0/roles').then(({items}) =>
+		items.filter(({name}) => name !== 'Owner')
+	);
 }
 
 export function getDataDefinition(dataDefinitionId) {
@@ -38,7 +40,13 @@ export function getFormViews(dataDefinitionId, defaultLanguageId) {
 		PARAMS
 	)
 		.then(getItems)
-		.then(buildLocalizedItems(defaultLanguageId));
+		.then(buildLocalizedItems(defaultLanguageId))
+		.then((formViews) =>
+			formViews.map((formView) => ({
+				...formView,
+				fields: getFormViewFields(formView),
+			}))
+		);
 }
 
 function getItems({items}) {
@@ -65,11 +73,11 @@ export function populateConfigData([
 	appWorkflow.appWorkflowTasks.forEach((task) => {
 		task.appWorkflowDataLayoutLinks = task.appWorkflowDataLayoutLinks.map(
 			(item) => {
-				const {name, ...formView} = formViews.find(
+				const {fields, name} = formViews.find(
 					({id}) => id === item.dataLayoutId
 				);
 
-				return {...item, fields: getFormViewFields(formView), name};
+				return {...item, fields, name};
 			}
 		);
 
@@ -87,12 +95,11 @@ export function populateConfigData([
 	const {appWorkflowStates = [], appWorkflowTasks = []} = appWorkflow;
 	const initialState = appWorkflowStates.find(({initial}) => initial);
 	const finalState = appWorkflowStates.find(({initial}) => !initial);
-	const formView = formViews.find(({id}) => id === app.dataLayoutId);
 
 	const config = {
 		currentStep: initialState,
 		dataObject: dataObjects.find(({id}) => id === app.dataDefinitionId),
-		formView: {...formView, fields: getFormViewFields(formView)},
+		formView: formViews.find(({id}) => id === app.dataLayoutId),
 		listItems: {
 			assigneeRoles,
 			dataObjects,

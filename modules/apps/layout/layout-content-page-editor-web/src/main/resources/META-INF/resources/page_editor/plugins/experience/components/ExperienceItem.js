@@ -14,6 +14,7 @@
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import ClayList from '@clayui/list';
@@ -34,6 +35,7 @@ const ExperienceItem = ({
 	lockedDecreasePriority,
 	lockedIncreasePriority,
 	onDeleteExperience,
+	onDuplicateExperience,
 	onEditExperience,
 	onPriorityDecrease,
 	onPriorityIncrease,
@@ -71,6 +73,9 @@ const ExperienceItem = ({
 		if (confirmed) {
 			onDeleteExperience(experience.segmentsExperienceId);
 		}
+	};
+	const handleExperienceDuplicate = () => {
+		onDuplicateExperience(experience.segmentsExperienceId);
 	};
 	const handleExperimentNavigation = (event) => {
 		event.preventDefault();
@@ -114,6 +119,15 @@ const ExperienceItem = ({
 									{experience.hasLockedSegmentsExperiment && (
 										<ExperienceLockIcon />
 									)}
+
+									{experience.active && (
+										<ClayLabel
+											className="inline-item-after"
+											displayType="success"
+										>
+											{Liferay.Language.get('active')}
+										</ClayLabel>
+									)}
 								</span>
 
 								<span className="text-truncate">
@@ -125,7 +139,7 @@ const ExperienceItem = ({
 
 								{experience.segmentsExperimentStatus && (
 									<div>
-										<span className="font-weight-normal mr-1 text-secondary">
+										<span className="font-weight-normal inline-item-before text-secondary">
 											{Liferay.Language.get('ab-test')}
 										</span>
 
@@ -153,6 +167,7 @@ const ExperienceItem = ({
 					editable={editable}
 					experience={experience}
 					handleExperienceDelete={handleExperienceDelete}
+					handleExperienceDuplicate={handleExperienceDuplicate}
 					handleExperienceEdit={handleExperienceEdit}
 					handleExperimentNavigation={handleExperimentNavigation}
 					handlePriorityDecrease={handlePriorityDecrease}
@@ -169,6 +184,7 @@ const ExperienceActions = ({
 	editable,
 	experience,
 	handleExperienceDelete,
+	handleExperienceDuplicate,
 	handleExperienceEdit,
 	handleExperimentNavigation,
 	handlePriorityDecrease,
@@ -226,6 +242,21 @@ const ExperienceActions = ({
 					/>
 
 					<ClayButtonWithIcon
+						aria-label={Liferay.Language.get(
+							'duplicate-experience'
+						)}
+						borderless
+						className="component-action mx-1"
+						displayType="unstyled"
+						monospaced
+						onClick={handleExperienceDuplicate}
+						outline
+						symbol="copy"
+						title={Liferay.Language.get('duplicate-experience')}
+						type="button"
+					/>
+
+					<ClayButtonWithIcon
 						aria-label={Liferay.Language.get('delete-experience')}
 						borderless
 						className="component-action mx-1"
@@ -269,7 +300,7 @@ const ExperienceLockIcon = () => {
 	const [showtoolTip, setShowtoolTip] = React.useState(false);
 
 	return (
-		<span>
+		<span className="inline-item-after">
 			<ClayIcon
 				className="text-secondary"
 				onMouseEnter={() => setShowtoolTip(true)}
@@ -299,6 +330,7 @@ ExperienceItem.propTypes = {
 	lockedDecreasePriority: PropTypes.bool.isRequired,
 	lockedIncreasePriority: PropTypes.bool.isRequired,
 	onDeleteExperience: PropTypes.func.isRequired,
+	onDuplicateExperience: PropTypes.func.isRequired,
 	onEditExperience: PropTypes.func.isRequired,
 	onPriorityDecrease: PropTypes.func.isRequired,
 	onPriorityIncrease: PropTypes.func.isRequired,

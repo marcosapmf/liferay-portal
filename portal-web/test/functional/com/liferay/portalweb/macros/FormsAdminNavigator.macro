@@ -94,14 +94,14 @@ definition {
 	}
 
 	macro gotoFormBuilder {
-		var key_assetTitle = "Form";
+		var key_navigationBarItem = "Form";
 
 		WaitForElementPresent(
-			locator1 = "NavBar#ASSET_TITLE",
+			locator1 = "FormsAdmin#FORMS_NAVIGATION_BAR_ITEM",
 			value1 = "Form");
 
 		AssertClick(
-			locator1 = "NavBar#ASSET_TITLE",
+			locator1 = "FormsAdmin#FORMS_NAVIGATION_BAR_ITEM",
 			value1 = "Form");
 	}
 
@@ -140,14 +140,14 @@ definition {
 	}
 
 	macro gotoRules {
-		var key_assetTitle = "Rules";
+		var key_navigationBarItem = "Rules";
 
 		WaitForElementPresent(
-			locator1 = "NavBar#ASSET_TITLE",
+			locator1 = "FormsAdmin#FORMS_NAVIGATION_BAR_ITEM",
 			value1 = "Rules");
 
 		AssertClick(
-			locator1 = "NavBar#ASSET_TITLE",
+			locator1 = "FormsAdmin#FORMS_NAVIGATION_BAR_ITEM",
 			value1 = "Rules");
 	}
 
@@ -166,12 +166,7 @@ definition {
 	}
 
 	macro gotoViewEntries {
-		if (IsElementNotPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS")) {
-			AssertElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS_IE");
-		}
-		else {
-			AssertElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
-		}
+		AssertElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
 
 		LexiconEntry.gotoEllipsisMenuItem(menuItem = "View Entries");
 	}

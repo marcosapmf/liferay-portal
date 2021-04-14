@@ -90,7 +90,6 @@ definition {
 		SiteTemplates.addCP(siteTemplateName = "Digital Class Room");
 
 		for (var pageName : list "Courses,Student Boards,Materials") {
-
 			SiteTemplates.addSitePageViaSiteTemplateCP(
 				pageName = "${pageName}",
 				siteTemplateName = "Digital Class Room");
@@ -308,7 +307,7 @@ definition {
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
-		Organization.addMemberCP(
+		Organization.assignUser(
 			orgName = "Site Organization Name",
 			userFirstName = "Test",
 			userLastName = "Test",
@@ -571,7 +570,9 @@ definition {
 
 		Navigator.openSpecificURL(url = "http://www.baker.com:8080/");
 
-		User.editEmailViaMyAccount(userEmailAddress = PropsUtil.get("email.address.4"));
+		Navigator.gotoAccountSettings();
+
+		User.editUserInformation(userEmailAddressEdit = PropsUtil.get("email.address.4"));
 
 		Gmail.logoutAndLogin(
 			userEmailAddress = PropsUtil.get("email.address.4"),
@@ -588,7 +589,7 @@ definition {
 
 		Click(locator1 = "Gmail#EMAIL_ADDRESS_VERIFICATION_URL");
 
-		SelectWindow(locator1 = "title=Verify Email Address - ${siteName}");
+		SelectWindow(locator1 = "title=Verify Email Address - Site Name - ${siteName}");
 
 		AssertLocation(value1 = "${emailAddressVerificationURL}");
 
@@ -601,6 +602,7 @@ definition {
 	test SiteFriendlyURLLayoutImporter {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property testray.component.names = "Site Administration";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		UserGroup.openUserGroupsAdmin();
@@ -1074,6 +1076,7 @@ definition {
 	@priority = "4"
 	test ViewSiteLogo {
 		property portal.upstream = "true";
+
 		JSONGroup.addGroup(groupName = "Site Name");
 
 		JSONLayout.addPublicLayout(

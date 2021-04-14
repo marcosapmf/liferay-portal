@@ -14,10 +14,11 @@
 
 package com.liferay.dynamic.data.mapping.web.internal.info.field.converter;
 
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.info.field.converter.DDMFormFieldInfoFieldConverter;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.dynamic.data.mapping.storage.constants.FieldConstants;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
@@ -70,22 +71,28 @@ public class DDMFormFieldInfoFieldConverterImpl
 		DDMFormField ddmFormField, InfoField.FinalStep finalStep) {
 
 		if (Objects.equals(
-				ddmFormField.getType(), DDMFormFieldType.CHECKBOX_MULTIPLE)) {
+				ddmFormField.getType(),
+				DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE)) {
 
 			finalStep.attribute(SelectInfoFieldType.MULTIPLE, true);
 		}
 
-		if (Objects.equals(ddmFormField.getType(), DDMFormFieldType.DECIMAL)) {
+		if (Objects.equals(
+				ddmFormField.getType(), DDMFormFieldTypeConstants.NUMERIC) &&
+			Objects.equals(ddmFormField.getDataType(), FieldConstants.DOUBLE)) {
+
 			finalStep.attribute(NumberInfoFieldType.DECIMAL, true);
 		}
 
-		if (Objects.equals(ddmFormField.getType(), DDMFormFieldType.SELECT) &&
+		if (Objects.equals(
+				ddmFormField.getType(), DDMFormFieldTypeConstants.SELECT) &&
 			GetterUtil.getBoolean(ddmFormField.getProperty("multiple"))) {
 
 			finalStep.attribute(SelectInfoFieldType.MULTIPLE, true);
 		}
 
-		if (Objects.equals(ddmFormField.getType(), DDMFormFieldType.TEXT) &&
+		if (Objects.equals(
+				ddmFormField.getType(), DDMFormFieldTypeConstants.TEXT) &&
 			Objects.equals(
 				ddmFormField.getProperty("displayStyle"), "multiline")) {
 
@@ -93,19 +100,8 @@ public class DDMFormFieldInfoFieldConverterImpl
 		}
 
 		if (Objects.equals(
-				ddmFormField.getType(), DDMFormFieldType.TEXT_AREA)) {
+				ddmFormField.getType(), DDMFormFieldTypeConstants.RICH_TEXT)) {
 
-			finalStep.attribute(TextInfoFieldType.MULTILINE, true);
-		}
-
-		if (Objects.equals(
-				ddmFormField.getType(), DDMFormFieldType.TEXT_HTML)) {
-
-			finalStep.attribute(TextInfoFieldType.HTML, true);
-			finalStep.attribute(TextInfoFieldType.MULTILINE, true);
-		}
-
-		if (Objects.equals(ddmFormField.getType(), "rich_text")) {
 			finalStep.attribute(TextInfoFieldType.HTML, true);
 			finalStep.attribute(TextInfoFieldType.MULTILINE, true);
 		}
@@ -116,36 +112,43 @@ public class DDMFormFieldInfoFieldConverterImpl
 	private InfoFieldType _getInfoFieldType(DDMFormField ddmFormField) {
 		String ddmFormFieldType = ddmFormField.getType();
 
-		if (Objects.equals(ddmFormFieldType, DDMFormFieldType.CHECKBOX)) {
+		if (Objects.equals(
+				ddmFormFieldType, DDMFormFieldTypeConstants.CHECKBOX)) {
+
 			return BooleanInfoFieldType.INSTANCE;
 		}
 		else if (Objects.equals(
-					ddmFormFieldType, DDMFormFieldType.CHECKBOX_MULTIPLE) ||
-				 Objects.equals(ddmFormFieldType, DDMFormFieldType.SELECT)) {
+					ddmFormFieldType,
+					DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE) ||
+				 Objects.equals(
+					 ddmFormFieldType, DDMFormFieldTypeConstants.SELECT)) {
 
 			return SelectInfoFieldType.INSTANCE;
 		}
-		else if (Objects.equals(ddmFormFieldType, DDMFormFieldType.DATE) ||
+		else if (Objects.equals(
+					ddmFormFieldType, DDMFormFieldTypeConstants.DATE) ||
 				 Objects.equals(ddmFormFieldType, "date")) {
 
 			return DateInfoFieldType.INSTANCE;
 		}
-		else if (Objects.equals(ddmFormFieldType, "ddm-image") ||
-				 Objects.equals(ddmFormFieldType, "image")) {
+		else if (Objects.equals(
+					ddmFormFieldType, DDMFormFieldTypeConstants.IMAGE)) {
 
 			return ImageInfoFieldType.INSTANCE;
 		}
-		else if (Objects.equals(ddmFormFieldType, DDMFormFieldType.DECIMAL) ||
-				 Objects.equals(ddmFormFieldType, DDMFormFieldType.INTEGER) ||
-				 Objects.equals(ddmFormFieldType, DDMFormFieldType.NUMERIC) ||
-				 Objects.equals(ddmFormFieldType, DDMFormFieldType.NUMBER)) {
+		else if (Objects.equals(
+					ddmFormFieldType, DDMFormFieldTypeConstants.NUMERIC)) {
 
 			return NumberInfoFieldType.INSTANCE;
 		}
-		else if (Objects.equals(ddmFormFieldType, DDMFormFieldType.GRID)) {
+		else if (Objects.equals(
+					ddmFormFieldType, DDMFormFieldTypeConstants.GRID)) {
+
 			return GridInfoFieldType.INSTANCE;
 		}
-		else if (Objects.equals(ddmFormFieldType, DDMFormFieldType.RADIO)) {
+		else if (Objects.equals(
+					ddmFormFieldType, DDMFormFieldTypeConstants.RADIO)) {
+
 			return RadioInfoFieldType.INSTANCE;
 		}
 

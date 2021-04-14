@@ -1,9 +1,9 @@
 definition {
 
 	macro activatePaymentMethod {
-		Click(
-			key_entryName = "${paymentMethod}",
-			locator1 = "CommerceEntry#TABLE_LIST_TITLE");
+		CommerceEntry.clickTableEntryEditButton(
+			entryName = "${paymentMethod}",
+			table = "Payment Methods");
 
 		SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 

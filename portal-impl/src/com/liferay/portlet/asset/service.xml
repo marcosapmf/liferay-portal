@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.3.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_3_0.dtd">
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.4.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_4_0.dtd">
 
 <service-builder api-package-path="com.liferay.asset.kernel" auto-import-default-references="false" change-tracking-enabled="true" mvcc-enabled="true" package-path="com.liferay.portlet.asset">
 	<namespace>Asset</namespace>
@@ -31,10 +31,6 @@
 		<column name="vocabularyId" type="long" />
 		<column name="lastPublishDate" type="Date" />
 
-		<!-- Relationships -->
-
-		<column entity="AssetEntry" mapping-table="AssetEntries_AssetCategories" name="entries" type="Collection" />
-
 		<!-- Order -->
 
 		<order by="asc">
@@ -57,7 +53,7 @@
 			<finder-column name="parentCategoryId" />
 		</finder>
 		<finder name="G_V" return-type="Collection">
-			<finder-column name="groupId" />
+			<finder-column arrayable-operator="OR" name="groupId" />
 			<finder-column arrayable-operator="OR" name="vocabularyId" />
 		</finder>
 		<finder name="P_N" return-type="Collection">
@@ -83,7 +79,7 @@
 			<finder-column name="vocabularyId" />
 		</finder>
 		<finder name="G_LikeN_V" return-type="Collection">
-			<finder-column name="groupId" />
+			<finder-column arrayable-operator="OR" name="groupId" />
 			<finder-column case-sensitive="false" comparator="LIKE" name="name" />
 			<finder-column arrayable-operator="OR" name="vocabularyId" />
 		</finder>
@@ -98,7 +94,6 @@
 		<reference entity="ClassName" package-path="com.liferay.portal" />
 		<reference entity="Resource" package-path="com.liferay.portal" />
 		<reference entity="User" package-path="com.liferay.portal" />
-		<reference entity="AssetEntry" package-path="com.liferay.portlet.asset" />
 		<reference entity="AssetVocabulary" package-path="com.liferay.portlet.asset" />
 	</entity>
 	<entity deprecated="true" local-service="true" name="AssetCategoryProperty" remote-service="true">
@@ -186,7 +181,6 @@
 
 		<!-- Relationships -->
 
-		<column entity="AssetCategory" mapping-table="AssetEntries_AssetCategories" name="categories" type="Collection" />
 		<column entity="AssetTag" mapping-table="AssetEntries_AssetTags" name="tags" type="Collection" />
 
 		<!-- Finder methods -->
@@ -411,6 +405,7 @@
 
 		<!-- References -->
 
+		<reference entity="ClassName" package-path="com.liferay.portal" />
 		<reference entity="Group" package-path="com.liferay.portal" />
 		<reference entity="Resource" package-path="com.liferay.portal" />
 		<reference entity="User" package-path="com.liferay.portal" />

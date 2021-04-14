@@ -1,11 +1,11 @@
 @component-name = "portal-authentication-ee"
 definition {
 
-	property portal.release = "true";
-	property portal.upstream = "true";
 	property app.server.bundles.size = "1";
 	property databases.size = "1";
 	property dummy.socket.proxy.disabled = "true";
+	property portal.release = "true";
+	property portal.upstream = "true";
 	property test.run.environment = "EE";
 	property testray.main.component.name = "SAML";
 
@@ -167,7 +167,7 @@ definition {
 			panel = "Control Panel",
 			portlet = "SAML Admin");
 
-		MouseOver(locator1 = "Icon#TOOLTIP");
+		Click(locator1 = "Icon#TOOLTIP");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#TOOLTIP",
@@ -273,7 +273,7 @@ definition {
 
 		Navigator.gotoAccountSettings();
 
-		User.editDetailsViaMyAccount(userFirstNameEdit = "Testedit");
+		User.editUserInformation(userFirstNameEdit = "Testedit");
 
 		Navigator.openSpecificURL(url = "http://www.able.com:9080");
 
@@ -600,6 +600,7 @@ definition {
 
 	@priority = "4"
 	test AssertSSOWithSignAuthnRequests {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "SAML#AssertSSOWithSignAuthnRequests";
 
 		SAML.configureLiferaySAMLAsIdP(samlEntityID = "samlidp");
@@ -986,10 +987,14 @@ definition {
 
 		User.viewLoggedOutPG();
 
-		User.loginPG(
-			password = "test",
-			specificURL = "http://www.able.com:9080",
-			userEmailAddress = "test@liferay.com");
+		Navigator.openSpecificURL(url = "http://www.able.com:9080");
+
+		if (IsElementNotPresent(locator1 = "UserBar#USER_AVATAR_IMAGE")) {
+			User.loginPG(
+				password = "test",
+				specificURL = "http://www.able.com:9080",
+				userEmailAddress = "test@liferay.com");
+		}
 	}
 
 	@priority = "4"
@@ -1090,55 +1095,6 @@ definition {
 			webContentTitle = "Web Content Title 2");
 
 		PortletEntry.publish();
-	}
-
-	@description = "This is a use case for LPS-110450."
-	@priority = "5"
-	test VerifyErrorMessageInSaas {
-		property osgi.modules.includes = "saml-saas";
-		property test.name.skip.portal.instance = "SAML#VerifyErrorMessageInSaas";
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "System Settings");
-
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "SSO",
-			configurationName = "SAML Configuration",
-			configurationScope = "System Scope");
-
-		FormFields.disableCheckbox(fieldName = "Enable Identity Provider Role To Be Configured");
-
-		SystemSettings.saveConfiguration();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
-
-		PortalInstances.addCP(
-			mailDomain = "www.able.com",
-			virtualHost = "www.able.com",
-			webId = "www.able.com");
-
-		PortalInstances.viewCP(virtualHost = "www.able.com");
-
-		User.firstLoginPG(
-			password = "test",
-			userEmailAddress = "test@www.able.com",
-			virtualHostsURL = "http://www.able.com:8080");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Security",
-			panel = "Control Panel",
-			portlet = "SAML Admin");
-
-		MouseOver(locator1 = "Icon#TOOLTIP");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#TOOLTIP",
-			value1 = "Identity provider is not supported in SaaS mode, so the role has been disabled.");
 	}
 
 	@description = "Sign into portal by executing a IdP initiated SSO login. After a successful login, the IdP will redirect to the SP. If the same users with the same email address are present on both instances, it will authenticate and show the SP. SAML can authenticate across major portal versions, that is, the IdP can be Portal 6.1 EE GA3 and the SP can be Portal 6.2. EE GA1. For testing purposes, it is obvious if the authentication succeeds or fails if the IdP and SP are different portal versions."

@@ -29,7 +29,8 @@ public class PoshiEmptyLinesCheck extends BaseFileCheck {
 	protected String doProcess(
 		String fileName, String absolutePath, String content) {
 
-		content = content.replaceAll("\n(\n\t\\})", "$1");
+		content = content.replaceAll("(\\{\n)\n+(?!\t*/[/\\*])", "$1");
+		content = content.replaceAll("\n(\n\t+\\})", "$1");
 		content = content.replaceAll(
 			"(?<!\n)(\n\t(?!else|if)\\w+ \\{)", "\n$1");
 

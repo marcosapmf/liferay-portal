@@ -14,6 +14,8 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.io.IOException;
+
 import java.net.URL;
 
 import java.util.List;
@@ -57,6 +59,8 @@ public interface Build {
 
 	public int getBuildNumber();
 
+	public Job.BuildProfile getBuildProfile();
+
 	public String getBuildURL();
 
 	public String getBuildURLRegex();
@@ -86,6 +90,9 @@ public interface Build {
 	public Element getGitHubMessageElement();
 
 	public Element getGitHubMessageUpstreamJobFailureElement();
+
+	public Map<String, String> getInjectedEnvironmentVariablesMap()
+		throws IOException;
 
 	public String getInvocationURL();
 
@@ -187,6 +194,10 @@ public interface Build {
 
 	public boolean isBuildModified();
 
+	public boolean isCompareToUpstream();
+
+	public boolean isCompleted();
+
 	public boolean isFromArchive();
 
 	public boolean isFromCompletedBuild();
@@ -196,6 +207,8 @@ public interface Build {
 	public void reinvoke();
 
 	public void reinvoke(ReinvokeRule reinvokeRule);
+
+	public void removeDownstreamBuild(Build build);
 
 	public String replaceBuildURL(String text);
 

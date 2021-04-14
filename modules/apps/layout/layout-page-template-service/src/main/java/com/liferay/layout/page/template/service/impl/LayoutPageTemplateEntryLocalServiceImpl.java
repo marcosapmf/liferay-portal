@@ -26,6 +26,7 @@ import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryNameException;
+import com.liferay.layout.page.template.exception.NoSuchPageTemplateEntryException;
 import com.liferay.layout.page.template.internal.validator.LayoutPageTemplateEntryValidator;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.base.LayoutPageTemplateEntryLocalServiceBaseImpl;
@@ -608,6 +609,15 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 	}
 
 	@Override
+	public LayoutPageTemplateEntry getLayoutPageTemplateEntry(
+			long groupId, String layoutPageTemplateEntryKey)
+		throws NoSuchPageTemplateEntryException {
+
+		return layoutPageTemplateEntryPersistence.findByG_LPTEK(
+			groupId, layoutPageTemplateEntryKey);
+	}
+
+	@Override
 	public LayoutPageTemplateEntry updateLayoutPageTemplateEntry(
 		long layoutPageTemplateEntryId, boolean defaultTemplate) {
 
@@ -736,7 +746,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
 			draftLayout.getType(), draftLayout.isHidden(),
 			draftLayout.getFriendlyURLMap(), draftLayout.getIconImage(), null,
-			serviceContext);
+			0, 0, serviceContext);
 
 		return layoutPageTemplateEntry;
 	}
@@ -959,8 +969,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		Layout layout = layoutLocalService.addLayout(
 			userId, groupId, privateLayout, 0, 0, 0, titleMap, titleMap, null,
-			null, null, layoutType, typeSettings, true, true, masterLayoutPlid,
-			new HashMap<>(), serviceContext);
+			null, null, layoutType, typeSettings, true, true, new HashMap<>(),
+			masterLayoutPlid, serviceContext);
 
 		serviceContext.setModifiedDate(layout.getModifiedDate());
 
@@ -970,7 +980,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			layout.getPlid(), layout.getNameMap(), titleMap,
 			layout.getDescriptionMap(), layout.getKeywordsMap(),
 			layout.getRobotsMap(), layoutType, layout.getTypeSettings(), true,
-			true, masterLayoutPlid, Collections.emptyMap(), serviceContext);
+			true, Collections.emptyMap(), masterLayoutPlid, serviceContext);
 
 		if ((type == LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT) ||
 			(masterLayoutPlid > 0)) {

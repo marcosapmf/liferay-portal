@@ -5,15 +5,17 @@
 		<fileSet filtered="true">
 			<directory></directory>
 			<includes>
-				<include>configs/**</include>
-				<include>modules/pom.xml</include>
-				<include>themes/pom.xml</include>
 				<include>.gitignore</include>
+				<include>Dockerfile.ext</include>
+				<include>GETTING_STARTED.markdown</include>
 				<include>build.gradle</include>
-				<include>gradle.properties</include>
+				<include>configs/**</include>
 				<include>gradle-local.properties</include>
+				<include>gradle.properties</include>
+				<include>modules/pom.xml</include>
 				<include>platform.bndrun</include>
 				<include>settings.gradle</include>
+				<include>themes/pom.xml</include>
 			</includes>
 		</fileSet>
 	</fileSets>

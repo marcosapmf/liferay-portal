@@ -36,7 +36,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 
 <portlet:actionURL name="/monitoring/edit_session" var="editSessionURL" />
 
-<aui:form action="<%= editSessionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= editSessionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="sessionId" type="hidden" value="<%= sessionId %>" />
 
@@ -214,6 +214,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 		</c:otherwise>
 	</c:choose>
 </aui:form>
+
 <%!
-	private static Log _log = LogFactoryUtil.getLog("com_liferay_monitoring_web.edit_session_jsp");
+private static Log _log = LogFactoryUtil.getLog("com_liferay_monitoring_web.edit_session_jsp");
 %>

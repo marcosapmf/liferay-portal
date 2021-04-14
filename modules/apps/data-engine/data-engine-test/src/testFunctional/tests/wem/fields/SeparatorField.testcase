@@ -1,0 +1,221 @@
+@component-name = "portal-wcm"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Web Content Administration";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "Test");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		WebContentStructures.deleteCP(structureName = "Test");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+		}
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test AddSeparatorOnFormByDragAndDrop {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 AddSeparatorOnFormByDragAndDrop pending implementation
+
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test DeleteSeparatorOnBuilder {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 DeleteSeparatorOnBuilder pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test DeleteSeparatorOnSidebar {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 DeleteSeparatorOnSidebar pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "4"
+	test DuplicateSeparatorOnBuilder {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 DuplicateSeparatorOnBuilder pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "4"
+	test DuplicateSeparatorOnSidebar {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 DuplicateSeparatorOnSidebar pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "5"
+	test EditHelpTextOfSeparator {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Test",
+			fieldName = "Separator");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Test",
+			fieldHelp = "Choose as many content pieces as you would like to feature.");
+
+		Button.clickSave();
+
+		WebContentStructures.editStructure(structureName = "Test");
+
+		DataEngine.viewFieldHelpText(
+			fieldFieldLabel = "Test",
+			fieldHelp = "Choose as many content pieces as you would like to feature.",
+			fieldName = "Separator");
+
+		Button.clickSave();
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "5"
+	test EditLabelOfSeparator {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Test",
+			fieldName = "Separator");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Test",
+			label = "Edited label");
+
+		Button.clickSave();
+
+		WebContentStructures.editStructure(structureName = "Test");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Edited label",
+			fieldName = "Separator");
+
+		Button.clickSave();
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test EditReferenceOfSeparator {
+		property portal.acceptance = "false";
+
+		DataEngine.addField(
+			fieldFieldLabel = "Test",
+			fieldName = "Separator");
+
+		DataEngine.editFieldReference(
+			fieldFieldLabel = "Test",
+			fieldName = "Separator",
+			fieldReference = "Minhareferencia123");
+
+		Button.clickSave();
+
+		WebContentStructures.editStructure(structureName = "Test");
+
+		DataEngine.viewFieldReference(
+			fieldFieldLabel = "Test",
+			fieldName = "Separator",
+			fieldReference = "Minhareferencia123");
+
+		Button.clickSave();
+
+		// TODO LPS-98081 EditReferenceOfSeparator pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "4"
+	test EditReferenceOfSeparatorWithInvalidCharacters {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 EditReferenceOfSeparatorWithInvalidCharacters pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "5"
+	test RepeatSeparatorOnWebContent {
+		DataEngine.addField(
+			fieldFieldLabel = "Separator",
+			fieldName = "Separator");
+
+		DataEngine.editFieldRepeatable(fieldFieldLabel = "Separator");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Test");
+
+		WebContent.addCP(webContentTitle = "Web Content Title");
+
+		DataEngine.addRepeatableField(fieldName = "Separator");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		for (var n : list "1,2") {
+			WebContent.assertFieldRepeated(
+				fieldReference = "Separator",
+				index = "${n}");
+		}
+
+		AssertVisible(
+			key_fieldReference = "Separator",
+			key_index = "2",
+			locator1 = "FormFields#FIELD_REMOVE");
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "4"
+	test SetSeparatorRepeatable {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 SetSeparatorRepeatable pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "3"
+	test ShowAndHideSeparatorLabel {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 ShowAndHideSeparatorLabel pending implementation
+	}
+
+}

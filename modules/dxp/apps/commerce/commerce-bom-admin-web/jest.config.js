@@ -9,7 +9,6 @@
  * distribution rights of the Software.
  */
 
-// eslint-disable-next-line no-undef
 module.exports = {
 	setupFilesAfterEnv: ['./setupTests.js'],
 	testMatch: ['./test'],

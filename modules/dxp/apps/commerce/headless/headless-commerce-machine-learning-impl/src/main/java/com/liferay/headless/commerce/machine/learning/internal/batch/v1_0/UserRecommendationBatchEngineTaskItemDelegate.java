@@ -18,8 +18,8 @@ import com.liferay.batch.engine.BaseBatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
-import com.liferay.commerce.machine.learning.recommendation.model.UserCommerceMLRecommendation;
-import com.liferay.commerce.machine.learning.recommendation.service.UserCommerceMLRecommendationService;
+import com.liferay.commerce.machine.learning.recommendation.UserCommerceMLRecommendation;
+import com.liferay.commerce.machine.learning.recommendation.UserCommerceMLRecommendationManager;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.UserRecommendation;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -44,24 +44,27 @@ public class UserRecommendationBatchEngineTaskItemDelegate
 
 	@Override
 	public void createItem(
-			UserRecommendation item, Map<String, Serializable> parameters)
+			UserRecommendation userRecommendation,
+			Map<String, Serializable> parameters)
 		throws Exception {
 
 		UserCommerceMLRecommendation userCommerceMLRecommendation =
-			_userCommerceMLRecommendationService.create();
+			_userCommerceMLRecommendationManager.create();
 
 		userCommerceMLRecommendation.setAssetCategoryIds(
-			ArrayUtil.toArray(item.getAssetCategoryIds()));
+			ArrayUtil.toArray(userRecommendation.getAssetCategoryIds()));
 		userCommerceMLRecommendation.setCompanyId(
 			contextCompany.getCompanyId());
-		userCommerceMLRecommendation.setCreateDate(item.getCreateDate());
-		userCommerceMLRecommendation.setEntryClassPK(item.getProductId());
-		userCommerceMLRecommendation.setJobId(item.getJobId());
+		userCommerceMLRecommendation.setCreateDate(
+			userRecommendation.getCreateDate());
+		userCommerceMLRecommendation.setEntryClassPK(
+			userRecommendation.getProductId());
+		userCommerceMLRecommendation.setJobId(userRecommendation.getJobId());
 		userCommerceMLRecommendation.setRecommendedEntryClassPK(
-			item.getRecommendedProductId());
-		userCommerceMLRecommendation.setScore(item.getScore());
+			userRecommendation.getRecommendedProductId());
+		userCommerceMLRecommendation.setScore(userRecommendation.getScore());
 
-		_userCommerceMLRecommendationService.addUserCommerceMLRecommendation(
+		_userCommerceMLRecommendationManager.addUserCommerceMLRecommendation(
 			userCommerceMLRecommendation);
 	}
 
@@ -75,7 +78,7 @@ public class UserRecommendationBatchEngineTaskItemDelegate
 	}
 
 	@Reference
-	private UserCommerceMLRecommendationService
-		_userCommerceMLRecommendationService;
+	private UserCommerceMLRecommendationManager
+		_userCommerceMLRecommendationManager;
 
 }

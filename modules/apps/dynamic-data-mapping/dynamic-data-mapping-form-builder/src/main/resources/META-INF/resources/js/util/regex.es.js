@@ -12,6 +12,6 @@
  * details.
  */
 
-export const DEFAULT_FIELD_NAME_REGEX = /^Field[0-9]{8}$/;
+export const DEFAULT_FIELD_NAME_REGEX = /^[a-zA-Z]+\d{8}$/;
 
-export const EMPTY_FIELD_REGEX = /\[\]/g;
+export const DEFAULT_FIELD_NAMES_REGEX_FOR_EXPRESSION = /[a-zA-Z]+\d{8}/g;

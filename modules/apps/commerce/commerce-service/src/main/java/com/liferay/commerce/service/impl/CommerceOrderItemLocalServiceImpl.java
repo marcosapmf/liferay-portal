@@ -32,7 +32,7 @@ import com.liferay.commerce.inventory.model.CommerceInventoryBookedQuantity;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem;
 import com.liferay.commerce.inventory.service.CommerceInventoryBookedQuantityLocalService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemLocalService;
-import com.liferay.commerce.inventory.type.CommerceInventoryAuditTypeConstants;
+import com.liferay.commerce.inventory.type.constants.CommerceInventoryAuditTypeConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderValidatorRegistry;
@@ -91,7 +91,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -108,8 +107,8 @@ public class CommerceOrderItemLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem addCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, int quantity,
-			int shippedQuantity, String json, CommerceContext commerceContext,
+			long commerceOrderId, long cpInstanceId, String json, int quantity,
+			int shippedQuantity, CommerceContext commerceContext,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -128,8 +127,8 @@ public class CommerceOrderItemLocalServiceImpl
 		User user = userLocalService.getUser(serviceContext.getUserId());
 
 		CommerceOrderItem commerceOrderItem = _createCommerceOrderItem(
-			commerceOrder.getGroupId(), user, commerceOrder, cpInstance, json,
-			0, quantity, shippedQuantity, commerceContext, serviceContext);
+			commerceOrder.getGroupId(), user, commerceOrder, cpInstance, 0,
+			json, quantity, shippedQuantity, commerceContext, serviceContext);
 
 		commerceOrderItem = commerceOrderItemPersistence.update(
 			commerceOrderItem);
@@ -157,8 +156,9 @@ public class CommerceOrderItemLocalServiceImpl
 
 			CommerceOrderItem childCommerceOrderItem = _createCommerceOrderItem(
 				commerceOrder.getGroupId(), user, commerceOrder,
-				commerceOptionValueCPInstance, commerceOptionValue.toJSON(),
-				commerceOrderItem.getCommerceOrderItemId(), currentQuantity, 0,
+				commerceOptionValueCPInstance,
+				commerceOrderItem.getCommerceOrderItemId(),
+				commerceOptionValue.toJSON(), currentQuantity, 0,
 				commerceContext, serviceContext);
 
 			if (!_isStaticPriceType(commerceOptionValue.getPriceType())) {
@@ -431,7 +431,7 @@ public class CommerceOrderItemLocalServiceImpl
 	}
 
 	@Override
-	public BaseModelSearchResult<CommerceOrderItem> search(
+	public BaseModelSearchResult<CommerceOrderItem> searchCommerceOrderItems(
 			long commerceOrderId, long parentCommerceOrderItemId,
 			String keywords, int start, int end, Sort sort)
 		throws PortalException {
@@ -445,7 +445,7 @@ public class CommerceOrderItemLocalServiceImpl
 	}
 
 	@Override
-	public BaseModelSearchResult<CommerceOrderItem> search(
+	public BaseModelSearchResult<CommerceOrderItem> searchCommerceOrderItems(
 			long commerceOrderId, String keywords, int start, int end,
 			Sort sort)
 		throws PortalException {
@@ -459,8 +459,8 @@ public class CommerceOrderItemLocalServiceImpl
 	}
 
 	@Override
-	public BaseModelSearchResult<CommerceOrderItem> search(
-			long commerceOrderId, String sku, String name, boolean andOperator,
+	public BaseModelSearchResult<CommerceOrderItem> searchCommerceOrderItems(
+			long commerceOrderId, String name, String sku, boolean andOperator,
 			int start, int end, Sort sort)
 		throws PortalException {
 
@@ -484,14 +484,27 @@ public class CommerceOrderItemLocalServiceImpl
 			commerceOrderItemPersistence.findByPrimaryKey(commerceOrderItemId);
 
 		return commerceOrderItemLocalService.updateCommerceOrderItem(
-			commerceOrderItemId, quantity, commerceOrderItem.getJson(),
+			commerceOrderItemId, commerceOrderItem.getJson(), quantity,
 			commerceContext, serviceContext);
+	}
+
+	@Override
+	public CommerceOrderItem updateCommerceOrderItem(
+			long commerceOrderItemId, long bookedQuantityId)
+		throws NoSuchOrderItemException {
+
+		CommerceOrderItem commerceOrderItem =
+			commerceOrderItemPersistence.findByPrimaryKey(commerceOrderItemId);
+
+		commerceOrderItem.setBookedQuantityId(bookedQuantityId);
+
+		return commerceOrderItemPersistence.update(commerceOrderItem);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, int quantity, String json,
+			long commerceOrderItemId, String json, int quantity,
 			CommerceContext commerceContext, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -557,19 +570,6 @@ public class CommerceOrderItemLocalServiceImpl
 			serviceContext);
 	}
 
-	@Override
-	public CommerceOrderItem updateCommerceOrderItem(
-			long commerceOrderItemId, long bookedQuantityId)
-		throws NoSuchOrderItemException {
-
-		CommerceOrderItem commerceOrderItem =
-			commerceOrderItemPersistence.findByPrimaryKey(commerceOrderItemId);
-
-		commerceOrderItem.setBookedQuantityId(bookedQuantityId);
-
-		return commerceOrderItemPersistence.update(commerceOrderItem);
-	}
-
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem updateCommerceOrderItemDeliveryDate(
@@ -593,15 +593,15 @@ public class CommerceOrderItemLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem updateCommerceOrderItemInfo(
-			long commerceOrderItemId, String deliveryGroup,
-			long shippingAddressId, String printedNote)
+			long commerceOrderItemId, long shippingAddressId,
+			String deliveryGroup, String printedNote)
 		throws PortalException {
 
 		CommerceOrderItem commerceOrderItem =
 			commerceOrderItemPersistence.findByPrimaryKey(commerceOrderItemId);
 
-		commerceOrderItem.setDeliveryGroup(deliveryGroup);
 		commerceOrderItem.setShippingAddressId(shippingAddressId);
+		commerceOrderItem.setDeliveryGroup(deliveryGroup);
 		commerceOrderItem.setPrintedNote(printedNote);
 
 		return commerceOrderItemPersistence.update(commerceOrderItem);
@@ -610,8 +610,8 @@ public class CommerceOrderItemLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem updateCommerceOrderItemInfo(
-			long commerceOrderItemId, String deliveryGroup,
-			long shippingAddressId, String printedNote,
+			long commerceOrderItemId, long shippingAddressId,
+			String deliveryGroup, String printedNote,
 			int requestedDeliveryDateMonth, int requestedDeliveryDateDay,
 			int requestedDeliveryDateYear)
 		throws PortalException {
@@ -629,8 +629,8 @@ public class CommerceOrderItemLocalServiceImpl
 			throw new CommerceOrderItemRequestedDeliveryDateException();
 		}
 
-		commerceOrderItem.setDeliveryGroup(deliveryGroup);
 		commerceOrderItem.setShippingAddressId(shippingAddressId);
+		commerceOrderItem.setDeliveryGroup(deliveryGroup);
 		commerceOrderItem.setPrintedNote(printedNote);
 		commerceOrderItem.setRequestedDeliveryDate(requestedDeliveryDate);
 
@@ -651,7 +651,7 @@ public class CommerceOrderItemLocalServiceImpl
 		throws PortalException {
 
 		return commerceOrderItemLocalService.updateCommerceOrderItemInfo(
-			commerceOrderItemId, deliveryGroup, shippingAddressId, printedNote,
+			commerceOrderItemId, shippingAddressId, deliveryGroup, printedNote,
 			requestedDeliveryDateMonth, requestedDeliveryDateDay,
 			requestedDeliveryDateYear);
 	}
@@ -715,12 +715,12 @@ public class CommerceOrderItemLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem updateCommerceOrderItemPrices(
-			long commerceOrderItemId, BigDecimal unitPrice,
-			BigDecimal promoPrice, BigDecimal discountAmount,
-			BigDecimal finalPrice, BigDecimal discountPercentageLevel1,
+			long commerceOrderItemId, BigDecimal discountAmount,
+			BigDecimal discountPercentageLevel1,
 			BigDecimal discountPercentageLevel2,
 			BigDecimal discountPercentageLevel3,
-			BigDecimal discountPercentageLevel4)
+			BigDecimal discountPercentageLevel4, BigDecimal finalPrice,
+			BigDecimal promoPrice, BigDecimal unitPrice)
 		throws PortalException {
 
 		CommerceOrderItem commerceOrderItem =
@@ -728,15 +728,15 @@ public class CommerceOrderItemLocalServiceImpl
 
 		validateParentCommerceOrderId(commerceOrderItem);
 
-		commerceOrderItem.setUnitPrice(unitPrice);
-		commerceOrderItem.setPromoPrice(promoPrice);
 		commerceOrderItem.setDiscountAmount(discountAmount);
-		commerceOrderItem.setFinalPrice(finalPrice);
 		commerceOrderItem.setDiscountPercentageLevel1(discountPercentageLevel1);
 		commerceOrderItem.setDiscountPercentageLevel2(discountPercentageLevel2);
 		commerceOrderItem.setDiscountPercentageLevel3(discountPercentageLevel3);
 		commerceOrderItem.setDiscountPercentageLevel4(discountPercentageLevel4);
+		commerceOrderItem.setFinalPrice(finalPrice);
 		commerceOrderItem.setManuallyAdjusted(true);
+		commerceOrderItem.setPromoPrice(promoPrice);
+		commerceOrderItem.setUnitPrice(unitPrice);
 
 		return commerceOrderItemPersistence.update(commerceOrderItem);
 	}
@@ -744,37 +744,29 @@ public class CommerceOrderItemLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommerceOrderItem updateCommerceOrderItemPrices(
-			long commerceOrderItemId, BigDecimal unitPrice,
-			BigDecimal promoPrice, BigDecimal discountAmount,
-			BigDecimal finalPrice, BigDecimal discountPercentageLevel1,
-			BigDecimal discountPercentageLevel2,
-			BigDecimal discountPercentageLevel3,
-			BigDecimal discountPercentageLevel4,
-			BigDecimal unitPriceWithTaxAmount,
-			BigDecimal promoPriceWithTaxAmount,
+			long commerceOrderItemId, BigDecimal discountAmount,
 			BigDecimal discountAmountWithTaxAmount,
-			BigDecimal finalPriceWithTaxAmount,
+			BigDecimal discountPercentageLevel1,
 			BigDecimal discountPercentageLevel1WithTaxAmount,
+			BigDecimal discountPercentageLevel2,
 			BigDecimal discountPercentageLevel2WithTaxAmount,
+			BigDecimal discountPercentageLevel3,
 			BigDecimal discountPercentageLevel3WithTaxAmount,
-			BigDecimal discountPercentageLevel4WithTaxAmount)
+			BigDecimal discountPercentageLevel4,
+			BigDecimal discountPercentageLevel4WithTaxAmount,
+			BigDecimal finalPrice, BigDecimal finalPriceWithTaxAmount,
+			BigDecimal promoPrice, BigDecimal promoPriceWithTaxAmount,
+			BigDecimal unitPrice, BigDecimal unitPriceWithTaxAmount)
 		throws PortalException {
 
 		CommerceOrderItem commerceOrderItem =
 			commerceOrderItemPersistence.findByPrimaryKey(commerceOrderItemId);
 
-		commerceOrderItem.setUnitPrice(unitPrice);
-		commerceOrderItem.setPromoPrice(promoPrice);
 		commerceOrderItem.setDiscountAmount(discountAmount);
-		commerceOrderItem.setFinalPrice(finalPrice);
 		commerceOrderItem.setDiscountPercentageLevel1(discountPercentageLevel1);
 		commerceOrderItem.setDiscountPercentageLevel2(discountPercentageLevel2);
 		commerceOrderItem.setDiscountPercentageLevel3(discountPercentageLevel3);
 		commerceOrderItem.setDiscountPercentageLevel4(discountPercentageLevel4);
-		commerceOrderItem.setUnitPriceWithTaxAmount(unitPriceWithTaxAmount);
-		commerceOrderItem.setPromoPriceWithTaxAmount(promoPriceWithTaxAmount);
-		commerceOrderItem.setDiscountWithTaxAmount(discountAmountWithTaxAmount);
-		commerceOrderItem.setFinalPriceWithTaxAmount(finalPriceWithTaxAmount);
 		commerceOrderItem.setDiscountPercentageLevel1WithTaxAmount(
 			discountPercentageLevel1WithTaxAmount);
 		commerceOrderItem.setDiscountPercentageLevel2WithTaxAmount(
@@ -783,7 +775,14 @@ public class CommerceOrderItemLocalServiceImpl
 			discountPercentageLevel3WithTaxAmount);
 		commerceOrderItem.setDiscountPercentageLevel4WithTaxAmount(
 			discountPercentageLevel4WithTaxAmount);
+		commerceOrderItem.setDiscountWithTaxAmount(discountAmountWithTaxAmount);
+		commerceOrderItem.setFinalPrice(finalPrice);
+		commerceOrderItem.setFinalPriceWithTaxAmount(finalPriceWithTaxAmount);
 		commerceOrderItem.setManuallyAdjusted(true);
+		commerceOrderItem.setPromoPrice(promoPrice);
+		commerceOrderItem.setPromoPriceWithTaxAmount(promoPriceWithTaxAmount);
+		commerceOrderItem.setUnitPrice(unitPrice);
+		commerceOrderItem.setUnitPriceWithTaxAmount(unitPriceWithTaxAmount);
 
 		return commerceOrderItemPersistence.update(commerceOrderItem);
 	}
@@ -807,8 +806,8 @@ public class CommerceOrderItemLocalServiceImpl
 
 	@Override
 	public CommerceOrderItem updateCommerceOrderItemUnitPrice(
-			long userId, long commerceOrderItemId, BigDecimal unitPrice,
-			int quantity)
+			long userId, long commerceOrderItemId, int quantity,
+			BigDecimal unitPrice)
 		throws PortalException {
 
 		CommerceOrderItem commerceOrderItem =
@@ -818,9 +817,9 @@ public class CommerceOrderItemLocalServiceImpl
 			userId, commerceOrderItem, commerceOrderItem.getBookedQuantityId(),
 			quantity, commerceOrderItem.getQuantity());
 
+		commerceOrderItem.setManuallyAdjusted(true);
 		commerceOrderItem.setQuantity(quantity);
 		commerceOrderItem.setUnitPrice(unitPrice);
-		commerceOrderItem.setManuallyAdjusted(true);
 
 		return commerceOrderItemPersistence.update(commerceOrderItem);
 	}
@@ -852,15 +851,14 @@ public class CommerceOrderItemLocalServiceImpl
 			_getCPInstanceOptionValueRelsJSONString(cpInstanceId);
 
 		return commerceOrderItemLocalService.upsertCommerceOrderItem(
-			commerceOrderId, cpInstanceId, quantity, 0,
-			cpInstanceOptionValueRelJSONString, commerceContext,
-			serviceContext);
+			commerceOrderId, cpInstanceId, cpInstanceOptionValueRelJSONString,
+			quantity, 0, commerceContext, serviceContext);
 	}
 
 	@Override
 	public CommerceOrderItem upsertCommerceOrderItem(
-			long commerceOrderId, long cpInstanceId, int quantity,
-			int shippedQuantity, String json, CommerceContext commerceContext,
+			long commerceOrderId, long cpInstanceId, String json, int quantity,
+			int shippedQuantity, CommerceContext commerceContext,
 			ServiceContext serviceContext)
 		throws PortalException {
 
@@ -874,14 +872,14 @@ public class CommerceOrderItemLocalServiceImpl
 
 				return commerceOrderItemLocalService.updateCommerceOrderItem(
 					commerceOrderItem.getCommerceOrderItemId(),
-					commerceOrderItem.getQuantity() + quantity,
-					commerceOrderItem.getJson(), commerceContext,
+					commerceOrderItem.getJson(),
+					commerceOrderItem.getQuantity() + quantity, commerceContext,
 					serviceContext);
 			}
 		}
 
 		return commerceOrderItemLocalService.addCommerceOrderItem(
-			commerceOrderId, cpInstanceId, quantity, 0, json, commerceContext,
+			commerceOrderId, cpInstanceId, json, quantity, 0, commerceContext,
 			serviceContext);
 	}
 
@@ -1051,7 +1049,7 @@ public class CommerceOrderItemLocalServiceImpl
 
 	private CommerceOrderItem _createCommerceOrderItem(
 			long groupId, User user, CommerceOrder commerceOrder,
-			CPInstance cpInstance, String json, long parentCommerceOrderItemId,
+			CPInstance cpInstance, long parentCommerceOrderItemId, String json,
 			int quantity, int shippedQuantity, CommerceContext commerceContext,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -1074,13 +1072,13 @@ public class CommerceOrderItemLocalServiceImpl
 		commerceOrderItem.setUserName(user.getFullName());
 		commerceOrderItem.setCommerceOrderId(
 			commerceOrder.getCommerceOrderId());
-		commerceOrderItem.setCProductId(cpDefinition.getCProductId());
 		commerceOrderItem.setCPInstanceId(cpInstance.getCPInstanceId());
+		commerceOrderItem.setCProductId(cpDefinition.getCProductId());
 		commerceOrderItem.setParentCommerceOrderItemId(
 			parentCommerceOrderItemId);
+		commerceOrderItem.setJson(json);
 		commerceOrderItem.setQuantity(quantity);
 		commerceOrderItem.setShippedQuantity(shippedQuantity);
-		commerceOrderItem.setJson(json);
 
 		CommerceProductPrice commerceProductPrice = _getCommerceProductPrice(
 			cpInstance.getCPDefinitionId(), cpInstance.getCPInstanceId(), json,
@@ -1089,8 +1087,8 @@ public class CommerceOrderItemLocalServiceImpl
 		_setCommerceOrderItemPrice(commerceOrderItem, commerceProductPrice);
 
 		commerceOrderItem.setNameMap(cpDefinition.getNameMap());
-		commerceOrderItem.setSku(cpInstance.getSku());
 		commerceOrderItem.setManuallyAdjusted(false);
+		commerceOrderItem.setSku(cpInstance.getSku());
 		commerceOrderItem.setExpandoBridgeAttributes(serviceContext);
 
 		_setCommerceOrderItemDiscountValue(
@@ -1101,6 +1099,16 @@ public class CommerceOrderItemLocalServiceImpl
 			commerceProductPrice.getDiscountValueWithTaxAmount(), true);
 
 		commerceOrderItem.setSubscription(_isSubscription(cpInstance));
+
+		_setSubscriptionInfo(commerceOrderItem, cpInstance);
+
+		commerceOrderItem.setFreeShipping(cpDefinition.isFreeShipping());
+		commerceOrderItem.setShipSeparately(cpDefinition.isShipSeparately());
+		commerceOrderItem.setShippable(cpDefinition.isShippable());
+		commerceOrderItem.setShippingExtraPrice(
+			cpDefinition.getShippingExtraPrice());
+
+		_setDimensions(commerceOrderItem, cpInstance);
 
 		return commerceOrderItem;
 	}
@@ -1155,12 +1163,9 @@ public class CommerceOrderItemLocalServiceImpl
 		expandoRowLocalService.deleteRows(
 			commerceOrderItem.getCommerceOrderItemId());
 
-		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
-
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		updateWorkflow(commerceOrder, serviceContext);
+		updateWorkflow(
+			commerceOrderItem.getCommerceOrder(),
+			ServiceContextThreadLocal.getServiceContext());
 
 		return commerceOrderItem;
 	}
@@ -1362,7 +1367,6 @@ public class CommerceOrderItemLocalServiceImpl
 		}
 
 		if (includeTax) {
-			commerceOrderItem.setDiscountWithTaxAmount(discountAmount);
 			commerceOrderItem.setDiscountPercentageLevel1WithTaxAmount(
 				discountPercentageLevel1);
 			commerceOrderItem.setDiscountPercentageLevel2WithTaxAmount(
@@ -1371,6 +1375,7 @@ public class CommerceOrderItemLocalServiceImpl
 				discountPercentageLevel3);
 			commerceOrderItem.setDiscountPercentageLevel4WithTaxAmount(
 				discountPercentageLevel4);
+			commerceOrderItem.setDiscountWithTaxAmount(discountAmount);
 		}
 		else {
 			commerceOrderItem.setDiscountAmount(discountAmount);
@@ -1389,49 +1394,51 @@ public class CommerceOrderItemLocalServiceImpl
 		CommerceOrderItem commerceOrderItem,
 		CommerceProductPrice commerceProductPrice) {
 
-		CommerceMoney unitPriceMoney = commerceProductPrice.getUnitPrice();
+		CommerceMoney unitPriceCommerceMoney =
+			commerceProductPrice.getUnitPrice();
 
-		commerceOrderItem.setUnitPrice(unitPriceMoney.getPrice());
+		commerceOrderItem.setUnitPrice(unitPriceCommerceMoney.getPrice());
 
 		BigDecimal promoPrice = BigDecimal.ZERO;
 		BigDecimal promoPriceWithTaxAmount = BigDecimal.ZERO;
 
-		CommerceMoney unitPromoPriceMoney =
+		CommerceMoney unitPromoPriceCommerceMoney =
 			commerceProductPrice.getUnitPromoPrice();
 
-		if (!unitPromoPriceMoney.isEmpty()) {
-			promoPrice = unitPromoPriceMoney.getPrice();
+		if (!unitPromoPriceCommerceMoney.isEmpty()) {
+			promoPrice = unitPromoPriceCommerceMoney.getPrice();
 		}
 
-		CommerceMoney unitPromoMoneyPriceWithTaxAmount =
+		CommerceMoney unitPromoPriceWithTaxAmountCommerceMoney =
 			commerceProductPrice.getUnitPromoPriceWithTaxAmount();
 
-		if (!unitPromoMoneyPriceWithTaxAmount.isEmpty()) {
+		if (!unitPromoPriceWithTaxAmountCommerceMoney.isEmpty()) {
 			promoPriceWithTaxAmount =
-				unitPromoMoneyPriceWithTaxAmount.getPrice();
+				unitPromoPriceWithTaxAmountCommerceMoney.getPrice();
 		}
 
 		commerceOrderItem.setPromoPrice(promoPrice);
 		commerceOrderItem.setPromoPriceWithTaxAmount(promoPriceWithTaxAmount);
 
-		CommerceMoney finalPriceMoney = commerceProductPrice.getFinalPrice();
+		CommerceMoney finalPriceCommerceMoney =
+			commerceProductPrice.getFinalPrice();
 
-		commerceOrderItem.setFinalPrice(finalPriceMoney.getPrice());
+		commerceOrderItem.setFinalPrice(finalPriceCommerceMoney.getPrice());
 
-		CommerceMoney unitPriceMoneyWithTaxAmount =
+		CommerceMoney unitPriceWithTaxAmountCommerceMoney =
 			commerceProductPrice.getUnitPriceWithTaxAmount();
 
-		if (unitPriceMoneyWithTaxAmount != null) {
+		if (unitPriceWithTaxAmountCommerceMoney != null) {
 			commerceOrderItem.setUnitPriceWithTaxAmount(
-				unitPriceMoneyWithTaxAmount.getPrice());
+				unitPriceWithTaxAmountCommerceMoney.getPrice());
 		}
 
-		CommerceMoney finalPriceMoneyWithTaxAmount =
+		CommerceMoney finalPriceWithTaxAmountCommerceMoney =
 			commerceProductPrice.getFinalPriceWithTaxAmount();
 
-		if (finalPriceMoneyWithTaxAmount != null) {
+		if (finalPriceWithTaxAmountCommerceMoney != null) {
 			commerceOrderItem.setFinalPriceWithTaxAmount(
-				finalPriceMoneyWithTaxAmount.getPrice());
+				finalPriceWithTaxAmountCommerceMoney.getPrice());
 		}
 
 		commerceOrderItem.setCommercePriceListId(
@@ -1468,6 +1475,84 @@ public class CommerceOrderItemLocalServiceImpl
 			commerceProductPrice.getDiscountValueWithTaxAmount(), true);
 	}
 
+	private void _setDimensions(
+			CommerceOrderItem commerceOrderItem, CPInstance cpInstance)
+		throws PortalException {
+
+		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
+			cpInstance.getCPDefinitionId());
+
+		commerceOrderItem.setWidth(cpInstance.getWidth());
+
+		if (commerceOrderItem.getWidth() <= 0) {
+			commerceOrderItem.setWidth(cpDefinition.getWidth());
+		}
+
+		commerceOrderItem.setHeight(cpInstance.getHeight());
+
+		if (commerceOrderItem.getHeight() <= 0) {
+			commerceOrderItem.setWidth(cpDefinition.getHeight());
+		}
+
+		commerceOrderItem.setDepth(cpInstance.getDepth());
+
+		if (commerceOrderItem.getDepth() <= 0) {
+			commerceOrderItem.setWidth(cpDefinition.getDepth());
+		}
+
+		commerceOrderItem.setWeight(cpInstance.getWeight());
+
+		if (commerceOrderItem.getWeight() <= 0) {
+			commerceOrderItem.setWidth(cpDefinition.getWeight());
+		}
+	}
+
+	private void _setSubscriptionInfo(
+			CommerceOrderItem commerceOrderItem, CPInstance cpInstance)
+		throws PortalException {
+
+		if (cpInstance.isOverrideSubscriptionInfo()) {
+			commerceOrderItem.setDeliveryMaxSubscriptionCycles(
+				cpInstance.getDeliveryMaxSubscriptionCycles());
+			commerceOrderItem.setDeliverySubscriptionLength(
+				cpInstance.getDeliverySubscriptionLength());
+			commerceOrderItem.setDeliverySubscriptionType(
+				cpInstance.getDeliverySubscriptionType());
+			commerceOrderItem.setDeliverySubscriptionTypeSettings(
+				cpInstance.getDeliverySubscriptionTypeSettings());
+			commerceOrderItem.setMaxSubscriptionCycles(
+				cpInstance.getMaxSubscriptionCycles());
+			commerceOrderItem.setSubscriptionLength(
+				cpInstance.getSubscriptionLength());
+			commerceOrderItem.setSubscriptionType(
+				cpInstance.getSubscriptionType());
+			commerceOrderItem.setSubscriptionTypeSettings(
+				cpInstance.getSubscriptionTypeSettings());
+		}
+		else {
+			CPDefinition cpDefinition =
+				_cpDefinitionLocalService.getCPDefinition(
+					cpInstance.getCPDefinitionId());
+
+			commerceOrderItem.setDeliveryMaxSubscriptionCycles(
+				cpDefinition.getDeliveryMaxSubscriptionCycles());
+			commerceOrderItem.setDeliverySubscriptionLength(
+				cpDefinition.getDeliverySubscriptionLength());
+			commerceOrderItem.setDeliverySubscriptionType(
+				cpDefinition.getDeliverySubscriptionType());
+			commerceOrderItem.setDeliverySubscriptionTypeSettings(
+				cpDefinition.getDeliverySubscriptionTypeSettings());
+			commerceOrderItem.setMaxSubscriptionCycles(
+				cpDefinition.getMaxSubscriptionCycles());
+			commerceOrderItem.setSubscriptionLength(
+				cpDefinition.getSubscriptionLength());
+			commerceOrderItem.setSubscriptionType(
+				cpDefinition.getSubscriptionType());
+			commerceOrderItem.setSubscriptionTypeSettings(
+				cpDefinition.getSubscriptionTypeSettings());
+		}
+	}
+
 	private void _updateBookedQuantity(
 			long userId, CommerceOrderItem commerceOrderItem,
 			long bookedQuantityId, int quantity, int oldQuantity)
@@ -1479,20 +1564,21 @@ public class CommerceOrderItemLocalServiceImpl
 					fetchCommerceInventoryBookedQuantity(bookedQuantityId);
 
 			if (commerceInventoryBookedQuantity != null) {
-				Map<String, String> context = HashMapBuilder.put(
-					CommerceInventoryAuditTypeConstants.ORDER_ID,
-					String.valueOf(commerceOrderItem.getCommerceOrderId())
-				).put(
-					CommerceInventoryAuditTypeConstants.ORDER_ITEM_ID,
-					String.valueOf(commerceOrderItem.getCommerceOrderItemId())
-				).build();
-
 				_commerceInventoryBookedQuantityLocalService.
 					updateCommerceInventoryBookedQuantity(
 						userId,
 						commerceInventoryBookedQuantity.
 							getCommerceInventoryBookedQuantityId(),
-						quantity, context,
+						quantity,
+						HashMapBuilder.put(
+							CommerceInventoryAuditTypeConstants.ORDER_ID,
+							String.valueOf(
+								commerceOrderItem.getCommerceOrderId())
+						).put(
+							CommerceInventoryAuditTypeConstants.ORDER_ITEM_ID,
+							String.valueOf(
+								commerceOrderItem.getCommerceOrderItemId())
+						).build(),
 						commerceInventoryBookedQuantity.getMvccVersion());
 			}
 		}
@@ -1521,8 +1607,8 @@ public class CommerceOrderItemLocalServiceImpl
 
 		updateWorkflow(commerceOrder, serviceContext);
 
-		commerceOrderItem.setQuantity(quantity);
 		commerceOrderItem.setJson(json);
+		commerceOrderItem.setQuantity(quantity);
 
 		if (commerceOrder.isOpen()) {
 			if (commerceProductPrice == null) {

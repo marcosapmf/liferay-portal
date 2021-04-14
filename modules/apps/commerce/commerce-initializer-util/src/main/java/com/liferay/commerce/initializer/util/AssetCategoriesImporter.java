@@ -19,7 +19,7 @@ import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -221,7 +221,7 @@ public class AssetCategoriesImporter {
 		// Commerce product friendly URL entry
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
-			_portal.getDefaultCompanyId());
+			assetCategory.getCompanyId());
 
 		long classNameId = _portal.getClassNameId(AssetCategory.class);
 
@@ -303,12 +303,11 @@ public class AssetCategoriesImporter {
 
 		for (Map.Entry<Locale, String> titleEntry : titleMap.entrySet()) {
 			Group companyGroup = _groupLocalService.getCompanyGroup(
-				_portal.getDefaultCompanyId());
-
-			long classNameId = _portal.getClassNameId(AssetCategory.class);
+				assetCategory.getCompanyId());
 
 			String urlTitle = _friendlyURLEntryLocalService.getUniqueUrlTitle(
-				companyGroup.getGroupId(), classNameId,
+				companyGroup.getGroupId(),
+				_portal.getClassNameId(AssetCategory.class),
 				assetCategory.getCategoryId(), titleEntry.getValue());
 
 			urlTitleMap.put(

@@ -14,30 +14,35 @@
 
 import {
 	PagesVisitor,
+	generateInstanceId,
 	normalizeFieldName,
 } from 'dynamic-data-mapping-form-renderer';
 
 import {getDefaultFieldName} from '../../../util/fieldSupport.es';
 import {updateFieldValidationProperty} from './fields.es';
 
-export const getSettingsContextProperty = (settingsContext, propertyName) => {
+export const getSettingsContextProperty = (
+	settingsContext,
+	propertyName,
+	propertyType = 'value'
+) => {
 	let propertyValue;
 	const visitor = new PagesVisitor(settingsContext.pages);
 
 	visitor.mapFields((field) => {
 		if (propertyName === field.fieldName) {
-			propertyValue = field.value;
+			propertyValue = field[propertyType];
 		}
 	});
 
 	return propertyValue;
 };
 
-export const updateSettingsContextProperty = (
-	editingLanguageId,
+export const setFieldReferenceErrorMessage = (
 	settingsContext,
 	propertyName,
-	propertyValue
+	displayErrors = true,
+	shouldUpdateValue = false
 ) => {
 	const visitor = new PagesVisitor(settingsContext.pages);
 
@@ -47,18 +52,77 @@ export const updateSettingsContextProperty = (
 			if (propertyName === field.fieldName) {
 				field = {
 					...field,
-					value: propertyValue,
+					displayErrors,
+					errorMessage: Liferay.Language.get(
+						'this-reference-is-already-being-used'
+					),
+					shouldUpdateValue,
+					valid: !displayErrors,
+				};
+			}
+
+			return field;
+		}),
+	};
+};
+
+export const updateSettingsContextProperty = (
+	editingLanguageId,
+	settingsContext,
+	propertyName,
+	propertyValue
+) => {
+	const visitor = new PagesVisitor(settingsContext.pages);
+	const isLocalizablePropertyValue = typeof propertyValue === 'object';
+	const isLocalizableLabel =
+		propertyName === 'label' && isLocalizablePropertyValue;
+
+	return {
+		...settingsContext,
+		pages: visitor.mapFields((field) => {
+			if (propertyName === field.fieldName) {
+				let value = propertyValue;
+
+				if (isLocalizableLabel) {
+					value = propertyValue[editingLanguageId];
+				}
+
+				field = {
+					...field,
+					value,
 				};
 
 				if (field.localizable) {
+					if (isLocalizableLabel) {
+						field.localizedValue = {
+							...propertyValue,
+						};
+					}
+
 					field.localizedValue = {
 						...field.localizedValue,
-						[editingLanguageId]: propertyValue,
+						[editingLanguageId]: value,
 					};
 				}
 			}
 
 			return field;
+		}),
+	};
+};
+
+export const updateSettingsContextInstanceId = ({settingsContext}) => {
+	const visitor = new PagesVisitor(settingsContext.pages);
+
+	return {
+		...settingsContext,
+		pages: visitor.mapFields((field) => {
+			const newField = {
+				...field,
+				instanceId: generateInstanceId(8),
+			};
+
+			return newField;
 		}),
 	};
 };
@@ -110,6 +174,26 @@ export const updateFieldName = (
 	return focusedField;
 };
 
+export const updateFieldReference = (
+	focusedField,
+	invalid = false,
+	shouldUpdateValue = false
+) => {
+	const {settingsContext} = focusedField;
+
+	focusedField = {
+		...focusedField,
+		settingsContext: setFieldReferenceErrorMessage(
+			settingsContext,
+			'fieldReference',
+			invalid,
+			shouldUpdateValue
+		),
+	};
+
+	return focusedField;
+};
+
 export const updateFieldDataType = (editingLanguageId, focusedField, value) => {
 	let {settingsContext} = focusedField;
 
@@ -144,6 +228,7 @@ export const updateFieldLabel = (
 	value
 ) => {
 	let {fieldName, settingsContext} = focusedField;
+	let label = value;
 
 	if (
 		generateFieldNameUsingFieldLabel &&
@@ -160,10 +245,14 @@ export const updateFieldLabel = (
 		settingsContext = updates.settingsContext;
 	}
 
+	if (typeof value === 'object') {
+		label = value[editingLanguageId] || value[defaultLanguageId];
+	}
+
 	return {
 		...focusedField,
 		fieldName,
-		label: value,
+		label,
 		settingsContext: updateSettingsContextProperty(
 			editingLanguageId,
 			settingsContext,

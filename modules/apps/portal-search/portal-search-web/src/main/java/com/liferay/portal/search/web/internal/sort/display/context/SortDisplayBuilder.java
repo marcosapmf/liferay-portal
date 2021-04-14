@@ -61,14 +61,19 @@ public class SortDisplayBuilder {
 	public SortDisplayContext build() {
 		SortDisplayContext sortDisplayContext = new SortDisplayContext();
 
+		List<SortTermDisplayContext> sortTermDisplayContexts =
+			buildTermDisplayContexts();
+
+		sortDisplayContext.setAnySelected(
+			isAnySelected(sortTermDisplayContexts));
+
 		sortDisplayContext.setDisplayStyleGroupId(getDisplayStyleGroupId());
-		sortDisplayContext.setSortPortletInstanceConfiguration(
-			_sortPortletInstanceConfiguration);
 		sortDisplayContext.setParameterName(_parameterName);
 		sortDisplayContext.setParameterValue(getParameterValue());
 		sortDisplayContext.setRenderNothing(isRenderNothing());
-		sortDisplayContext.setSortTermDisplayContexts(
-			buildTermDisplayContexts());
+		sortDisplayContext.setSortPortletInstanceConfiguration(
+			_sortPortletInstanceConfiguration);
+		sortDisplayContext.setSortTermDisplayContexts(sortTermDisplayContexts);
 
 		return sortDisplayContext;
 	}
@@ -149,6 +154,29 @@ public class SortDisplayBuilder {
 		}
 
 		return null;
+	}
+
+	protected boolean isAnySelected(
+		List<SortTermDisplayContext> sortTermDisplayContexts) {
+
+		for (SortTermDisplayContext sortTermDisplayContext :
+				sortTermDisplayContexts) {
+
+			if (sortTermDisplayContext.isSelected()) {
+				return true;
+			}
+		}
+
+		if (!sortTermDisplayContexts.isEmpty()) {
+			SortTermDisplayContext sortTermDisplayContext =
+				sortTermDisplayContexts.get(0);
+
+			sortTermDisplayContext.setSelected(true);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	protected boolean isRenderNothing() {

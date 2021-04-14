@@ -12,6 +12,10 @@
  * details.
  */
 
+const COLORS = {
+	secondary: '#A7A9BC',
+};
+
 const COLUMNS = [
 	{
 		key: 'name',
@@ -25,7 +29,7 @@ const COLUMNS = [
 	{
 		key: 'dateCreated',
 		sortable: true,
-		value: Liferay.Language.get('create-date'),
+		value: Liferay.Language.get('created-date'),
 	},
 	{
 		asc: false,
@@ -92,6 +96,7 @@ const FILTERS = [
 ];
 
 export {
+	COLORS,
 	COLUMNS,
 	DEPLOYMENT_ACTION,
 	DEPLOYMENT_TYPES,

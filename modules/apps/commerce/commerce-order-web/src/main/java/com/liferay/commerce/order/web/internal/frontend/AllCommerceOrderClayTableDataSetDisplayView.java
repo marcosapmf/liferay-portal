@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.order.web.internal.frontend;
 
+import com.liferay.commerce.order.web.internal.frontend.constants.CommerceOrderDataSetConstants;
 import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.BaseTableClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchema;
@@ -59,7 +60,7 @@ public class AllCommerceOrderClayTableDataSetDisplayView
 
 		ClayTableSchemaField dateClayTableSchemaField =
 			clayTableSchemaBuilder.addClayTableSchemaField(
-				"createDate", "create-date");
+				"orderDate", "order-date");
 
 		dateClayTableSchemaField.setContentRenderer("date");
 		dateClayTableSchemaField.setSortable(true);

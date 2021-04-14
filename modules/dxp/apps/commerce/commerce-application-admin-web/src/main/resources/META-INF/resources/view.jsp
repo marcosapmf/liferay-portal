@@ -47,7 +47,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "applications"));
 			selectedDisplayStyle="list"
 		/>
 
-		<c:if test="<%= commerceApplicationAdminDisplayContext.hasPermissions(CommerceApplicationActionKeys.ADD_COMMERCE_BRAND) %>">
+		<c:if test="<%= commerceApplicationAdminDisplayContext.hasBrandPermissions(CommerceApplicationActionKeys.ADD_COMMERCE_BRAND) %>">
 			<liferay-frontend:add-menu
 				inline="<%= true %>"
 			>
@@ -69,9 +69,9 @@ renderResponse.setTitle(LanguageUtil.get(request, "applications"));
 	</liferay-frontend:management-bar-action-buttons>
 </liferay-frontend:management-bar>
 
-<portlet:actionURL name="editCommerceApplicationBrand" var="editCommerceApplicationBrandActionURL" />
+<portlet:actionURL name="/commerce_application_admin/edit_commerce_application_brand" var="editCommerceApplicationBrandActionURL" />
 
-<div class="container-fluid-1280" id="<portlet:namespace />commerceApplicationBrandContainer">
+<div class="container-fluid container-fluid-max-xl" id="<portlet:namespace />commerceApplicationBrandContainer">
 	<aui:form action="<%= editCommerceApplicationBrandActionURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -83,7 +83,6 @@ renderResponse.setTitle(LanguageUtil.get(request, "applications"));
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.commerce.application.model.CommerceApplicationBrand"
-				cssClass="entry-display-style"
 				keyProperty="commerceApplicationBrandId"
 				modelVar="commerceApplicationBrand"
 			>
@@ -91,13 +90,13 @@ renderResponse.setTitle(LanguageUtil.get(request, "applications"));
 				<%
 				PortletURL rowURL = renderResponse.createRenderURL();
 
-				rowURL.setParameter("mvcRenderCommandName", "editCommerceApplicationBrand");
+				rowURL.setParameter("mvcRenderCommandName", "/commerce_application_admin/edit_commerce_application_brand");
 				rowURL.setParameter("redirect", currentURL);
 				rowURL.setParameter("commerceApplicationBrandId", String.valueOf(commerceApplicationBrand.getCommerceApplicationBrandId()));
 				%>
 
 				<liferay-ui:search-container-column-text
-					cssClass="important table-cell-content"
+					cssClass="important table-cell-expand"
 					href="<%= rowURL %>"
 					property="name"
 				/>
@@ -137,14 +136,16 @@ renderResponse.setTitle(LanguageUtil.get(request, "applications"));
 	}
 </aui:script>
 
-<c:if test="<%= commerceApplicationAdminDisplayContext.hasPermissions(CommerceApplicationActionKeys.ADD_COMMERCE_BRAND) %>">
-	<portlet:actionURL name="editCommerceApplicationBrand" var="editCommerceApplicationBrandActionURL">
+<c:if test="<%= commerceApplicationAdminDisplayContext.hasBrandPermissions(CommerceApplicationActionKeys.ADD_COMMERCE_BRAND) %>">
+	<portlet:actionURL name="/commerce_application_admin/edit_commerce_application_brand" var="editCommerceApplicationBrandActionURL">
 		<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD %>" />
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 	</portlet:actionURL>
 
-	<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
-		var handleAddApplicationBrandButtonClick = dom.delegate(
+	<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
+		var delegate = delegateModule.default;
+
+		var handleAddApplicationBrandButtonClick = delegate(
 			document.body,
 			'click',
 			'#<portlet:namespace />addApplicationBrandButton',
@@ -163,7 +164,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "applications"));
 		);
 
 		function handleDestroyPortlet() {
-			handleAddApplicationBrandButtonClick.removeListener();
+			handleAddApplicationBrandButtonClick.dispose();
 
 			Liferay.detach('destroyPortlet', handleDestroyPortlet);
 		}

@@ -16,7 +16,7 @@
 
 <%@ include file="/admin/init.jsp" %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= kaleoFormsAdminDisplayContext.getActionItemsDropdownItems() %>"
 	clearResultsURL="<%= kaleoFormsAdminDisplayContext.getClearResultsURL() %>"
 	componentId="kaleoFormsManagementToolbar"
@@ -54,7 +54,7 @@
 
 			submitForm(
 				form,
-				'<portlet:actionURL name="deleteKaleoProcess"><portlet:param name="mvcPath" value="/admin/view.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
+				'<portlet:actionURL name="/kaleo_forms_admin/delete_kaleo_process"><portlet:param name="mvcPath" value="/admin/view.jsp" /><portlet:param name="redirect" value="<%= currentURL %>" /></portlet:actionURL>'
 			);
 		}
 	};

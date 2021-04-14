@@ -74,7 +74,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	<liferay-ui:message key="all-channels-associated-with-this-product-must-have-at-least-one-payment-method-active-that-supports-recurring-payments" />
 </aui:alert>
 
-<portlet:actionURL name="editProductDefinition" var="editProductDefinitionSubscriptionInfoActionURL" />
+<portlet:actionURL name="/cp_definitions/edit_cp_definition" var="editProductDefinitionSubscriptionInfoActionURL" />
 
 <aui:form action="<%= editProductDefinitionSubscriptionInfoActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="updateSubscriptionInfo" />
@@ -126,8 +126,10 @@ if (deliveryMaxSubscriptionCycles > 0) {
 					<aui:validator name="digits" />
 
 					<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
-						function(val, fieldNode, ruleValue) {
-							if (window.document.querySelector('#<portlet:namespace />neverEnds')[0].checked) {
+						function(val) {
+							var subscriptionNeverEndsCheckbox = window.document.querySelector('#<portlet:namespace />neverEnds');
+
+							if (subscriptionNeverEndsCheckbox && subscriptionNeverEndsCheckbox.checked) {
 								return true;
 							}
 
@@ -186,8 +188,10 @@ if (deliveryMaxSubscriptionCycles > 0) {
 					<aui:validator name="digits" />
 
 					<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
-						function(val, fieldNode, ruleValue) {
-							if (window.document.querySelector('#<portlet:namespace />deliveryNeverEnds')[0].checked) {
+						function(val) {
+							var deliveryNeverEndsCheckbox = window.document.querySelector('#<portlet:namespace />deliveryNeverEnds');
+
+							if (deliveryNeverEndsCheckbox && deliveryNeverEndsCheckbox.checked) {
 								return true;
 							}
 

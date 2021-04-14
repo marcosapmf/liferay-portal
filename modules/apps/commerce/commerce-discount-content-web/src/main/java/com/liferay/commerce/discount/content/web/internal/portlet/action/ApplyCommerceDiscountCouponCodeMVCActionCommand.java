@@ -19,6 +19,7 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.discount.constants.CommerceDiscountPortletKeys;
 import com.liferay.commerce.discount.exception.CommerceDiscountCouponCodeException;
 import com.liferay.commerce.discount.exception.CommerceDiscountLimitationTimesException;
+import com.liferay.commerce.discount.exception.CommerceDiscountValidatorException;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
@@ -43,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceDiscountPortletKeys.COMMERCE_DISCOUNT_CONTENT_WEB,
-		"mvc.command.name=applyCommerceDiscountCouponCode"
+		"mvc.command.name=/commerce_discount_content/apply_commerce_discount_coupon_code"
 	},
 	service = MVCActionCommand.class
 )
@@ -78,7 +79,12 @@ public class ApplyCommerceDiscountCouponCodeMVCActionCommand
 					commerceContext);
 			}
 			catch (CommerceDiscountCouponCodeException |
-				   CommerceDiscountLimitationTimesException exception) {
+				   CommerceDiscountLimitationTimesException |
+				   CommerceDiscountValidatorException exception) {
+
+				if (exception instanceof CommerceDiscountValidatorException) {
+					throw exception;
+				}
 
 				SessionErrors.add(actionRequest, exception.getClass());
 

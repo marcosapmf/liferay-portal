@@ -29,10 +29,12 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.PriceModifierCa
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -51,10 +53,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/price-modifier-category.properties",
 	scope = ServiceScope.PROTOTYPE,
-	service = PriceModifierCategoryResource.class
+	service = {NestedFieldSupport.class, PriceModifierCategoryResource.class}
 )
 public class PriceModifierCategoryResourceImpl
-	extends BasePriceModifierCategoryResourceImpl {
+	extends BasePriceModifierCategoryResourceImpl
+	implements NestedFieldSupport {
 
 	@Override
 	public void deletePriceModifierCategory(Long id) throws Exception {
@@ -167,17 +170,11 @@ public class PriceModifierCategoryResourceImpl
 
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> {
-				CommercePriceModifier commercePriceModifier =
-					commercePriceModifierRel.getCommercePriceModifier();
-
-				return addAction(
-					"UPDATE", commercePriceModifier.getCommercePriceListId(),
-					"deletePriceModifierCategory",
-					commercePriceModifier.getUserId(),
-					"com.liferay.commerce.price.list.model.CommercePriceList",
-					commercePriceModifier.getGroupId());
-			}
+			addAction(
+				"UPDATE",
+				commercePriceModifierRel.getCommercePriceModifierRelId(),
+				"deletePriceModifierCategory",
+				_commercePriceModifierRelModelResourcePermission)
 		).build();
 	}
 
@@ -217,6 +214,12 @@ public class PriceModifierCategoryResourceImpl
 
 	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.pricing.model.CommercePriceModifierRel)"
+	)
+	private ModelResourcePermission<CommercePriceModifierRel>
+		_commercePriceModifierRelModelResourcePermission;
 
 	@Reference
 	private CommercePriceModifierRelService _commercePriceModifierRelService;

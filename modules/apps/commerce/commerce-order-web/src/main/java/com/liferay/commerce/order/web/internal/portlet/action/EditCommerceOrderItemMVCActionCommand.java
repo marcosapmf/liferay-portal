@@ -55,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
-		"mvc.command.name=editCommerceOrderItem"
+		"mvc.command.name=/commerce_order/edit_commerce_order_item"
 	},
 	service = MVCActionCommand.class
 )
@@ -80,7 +80,7 @@ public class EditCommerceOrderItemMVCActionCommand
 
 		for (long cpInstanceId : cpInstanceIds) {
 			_commerceOrderItemService.addCommerceOrderItem(
-				commerceOrderId, cpInstanceId, 1, 0, null, commerceContext,
+				commerceOrderId, cpInstanceId, null, 1, 0, commerceContext,
 				serviceContext);
 		}
 	}
@@ -175,9 +175,6 @@ public class EditCommerceOrderItemMVCActionCommand
 			actionRequest, "commerceOrderItemId");
 		int quantity = ParamUtil.getInteger(actionRequest, "quantity");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			CommerceOrderItem.class.getName(), actionRequest);
-
 		CommerceOrderItem commerceOrderItem =
 			_commerceOrderItemService.getCommerceOrderItem(commerceOrderItemId);
 
@@ -187,6 +184,9 @@ public class EditCommerceOrderItemMVCActionCommand
 			CommerceContext commerceContext =
 				(CommerceContext)actionRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
+
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(
+				CommerceOrderItem.class.getName(), actionRequest);
 
 			commerceOrderItem =
 				_commerceOrderItemService.updateCommerceOrderItem(
@@ -199,7 +199,7 @@ public class EditCommerceOrderItemMVCActionCommand
 
 			commerceOrderItem =
 				_commerceOrderItemService.updateCommerceOrderItemUnitPrice(
-					commerceOrderItemId, price, quantity);
+					commerceOrderItemId, quantity, price);
 		}
 
 		int requestedDeliveryDateMonth = ParamUtil.getInteger(
@@ -213,8 +213,8 @@ public class EditCommerceOrderItemMVCActionCommand
 			actionRequest, "deliveryGroup");
 
 		_commerceOrderItemService.updateCommerceOrderItemInfo(
-			commerceOrderItem.getCommerceOrderItemId(), deliveryGroup,
-			commerceOrderItem.getShippingAddressId(),
+			commerceOrderItem.getCommerceOrderItemId(),
+			commerceOrderItem.getShippingAddressId(), deliveryGroup,
 			commerceOrderItem.getPrintedNote(), requestedDeliveryDateMonth,
 			requestedDeliveryDateDay, requestedDeliveryDateYear);
 	}

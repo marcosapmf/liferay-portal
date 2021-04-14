@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.COMMERCE_CHANNELS,
-		"mvc.command.name=editCommerceTaxMethod"
+		"mvc.command.name=/commerce_channels/edit_commerce_tax_method"
 	},
 	service = MVCRenderCommand.class
 )
@@ -51,7 +51,8 @@ public class EditCommerceTaxMethodMVCRenderCommand implements MVCRenderCommand {
 		throws PortletException {
 
 		RequestDispatcher requestDispatcher =
-			_servletContext.getRequestDispatcher("/edit_tax_method.jsp");
+			_servletContext.getRequestDispatcher(
+				"/edit_commerce_tax_method.jsp");
 
 		try {
 			requestDispatcher.include(

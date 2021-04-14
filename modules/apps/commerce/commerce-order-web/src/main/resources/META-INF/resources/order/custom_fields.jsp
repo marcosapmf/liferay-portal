@@ -19,11 +19,10 @@
 <%
 CommerceOrderEditDisplayContext commerceOrderEditDisplayContext = (CommerceOrderEditDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-CommerceOrder commerceOrder = commerceOrderEditDisplayContext.getCommerceOrder();
 long commerceOrderId = commerceOrderEditDisplayContext.getCommerceOrderId();
 %>
 
-<liferay-portlet:actionURL name="editCommerceOrder" var="editCommerceOrderURL" />
+<liferay-portlet:actionURL name="/commerce_order/edit_commerce_order" var="editCommerceOrderURL" />
 
 <aui:fieldset-group markupView="lexicon">
 	<aui:form action="<%= editCommerceOrderURL %>" method="post" name="orderCustomFieldFm">
@@ -37,7 +36,7 @@ long commerceOrderId = commerceOrderEditDisplayContext.getCommerceOrderId();
 				value="custom-fields"
 			/>
 
-			<aui:model-context bean="<%= commerceOrder %>" model="<%= CommerceOrder.class %>" />
+			<aui:model-context bean="<%= commerceOrderEditDisplayContext.getCommerceOrder() %>" model="<%= CommerceOrder.class %>" />
 
 			<liferay-expando:custom-attribute-list
 				className="<%= CommerceOrder.class.getName() %>"

@@ -97,7 +97,7 @@ const DocumentRenderer = ({displayType, value = {}}) => {
 				<StringRenderer value={title} />
 			) : fileEntryId ? (
 				<ClayTooltipProvider>
-					<ClayButton.Group className="data-record-document-field">
+					<ClayButton.Group className="data-record-document-field mb-2">
 						<ClayButton
 							data-tooltip-align="bottom"
 							data-tooltip-delay="200"
@@ -254,9 +254,19 @@ const getFieldValueRenderer = (
 	}
 
 	if (fieldType === 'document_library') {
-		return ({value}) => (
-			<DocumentRenderer displayType={displayType} value={value} />
-		);
+		return ({value}) => {
+			if (repeatable) {
+				return value.map((repeatableValue, key) => (
+					<DocumentRenderer
+						displayType={displayType}
+						key={key}
+						value={repeatableValue}
+					/>
+				));
+			}
+
+			return <DocumentRenderer displayType={displayType} value={value} />;
+		};
 	}
 
 	if (fieldType === 'radio') {
@@ -308,13 +318,18 @@ export const FieldValuePreview = ({
 		displayType,
 		userLanguageId
 	);
-	const value = dataRecordValues[fieldName];
 
-	if (dataDefinitionField.localizable) {
-		return (
-			<Renderer value={value ? value[defaultLanguageId] : undefined} />
-		);
-	}
+	const dataRecordValuesKeys = Object.keys(dataRecordValues);
+
+	const value = dataRecordValuesKeys
+		.filter((key) => key.includes(fieldName))
+		.map((key) => {
+			if (typeof dataRecordValues[key] == 'object') {
+				return dataRecordValues[key][defaultLanguageId];
+			}
+
+			return dataRecordValues[key];
+		});
 
 	return <Renderer value={value} />;
 };

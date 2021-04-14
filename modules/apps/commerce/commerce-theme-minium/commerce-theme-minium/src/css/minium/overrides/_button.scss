@@ -2,19 +2,19 @@
 	align-content: center;
 	align-items: center;
 	background: transparent;
-	border: 2px solid transparent;
-	border-radius: 8px;
+	border-radius: $border-radius;
+	border-width: 2px;
 	display: inline-flex;
-	font-size: 10px;
+	font-size: 0.75rem;
 	font-weight: 900;
 	justify-content: center;
 	letter-spacing: 1px;
 	line-height: 1.25;
 	overflow: hidden;
-	padding: 10px 20px;
 	position: relative;
 	text-decoration: none;
 	text-transform: uppercase;
+	transition: border-color 0.3s ease-in;
 	white-space: nowrap;
 	z-index: 2;
 
@@ -41,35 +41,13 @@
 		cursor: not-allowed;
 	}
 
-	&:not([disabled]):not(.disabled):not(.btn-link) {
-		&::after {
-			border-radius: 50%;
-			content: '';
-			display: block;
-			height: 60px;
-			left: 50%;
-			margin-left: -30px;
-			margin-top: -30px;
-			opacity: 0;
-			padding: 0;
-			pointer-events: none;
-			position: absolute;
-			top: 50%;
-			transform: scale(0, 0);
-			transition: all ease-in-out 0.3s;
-			width: 60px;
-			z-index: -1;
-		}
-
-		&:hover::after {
-			opacity: 1;
-			transform: scale(5, 5);
-		}
+	&:not([disabled]):not(.disabled):not(.btn-link):hover {
+		background-color: $color-bg-alt;
 	}
 
 	&.btn-primary {
 		background: transparent;
-		border-color: $color-theme;
+		border-color: transparent;
 		color: $color-bg;
 
 		&:not([disabled]):not(.disabled) {
@@ -77,8 +55,12 @@
 				background-color: $color-theme;
 			}
 
-			&:hover::before {
-				background-color: $color-theme-dark;
+			&:hover {
+				border-color: $color-theme-dark;
+
+				&::before {
+					background-color: $color-theme-dark;
+				}
 			}
 
 			&::after {
@@ -97,26 +79,14 @@
 
 	&.btn-secondary {
 		background: transparent;
-		border-color: $color-theme;
-		color: $color-theme;
+		border-color: $color-border;
 
 		&::before {
-			background-color: $color-bg;
-		}
-
-		&:not([disabled]):not(.disabled) {
-			&:hover::before {
-				background-color: $color-border;
-			}
-
-			&::after {
-				background-color: $color-border;
-			}
+			background-color: transparent;
 		}
 
 		&[disabled] {
-			border-color: $color-disabled;
-			color: $color-disabled;
+			border-color: $color-border;
 
 			&::before {
 				background-color: $color-bg;
@@ -134,8 +104,12 @@
 				background-color: $color-mood-good;
 			}
 
-			&:hover::before {
-				background-color: darken($color-mood-good, 10%);
+			&:hover {
+				border-color: darken($color-mood-good, 10%);
+
+				&::before {
+					background-color: darken($color-mood-good, 10%);
+				}
 			}
 
 			&::after {
@@ -162,8 +136,12 @@
 				background-color: $color-mood-bad;
 			}
 
-			&:hover::before {
-				background-color: darken($color-mood-bad, 10%);
+			&:hover {
+				border-color: darken($color-mood-bad, 10%);
+
+				&::before {
+					background-color: darken($color-mood-bad, 10%);
+				}
 			}
 
 			&::after {
@@ -182,28 +160,32 @@
 
 	&.btn-warning {
 		background: transparent;
-		border-color: $color-mood-neutral;
+		border-color: $color-mood-warning;
 		color: $color-bg;
 
 		&:not([disabled]):not(.disabled) {
 			&::before {
-				background-color: $color-mood-neutral;
+				background-color: $color-mood-warning;
 			}
 
-			&:hover::before {
-				background-color: darken($color-mood-neutral, 10%);
+			&:hover {
+				border-color: darken($color-mood-warning, 10%);
+
+				&::before {
+					background-color: darken($color-mood-warning, 10%);
+				}
 			}
 
 			&::after {
-				background-color: darken($color-mood-neutral, 10%);
+				background-color: darken($color-mood-warning, 10%);
 			}
 		}
 
 		&[disabled] {
-			border-color: lighten($color-mood-neutral, 20%);
+			border-color: lighten($color-mood-warning, 20%);
 
 			&::before {
-				background-color: lighten($color-mood-neutral, 20%);
+				background-color: lighten($color-mood-warning, 20%);
 			}
 		}
 	}
@@ -221,8 +203,7 @@
 	}
 
 	&.btn-lg {
-		font-size: 12px;
-		height: 64px;
+		height: 3.75rem;
 
 		&.btn-monospaced {
 			width: 64px;

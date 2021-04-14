@@ -15,6 +15,7 @@
 import {LayoutTypes} from './LayoutTypes';
 
 export interface Config {
+	adaptiveMediaEnabled: boolean;
 	addFragmentCompositionURL: string;
 	addFragmentEntryLinkCommentURL: string;
 	addFragmentEntryLinkURL: string;
@@ -22,6 +23,8 @@ export interface Config {
 	addItemURL: string;
 	addPortletURL: string;
 	addSegmentsExperienceURL: string;
+
+	assetCategoryTreeNodeItemSelectorURL: string;
 
 	autoExtendSessionEnabled: boolean;
 
@@ -94,6 +97,7 @@ export interface Config {
 	discardDraftURL: string;
 	draft: boolean;
 	duplicateItemURL: string;
+	duplicateSegmentsExperienceURL: string;
 	editFragmentEntryLinkCommentURL: string;
 	editFragmentEntryLinkURL: string;
 	editSegmentsEntryURL: string;
@@ -106,6 +110,7 @@ export interface Config {
 			value: string;
 		};
 	};
+	getAvailableImageConfigurationsURL: string;
 	getAvailableListRenderersURL: string;
 	getAvailableListItemRenderersURL: string;
 	getAvailableTemplatesURL: string;
@@ -163,6 +168,8 @@ export interface Config {
 	};
 
 	singleSegmentsExperienceMode: boolean;
+	siteNavigationMenuItemSelectorURL: string;
+	styleBookEnabled: boolean;
 	stylebookEntryId: string;
 	styleBooks: Array<{
 		imagePreviewURL: string;

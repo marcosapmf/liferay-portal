@@ -109,6 +109,7 @@ definition {
 	}
 
 	test AddAndEditOAuthSAPEntries {
+		property custom.properties = "json.service.serialize.throwable=true";
 		property test.name.skip.portal.instance = "OAuth2#AddAndEditOAuthSAPEntries";
 
 		ApplicationsMenu.gotoPortlet(
@@ -155,7 +156,7 @@ definition {
 
 		var portalVersionOutput = JSONCurlUtil.post("${portalVersionCurl}");
 
-		if (!(contains("${portalVersionOutput}", "7.3"))) {
+		if (!(contains("${portalVersionOutput}", "7.4"))) {
 			fail("JSON-WS call failed to return Portal version");
 		}
 
@@ -170,7 +171,7 @@ definition {
 
 		var portalVersionOutput = JSONCurlUtil.post("${portalVersionCurl}");
 
-		if (!(contains("${portalVersionOutput}", "{}"))) {
+		if (!(contains("${portalVersionOutput}", "Access denied to com.liferay.portal.kernel.service.PortalService#getVersion"))) {
 			fail("Access denied message was not returned");
 		}
 
@@ -195,7 +196,7 @@ definition {
 
 		var portalVersionOutput = JSONCurlUtil.post("${portalVersionCurl}");
 
-		if (!(contains("${portalVersionOutput}", "7.3"))) {
+		if (!(contains("${portalVersionOutput}", "7.4"))) {
 			fail("JSON-WS call failed to return Portal version");
 		}
 
@@ -231,7 +232,7 @@ definition {
 
 		var buildNumberOutput = JSONCurlUtil.post("${buildNumberCurl}");
 
-		if (!(contains("${buildNumberOutput}", "73"))) {
+		if (!(contains("${buildNumberOutput}", "74"))) {
 			fail("JSON-WS call failed to return build number");
 		}
 	}
@@ -604,7 +605,6 @@ definition {
 			locator1 = "NavUnderline#NAV_UNDERLINE_LINK");
 
 		for (var resourcePanel : list "Bulk Processing,Content Delivery,Dynamic Data Lists,Forms,Portal Services,Taxonomy Administration,User Administration,Workflow Administration") {
-
 			AssertHTMLSourceTextNotPresent(value1 = "${resourcePanel}");
 		}
 	}
@@ -660,6 +660,8 @@ definition {
 			resourceCheckList = "everything.read.userprofile",
 			resourcePanels = "Portal Services");
 
+		Refresh();
+
 		OAuth2.viewScopes(
 			applicationName = "OAuth Application",
 			resourceCheckedList = "everything.read.userprofile",
@@ -668,6 +670,8 @@ definition {
 		OAuth2.editScopes(
 			applicationName = "OAuth Application",
 			checkGlobalScope = "Everything");
+
+		Refresh();
 
 		OAuth2.viewScopes(
 			applicationName = "OAuth Application",
@@ -681,6 +685,8 @@ definition {
 			uncheckAllResourceScopes = "true",
 			uncheckGlobalScope = "Everything");
 
+		Refresh();
+
 		OAuth2.viewScopes(
 			allResourceScopesUnchecked = "true",
 			applicationName = "OAuth Application",
@@ -692,6 +698,8 @@ definition {
 			checkGlobalScopesViaModal = "Everything",
 			modalLinkScope = "example-scope-1",
 			resourcePanels = "Sample QA app");
+
+		Refresh();
 
 		OAuth2.viewScopes(
 			applicationName = "OAuth Application",
@@ -793,6 +801,8 @@ definition {
 			applicationName = "Test Expired Application",
 			resourceCheckList = "liferay-json-web-services.everything.read.userprofile",
 			resourcePanels = "Portal Services");
+
+		Refresh();
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
@@ -1018,6 +1028,8 @@ definition {
 			resourceCheckList = "liferay-json-web-services.everything.read,liferay-json-web-services.everything.write,liferay-json-web-services.everything.read.documents.download,liferay-json-web-services.everything.read.userprofile",
 			resourcePanels = "Portal Services");
 
+		Refresh();
+
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
 			rowEntry = "OAuth Application");
@@ -1048,6 +1060,8 @@ definition {
 		OAuth2.revokeGrantedAuthViaAdmin(
 			applicationName = "OAuth Application",
 			userName = "Test Test");
+
+		Refresh();
 
 		OAuth2.viewScopes(
 			applicationName = "OAuth Application",

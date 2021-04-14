@@ -69,7 +69,8 @@ public class DDMFormValuesUtil {
 					_flattenDDMFormFieldValues(
 						rootDDMFormFields,
 						ddmFormField -> _toDDMFormFieldValues(
-							contentFieldMap.get(ddmFormField.getName()),
+							contentFieldMap.get(
+								ddmFormField.getFieldReference()),
 							ddmFormField, dlAppService, groupId,
 							journalArticleService, layoutLocalService,
 							locale)));
@@ -126,12 +127,13 @@ public class DDMFormValuesUtil {
 		return new DDMFormFieldValue() {
 			{
 				setName(ddmFormField.getName());
+				setFieldReference(ddmFormField.getFieldReference());
 				setNestedDDMFormFields(
 					_flattenDDMFormFieldValues(
 						ddmFormField.getNestedDDMFormFields(),
 						field -> _toDDMFormFieldValues(
-							contentFieldMap.get(field.getName()), field,
-							dlAppService, groupId, journalArticleService,
+							contentFieldMap.get(field.getFieldReference()),
+							field, dlAppService, groupId, journalArticleService,
 							layoutLocalService, locale)));
 				setValue(value);
 			}
@@ -148,14 +150,14 @@ public class DDMFormValuesUtil {
 			if (ddmFormField.isRequired()) {
 				throw new BadRequestException(
 					"No value is specified for field " +
-						ddmFormField.getName());
+						ddmFormField.getFieldReference());
 			}
 
 			return Collections.singletonList(
 				_toDDMFormFieldValue(
 					Collections.emptyList(), ddmFormField, dlAppService,
 					groupId, journalArticleService, layoutLocalService, locale,
-					_toValue(ddmFormField, locale)));
+					_toPredefinedValue(ddmFormField, locale)));
 		}
 
 		return TransformUtil.transform(
@@ -169,7 +171,9 @@ public class DDMFormValuesUtil {
 					journalArticleService, layoutLocalService, locale)));
 	}
 
-	private static Value _toValue(DDMFormField ddmFormField, Locale locale) {
+	private static Value _toPredefinedValue(
+		DDMFormField ddmFormField, Locale locale) {
+
 		if (Objects.equals(
 				DDMFormFieldType.SEPARATOR, ddmFormField.getType())) {
 
@@ -181,10 +185,16 @@ public class DDMFormValuesUtil {
 		String valueString = localizedValue.getString(
 			localizedValue.getDefaultLocale());
 
+		if (valueString.equals("[]")) {
+			valueString = "";
+		}
+
 		if (ddmFormField.isLocalizable()) {
+			String finalValueString = valueString;
+
 			return new LocalizedValue(locale) {
 				{
-					addString(locale, valueString);
+					addString(locale, finalValueString);
 				}
 			};
 		}

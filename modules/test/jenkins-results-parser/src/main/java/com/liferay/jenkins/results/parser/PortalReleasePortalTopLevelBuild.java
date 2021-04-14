@@ -17,6 +17,9 @@ package com.liferay.jenkins.results.parser;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author Michael Hashimoto
  */
@@ -26,6 +29,28 @@ public class PortalReleasePortalTopLevelBuild extends PortalTopLevelBuild {
 		String url, TopLevelBuild topLevelBuild) {
 
 		super(url, topLevelBuild);
+	}
+
+	@Override
+	public String getBaseGitRepositoryName() {
+		return "liferay-portal-ee";
+	}
+
+	@Override
+	public String getBranchName() {
+		PortalRelease portalRelease = getPortalRelease();
+
+		String portalVersion = portalRelease.getPortalVersion();
+
+		Matcher matcher = _pattern.matcher(portalVersion);
+
+		if (!matcher.find()) {
+			throw new RuntimeException(
+				"Invalid portal version: " + portalVersion);
+		}
+
+		return JenkinsResultsParserUtil.combine(
+			matcher.group("major"), ".", matcher.group("minor"), ".x");
 	}
 
 	@Override
@@ -46,6 +71,9 @@ public class PortalReleasePortalTopLevelBuild extends PortalTopLevelBuild {
 
 		return _portalRelease;
 	}
+
+	private static final Pattern _pattern = Pattern.compile(
+		"(?<major>\\d)\\.(?<minor>\\d)\\.(?<fix>\\d+)");
 
 	private PortalRelease _portalRelease;
 

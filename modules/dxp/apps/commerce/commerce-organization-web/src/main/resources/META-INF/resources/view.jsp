@@ -111,7 +111,7 @@ request.setAttribute("view.jsp-filterPerOrganization", false);
 		<aui:button cssClass="btn-lg" name="addOrganizationButton" primary="<%= true %>" value="add-organization" />
 	</div>
 
-	<portlet:actionURL name="editCommerceOrganization" var="editCommerceOrganizationActionURL">
+	<portlet:actionURL name="/commerce_organization/edit_commerce_organization" var="editCommerceOrganizationActionURL">
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 	</portlet:actionURL>
 
@@ -120,7 +120,7 @@ request.setAttribute("view.jsp-filterPerOrganization", false);
 		<aui:input name="organizationId" type="hidden" value="<%= String.valueOf(commerceOrganizationDisplayContext.getOrganizationId()) %>" />
 	</aui:form>
 
-	<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
+	<aui:script require="frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as modalCommands">
 		Liferay.provide(
 			window,
 			'handleAddOrganizationButtonClick',

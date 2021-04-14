@@ -49,7 +49,7 @@
 		base: Liferay.ThemeDisplay.getCDNBaseURL() + PATH_JAVASCRIPT + '/aui/',
 		combine: COMBINE,
 		comboBase: LiferayAUI.getComboPath(),
-		filter: Liferay.AUI.getFilter(),
+		filter: process.env.NODE_ENV === 'development' ? 'raw' : 'min',
 		groups: {
 			editor: {
 				base: PATH_EDITOR_CKEDITOR,
@@ -268,7 +268,6 @@
 							'aui-event-input',
 							'aui-palette',
 							'aui-set',
-							'portal-available-languages',
 						],
 					},
 					'liferay-input-move-boxes': {
@@ -613,38 +612,6 @@
 					'liferay-xml-formatter': {
 						path: 'xml_formatter.js',
 						requires: ['aui-base'],
-					},
-				},
-				root: PATH_JAVASCRIPT + '/liferay/',
-			},
-
-			misc: {
-				base:
-					Liferay.ThemeDisplay.getCDNBaseURL() +
-					PATH_JAVASCRIPT +
-					'/misc/',
-				combine: COMBINE,
-				modules: {
-					swfobject: {
-						path: 'swfobject.js',
-					},
-					swfupload: {
-						path: 'swfupload/swfupload.js',
-					},
-				},
-				root: PATH_JAVASCRIPT + '/misc/',
-			},
-
-			portal: {
-				base:
-					Liferay.ThemeDisplay.getCDNBaseURL() +
-					LiferayAUI.getJavaScriptRootPath() +
-					'/liferay/',
-				combine: false,
-				modules: {
-					'portal-available-languages': {
-						path: LiferayAUI.getAvailableLangPath(),
-						requires: ['liferay-language'],
 					},
 				},
 				root: PATH_JAVASCRIPT + '/liferay/',

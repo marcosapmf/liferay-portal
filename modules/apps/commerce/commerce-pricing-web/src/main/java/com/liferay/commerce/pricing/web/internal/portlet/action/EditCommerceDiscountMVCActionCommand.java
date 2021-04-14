@@ -46,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_DISCOUNT,
-		"mvc.command.name=editCommerceDiscount"
+		"mvc.command.name=/commerce_discount/edit_commerce_discount"
 	},
 	service = MVCActionCommand.class
 )
@@ -180,17 +180,16 @@ public class EditCommerceDiscountMVCActionCommand extends BaseMVCActionCommand {
 			CommerceDiscount.class.getName(), actionRequest);
 
 		return _commerceDiscountService.upsertCommerceDiscount(
-			serviceContext.getUserId(), commerceDiscountId, title, target,
-			useCouponCode, couponCode, usePercentage, maximumDiscountAmount,
-			level, discountLevels[0], discountLevels[1], discountLevels[2],
-			discountLevels[3],
+			externalReferenceCode, serviceContext.getUserId(),
+			commerceDiscountId, title, target, useCouponCode, couponCode,
+			usePercentage, maximumDiscountAmount, level, discountLevels[0],
+			discountLevels[1], discountLevels[2], discountLevels[3],
 			_getLimitationType(limitationTimes, limitationTimesPerAccount),
 			limitationTimes, limitationTimesPerAccount, rulesConjunction,
 			active, displayDateMonth, displayDateDay, displayDateYear,
 			displayDateHour, displayDateMinute, expirationDateMonth,
 			expirationDateDay, expirationDateYear, expirationDateHour,
-			expirationDateMinute, externalReferenceCode, neverExpire,
-			serviceContext);
+			expirationDateMinute, neverExpire, serviceContext);
 	}
 
 	private BigDecimal[] _getDiscountLevels(String level, BigDecimal amount) {

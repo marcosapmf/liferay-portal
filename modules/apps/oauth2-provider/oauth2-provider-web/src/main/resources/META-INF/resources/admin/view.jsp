@@ -24,7 +24,7 @@ OAuth2ApplicationsManagementToolbarDisplayContext oAuth2ApplicationsManagementTo
 String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDisplayStyle();
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
 	creationMenu="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getCreationMenu() %>"
 	disabled="<%= oAuth2ApplicationsCount == 0 %>"
@@ -65,7 +65,7 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 				modelVar="oAuth2Application"
 			>
 				<portlet:renderURL var="editURL">
-					<portlet:param name="mvcRenderCommandName" value="/admin/update_oauth2_application" />
+					<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/update_oauth2_application" />
 					<portlet:param name="oAuth2ApplicationId" value="<%= String.valueOf(oAuth2Application.getOAuth2ApplicationId()) %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 				</portlet:renderURL>
@@ -165,7 +165,7 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 					),
 				},
 				url:
-					'<portlet:actionURL name="/admin/delete_oauth2_applications" />',
+					'<portlet:actionURL name="/oauth2_provider/delete_oauth2_applications" />',
 			});
 		}
 	}

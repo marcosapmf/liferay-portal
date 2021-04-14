@@ -22,8 +22,6 @@ CategoryCPAttachmentFileEntriesDisplayContext categoryCPAttachmentFileEntriesDis
 CPAttachmentFileEntry cpAttachmentFileEntry = categoryCPAttachmentFileEntriesDisplayContext.getCPAttachmentFileEntry();
 
 long categoryId = ParamUtil.getLong(request, "categoryId");
-
-long fileEntryId = BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEntryId");
 %>
 
 <liferay-ui:error-marker
@@ -35,14 +33,14 @@ long fileEntryId = BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEn
 
 <liferay-ui:error exception="<%= NoSuchFileEntryException.class %>" message="please-select-an-existing-file" />
 
-<portlet:actionURL name="uploadTempCategoryAttachment" var="uploadCoverImageURL">
+<portlet:actionURL name="/commerce_product_asset_categories/upload_temp_asset_category_attachment" var="uploadCoverImageURL">
 	<portlet:param name="categoryId" value="<%= String.valueOf(categoryId) %>" />
 </portlet:actionURL>
 
 <div class="lfr-attachment-cover-image-selector">
 	<liferay-item-selector:image-selector
 		draggableImage="vertical"
-		fileEntryId="<%= fileEntryId %>"
+		fileEntryId='<%= BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEntryId") %>'
 		itemSelectorEventName="addCategoryCPAttachmentFileEntry"
 		itemSelectorURL="<%= categoryCPAttachmentFileEntriesDisplayContext.getItemSelectorUrl() %>"
 		maxFileSize="<%= categoryCPAttachmentFileEntriesDisplayContext.getImageMaxSize() %>"

@@ -21,8 +21,8 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.saml.opensaml.integration.internal.BaseSamlTestCase;
+import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
-import com.liferay.saml.opensaml.integration.metadata.MetadataManager;
 import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
 import com.liferay.saml.runtime.exception.SubjectException;
@@ -73,11 +73,10 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 			_ATTRIBUTE_MAPPINGS
 		);
 
-		SamlSpIdpConnection samlSpIdpConnection = mock(
-			SamlSpIdpConnection.class);
+		_samlSpIdpConnection = mock(SamlSpIdpConnection.class);
 
 		when(
-			samlSpIdpConnection.isUnknownUsersAreStrangers()
+			_samlSpIdpConnection.isUnknownUsersAreStrangers()
 		).thenReturn(
 			true
 		);
@@ -89,7 +88,7 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 			samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
 				Mockito.anyLong(), Mockito.anyString())
 		).thenReturn(
-			samlSpIdpConnection
+			_samlSpIdpConnection
 		);
 
 		_defaultUserResolver.setSamlSpIdpConnectionLocalService(
@@ -133,8 +132,8 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		);
 
 		User resolvedUser = _defaultUserResolver.importUser(
-			1, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS, "emailAddress",
-			new UserResolverSAMLContextImpl(_messageContext),
+			1L, _samlSpIdpConnection, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS,
+			"emailAddress", new UserResolverSAMLContextImpl(_messageContext),
 			new ServiceContext());
 
 		Assert.assertNotNull(resolvedUser);
@@ -149,8 +148,8 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		);
 
 		_defaultUserResolver.importUser(
-			1, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS, "emailAddress",
-			new UserResolverSAMLContextImpl(_messageContext),
+			1L, _samlSpIdpConnection, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS,
+			"emailAddress", new UserResolverSAMLContextImpl(_messageContext),
 			new ServiceContext());
 	}
 
@@ -171,8 +170,8 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 		);
 
 		_defaultUserResolver.importUser(
-			1, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS, "emailAddress",
-			new UserResolverSAMLContextImpl(_messageContext),
+			1L, _samlSpIdpConnection, _SUBJECT_NAME_IDENTIFIER_EMAIL_ADDRESS,
+			"emailAddress", new UserResolverSAMLContextImpl(_messageContext),
 			new ServiceContext());
 	}
 
@@ -298,6 +297,7 @@ public class DefaultUserResolverTest extends BaseSamlTestCase {
 	private final DefaultUserResolver _defaultUserResolver =
 		new DefaultUserResolver();
 	private MessageContext<Response> _messageContext;
+	private SamlSpIdpConnection _samlSpIdpConnection;
 	private UserLocalService _userLocalService;
 
 }

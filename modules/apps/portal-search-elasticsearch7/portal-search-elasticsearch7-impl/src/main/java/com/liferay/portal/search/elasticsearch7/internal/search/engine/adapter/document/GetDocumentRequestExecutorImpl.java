@@ -18,7 +18,6 @@ import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.elasticsearch7.internal.document.DocumentFieldsTranslator;
-import com.liferay.portal.search.engine.adapter.document.BulkableDocumentRequestTranslator;
 import com.liferay.portal.search.engine.adapter.document.GetDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.GetDocumentResponse;
 import com.liferay.portal.search.geolocation.GeoBuilders;
@@ -42,8 +41,9 @@ public class GetDocumentRequestExecutorImpl
 
 	@Override
 	public GetDocumentResponse execute(GetDocumentRequest getDocumentRequest) {
-		GetRequest getRequest = _bulkableDocumentRequestTranslator.translate(
-			getDocumentRequest);
+		GetRequest getRequest =
+			_elasticsearchBulkableDocumentRequestTranslator.translate(
+				getDocumentRequest);
 
 		GetResponse getResponse = getGetResponse(
 			getRequest, getDocumentRequest);
@@ -89,9 +89,11 @@ public class GetDocumentRequestExecutorImpl
 
 	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
 	protected void setBulkableDocumentRequestTranslator(
-		BulkableDocumentRequestTranslator bulkableDocumentRequestTranslator) {
+		ElasticsearchBulkableDocumentRequestTranslator
+			elasticsearchBulkableDocumentRequestTranslator) {
 
-		_bulkableDocumentRequestTranslator = bulkableDocumentRequestTranslator;
+		_elasticsearchBulkableDocumentRequestTranslator =
+			elasticsearchBulkableDocumentRequestTranslator;
 	}
 
 	@Reference(unbind = "-")
@@ -113,9 +115,9 @@ public class GetDocumentRequestExecutorImpl
 		_geoBuilders = geoBuilders;
 	}
 
-	private BulkableDocumentRequestTranslator
-		_bulkableDocumentRequestTranslator;
 	private DocumentBuilderFactory _documentBuilderFactory;
+	private ElasticsearchBulkableDocumentRequestTranslator
+		_elasticsearchBulkableDocumentRequestTranslator;
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
 	private GeoBuilders _geoBuilders;
 

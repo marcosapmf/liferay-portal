@@ -80,16 +80,16 @@ boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 %>
 
-<portlet:actionURL name="addTemplate" var="addTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/add_template" var="addTemplateURL">
 	<portlet:param name="mvcPath" value="/edit_template.jsp" />
 </portlet:actionURL>
 
-<portlet:actionURL name="updateTemplate" var="updateTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/update_template" var="updateTemplateURL">
 	<portlet:param name="mvcPath" value="/edit_template.jsp" />
 </portlet:actionURL>
 
 <clay:container-fluid>
-	<aui:form action="<%= (template == null) ? addTemplateURL : updateTemplateURL %>" cssClass="container-fluid-1280" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault();" %>'>
+	<aui:form action="<%= (template == null) ? addTemplateURL : updateTemplateURL %>" cssClass="container-fluid container-fluid-max-xl" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault();" %>'>
 		<aui:input name="redirect" type="hidden" value="<%= ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource) %>" />
 		<aui:input name="closeRedirect" type="hidden" value="<%= closeRedirect %>" />
 		<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
@@ -273,7 +273,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 							<c:if test="<%= template != null %>">
 								<aui:input helpMessage="template-key-help" name="templateKey" type="resource" value="<%= template.getTemplateKey() %>" />
 
-								<portlet:resourceURL id="getTemplate" var="getTemplateURL">
+								<portlet:resourceURL id="/dynamic_data_mapping/get_template" var="getTemplateURL">
 									<portlet:param name="templateId" value="<%= String.valueOf(templateId) %>" />
 								</portlet:resourceURL>
 

@@ -49,6 +49,12 @@ definition {
 		Button.clickCancel();
 	}
 
+	macro changeDiffDisplayItem {
+		Click(locator1 = "Publications#CURRENT_DIFF_DISPLAY_ICON");
+
+		MenuItem.click(menuItem = "${displayItem}");
+	}
+
 	macro createNewPublication {
 		if ("${gotoManagePublications}" == "true") {
 			ApplicationsMenu.gotoPortlet(
@@ -82,7 +88,11 @@ definition {
 	}
 
 	macro deletePublication {
-		Click.waitForMenuToggleJSClick(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS");
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		Click(
+			key_publicationsName = "${publicationsName}",
+			locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
 
 		ClickNoError(
 			key_menuItem = "Delete",
@@ -116,8 +126,9 @@ definition {
 		if ("${conflictingPublications}" == "true") {
 			Click(
 				key_entryTitle = "${entryTitle}",
-				locator1 = "Publications#CONFICTING_CHANGES_DISCARD_BUTTON",
-				value1 = "Discard");
+				locator1 = "Publications#CONFLICTING_CHANGES_DISCARD_ELLIPSIS");
+
+			MenuItem.click(menuItem = "Discard Change");
 		}
 		else {
 			var key_publicationsCategory = "${publicationsCategory}";
@@ -205,18 +216,15 @@ definition {
 	macro gotoViewDiffInConflictingPublications {
 		Click(
 			key_entryTitle = "${entryTitle}",
-			locator1 = "Publications#CONFICTING_PUBLICATIONS_VIEW_BUTTON",
-			value1 = "View");
+			locator1 = "Publications#CONFLICTING_CHANGES_CONTENT_LINK");
 
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		Pause(locator1 = "1000");
 
 		SelectFrameTop(value1 = "relative=top");
 
 		AssertElementPresent(
 			key_iframeTitle = "${entryTitle}",
-			locator1 = "IFrame#IFRAME_TITLE");
-
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+			locator1 = "Publications#CONFLICTING_CHANGES_DIFF_IFRAME_TITLE");
 	}
 
 	macro publishPublication {
@@ -297,15 +305,11 @@ definition {
 				locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Schedule");
-
-			Click(locator1 = "Publications#NEXT_BUTTON");
 		}
 		else if ("${gotoReviewPublications}" == "true") {
 			Publications.gotoReviewPublications();
 
-			Click(locator1 = "Publications#SCHEDULE_BUTTON");
-
-			Click(locator1 = "Publications#NEXT_BUTTON");
+			Click(locator1 = "Publications#SCHEDULE_NAV_BAR");
 		}
 		else if ("${reschedule}" == "true") {
 			Publications.gotoScheduledPublications();
@@ -317,32 +321,64 @@ definition {
 				locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
 
 			MenuItem.click(menuItem = "Reschedule");
+
+			// Workaround LPS-123416
+
+			Pause(locator1 = "1000");
+
+			Click.mouseOverClick(locator1 = "Publications#DELETE_THE_ENTERED_TIME_BUTTON");
 		}
 		else {
 			Click(locator1 = "Publications#PUBLICATIONS_INDICATOR_BUTTON");
 
 			MenuItem.click(menuItem = "Schedule");
-
-			Click(locator1 = "Publications#NEXT_BUTTON");
 		}
 
-		var utcHours = Time.getUTCHours();
-		var utcMinutes = Time.getUTCMinutes();
-
-		if ("${utcMinutes}" == "59") {
-			utcHours = MathUtil.sum("${utcHours}", "1");
-
-			utcMinutes = "00";
-		}
-		else {
-			utcMinutes = MathUtil.sum("${utcMinutes}", "1");
-		}
+		var publishDateDay = Time.getUTCDay();
+		var publishDateMonth = Time.getUTCMonth();
+		var publishDateYear = Time.getUTCYear();
+		var publishDate = "${publishDateYear}-${publishDateMonth}-${publishDateDay}";
 
 		Type(
-			locator1 = "Publications#PUBLISH_TIME",
-			value1 = "${utcHours}:${utcMinutes}");
+			locator1 = "Publications#PUBLISH_DATE",
+			value1 = "${publishDate}");
 
-		Click(locator1 = "Publications#SCHEDULE_BUTTON");
+		var publishTimeHours = Time.getUTCHours();
+		var publishTimeMinutes = Time.getUTCMinutes();
+
+		if ("${utcMinutes}" == "59") {
+			publishTimeHours = MathUtil.sum("${publishTimeHours}", "1");
+
+			publishTimeMinutes = "00";
+		}
+		else {
+			publishTimeMinutes = MathUtil.sum("${publishTimeMinutes}", "1");
+		}
+
+		Click(locator1 = "Publications#PUBLISH_TIME_HOURS");
+
+		DoubleClick.javaScriptDoubleClick(locator1 = "Publications#PUBLISH_TIME_HOURS");
+
+		Type.sendKeys(
+			locator1 = "Publications#PUBLISH_TIME_HOURS",
+			value1 = "${publishTimeHours}");
+
+		Click(locator1 = "Publications#PUBLISH_TIME_MINUTES");
+
+		DoubleClick.javaScriptDoubleClick(locator1 = "Publications#PUBLISH_TIME_MINUTES");
+
+		Type.sendKeys(
+			locator1 = "Publications#PUBLISH_TIME_MINUTES",
+			value1 = "${publishTimeMinutes}");
+
+		if ("${reschedule}" == "true") {
+			Click(locator1 = "Publications#RESCHEDULE_BUTTON");
+		}
+		else {
+			Click(locator1 = "Publications#SCHEDULE_BUTTON");
+		}
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro search {
@@ -360,7 +396,7 @@ definition {
 
 		MenuItem.click(menuItem = "Select a Publication");
 
-		SelectFrame(locator1 = "IFrame#SELECT_PUBLICATION");
+		SelectFrameTop(value1 = "relative=top");
 
 		var key_publicationsName = "${publicationsName}";
 
@@ -391,7 +427,7 @@ definition {
 		AssertElementPresent(
 			key_entryTitle = "${entryTitle}",
 			key_successMessage = "${successMessage}",
-			locator1 = "Publications#CONFICTING_PUBLICATIONS_SUCCESS_CONTENT");
+			locator1 = "Publications#CONFLICTING_CHANGES_SUCCESS_CONTENT");
 	}
 
 	macro viewNeedsManualResolution {
@@ -400,32 +436,55 @@ definition {
 		AssertElementPresent(
 			key_entryTitle = "${entryTitle}",
 			key_warningMessage = "${warningMessage}",
-			locator1 = "Publications#CONFICTING_PUBLICATIONS_WARNING_CONTENT");
+			locator1 = "Publications#CONFLICTING_CHANGES_WARNING_CONTENT");
 
 		AssertVisible(locator1 = "Publications#DISABLED_PUBLISH_BUTTON");
 	}
 
 	macro viewPublicationsDiff {
-		if (contains("${entryTitle}", "modified")) {
+		AssertTextEquals(
+			key_displayItem = "Unified",
+			locator1 = "Publications#CURRENT_DIFF_DISPLAY_ITEM",
+			value1 = "Unified");
+
+		var key_columnName = "${columnName}";
+
+		if (isSet(diffAddedValue)) {
 			AssertTextEquals.assertPartialText(
-				key_publicationsName = "Production",
-				locator1 = "Publications#PUBLICATION_NAME_IN_DIFF",
-				value1 = "Production");
+				locator1 = "Publications#DIFF_ADDED_VALUE",
+				value1 = "${diffAddedValue}");
+		}
+
+		if (isSet(diffRemovedValue)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "Publications#DIFF_REMOVED_VALUE",
+				value1 = "${diffRemovedValue}");
+		}
+
+		Publications.changeDiffDisplayItem(displayItem = "Production");
+
+		AssertTextEquals(
+			key_displayItem = "Production",
+			locator1 = "Publications#CURRENT_DIFF_DISPLAY_ITEM",
+			value1 = "Production");
+
+		if (isSet(columnValueInProduction)) {
+			key_columnValueInProduction = "${columnValueInProduction}";
 
 			AssertTextEquals.assertPartialText(
-				key_publicationsName = "${publicationsName}",
-				locator1 = "Publications#PUBLICATION_NAME_IN_DIFF",
-				value1 = "${publicationsName}");
+				locator1 = "Publications#COLUMN_VALUE_IN_PRODUCTION",
+				value1 = "${columnValueInProduction}");
+		}
 
-			var key_columnName = "${columnName}";
-			var key_columnValueInProduction = "${columnValueInProduction}";
-			var key_columnValueInPublication = "${columnValueInPublication}";
+		Publications.changeDiffDisplayItem(displayItem = "Publication: ${publicationsName}");
 
-			if (isSet(columnValueInProduction)) {
-				AssertTextEquals.assertPartialText(
-					locator1 = "Publications#COLUMN_VALUE_IN_PRODUCTION",
-					value1 = "${columnValueInProduction}");
-			}
+		AssertTextEquals(
+			key_displayItem = "${publicationsName}",
+			locator1 = "Publications#CURRENT_DIFF_DISPLAY_ITEM",
+			value1 = "${publicationsName}");
+
+		if (isSet(columnValueInPublication)) {
+			key_columnValueInPublication = "${columnValueInPublication}";
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "Publications#COLUMN_VALUE_IN_PUBLICATION",

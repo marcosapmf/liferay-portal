@@ -35,6 +35,7 @@ else {
 PortletURL portletURL = PortletURLUtil.getCurrent(renderRequest, renderResponse);
 
 request.setAttribute("search.jsp-portletURL", portletURL);
+
 request.setAttribute("search.jsp-returnToFullPageURL", portletDisplay.getURLBack());
 %>
 
@@ -49,13 +50,6 @@ request.setAttribute("search.jsp-returnToFullPageURL", portletDisplay.getURLBack
 		<liferay-ui:input-search
 			name="keywords"
 			placeholder='<%= LanguageUtil.get(request, "keywords") %>'
-		/>
-	</div>
-
-	<div class="search-results">
-		<liferay-ui:search-speed
-			hits="<%= journalContentSearchDisplayContext.getHits() %>"
-			searchContainer="<%= journalContentSearchDisplayContext.getSearchContainer() %>"
 		/>
 	</div>
 

@@ -358,14 +358,69 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-115435."
+	@priority = "3"
+	test ModifyPaginationConfigurationProperties {
+		for (var count : list "1,2,3,4,5") {
+			JSONWebcontent.addWebContent(
+				content = "WC Content ${count}",
+				groupName = "Guest",
+				title = "Apple ${count}");
+		}
+
+		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+
+		SearchPortlets.addWidgets(searchPortletList = "Sort");
+
+		Refresh();
+
+		SearchPortlets.chooseSortOption(sortOption = "Title");
+
+		SearchPortlets.searchEmbedded(searchTerm = "Apple");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article,Apple 5/Web Content Article,",
+			searchTerm = "Apple");
+
+		SearchResultPortlet.configureSearchResults(paginationDelta = "3");
+
+		Refresh();
+
+		SearchResultPortlet.viewSearchResultNotPresent(
+			searchAssetTitle = "Apple 4",
+			searchAssetType = "Web Content Article");
+
+		Pagination.changePagination(itemsPerPage = "20");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article,Apple 5/Web Content Article,",
+			searchTerm = "Apple");
+
+		Pagination.changePagination(itemsPerPage = "4");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article",
+			searchTerm = "Apple");
+
+		SearchResultPortlet.viewSearchResultNotPresent(
+			searchAssetTitle = "Apple 5",
+			searchAssetType = "Web Content Article");
+
+		Pagination.changePagination(itemsPerPage = "20");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "Apple 1/Web Content Article,Apple 2/Web Content Article,Apple 3/Web Content Article,Apple 4/Web Content Article,Apple 5/Web Content Article",
+			searchTerm = "Apple");
+	}
+
 	@description = "This is a use case for LPS-90078."
 	@priority = "4"
 	test ModifyPaginationPortalProperties {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property custom.properties = "search.container.page.default.delta=2";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property portal.acceptance = "true";
 		property environment.acceptance = "true";
+		property portal.acceptance = "true";
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
@@ -1181,7 +1236,7 @@ definition {
 			entryContent = "This is a blog about Potatoes",
 			entryTitle = "Potato Blog");
 
-		var currentDate = DateUtil.getFormattedDate("0", "MMM d, YYYY");
+		var currentDate = DateUtil.getFormattedCurrentDate("MMM d, yyyy");
 		var portalURL = PropsUtil.get("portal.url");
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/guest/search");
@@ -1310,7 +1365,8 @@ definition {
 	@description = "This is a use case for LPS-81931"
 	@priority = "5"
 	test SearchGlobalTemplateSmoke {
-		property portal.acceptance = "true";
+		property portal.acceptance = "false";
+		property portal.upstream = "false";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
@@ -2286,6 +2342,15 @@ definition {
 			password = "test",
 			userEmailAddress = "test@liferay.com");
 
+		ApplicationsMenu.gotoPortlet(
+			category = "Configuration",
+			panel = "Control Panel",
+			portlet = "Search");
+
+		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+
+		Navigator.openURL();
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			portlet = "Pages");
@@ -2294,13 +2359,25 @@ definition {
 
 		Navigator.gotoPage(pageName = "${searchPage}");
 
-		SearchPortlets.addWidgets(searchPortletList = "Category Facet,Folder Facet,Site Facet,Tag Facet,Type Facet,User Facet,Search Results,Search Bar");
+		SearchPortlets.addWidgets(searchPortletList = "Category Facet,Folder Facet,Site Facet,Tag Facet,Type Facet,User Facet");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "2",
+			groupName = "Guest",
+			layoutName = "Search Page",
+			widgetName = "Search Bar");
 
 		JSONLayout.addWidgetToPublicLayout(
 			column = "2",
 			groupName = "Guest",
 			layoutName = "Search Page",
 			widgetName = "Search Options");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "2",
+			groupName = "Guest",
+			layoutName = "Search Page",
+			widgetName = "Search Results");
 
 		Refresh();
 
@@ -2607,25 +2684,25 @@ definition {
 
 	test ViewSortedSearchResults {
 		JSONWebcontent.addWebContent(
-			content = "Content",
+			content = "Fruit",
 			groupName = "Guest",
 			title = "Apple");
 
 		Pause(locator1 = "1000");
 
 		JSONWebcontent.addWebContent(
-			content = "Content",
+			content = "Fruit",
 			groupName = "Guest",
 			title = "Banana");
 
 		Pause(locator1 = "1000");
 
 		JSONWebcontent.addWebContent(
-			content = "Content",
+			content = "Fruit",
 			groupName = "Guest",
 			title = "Cantaloupe");
 
-		SearchPortlets.searchEmbedded(searchTerm = "Content");
+		SearchPortlets.searchEmbedded(searchTerm = "Fruit");
 
 		SearchPortlets.addWidgets(searchPortletList = "Sort");
 

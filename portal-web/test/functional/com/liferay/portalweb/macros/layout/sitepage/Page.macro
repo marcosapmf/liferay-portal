@@ -2,7 +2,7 @@ definition {
 
 	macro _addPageTypeEmbedded {
 		Type(
-			locator1 = "SitePagesEditPage#PAGE_TYPE_EMBEDDED_URL_FIELD",
+			locator1 = "TextInput#URL",
 			value1 = "${pageTypeURL}");
 
 		AssertTextEquals.assertPartialText(
@@ -80,34 +80,16 @@ definition {
 		if ("${locale}" == "zh") {
 			var zhAlternate = '''" hreflang="zh-CN" rel="alternate" />''';
 
-			var hrefURL = selenium.getAttribute("//link[contains(@rel,'alternate')][contains(@hreflang,'zh-CN')]@href");
-
-			var hrefURLNoPortalURL = StringUtil.replace("${hrefURL}", "${portalURL}/zh", "");
-
-			var pageSource = StringUtil.add("${HTML}", "${portalURL}/zh${zhAlternate}","");
-
-			var pageSourceAlternate = StringUtil.add("${HTML}", "${portalURL}/zh/web/guest${zhAlternate}","");
+			var pageSource = StringUtil.add("${HTML}", "${portalURL}/zh/web/guest${zhAlternate}","");
 		}
 
 		else if ("${locale}" == "es") {
 			var esAlternate = '''" hreflang="es-ES" rel="alternate" />''';
 
-			var hrefURL = selenium.getAttribute("//link[contains(@rel,'alternate')][contains(@hreflang,'es-ES')]@href");
-
-			var hrefURLNoPortalURL = StringUtil.replace("${hrefURL}", "${portalURL}/es", "");
-
-			var pageSource = StringUtil.add("${HTML}", "${portalURL}/es${esAlternate}","");
-
-			var pageSourceAlternate = StringUtil.add("${HTML}", "${portalURL}/es/web/guest${esAlternate}","");
+			var pageSource = StringUtil.add("${HTML}", "${portalURL}/es/web/guest${esAlternate}","");
 		}
-		echo("${hrefURL}");
 
-		if ("${hrefURLNoPortalURL}" == "/web/guest") {
-			AssertHTMLSourceTextPresent(value1 = "${pageSourceAlternate}");
-		}
-		else {
-			AssertHTMLSourceTextPresent(value1 = "${pageSource}");
-		}
+		AssertHTMLSourceTextPresent(value1 = "${pageSource}");
 	}
 
 	macro assertCannotDeleteOnlyPage {
@@ -122,49 +104,29 @@ definition {
 		var HTML = '''<link data-senna-track="temporary" href="''';
 		var HTML2 = '''" rel="canonical" />''';
 
-		if (isSet(pageName)) {
-			var pageNameURL = StringUtil.lowerCase("${pageName}");
-
-			var pageNameURL = StringUtil.replace("${pageNameURL}", " ", "-");
-
-			var hrefURL = selenium.getAttribute("//link[contains(@rel,'canonical')]@href");
-
-			var hrefURLNoPageName = StringUtil.replace("${hrefURL}", "/${pageNameURL}", "");
-
-			var hrefURLNoPortalURL = StringUtil.replace("${hrefURLNoPageName}", "${portalURL}", "");
-
-			var pageSource = StringUtil.add("${HTML}", "${portalURL}/${pageNameURL}${HTML2}","");
-
-			var pageSourceAlternate = StringUtil.add("${HTML}", "${portalURL}/web/guest/${pageNameURL}${HTML2}","");
+		if (isSet(customCanonicalURL)) {
+			var portalURL = "${customCanonicalURL}";
 		}
 
 		else if (isSet(locale)) {
-			var hrefURL = selenium.getAttribute("//link[contains(@rel,'canonical')]@href");
+			var portalURL = "${portalURL}/${locale}/web/guest";
+		}
+		else {
+			var portalURL = "${portalURL}/web/guest";
+		}
 
-			var hrefURLNoPortalURL = StringUtil.replace("${hrefURL}", "${portalURL}/${locale}", "");
+		if (isSet(pageName)) {
+			var pageName = StringUtil.lowerCase("${pageName}");
+			var pageNameURL = StringUtil.replace("${pageName}", " ", "-");
 
-			var pageSource = StringUtil.add("${HTML}", "${portalURL}/${locale}${HTML2}","");
-
-			var pageSourceAlternate = StringUtil.add("${HTML}", "${portalURL}/${locale}/web/guest${HTML2}","");
+			var pageSource = StringUtil.add("${HTML}", "${portalURL}/${pageNameURL}${HTML2}","");
 		}
 
 		else {
-			var hrefURL = selenium.getAttribute("//link[contains(@rel,'canonical')]@href");
-
-			var hrefURLNoPortalURL = StringUtil.replace("${hrefURL}", "${portalURL}", "");
-
 			var pageSource = StringUtil.add("${HTML}", "${portalURL}${HTML2}","");
+		}
 
-			var pageSourceAlternate = StringUtil.add("${HTML}", "${portalURL}/web/guest${HTML2}","");
-		}
-		echo("${hrefURL}");
-
-		if ("${hrefURLNoPortalURL}" == "/web/guest") {
-			AssertHTMLSourceTextPresent(value1 = "${pageSourceAlternate}");
-		}
-		else {
-			AssertHTMLSourceTextPresent(value1 = "${pageSource}");
-		}
+		AssertHTMLSourceTextPresent(value1 = "${pageSource}");
 	}
 
 	macro assertNodePortPG {
@@ -231,6 +193,28 @@ definition {
 		LexiconCard.clickCardTitle(card = "${themeName}");
 
 		SelectFrameTop(value1 = "relative=top");
+
+		PortletEntry.save();
+	}
+
+	macro configureCanonicalURL {
+		var checkboxName = "Use Custom Canonical URL";
+
+		if (IsNotChecked(locator1 = "Checkbox#ANY_CHECKBOX")) {
+			Click(locator1 = "Checkbox#ANY_CHECKBOX");
+
+			AssertTextEquals(
+				locator1 = "Message#INFO",
+				value1 = "Info:Due to the customization of the canonical URL, depending on the platform this page is shared, the Open Graph metadata shown might not be the one configured in this page.");
+		}
+
+		if (isSet(locale)) {
+			PortletEntry.changeLocale(locale = "${locale}");
+		}
+
+		Type(
+			locator1 = "TextInput#CUSTOM_CANONICAL_URL",
+			value1 = "${customCanonicalURL}");
 
 		PortletEntry.save();
 	}
@@ -357,7 +341,9 @@ definition {
 
 		ClickNoError(locator1 = "Home#PAGE");
 
-		MouseOver(locator1 = "Home#PAGE");
+		MouseOver(locator1 = "Home#SITE_NAME");
+
+		MouseOver(locator1 = "NavigationMenusWidget#CHILD_TOGGLE");
 
 		AssertVisible(
 			key_childPageName = "${childPageName}",
@@ -479,6 +465,55 @@ definition {
 		Button.clickSave();
 
 		Alert.viewSuccessMessage();
+	}
+
+	macro selectFilterInCollectionCategoryFilter {
+		if (isSet(columnNumber)) {
+			Click.clickNoWaitForVisible(
+				key_columnNumber = "${columnNumber}",
+				key_elementHeader = "//p[normalize-space(text())='${title}']//following-sibling::div//button[contains(@class,'dropdown-toggle')]",
+				key_position = "1",
+				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
+		}
+		else {
+			Click(
+				key_title = "${title}",
+				locator1 = "Fragment#COLLECTION_CATEGORY_FILTER_DROPDOWN_TOGGLE");
+		}
+
+		if (isSet(multipleSelection)) {
+			for (var categoryName : list "${categoryNameList}") {
+				Check.checkNotVisible(
+					key_checkboxName = "${categoryName}",
+					locator1 = "MenuItem#ANY_CHECKBOX");
+
+				Pause(locator1 = "3000");
+
+				AssertChecked.assertCheckedNotVisible(
+					key_checkboxName = "${categoryName}",
+					locator1 = "MenuItem#ANY_CHECKBOX");
+			}
+
+			Button.clickApply();
+		}
+		else {
+			DropdownMenuItem.click(menuItem = "${filterName}");
+		}
+
+		if (isSet(columnNumber)) {
+			AssertTextEquals(
+				key_columnNumber = "${columnNumber}",
+				key_elementHeader = "//p[normalize-space(text())='${title}']//following-sibling::div//button[contains(@class,'dropdown-toggle')]",
+				key_position = "1",
+				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT",
+				value1 = "${selectedName}");
+		}
+		else {
+			AssertTextEquals(
+				key_title = "${title}",
+				locator1 = "Fragment#COLLECTION_CATEGORY_FILTER_DROPDOWN_TOGGLE",
+				value1 = "${selectedName}");
+		}
 	}
 
 	macro selectMobileDeviceFamily {
@@ -1009,7 +1044,6 @@ definition {
 		AssertElementPresent(locator1 = "SitePages#DETAILS_PAGE_TYPE_PANEL_COMPONENT_TREE_EXPANDED");
 
 		for (var portletName : list "${portletNameList}") {
-
 			if ("${portletName}" == "Portal Directory") {
 				var key_componentOrPortletName ="Directory";
 			}
@@ -1100,7 +1134,11 @@ definition {
 		if (isSet(truncatedHTMLTitle)) {
 			ProductMenuHelper.closeProductMenu();
 
+			takeScreenshot();
+
 			if (isSet(openGraph)) {
+				ScrollWebElementIntoView(locator1 = "Button#SAVE");
+
 				SikuliAssertElementPresent(locator1 = "SitePagesEditPage#PREVIEW_TITLE_ELLIPSES_OG");
 			}
 			else {

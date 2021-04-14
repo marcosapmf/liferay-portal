@@ -18,17 +18,55 @@ import {
 	generateInstanceId,
 } from 'dynamic-data-mapping-form-renderer';
 
-import {getDefaultFieldName} from '../../../util/fieldSupport.es';
+import {
+	getDefaultFieldName,
+	localizeField,
+} from '../../../util/fieldSupport.es';
 import {sub} from '../../../util/strings.es';
 import {getFieldLocalizedValue} from '../util/fields.es';
 import {
 	getSettingsContextProperty,
 	updateField,
+	updateFieldLabel,
+	updateSettingsContextInstanceId,
 	updateSettingsContextProperty,
 } from '../util/settingsContext.es';
 
+export const getLabel = (
+	originalField,
+	defaultLanguageId,
+	editingLanguageId
+) => {
+	const labelFieldLocalizedValue = getFieldLocalizedValue(
+		originalField.settingsContext.pages,
+		'label',
+		editingLanguageId
+	);
+
+	if (!labelFieldLocalizedValue) {
+		return;
+	}
+
+	return sub(Liferay.Language.get('copy-of-x'), [labelFieldLocalizedValue]);
+};
+
+export const getValidation = (originalField) => {
+	const validation = getSettingsContextProperty(
+		originalField.settingsContext,
+		'validation'
+	);
+
+	return validation;
+};
+
 export const createDuplicatedField = (originalField, props, blacklist = []) => {
-	const {editingLanguageId, fieldNameGenerator} = props;
+	const {
+		availableLanguageIds,
+		defaultLanguageId,
+		editingLanguageId,
+		fieldNameGenerator,
+		generateFieldNameUsingFieldLabel,
+	} = props;
 	const newFieldName = fieldNameGenerator(
 		getDefaultFieldName(),
 		null,
@@ -42,11 +80,33 @@ export const createDuplicatedField = (originalField, props, blacklist = []) => {
 		newFieldName
 	);
 
+	duplicatedField = updateField(
+		props,
+		duplicatedField,
+		'fieldReference',
+		newFieldName
+	);
+
 	duplicatedField.instanceId = generateInstanceId(8);
 
-	const label = getLabel(originalField, editingLanguageId);
+	availableLanguageIds.forEach((availableLanguageId) => {
+		const label = getLabel(
+			originalField,
+			defaultLanguageId,
+			availableLanguageId
+		);
 
-	duplicatedField = updateField(props, duplicatedField, 'label', label);
+		if (label) {
+			duplicatedField = updateFieldLabel(
+				defaultLanguageId,
+				availableLanguageId,
+				fieldNameGenerator,
+				duplicatedField,
+				generateFieldNameUsingFieldLabel,
+				label
+			);
+		}
+	});
 
 	if (duplicatedField.nestedFields?.length > 0) {
 		duplicatedField.nestedFields = duplicatedField.nestedFields.map(
@@ -59,9 +119,15 @@ export const createDuplicatedField = (originalField, props, blacklist = []) => {
 
 				blacklist.push(newDuplicatedNestedField.fieldName);
 
+				let {rows = []} = duplicatedField;
+
+				if (typeof rows === 'string') {
+					rows = JSON.parse(rows);
+				}
+
 				const visitor = new PagesVisitor([
 					{
-						rows: duplicatedField.rows ?? [],
+						rows,
 					},
 				]);
 
@@ -92,31 +158,23 @@ export const createDuplicatedField = (originalField, props, blacklist = []) => {
 		);
 	}
 
+	const settingsContext = updateSettingsContextInstanceId(duplicatedField);
+
+	const settingsVisitor = new PagesVisitor(settingsContext.pages);
+
+	duplicatedField.settingsContext = {
+		...settingsContext,
+		pages: settingsVisitor.mapFields((field) =>
+			localizeField(field, defaultLanguageId, editingLanguageId)
+		),
+	};
+
 	return updateField(
 		props,
 		duplicatedField,
 		'validation',
 		getValidation(duplicatedField)
 	);
-};
-
-export const getLabel = (originalField, editingLanguageId) => {
-	return sub(Liferay.Language.get('copy-of-x'), [
-		getFieldLocalizedValue(
-			originalField.settingsContext.pages,
-			'label',
-			editingLanguageId
-		),
-	]);
-};
-
-export const getValidation = (originalField) => {
-	const validation = getSettingsContextProperty(
-		originalField.settingsContext,
-		'validation'
-	);
-
-	return validation;
 };
 
 export const duplicateField = (
@@ -148,7 +206,13 @@ export const duplicateField = (
 						nestedFields
 					);
 
-					let pages = [{rows: field.rows}];
+					let {rows} = field;
+
+					if (typeof rows === 'string') {
+						rows = JSON.parse(rows);
+					}
+
+					let pages = [{rows}];
 
 					const {rowIndex} = FormSupport.getFieldIndexes(
 						pages,

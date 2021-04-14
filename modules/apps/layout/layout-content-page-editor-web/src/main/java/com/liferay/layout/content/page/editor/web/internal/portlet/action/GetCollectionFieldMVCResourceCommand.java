@@ -74,7 +74,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/get_collection_field"
+		"mvc.command.name=/layout_content_page_editor/get_collection_field"
 	},
 	service = MVCResourceCommand.class
 )
@@ -155,9 +155,8 @@ public class GetCollectionFieldMVCResourceCommand
 
 				defaultLayoutListRetrieverContext.setPagination(
 					Pagination.of(size, 0));
-				defaultLayoutListRetrieverContext.
-					setSegmentsExperienceIdsOptional(
-						new long[] {segmentsExperienceId});
+				defaultLayoutListRetrieverContext.setSegmentsExperienceIds(
+					new long[] {segmentsExperienceId});
 
 				ListObjectReference listObjectReference =
 					listObjectReferenceFactory.getListObjectReference(

@@ -54,6 +54,8 @@ public class CommerceDiscountConstants {
 		LIMITATION_TYPE_LIMITED_FOR_ACCOUNTS_AND_TOTAL
 	};
 
+	public static final String RESOURCE_NAME = "com.liferay.commerce.discount";
+
 	public static final String TARGET_CATEGORIES = "categories";
 
 	/**
@@ -89,5 +91,11 @@ public class CommerceDiscountConstants {
 	public static final String TYPE_PERCENTAGE = "percentage";
 
 	public static final String[] TYPES = {TYPE_PERCENTAGE, TYPE_FIXED_AMOUNT};
+
+	public static final String VALIDATOR_TYPE_POST_QUALIFICATION =
+		"post-qualification";
+
+	public static final String VALIDATOR_TYPE_PRE_QUALIFICATION =
+		"pre-qualification";
 
 }

@@ -132,6 +132,32 @@
 			</c:if>
 		];
 
+		(function () {
+			var available = {};
+
+			var direction = {};
+
+			<%
+			for (Locale curLocale : LanguageUtil.getAvailableLocales()) {
+				String selLanguageId = LocaleUtil.toLanguageId(curLocale);
+			%>
+
+				available['<%= selLanguageId %>'] = '<%= curLocale.getDisplayName(locale) %>';
+				direction['<%= selLanguageId %>'] = '<%= LanguageUtil.get(curLocale, "lang.dir") %>';
+
+			<%
+			}
+			%>
+
+			Liferay.Language = {
+				available,
+				direction,
+				get: function(key) {
+					return key;
+				}
+			};
+		})();
+
 		Liferay.PortletKeys = {
 			DOCUMENT_LIBRARY: '<%= PortletKeys.DOCUMENT_LIBRARY %>',
 			DYNAMIC_DATA_MAPPING: 'com_liferay_dynamic_data_mapping_web_portlet_DDMPortlet',
@@ -311,9 +337,6 @@
 			long jsLastModified = PortalWebResourcesUtil.getLastModified(PortalWebResourceConstants.RESOURCE_TYPE_JS);
 			%>
 
-			getAvailableLangPath: function() {
-				return '<%= PortalUtil.getStaticResourceURL(request, "available_languages.jsp", LanguageUtil.getLastModified()) %>';
-			},
 			getCombine: function() {
 				return <%= themeDisplay.isThemeJsFastLoad() %>;
 			},
@@ -357,9 +380,6 @@
 			getJavaScriptRootPath: function() {
 				return '<%= themeDisplay.getPathJavaScript() %>';
 			},
-			getLangPath: function() {
-				return '<%= PortalUtil.getStaticResourceURL(request, "aui_lang.jsp", jsLastModified) %>';
-			},
 			getPortletRootPath: function() {
 				return '<%= themeDisplay.getPathContext() %>/html/portlet';
 			},
@@ -380,15 +400,6 @@
 </script>
 
 <liferay-util:dynamic-include key="/html/common/themes/top_js.jspf#resources" />
-
-<c:if test="<%= PortalWebResourcesUtil.getPortalWebResources(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG) != null %>">
-
-	<%
-	long jsBundleConfigLastModified = PortalWebResourcesUtil.getLastModified(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG);
-	%>
-
-	<script data-senna-track="temporary" src="<%= HtmlUtil.escape(themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_JS_BUNDLE_CONFIG) + "/js_bundle_config?t=" + jsBundleConfigLastModified) %>" type="text/javascript"></script>
-</c:if>
 
 <script data-senna-track="temporary" type="text/javascript">
 	// <![CDATA[
@@ -503,7 +514,7 @@ for (String analyticsType : analyticsTypes) {
 		<c:otherwise>
 
 			<%
-			String analyticsScript = groupTypeSettings.getProperty(Sites.ANALYTICS_PREFIX + analyticsType);
+			String analyticsScript = HtmlUtil.escape(groupTypeSettings.getProperty(Sites.ANALYTICS_PREFIX + analyticsType));
 			%>
 
 			<c:if test="<%= Validator.isNotNull(analyticsScript) %>">

@@ -28,10 +28,10 @@ const getPredefinedValues = ({locale, localizedValue, options}) => {
 
 export const getFilteredSettingsContext = ({
 	config,
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
 	editingLanguageId,
 	settingsContext,
 }) => {
-	const defaultLanguageId = themeDisplay.getDefaultLanguageId();
 	const unsupportedTabs = [...config.disabledTabs];
 
 	const pages = settingsContext.pages.filter(
@@ -87,6 +87,14 @@ export const getFilteredSettingsContext = ({
 						field.localizedValue[
 							field.locale
 						] = getPredefinedValues(field);
+					}
+
+					if (fieldName === 'repeatable') {
+						return {
+							...updatedField,
+							name: generateName(name, updatedField),
+							showMaximumRepetitionsInfo: false,
+						};
 					}
 
 					return {

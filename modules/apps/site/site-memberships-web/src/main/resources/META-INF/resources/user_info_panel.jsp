@@ -119,7 +119,7 @@ Group group = siteMembershipsDisplayContext.getGroup();
 			%>
 
 			<c:if test="<%= Validator.isNotNull(portraitURL) %>">
-				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="crop-img img-rounded" src="<%= portraitURL %>" />
+				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="crop-img rounded" src="<%= portraitURL %>" />
 			</c:if>
 
 			<h5><liferay-ui:message key="email" /></h5>
@@ -129,11 +129,9 @@ Group group = siteMembershipsDisplayContext.getGroup();
 			</p>
 
 			<%
-			List<UserGroupRole> userGroupRoles = UserGroupRoleLocalServiceUtil.getUserGroupRoles(curUser.getUserId(), siteMembershipsDisplayContext.getGroupId());
-
 			List<Team> teams = TeamLocalServiceUtil.getUserOrUserGroupTeams(siteMembershipsDisplayContext.getGroupId(), curUser.getUserId());
 
-			List<String> rolesAndTeamsNames = ListUtil.toList(userGroupRoles, UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR);
+			List<String> rolesAndTeamsNames = ListUtil.toList(UserGroupRoleLocalServiceUtil.getUserGroupRoles(curUser.getUserId(), siteMembershipsDisplayContext.getGroupId()), UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR);
 
 			rolesAndTeamsNames.addAll(ListUtil.toList(teams, Team.NAME_ACCESSOR));
 			%>

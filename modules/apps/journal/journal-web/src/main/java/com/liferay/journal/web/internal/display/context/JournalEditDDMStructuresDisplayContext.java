@@ -86,7 +86,7 @@ public class JournalEditDDMStructuresDisplayContext {
 				"label", LanguageUtil.get(_httpServletRequest, "properties")
 			).put(
 				"pluginEntryPoint",
-				npmResolvedPackageName + "/js/ddm_structure/panels/index.es"
+				npmResolvedPackageName + "/js/data_engine/panels/index.es"
 			).put(
 				"sidebarPanelId", "properties"
 			).put(
@@ -96,8 +96,7 @@ public class JournalEditDDMStructuresDisplayContext {
 						_liferayPortletResponse.createRenderURL();
 
 					editBasicInfoURL.setParameter(
-						"mvcPath",
-						"/ddm_structure/basic_info_data_engine_editor.jsp");
+						"mvcPath", "/data_engine/basic_info.jsp");
 					editBasicInfoURL.setParameter(
 						"ddmStructureId", String.valueOf(getDDMStructureId()));
 					editBasicInfoURL.setWindowState(
@@ -139,11 +138,22 @@ public class JournalEditDDMStructuresDisplayContext {
 		return StringPool.BLANK;
 	}
 
+	public Map<String, Object> getComponentContext() {
+		return HashMapBuilder.<String, Object>put(
+			"contentTitle", "name"
+		).put(
+			"defaultLanguageId", getDefaultLanguageId()
+		).build();
+	}
+
 	public DDMForm getDDMForm() {
 		try {
 			return DDMUtil.getDDMForm(getScript());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -169,6 +179,16 @@ public class JournalEditDDMStructuresDisplayContext {
 			_httpServletRequest, "ddmStructureId");
 
 		return _ddmStructureId;
+	}
+
+	public String getDefaultLanguageId() {
+		DDMForm ddmForm = getDDMForm();
+
+		if ((ddmForm == null) || (ddmForm.getDefaultLocale() == null)) {
+			return LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault());
+		}
+
+		return LocaleUtil.toLanguageId(ddmForm.getDefaultLocale());
 	}
 
 	public String getFields() throws PortalException {
@@ -273,7 +293,7 @@ public class JournalEditDDMStructuresDisplayContext {
 	}
 
 	public String getStorageType() {
-		String storageType = StorageType.JSON.getValue();
+		String storageType = StorageType.DEFAULT.getValue();
 
 		try {
 			JournalServiceConfiguration journalServiceConfiguration =

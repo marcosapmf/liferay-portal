@@ -19,47 +19,51 @@
 <%
 CommerceCartContentTotalDisplayContext commerceCartContentTotalDisplayContext = (CommerceCartContentTotalDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
-CommerceMoney subtotal = null;
-CommerceMoney taxValue = null;
-CommerceMoney totalOrder = null;
-CommerceMoney totalDiscountAmount = null;
-CommerceMoney subtotalDiscountAmount = null;
-CommerceDiscountValue totalDiscountValue = null;
-CommerceDiscountValue subtotalDiscountValue = null;
+CommerceMoney subtotalCommerceMoney = null;
+CommerceMoney taxValueCommerceMoney = null;
+CommerceMoney totalOrderCommerceMoney = null;
+CommerceMoney totalDiscountAmountCommerceMoney = null;
+CommerceMoney subtotalDiscountAmountCommerceMoney = null;
+CommerceDiscountValue totalCommerceDiscountValue = null;
+CommerceDiscountValue subtotalCommerceDiscountValue = null;
 
 String priceDisplayType = commerceCartContentTotalDisplayContext.getCommercePriceDisplayType();
 
 CommerceOrderPrice commerceOrderPrice = commerceCartContentTotalDisplayContext.getCommerceOrderPrice();
 
 if (commerceOrderPrice != null) {
-	subtotal = commerceOrderPrice.getSubtotal();
-	subtotalDiscountValue = commerceOrderPrice.getSubtotalDiscountValue();
+	subtotalCommerceMoney = commerceOrderPrice.getSubtotal();
 
-	if (subtotalDiscountValue != null) {
-		subtotalDiscountAmount = subtotalDiscountValue.getDiscountAmount();
+	subtotalCommerceDiscountValue = commerceOrderPrice.getSubtotalDiscountValue();
+
+	if (subtotalCommerceDiscountValue != null) {
+		subtotalDiscountAmountCommerceMoney = subtotalCommerceDiscountValue.getDiscountAmount();
 	}
 
-	taxValue = commerceOrderPrice.getTaxValue();
-	totalOrder = commerceOrderPrice.getTotal();
-	totalDiscountValue = commerceOrderPrice.getTotalDiscountValue();
+	taxValueCommerceMoney = commerceOrderPrice.getTaxValue();
+	totalOrderCommerceMoney = commerceOrderPrice.getTotal();
 
-	if (totalDiscountValue != null) {
-		totalDiscountAmount = totalDiscountValue.getDiscountAmount();
+	totalCommerceDiscountValue = commerceOrderPrice.getTotalDiscountValue();
+
+	if (totalCommerceDiscountValue != null) {
+		totalDiscountAmountCommerceMoney = totalCommerceDiscountValue.getDiscountAmount();
 	}
 
 	if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-		subtotal = commerceOrderPrice.getSubtotalWithTaxAmount();
-		subtotalDiscountValue = commerceOrderPrice.getSubtotalDiscountValueWithTaxAmount();
+		subtotalCommerceMoney = commerceOrderPrice.getSubtotalWithTaxAmount();
 
-		if (subtotalDiscountValue != null) {
-			subtotalDiscountAmount = subtotalDiscountValue.getDiscountAmount();
+		subtotalCommerceDiscountValue = commerceOrderPrice.getSubtotalDiscountValueWithTaxAmount();
+
+		if (subtotalCommerceDiscountValue != null) {
+			subtotalDiscountAmountCommerceMoney = subtotalCommerceDiscountValue.getDiscountAmount();
 		}
 
-		totalOrder = commerceOrderPrice.getTotalWithTaxAmount();
-		totalDiscountValue = commerceOrderPrice.getTotalDiscountValueWithTaxAmount();
+		totalOrderCommerceMoney = commerceOrderPrice.getTotalWithTaxAmount();
 
-		if (totalDiscountValue != null) {
-			totalDiscountAmount = totalDiscountValue.getDiscountAmount();
+		totalCommerceDiscountValue = commerceOrderPrice.getTotalDiscountValueWithTaxAmount();
+
+		if (totalCommerceDiscountValue != null) {
+			totalDiscountAmountCommerceMoney = totalCommerceDiscountValue.getDiscountAmount();
 		}
 	}
 }
@@ -79,15 +83,15 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 	entries="<%= commerceOrderItemSearchContainer.getResults() %>"
 >
 	<div class="order-total text-dark">
-		<c:if test="<%= subtotal != null %>">
+		<c:if test="<%= subtotalCommerceMoney != null %>">
 			<div class="row">
-				<c:if test="<%= subtotalDiscountValue != null %>">
+				<c:if test="<%= subtotalCommerceDiscountValue != null %>">
 					<div class="col-auto">
 						<h4><liferay-ui:message key="subtotal-discount" /></h4>
 					</div>
 
 					<div class="col-auto">
-						<span>(<%= HtmlUtil.escape(subtotalDiscountAmount.format(locale)) %>)</span>
+						<span>(<%= HtmlUtil.escape(subtotalDiscountAmountCommerceMoney.format(locale)) %>)</span>
 					</div>
 				</c:if>
 
@@ -96,32 +100,32 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 				</div>
 
 				<div class="col text-right">
-					<h3 class="h4"><%= HtmlUtil.escape(subtotal.format(locale)) %></h3>
+					<h3 class="h4"><%= HtmlUtil.escape(subtotalCommerceMoney.format(locale)) %></h3>
 				</div>
 			</div>
 		</c:if>
 
-		<c:if test="<%= (taxValue != null) && priceDisplayType.equals(CommercePricingConstants.TAX_EXCLUDED_FROM_PRICE) %>">
+		<c:if test="<%= (taxValueCommerceMoney != null) && priceDisplayType.equals(CommercePricingConstants.TAX_EXCLUDED_FROM_PRICE) %>">
 			<div class="row">
 				<div class="col-auto">
 					<h3 class="h4"><liferay-ui:message key="tax" /></h3>
 				</div>
 
 				<div class="col text-right">
-					<h3 class="h4"><%= HtmlUtil.escape(taxValue.format(locale)) %></h3>
+					<h3 class="h4"><%= HtmlUtil.escape(taxValueCommerceMoney.format(locale)) %></h3>
 				</div>
 			</div>
 		</c:if>
 
-		<c:if test="<%= totalOrder != null %>">
+		<c:if test="<%= totalOrderCommerceMoney != null %>">
 			<div class="row">
-				<c:if test="<%= totalDiscountValue != null %>">
+				<c:if test="<%= totalCommerceDiscountValue != null %>">
 					<div class="col-auto">
 						<h4><liferay-ui:message key="total-discount" /></h4>
 					</div>
 
 					<div class="col-auto">
-						<span>(<%= HtmlUtil.escape(totalDiscountAmount.format(locale)) %>)</span>
+						<span>(<%= HtmlUtil.escape(totalDiscountAmountCommerceMoney.format(locale)) %>)</span>
 					</div>
 				</c:if>
 
@@ -130,7 +134,7 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 				</div>
 
 				<div class="col text-right">
-					<h3 class="h4"><%= HtmlUtil.escape(totalOrder.format(locale)) %></h3>
+					<h3 class="h4"><%= HtmlUtil.escape(totalOrderCommerceMoney.format(locale)) %></h3>
 				</div>
 			</div>
 		</c:if>
@@ -146,7 +150,7 @@ SearchContainer<CommerceOrderItem> commerceOrderItemSearchContainer = commerceCa
 	</aui:button-row>
 
 	<aui:script>
-		Liferay.after('commerce:productAddedToCart', function (event) {
+		Liferay.after('current-order-updated', function (event) {
 			Liferay.Portlet.refresh('#p_p_id<portlet:namespace />');
 		});
 	</aui:script>

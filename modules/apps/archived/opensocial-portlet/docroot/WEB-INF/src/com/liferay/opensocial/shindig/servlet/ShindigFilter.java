@@ -138,6 +138,10 @@ public class ShindigFilter extends InjectedFilter {
 				Encryptor.decrypt(company.getKeyObj(), userUUIDString));
 		}
 		catch (EncryptorException encryptorException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(encryptorException, encryptorException);
+			}
+
 			return false;
 		}
 		catch (Exception exception) {
@@ -160,10 +164,8 @@ public class ShindigFilter extends InjectedFilter {
 
 			PrincipalThreadLocal.setName(userIdString);
 
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
 		}
 		catch (Exception exception) {
 			_log.error(exception, exception);

@@ -23,7 +23,7 @@ String editEntryCssClass = "";
 
 String mvcPath = ParamUtil.getString(request, PortalUtil.getPortletNamespace(portletName) + "mvcPath");
 
-if (mvcPath.startsWith("/edit_entry.jsp")) {
+if (mvcPath.startsWith("/edit_app_entry.jsp")) {
 	editEntryCssClass = "edit-entry";
 }
 %>
@@ -65,10 +65,7 @@ if (mvcPath.startsWith("/edit_entry.jsp")) {
 				<clay:content-col
 					cssClass="align-items-center flex-row"
 				>
-					<liferay-portlet:runtime
-						portletProviderAction="<%= PortletProvider.Action.VIEW %>"
-						portletProviderClassName="com.liferay.admin.kernel.util.PortalUserPersonalBarApplicationType$UserPersonalBar"
-					/>
+					<div id="app-personal-menu"></div>
 				</clay:content-col>
 			</clay:content-row>
 

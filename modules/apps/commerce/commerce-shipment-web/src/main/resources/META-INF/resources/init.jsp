@@ -44,7 +44,7 @@ page import="com.liferay.commerce.model.CommerceShipmentItem" %><%@
 page import="com.liferay.commerce.product.model.CommerceChannel" %><%@
 page import="com.liferay.commerce.shipment.web.internal.display.context.CommerceShipmentDisplayContext" %><%@
 page import="com.liferay.commerce.shipment.web.internal.display.context.CommerceShipmentItemDisplayContext" %><%@
-page import="com.liferay.commerce.shipment.web.internal.servlet.taglib.ui.CommerceShipmentScreenNavigationConstants" %><%@
+page import="com.liferay.commerce.shipment.web.internal.servlet.taglib.ui.constants.CommerceShipmentScreenNavigationConstants" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
 page import="com.liferay.portal.kernel.util.CalendarFactoryUtil" %><%@
@@ -62,8 +62,7 @@ page import="java.text.Format" %>
 
 <%@ page import="java.util.Calendar" %><%@
 page import="java.util.Date" %><%@
-page import="java.util.List" %><%@
-page import="java.util.Map" %>
+page import="java.util.List" %>
 
 <liferay-frontend:defineObjects />
 

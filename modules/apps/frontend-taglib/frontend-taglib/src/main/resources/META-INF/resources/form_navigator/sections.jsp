@@ -17,77 +17,40 @@
 <%@ include file="/form_navigator/init.jsp" %>
 
 <%
+FormNavigatorDisplayContext formNavigatorDisplayContext = new FormNavigatorDisplayContext(request);
+
 List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry<Object>>)request.getAttribute(FormNavigatorWebKeys.FORM_NAVIGATOR_ENTRIES);
 %>
 
 <liferay-frontend:fieldset-group>
 
 	<%
-	final FormNavigatorEntry<Object> formNavigatorEntry = formNavigatorEntries.get(0);
-
-	String sectionId = namespace + _getSectionId(formNavigatorEntry.getKey());
-
 	String errorSection = null;
-	%>
 
-	<!-- Begin fragment <%= sectionId %> -->
+	int i = 0;
 
-	<liferay-frontend:fieldset
-		collapsible="<%= formNavigatorEntries.size() > 1 %>"
-		cssClass="<%= fieldSetCssClass %>"
-		id="<%= _getSectionId(formNavigatorEntry.getKey()) %>"
-		label="<%= (formNavigatorEntries.size() > 1) ? formNavigatorEntry.getLabel(locale) : StringPool.BLANK %>"
-	>
+	for (FormNavigatorEntry<Object> curFormNavigatorEntry : formNavigatorEntries) {
+		String sectionId = namespace + formNavigatorDisplayContext.getSectionId(curFormNavigatorEntry.getKey());
 
-		<%
-		PortalIncludeUtil.include(
-			pageContext,
-			new PortalIncludeUtil.HTMLRenderer() {
+		String label = curFormNavigatorEntry.getLabel(locale);
 
-				public void renderHTML(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-					formNavigatorEntry.include(request, response);
-				}
-
-			});
-
-		errorSection = (String)request.getAttribute(WebKeys.ERROR_SECTION);
-
-		if (Objects.equals(formNavigatorEntry.getKey(), errorSection)) {
-			request.setAttribute(WebKeys.ERROR_SECTION, null);
+		if ((i == 0) && (formNavigatorEntries.size() == 1)) {
+			label = StringPool.BLANK;
 		}
-		%>
-
-	</liferay-frontend:fieldset>
-
-	<!-- End fragment <%= sectionId %> -->
-
-	<%
-	for (int i = 1; i < formNavigatorEntries.size(); i++) {
-		final FormNavigatorEntry<Object> curFormNavigatorEntry = formNavigatorEntries.get(i);
-
-		sectionId = namespace + _getSectionId(curFormNavigatorEntry.getKey());
 	%>
 
 		<!-- Begin fragment <%= sectionId %> -->
 
 		<liferay-frontend:fieldset
-			collapsed="<%= true %>"
-			collapsible="<%= true %>"
-			cssClass="<%= fieldSetCssClass %>"
-			id="<%= _getSectionId(curFormNavigatorEntry.getKey()) %>"
-			label="<%= curFormNavigatorEntry.getLabel(locale) %>"
+			collapsed="<%= i != 0 %>"
+			collapsible="<%= (i != 0) || (formNavigatorEntries.size() > 1) %>"
+			cssClass="<%= formNavigatorDisplayContext.getFieldSetCssClass() %>"
+			id="<%= formNavigatorDisplayContext.getSectionId(curFormNavigatorEntry.getKey()) %>"
+			label="<%= label %>"
 		>
 
 			<%
-			PortalIncludeUtil.include(
-				pageContext,
-				new PortalIncludeUtil.HTMLRenderer() {
-
-					public void renderHTML(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-						curFormNavigatorEntry.include(request, response);
-					}
-
-				});
+			PortalIncludeUtil.include(pageContext, curFormNavigatorEntry::include);
 			%>
 
 		</liferay-frontend:fieldset>
@@ -97,15 +60,15 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 	<%
 		String curErrorSection = (String)request.getAttribute(WebKeys.ERROR_SECTION);
 
-		if (Objects.equals(_getSectionId(curFormNavigatorEntry.getKey()), _getSectionId(curErrorSection))) {
+		if (Objects.equals(formNavigatorDisplayContext.getSectionId(curFormNavigatorEntry.getKey()), formNavigatorDisplayContext.getSectionId(curErrorSection))) {
 			errorSection = curErrorSection;
 
 			request.setAttribute(WebKeys.ERROR_SECTION, null);
 		}
-	}
-	%>
 
-	<%
+		i++;
+	}
+
 	if (Validator.isNotNull(errorSection)) {
 		String currentTab = (String)request.getAttribute(FormNavigatorWebKeys.CURRENT_TAB);
 
@@ -116,7 +79,7 @@ List<FormNavigatorEntry<Object>> formNavigatorEntries = (List<FormNavigatorEntry
 			var focusField;
 
 			var sectionContent = document.querySelector(
-				'#<%= _getSectionId(errorSection) %>Content'
+				'#<%= formNavigatorDisplayContext.getSectionId(errorSection) %>Content'
 			);
 
 			<%

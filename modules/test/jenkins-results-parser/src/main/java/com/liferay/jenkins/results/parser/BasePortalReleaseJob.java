@@ -14,9 +14,15 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.liferay.jenkins.results.parser.test.clazz.group.AxisTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.BatchTestClassGroup;
+import com.liferay.jenkins.results.parser.test.clazz.group.SegmentTestClassGroup;
+
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -29,19 +35,14 @@ public abstract class BasePortalReleaseJob
 	implements BatchDependentJob, PortalTestClassJob, TestSuiteJob {
 
 	public BasePortalReleaseJob(
-		String jobName, String portalBranchName, BuildProfile buildProfile,
+		String jobName, BuildProfile buildProfile, String portalBranchName,
 		String testSuiteName) {
 
-		super(jobName);
+		super(jobName, buildProfile);
 
 		_portalBranchName = portalBranchName;
-		this.buildProfile = buildProfile;
 
 		_testSuiteName = testSuiteName;
-
-		if (buildProfile == null) {
-			this.buildProfile = BuildProfile.PORTAL;
-		}
 
 		_jenkinsGitWorkingDirectory =
 			GitWorkingDirectoryFactory.newJenkinsGitWorkingDirectory();
@@ -59,44 +60,37 @@ public abstract class BasePortalReleaseJob
 	}
 
 	@Override
-	public Set<String> getBatchNames() {
-		Set<String> batchNames = new TreeSet<>();
+	public List<AxisTestClassGroup> getDependentAxisTestClassGroups() {
+		List<AxisTestClassGroup> axisTestClassGroups = new ArrayList<>();
 
-		Properties jobProperties = getJobProperties();
+		for (BatchTestClassGroup batchTestClassGroup :
+				getDependentBatchTestClassGroups()) {
 
-		batchNames.addAll(
-			getSetFromString(
-				JenkinsResultsParserUtil.getProperty(
-					jobProperties, "test.batch.names", false, _portalBranchName,
-					getTestSuiteName())));
-		batchNames.addAll(
-			getSetFromString(
-				JenkinsResultsParserUtil.getProperty(
-					jobProperties, "test.batch.names", false, _portalBranchName,
-					buildProfile.toString(), getTestSuiteName())));
+			axisTestClassGroups.addAll(
+				batchTestClassGroup.getAxisTestClassGroups());
+		}
 
-		return batchNames;
+		return axisTestClassGroups;
 	}
 
 	@Override
 	public Set<String> getDependentBatchNames() {
-		Set<String> batchNames = new TreeSet<>();
+		return getFilteredBatchNames(getRawDependentBatchNames());
+	}
 
-		Properties jobProperties = getJobProperties();
+	@Override
+	public List<BatchTestClassGroup> getDependentBatchTestClassGroups() {
+		return getBatchTestClassGroups(getRawDependentBatchNames());
+	}
 
-		batchNames.addAll(
-			getSetFromString(
-				JenkinsResultsParserUtil.getProperty(
-					jobProperties, "test.batch.names.smoke", false,
-					_portalBranchName, getTestSuiteName())));
-		batchNames.addAll(
-			getSetFromString(
-				JenkinsResultsParserUtil.getProperty(
-					jobProperties, "test.batch.names.smoke", false,
-					_portalBranchName, buildProfile.toString(),
-					getTestSuiteName())));
+	@Override
+	public Set<String> getDependentSegmentNames() {
+		return getFilteredSegmentNames(getRawDependentBatchNames());
+	}
 
-		return batchNames;
+	@Override
+	public List<SegmentTestClassGroup> getDependentSegmentTestClassGroups() {
+		return getSegmentTestClassGroups(getRawDependentBatchNames());
 	}
 
 	@Override
@@ -114,36 +108,53 @@ public abstract class BasePortalReleaseJob
 		return _testSuiteName;
 	}
 
-	public static enum BuildProfile {
-
-		DXP {
-
-			private static final String _TEXT = "dxp";
-
-			@Override
-			public String toString() {
-				return _TEXT;
-			}
-
-		},
-		PORTAL {
-
-			private static final String _TEXT = "portal";
-
-			@Override
-			public String toString() {
-				return _TEXT;
-			}
-
-		}
-
-	}
-
 	protected GitWorkingDirectory getJenkinsGitWorkingDirectory() {
 		return _jenkinsGitWorkingDirectory;
 	}
 
-	protected BuildProfile buildProfile;
+	@Override
+	protected Set<String> getRawBatchNames() {
+		Set<String> batchNames = new TreeSet<>();
+
+		Properties jobProperties = getJobProperties();
+
+		batchNames.addAll(
+			getSetFromString(
+				JenkinsResultsParserUtil.getProperty(
+					jobProperties, "test.batch.names", false, _portalBranchName,
+					getTestSuiteName())));
+
+		BuildProfile buildProfile = getBuildProfile();
+
+		batchNames.addAll(
+			getSetFromString(
+				JenkinsResultsParserUtil.getProperty(
+					jobProperties, "test.batch.names", false, _portalBranchName,
+					buildProfile.toString(), getTestSuiteName())));
+
+		return batchNames;
+	}
+
+	protected Set<String> getRawDependentBatchNames() {
+		Set<String> dependentBatchNames = new TreeSet<>();
+
+		dependentBatchNames.addAll(
+			getSetFromString(
+				JenkinsResultsParserUtil.getProperty(
+					getJobProperties(), "test.batch.names.smoke", false,
+					_portalBranchName, getTestSuiteName())));
+
+		BuildProfile buildProfile = getBuildProfile();
+
+		dependentBatchNames.addAll(
+			getSetFromString(
+				JenkinsResultsParserUtil.getProperty(
+					getJobProperties(), "test.batch.names.smoke", false,
+					_portalBranchName, buildProfile.toString(),
+					getTestSuiteName())));
+
+		return dependentBatchNames;
+	}
 
 	private final GitWorkingDirectory _jenkinsGitWorkingDirectory;
 	private final String _portalBranchName;

@@ -636,6 +636,9 @@ public interface PropsKeys {
 	public static final String CONTROL_PANEL_NAVIGATION_MAX_SITES =
 		"control.panel.navigation.max.sites";
 
+	public static final String CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK =
+		"cors.disable.authorization.context.check";
+
 	public static final String COUNTER_DATA_CENTER_COUNT =
 		"counter.data.center.count";
 
@@ -654,6 +657,30 @@ public interface PropsKeys {
 
 	public static final String CUSTOM_SQL_FUNCTION_ISNULL =
 		"custom.sql.function.isnull";
+
+	public static final String DATA_LIMIT_MAX_DL_STORAGE_SIZE =
+		"data.limit.max.dl.storage.size";
+
+	public static final String DATA_LIMIT_MAX_MAIL_MESSAGE_COUNT =
+		"data.limit.max.mail.message.count";
+
+	public static final String DATA_LIMIT_MAX_MAIL_MESSAGE_PERIOD =
+		"data.limit.max.mail.message.period";
+
+	public static final String DATA_LIMIT_MAX_ORGANIZATION_COUNT =
+		"data.limit.max.organization.count";
+
+	public static final String DATA_LIMIT_MAX_ROLE_COUNT =
+		"data.limit.max.role.count";
+
+	public static final String DATA_LIMIT_MAX_SITE_COUNT =
+		"data.limit.max.site.count";
+
+	public static final String DATA_LIMIT_MAX_TEAM_COUNT =
+		"data.limit.max.team.count";
+
+	public static final String DATA_LIMIT_MAX_USER_COUNT =
+		"data.limit.max.user.count";
 
 	public static final String DATABASE_IN_MAX_PARAMETERS =
 		"database.in.max.parameters";
@@ -1053,9 +1080,6 @@ public interface PropsKeys {
 
 	public static final String DL_STORE_ANTIVIRUS_ENABLED =
 		"dl.store.antivirus.enabled";
-
-	public static final String DL_STORE_ANTIVIRUS_IMPL =
-		"dl.store.antivirus.impl";
 
 	public static final String DL_STORE_FILE_IMPL_SAFE_FILE_NAME_2_AMPERSAND =
 		"dl.store.file.impl.safe.file.name.2.ampersand";
@@ -2650,6 +2674,9 @@ public interface PropsKeys {
 	public static final String RECENT_CONTENT_MAX_DISPLAY_ITEMS =
 		"recent.content.max.display.items";
 
+	public static final String RECENT_GROUPS_MAX_ELEMENTS =
+		"recent.groups.max.elements";
+
 	public static final String REDIRECT_URL_DOMAINS_ALLOWED =
 		"redirect.url.domains.allowed";
 
@@ -2682,6 +2709,9 @@ public interface PropsKeys {
 
 	public static final String RESOURCE_ACTIONS_READ_PORTLET_RESOURCES =
 		"resource.actions.read.portlet.resources";
+
+	public static final String RESOURCE_ACTIONS_STRICT_MODE_ENABLED =
+		"resource.actions.strict.mode.enabled";
 
 	public static final String RESOURCE_REPOSITORIES_ROOT =
 		"resource.repositories.root";
@@ -3308,6 +3338,9 @@ public interface PropsKeys {
 	public static final String USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED =
 		"users.reminder.queries.custom.question.enabled";
 
+	public static final String USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT =
+		"users.reminder.queries.display.answer.in.plain.text";
+
 	public static final String USERS_REMINDER_QUERIES_ENABLED =
 		"users.reminder.queries.enabled";
 
@@ -3400,6 +3433,12 @@ public interface PropsKeys {
 	@Deprecated
 	public static final String VERIFY_PROCESSES = "verify.processes";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             com.liferay.view.count.configuration.ViewCountsConfiguration
+	 *             #enabled()}
+	 */
+	@Deprecated
 	public static final String VIEW_COUNT_ENABLED = "view.count.enabled";
 
 	public static final String VIRTUAL_HOSTS_DEFAULT_SITE_NAME =

@@ -14,18 +14,23 @@
 
 package com.liferay.account.service.test;
 
+import com.liferay.account.exception.DefaultAccountGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryLocalService;
-import com.liferay.account.service.AccountGroupAccountEntryRelLocalService;
 import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.account.service.test.util.AccountEntryTestUtil;
 import com.liferay.account.service.test.util.AccountGroupTestUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.ModelListenerException;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -33,6 +38,7 @@ import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -77,61 +83,97 @@ public class AccountGroupLocalServiceTest {
 	}
 
 	@Test
-	public void testDeleteAccountGroupWithAccountGroupAccountEntryRel()
-		throws Exception {
-
+	public void testDeleteAccountGroupWithAccountGroupRel() throws Exception {
 		AccountGroup accountGroup = _addAccountGroup();
 		AccountEntry accountEntry = AccountEntryTestUtil.addAccountEntry(
 			_accountEntryLocalService);
 
-		_accountGroupAccountEntryRelLocalService.addAccountGroupAccountEntryRel(
-			accountGroup.getAccountGroupId(), accountEntry.getAccountEntryId());
+		_accountGroupRelLocalService.addAccountGroupRel(
+			accountGroup.getAccountGroupId(), AccountEntry.class.getName(),
+			accountEntry.getAccountEntryId());
 
 		_accountGroupLocalService.deleteAccountGroup(accountGroup);
 
 		Assert.assertEquals(
 			0,
-			_accountGroupAccountEntryRelLocalService.
-				getAccountGroupAccountEntryRelsCountByAccountGroupId(
+			_accountGroupRelLocalService.
+				getAccountGroupRelsCountByAccountGroupId(
 					accountGroup.getAccountGroupId()));
 	}
 
 	@Test
-	public void testSearchAccountGroups() throws Exception {
-		for (int i = 0; i < 5; i++) {
-			_addAccountGroup();
+	public void testDeleteDefaultAccountGroup() throws Exception {
+		try {
+			_accountGroupLocalService.deleteAccountGroup(
+				_accountGroupLocalService.getDefaultAccountGroup(
+					TestPropsValues.getCompanyId()));
 		}
+		catch (ModelListenerException modelListenerException) {
+			Assert.assertTrue(
+				modelListenerException.getCause() instanceof
+					DefaultAccountGroupException.
+						MustNotDeleteDefaultAccountGroup);
+		}
+	}
+
+	@Test
+	public void testHasDefaultAccountGroupWhenCompanyIsCreated()
+		throws Exception {
+
+		Company company = CompanyTestUtil.addCompany();
+
+		Assert.assertTrue(
+			_accountGroupLocalService.hasDefaultAccountGroup(
+				company.getCompanyId()));
+
+		AccountGroup defaultAccountGroup =
+			_accountGroupLocalService.getDefaultAccountGroup(
+				company.getCompanyId());
+
+		Assert.assertEquals(
+			company.getCompanyId(), defaultAccountGroup.getCompanyId());
+	}
+
+	@Test
+	public void testSearchAccountGroups() throws Exception {
+		List<AccountGroup> expectedAccountGroups = Arrays.asList(
+			_addAccountGroup(), _addAccountGroup());
 
 		BaseModelSearchResult<AccountGroup> baseModelSearchResult =
 			_accountGroupLocalService.searchAccountGroups(
 				TestPropsValues.getCompanyId(), null, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
+				QueryUtil.ALL_POS,
+				OrderByComparatorFactoryUtil.create(
+					"AccountGroup", "createDate", true));
 
-		Assert.assertEquals(5, baseModelSearchResult.getLength());
+		Assert.assertEquals(
+			expectedAccountGroups.size(), baseModelSearchResult.getLength());
+		Assert.assertEquals(
+			expectedAccountGroups, baseModelSearchResult.getBaseModels());
+	}
 
+	@Test
+	public void testSearchAccountGroupsWithKeywords() throws Exception {
 		String keywords = RandomTestUtil.randomString();
 
-		List<AccountGroup> expectedAccountGroups = Arrays.asList(
-			_addAccountGroup(keywords, RandomTestUtil.randomString()),
-			_addAccountGroup(RandomTestUtil.randomString(), keywords));
+		List<AccountGroup> expectedAccountGroups = new ArrayList<>();
 
-		baseModelSearchResult = _accountGroupLocalService.searchAccountGroups(
-			TestPropsValues.getCompanyId(), keywords, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		for (int i = 0; i < 5; i++) {
+			expectedAccountGroups.add(
+				_addAccountGroup(RandomTestUtil.randomString(), keywords + i));
+		}
 
-		Assert.assertEquals(
-			expectedAccountGroups.size(), baseModelSearchResult.getLength());
-
-		expectedAccountGroups = _accountGroupLocalService.getAccountGroups(
-			TestPropsValues.getCompanyId(), QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
-
-		baseModelSearchResult = _accountGroupLocalService.searchAccountGroups(
-			TestPropsValues.getCompanyId(), null, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+		BaseModelSearchResult<AccountGroup> baseModelSearchResult =
+			_accountGroupLocalService.searchAccountGroups(
+				TestPropsValues.getCompanyId(), keywords, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS,
+				OrderByComparatorFactoryUtil.create(
+					"AccountGroup", "name", true));
 
 		Assert.assertEquals(
 			expectedAccountGroups.size(), baseModelSearchResult.getLength());
+		Assert.assertEquals(
+			expectedAccountGroups, baseModelSearchResult.getBaseModels());
 	}
 
 	@Test
@@ -139,11 +181,11 @@ public class AccountGroupLocalServiceTest {
 		String keywords = RandomTestUtil.randomString();
 
 		List<AccountGroup> expectedAccountGroups = Arrays.asList(
-			_addAccountGroup(RandomTestUtil.randomString(), keywords),
-			_addAccountGroup(RandomTestUtil.randomString(), keywords),
-			_addAccountGroup(RandomTestUtil.randomString(), keywords),
-			_addAccountGroup(RandomTestUtil.randomString(), keywords),
-			_addAccountGroup(RandomTestUtil.randomString(), keywords));
+			_addAccountGroup(keywords, RandomTestUtil.randomString()),
+			_addAccountGroup(keywords, RandomTestUtil.randomString()),
+			_addAccountGroup(keywords, RandomTestUtil.randomString()),
+			_addAccountGroup(keywords, RandomTestUtil.randomString()),
+			_addAccountGroup(keywords, RandomTestUtil.randomString()));
 
 		Comparator<AccountGroup> comparator =
 			(accountGroup1, accountGroup2) -> {
@@ -159,17 +201,36 @@ public class AccountGroupLocalServiceTest {
 			comparator, expectedAccountGroups, keywords, true);
 	}
 
+	@Test
+	public void testUpdateDefaultAccountGroup() throws Exception {
+		try {
+			AccountGroup accountGroup =
+				_accountGroupLocalService.getDefaultAccountGroup(
+					TestPropsValues.getCompanyId());
+
+			_accountGroupLocalService.updateAccountGroup(
+				accountGroup.getAccountGroupId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString());
+		}
+		catch (ModelListenerException modelListenerException) {
+			Assert.assertTrue(
+				modelListenerException.getCause() instanceof
+					DefaultAccountGroupException.
+						MustNotUpdateDefaultAccountGroup);
+		}
+	}
+
 	private AccountGroup _addAccountGroup() throws Exception {
 		return AccountGroupTestUtil.addAccountGroup(
 			_accountGroupLocalService, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString());
 	}
 
-	private AccountGroup _addAccountGroup(String name, String description)
+	private AccountGroup _addAccountGroup(String description, String name)
 		throws Exception {
 
 		return AccountGroupTestUtil.addAccountGroup(
-			_accountGroupLocalService, name, description);
+			_accountGroupLocalService, description, name);
 	}
 
 	private void _testDeleteAccountGroup(
@@ -224,10 +285,12 @@ public class AccountGroupLocalServiceTest {
 	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Inject
-	private AccountGroupAccountEntryRelLocalService
-		_accountGroupAccountEntryRelLocalService;
+	private AccountGroupLocalService _accountGroupLocalService;
 
 	@Inject
-	private AccountGroupLocalService _accountGroupLocalService;
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

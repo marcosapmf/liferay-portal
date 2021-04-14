@@ -37,9 +37,9 @@ if (requestedLocale == null) {
 	requestedLocale = locale;
 }
 
-String hideClass = "";
+String hideCssClass = "";
 
 if (!localizable || readOnly) {
-	hideClass = "hide";
+	hideCssClass = "hide";
 }
 %>

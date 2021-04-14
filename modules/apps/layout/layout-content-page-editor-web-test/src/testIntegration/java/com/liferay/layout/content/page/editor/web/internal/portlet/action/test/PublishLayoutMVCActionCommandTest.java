@@ -86,8 +86,8 @@ public class PublishLayoutMVCActionCommandTest {
 				LocaleUtil.US, RandomTestUtil.randomString()
 			).build(),
 			new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(),
-			LayoutConstants.TYPE_CONTENT, StringPool.BLANK, false, false, 0,
-			new HashMap<>(), _serviceContext);
+			LayoutConstants.TYPE_CONTENT, StringPool.BLANK, false, false,
+			new HashMap<>(), 0, _serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
@@ -164,7 +164,9 @@ public class PublishLayoutMVCActionCommandTest {
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
-	@Inject(filter = "mvc.command.name=/content_layout/publish_layout")
+	@Inject(
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout"
+	)
 	private MVCActionCommand _mvcActionCommand;
 
 	private ServiceContext _serviceContext;

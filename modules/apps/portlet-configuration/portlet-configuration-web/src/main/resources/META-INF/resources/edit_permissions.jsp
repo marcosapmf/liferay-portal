@@ -32,7 +32,7 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 
 <div class="edit-permissions portlet-configuration-edit-permissions">
 	<div class="portlet-configuration-body-content">
-		<clay:management-toolbar
+		<clay:management-toolbar-v2
 			clearResultsURL="<%= portletConfigurationPermissionsDisplayContext.getClearResultsURL() %>"
 			itemsTotal="<%= roleSearchContainer.getTotal() %>"
 			searchActionURL="<%= portletConfigurationPermissionsDisplayContext.getSearchActionURL() %>"
@@ -40,7 +40,7 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 			selectable="<%= false %>"
 		/>
 
-		<aui:form action="<%= portletConfigurationPermissionsDisplayContext.getUpdateRolePermissionsURL() %>" cssClass="container-fluid-1280" method="post" name="fm">
+		<aui:form action="<%= portletConfigurationPermissionsDisplayContext.getUpdateRolePermissionsURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 			<aui:input name="resourceId" type="hidden" value="<%= resource.getResourceId() %>" />
 
 			<liferay-ui:search-container
@@ -66,18 +66,25 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 						RoleTypeContributor roleTypeContributor = roleTypeContributorProvider.getRoleTypeContributor(role.getType());
 						%>
 
-						<liferay-ui:icon
-							icon='<%= (roleTypeContributor != null) ? roleTypeContributor.getIcon() : "users" %>'
-							label="<%= false %>"
-							markupView="lexicon"
-							message='<%= LanguageUtil.get(request, (roleTypeContributor != null) ? roleTypeContributor.getTitle(locale) : "team") %>'
-						/>
+						<span class="text-truncate-inline">
+							<span class="inline-item-before">
+								<liferay-ui:icon
+									icon='<%= (roleTypeContributor != null) ? roleTypeContributor.getIcon() : "users" %>'
+									label="<%= false %>"
+									markupView="lexicon"
+									message='<%= LanguageUtil.get(request, (roleTypeContributor != null) ? roleTypeContributor.getTitle(locale) : "team") %>'
+								/>
+							</span>
+							<span class="lfr-portal-tooltip text-truncate" title="<%= role.getTitle(locale) %>">
+								<%= role.getTitle(locale) %>
+							</span>
 
-						<%= role.getTitle(locale) %>
-
-						<c:if test="<%= layout.isPrivateLayout() && name.equals(RoleConstants.GUEST) %>">
-							<liferay-ui:icon-help message="under-the-current-configuration-all-users-automatically-inherit-permissions-from-the-guest-role" />
-						</c:if>
+							<c:if test="<%= layout.isPrivateLayout() && name.equals(RoleConstants.GUEST) %>">
+								<span class="inline-item-after">
+									<liferay-ui:icon-help message="under-the-current-configuration-all-users-automatically-inherit-permissions-from-the-guest-role" />
+								</span>
+							</c:if>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<%

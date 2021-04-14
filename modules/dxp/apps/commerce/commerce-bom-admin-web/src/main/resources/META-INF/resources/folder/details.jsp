@@ -20,16 +20,15 @@
 CommerceBOMAdminDisplayContext commerceBOMAdminDisplayContext = (CommerceBOMAdminDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 CommerceBOMFolder commerceBOMFolder = commerceBOMAdminDisplayContext.getCommerceBOMFolder();
-long commerceBOMFolderId = commerceBOMAdminDisplayContext.getCommerceBOMFolderId();
 %>
 
-<portlet:actionURL name="editCommerceBOMFolder" var="editCommerceBOMFolderActionURL" />
+<portlet:actionURL name="/commerce_bom_admin/edit_commerce_bom_folder" var="editCommerceBOMFolderActionURL" />
 
-<aui:form action="<%= editCommerceBOMFolderActionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= editCommerceBOMFolderActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commerceBOMFolder == null) ? Constants.ADD : Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="backURL" type="hidden" value="<%= backURL %>" />
-	<aui:input name="commerceBOMFolderId" type="hidden" value="<%= commerceBOMFolderId %>" />
+	<aui:input name="commerceBOMFolderId" type="hidden" value="<%= commerceBOMAdminDisplayContext.getCommerceBOMFolderId() %>" />
 
 	<aui:model-context bean="<%= commerceBOMFolder %>" model="<%= CommerceBOMFolder.class %>" />
 

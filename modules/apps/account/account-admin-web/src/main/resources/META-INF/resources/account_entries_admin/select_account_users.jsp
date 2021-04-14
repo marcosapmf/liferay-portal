@@ -30,7 +30,7 @@ if (selectAccountUsersManagementToolbarDisplayContext.isSingleSelect()) {
 String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "assignAccountUsers");
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= selectAccountUsersManagementToolbarDisplayContext %>"
 />
 
@@ -61,6 +61,12 @@ String eventName = ParamUtil.getString(request, "eventName", liferayPortletRespo
 				cssClass="table-cell-expand-small table-cell-minw-150"
 				name="email-address"
 				property="emailAddress"
+			/>
+
+			<liferay-ui:search-container-column-text
+				cssClass="table-cell-expand-small table-cell-minw-150"
+				name="job-title"
+				property="jobTitle"
 			/>
 
 			<liferay-ui:search-container-column-text

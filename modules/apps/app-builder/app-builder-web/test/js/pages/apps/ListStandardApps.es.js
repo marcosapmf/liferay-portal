@@ -14,7 +14,7 @@
 
 import '@testing-library/jest-dom/extend-expect';
 import {waitForElementToBeRemoved} from '@testing-library/dom';
-import {cleanup, fireEvent, render} from '@testing-library/react';
+import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import ListStandardApps from '../../../../src/main/resources/META-INF/resources/js/pages/apps/ListStandardApps.es';
@@ -75,8 +75,10 @@ describe('ListStandardApps', () => {
 			'.nav-btn.nav-btn-monospaced.btn.btn-monospaced.btn-primary'
 		);
 
-		await fireEvent.click(newAppButton);
-		await fireEvent.mouseOver(newAppButton);
+		await act(async () => {
+			await fireEvent.click(newAppButton);
+			await fireEvent.mouseOver(newAppButton);
+		});
 
 		expect(
 			document.querySelector('.popover.apps-popover')
@@ -88,15 +90,19 @@ describe('ListStandardApps', () => {
 			'standard-appcreate-an-app-to-collect-and-manage-an-objects-data'
 		);
 
-		await fireEvent.click(newAppButton);
-		await fireEvent.mouseOut(newAppButton);
+		await act(async () => {
+			await fireEvent.click(newAppButton);
+			await fireEvent.mouseOut(newAppButton);
+		});
 
 		expect(document.querySelector('.popover.apps-popover.hide'));
 		expect(
 			document.querySelector('.popover.clay-popover-bottom-right')
 		).not.toBeInTheDocument();
 
-		await fireEvent.click(newAppButton);
+		await act(async () => {
+			await fireEvent.click(newAppButton);
+		});
 
 		expect(document.querySelector('.popover.apps-popover.hide'));
 	});
@@ -130,7 +136,9 @@ describe('ListStandardApps', () => {
 
 		const createNewAppButton = queryByText('create-new-app');
 
-		await fireEvent.click(createNewAppButton);
+		await act(async () => {
+			await fireEvent.click(createNewAppButton);
+		});
 
 		const continueButton = document.querySelector(
 			'.apps-popover > .popover-footer button:nth-child(2)'
@@ -151,11 +159,15 @@ describe('ListStandardApps', () => {
 
 		expect(dropdownItems[0].textContent).toBe('Object test');
 
-		await fireEvent.click(dropdownItems[0]);
+		await act(async () => {
+			await fireEvent.click(dropdownItems[0]);
+		});
 
 		expect(continueButton).not.toBeDisabled();
 
-		await fireEvent.click(continueButton);
+		await act(async () => {
+			await fireEvent.click(continueButton);
+		});
 
 		expect(push).toHaveBeenCalledWith({
 			pathname: '/standard/123/deploy',

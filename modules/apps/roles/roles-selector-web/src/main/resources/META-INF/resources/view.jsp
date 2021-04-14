@@ -93,7 +93,7 @@ request.setAttribute("edit_roles.jsp-portletURL", portletURL);
 					add(
 						navigationItem -> {
 							navigationItem.setActive(true);
-							navigationItem.setLabel(LanguageUtil.get(request, "roles"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "roles"));
 						});
 				}
 				else {
@@ -101,14 +101,14 @@ request.setAttribute("edit_roles.jsp-portletURL", portletURL);
 						navigationItem -> {
 							navigationItem.setActive(tabs1.equals("current"));
 							navigationItem.setHref(portletURL, "tabs1", "current");
-							navigationItem.setLabel(LanguageUtil.get(request, "current"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "current"));
 						});
 
 					add(
 						navigationItem -> {
 							navigationItem.setActive(tabs1.equals("available"));
 							navigationItem.setHref(portletURL, "tabs1", "available");
-							navigationItem.setLabel(LanguageUtil.get(request, "available"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "available"));
 						});
 				}
 			}
@@ -131,8 +131,51 @@ else {
 	message="<%= stripeMessage %>"
 />
 
-<clay:management-toolbar
-	clearResultsURL="<%= portletURL.toString() %>"
+<%
+String methodName = null;
+%>
+
+<liferay-util:buffer
+	var="resultsHTML"
+>
+	<c:choose>
+		<c:when test="<%= role == null %>">
+			<liferay-util:include page="/edit_roles.jsp" servletContext="<%= application %>" />
+		</c:when>
+		<c:otherwise>
+			<c:choose>
+				<c:when test="<%= className.equals(User.class.getName()) %>">
+
+					<%
+					methodName = "updateUserGroupRoleUsers";
+					%>
+
+					<liferay-util:include page="/edit_roles_users.jsp" servletContext="<%= application %>" />
+				</c:when>
+				<c:otherwise>
+
+					<%
+					methodName = "updateUserGroupGroupRoleUsers";
+					%>
+
+					<liferay-util:include page="/edit_roles_user_groups.jsp" servletContext="<%= application %>" />
+				</c:otherwise>
+			</c:choose>
+		</c:otherwise>
+	</c:choose>
+</liferay-util:buffer>
+
+<%
+PortletURL clearResultsURL = (PortletURL)request.getAttribute("edit_roles.jsp-portletURL");
+
+clearResultsURL.setParameter("keywords", StringPool.BLANK);
+
+SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("liferay-ui:search:searchContainer");
+%>
+
+<clay:management-toolbar-v2
+	clearResultsURL="<%= clearResultsURL.toString() %>"
+	itemsTotal="<%= searchContainer.getTotal() %>"
 	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= portletURL.toString() %>"
 	selectable="<%= false %>"
@@ -145,37 +188,9 @@ else {
 	<aui:input name="groupId" type="hidden" value="<%= String.valueOf(group.getGroupId()) %>" />
 	<aui:input name="roleId" type="hidden" value="<%= roleId %>" />
 
-	<%
-	String methodName = null;
-	%>
-
 	<div class="roles-selector-body">
 		<clay:container-fluid>
-			<c:choose>
-				<c:when test="<%= role == null %>">
-					<liferay-util:include page="/edit_roles.jsp" servletContext="<%= application %>" />
-				</c:when>
-				<c:otherwise>
-					<c:choose>
-						<c:when test="<%= className.equals(User.class.getName()) %>">
-
-							<%
-							methodName = "updateUserGroupRoleUsers";
-							%>
-
-							<liferay-util:include page="/edit_roles_users.jsp" servletContext="<%= application %>" />
-						</c:when>
-						<c:otherwise>
-
-							<%
-							methodName = "updateUserGroupGroupRoleUsers";
-							%>
-
-							<liferay-util:include page="/edit_roles_user_groups.jsp" servletContext="<%= application %>" />
-						</c:otherwise>
-					</c:choose>
-				</c:otherwise>
-			</c:choose>
+			<%= resultsHTML %>
 		</clay:container-fluid>
 	</div>
 

@@ -14,11 +14,12 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
+import {ClayTooltipProvider} from '@clayui/tooltip';
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
 import DataSetDisplayContext from '../../DataSetDisplayContext';
-import {triggerAction} from '../../utilities/actionItems/index';
+import {triggerAction} from '../../utils/actionItems/index';
 
 function CreationMenu({primaryItems}) {
 	const [active, setActive] = useState(false);
@@ -32,7 +33,12 @@ function CreationMenu({primaryItems}) {
 						<ClayDropDown
 							active={active}
 							onActiveChange={setActive}
-							trigger={<ClayButtonWithIcon symbol="plus" />}
+							trigger={
+								<ClayButtonWithIcon
+									className="nav-btn nav-btn-monospaced"
+									symbol="plus"
+								/>
+							}
 						>
 							<ClayDropDown.ItemList>
 								{primaryItems.map((item, i) => (
@@ -50,12 +56,20 @@ function CreationMenu({primaryItems}) {
 							</ClayDropDown.ItemList>
 						</ClayDropDown>
 					) : (
-						<ClayButtonWithIcon
-							onClick={() =>
-								triggerAction(primaryItems[0], dataSetContext)
-							}
-							symbol="plus"
-						/>
+						<ClayTooltipProvider>
+							<ClayButtonWithIcon
+								className="nav-btn nav-btn-monospaced"
+								data-tooltip-align="top"
+								onClick={() =>
+									triggerAction(
+										primaryItems[0],
+										dataSetContext
+									)
+								}
+								symbol="plus"
+								title={primaryItems[0].label}
+							/>
+						</ClayTooltipProvider>
 					)}
 				</li>
 			</ul>

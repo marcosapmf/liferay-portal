@@ -49,6 +49,7 @@ export default (props) => {
 		icon,
 		label,
 		name,
+		required,
 		onClick,
 		onDelete,
 		onDoubleClick,
@@ -121,9 +122,14 @@ export default (props) => {
 			</ClayLayout.ContentCol>
 
 			<ClayLayout.ContentCol className="pr-2" expand>
-				<h4 className="list-group-title text-truncate">
-					<span>{label}</span>
-				</h4>
+				<div className="d-flex list-group-title">
+					<span className="text-truncate">{label}</span>
+					{required && (
+						<span className="reference-mark">
+							<ClayIcon symbol="asterisk" />
+						</span>
+					)}
+				</div>
 
 				{description && (
 					<p className="list-group-subtitle text-truncate">

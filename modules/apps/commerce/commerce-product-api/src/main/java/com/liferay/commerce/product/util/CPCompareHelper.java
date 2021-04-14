@@ -16,11 +16,10 @@ package com.liferay.commerce.product.util;
 
 import aQute.bnd.annotation.ProviderType;
 
+import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.portal.kernel.exception.PortalException;
 
 import java.util.List;
-
-import javax.servlet.http.HttpSession;
 
 /**
  * @author Alec Sloan
@@ -28,21 +27,16 @@ import javax.servlet.http.HttpSession;
 @ProviderType
 public interface CPCompareHelper {
 
-	public void addCompareProduct(
-			long groupId, long commerceAccountId, long cpDefinitionId,
-			HttpSession httpSession)
+	public List<CPCatalogEntry> getCPCatalogEntries(
+			long groupId, long commerceAccountId,
+			String cpDefinitionIdsCookieValue)
 		throws PortalException;
 
 	public List<Long> getCPDefinitionIds(
-			long groupId, long commerceAccountId, HttpSession httpSession)
+			long groupId, long commerceAccountId,
+			String cpDefinitionIdsCookieValue)
 		throws PortalException;
 
-	public void removeCompareProduct(
-			long groupId, long commerceAccountId, long cpDefinitionId,
-			HttpSession httpSession)
-		throws PortalException;
-
-	public void setCPDefinitionIds(
-		long groupId, List<Long> cpDefinitionIds, HttpSession httpSession);
+	public String getCPDefinitionIdsCookieKey(long commerceChannelGroupId);
 
 }

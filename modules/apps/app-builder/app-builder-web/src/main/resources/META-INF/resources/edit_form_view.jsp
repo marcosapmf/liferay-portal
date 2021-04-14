@@ -34,7 +34,15 @@ boolean newCustomObject = ParamUtil.getBoolean(request, "newCustomObject");
 
 		<portlet:renderURL var="basePortletURL" />
 
-		<div class="app-builder-form-view-app" id="<%= editFormViewRootElementId %>">
+		<%
+		String popUpCssClass = "";
+
+		if (LiferayWindowState.isPopUp(request)) {
+			popUpCssClass = "app-builder-popup";
+		}
+		%>
+
+		<div class="app-builder-form-view-app <%= popUpCssClass %>" id="<%= editFormViewRootElementId %>">
 			<react:component
 				module="js/pages/form-view/EditFormViewApp.es"
 				props='<%=
@@ -53,13 +61,13 @@ boolean newCustomObject = ParamUtil.getBoolean(request, "newCustomObject");
 					).put(
 						"newCustomObject", newCustomObject
 					).put(
-						"showTranslationManager", request.getAttribute(AppBuilderWebKeys.SHOW_TRANSLATION_MANAGER)
+						"popUpWindow", LiferayWindowState.isPopUp(request)
 					).build()
 				%>'
 			/>
 		</div>
 
-		<div class="app-builder-form-view-body">
+		<div class="app-builder-form-view-body <%= popUpCssClass %>">
 			<div class="app-builder-custom-object-sidebar" id="<%= customObjectSidebarElementId %>"></div>
 
 			<div class="data-layout-builder-wrapper" id="<%= dataLayoutBuilderElementId %>">

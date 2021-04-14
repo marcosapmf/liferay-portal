@@ -212,9 +212,8 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 	public String getFieldProperty(String fieldName, String property)
 		throws PortalException {
 
-		DDMFormField ddmFormField = _getDDMFormField(fieldName);
-
-		return BeanPropertiesUtil.getString(ddmFormField, property);
+		return BeanPropertiesUtil.getString(
+			_getDDMFormField(fieldName), property);
 	}
 
 	@Override
@@ -283,6 +282,17 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 		return DDMStructureVersionLocalServiceUtil.getLatestStructureVersion(
 			getStructureId());
+	}
+
+	@Override
+	public String getName(Locale locale, boolean useDefault) {
+		String name = super.getName(locale, useDefault);
+
+		if (Validator.isNull(name)) {
+			return super.getName(getDefaultLanguageId(), useDefault);
+		}
+
+		return name;
 	}
 
 	@Override

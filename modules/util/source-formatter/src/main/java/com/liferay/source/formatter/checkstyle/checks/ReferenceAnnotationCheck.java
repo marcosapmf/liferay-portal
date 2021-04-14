@@ -64,10 +64,8 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 		DetailAST classDefinitionDetailAST, DetailAST methodDefinitionDetailAST,
 		String methodName, String defaultUnbindMethodName) {
 
-		String methodBody = _getMethodBody(methodDefinitionDetailAST);
-
 		Matcher matcher = _referenceMethodContentPattern.matcher(
-			StringUtil.trim(methodBody));
+			StringUtil.trim(_getMethodBody(methodDefinitionDetailAST)));
 
 		if (!matcher.find()) {
 			if (!_containsMethod(
@@ -149,35 +147,65 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 			methodName);
 
 		_checkUnbind(
-			classDefinitionDetailAST, defaultUnbindMethodName, unbindName,
-			policyName, annotationDetailAST.getLineNo());
+			annotationDetailAST, classDefinitionDetailAST,
+			defaultUnbindMethodName, unbindName, policyName);
 
 		if (policyName.endsWith(_POLICY_DYNAMIC) && (unbindName == null)) {
 			_checkDynamicMethod(
 				classDefinitionDetailAST, detailAST, methodName,
 				defaultUnbindMethodName);
 		}
+
+		_checkTarget(annotationDetailAST);
+	}
+
+	private void _checkTarget(DetailAST annotationDetailAST) {
+		String targetValue = _getAnnotationMemberValue(
+			annotationDetailAST, "target", null);
+
+		if (targetValue == null) {
+			return;
+		}
+
+		List<String> allowedFileNames = getAttributeValues(_ALLOWED_FILE_NAMES);
+
+		String absolutePath = getAbsolutePath();
+
+		for (String allowedFileName : allowedFileNames) {
+			if (absolutePath.endsWith(allowedFileName)) {
+				return;
+			}
+		}
+
+		List<String> forbiddenReferenceTargetValues = getAttributeValues(
+			_FORBIDDEN_REFERENCE_TARGET_VALUES);
+
+		if (forbiddenReferenceTargetValues.contains(targetValue)) {
+			log(annotationDetailAST, _MSG_INCORRECT_TARGET_VALUE, targetValue);
+		}
 	}
 
 	private void _checkUnbind(
-		DetailAST classDefinitionDetailAST, String defaultUnbindMethodName,
-		String unbindName, String policyName, int lineNo) {
+		DetailAST annotationDetailAST, DetailAST classDefinitionDetailAST,
+		String defaultUnbindMethodName, String unbindName, String policyName) {
 
 		if (unbindName == null) {
 			if (policyName.endsWith(_POLICY_STATIC) &&
 				!_containsMethod(
 					classDefinitionDetailAST, defaultUnbindMethodName)) {
 
-				log(lineNo, _MSG_MISSING_STATIC_POLICY_UNBIND, _NO_UNBIND);
+				log(
+					annotationDetailAST, _MSG_MISSING_STATIC_POLICY_UNBIND,
+					_NO_UNBIND);
 			}
 		}
 		else if (unbindName.equals("\"" + defaultUnbindMethodName + "\"")) {
-			log(lineNo, _MSG_REDUNDANT_DEFAULT_UNBIND);
+			log(annotationDetailAST, _MSG_REDUNDANT_DEFAULT_UNBIND);
 		}
 		else if (unbindName.equals(_NO_UNBIND) &&
 				 policyName.endsWith(_POLICY_DYNAMIC)) {
 
-			log(lineNo, _MSG_MISSING_DYNAMIC_POLICY_UNBIND);
+			log(annotationDetailAST, _MSG_MISSING_DYNAMIC_POLICY_UNBIND);
 		}
 	}
 
@@ -284,6 +312,14 @@ public class ReferenceAnnotationCheck extends BaseCheck {
 
 		return sb.toString();
 	}
+
+	private static final String _ALLOWED_FILE_NAMES = "allowedFileNames";
+
+	private static final String _FORBIDDEN_REFERENCE_TARGET_VALUES =
+		"forbiddenReferenceTargetValues";
+
+	private static final String _MSG_INCORRECT_TARGET_VALUE =
+		"target.value.incorrect";
 
 	private static final String _MSG_MISSING_DYNAMIC_POLICY_UNBIND =
 		"unbind.dynamic.policy.missing";

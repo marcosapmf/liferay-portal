@@ -18,6 +18,7 @@ import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTProcessService;
+import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.web.internal.constants.CTWebConstants;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
@@ -36,6 +37,7 @@ import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.List;
 import java.util.Map;
@@ -54,12 +56,14 @@ public class ViewHistoryDisplayContext {
 		BackgroundTaskLocalService backgroundTaskLocalService,
 		CTCollectionLocalService ctCollectionLocalService,
 		CTProcessService ctProcessService,
+		CTSchemaVersionLocalService ctSchemaVersionLocalService,
 		HttpServletRequest httpServletRequest, Language language,
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		_backgroundTaskLocalService = backgroundTaskLocalService;
 		_ctCollectionLocalService = ctCollectionLocalService;
 		_ctProcessService = ctProcessService;
+		_ctSchemaVersionLocalService = ctSchemaVersionLocalService;
 		_httpServletRequest = httpServletRequest;
 		_language = language;
 
@@ -154,11 +158,12 @@ public class ViewHistoryDisplayContext {
 					_language.get(_httpServletRequest, "ongoing"));
 			}
 		).add(
+			() -> PropsValues.SCHEDULER_ENABLED,
 			navigationItem -> {
 				navigationItem.setActive(false);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/publications/view_scheduled", "displayStyle",
+					"/change_tracking/view_scheduled", "displayStyle",
 					getDisplayStyle());
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "scheduled"));
@@ -168,12 +173,17 @@ public class ViewHistoryDisplayContext {
 				navigationItem.setActive(true);
 				navigationItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"/publications/view_history", "displayStyle",
+					"/change_tracking/view_history", "displayStyle",
 					getDisplayStyle());
 				navigationItem.setLabel(
 					_language.get(_httpServletRequest, "history"));
 			}
 		).build();
+	}
+
+	public boolean isExpired(CTCollection ctCollection) {
+		return !_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
+			ctCollection.getSchemaVersionId());
 	}
 
 	private String _getFilterByStatus() {
@@ -227,6 +237,7 @@ public class ViewHistoryDisplayContext {
 	private final BackgroundTaskLocalService _backgroundTaskLocalService;
 	private final CTCollectionLocalService _ctCollectionLocalService;
 	private final CTProcessService _ctProcessService;
+	private final CTSchemaVersionLocalService _ctSchemaVersionLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
 	private final RenderRequest _renderRequest;

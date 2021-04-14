@@ -43,7 +43,7 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 
 <liferay-ui:membership-policy-error />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= selectOrganizationUsersManagementToolbarDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= selectOrganizationUsersManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= userSearchContainer.getTotal() %>"
@@ -57,7 +57,7 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 	viewTypeItems="<%= selectOrganizationUsersManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<liferay-ui:search-container
 		id="users"
 		searchContainer="<%= userSearchContainer %>"
@@ -88,15 +88,9 @@ SearchContainer<User> userSearchContainer = selectOrganizationUsersManagementToo
 					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test='<%= displayStyle.equals("icon") %>'>
-
-					<%
-					row.setCssClass("entry-card lfr-asset-item");
-					%>
-
 					<liferay-ui:search-container-column-text>
 						<liferay-frontend:user-vertical-card
 							actionJspServletContext="<%= application %>"
-							cssClass="entry-display-style"
 							resultRow="<%= row %>"
 							rowChecker="<%= userSearchContainer.getRowChecker() %>"
 							subtitle="<%= user2.getScreenName() %>"

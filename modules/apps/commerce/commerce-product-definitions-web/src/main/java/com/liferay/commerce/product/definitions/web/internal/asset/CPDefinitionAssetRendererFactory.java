@@ -68,6 +68,7 @@ public class CPDefinitionAssetRendererFactory
 		setLinkable(true);
 		setPortletId(CPPortletKeys.CP_DEFINITIONS);
 		setSearchable(true);
+		setSelectable(false);
 	}
 
 	@Override
@@ -123,7 +124,7 @@ public class CPDefinitionAssetRendererFactory
 			CPPortletKeys.CP_DEFINITIONS, 0, 0, PortletRequest.RENDER_PHASE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editProductDefinition");
+			"mvcRenderCommandName", "/cp_definitions/edit_cp_definition");
 
 		return portletURL;
 	}

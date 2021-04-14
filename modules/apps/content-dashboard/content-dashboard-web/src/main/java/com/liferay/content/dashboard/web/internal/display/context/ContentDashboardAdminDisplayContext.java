@@ -34,14 +34,18 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -59,7 +63,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.portlet.ActionRequest;
+import javax.portlet.ActionURL;
 import javax.portlet.PortletURL;
+import javax.portlet.WindowStateException;
 
 /**
  * @author Cristina González
@@ -289,6 +296,44 @@ public class ContentDashboardAdminDisplayContext {
 			contentDashboardItem);
 	}
 
+	public String getOnClickConfiguration() throws WindowStateException {
+		StringBundler sb = new StringBundler(13);
+
+		sb.append("Liferay.Portlet.openModal({namespace: '");
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)_liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+		sb.append(portletDisplay.getNamespace());
+
+		sb.append("', onClose: function() {Liferay.Portlet.refresh('#p_p_id_");
+		sb.append(portletDisplay.getId());
+		sb.append("_')}, portletSelector: '#p_p_id_");
+		sb.append(portletDisplay.getId());
+		sb.append("_', portletId: '");
+		sb.append(portletDisplay.getId());
+		sb.append("', title: '");
+		sb.append(
+			ResourceBundleUtil.getString(_resourceBundle, "configuration"));
+		sb.append("', url: '");
+
+		PortletURL renderURL = _liferayPortletResponse.createRenderURL();
+
+		renderURL.setParameter(
+			"mvcRenderCommandName",
+			"/content_dashboard/edit_content_dashboard_configuration");
+		renderURL.setWindowState(LiferayWindowState.POP_UP);
+
+		sb.append(HtmlUtil.escapeJS(renderURL.toString()));
+
+		sb.append("'}); return false;");
+
+		return sb.toString();
+	}
+
 	public long getScopeId() {
 		if (_scopeId > 0) {
 			return _scopeId;
@@ -330,6 +375,16 @@ public class ContentDashboardAdminDisplayContext {
 		return _status;
 	}
 
+	public ActionURL getSwapConfigurationURL() {
+		ActionURL actionURL = _liferayPortletResponse.createActionURL();
+
+		actionURL.setParameter(
+			ActionRequest.ACTION_NAME,
+			"/content_dashboard/swap_content_dashboard_configuration");
+
+		return actionURL;
+	}
+
 	public long getUserId() {
 		if (_userId > 0) {
 			return _userId;
@@ -338,6 +393,24 @@ public class ContentDashboardAdminDisplayContext {
 		_userId = _portal.getUserId(_liferayPortletRequest);
 
 		return _userId;
+	}
+
+	public boolean isSwapConfigurationEnabled() {
+		if (_swapConfigurationEnabled != null) {
+			return _swapConfigurationEnabled;
+		}
+
+		List<String> vocabularyNames =
+			_assetVocabularyMetric.getVocabularyNames();
+
+		if (vocabularyNames.size() == 2) {
+			_swapConfigurationEnabled = true;
+		}
+		else {
+			_swapConfigurationEnabled = false;
+		}
+
+		return _swapConfigurationEnabled;
 	}
 
 	private Map<String, Object> _getContext() {
@@ -387,6 +460,7 @@ public class ContentDashboardAdminDisplayContext {
 	private long _scopeId;
 	private final SearchContainer<ContentDashboardItem<?>> _searchContainer;
 	private Integer _status;
+	private Boolean _swapConfigurationEnabled;
 	private long _userId;
 
 }

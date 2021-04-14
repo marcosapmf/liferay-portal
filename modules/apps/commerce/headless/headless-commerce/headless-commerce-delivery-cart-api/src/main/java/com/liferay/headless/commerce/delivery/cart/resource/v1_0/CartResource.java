@@ -64,6 +64,8 @@ public interface CartResource {
 	public Response putCartBatch(String callbackURL, Object object)
 		throws Exception;
 
+	public Cart postCartCheckout(Long cartId) throws Exception;
+
 	public Cart postCartCouponCode(Long cartId, CouponCode couponCode)
 		throws Exception;
 

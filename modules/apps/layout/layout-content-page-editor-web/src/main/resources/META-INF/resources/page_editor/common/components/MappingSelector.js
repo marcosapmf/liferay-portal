@@ -82,7 +82,11 @@ function loadFields({
 	return Promise.resolve(null);
 }
 
-export default function ({fieldType, mappedItem, onMappingSelect}) {
+export default function MappingSelectorWrapper({
+	fieldType,
+	mappedItem,
+	onMappingSelect,
+}) {
 	const collectionConfig = useCollectionConfig();
 	const [collectionFieldSets, setCollectionFieldSets] = useState([]);
 	const [
@@ -241,17 +245,18 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 	};
 
 	useEffect(() => {
-		const infoItem = mappedInfoItems.find(
-			(infoItem) =>
-				infoItem.classNameId === mappedItem.classNameId &&
-				infoItem.classPK === mappedItem.classPK
-		);
+		if (mappedItem.classNameId && mappedItem.classPK) {
+			const infoItem = mappedInfoItems.find(
+				(infoItem) =>
+					infoItem.classNameId === mappedItem.classNameId &&
+					infoItem.classPK === mappedItem.classPK
+			);
 
-		setSelectedItem((selectedItem) => ({
-			...infoItem,
-			...mappedItem,
-			...selectedItem,
-		}));
+			setSelectedItem({
+				...infoItem,
+				...mappedItem,
+			});
+		}
 	}, [mappedItem, mappedInfoItems, setSelectedItem]);
 
 	useEffect(() => {

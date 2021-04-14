@@ -77,10 +77,12 @@ public class DispatchTriggerModelImpl
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"active_", Types.BOOLEAN},
-		{"cronExpression", Types.VARCHAR}, {"endDate", Types.TIMESTAMP},
-		{"name", Types.VARCHAR}, {"startDate", Types.TIMESTAMP},
-		{"system_", Types.BOOLEAN}, {"taskSettings", Types.CLOB},
-		{"taskType", Types.VARCHAR}
+		{"cronExpression", Types.VARCHAR},
+		{"dispatchTaskClusterMode", Types.INTEGER},
+		{"dispatchTaskExecutorType", Types.VARCHAR},
+		{"dispatchTaskSettings", Types.CLOB}, {"endDate", Types.TIMESTAMP},
+		{"name", Types.VARCHAR}, {"overlapAllowed", Types.BOOLEAN},
+		{"startDate", Types.TIMESTAMP}, {"system_", Types.BOOLEAN}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -96,16 +98,18 @@ public class DispatchTriggerModelImpl
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("active_", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("cronExpression", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("dispatchTaskClusterMode", Types.INTEGER);
+		TABLE_COLUMNS_MAP.put("dispatchTaskExecutorType", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("dispatchTaskSettings", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("endDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("overlapAllowed", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("startDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("system_", Types.BOOLEAN);
-		TABLE_COLUMNS_MAP.put("taskSettings", Types.CLOB);
-		TABLE_COLUMNS_MAP.put("taskType", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table DispatchTrigger (mvccVersion LONG default 0 not null,dispatchTriggerId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,cronExpression VARCHAR(75) null,endDate DATE null,name VARCHAR(75) null,startDate DATE null,system_ BOOLEAN,taskSettings TEXT null,taskType VARCHAR(75) null)";
+		"create table DispatchTrigger (mvccVersion LONG default 0 not null,dispatchTriggerId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,active_ BOOLEAN,cronExpression VARCHAR(75) null,dispatchTaskClusterMode INTEGER,dispatchTaskExecutorType VARCHAR(75) null,dispatchTaskSettings TEXT null,endDate DATE null,name VARCHAR(75) null,overlapAllowed BOOLEAN,startDate DATE null,system_ BOOLEAN)";
 
 	public static final String TABLE_SQL_DROP = "drop table DispatchTrigger";
 
@@ -125,32 +129,44 @@ public class DispatchTriggerModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
 	 */
 	@Deprecated
-	public static final long COMPANYID_COLUMN_BITMASK = 1L;
+	public static final long ACTIVE_COLUMN_BITMASK = 1L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
 	 */
 	@Deprecated
-	public static final long NAME_COLUMN_BITMASK = 2L;
+	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
 	 */
 	@Deprecated
-	public static final long TASKTYPE_COLUMN_BITMASK = 4L;
+	public static final long DISPATCHTASKCLUSTERMODE_COLUMN_BITMASK = 4L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
 	 */
 	@Deprecated
-	public static final long USERID_COLUMN_BITMASK = 8L;
+	public static final long DISPATCHTASKEXECUTORTYPE_COLUMN_BITMASK = 8L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
+	public static final long NAME_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)
+	 */
+	@Deprecated
+	public static final long USERID_COLUMN_BITMASK = 32L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)
 	 */
 	@Deprecated
-	public static final long MODIFIEDDATE_COLUMN_BITMASK = 16L;
+	public static final long MODIFIEDDATE_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
@@ -190,12 +206,16 @@ public class DispatchTriggerModelImpl
 		model.setModifiedDate(soapModel.getModifiedDate());
 		model.setActive(soapModel.isActive());
 		model.setCronExpression(soapModel.getCronExpression());
+		model.setDispatchTaskClusterMode(
+			soapModel.getDispatchTaskClusterMode());
+		model.setDispatchTaskExecutorType(
+			soapModel.getDispatchTaskExecutorType());
+		model.setDispatchTaskSettings(soapModel.getDispatchTaskSettings());
 		model.setEndDate(soapModel.getEndDate());
 		model.setName(soapModel.getName());
+		model.setOverlapAllowed(soapModel.isOverlapAllowed());
 		model.setStartDate(soapModel.getStartDate());
 		model.setSystem(soapModel.isSystem());
-		model.setTaskSettings(soapModel.getTaskSettings());
-		model.setTaskType(soapModel.getTaskType());
 
 		return model;
 	}
@@ -395,6 +415,26 @@ public class DispatchTriggerModelImpl
 			"cronExpression",
 			(BiConsumer<DispatchTrigger, String>)
 				DispatchTrigger::setCronExpression);
+		attributeGetterFunctions.put(
+			"dispatchTaskClusterMode",
+			DispatchTrigger::getDispatchTaskClusterMode);
+		attributeSetterBiConsumers.put(
+			"dispatchTaskClusterMode",
+			(BiConsumer<DispatchTrigger, Integer>)
+				DispatchTrigger::setDispatchTaskClusterMode);
+		attributeGetterFunctions.put(
+			"dispatchTaskExecutorType",
+			DispatchTrigger::getDispatchTaskExecutorType);
+		attributeSetterBiConsumers.put(
+			"dispatchTaskExecutorType",
+			(BiConsumer<DispatchTrigger, String>)
+				DispatchTrigger::setDispatchTaskExecutorType);
+		attributeGetterFunctions.put(
+			"dispatchTaskSettings", DispatchTrigger::getDispatchTaskSettings);
+		attributeSetterBiConsumers.put(
+			"dispatchTaskSettings",
+			(BiConsumer<DispatchTrigger, String>)
+				DispatchTrigger::setDispatchTaskSettings);
 		attributeGetterFunctions.put("endDate", DispatchTrigger::getEndDate);
 		attributeSetterBiConsumers.put(
 			"endDate",
@@ -404,6 +444,12 @@ public class DispatchTriggerModelImpl
 			"name",
 			(BiConsumer<DispatchTrigger, String>)DispatchTrigger::setName);
 		attributeGetterFunctions.put(
+			"overlapAllowed", DispatchTrigger::getOverlapAllowed);
+		attributeSetterBiConsumers.put(
+			"overlapAllowed",
+			(BiConsumer<DispatchTrigger, Boolean>)
+				DispatchTrigger::setOverlapAllowed);
+		attributeGetterFunctions.put(
 			"startDate", DispatchTrigger::getStartDate);
 		attributeSetterBiConsumers.put(
 			"startDate",
@@ -412,16 +458,6 @@ public class DispatchTriggerModelImpl
 		attributeSetterBiConsumers.put(
 			"system",
 			(BiConsumer<DispatchTrigger, Boolean>)DispatchTrigger::setSystem);
-		attributeGetterFunctions.put(
-			"taskSettings", DispatchTrigger::getTaskSettings);
-		attributeSetterBiConsumers.put(
-			"taskSettings",
-			(BiConsumer<DispatchTrigger, String>)
-				DispatchTrigger::setTaskSettings);
-		attributeGetterFunctions.put("taskType", DispatchTrigger::getTaskType);
-		attributeSetterBiConsumers.put(
-			"taskType",
-			(BiConsumer<DispatchTrigger, String>)DispatchTrigger::setTaskType);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -601,6 +637,16 @@ public class DispatchTriggerModelImpl
 		_active = active;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public boolean getOriginalActive() {
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("active_"));
+	}
+
 	@JSON
 	@Override
 	public String getCronExpression() {
@@ -619,6 +665,80 @@ public class DispatchTriggerModelImpl
 		}
 
 		_cronExpression = cronExpression;
+	}
+
+	@JSON
+	@Override
+	public int getDispatchTaskClusterMode() {
+		return _dispatchTaskClusterMode;
+	}
+
+	@Override
+	public void setDispatchTaskClusterMode(int dispatchTaskClusterMode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_dispatchTaskClusterMode = dispatchTaskClusterMode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public int getOriginalDispatchTaskClusterMode() {
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("dispatchTaskClusterMode"));
+	}
+
+	@JSON
+	@Override
+	public String getDispatchTaskExecutorType() {
+		if (_dispatchTaskExecutorType == null) {
+			return "";
+		}
+		else {
+			return _dispatchTaskExecutorType;
+		}
+	}
+
+	@Override
+	public void setDispatchTaskExecutorType(String dispatchTaskExecutorType) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_dispatchTaskExecutorType = dispatchTaskExecutorType;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalDispatchTaskExecutorType() {
+		return getColumnOriginalValue("dispatchTaskExecutorType");
+	}
+
+	@JSON
+	@Override
+	public String getDispatchTaskSettings() {
+		if (_dispatchTaskSettings == null) {
+			return "";
+		}
+		else {
+			return _dispatchTaskSettings;
+		}
+	}
+
+	@Override
+	public void setDispatchTaskSettings(String dispatchTaskSettings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_dispatchTaskSettings = dispatchTaskSettings;
 	}
 
 	@JSON
@@ -667,6 +787,27 @@ public class DispatchTriggerModelImpl
 
 	@JSON
 	@Override
+	public boolean getOverlapAllowed() {
+		return _overlapAllowed;
+	}
+
+	@JSON
+	@Override
+	public boolean isOverlapAllowed() {
+		return _overlapAllowed;
+	}
+
+	@Override
+	public void setOverlapAllowed(boolean overlapAllowed) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_overlapAllowed = overlapAllowed;
+	}
+
+	@JSON
+	@Override
 	public Date getStartDate() {
 		return _startDate;
 	}
@@ -699,55 +840,6 @@ public class DispatchTriggerModelImpl
 		}
 
 		_system = system;
-	}
-
-	@JSON
-	@Override
-	public String getTaskSettings() {
-		if (_taskSettings == null) {
-			return "";
-		}
-		else {
-			return _taskSettings;
-		}
-	}
-
-	@Override
-	public void setTaskSettings(String taskSettings) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_taskSettings = taskSettings;
-	}
-
-	@JSON
-	@Override
-	public String getTaskType() {
-		if (_taskType == null) {
-			return "";
-		}
-		else {
-			return _taskType;
-		}
-	}
-
-	@Override
-	public void setTaskType(String taskType) {
-		if (_columnOriginalValues == Collections.EMPTY_MAP) {
-			_setColumnOriginalValues();
-		}
-
-		_taskType = taskType;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getColumnOriginalValue(String)}
-	 */
-	@Deprecated
-	public String getOriginalTaskType() {
-		return getColumnOriginalValue("taskType");
 	}
 
 	public long getColumnBitmask() {
@@ -813,12 +905,16 @@ public class DispatchTriggerModelImpl
 		dispatchTriggerImpl.setModifiedDate(getModifiedDate());
 		dispatchTriggerImpl.setActive(isActive());
 		dispatchTriggerImpl.setCronExpression(getCronExpression());
+		dispatchTriggerImpl.setDispatchTaskClusterMode(
+			getDispatchTaskClusterMode());
+		dispatchTriggerImpl.setDispatchTaskExecutorType(
+			getDispatchTaskExecutorType());
+		dispatchTriggerImpl.setDispatchTaskSettings(getDispatchTaskSettings());
 		dispatchTriggerImpl.setEndDate(getEndDate());
 		dispatchTriggerImpl.setName(getName());
+		dispatchTriggerImpl.setOverlapAllowed(isOverlapAllowed());
 		dispatchTriggerImpl.setStartDate(getStartDate());
 		dispatchTriggerImpl.setSystem(isSystem());
-		dispatchTriggerImpl.setTaskSettings(getTaskSettings());
-		dispatchTriggerImpl.setTaskType(getTaskType());
 
 		dispatchTriggerImpl.resetOriginalValues();
 
@@ -944,6 +1040,33 @@ public class DispatchTriggerModelImpl
 			dispatchTriggerCacheModel.cronExpression = null;
 		}
 
+		dispatchTriggerCacheModel.dispatchTaskClusterMode =
+			getDispatchTaskClusterMode();
+
+		dispatchTriggerCacheModel.dispatchTaskExecutorType =
+			getDispatchTaskExecutorType();
+
+		String dispatchTaskExecutorType =
+			dispatchTriggerCacheModel.dispatchTaskExecutorType;
+
+		if ((dispatchTaskExecutorType != null) &&
+			(dispatchTaskExecutorType.length() == 0)) {
+
+			dispatchTriggerCacheModel.dispatchTaskExecutorType = null;
+		}
+
+		dispatchTriggerCacheModel.dispatchTaskSettings =
+			getDispatchTaskSettings();
+
+		String dispatchTaskSettings =
+			dispatchTriggerCacheModel.dispatchTaskSettings;
+
+		if ((dispatchTaskSettings != null) &&
+			(dispatchTaskSettings.length() == 0)) {
+
+			dispatchTriggerCacheModel.dispatchTaskSettings = null;
+		}
+
 		Date endDate = getEndDate();
 
 		if (endDate != null) {
@@ -961,6 +1084,8 @@ public class DispatchTriggerModelImpl
 			dispatchTriggerCacheModel.name = null;
 		}
 
+		dispatchTriggerCacheModel.overlapAllowed = isOverlapAllowed();
+
 		Date startDate = getStartDate();
 
 		if (startDate != null) {
@@ -971,22 +1096,6 @@ public class DispatchTriggerModelImpl
 		}
 
 		dispatchTriggerCacheModel.system = isSystem();
-
-		dispatchTriggerCacheModel.taskSettings = getTaskSettings();
-
-		String taskSettings = dispatchTriggerCacheModel.taskSettings;
-
-		if ((taskSettings != null) && (taskSettings.length() == 0)) {
-			dispatchTriggerCacheModel.taskSettings = null;
-		}
-
-		dispatchTriggerCacheModel.taskType = getTaskType();
-
-		String taskType = dispatchTriggerCacheModel.taskType;
-
-		if ((taskType != null) && (taskType.length() == 0)) {
-			dispatchTriggerCacheModel.taskType = null;
-		}
 
 		return dispatchTriggerCacheModel;
 	}
@@ -1071,12 +1180,14 @@ public class DispatchTriggerModelImpl
 	private boolean _setModifiedDate;
 	private boolean _active;
 	private String _cronExpression;
+	private int _dispatchTaskClusterMode;
+	private String _dispatchTaskExecutorType;
+	private String _dispatchTaskSettings;
 	private Date _endDate;
 	private String _name;
+	private boolean _overlapAllowed;
 	private Date _startDate;
 	private boolean _system;
-	private String _taskSettings;
-	private String _taskType;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1116,12 +1227,17 @@ public class DispatchTriggerModelImpl
 		_columnOriginalValues.put("modifiedDate", _modifiedDate);
 		_columnOriginalValues.put("active_", _active);
 		_columnOriginalValues.put("cronExpression", _cronExpression);
+		_columnOriginalValues.put(
+			"dispatchTaskClusterMode", _dispatchTaskClusterMode);
+		_columnOriginalValues.put(
+			"dispatchTaskExecutorType", _dispatchTaskExecutorType);
+		_columnOriginalValues.put(
+			"dispatchTaskSettings", _dispatchTaskSettings);
 		_columnOriginalValues.put("endDate", _endDate);
 		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("overlapAllowed", _overlapAllowed);
 		_columnOriginalValues.put("startDate", _startDate);
 		_columnOriginalValues.put("system_", _system);
-		_columnOriginalValues.put("taskSettings", _taskSettings);
-		_columnOriginalValues.put("taskType", _taskType);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1164,17 +1280,21 @@ public class DispatchTriggerModelImpl
 
 		columnBitmasks.put("cronExpression", 256L);
 
-		columnBitmasks.put("endDate", 512L);
+		columnBitmasks.put("dispatchTaskClusterMode", 512L);
 
-		columnBitmasks.put("name", 1024L);
+		columnBitmasks.put("dispatchTaskExecutorType", 1024L);
 
-		columnBitmasks.put("startDate", 2048L);
+		columnBitmasks.put("dispatchTaskSettings", 2048L);
 
-		columnBitmasks.put("system_", 4096L);
+		columnBitmasks.put("endDate", 4096L);
 
-		columnBitmasks.put("taskSettings", 8192L);
+		columnBitmasks.put("name", 8192L);
 
-		columnBitmasks.put("taskType", 16384L);
+		columnBitmasks.put("overlapAllowed", 16384L);
+
+		columnBitmasks.put("startDate", 32768L);
+
+		columnBitmasks.put("system_", 65536L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}
