@@ -71,7 +71,7 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 	}
 
 	private void _addJSPUnusedImports(
-		String fileName, List<String> importLines,
+		String fileName, String content, List<String> importLines,
 		List<String> unneededImports) {
 
 		Set<String> checkedFileNames = new HashSet<>();
@@ -92,7 +92,7 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 				className.lastIndexOf(CharPool.PERIOD) + 1);
 
 			if (hasUnusedJSPTerm(
-					fileName, "\\W" + className + "[^\\w\"]", "class",
+					fileName, content, "\\W" + className + "[^\\w\"]", "class",
 					checkedFileNames, includeFileNames, getContentsMap())) {
 
 				unneededImports.add(importLine);
@@ -101,7 +101,7 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 	}
 
 	private void _addJSPUnusedTaglibs(
-		String fileName, List<String> taglibLines,
+		String fileName, String content, List<String> taglibLines,
 		List<String> unneededTaglibs) {
 
 		Set<String> checkedFileNames = new HashSet<>();
@@ -119,11 +119,11 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 			String prefix = taglibLine.substring(x + 8, y);
 
 			String regex = StringBundler.concat(
-				StringPool.LESS_THAN, prefix, StringPool.COLON, StringPool.PIPE,
-				"\\$\\{", prefix, StringPool.COLON);
+				StringPool.LESS_THAN, prefix, ":|\\$\\{", prefix,
+				StringPool.COLON);
 
 			if (hasUnusedJSPTerm(
-					fileName, regex, "taglib", checkedFileNames,
+					fileName, content, regex, "taglib", checkedFileNames,
 					includeFileNames, getContentsMap())) {
 
 				unneededTaglibs.add(taglibLine);
@@ -188,69 +188,46 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 	}
 
 	private String _getVariableName(String line) {
-		if ((!line.endsWith(";") && !line.endsWith("(")) ||
-			line.startsWith("//")) {
+		Matcher matcher = _variableDeclarationPattern.matcher(line);
 
+		if (!matcher.find()) {
 			return null;
 		}
 
-		String variableName = null;
+		String typeName = matcher.group(1);
 
-		int x = line.indexOf(" = ");
+		if (!typeName.equals("break") && !typeName.equals("continue") &&
+			!typeName.equals("return") && !typeName.equals("throw")) {
 
-		if (x == -1) {
-			int y = line.lastIndexOf(CharPool.SPACE);
-
-			if (y != -1) {
-				variableName = line.substring(y + 1, line.length() - 1);
-			}
-		}
-		else {
-			line = line.substring(0, x);
-
-			int y = line.lastIndexOf(CharPool.SPACE);
-
-			if (y != -1) {
-				variableName = line.substring(y + 1);
-			}
-		}
-
-		if (Validator.isVariableName(variableName)) {
-			return variableName;
+			return matcher.group(2);
 		}
 
 		return null;
 	}
 
 	private boolean _hasUnusedPortletDefineObjectsProperty(
-		String fileName, String portletDefineObjectProperty,
+		String fileName, String content, String portletDefineObjectProperty,
 		Set<String> checkedFileNames, Set<String> includeFileNames) {
 
 		return hasUnusedJSPTerm(
-			fileName, "\\W" + portletDefineObjectProperty + "\\W",
+			fileName, content, "\\W" + portletDefineObjectProperty + "\\W",
 			"portletDefineObjectProperty", checkedFileNames, includeFileNames,
 			getContentsMap());
 	}
 
 	private boolean _hasUnusedVariable(
-		String fileName, String line, Set<String> checkedFileNames,
-		Set<String> includeFileNames) {
-
-		if (line.contains(": ")) {
-			return false;
-		}
+		String fileName, String content, String line, int lineNumber,
+		Set<String> checkedFileNames, Set<String> includeFileNames) {
 
 		String variableName = _getVariableName(line);
 
-		if (Validator.isNull(variableName) || variableName.equals("false") ||
-			variableName.equals("true")) {
-
+		if (variableName == null) {
 			return false;
 		}
 
 		return hasUnusedJSPTerm(
-			fileName, "\\W" + variableName + "\\W", "variable",
-			checkedFileNames, includeFileNames, getContentsMap());
+			fileName, content, "\\W" + variableName + "\\W", lineNumber,
+			"variable", checkedFileNames, includeFileNames, getContentsMap());
 	}
 
 	private boolean _isJSPDuplicateDefineObjects(
@@ -446,7 +423,7 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 		List<String> unneededImports = _getJSPDuplicateImports(
 			fileName, content, importLines);
 
-		_addJSPUnusedImports(fileName, importLines, unneededImports);
+		_addJSPUnusedImports(fileName, content, importLines, unneededImports);
 
 		for (String unneededImport : unneededImports) {
 			newImports = StringUtil.removeSubstring(newImports, unneededImport);
@@ -469,8 +446,8 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 				_PORTLET_DEFINE_OBJECTS_PROPERTIES) {
 
 			if (!_hasUnusedPortletDefineObjectsProperty(
-					fileName, portletDefineObjectProperty, checkedFileNames,
-					includeFileNames)) {
+					fileName, content, portletDefineObjectProperty,
+					checkedFileNames, includeFileNames)) {
 
 				return content;
 			}
@@ -514,7 +491,7 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 		List<String> unneededTaglibs = _getJSPDuplicateTaglibs(
 			fileName, content, taglibLines);
 
-		_addJSPUnusedTaglibs(fileName, taglibLines, unneededTaglibs);
+		_addJSPUnusedTaglibs(fileName, content, taglibLines, unneededTaglibs);
 
 		for (String unneededTaglib : unneededTaglibs) {
 			newTaglibs = StringUtil.removeSubstring(newTaglibs, unneededTaglib);
@@ -564,8 +541,8 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 					!isExcludedPath(
 						_UNUSED_VARIABLES_EXCLUDES, absolutePath, lineNumber) &&
 					_hasUnusedVariable(
-						fileName, trimmedLine, checkedFileNames,
-						includeFileNames)) {
+						fileName, content, trimmedLine, lineNumber,
+						checkedFileNames, includeFileNames)) {
 
 					unusedVariable = true;
 				}
@@ -609,5 +586,7 @@ public class JSPUnusedTermsCheck extends BaseJSPTermsCheck {
 		"(<.*\n*taglib uri=\".*>\n*)+", Pattern.MULTILINE);
 	private static final Pattern _defineObjectsPattern = Pattern.compile(
 		"<[\\w-]+:defineObjects />");
+	private static final Pattern _variableDeclarationPattern = Pattern.compile(
+		"^([\\w<>,\\s]+?)\\s(\\w+)( =\\s|;)");
 
 }

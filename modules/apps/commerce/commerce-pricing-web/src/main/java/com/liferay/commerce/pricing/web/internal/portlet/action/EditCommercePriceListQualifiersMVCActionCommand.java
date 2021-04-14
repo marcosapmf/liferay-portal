@@ -14,11 +14,10 @@
 
 package com.liferay.commerce.pricing.web.internal.portlet.action;
 
-import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListAccountRelService;
+import com.liferay.commerce.price.list.service.CommercePriceListChannelRelService;
 import com.liferay.commerce.price.list.service.CommercePriceListCommerceAccountGroupRelService;
 import com.liferay.commerce.pricing.constants.CommercePricingPortletKeys;
-import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -41,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PRICE_LIST,
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_PROMOTION,
-		"mvc.command.name=editCommercePriceListQualifiers"
+		"mvc.command.name=/commerce_price_list/edit_commerce_price_list_qualifiers"
 	},
 	service = MVCActionCommand.class
 )
@@ -92,8 +91,9 @@ public class EditCommercePriceListQualifiersMVCActionCommand
 		}
 
 		if (Objects.equals(channelQualifiers, "all")) {
-			_commerceChannelRelService.deleteCommerceChannelRels(
-				CommercePriceList.class.getName(), commercePriceListId);
+			_commercePriceListChannelRelService.
+				deleteCommercePriceListChannelRelsByCommercePriceListId(
+					commercePriceListId);
 		}
 	}
 
@@ -101,10 +101,12 @@ public class EditCommercePriceListQualifiersMVCActionCommand
 			long commercePriceListId)
 		throws Exception {
 
-		if (_commercePriceListCommerceAccountGroupRelService.
+		int count =
+			_commercePriceListCommerceAccountGroupRelService.
 				getCommercePriceListCommerceAccountGroupRelsCount(
-					commercePriceListId) == 0) {
+					commercePriceListId);
 
+		if (count == 0) {
 			return;
 		}
 
@@ -116,10 +118,11 @@ public class EditCommercePriceListQualifiersMVCActionCommand
 	private void _deleteCommercePriceListAccountRels(long commercePriceListId)
 		throws Exception {
 
-		if (_commercePriceListAccountRelService.
-				getCommercePriceListAccountRelsCount(commercePriceListId) ==
-					0) {
+		int count =
+			_commercePriceListAccountRelService.
+				getCommercePriceListAccountRelsCount(commercePriceListId);
 
+		if (count == 0) {
 			return;
 		}
 
@@ -129,11 +132,12 @@ public class EditCommercePriceListQualifiersMVCActionCommand
 	}
 
 	@Reference
-	private CommerceChannelRelService _commerceChannelRelService;
-
-	@Reference
 	private CommercePriceListAccountRelService
 		_commercePriceListAccountRelService;
+
+	@Reference
+	private CommercePriceListChannelRelService
+		_commercePriceListChannelRelService;
 
 	@Reference
 	private CommercePriceListCommerceAccountGroupRelService

@@ -53,6 +53,19 @@ public class PortletJSONUtil {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
+		LayoutTypePortlet layoutTypePortlet =
+			themeDisplay.getLayoutTypePortlet();
+
+		populatePortletJSONObject(
+			httpServletRequest, portletHTML, portlet,
+			layoutTypePortlet.getAllPortlets(), jsonObject);
+	}
+
+	public static void populatePortletJSONObject(
+			HttpServletRequest httpServletRequest, String portletHTML,
+			Portlet portlet, List<Portlet> allPortlets, JSONObject jsonObject)
+		throws Exception {
+
 		Set<String> footerCssSet = new LinkedHashSet<>();
 		Set<String> footerJavaScriptSet = new LinkedHashSet<>();
 		Set<String> headerCssSet = new LinkedHashSet<>();
@@ -63,10 +76,7 @@ public class PortletJSONUtil {
 		String rootPortletId = _getRootPortletId(portlet);
 		String portletId = portlet.getPortletId();
 
-		LayoutTypePortlet layoutTypePortlet =
-			themeDisplay.getLayoutTypePortlet();
-
-		for (Portlet layoutPortlet : layoutTypePortlet.getAllPortlets()) {
+		for (Portlet layoutPortlet : allPortlets) {
 
 			// Check to see if an instance of this portlet is already in the
 			// layout, but ignore the portlet that was just added

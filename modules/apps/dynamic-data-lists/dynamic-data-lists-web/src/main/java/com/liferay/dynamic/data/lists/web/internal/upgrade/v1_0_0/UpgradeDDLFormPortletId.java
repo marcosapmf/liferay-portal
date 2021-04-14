@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.ResourcePermission;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
@@ -131,7 +132,6 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 
 				dynamicQuery.add(junction);
 			});
-		actionableDynamicQuery.setParallel(true);
 		actionableDynamicQuery.setPerformActionMethod(
 			(PortletPreferences portletPreference) -> updatePortletPreferences(
 				portletPreference, oldRootPortletId, newRootPortletId));
@@ -169,19 +169,35 @@ public class UpgradeDDLFormPortletId extends BaseUpgradePortletId {
 
 		portletPreferences.setPortletId(newPortletId);
 
+		portletPreferences =
+			_portletPreferencesLocalService.updatePortletPreferences(
+				portletPreferences);
+
+		String oldPreferences = PortletPreferencesFactoryUtil.toXML(
+			_portletPreferencesLocalService.getPreferences(
+				portletPreferences.getCompanyId(),
+				portletPreferences.getOwnerId(),
+				portletPreferences.getOwnerType(), portletPreferences.getPlid(),
+				portletPreferences.getPortletId()));
+
 		String newPreferences = StringUtil.replace(
-			portletPreferences.getPreferences(), "</portlet-preferences>",
+			oldPreferences, "</portlet-preferences>",
 			"<preference><name>formView</name><value>true</value>" +
 				"</preference></portlet-preferences>");
 
 		newPreferences = StringUtil.replace(
-			newPreferences, "#portlet_" + oldRootPortletId,
-			"#portlet_" + newRootPortletId);
+			newPreferences,
+			new String[] {
+				"#p_p_id_" + oldRootPortletId, "#portlet_" + oldRootPortletId
+			},
+			new String[] {
+				"#p_p_id_" + newRootPortletId, "#portlet_" + newRootPortletId
+			});
 
-		portletPreferences.setPreferences(newPreferences);
-
-		_portletPreferencesLocalService.updatePortletPreferences(
-			portletPreferences);
+		_portletPreferencesLocalService.updatePreferences(
+			portletPreferences.getOwnerId(), portletPreferences.getOwnerType(),
+			portletPreferences.getPlid(), portletPreferences.getPortletId(),
+			newPreferences);
 	}
 
 	@Override

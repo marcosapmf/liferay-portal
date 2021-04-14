@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + AccountPortletKeys.ACCOUNT_GROUPS_ADMIN,
-		"mvc.command.name=/account_groups_admin/edit_account_group"
+		"mvc.command.name=/account_admin/edit_account_group"
 	},
 	service = MVCActionCommand.class
 )
@@ -51,11 +51,11 @@ public class EditAccountGroupMVCActionCommand extends BaseMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String name = ParamUtil.getString(actionRequest, "name");
 		String description = ParamUtil.getString(actionRequest, "description");
+		String name = ParamUtil.getString(actionRequest, "name");
 
 		return _accountGroupLocalService.addAccountGroup(
-			themeDisplay.getUserId(), name, description);
+			themeDisplay.getUserId(), description, name);
 	}
 
 	@Override
@@ -89,11 +89,11 @@ public class EditAccountGroupMVCActionCommand extends BaseMVCActionCommand {
 		long accountGroupId = ParamUtil.getLong(
 			actionRequest, "accountGroupId");
 
-		String name = ParamUtil.getString(actionRequest, "name");
 		String description = ParamUtil.getString(actionRequest, "description");
+		String name = ParamUtil.getString(actionRequest, "name");
 
 		_accountGroupLocalService.updateAccountGroup(
-			accountGroupId, name, description);
+			accountGroupId, description, name);
 	}
 
 	@Reference

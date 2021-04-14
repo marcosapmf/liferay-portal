@@ -31,6 +31,8 @@ import java.util.Set;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * @author Alessio Antonio Rendina
  */
@@ -41,10 +43,14 @@ public interface CPCompareContentHelper {
 			CPDataSourceResult cpDataSourceResult)
 		throws PortalException;
 
-	public String getClearCompareProductsURL(
-		RenderRequest renderRequest, RenderResponse renderResponse);
+	public String getCompareContentPortletNamespace();
 
 	public String getCompareProductsURL(ThemeDisplay themeDisplay)
+		throws PortalException;
+
+	public List<CPCatalogEntry> getCPCatalogEntries(
+			long groupId, long commerceAccountId,
+			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
 	public Set<String> getCPDefinitionOptionRelNames(

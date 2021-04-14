@@ -20,6 +20,7 @@
 CPDefinitionsDisplayContext cpDefinitionsDisplayContext = (CPDefinitionsDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 CPDefinition cpDefinition = cpDefinitionsDisplayContext.getCPDefinition();
+
 long cpDefinitionId = cpDefinitionsDisplayContext.getCPDefinitionId();
 
 Map<String, String> contextParams = HashMapBuilder.<String, String>put(
@@ -27,7 +28,7 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 ).build();
 %>
 
-<portlet:actionURL name="editProductDefinition" var="editProductDefinitionActionURL" />
+<portlet:actionURL name="/cp_definitions/edit_cp_definition" var="editProductDefinitionActionURL" />
 
 <aui:form action="<%= editProductDefinitionActionURL %>" cssClass="pt-4" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="updateVisibility" />
@@ -78,7 +79,7 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 </aui:form>
 
 <aui:script use="liferay-item-selector-dialog">
-	Liferay.on('<portlet:namespace />selectCommerceAccountGroup', function () {
+	Liferay.on('<portlet:namespace />selectCommerceAccountGroup', () => {
 		var itemSelectorDialog = new A.LiferayItemSelectorDialog({
 			eventName: 'accountGroupSelectItem',
 			on: {
@@ -90,15 +91,14 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 					if (selectedItems) {
 						var A = AUI();
 
-						A.Array.each(selectedItems, function (
-							item,
-							index,
-							selectedItems
-						) {
-							<portlet:namespace />addCommerceAccountGroupIds.push(
-								item.commerceAccountGroupId
-							);
-						});
+						A.Array.each(
+							selectedItems,
+							(item, index, selectedItems) => {
+								<portlet:namespace />addCommerceAccountGroupIds.push(
+									item.commerceAccountGroupId
+								);
+							}
+						);
 
 						window.document.querySelector(
 							'#<portlet:namespace />commerceAccountGroupIds'
@@ -120,7 +120,7 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 		itemSelectorDialog.open();
 	});
 
-	Liferay.on('<portlet:namespace />selectCommerceChannel', function () {
+	Liferay.on('<portlet:namespace />selectCommerceChannel', () => {
 		var itemSelectorDialog = new A.LiferayItemSelectorDialog({
 			eventName: 'channelSelectItem',
 			on: {
@@ -132,15 +132,14 @@ Map<String, String> contextParams = HashMapBuilder.<String, String>put(
 					if (selectedItems) {
 						var A = AUI();
 
-						A.Array.each(selectedItems, function (
-							item,
-							index,
-							selectedItems
-						) {
-							<portlet:namespace />addCommerceChannelIds.push(
-								item.commerceChannelId
-							);
-						});
+						A.Array.each(
+							selectedItems,
+							(item, index, selectedItems) => {
+								<portlet:namespace />addCommerceChannelIds.push(
+									item.commerceChannelId
+								);
+							}
+						);
 
 						window.document.querySelector(
 							'#<portlet:namespace />commerceChannelIds'

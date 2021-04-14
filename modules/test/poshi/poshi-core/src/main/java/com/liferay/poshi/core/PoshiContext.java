@@ -24,8 +24,10 @@ import com.liferay.poshi.core.prose.PoshiProseMatcher;
 import com.liferay.poshi.core.script.PoshiScriptParserException;
 import com.liferay.poshi.core.selenium.LiferaySelenium;
 import com.liferay.poshi.core.util.FileUtil;
+import com.liferay.poshi.core.util.GetterUtil;
 import com.liferay.poshi.core.util.MathUtil;
 import com.liferay.poshi.core.util.OSDetector;
+import com.liferay.poshi.core.util.PropsUtil;
 import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
@@ -84,43 +86,87 @@ public class PoshiContext {
 		"**/*.prose", "**/*.testcase"
 	};
 
+	public static void addPoshiPropertyNames(Set<String> poshiPropertyNames) {
+		_poshiPropertyNames.addAll(poshiPropertyNames);
+	}
+
 	public static void clear() {
 		_commandElements.clear();
 		_commandSummaries.clear();
 		_filePaths.clear();
+		_functionFileNames.clear();
 		_functionLocatorCounts.clear();
+		_namespacedClassCommandNamePropertiesMap.clear();
+		_namespaces.clear();
+		_overrideClassNames.clear();
+		_pathExtensions.clear();
 		_pathLocators.clear();
+		_poshiPropertyNames.clear();
 		_rootElements.clear();
+		_rootVarElements.clear();
 		_seleniumParameterCounts.clear();
+		_testCaseDescriptions.clear();
+		_testCaseNamespacedClassCommandNames.clear();
+		_testCaseNamespacedClassNames.clear();
 	}
 
-	public static void executePQLQuery() throws Exception {
-		readFiles();
+	public static List<String> executePQLQuery() throws Exception {
+		return executePQLQuery(PropsValues.TEST_BATCH_PROPERTY_QUERY, true);
+	}
 
-		String propertyQuery = PropsValues.TEST_BATCH_PROPERTY_QUERY;
+	public static List<String> executePQLQuery(String query, boolean readFiles)
+		throws Exception {
 
-		List<String> namespacedClassCommandNames = _executePQLQuery(
-			propertyQuery);
+		if (readFiles) {
+			clear();
 
-		int numCommandsFound = namespacedClassCommandNames.size();
+			readFiles();
+		}
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append("The following query returned ");
-		sb.append(numCommandsFound);
-		sb.append(" test class command names:\n");
-		sb.append(propertyQuery);
+		sb.append("(");
+		sb.append(query);
+		sb.append(") AND (ignored != true)");
 
-		if (numCommandsFound > 0) {
-			sb.append("\n\n");
-			sb.append(
-				StringUtil.join(
-					namespacedClassCommandNames.toArray(
-						new String[numCommandsFound]),
-					","));
+		if (Validator.isNotNull(PropsValues.TEST_RUN_ENVIRONMENT)) {
+			sb.append(" AND (test.run.environment == \"");
+			sb.append(PropsValues.TEST_RUN_ENVIRONMENT);
+			sb.append("\" OR test.run.environment == null)");
 		}
 
+		query = sb.toString();
+
+		List<String> classCommandNames = new ArrayList<>();
+
+		PQLEntity pqlEntity = PQLEntityFactory.newPQLEntity(query);
+
+		for (String testCaseNamespacedClassCommandName :
+				_testCaseNamespacedClassCommandNames) {
+
+			Properties properties =
+				_namespacedClassCommandNamePropertiesMap.get(
+					testCaseNamespacedClassCommandName);
+
+			Boolean pqlResultBoolean = (Boolean)pqlEntity.getPQLResult(
+				properties);
+
+			if (pqlResultBoolean) {
+				classCommandNames.add(testCaseNamespacedClassCommandName);
+			}
+		}
+
+		sb = new StringBuilder();
+
+		sb.append("The following query returned ");
+		sb.append(classCommandNames.size());
+		sb.append(" test class command names:\n");
+		sb.append(query);
+		sb.append("\n");
+
 		System.out.println(sb.toString());
+
+		return classCommandNames;
 	}
 
 	public static String getDefaultNamespace() {
@@ -259,6 +305,32 @@ public class PoshiContext {
 		return _rootElements.get("path#" + namespace + "." + className);
 	}
 
+	public static List<String> getPoshiPropertyNames() {
+		List<String> poshiPropertyNames = new ArrayList<>(_poshiPropertyNames);
+
+		poshiPropertyNames.add("ignored");
+		poshiPropertyNames.add("known-issues");
+		poshiPropertyNames.add("priority");
+		poshiPropertyNames.add("test.run.environment");
+
+		return poshiPropertyNames;
+	}
+
+	public static List<String> getRequiredPoshiPropertyNames() {
+		List<String> requiredPoshiPropertyNames = new ArrayList<>();
+
+		String testCaseRequiredPropertyNames =
+			PropsValues.TEST_CASE_REQUIRED_PROPERTY_NAMES;
+
+		if (Validator.isNotNull(testCaseRequiredPropertyNames)) {
+			Collections.addAll(
+				requiredPoshiPropertyNames,
+				StringUtil.split(testCaseRequiredPropertyNames));
+		}
+
+		return requiredPoshiPropertyNames;
+	}
+
 	public static List<Element> getRootVarElements(
 		String classType, String className, String namespace) {
 
@@ -268,6 +340,62 @@ public class PoshiContext {
 
 	public static int getSeleniumParameterCount(String commandName) {
 		return _seleniumParameterCounts.get(commandName);
+	}
+
+	public static List<List<String>> getTestBatchGroups(
+			String propertyQuery, int maxGroupSize)
+		throws Exception {
+
+		if (maxGroupSize <= 0) {
+			maxGroupSize = 1;
+		}
+
+		List<String> classCommandNames = executePQLQuery(propertyQuery, false);
+
+		Multimap<Properties, String> multimap = HashMultimap.create();
+
+		for (String classCommandName : classCommandNames) {
+			Properties properties = new Properties();
+
+			properties.putAll(
+				_namespacedClassCommandNamePropertiesMap.get(classCommandName));
+
+			String testBatchGroupIgnoreRegex = PropsUtil.get(
+				"test.batch.group.ignore.regex");
+
+			if (Validator.isNotNull(testBatchGroupIgnoreRegex)) {
+				Set<String> propertyNames = properties.stringPropertyNames();
+
+				for (String propertyName : propertyNames) {
+					if (propertyName.matches(testBatchGroupIgnoreRegex)) {
+						properties.remove(propertyName);
+					}
+				}
+			}
+
+			multimap.put(properties, classCommandName);
+		}
+
+		Map<Properties, Collection<String>> map = multimap.asMap();
+
+		List<List<String>> testBatchGroups = new ArrayList<>();
+
+		for (Collection<String> value : map.values()) {
+			List<String> classCommandNameGroup = new ArrayList<>(value);
+
+			Collections.sort(classCommandNameGroup);
+
+			int testCount = classCommandNameGroup.size();
+
+			int groupCount = MathUtil.quotient(testCount, maxGroupSize, true);
+
+			int groupSize = MathUtil.quotient(testCount, groupCount, true);
+
+			testBatchGroups.addAll(
+				Lists.partition(classCommandNameGroup, groupSize));
+		}
+
+		return testBatchGroups;
 	}
 
 	public static Element getTestCaseCommandElement(
@@ -289,6 +417,11 @@ public class PoshiContext {
 		String className, String namespace) {
 
 		return _rootElements.get("test-case#" + namespace + "." + className);
+	}
+
+	public static boolean ignoreUtilClassesErrors() {
+		return GetterUtil.getBoolean(
+			PropsUtil.get("ignore.errors.util.classes"));
 	}
 
 	public static boolean isCommandElement(
@@ -328,31 +461,85 @@ public class PoshiContext {
 	}
 
 	public static void readFiles() throws Exception {
-		System.out.print("Reading Poshi files...");
-
-		long start = System.currentTimeMillis();
-
-		readFiles(POSHI_TEST_FILE_INCLUDES);
-
-		System.out.println(
-			" Completed in " + (System.currentTimeMillis() - start) + "ms.");
-	}
-
-	public static void readFiles(String[] testFileIncludes) throws Exception {
-		_readPoshiFiles(testFileIncludes);
-		_readSeleniumFiles();
-
-		PoshiScriptParserException.throwExceptions();
+		readFiles(null);
 	}
 
 	public static void readFiles(String[] includes, String... baseDirNames)
 		throws Exception {
 
-		_readPoshiFilesFromClassPath(includes, "testFunctional");
-		_readPoshiFiles(includes, baseDirNames);
+		System.out.println("Start reading Poshi files.");
+
+		long start = System.currentTimeMillis();
+
+		if (includes == null) {
+			includes = POSHI_TEST_FILE_INCLUDES;
+		}
+
+		Set<String> poshiFileIncludes = new HashSet<>();
+
+		Collections.addAll(poshiFileIncludes, includes);
+		Collections.addAll(poshiFileIncludes, POSHI_SUPPORT_FILE_INCLUDES);
+
+		_readPoshiFilesFromClassPath(
+			poshiFileIncludes.toArray(new String[0]), "testFunctional");
+
+		String testBaseDirName = PropsUtil.get("test.base.dir.name");
+
+		if ((baseDirNames == null) || (baseDirNames.length == 0)) {
+			if ((testBaseDirName == null) || testBaseDirName.isEmpty()) {
+				throw new RuntimeException("Please set 'test.base.dir.name'");
+			}
+
+			baseDirNames = new String[] {testBaseDirName};
+		}
+
+		String testSubrepoDirs = PropsUtil.get("test.subrepo.dirs");
+
+		if ((testSubrepoDirs != null) && !testSubrepoDirs.isEmpty()) {
+			baseDirNames = ArrayUtils.addAll(
+				baseDirNames, StringUtil.split(testSubrepoDirs));
+		}
+
+		String testIncludeDirNames = PropsUtil.get("test.include.dir.names");
+
+		if ((testIncludeDirNames != null) && !testIncludeDirNames.isEmpty()) {
+			Set<String> testIncludeDirPaths = new HashSet<>();
+
+			for (String testIncludeDirName :
+					StringUtil.split(testIncludeDirNames)) {
+
+				File testIncludeDir = new File(testIncludeDirName);
+
+				if (!testIncludeDir.exists()) {
+					testIncludeDir = new File(
+						testBaseDirName, testIncludeDirName);
+				}
+
+				if (!testIncludeDir.exists()) {
+					continue;
+				}
+
+				testIncludeDirPaths.add(testIncludeDir.getCanonicalPath());
+			}
+
+			_readPoshiFiles(
+				POSHI_SUPPORT_FILE_INCLUDES,
+				testIncludeDirPaths.toArray(new String[0]));
+		}
+
+		_readPoshiFiles(poshiFileIncludes.toArray(new String[0]), baseDirNames);
 		_readSeleniumFiles();
 
+		_initComponentCommandNamesMap();
+
+		_throwExceptions();
+
 		PoshiScriptParserException.throwExceptions();
+
+		long duration = System.currentTimeMillis() - start;
+
+		System.out.println(
+			"Completed reading Poshi files in " + duration + "ms.");
 	}
 
 	public static void setTestCaseNamespacedClassCommandName(
@@ -380,47 +567,11 @@ public class PoshiContext {
 		}
 	}
 
-	private static List<String> _executePQLQuery(String query)
-		throws Exception {
-
-		List<String> namespacedClassCommandNames = new ArrayList<>();
-
-		PQLEntity pqlEntity = PQLEntityFactory.newPQLEntity(query);
-
-		for (String testCaseNamespacedClassCommandName :
-				_testCaseNamespacedClassCommandNames) {
-
-			Properties properties =
-				_namespacedClassCommandNamePropertiesMap.get(
-					testCaseNamespacedClassCommandName);
-
-			Boolean pqlResultBoolean = (Boolean)pqlEntity.getPQLResult(
-				properties);
-
-			if (pqlResultBoolean) {
-				namespacedClassCommandNames.add(
-					testCaseNamespacedClassCommandName);
-			}
-		}
-
-		return namespacedClassCommandNames;
-	}
-
-	private static int _getAllocatedTestGroupSize(int testCount) {
-		int groupCount = MathUtil.quotient(
-			testCount, PropsValues.TEST_BATCH_MAX_GROUP_SIZE, true);
-
-		return MathUtil.quotient(testCount, groupCount, true);
-	}
-
 	private static Properties _getClassCommandNameProperties(
 			Element rootElement, Element commandElement)
 		throws Exception {
 
 		Properties properties = new Properties();
-
-		List<String> poshiPropertyNames =
-			PoshiProperties.getPoshiPropertiesNames();
 
 		List<Element> rootPropertyElements = rootElement.elements("property");
 
@@ -429,10 +580,6 @@ public class PoshiContext {
 			String propertyValue = propertyElement.attributeValue("value");
 
 			properties.setProperty(propertyName, propertyValue);
-
-			if (!poshiPropertyNames.contains(propertyName)) {
-				poshiPropertyNames.add(propertyName);
-			}
 		}
 
 		List<Element> commandPropertyElements = commandElement.elements(
@@ -443,10 +590,6 @@ public class PoshiContext {
 			String propertyValue = propertyElement.attributeValue("value");
 
 			properties.setProperty(propertyName, propertyValue);
-
-			if (!poshiPropertyNames.contains(propertyName)) {
-				poshiPropertyNames.add(propertyName);
-			}
 		}
 
 		if (Validator.isNotNull(
@@ -528,209 +671,6 @@ public class PoshiContext {
 		throws Exception {
 
 		return _getPoshiURLs(null, includes, baseDirName);
-	}
-
-	private static String _getTestBatchGroups() throws Exception {
-		String propertyQuery = PropsValues.TEST_BATCH_PROPERTY_QUERY;
-
-		if (Validator.isNotNull(PropsValues.TEST_RUN_ENVIRONMENT)) {
-			StringBuilder sb = new StringBuilder();
-
-			sb.append("(");
-			sb.append(propertyQuery);
-			sb.append(") AND (ignored != true) AND ");
-			sb.append("(test.run.environment == \"");
-			sb.append(PropsValues.TEST_RUN_ENVIRONMENT);
-			sb.append("\" OR test.run.environment == null)");
-
-			propertyQuery = sb.toString();
-		}
-
-		List<String> namespacedClassCommandNames = _executePQLQuery(
-			propertyQuery);
-
-		System.out.println(
-			"The following query returned " +
-				namespacedClassCommandNames.size() +
-					" test class command names:");
-
-		System.out.println(propertyQuery);
-
-		if (PropsValues.TEST_BATCH_RUN_TYPE.equals("sequential")) {
-			return _getTestBatchSequentialGroups(namespacedClassCommandNames);
-		}
-		else if (PropsValues.TEST_BATCH_RUN_TYPE.equals("single")) {
-			return _getTestBatchSingleGroups(namespacedClassCommandNames);
-		}
-
-		throw new Exception(
-			"'test.batch.run.type' must be set to 'single' or 'sequential'");
-	}
-
-	private static String _getTestBatchSequentialGroups(
-			List<String> namespacedClassCommandNames)
-		throws Exception {
-
-		Multimap<Properties, String> multimap = HashMultimap.create();
-
-		for (String namespacedClassCommandName : namespacedClassCommandNames) {
-			Properties properties = new Properties();
-
-			properties.putAll(
-				_namespacedClassCommandNamePropertiesMap.get(
-					namespacedClassCommandName));
-
-			if (Validator.isNotNull(
-					PropsValues.TEST_BATCH_GROUP_IGNORE_REGEX)) {
-
-				Set<String> propertyNames = properties.stringPropertyNames();
-
-				for (String propertyName : propertyNames) {
-					if (propertyName.matches(
-							PropsValues.TEST_BATCH_GROUP_IGNORE_REGEX)) {
-
-						properties.remove(propertyName);
-					}
-				}
-			}
-
-			multimap.put(properties, namespacedClassCommandName);
-		}
-
-		Map<Integer, List<String>> classCommandNameGroups = new HashMap<>();
-		int classCommandNameIndex = 0;
-		Map<Properties, Collection<String>> map = multimap.asMap();
-
-		for (Collection<String> value : map.values()) {
-			List<String> classCommandNameGroup = new ArrayList<>(value);
-
-			Collections.sort(classCommandNameGroup);
-
-			int groupSize = _getAllocatedTestGroupSize(
-				classCommandNameGroup.size());
-
-			List<List<String>> partitions = Lists.partition(
-				classCommandNameGroup, groupSize);
-
-			for (List<String> partition : partitions) {
-				classCommandNameGroups.put(classCommandNameIndex, partition);
-
-				classCommandNameIndex++;
-			}
-		}
-
-		StringBuilder sb = new StringBuilder();
-
-		for (int i = 0; i < classCommandNameGroups.size(); i++) {
-			List<String> classCommandNameGroup = classCommandNameGroups.get(i);
-			int subgroupSize = PropsValues.TEST_BATCH_MAX_SUBGROUP_SIZE;
-
-			int subgroupCount = MathUtil.quotient(
-				classCommandNameGroup.size(), subgroupSize, true);
-
-			sb.append("RUN_TEST_CASE_METHOD_GROUP_");
-			sb.append(i);
-			sb.append("=");
-
-			for (int j = 0; j < subgroupCount; j++) {
-				sb.append(i);
-				sb.append("_");
-				sb.append(j);
-
-				if (j < (subgroupCount - 1)) {
-					sb.append(" ");
-				}
-			}
-
-			sb.append("\n");
-
-			for (int j = 0; j < classCommandNameGroup.size(); j++) {
-				if ((j % subgroupSize) == 0) {
-					sb.append("RUN_TEST_CASE_METHOD_GROUP_");
-					sb.append(i);
-					sb.append("_");
-					sb.append(j / subgroupSize);
-					sb.append("=");
-					sb.append(classCommandNameGroup.get(j));
-				}
-				else if (((j + 1) % subgroupSize) == 0) {
-					sb.append(",");
-					sb.append(classCommandNameGroup.get(j));
-					sb.append("\n");
-				}
-				else {
-					sb.append(",");
-					sb.append(classCommandNameGroup.get(j));
-				}
-			}
-
-			sb.append("\n");
-		}
-
-		sb.append("RUN_TEST_CASE_METHOD_GROUPS=");
-
-		for (int i = 0; i < classCommandNameGroups.size(); i++) {
-			sb.append(i);
-
-			if (i < (classCommandNameGroups.size() - 1)) {
-				sb.append(" ");
-			}
-		}
-
-		return sb.toString();
-	}
-
-	private static String _getTestBatchSingleGroups(
-		List<String> namespacedClassCommandNames) {
-
-		StringBuilder sb = new StringBuilder();
-
-		int groupSize = 15;
-
-		List<List<String>> partitions = Lists.partition(
-			namespacedClassCommandNames, groupSize);
-
-		for (int i = 0; i < partitions.size(); i++) {
-			sb.append("RUN_TEST_CASE_METHOD_GROUP_");
-			sb.append(i);
-			sb.append("=");
-
-			List<String> partition = partitions.get(i);
-
-			for (int j = 0; j < partition.size(); j++) {
-				sb.append(i);
-				sb.append("_");
-				sb.append(j);
-
-				if (j < (partition.size() - 1)) {
-					sb.append(" ");
-				}
-			}
-
-			sb.append("\n");
-
-			for (int j = 0; j < partition.size(); j++) {
-				sb.append("RUN_TEST_CASE_METHOD_GROUP_");
-				sb.append(i);
-				sb.append("_");
-				sb.append(j);
-				sb.append("=");
-				sb.append(partition.get(j));
-				sb.append("\n");
-			}
-		}
-
-		sb.append("RUN_TEST_CASE_METHOD_GROUPS=");
-
-		for (int i = 0; i < partitions.size(); i++) {
-			sb.append(i);
-
-			if (i < (partitions.size() - 1)) {
-				sb.append(" ");
-			}
-		}
-
-		return sb.toString();
 	}
 
 	private static void _initComponentCommandNamesMap() {
@@ -1000,6 +940,9 @@ public class PoshiContext {
 					_namespacedClassCommandNamePropertiesMap.put(
 						baseNamespacedClassCommandName, overriddenProperties);
 
+					_poshiPropertyNames.addAll(
+						overrideProperties.stringPropertyNames());
+
 					if (Validator.isNotNull(
 							overrideCommandElement.attributeValue(
 								"description"))) {
@@ -1072,41 +1015,17 @@ public class PoshiContext {
 		}
 	}
 
-	private static void _readPoshiFiles(String[] testFileIncludes)
-		throws Exception {
-
-		String[] poshiFileIncludes = ArrayUtils.addAll(
-			POSHI_SUPPORT_FILE_INCLUDES, testFileIncludes);
-
-		_readPoshiFilesFromClassPath(poshiFileIncludes, "testFunctional");
-
-		if (Validator.isNotNull(PropsValues.TEST_INCLUDE_DIR_NAMES)) {
-			_readPoshiFiles(
-				POSHI_SUPPORT_FILE_INCLUDES,
-				PropsValues.TEST_INCLUDE_DIR_NAMES);
-		}
-
-		_readPoshiFiles(poshiFileIncludes, _TEST_BASE_DIR_NAME);
-
-		if (Validator.isNotNull(PropsValues.TEST_SUBREPO_DIRS)) {
-			_readPoshiFiles(poshiFileIncludes, PropsValues.TEST_SUBREPO_DIRS);
-		}
-
-		_initComponentCommandNamesMap();
-
-		if (!_duplicateLocatorMessages.isEmpty()) {
-			throw _getDuplicateLocatorsException();
-		}
-	}
-
 	private static void _readPoshiFiles(
 			String[] includes, String... baseDirNames)
 		throws Exception {
 
 		for (String baseDirName : baseDirNames) {
-			List<URL> poshiURLs = _getPoshiURLs(includes, baseDirName);
+			_storeRootElements(
+				_getPoshiURLs(includes, baseDirName), _DEFAULT_NAMESPACE);
+		}
 
-			_storeRootElements(poshiURLs, _DEFAULT_NAMESPACE);
+		if (!_duplicateLocatorMessages.isEmpty()) {
+			throw _getDuplicateLocatorsException();
 		}
 	}
 
@@ -1356,6 +1275,9 @@ public class PoshiContext {
 					_namespacedClassCommandNamePropertiesMap.put(
 						namespace + "." + classCommandName, properties);
 
+					_poshiPropertyNames.addAll(
+						properties.stringPropertyNames());
+
 					if (Validator.isNotNull(
 							commandElement.attributeValue("description"))) {
 
@@ -1447,13 +1369,88 @@ public class PoshiContext {
 			PropsValues.POSHI_FILE_READ_THREAD_POOL);
 	}
 
+	private static void _throwExceptions() throws Exception {
+		if (!_exceptions.isEmpty()) {
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("\n\n");
+			sb.append(_exceptions.size());
+			sb.append(" errors in Poshi file reading\n\n");
+
+			for (Exception exception : _exceptions) {
+				sb.append(exception.getMessage());
+				sb.append("\n");
+
+				Throwable causeThrowable = exception.getCause();
+
+				sb.append(causeThrowable.getMessage());
+
+				sb.append("\n\n");
+			}
+
+			System.out.println(sb.toString());
+
+			throw new Exception();
+		}
+	}
+
 	private static void _writeTestCaseMethodNamesProperties() throws Exception {
 		StringBuilder sb = new StringBuilder();
 
-		if ((PropsValues.TEST_BATCH_MAX_GROUP_SIZE > 0) &&
-			(PropsValues.TEST_BATCH_PROPERTY_QUERY != null)) {
+		if (PropsValues.TEST_BATCH_PROPERTY_QUERY != null) {
+			int maxSubgroupSize = PropsValues.TEST_BATCH_MAX_SUBGROUP_SIZE;
 
-			sb.append(_getTestBatchGroups());
+			if (PropsValues.TEST_BATCH_RUN_TYPE.equals("single")) {
+				maxSubgroupSize = 1;
+			}
+
+			List<List<String>> testBatchGroups = getTestBatchGroups(
+				PropsValues.TEST_BATCH_PROPERTY_QUERY, maxSubgroupSize);
+
+			List<List<List<String>>> segments = Lists.partition(
+				testBatchGroups, PropsValues.TEST_BATCH_MAX_GROUP_SIZE);
+
+			for (int i = 0; i < segments.size(); i++) {
+				List<List<String>> segment = segments.get(i);
+
+				List<String> axisNames = new ArrayList<>();
+
+				for (int j = 0; j < segment.size(); j++) {
+					sb.append("RUN_TEST_CASE_METHOD_GROUP_");
+					sb.append(i);
+					sb.append("_");
+					sb.append(j);
+					sb.append("=");
+
+					List<String> axis = segment.get(j);
+
+					sb.append(
+						StringUtil.join(axis.toArray(new String[0]), ","));
+
+					sb.append("\n");
+
+					axisNames.add(i + "_" + j);
+				}
+
+				sb.append("RUN_TEST_CASE_METHOD_GROUP_");
+				sb.append(i);
+				sb.append("=");
+
+				sb.append(
+					StringUtil.join(axisNames.toArray(new String[0]), " "));
+
+				sb.append("\n");
+			}
+
+			List<String> segmentNames = new ArrayList<>();
+
+			for (int i = 0; i < segments.size(); i++) {
+				segmentNames.add(String.valueOf(i));
+			}
+
+			sb.append("RUN_TEST_CASE_METHOD_GROUPS=");
+			sb.append(
+				StringUtil.join(segmentNames.toArray(new String[0]), " "));
 		}
 
 		FileUtil.write("test.case.method.names.properties", sb.toString());
@@ -1578,14 +1575,13 @@ public class PoshiContext {
 
 	private static final String _DEFAULT_NAMESPACE = "LocalFile";
 
-	private static final String _TEST_BASE_DIR_NAME = FileUtil.getCanonicalPath(
-		PropsValues.TEST_BASE_DIR_NAME);
-
 	private static final Map<String, Element> _commandElements =
 		Collections.synchronizedMap(new HashMap<>());
 	private static final Map<String, String> _commandSummaries =
 		Collections.synchronizedMap(new HashMap<>());
 	private static final Set<String> _duplicateLocatorMessages =
+		Collections.synchronizedSet(new HashSet<>());
+	private static final Set<Exception> _exceptions =
 		Collections.synchronizedSet(new HashSet<>());
 	private static final Map<String, String> _filePaths =
 		Collections.synchronizedMap(new HashMap<>());
@@ -1608,6 +1604,8 @@ public class PoshiContext {
 		Collections.synchronizedMap(new HashMap<>());
 	private static final Map<String, String> _pathLocators =
 		Collections.synchronizedMap(new HashMap<>());
+	private static final Set<String> _poshiPropertyNames =
+		Collections.synchronizedSet(new HashSet<>());
 	private static final Pattern _poshiResourceJarNamePattern = Pattern.compile(
 		"jar:.*\\/(?<namespace>\\w+)\\-(?<branchName>\\w+" +
 			"([\\-\\.]\\w+)*)\\-.*?\\.jar.*");
@@ -1673,10 +1671,10 @@ public class PoshiContext {
 				}
 			}
 			catch (Exception exception) {
-				System.out.println("Unable to read: " + filePath);
-
 				if (!(exception instanceof PoshiScriptParserException)) {
-					System.out.println(exception.getMessage());
+					_exceptions.add(
+						new Exception(
+							"Unable to read: " + filePath, exception));
 				}
 			}
 

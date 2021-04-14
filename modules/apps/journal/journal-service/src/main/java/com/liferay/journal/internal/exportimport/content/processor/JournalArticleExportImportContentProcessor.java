@@ -16,7 +16,6 @@ package com.liferay.journal.internal.exportimport.content.processor;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.service.DLAppService;
-import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
@@ -24,12 +23,14 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesTransformer;
+import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
 import com.liferay.exportimport.kernel.exception.ExportImportContentValidationException;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
+import com.liferay.journal.article.dynamic.data.mapping.form.field.type.constants.JournalArticleDDMFormFieldTypeConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.model.JournalArticle;
@@ -114,7 +115,7 @@ public class JournalArticleExportImportContentProcessor
 			return processedContent;
 		}
 
-		DDMFormValues ddmFormValues = _journalConverter.getDDMFormValues(
+		DDMFormValues ddmFormValues = _fieldsToDDMFormValuesConverter.convert(
 			ddmStructure, fields);
 
 		ddmFormValues =
@@ -171,7 +172,7 @@ public class JournalArticleExportImportContentProcessor
 		content = replaceImportJournalArticleReferences(
 			ddmStructure, fields, portletDataContext, stagedModel);
 
-		DDMFormValues ddmFormValues = _journalConverter.getDDMFormValues(
+		DDMFormValues ddmFormValues = _fieldsToDDMFormValuesConverter.convert(
 			ddmStructure, fields);
 
 		List<String> originalContents = _fetchContentsFromDDMFormValues(
@@ -280,7 +281,8 @@ public class JournalArticleExportImportContentProcessor
 
 		for (Field field : fields) {
 			if (!Objects.equals(
-					field.getType(), DDMFormFieldType.JOURNAL_ARTICLE)) {
+					field.getType(),
+					JournalArticleDDMFormFieldTypeConstants.JOURNAL_ARTICLE)) {
 
 				continue;
 			}
@@ -379,7 +381,8 @@ public class JournalArticleExportImportContentProcessor
 			}
 		}
 
-		return _journalConverter.getContent(ddmStructure, fields);
+		return _journalConverter.getContent(
+			ddmStructure, fields, ddmStructure.getGroupId());
 	}
 
 	protected String replaceImportJournalArticleReferences(
@@ -389,7 +392,8 @@ public class JournalArticleExportImportContentProcessor
 
 		for (Field field : fields) {
 			if (!Objects.equals(
-					field.getType(), DDMFormFieldType.JOURNAL_ARTICLE)) {
+					field.getType(),
+					JournalArticleDDMFormFieldTypeConstants.JOURNAL_ARTICLE)) {
 
 				continue;
 			}
@@ -453,7 +457,8 @@ public class JournalArticleExportImportContentProcessor
 			}
 		}
 
-		return _journalConverter.getContent(ddmStructure, fields);
+		return _journalConverter.getContent(
+			ddmStructure, fields, ddmStructure.getGroupId());
 	}
 
 	protected void validateJournalArticleReferences(String content)
@@ -465,7 +470,9 @@ public class JournalArticleExportImportContentProcessor
 			Document document = SAXReaderUtil.read(content);
 
 			XPath xPath = SAXReaderUtil.createXPath(
-				"//dynamic-element[@type='ddm-journal-article']");
+				"//dynamic-element[@type='" +
+					JournalArticleDDMFormFieldTypeConstants.JOURNAL_ARTICLE +
+						"']");
 
 			List<Node> ddmJournalArticleNodes = xPath.selectNodes(document);
 
@@ -534,7 +541,7 @@ public class JournalArticleExportImportContentProcessor
 		}
 		catch (DocumentException documentException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Invalid content:\n" + content);
+				_log.debug("Invalid content:\n" + content, documentException);
 			}
 		}
 
@@ -646,6 +653,9 @@ public class JournalArticleExportImportContentProcessor
 
 	@Reference
 	private DLAppService _dlAppService;
+
+	@Reference
+	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

@@ -1,0 +1,1339 @@
+definition {
+
+	macro addField {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fields", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fields");
+		}
+
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
+		var key_fieldName = "${fieldName}";
+		var fieldReference = StringUtil.replace("${fieldFieldLabel}", " ", "");
+
+		if (isSet(fieldLocation)) {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_fieldLocation = "${fieldLocation}",
+				locator1 = "Sidebar#ADD_FIELD_NAME",
+				locator2 = "Sidebar#ADD_FIELD_POSITION",
+				value1 = "${fieldName}");
+		}
+		else {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				locator1 = "Sidebar#ADD_FIELD_NAME",
+				locator2 = "Sidebar#ADD_FIELD_TARGET",
+				value1 = "${fieldName}");
+		}
+
+		Pause(locator1 = "3000");
+
+		if (IsElementNotPresent(key_tab = "Basic", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		Type(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabel}");
+
+		AssertTextEquals(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabel}");
+
+		AssertElementPresent(
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldFieldLabel}");
+
+		if ("${fieldName}" == "Text") {
+			if (isSet(fieldType)) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "${fieldType}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+		else if ("${fieldName}" == "Numeric") {
+			if (isSet(numericType)) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "${numericType}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		Type(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		AssertTextEquals.assertValue(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro addFieldNested {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fields", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fields");
+		}
+
+		DragAndDrop.javaScriptDragAndDropToObject(
+			key_fieldFieldLabel = "${targetFieldLabel}",
+			key_fieldName = "${fieldName}",
+			locator1 = "Sidebar#ADD_FIELD_NAME",
+			locator2 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldName}");
+
+		Pause(locator1 = "3000");
+
+		if (IsElementNotPresent(key_tab = "Basic", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		Type(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabel}");
+
+		AssertTextEquals(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabel}");
+
+		AssertElementPresent(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldFieldLabel}");
+
+		if ("${fieldName}" == "Text") {
+			if (isSet(fieldType)) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "${fieldType}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+		else if ("${fieldName}" == "Numeric") {
+			if (isSet(numericType)) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "${numericType}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+
+		var fieldReference = StringUtil.replace("${fieldFieldLabel}", " ", "");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		Type(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		AssertTextEquals.assertValue(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro addFieldOption {
+		if (isSet(fieldFieldLabel)) {
+			AssertClick.assertPartialTextClickAt(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+				value1 = "${fieldFieldLabel}");
+		}
+
+		if (isSet(optionFieldLabel)) {
+			Type(
+				index = "${index}",
+				key_optionFieldLabel = "${optionFieldLabel}",
+				locator1 = "Sidebar#OPTION_INPUT",
+				value1 = "${optionValue}");
+		}
+		else {
+			Type(
+				index = "${index}",
+				locator1 = "Sidebar#OPTION_INPUT_WITHOUT_LABEL",
+				value1 = "${optionValue}");
+		}
+
+		if (isSet(fieldFieldLabel)) {
+			Click(locator1 = "Sidebar#BACK");
+		}
+	}
+
+	macro addFields {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fields", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fields");
+		}
+
+		for (var fieldName : list "${fieldNameList}") {
+			var key_fieldName = "${fieldName}";
+			var fieldReference = StringUtil.replace("${fieldName}", " ", "");
+
+			DoubleClick(locator1 = "Sidebar#ADD_FIELD_NAME");
+
+			Pause(locator1 = "3000");
+
+			AssertElementPresent(
+				key_fieldFieldLabel = "${fieldName}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+				value1 = "${fieldName}");
+
+			if ("${fieldName}" == "Grid") {
+				var index = "1";
+
+				for (var optionValue : list "R1,R2") {
+					DataEngine.addFieldOption(
+						index = "${index}",
+						optionFieldLabel = "Rows",
+						optionValue = "Row ${index}");
+
+					DataEngine.editFieldReferenceOfFieldOption(
+						fieldReferenceOfFieldOption = "${optionValue}",
+						index = "${index}",
+						optionFieldLabel = "Rows");
+
+					var index = ${index} + 1;
+				}
+
+				var index = "1";
+
+				for (var optionValue : list "C1,C2") {
+					DataEngine.addFieldOption(
+						index = "${index}",
+						optionFieldLabel = "Columns",
+						optionValue = "Column ${index}");
+
+					DataEngine.editFieldReferenceOfFieldOption(
+						fieldReferenceOfFieldOption = "${optionValue}",
+						index = "${index}",
+						optionFieldLabel = "Columns");
+
+					var index = ${index} + 1;
+				}
+			}
+			else if ("${fieldName}" == "Multiple Selection") {
+				DataEngine.addFieldOption(
+					index = "1",
+					optionFieldLabel = "Options",
+					optionValue = "Option 1");
+
+				DataEngine.addFieldOption(
+					index = "2",
+					optionFieldLabel = "Options",
+					optionValue = "Option 2");
+			}
+			else if ("${fieldName}" == "Select from List") {
+				DataEngine.addFieldOption(
+					index = "1",
+					optionValue = "Option 2");
+
+				DataEngine.editFieldReferenceOfFieldOption(
+					fieldReferenceOfFieldOption = "Value2",
+					index = "1");
+
+				DataEngine.addFieldOption(
+					index = "2",
+					optionValue = "Option 1");
+
+				DataEngine.editFieldReferenceOfFieldOption(
+					fieldReferenceOfFieldOption = "Value1",
+					index = "2");
+			}
+			else if ("${fieldName}" == "Single Selection") {
+				DataEngine.addFieldOption(
+					index = "1",
+					optionValue = "Option 3");
+
+				DataEngine.editFieldReferenceOfFieldOption(
+					fieldReferenceOfFieldOption = "Value3",
+					index = "1");
+
+				DataEngine.addFieldOption(
+					index = "2",
+					optionValue = "Option 4");
+
+				DataEngine.editFieldReferenceOfFieldOption(
+					fieldReferenceOfFieldOption = "Value4",
+					index = "2");
+			}
+
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			Type(
+				key_fieldLabel = "Field Reference",
+				key_fieldName = "fieldReference",
+				locator1 = "Sidebar#TEXT_INPUT",
+				value1 = "${fieldReference}");
+
+			AssertTextEquals.assertValue(
+				key_fieldLabel = "Field Reference",
+				key_fieldName = "fieldReference",
+				locator1 = "Sidebar#TEXT_INPUT",
+				value1 = "${fieldReference}");
+
+			Click(locator1 = "Sidebar#BACK");
+		}
+	}
+
+	macro addFieldsetNested {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fieldsets", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fieldsets");
+		}
+
+		DragAndDrop.javaScriptDragAndDropToObject(
+			key_fieldFieldLabel = "${targetFieldLabel}",
+			key_fieldName = "${fieldsetName}",
+			locator1 = "Sidebar#ADD_FIELD_NAME",
+			locator2 = "DDMEditStructure#FORM_FIELD_CONTAINER");
+
+		Pause(locator1 = "3000");
+
+		if (isSet(fieldsetLabel)) {
+			Type(
+				key_fieldLabel = "Label",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${fieldsetLabel}");
+
+			AssertTextEquals(
+				key_fieldLabel = "Label",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${fieldsetLabel}");
+
+			AssertElementPresent(
+				key_fieldsetLabel = "${fieldsetLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL",
+				value1 = "${fieldsetLabel}");
+		}
+		else {
+			AssertElementPresent(
+				key_fieldsetLabel = "${fieldsetName}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL",
+				value1 = "${fieldsetName}");
+		}
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro addFieldsets {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fieldsets", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fieldsets");
+		}
+
+		if (isSet(createNewFieldset)) {
+			Click(locator1 = "FormViewBuilder#CREATE_NEW_FIELD_SETS");
+
+			Type(
+				locator1 = "FormViewBuilder#FIELD_SET_NAME",
+				value1 = "${fieldsetName}");
+
+			DataEngine.addFields(fieldNameList = "${fieldNameList}");
+
+			if (isSet(fieldHelp)) {
+				for (var fieldName : list "${fieldNameList}") {
+					DataEngine.editFieldTip(
+						fieldFieldLabel = "${fieldName}",
+						fieldHelp = "${fieldName} Help Text");
+				}
+			}
+
+			if (isSet(fieldPlaceholder)) {
+				for (var fieldName : list "${fieldNameList}") {
+					DataEngine.editFieldTip(
+						fieldFieldLabel = "${fieldName}",
+						fieldPlaceholder = "${fieldName} Placeholder");
+				}
+			}
+
+			Click(locator1 = "Modal#SAVE_BUTTON");
+
+			Alert.viewSuccessMessage();
+		}
+
+		DoubleClick(
+			key_fieldName = "${fieldsetName}",
+			locator1 = "Sidebar#ADD_FIELD_NAME");
+
+		Pause(locator1 = "3000");
+
+		if (IsElementNotPresent(key_tab = "Basic", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		if (isSet(fieldsetLabel)) {
+			Type(
+				key_fieldLabel = "Label",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${fieldsetLabel}");
+
+			AssertTextEquals(
+				key_fieldLabel = "Label",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${fieldsetLabel}");
+
+			AssertElementPresent(
+				key_fieldsetLabel = "${fieldsetLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL",
+				value1 = "${fieldsetLabel}");
+		}
+		else {
+			AssertElementPresent(
+				key_fieldsetLabel = "${fieldsetName}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL",
+				value1 = "${fieldsetName}");
+		}
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro addFieldToFieldsGroup {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fields", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fields");
+		}
+
+		DragAndDrop.javaScriptDragAndDropToBottom(
+			key_fieldName = "${fieldName}",
+			key_fieldsGroupLabel = "${fieldsGroupLabel}",
+			locator1 = "Sidebar#ADD_FIELD_NAME",
+			locator2 = "DDMEditStructure#FORM_FIELDS_GROUP_CONTAINER");
+
+		Pause(locator1 = "3000");
+
+		if (IsElementNotPresent(key_tab = "Basic", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		Type(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabel}");
+
+		AssertTextEquals(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabel}");
+
+		AssertElementPresent(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldFieldLabel}");
+
+		if ("${fieldName}" == "Text") {
+			if (isSet(fieldType)) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "${fieldType}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+		else if ("${fieldName}" == "Numeric") {
+			if (isSet(numericType)) {
+				Check.checkToggleSwitch(
+					key_toggleSwitchLabel = "${numericType}",
+					locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+			}
+		}
+
+		var fieldReference = StringUtil.replace("${fieldFieldLabel}", " ", "");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		Type(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		AssertTextEquals.assertValue(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro addRepeatableField {
+		var key_fieldName = "${fieldName}";
+
+		Click(locator1 = "DDMField#FIELD_DUPLICATE");
+	}
+
+	macro addRepeatableFieldGroups {
+		var fieldName = "${fieldName}";
+		var i = "0";
+
+		while ("${i}" != "${totalPortletCount}") {
+			var i = ${i} + 1;
+
+			Click(locator1 = "WCEditWebContent#REPEATABLE_BUTTON");
+		}
+	}
+
+	macro addRepeatableFieldset {
+		Click(
+			key_fieldsetLabel = "${fieldsetLabel}",
+			locator1 = "WCEditWebContent#FIELDSET_REPEATABLE_BUTTON");
+	}
+
+	macro addRepeatableFieldsGroup {
+		Click(
+			key_fieldsetLabel = "${fieldsGroupLabel}",
+			locator1 = "WCEditWebContent#FIELDSET_REPEATABLE_BUTTON");
+	}
+
+	macro addTranslationToFieldset {
+		DataEngine.gotoFieldsetItemEllipsis(fieldsetName = "${fieldsetName}");
+
+		MenuItem.click(menuItem = "Edit");
+
+		for (var locale : list "${localeList}") {
+			PortletEntry.changeLocale(
+				locale = "${locale}",
+				modal = "true");
+
+			Type(
+				locator1 = "FormViewBuilder#FIELD_SET_NAME",
+				value1 = "${fieldsetName} ${locale}");
+
+			for (var fieldName : list "${fieldNameList}") {
+				DataEngine.editFieldLabel(
+					fieldFieldLabel = "${fieldName}",
+					fieldFieldLabelEdit = "${fieldName} ${locale}",
+					fieldsetModal = "true");
+
+				if (isSet(fieldHelp)) {
+					DataEngine.editFieldTip(
+						fieldFieldLabel = "${fieldName} ${locale}",
+						fieldHelp = "${fieldName} Help Text ${locale}");
+				}
+
+				if (isSet(fieldPlaceholder)) {
+					DataEngine.editFieldTip(
+						fieldFieldLabel = "${fieldName} ${locale}",
+						fieldPlaceholder = "${fieldName} Placeholder ${locale}");
+				}
+			}
+		}
+
+		Click(locator1 = "Modal#SAVE_BUTTON");
+
+		Click(
+			key_text = "Propagate",
+			locator1 = "Button#ANY");
+
+		Alert.viewSuccessMessage();
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro assertFieldRepeated {
+		AssertElementPresent(
+			key_fieldName = "${fieldName}",
+			key_index = "${index}",
+			locator1 = "WCEditWebContent#REPEATED_FIELD");
+	}
+
+	macro assertFieldRepeatedNotPresent {
+		AssertElementNotPresent(
+			key_fieldName = "${fieldName}",
+			key_index = "${index}",
+			locator1 = "WCEditWebContent#REPEATED_FIELD");
+	}
+
+	macro configureFieldsetsShowOrHideLabel {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldFieldLabel}");
+
+		if ("${status}" == "Show") {
+			Check.checkToggleSwitch(
+				checkboxName = "Show Label",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+		else if ("${status}" == "Hide") {
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Show Label",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+	}
+
+	macro createNewFieldset {
+		DataEngine.gotoCreateNewFieldset();
+
+		Type(
+			locator1 = "FormViewBuilder#FIELD_SET_NAME",
+			value1 = "${fieldsetName}");
+
+		DataEngine.addFields(fieldNameList = "${fieldNameList}");
+
+		if (isSet(fieldHelp)) {
+			for (var fieldName : list "${fieldNameList}") {
+				DataEngine.editFieldTip(
+					fieldFieldLabel = "${fieldName}",
+					fieldHelp = "${fieldName} Help Text");
+			}
+		}
+
+		if (isSet(fieldPlaceholder)) {
+			for (var fieldName : list "${fieldNameList}") {
+				DataEngine.editFieldTip(
+					fieldFieldLabel = "${fieldName}",
+					fieldPlaceholder = "${fieldName} Placeholder");
+			}
+		}
+
+		if (isSet(localeList)) {
+			for (var locale : list "${localeList}") {
+				PortletEntry.changeLocale(
+					locale = "${locale}",
+					modal = "true");
+
+				Type(
+					locator1 = "FormViewBuilder#FIELD_SET_NAME",
+					value1 = "${fieldsetName} ${locale}");
+
+				for (var fieldName : list "${fieldNameList}") {
+					DataEngine.editFieldLabel(
+						fieldFieldLabel = "${fieldName}",
+						fieldFieldLabelEdit = "${fieldName} ${locale}",
+						fieldsetModal = "true");
+
+					if (isSet(fieldHelp)) {
+						DataEngine.editFieldTip(
+							fieldFieldLabel = "${fieldName} ${locale}",
+							fieldHelp = "${fieldName} Help Text ${locale}");
+					}
+
+					if (isSet(fieldPlaceholder)) {
+						DataEngine.editFieldTip(
+							fieldFieldLabel = "${fieldName} ${locale}",
+							fieldPlaceholder = "${fieldName} Placeholder ${locale}");
+					}
+				}
+			}
+		}
+
+		Click(locator1 = "Modal#SAVE_BUTTON");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro delete {
+		if (isSet(fieldFieldLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER");
+
+			Click(
+				key_text = "${fieldFieldLabel}",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+		else if (isSet(fieldsetLabel)) {
+			Click(
+				key_fieldsetLabel = "${fieldsetLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+			Click(
+				key_text = "${fieldsetLabel}",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+		else if (isSet(fieldsGroupLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldsGroupLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+			Click(
+				key_text = "${fieldsGroupLabel}",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+
+		MenuItem.click(menuItem = "Delete");
+	}
+
+	macro deleteFieldsetFromSideBar {
+		if (isSet(siteURLKey)) {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+		}
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP();
+
+		DataEngine.gotoFieldsetItemEllipsis(fieldsetName = "${fieldsetName}");
+
+		MenuItem.click(menuItem = "Delete");
+
+		Button.clickDelete();
+	}
+
+	macro duplicate {
+		if (isSet(fieldFieldLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER");
+
+			Click(
+				key_text = "${fieldFieldLabel}",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+		else if (isSet(fieldsetLabel)) {
+			Click(
+				key_fieldsetLabel = "${fieldsetLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+			Click(
+				key_text = "${fieldsetLabel}",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+		else if (isSet(fieldsGroupLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldsGroupLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+			Click(
+				key_text = "${fieldsGroupLabel}",
+				locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
+		}
+
+		MenuItem.click(menuItem = "Duplicate");
+	}
+
+	macro editCollapsible {
+		if (isSet(fieldsetLabel)) {
+			Click(
+				key_fieldsetLabel = "${fieldsetLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+		}
+		else if (isSet(fieldsGroupLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldsGroupLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		}
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Basic")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		if ("${collapsible}" == "true") {
+			Check.checkToggleSwitch(
+				checkboxName = "Collapsible",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+		else if ("${collapsible}" == "false") {
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Collapsible",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+		}
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldHide {
+		var checkboxName = "Show Label";
+		var fieldLabel = "${fieldLabel}";
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		FormFields.disableSwitcher(fieldName = "Show Label");
+	}
+
+	macro editFieldLabel {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (isSet(fieldsetModal)) {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL_IN_FIELDSET_MODAL");
+		}
+		else {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		}
+
+		Type(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabelEdit}");
+
+		AssertTextEquals(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldFieldLabelEdit}");
+
+		AssertElementPresent(
+			key_fieldFieldLabel = "${fieldFieldLabelEdit}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldReference {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		if (isSet(fieldReference)) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+
+			Type(
+				key_fieldLabel = "Field Reference",
+				key_fieldName = "fieldReference",
+				locator1 = "Sidebar#TEXT_INPUT",
+				value1 = "${fieldReference}");
+
+			AssertTextEquals.assertValue(
+				key_fieldLabel = "Field Reference",
+				key_fieldName = "fieldReference",
+				locator1 = "Sidebar#TEXT_INPUT",
+				value1 = "${assertFieldReference}");
+		}
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldReferenceOfFieldOption {
+		if (isSet(fieldFieldLabel)) {
+			AssertClick.assertPartialTextClickAt(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+				value1 = "${fieldFieldLabel}");
+		}
+
+		if (isSet(optionFieldLabel)) {
+			DoubleClick(
+				index = "${index}",
+				key_optionFieldLabel = "${optionFieldLabel}",
+				locator1 = "Sidebar#OPTION_FIELD_REFERENCE_INPUT");
+
+			Type.type(
+				index = "${index}",
+				key_optionFieldLabel = "${optionFieldLabel}",
+				locator1 = "Sidebar#OPTION_FIELD_REFERENCE_INPUT",
+				value1 = "${fieldReferenceOfFieldOption}");
+		}
+		else {
+			DoubleClick(
+				index = "${index}",
+				locator1 = "Sidebar#OPTION_WITHOUT_LABEL_FIELD_REFERENCE_INPUT");
+
+			Type.type(
+				index = "${index}",
+				locator1 = "Sidebar#OPTION_WITHOUT_LABEL_FIELD_REFERENCE_INPUT",
+				value1 = "${fieldReferenceOfFieldOption}");
+		}
+
+		if (isSet(fieldFieldLabel)) {
+			Click(locator1 = "Sidebar#BACK");
+		}
+	}
+
+	macro editFieldReferenceWithInvalidCharacters {
+		Click(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		Type.sendKeys(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${fieldReference}");
+
+		AssertTextEquals.assertValue(
+			key_fieldLabel = "Field Reference",
+			key_fieldName = "fieldReference",
+			locator1 = "Sidebar#TEXT_INPUT",
+			value1 = "${assertFieldReference}");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldRepeatable {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		Check.checkToggleSwitch(
+			checkboxName = "Repeatable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldRequired {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Basic")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		Check.checkToggleSwitch(
+			checkboxName = "Required Field",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldSearchable {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		Check.checkNotVisible(
+			key_fieldFieldLabel = "Searchable",
+			key_optionValue = "${searchableType}",
+			locator1 = "WCEditWebContent#SELECTION_OPTION");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldsetsCollapsible {
+		Click(
+			key_fieldsetLabel = "${fieldsetLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+		Check.checkToggleSwitch(
+			checkboxName = "Collapsible",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldsetsLabel {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		Click(
+			key_fieldsetLabel = "${fieldsetLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+		Type(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldsetLabelEdit}");
+
+		AssertTextEquals(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldsetLabelEdit}");
+
+		AssertElementPresent(
+			key_fieldsetLabel = "${fieldsetLabelEdit}",
+			locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldsetsRepeatable {
+		Click(
+			key_fieldsetLabel = "${fieldsetLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+		Check.checkToggleSwitch(
+			checkboxName = "Repeatable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldsGroupCollapsible {
+		if (!(isSet(fieldsGroupLabel))) {
+			var fieldsGroupLabel = "Fields Group";
+		}
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldsGroupLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldsGroupLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Basic")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		Check.checkToggleSwitch(
+			checkboxName = "Collapsible",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldsGroupLabel {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (isSet(fieldsetModal)) {
+			Click(
+				key_fieldFieldLabel = "${fieldsGroupLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL_IN_FIELDSET_MODAL");
+		}
+		else {
+			Click(
+				key_fieldFieldLabel = "${fieldsGroupLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		}
+
+		Type(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldsGroupLabelEdit}");
+
+		AssertTextEquals(
+			key_fieldLabel = "Label",
+			locator1 = "TextInput#GENERIC_TEXT_INPUT",
+			value1 = "${fieldsGroupLabelEdit}");
+
+		AssertElementPresent(
+			key_fieldFieldLabel = "${fieldsGroupLabelEdit}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldsGroupRepeatable {
+		if (!(isSet(fieldsGroupLabel))) {
+			var fieldsGroupLabel = "Fields Group";
+		}
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldsGroupLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldsGroupLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Basic")) {
+			Navigator.gotoNavTab(navTab = "Basic");
+		}
+
+		Check.checkToggleSwitch(
+			checkboxName = "Repeatable",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editFieldShowLabel {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		Check.checkToggleSwitch(
+			checkboxName = "Show Label",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+	}
+
+	macro editFieldTip {
+		if (isSet(fieldsetModal)) {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL_IN_FIELDSET_MODAL");
+		}
+		else {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+		}
+
+		if (isSet(fieldPlaceholder)) {
+			var key_fieldFieldLabel = "${fieldFieldLabel}";
+			var key_text = "Placeholder";
+
+			Click(locator1 = "Sidebar#DDM_ANY");
+
+			Type(
+				locator1 = "Sidebar#DDM_ANY",
+				value1 = "${fieldPlaceholder}");
+
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_TEXT",
+				value1 = "${fieldPlaceholder}");
+		}
+
+		if (isSet(fieldHelp)) {
+			if (isSet(fieldsetModal)) {
+				Click(
+					key_fieldFieldLabel = "${fieldFieldLabel}",
+					locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL_IN_FIELDSET_MODAL");
+
+				Type(
+					key_fieldLabel = "Help Text",
+					locator1 = "TextInput#GENERIC_TEXT_INPUT",
+					value1 = "${fieldHelp}");
+			}
+			else {
+				var key_fieldFieldLabel = "${fieldFieldLabel}";
+				var key_text = "Help";
+
+				Click(locator1 = "Sidebar#DDM_ANY");
+
+				Type(
+					locator1 = "Sidebar#DDM_ANY",
+					value1 = "${fieldHelp}");
+
+				AssertTextEquals(
+					locator1 = "DDMEditStructure#SETTINGS_TEXT",
+					value1 = "${fieldHelp}");
+			}
+		}
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro editGridOptions {
+		var key_gridField = "${gridField}";
+		var key_rowNumber = "${rowNumber}";
+
+		Type(
+			locator1 = "DDMEditStructure#GRID_OPTIONS_OPTION_VALUE_FIELD",
+			value1 = "${optionValue}");
+	}
+
+	macro editOptionValue {
+		var key_rowNumber = "${rowNumber}";
+
+		Type(
+			locator1 = "DDMEditStructure#OPTION_VALUE_FIELD",
+			value1 = "${optionValue}");
+	}
+
+	macro editShowOrHideLabel {
+		if (isSet(fieldFieldLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER");
+
+			if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+				Navigator.gotoNavTab(navTab = "Advanced");
+			}
+		}
+		else if (isSet(fieldLabelHidden)) {
+			Click(locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_FIRST");
+
+			if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+				Navigator.gotoNavTab(navTab = "Advanced");
+			}
+		}
+		else if (isSet(fieldsetLabel)) {
+			Click(
+				key_fieldsetLabel = "${fieldsetLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+			if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Basic")) {
+				Navigator.gotoNavTab(navTab = "Basic");
+			}
+		}
+		else if (isSet(fieldsGroupLabel)) {
+			Click(
+				key_fieldFieldLabel = "${fieldsGroupLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+			if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Basic")) {
+				Navigator.gotoNavTab(navTab = "Basic");
+			}
+		}
+
+		if ("${showLabel}" == "true") {
+			Check.checkToggleSwitch(
+				checkboxName = "Show Label",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
+		else if ("${showLabel}" == "false") {
+			Uncheck.uncheckToggleSwitch(
+				checkboxName = "Show Label",
+				locator1 = "Checkbox#ANY_CHECKBOX_CHECKED");
+		}
+
+		Click(locator1 = "Sidebar#BACK");
+	}
+
+	macro gotoCreateNewFieldset {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fieldsets", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fieldsets");
+		}
+
+		Click(locator1 = "FormViewBuilder#CREATE_NEW_FIELD_SETS");
+	}
+
+	macro gotoFieldsetItemEllipsis {
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		if (IsElementNotPresent(key_tab = "Fieldsets", locator1 = "NavTab#ACTIVE_TAB_LINK")) {
+			Navigator.gotoNavTab(navTab = "Fieldsets");
+		}
+
+		Click(
+			key_fieldsetName = "${fieldsetName}",
+			locator1 = "Sidebar#FIELDSET_ITEM_ELLIPSIS");
+	}
+
+	macro viewField {
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
+		var key_text = "${fieldName}";
+
+		if (IsElementNotPresent(key_tabName = "Builder", locator1 = "Sidebar#ACTIVE_TAB")) {
+			Navigator.gotoSidebarTab(tabName = "Builder");
+		}
+
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "${fieldFieldLabel}");
+
+		AssertTextEquals(
+			locator1 = "Button#ANY",
+			value1 = "${fieldName}");
+
+		AssertTextEquals.assertValue(
+			locator1 = "Sidebar#DDM_LABEL",
+			value1 = "${fieldFieldLabel}");
+
+		if (isSet(fieldHelp)) {
+			AssertTextEquals(
+				locator1 = "DDMEditStructure#SETTINGS_TEXT",
+				value1 = "${fieldHelp}");
+		}
+	}
+
+	macro viewFieldHelpText {
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
+		var key_text = "${fieldName}";
+
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		AssertTextEquals(
+			locator1 = "Button#ANY",
+			value1 = "${fieldName}");
+
+		AssertTextEquals.assertValue(
+			locator1 = "Sidebar#DDM_HELP_TEXT",
+			value1 = "${fieldHelp}");
+	}
+
+	macro viewFieldReference {
+		var key_fieldFieldLabel = "${fieldFieldLabel}";
+		var key_text = "${fieldName}";
+
+		AssertClick.assertPartialTextClickAt(
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		AssertTextEquals(
+			locator1 = "Button#ANY",
+			value1 = "${fieldName}");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		AssertTextEquals.assertValue(
+			locator1 = "Sidebar#DDM_FIELD_REFERENCE",
+			value1 = "${fieldReference}");
+	}
+
+	macro viewFieldSearchable {
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${fieldFieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${fieldFieldLabel}");
+
+		Navigator.gotoNavTab(navTab = "Advanced");
+
+		AssertChecked.assertCheckedNotVisible(
+			key_fieldFieldLabel = "Searchable",
+			key_optionValue = "${searchableType}",
+			locator1 = "WCEditWebContent#SELECTION_OPTION");
+	}
+
+	macro viewFieldsetTranslation {
+		for (var locale : list "${localeList}") {
+			PortletEntry.changeLocale(locale = "${locale}");
+
+			AssertVisible(
+				key_fieldsetLabel = "${fieldsetName} ${locale}",
+				locator1 = "DDMEditStructure#FORM_FIELD_SETS_CONTAINER_LABEL");
+
+			for (var fieldName : list "${fieldNameList}") {
+				AssertVisible(
+					key_fieldFieldLabel = "${fieldName} ${locale}",
+					locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+			}
+		}
+	}
+
+	macro viewNestedField {
+		AssertTextEquals.assertValue(
+			key_fieldName = "${fieldName}",
+			key_nestedFieldName = "${nestedField}",
+			locator1 = "DDMField#NESTED_INPUT",
+			value1 = "${nestedFieldData}");
+	}
+
+}

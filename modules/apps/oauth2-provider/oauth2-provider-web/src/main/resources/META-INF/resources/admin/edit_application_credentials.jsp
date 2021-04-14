@@ -25,8 +25,8 @@ String clientId = (oAuth2Application == null) ? "" : oAuth2Application.getClient
 String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getClientSecret();
 %>
 
-<portlet:actionURL name="/admin/update_oauth2_application" var="updateOAuth2ApplicationURL">
-	<portlet:param name="mvcRenderCommandName" value="/admin/update_oauth2_application" />
+<portlet:actionURL name="/oauth2_provider/update_oauth2_application" var="updateOAuth2ApplicationURL">
+	<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/update_oauth2_application" />
 	<portlet:param name="oAuth2ApplicationId" value='<%= (oAuth2Application == null) ? "" : String.valueOf(oAuth2Application.getOAuth2ApplicationId()) %>' />
 	<portlet:param name="backURL" value="<%= redirect %>" />
 </portlet:actionURL>
@@ -240,15 +240,15 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 <aui:script use="aui-modal,liferay-form,node,node-event-simulate">
 	<portlet:namespace />generateRandomSecret = function () {
 		Liferay.Util.fetch(
-			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/admin/generate_random_secret" />',
+			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/oauth2_provider/generate_random_secret" />',
 			{
 				method: 'POST',
 			}
 		)
-			.then(function (response) {
+			.then((response) => {
 				return response.text();
 			})
-			.then(function (response) {
+			.then((response) => {
 				var newClientSecretField = A.one(
 					'#<portlet:namespace />newClientSecret'
 				);
@@ -393,7 +393,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 			plugins: [Liferay.WidgetZIndex],
 		}).render();
 
-		modal.on('render', function (event) {
+		modal.on('render', (event) => {
 			<portlet:namespace />updateComponent(applyField, populateField.val());
 		});
 
@@ -507,7 +507,7 @@ String clientSecret = (oAuth2Application == null) ? "" : oAuth2Application.getCl
 
 	clientProfile.delegate(
 		'change',
-		function (event) {
+		(event) => {
 			var newClientProfileValue = event.currentTarget.val();
 			<portlet:namespace />updateAllowedGrantTypes(newClientProfileValue);
 		},

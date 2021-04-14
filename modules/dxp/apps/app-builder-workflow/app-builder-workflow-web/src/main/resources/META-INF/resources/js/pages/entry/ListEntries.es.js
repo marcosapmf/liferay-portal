@@ -9,29 +9,33 @@
  * distribution rights of the Software.
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayLabel from '@clayui/label';
 import {AppContext} from 'app-builder-web/js/AppContext.es';
-import Button from 'app-builder-web/js/components/button/Button.es';
-import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
-import ManagementToolbar from 'app-builder-web/js/components/management-toolbar/ManagementToolbar.es';
-import ManagementToolbarResultsBar from 'app-builder-web/js/components/management-toolbar/ManagementToolbarResultsBar.es';
-import SearchContext, {
-	reducer,
-} from 'app-builder-web/js/components/management-toolbar/SearchContext.es';
-import TableWithPagination from 'app-builder-web/js/components/table/TableWithPagination.es';
+import NoPermissionState from 'app-builder-web/js/components/empty-state/NoPermissionState.es';
 import useDataListView from 'app-builder-web/js/hooks/useDataListView.es';
 import useEntriesActions from 'app-builder-web/js/hooks/useEntriesActions.es';
 import usePermissions from 'app-builder-web/js/hooks/usePermissions.es';
-import useQuery from 'app-builder-web/js/hooks/useQuery.es';
 import {
 	buildEntries,
 	navigateToEditPage,
 } from 'app-builder-web/js/pages/entry/utils.es';
-import {getItem} from 'app-builder-web/js/utils/client.es';
 import {getLocalizedUserPreferenceValue} from 'app-builder-web/js/utils/lang.es';
-import {errorToast} from 'app-builder-web/js/utils/toast.es';
-import {concatValues, isEqualObjects} from 'app-builder-web/js/utils/utils.es';
-import {usePrevious} from 'frontend-js-react-web';
+import Loading from 'data-engine-js-components-web/js/components/loading/Loading.es';
+import ManagementToolbar from 'data-engine-js-components-web/js/components/management-toolbar/ManagementToolbar.es';
+import ManagementToolbarResultsBar from 'data-engine-js-components-web/js/components/management-toolbar/ManagementToolbarResultsBar.es';
+import SearchContext, {
+	reducer,
+} from 'data-engine-js-components-web/js/components/management-toolbar/SearchContext.es';
+import TableWithPagination from 'data-engine-js-components-web/js/components/table/TableWithPagination.es';
+import useQuery from 'data-engine-js-components-web/js/hooks/useQuery.es';
+import {getItem} from 'data-engine-js-components-web/js/utils/client.es';
+import {errorToast} from 'data-engine-js-components-web/js/utils/toast.es';
+import {
+	concatValues,
+	isEqualObjects,
+} from 'data-engine-js-components-web/js/utils/utils.es';
+import {usePrevious, useTimeout} from 'frontend-js-react-web';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import useAppWorkflow from '../../hooks/useAppWorkflow.es';
@@ -41,7 +45,7 @@ import ReassignEntryModal from './ReassignEntryModal.es';
 const WORKFLOW_COLUMNS = [
 	{key: 'status', value: Liferay.Language.get('status')},
 	{key: 'taskNames', value: Liferay.Language.get('step')},
-	{key: 'assignees', value: Liferay.Language.get('assignee')},
+	{key: 'assignee', value: Liferay.Language.get('assignee')},
 ];
 
 export default function ListEntries({history}) {
@@ -61,14 +65,15 @@ export default function ListEntries({history}) {
 
 	const {appWorkflowDefinitionId} = useAppWorkflow(appId);
 	const dataRecordApps = useDataRecordApps(appId, dataRecordIds);
+	const delay = useTimeout();
+	const permissions = usePermissions();
 
 	const {
 		columns,
 		dataDefinition,
 		dataListView: {fieldNames},
 		isLoading,
-	} = useDataListView(dataListViewId, dataDefinitionId);
-	const permissions = usePermissions();
+	} = useDataListView(dataListViewId, dataDefinitionId, permissions.view);
 
 	const [{isFetching, items, totalCount}, setFetchState] = useState({
 		isFetching: true,
@@ -95,7 +100,12 @@ export default function ListEntries({history}) {
 
 	const previousQuery = usePrevious(query);
 
-	const doFetch = (query, workflowDefinitionId) => {
+	const doFetch = ({
+		entryInstanceId,
+		newAssignee,
+		query,
+		workflowDefinitionId,
+	}) => {
 		if (workflowDefinitionId) {
 			setFetchState((prevState) => ({
 				...prevState,
@@ -117,40 +127,68 @@ export default function ListEntries({history}) {
 
 						setDataRecordIds(classPKs);
 
-						getItem(
-							`/o/portal-workflow-metrics/v1.0/processes/${workflowDefinitionId}/instances`,
-							{classPKs, page: 1, pageSize: response.items.length}
-						).then((workflowResponse) => {
-							let items = response.items;
+						const getWorkflowInfo = () => {
+							getItem(
+								`/o/portal-workflow-metrics/v1.0/processes/${workflowDefinitionId}/instances`,
+								{
+									classPKs,
+									page: 1,
+									pageSize: response.items.length,
+								}
+							).then((workflowResponse) => {
+								let items = response.items;
+								let retryCount = 0;
 
-							if (workflowResponse.totalCount > 0) {
-								items = response.items.map((item) => {
+								if (entryInstanceId) {
 									const {
 										assignees,
-										completed,
-										id: instanceId,
-										taskNames,
-									} =
-										workflowResponse.items.find(
-											({classPK}) => classPK === item.id
-										) || {};
+									} = workflowResponse.items.find(
+										({id}) => id === entryInstanceId
+									);
 
-									return {
-										...item,
-										assignees,
-										completed,
-										instanceId,
-										taskNames,
-									};
-								});
-							}
+									if (
+										newAssignee &&
+										newAssignee.id !== assignees?.[0]?.id &&
+										retryCount <= 5
+									) {
+										retryCount++;
 
-							setFetchState((prevState) => ({
-								...prevState,
-								isFetching: false,
-								items,
-							}));
-						});
+										return delay(getWorkflowInfo, 1000);
+									}
+								}
+
+								if (workflowResponse.totalCount > 0) {
+									items = response.items.map((item) => {
+										const {
+											assignees,
+											completed,
+											id: instanceId,
+											taskNames,
+										} =
+											workflowResponse.items.find(
+												({classPK}) =>
+													classPK === item.id
+											) || {};
+
+										return {
+											...item,
+											assignees,
+											completed,
+											instanceId,
+											taskNames,
+										};
+									});
+								}
+
+								setFetchState((prevState) => ({
+									...prevState,
+									isFetching: false,
+									items,
+								}));
+							});
+						};
+
+						getWorkflowInfo();
 					}
 				})
 				.catch(() => {
@@ -169,13 +207,17 @@ export default function ListEntries({history}) {
 			languageId: userLanguageId,
 		});
 
-	const onCloseModal = (isRefetch) => {
+	const refetch = ({entryInstanceId, newAssignee} = {}) =>
+		doFetch({
+			entryInstanceId,
+			newAssignee,
+			query,
+			workflowDefinitionId: appWorkflowDefinitionId,
+		});
+
+	const onCloseModal = () => {
 		setModalVisible(false);
 		setSelectedEntry();
-
-		if (isRefetch) {
-			refetch();
-		}
 	};
 
 	const buildWorkflowItems = (items) => {
@@ -185,7 +227,7 @@ export default function ListEntries({history}) {
 					dataDefinition,
 					fieldNames,
 					permissions,
-					scope: appId,
+					query,
 				})
 			)
 			.map((entry) => {
@@ -194,10 +236,10 @@ export default function ListEntries({history}) {
 
 				WORKFLOW_COLUMNS.forEach(({key}) => {
 					switch (key) {
-						case 'assignees': {
+						case 'assignee': {
 							const {assignees = [], taskNames = []} = entry;
 
-							const {id, name = emptyValue, reviewer} =
+							const {id = -1, name = emptyValue, reviewer} =
 								assignees[0] || {};
 
 							if (id === -1) {
@@ -259,8 +301,6 @@ export default function ListEntries({history}) {
 			});
 	};
 
-	const refetch = () => doFetch(query, appWorkflowDefinitionId);
-
 	useEffect(() => {
 		if (!isEqualObjects(query, previousQuery)) {
 			refetch();
@@ -269,7 +309,7 @@ export default function ListEntries({history}) {
 	}, [query]);
 
 	useEffect(() => {
-		doFetch(query, appWorkflowDefinitionId);
+		doFetch({query, workflowDefinitionId: appWorkflowDefinitionId});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [appWorkflowDefinitionId]);
 
@@ -285,7 +325,9 @@ export default function ListEntries({history}) {
 			show: ({canReassign}) => canReassign,
 		},
 		...useEntriesActions({
-			update: ({completed}) => completed === false,
+			update: ({assignees, completed}) =>
+				completed === false &&
+				assignees?.[0]?.id === Number(themeDisplay.getUserId()),
 		}),
 	];
 
@@ -314,17 +356,21 @@ export default function ListEntries({history}) {
 			}),
 	}));
 
+	if (!permissions.view) {
+		return <NoPermissionState />;
+	}
+
 	return (
 		<Loading isLoading={isLoading}>
 			<SearchContext.Provider value={[query, dispatch]}>
 				<ManagementToolbar
 					addButton={() =>
 						showAddButton && (
-							<Button
+							<ClayButtonWithIcon
 								className="nav-btn nav-btn-monospaced"
 								onClick={onClickAddButton}
 								symbol="plus"
-								tooltip={Liferay.Language.get('new-entry')}
+								title={Liferay.Language.get('new-entry')}
 							/>
 						)
 					}
@@ -344,12 +390,12 @@ export default function ListEntries({history}) {
 					emptyState={{
 						button: () =>
 							showAddButton && (
-								<Button
+								<ClayButton
 									displayType="secondary"
 									onClick={onClickAddButton}
 								>
 									{Liferay.Language.get('new-entry')}
-								</Button>
+								</ClayButton>
 							),
 						title: Liferay.Language.get('there-are-no-entries-yet'),
 					}}
@@ -368,6 +414,7 @@ export default function ListEntries({history}) {
 				<ReassignEntryModal
 					entry={selectedEntry}
 					onCloseModal={onCloseModal}
+					refetch={refetch}
 				/>
 			)}
 		</Loading>

@@ -56,6 +56,20 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
+	macro addInternalVocabulary {
+		Vocabulary.gotoAddVocabulary();
+
+		PortletEntry.inputName(name = "${vocabularyName}");
+
+		Click(locator1 = "Categories#INTERNAL_VISIBILITY");
+
+		Button.clickNoError(button = "Save");
+
+		AssertConfirm.assertPartialConfirmation(value1 = "Are you sure you want to create this vocabulary only with internal visibility?");
+
+		Alert.viewSuccessMessage();
+	}
+
 	macro addViewableByCP {
 		Vocabulary.gotoAddVocabulary();
 
@@ -222,14 +236,7 @@ definition {
 			Button.click(button = "Add Vocabulary");
 		}
 		else {
-			var browserType = PropsUtil.get("browser.type");
-
-			if ("${browserType}" == "internetexplorer") {
-				Click(locator1 = "NavNested#NAV_NESTED_PLUS_IE");
-			}
-			else {
-				Click(locator1 = "NavNested#NAV_NESTED_PLUS");
-			}
+			Click(locator1 = "NavNested#NAV_NESTED_PLUS");
 		}
 	}
 

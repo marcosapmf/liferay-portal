@@ -169,8 +169,9 @@ public interface ProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/{discountProductGroupId}/product-group",
-				discountProductGroupId);
+						"/o/headless-commerce-admin-pricing/v2.0/discount-product-groups/{discountProductGroupId}/product-group");
+
+			httpInvoker.path("discountProductGroupId", discountProductGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -236,8 +237,10 @@ public interface ProductGroupResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-product-groups/{priceModifierProductGroupId}/product-group",
-				priceModifierProductGroupId);
+						"/o/headless-commerce-admin-pricing/v2.0/price-modifier-product-groups/{priceModifierProductGroupId}/product-group");
+
+			httpInvoker.path(
+				"priceModifierProductGroupId", priceModifierProductGroupId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

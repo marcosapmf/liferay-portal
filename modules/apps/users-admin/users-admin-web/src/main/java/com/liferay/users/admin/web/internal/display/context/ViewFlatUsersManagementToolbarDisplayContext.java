@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.UserSearchTerms;
+import com.liferay.users.admin.web.internal.util.DisplayStyleUtil;
 
 import java.util.List;
 
@@ -56,10 +57,11 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 			liferayPortletRequest.getHttpServletRequest(),
 			liferayPortletRequest, liferayPortletResponse, searchContainer);
 
-		_navigation = ParamUtil.getString(
-			liferayPortletRequest, "navigation", "active");
 		_showDeleteButton = showDeleteButton;
 		_showRestoreButton = showRestoreButton;
+
+		_navigation = ParamUtil.getString(
+			liferayPortletRequest, "navigation", "active");
 	}
 
 	@Override
@@ -72,7 +74,8 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 						"javascript:", liferayPortletResponse.getNamespace(),
 						"deleteUsers('", Constants.RESTORE, "');"));
 				dropdownItem.setIcon("undo");
-				dropdownItem.setLabel(LanguageUtil.get(request, "activate"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "activate"));
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -100,7 +103,8 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 
 				dropdownItem.setIcon(icon);
 
-				dropdownItem.setLabel(LanguageUtil.get(request, action));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, action));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -123,7 +127,8 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(),
 					"mvcRenderCommandName", "/users_admin/edit_user");
-				dropdownItem.setLabel(LanguageUtil.get(request, "add-user"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add-user"));
 			}
 		).build();
 	}
@@ -142,8 +147,8 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 				labelItem.setCloseable(true);
 
 				String label = String.format(
-					"%s: %s", LanguageUtil.get(request, "status"),
-					LanguageUtil.get(request, _navigation));
+					"%s: %s", LanguageUtil.get(httpServletRequest, "status"),
+					LanguageUtil.get(httpServletRequest, _navigation));
 
 				labelItem.setLabel(label);
 			}
@@ -169,11 +174,18 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return PortalPermissionUtil.contains(
 			themeDisplay.getPermissionChecker(), ActionKeys.ADD_USER);
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return DisplayStyleUtil.getDisplayStyle(
+			liferayPortletRequest, getDefaultDisplayStyle());
 	}
 
 	@Override
@@ -183,7 +195,7 @@ public class ViewFlatUsersManagementToolbarDisplayContext
 
 	@Override
 	protected String getFilterNavigationDropdownItemsLabel() {
-		return LanguageUtil.get(request, "filter-by-status");
+		return LanguageUtil.get(httpServletRequest, "filter-by-status");
 	}
 
 	@Override

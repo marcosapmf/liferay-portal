@@ -21,6 +21,7 @@ create table Account_ (
 create table Address (
 	mvccVersion LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	addressId LONG not null primary key,
 	companyId LONG,
 	userId LONG,
@@ -29,13 +30,17 @@ create table Address (
 	modifiedDate DATE null,
 	classNameId LONG,
 	classPK LONG,
-	street1 VARCHAR(75) null,
-	street2 VARCHAR(75) null,
-	street3 VARCHAR(75) null,
+	name VARCHAR(255) null,
+	description STRING null,
+	street1 VARCHAR(255) null,
+	street2 VARCHAR(255) null,
+	street3 VARCHAR(255) null,
 	city VARCHAR(75) null,
 	zip VARCHAR(75) null,
 	regionId LONG,
 	countryId LONG,
+	latitude DOUBLE,
+	longitude DOUBLE,
 	typeId LONG,
 	mailing BOOLEAN,
 	primary_ BOOLEAN
@@ -103,15 +108,6 @@ create table AssetCategory (
 	vocabularyId LONG,
 	lastPublishDate DATE null,
 	primary key (categoryId, ctCollectionId)
-);
-
-create table AssetEntries_AssetCategories (
-	companyId LONG not null,
-	categoryId LONG not null,
-	entryId LONG not null,
-	ctCollectionId LONG default 0 not null,
-	ctChangeType BOOLEAN,
-	primary key (categoryId, entryId, ctCollectionId)
 );
 
 create table AssetEntries_AssetTags (
@@ -281,14 +277,36 @@ create table Counter (
 
 create table Country (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	defaultLanguageId VARCHAR(75) null,
 	countryId LONG not null primary key,
-	name VARCHAR(75) null,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
 	a2 VARCHAR(75) null,
 	a3 VARCHAR(75) null,
-	number_ VARCHAR(75) null,
+	active_ BOOLEAN,
+	billingAllowed BOOLEAN,
+	groupFilterEnabled BOOLEAN,
 	idd_ VARCHAR(75) null,
+	name VARCHAR(75) null,
+	number_ VARCHAR(75) null,
+	position DOUBLE,
+	shippingAllowed BOOLEAN,
+	subjectToVAT BOOLEAN,
 	zipRequired BOOLEAN,
-	active_ BOOLEAN
+	lastPublishDate DATE null
+);
+
+create table CountryLocalization (
+	mvccVersion LONG default 0 not null,
+	countryLocalizationId LONG not null primary key,
+	companyId LONG,
+	countryId LONG,
+	languageId VARCHAR(75) null,
+	title VARCHAR(75) null
 );
 
 create table DLFileEntry (
@@ -976,6 +994,20 @@ create table PortletItem (
 	classNameId LONG
 );
 
+create table PortletPreferenceValue (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	portletPreferenceValueId LONG not null,
+	companyId LONG,
+	portletPreferencesId LONG,
+	index_ INTEGER,
+	largeValue TEXT null,
+	name VARCHAR(255) null,
+	readOnly BOOLEAN,
+	smallValue VARCHAR(255) null,
+	primary key (portletPreferenceValueId, ctCollectionId)
+);
+
 create table PortletPreferences (
 	mvccVersion LONG default 0 not null,
 	ctCollectionId LONG default 0 not null,
@@ -985,7 +1017,6 @@ create table PortletPreferences (
 	ownerType INTEGER,
 	plid LONG,
 	portletId VARCHAR(200) null,
-	preferences TEXT null,
 	primary key (portletPreferencesId, ctCollectionId)
 );
 
@@ -1054,11 +1085,29 @@ create table RecentLayoutSetBranch (
 
 create table Region (
 	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	defaultLanguageId VARCHAR(75) null,
 	regionId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null,
 	countryId LONG,
-	regionCode VARCHAR(75) null,
+	active_ BOOLEAN,
 	name VARCHAR(75) null,
-	active_ BOOLEAN
+	position DOUBLE,
+	regionCode VARCHAR(75) null,
+	lastPublishDate DATE null
+);
+
+create table RegionLocalization (
+	mvccVersion LONG default 0 not null,
+	regionLocalizationId LONG not null primary key,
+	companyId LONG,
+	regionId LONG,
+	languageId VARCHAR(75) null,
+	title VARCHAR(75) null
 );
 
 create table Release_ (

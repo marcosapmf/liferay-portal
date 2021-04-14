@@ -71,7 +71,8 @@ public class StagingProcessesWebPublishTemplatesToolbarDisplayContext
 	public String getClearResultsURL() {
 		PortletURL clearResultsURL = getRenderURL();
 
-		clearResultsURL.setParameter("mvcPath", "/publish_templates/view.jsp");
+		clearResultsURL.setParameter(
+			"mvcPath", "/publish_templates/view_publish_configurations.jsp");
 
 		return clearResultsURL.toString();
 	}
@@ -82,14 +83,17 @@ public class StagingProcessesWebPublishTemplatesToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.setHref(
 					getRenderURL(), "mvcRenderCommandName",
-					"editPublishConfiguration", "groupId",
+					"/staging_processes/edit_publish_configuration", "groupId",
 					String.valueOf(_stagingGroupId), "layoutSetBranchId",
-					ParamUtil.getString(request, "layoutSetBranchId"),
+					ParamUtil.getString(
+						httpServletRequest, "layoutSetBranchId"),
 					"layoutSetBranchName",
-					ParamUtil.getString(request, "layoutSetBranchName"),
+					ParamUtil.getString(
+						httpServletRequest, "layoutSetBranchName"),
 					"privateLayout", Boolean.FALSE.toString());
 
-				dropdownItem.setLabel(LanguageUtil.get(request, "new"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "new"));
 			}
 		).build();
 	}
@@ -104,7 +108,8 @@ public class StagingProcessesWebPublishTemplatesToolbarDisplayContext
 		PortletURL searchActionURL = getRenderURL();
 
 		searchActionURL.setParameter(
-			"mvcRenderCommandName", "viewPublishConfigurations");
+			"mvcRenderCommandName",
+			"/staging_processes/view_publish_configurations");
 
 		return searchActionURL.toString();
 	}

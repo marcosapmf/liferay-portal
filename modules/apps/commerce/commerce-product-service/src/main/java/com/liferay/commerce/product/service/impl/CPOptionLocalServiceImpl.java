@@ -236,6 +236,19 @@ public class CPOptionLocalServiceImpl extends CPOptionLocalServiceBaseImpl {
 		return cpOptionPersistence.update(cpOption);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CPOption updateCPOptionExternalReferenceCode(
+			long cpOptionId, String externalReferenceCode)
+		throws PortalException {
+
+		CPOption cpOption = cpOptionLocalService.getCPOption(cpOptionId);
+
+		cpOption.setExternalReferenceCode(externalReferenceCode);
+
+		return cpOptionPersistence.update(cpOption);
+	}
+
 	@Override
 	public CPOption upsertCPOption(
 			long userId, Map<Locale, String> nameMap,
@@ -407,7 +420,7 @@ public class CPOptionLocalServiceImpl extends CPOptionLocalServiceBaseImpl {
 
 		return _configurationProvider.getConfiguration(
 			CPOptionConfiguration.class,
-			new SystemSettingsLocator(CPConstants.CP_OPTION_SERVICE_NAME));
+			new SystemSettingsLocator(CPConstants.SERVICE_NAME_CP_OPTION));
 	}
 
 	private static final String[] _SELECTED_FIELD_NAMES = {

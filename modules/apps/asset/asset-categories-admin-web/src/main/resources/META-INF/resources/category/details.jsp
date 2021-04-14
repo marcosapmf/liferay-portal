@@ -94,7 +94,7 @@ renderResponse.setTitle(title);
 														<div class="input-group-item">
 															<c:if test="<%= parentCategory != null %>">
 																<clay:label
-																	closeable="<%= true %>"
+																	dismissible="<%= true %>"
 																	label="<%= parentCategory.getTitle(locale) %>"
 																/>
 
@@ -212,7 +212,7 @@ renderResponse.setTitle(title);
 					);
 					cancelButton.setAttribute('type', 'button');
 					cancelButton.innerText = '<liferay-ui:message key="cancel" />';
-					cancelButton.addEventListener('click', function () {
+					cancelButton.addEventListener('click', () => {
 						footer.get('boundingBox').all('.add-category-toolbar-button').hide();
 						Liferay.Util.navigate('<%= HtmlUtil.escapeJS(redirect) %>');
 					});
@@ -227,7 +227,7 @@ renderResponse.setTitle(title);
 					saveAndAddNewButton.setAttribute('type', 'submit');
 					saveAndAddNewButton.innerText =
 						'<liferay-ui:message key="save-and-add-a-new-one" />';
-					saveAndAddNewButton.addEventListener('click', function () {
+					saveAndAddNewButton.addEventListener('click', () => {
 						<portlet:namespace />saveAndAddNew();
 					});
 
@@ -240,7 +240,7 @@ renderResponse.setTitle(title);
 					);
 					submitButton.setAttribute('type', 'submit');
 					submitButton.innerText = '<liferay-ui:message key="save" />';
-					submitButton.addEventListener('click', function () {
+					submitButton.addEventListener('click', () => {
 						submitForm(document.querySelector('#<portlet:namespace />fm'));
 					});
 
@@ -254,7 +254,7 @@ renderResponse.setTitle(title);
 <aui:script>
 	function <portlet:namespace />saveAndAddNew() {
 		document.querySelector('#<portlet:namespace />redirect').value =
-			'<%= currentURL %>';
+			'<%= assetCategoriesDisplayContext.getAddCategoryRedirect() %>';
 
 		submitForm(document.querySelector('#<portlet:namespace />fm'));
 	}

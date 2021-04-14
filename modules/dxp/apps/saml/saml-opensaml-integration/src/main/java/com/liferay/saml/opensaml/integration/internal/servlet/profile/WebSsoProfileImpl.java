@@ -36,7 +36,8 @@ import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.constants.SamlWebKeys;
-import com.liferay.saml.opensaml.integration.SamlBinding;
+import com.liferay.saml.opensaml.integration.internal.binding.SamlBinding;
+import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributePublisherImpl;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributeResolverRegistry;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributeResolverSAMLContextImpl;
@@ -47,7 +48,6 @@ import com.liferay.saml.opensaml.integration.internal.resolver.SubjectAssertionC
 import com.liferay.saml.opensaml.integration.internal.resolver.UserResolverSAMLContextImpl;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
 import com.liferay.saml.opensaml.integration.internal.util.SamlUtil;
-import com.liferay.saml.opensaml.integration.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.resolver.AttributeResolver;
 import com.liferay.saml.opensaml.integration.resolver.NameIdResolver;
 import com.liferay.saml.opensaml.integration.resolver.UserResolver;
@@ -1156,9 +1156,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		AuthnStatement authnStatement = OpenSamlUtil.buildAuthnStatement();
 
-		AuthnContext authnContext = getSuccessAuthnContext();
-
-		authnStatement.setAuthnContext(authnContext);
+		authnStatement.setAuthnContext(getSuccessAuthnContext());
 
 		authnStatement.setAuthnInstant(assertion.getIssueInstant());
 		authnStatement.setSessionIndex(
@@ -1281,9 +1279,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		StatusCode statusCode = OpenSamlUtil.buildStatusCode(
 			StatusCode.SUCCESS);
 
-		Status status = OpenSamlUtil.buildStatus(statusCode);
-
-		response.setStatus(status);
+		response.setStatus(OpenSamlUtil.buildStatus(statusCode));
 
 		response.setVersion(SAMLVersion.VERSION_20);
 
@@ -1508,9 +1504,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		StatusCode statusCode = OpenSamlUtil.buildStatusCode(statusURI);
 
-		Status status = OpenSamlUtil.buildStatus(statusCode);
-
-		response.setStatus(status);
+		response.setStatus(OpenSamlUtil.buildStatus(statusCode));
 
 		outboundMessageContext.setMessage(response);
 
@@ -1769,6 +1763,11 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 				samlPeerEntityContext.getEntityId());
 		}
 		catch (NoSuchIdpSpSessionException noSuchIdpSpSessionException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					noSuchIdpSpSessionException, noSuchIdpSpSessionException);
+			}
+
 			_samlIdpSpSessionLocalService.addSamlIdpSpSession(
 				samlIdpSsoSession.getSamlIdpSsoSessionId(),
 				samlPeerEntityContext.getEntityId(), nameID.getFormat(),

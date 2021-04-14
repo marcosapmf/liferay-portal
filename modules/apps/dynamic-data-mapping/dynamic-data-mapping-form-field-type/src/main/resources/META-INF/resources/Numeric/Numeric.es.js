@@ -20,9 +20,18 @@ import vanillaTextMask from 'vanilla-text-mask';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 
+const getGenericValue = (symbols, value) => {
+	if (typeof value === 'number' || !symbols) {
+		return value;
+	}
+
+	return value.replace(symbols.decimalSymbol, '$[DECIMAL_SYMBOL]');
+};
+
 const getMaskConfig = (dataType, symbols) => {
 	let config = {
 		allowLeadingZeroes: true,
+		allowNegative: true,
 		includeThousandsSeparator: false,
 		prefix: '',
 	};
@@ -37,6 +46,32 @@ const getMaskConfig = (dataType, symbols) => {
 	}
 
 	return config;
+};
+
+const getValue = (dataType, symbols, value) => {
+	let decimalSymbol = symbols.decimalSymbol;
+
+	let newValue;
+
+	if (typeof value === 'number') {
+		newValue = `${value}`;
+		newValue = newValue.replace('.', decimalSymbol);
+	}
+	else {
+		newValue = value;
+	}
+
+	if (newValue && !newValue.includes('.') && decimalSymbol != ',') {
+		decimalSymbol = ',';
+	}
+
+	newValue = newValue.replace('$[DECIMAL_SYMBOL]', decimalSymbol);
+
+	if (dataType === 'integer' && newValue) {
+		newValue = String(Math.round(newValue.replace(decimalSymbol, '.')));
+	}
+
+	return newValue;
 };
 
 const Numeric = ({
@@ -58,21 +93,30 @@ const Numeric = ({
 	const inputRef = useRef(null);
 
 	const prevEditingLanguageId = usePrevious(editingLanguageId);
+	const prevSymbols = usePrevious(symbols);
 
 	useEffect(() => {
 		if (prevEditingLanguageId !== editingLanguageId && localizable) {
-			const newValue =
+			let newValue =
 				localizedValue[editingLanguageId] !== undefined
 					? localizedValue[editingLanguageId]
-					: localizedValue[defaultLanguageId];
+					: getGenericValue(
+							prevSymbols,
+							localizedValue[defaultLanguageId]
+					  );
+
+			newValue = getValue(dataType, symbols, newValue);
+
 			setCurrentValue(newValue);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		defaultLanguageId,
 		editingLanguageId,
 		localizable,
 		localizedValue,
 		prevEditingLanguageId,
+		prevSymbols,
 		setCurrentValue,
 	]);
 
@@ -80,23 +124,7 @@ const Numeric = ({
 		let maskInstance = null;
 
 		if (inputRef.current) {
-			let newValue = value;
-
-			let decimalSymbol = symbols.decimalSymbol;
-
-			if (
-				newValue &&
-				!newValue.includes('.') &&
-				symbols.decimalSymbol != ','
-			) {
-				decimalSymbol = ',';
-			}
-
-			if (dataType === 'integer' && value) {
-				newValue = String(
-					Math.round(newValue.replace(decimalSymbol, '.'))
-				);
-			}
+			const newValue = getValue(dataType, symbols, value);
 
 			const mask = createNumberMask(getMaskConfig(dataType, symbols));
 
@@ -121,7 +149,9 @@ const Numeric = ({
 	return (
 		<ClayInput
 			{...otherProps}
+			dir={Liferay.Language.direction[editingLanguageId]}
 			disabled={disabled}
+			lang={editingLanguageId}
 			onChange={(event) => {
 				const {value: newValue} = event.target;
 
@@ -157,34 +187,45 @@ const Main = ({
 	predefinedValue = '',
 	readOnly,
 	symbols,
-	value,
+	value = '',
 	...otherProps
-}) => (
-	<FieldBase
-		{...otherProps}
-		id={id}
-		localizedValue={localizedValue}
-		name={name}
-		readOnly={readOnly}
-	>
-		<Numeric
-			dataType={dataType}
-			defaultLanguageId={defaultLanguageId}
-			disabled={readOnly}
-			editingLanguageId={editingLanguageId}
-			id={id ? id : name}
-			localizable={localizable}
+}) => {
+	const [edited, setEdited] = useState(false);
+
+	return (
+		<FieldBase
+			{...otherProps}
+			id={id}
 			localizedValue={localizedValue}
 			name={name}
-			onBlur={onBlur}
-			onChange={onChange}
-			onFocus={onFocus}
-			placeholder={placeholder}
-			symbols={symbols}
-			value={value ? value : predefinedValue}
-		/>
-	</FieldBase>
-);
+			readOnly={readOnly}
+		>
+			<Numeric
+				dataType={dataType}
+				defaultLanguageId={defaultLanguageId}
+				disabled={readOnly}
+				editingLanguageId={editingLanguageId}
+				id={id}
+				localizable={localizable}
+				localizedValue={localizedValue}
+				name={name}
+				onBlur={onBlur}
+				onChange={(event) => {
+					if (!edited) {
+						setEdited(true);
+					}
+
+					onChange(event);
+				}}
+				onFocus={onFocus}
+				placeholder={placeholder}
+				predefinedValue={predefinedValue}
+				symbols={symbols}
+				value={edited || value ? value : predefinedValue}
+			/>
+		</FieldBase>
+	);
+};
 
 Main.displayName = 'Numeric';
 

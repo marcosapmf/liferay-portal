@@ -33,7 +33,11 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.portlet.InvokerPortlet;
+import com.liferay.portal.kernel.portlet.LiferayRenderRequest;
+import com.liferay.portal.kernel.portlet.LiferayRenderResponse;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
+import com.liferay.portal.kernel.portlet.PortletInstanceFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletLocalService;
@@ -44,14 +48,20 @@ import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.RenderRequestFactory;
+import com.liferay.portlet.RenderResponseFactory;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -63,7 +73,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/add_portlet"
+		"mvc.command.name=/layout_content_page_editor/add_portlet"
 	},
 	service = MVCActionCommand.class
 )
@@ -92,7 +102,7 @@ public class AddPortletMVCActionCommand
 				themeDisplay.getPlid(),
 				layoutStructure -> {
 					LayoutStructureItem layoutStructureItem =
-						layoutStructure.addFragmentLayoutStructureItem(
+						layoutStructure.addFragmentStyledLayoutStructureItem(
 							fragmentEntryLinkId, parentItemId, position);
 
 					jsonObject.put(
@@ -169,10 +179,35 @@ public class AddPortletMVCActionCommand
 		JSONObject jsonObject = addFragmentEntryLinkToLayoutData(
 			actionRequest, fragmentEntryLink.getFragmentEntryLinkId());
 
+		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
+			actionRequest);
+
+		Portlet portlet = _portletLocalService.getPortletById(portletId);
+
+		InvokerPortlet invokerPortlet = PortletInstanceFactoryUtil.create(
+			portlet, httpServletRequest.getServletContext());
+
+		LiferayRenderRequest liferayRenderRequest = RenderRequestFactory.create(
+			httpServletRequest, portlet, invokerPortlet,
+			actionRequest.getPortletContext(), actionRequest.getWindowState(),
+			actionRequest.getPortletMode(), actionRequest.getPreferences(),
+			themeDisplay.getPlid());
+
+		httpServletRequest.setAttribute(
+			JavaConstants.JAVAX_PORTLET_REQUEST, liferayRenderRequest);
+
+		LiferayRenderResponse liferayRenderResponse =
+			RenderResponseFactory.create(
+				_portal.getHttpServletResponse(actionResponse),
+				liferayRenderRequest);
+
+		httpServletRequest.setAttribute(
+			JavaConstants.JAVAX_PORTLET_RESPONSE, liferayRenderResponse);
+
 		return jsonObject.put(
 			"fragmentEntryLink",
 			FragmentEntryLinkUtil.getFragmentEntryLinkJSONObject(
-				actionRequest, actionResponse,
+				liferayRenderRequest, liferayRenderResponse,
 				_fragmentEntryConfigurationParser, fragmentEntryLink,
 				_fragmentCollectionContributorTracker,
 				_fragmentRendererController, _fragmentRendererTracker,
@@ -226,6 +261,9 @@ public class AddPortletMVCActionCommand
 
 	@Reference
 	private ItemSelector _itemSelector;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private PortletLocalService _portletLocalService;

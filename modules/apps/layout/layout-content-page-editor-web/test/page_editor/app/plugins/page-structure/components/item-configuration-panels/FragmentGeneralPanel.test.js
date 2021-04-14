@@ -21,7 +21,6 @@ import '@testing-library/jest-dom/extend-expect';
 import {cleanup, fireEvent, render} from '@testing-library/react';
 
 import {VIEWPORT_SIZES} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
-import {config} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/index';
 import FragmentService from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/services/FragmentService';
 import {StoreAPIContextProvider} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/app/store/index';
 import {FragmentGeneralPanel} from '../../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/page-structure/components/item-configuration-panels/FragmentGeneralPanel';
@@ -30,11 +29,36 @@ jest.mock(
 	'../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
 	() => ({
 		config: {
+			availableLanguages: {
+				ar_SA: {
+					default: false,
+					displayName: 'Arabic (Saudi Arabia)',
+					languageIcon: 'ar-sa',
+					languageId: 'ar_SA',
+					w3cLanguageId: 'ar-SA',
+				},
+				en_US: {
+					default: false,
+					displayName: 'English (United States)',
+					languageIcon: 'en-us',
+					languageId: 'en_US',
+					w3cLanguageId: 'en-US',
+				},
+				es_ES: {
+					default: true,
+					displayName: 'Spanish (Spain)',
+					languageIcon: 'es-es',
+					languageId: 'es_ES',
+					w3cLanguageId: 'es-ES',
+				},
+			},
 			availableViewportSizes: {
 				desktop: {label: 'Desktop', sizeId: 'desktop'},
 				mobile: {label: 'Mobile', sizeId: 'mobile'},
 				tablet: {label: 'Tablet', sizeId: 'tablet'},
 			},
+			defaultLanguageId: 'es_ES',
+			defaultSegmentsExperienceId: '0',
 		},
 	})
 );
@@ -54,7 +78,7 @@ jest.mock(
 
 const FRAGMENT_ENTRY_LINK_ID = '1';
 
-const defaultFragmentEntryLink = {
+const defaultFragmentEntryLink = (localizable = false) => ({
 	comments: [],
 	configuration: {
 		fieldSets: [
@@ -65,6 +89,7 @@ const defaultFragmentEntryLink = {
 						defaultValue: 'h1',
 						description: '',
 						label: 'Heading Level',
+						localizable,
 						name: 'headingLevel',
 						type: 'select',
 						typeOptions: {
@@ -90,7 +115,7 @@ const defaultFragmentEntryLink = {
 	},
 	fragmentEntryLinkId: FRAGMENT_ENTRY_LINK_ID,
 	name: 'Heading',
-};
+});
 
 const item = {
 	children: [],
@@ -110,10 +135,43 @@ const mockDispatch = jest.fn((a) => {
 
 const renderGeneralPanel = ({
 	segmentsExperienceId,
-	fragmentEntryLink = defaultFragmentEntryLink,
+	fragmentEntryLink = defaultFragmentEntryLink(),
 }) => {
 	const state = {
+		availableSegmentsExperiences: {
+			0: {
+				hasLockedSegmentsExperiment: false,
+				name: 'Default Experience',
+				priority: -1,
+				segmentsEntryId: 'test-segment-id-00',
+				segmentsExperienceId: '0',
+				segmentsExperimentStatus: undefined,
+				segmentsExperimentURL: 'https//:default-experience.com',
+			},
+			1: {
+				hasLockedSegmentsExperiment: false,
+				languageIds: ['es_ES', 'en_US'],
+				name: 'Experience #1',
+				priority: 3,
+				segmentsEntryId: 'test-segment-id-00',
+				segmentsExperienceId: 'test-experience-id-01',
+				segmentsExperimentStatus: undefined,
+				segmentsExperimentURL: 'https//:experience-1.com',
+			},
+			2: {
+				hasLockedSegmentsExperiment: false,
+				languageIds: ['es_ES', 'en_US', 'ar_SA'],
+				name: 'Experience #2',
+				priority: 1,
+				segmentsEntryId: 'test-segment-id-01',
+				segmentsExperienceId: 'test-experience-id-02',
+				segmentsExperimentStatus: undefined,
+				segmentsExperimentURL: 'https//:experience-2.com',
+			},
+		},
+		defaultSegmentsExperienceId: '0',
 		fragmentEntryLinks: {[FRAGMENT_ENTRY_LINK_ID]: fragmentEntryLink},
+		languageId: 'en_US',
 		segmentsExperienceId,
 		selectedViewportSize: VIEWPORT_SIZES.desktop,
 	};
@@ -134,8 +192,6 @@ describe('FragmentGeneralPanel', () => {
 	});
 
 	it('does not prefix values with segments if we do not have experiences', async () => {
-		config.defaultSegmentsExperienceId = null;
-
 		const {getByLabelText} = renderGeneralPanel({
 			segmentsExperienceId: null,
 		});
@@ -158,9 +214,20 @@ describe('FragmentGeneralPanel', () => {
 		);
 	});
 
-	it('prefix values with segments when we have experiences', async () => {
-		config.defaultSegmentsExperienceId = '2';
+	it('does not show flag icon when localizable property is false', async () => {
+		const {getByLabelText} = renderGeneralPanel({
+			fragmentEntryLink: defaultFragmentEntryLink(false),
+			segmentsExperienceId: null,
+		});
 
+		const input = getByLabelText('Heading Level');
+
+		const wrapperDiv = input.parentElement.parentElement.parentElement;
+
+		expect(wrapperDiv.querySelector('.sr-only')).toBeNull();
+	});
+
+	it('prefix values with segments when we have experiences', async () => {
 		const {getByLabelText} = renderGeneralPanel({
 			segmentsExperienceId: '1',
 		});
@@ -184,8 +251,6 @@ describe('FragmentGeneralPanel', () => {
 	});
 
 	it('prefix values with default experience when segmentsExperience is null', async () => {
-		config.defaultSegmentsExperienceId = '2';
-
 		const {getByLabelText} = renderGeneralPanel({
 			segmentsExperienceId: null,
 		});
@@ -209,8 +274,6 @@ describe('FragmentGeneralPanel', () => {
 	});
 
 	it('merges configuration values when a new one is added', async () => {
-		config.defaultSegmentsExperienceId = '0';
-
 		const fragmentEntryLink = {
 			comments: [],
 			configuration: {
@@ -281,5 +344,18 @@ describe('FragmentGeneralPanel', () => {
 				},
 			})
 		);
+	});
+
+	it('shows corresponding flag icon when localizable property is true', async () => {
+		const {getByLabelText} = renderGeneralPanel({
+			fragmentEntryLink: defaultFragmentEntryLink(true),
+			segmentsExperienceId: null,
+		});
+
+		const input = getByLabelText('Heading Level');
+
+		const wrapperDiv = input.parentElement.parentElement.parentElement;
+
+		expect(wrapperDiv.querySelector('.sr-only')).toHaveTextContent('en-US');
 	});
 });

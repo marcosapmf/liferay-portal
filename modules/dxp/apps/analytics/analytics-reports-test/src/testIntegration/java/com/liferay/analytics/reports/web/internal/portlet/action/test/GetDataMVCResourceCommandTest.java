@@ -16,7 +16,6 @@ package com.liferay.analytics.reports.web.internal.portlet.action.test;
 
 import com.liferay.analytics.reports.test.MockObject;
 import com.liferay.analytics.reports.test.analytics.reports.info.item.MockAnalyticsReportsInfoItem;
-import com.liferay.analytics.reports.test.info.item.provider.MockInfoItemFieldValuesProvider;
 import com.liferay.analytics.reports.test.layout.display.page.MockLayoutDisplayPageProvider;
 import com.liferay.analytics.reports.test.util.MockContextUtil;
 import com.liferay.analytics.reports.web.internal.portlet.action.test.util.MockThemeDisplayUtil;
@@ -99,13 +98,6 @@ public class GetDataMVCResourceCommandTest {
 			).analyticsReportsInfoItem(
 				MockAnalyticsReportsInfoItem.builder(
 				).build()
-			).infoItemFieldValuesProvider(
-				MockInfoItemFieldValuesProvider.builder(
-				).authorName(
-					RandomTestUtil.randomString()
-				).authorProfileImage(
-					RandomTestUtil.randomString() + "?img_id=0"
-				).build()
 			).layoutDisplayPageProvider(
 				MockLayoutDisplayPageProvider.builder(
 					_classNameLocalService
@@ -158,21 +150,18 @@ public class GetDataMVCResourceCommandTest {
 				_classNameLocalService
 			).analyticsReportsInfoItem(
 				MockAnalyticsReportsInfoItem.builder(
-				).publishDate(
-					publishDate
-				).build()
-			).infoItemFieldValuesProvider(
-				MockInfoItemFieldValuesProvider.builder(
 				).authorName(
 					authorName
 				).authorProfileImage(
 					authorProfileImage
+				).publishDate(
+					publishDate
+				).title(
+					title
 				).build()
 			).layoutDisplayPageProvider(
 				MockLayoutDisplayPageProvider.builder(
 					_classNameLocalService
-				).title(
-					title
 				).build()
 			).build(),
 			() -> {
@@ -233,7 +222,6 @@ public class GetDataMVCResourceCommandTest {
 
 				Assert.assertEquals(
 					Boolean.TRUE, viewURLJSONObject.getBoolean("default"));
-
 				Assert.assertEquals(
 					LocaleUtil.toBCP47LanguageId(LocaleUtil.getDefault()),
 					viewURLJSONObject.getString("languageId"));
@@ -281,7 +269,6 @@ public class GetDataMVCResourceCommandTest {
 
 				Assert.assertEquals(
 					Boolean.TRUE, viewURLJSONObject.getBoolean("default"));
-
 				Assert.assertEquals(
 					LocaleUtil.toBCP47LanguageId(LocaleUtil.getDefault()),
 					viewURLJSONObject.getString("languageId"));
@@ -385,6 +372,11 @@ public class GetDataMVCResourceCommandTest {
 					_group, _layout,
 					_layoutSetLocalService.getLayoutSet(
 						_group.getGroupId(), false)));
+			mockLiferayResourceRequest.setParameter(
+				"classNameId",
+				String.valueOf(
+					_classNameLocalService.getClassNameId(
+						MockObject.class.getName())));
 
 			return mockLiferayResourceRequest;
 		}

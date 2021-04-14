@@ -40,16 +40,38 @@ export default {
 	 * @param {function} options.dispatch
 	 */
 	createExperience({body, dispatch}) {
-		const {name, segmentsEntryId} = body;
+		const {languageIds, name, segmentsEntryId} = body;
 
 		const payload = {
 			active: true,
+			languageIds,
 			name,
 			segmentsEntryId,
 		};
 
 		return serviceFetch(
 			config.addSegmentsExperienceURL,
+			{body: payload},
+			dispatch
+		);
+	},
+
+	/**
+	 * Asks backend to duplicate an experience
+	 * @param {object} options
+	 * @param {object} options.body
+	 * @param {string} options.body.segmentsExperienceId Id of the experience to be duplicated
+	 * @param {function} options.dispatch
+	 */
+	duplicateExperience({body, dispatch}) {
+		const {segmentsExperienceId} = body;
+
+		const payload = {
+			segmentsExperienceId,
+		};
+
+		return serviceFetch(
+			config.duplicateSegmentsExperienceURL,
 			{body: payload},
 			dispatch
 		);
@@ -65,13 +87,9 @@ export default {
 	removeExperience({body, dispatch}) {
 		const {segmentsExperienceId} = body;
 
-		const payload = {
-			segmentsExperienceId,
-		};
-
 		return serviceFetch(
 			config.deleteSegmentsExperienceURL,
-			{body: payload},
+			{body: {segmentsExperienceId}},
 			dispatch
 		);
 	},
@@ -95,9 +113,18 @@ export default {
 	 * @param {function} options.dispatch
 	 */
 	updateExperience({body, dispatch}) {
+		const {languageIds, name, segmentsEntryId, segmentsExperienceId} = body;
+
+		const payload = {
+			languageIds,
+			name,
+			segmentsEntryId,
+			segmentsExperienceId,
+		};
+
 		return serviceFetch(
 			config.updateSegmentsExperienceURL,
-			{body},
+			{body: payload},
 			dispatch
 		);
 	},

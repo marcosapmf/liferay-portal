@@ -75,22 +75,22 @@ const getFieldTypes = ({
 
 	const setDefinitionField = (
 		{
-			customProperties,
+			customProperties = {},
 			fieldType,
 			label,
 			name,
+			required,
 			nestedDataDefinitionFields = [],
 			repeatable,
 			showLabel,
 		},
 		nested
 	) => {
-		const {ddmStructureId} = customProperties;
-
 		if (fieldType === 'section') {
 			return;
 		}
 
+		const {ddmStructureId} = customProperties;
 		const fieldTypeSettings = fieldTypes.find(({name}) => {
 			return name === fieldType;
 		});
@@ -126,7 +126,7 @@ const getFieldTypes = ({
 				? DragTypes.DRAG_FIELDSET
 				: DragTypes.DRAG_DATA_DEFINITION_FIELD,
 			icon: fieldTypeSettings.icon,
-			isCustomField: !customProperties['nativeField'],
+			isCustomField: !customProperties.nativeField,
 			isFieldSet,
 			...(isFieldGroup && {
 				fieldSet: getFieldSet({
@@ -147,6 +147,7 @@ const getFieldTypes = ({
 			nestedDataDefinitionFields: nestedDataDefinitionFields.map(
 				(nestedField) => setDefinitionField(nestedField, true)
 			),
+			required,
 		};
 
 		if (nested) {
@@ -175,14 +176,14 @@ const FieldCategory = ({categoryName}) => (
 		<div className="autofit-row autofit-row-center">
 			<>
 				<div className="autofit-col autofit-col-expand">
-					<h3 className="category-text">{categoryName}</h3>
+					<span className="category-text">{categoryName}</span>
 				</div>
 			</>
 		</div>
 	</div>
 );
 
-export default ({keywords}) => {
+const CustomObjectFieldsList = ({keywords}) => {
 	const [dataLayoutBuilder] = useContext(DataLayoutBuilderContext);
 	const [state, dispatch] = useContext(FormViewContext);
 	const {dataDefinition, fieldSets} = state;
@@ -281,7 +282,9 @@ export default ({keywords}) => {
 
 			<FieldTypeList
 				{...fieldTypeListProps}
+				dataDefinition={dataDefinition}
 				fieldTypes={customFieldTypes}
+				showEmptyState={false}
 			/>
 
 			{showCategories && (
@@ -292,8 +295,13 @@ export default ({keywords}) => {
 
 			<FieldTypeList
 				{...fieldTypeListProps}
+				dataDefinition={dataDefinition}
 				fieldTypes={nativeFieldTypes}
+				showEmptyState={false}
 			/>
 		</>
 	);
 };
+
+CustomObjectFieldsList.displayName = 'CustomObjectFieldsList';
+export default CustomObjectFieldsList;

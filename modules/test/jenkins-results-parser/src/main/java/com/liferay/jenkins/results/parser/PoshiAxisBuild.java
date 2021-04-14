@@ -27,7 +27,7 @@ import org.json.JSONObject;
 public class PoshiAxisBuild extends AxisBuild {
 
 	@Override
-	public List<TestResult> getTestResults(String testStatus) {
+	public List<TestResult> getTestResults() {
 		String status = getStatus();
 
 		if ((status == null) || !status.equals("completed")) {
@@ -39,7 +39,7 @@ public class PoshiAxisBuild extends AxisBuild {
 		String result = getResult();
 
 		if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
-			testResults.addAll(super.getTestResults(testStatus));
+			testResults.addAll(super.getTestResults());
 		}
 
 		List<String> existingTestNames = new ArrayList<>();
@@ -88,15 +88,14 @@ public class PoshiAxisBuild extends AxisBuild {
 	}
 
 	private List<String> _getPoshiTestNames() {
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-		BuildDatabase buildDatabase = topLevelBuild.getBuildDatabase();
-
 		List<String> poshiTestNames = new ArrayList<>();
 
-		if (buildDatabase == null) {
+		if (fromArchive) {
 			return poshiTestNames;
 		}
+
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
+			getTopLevelBuild());
 
 		Properties startProperties = buildDatabase.getProperties(
 			getJobVariant() + "/start.properties");

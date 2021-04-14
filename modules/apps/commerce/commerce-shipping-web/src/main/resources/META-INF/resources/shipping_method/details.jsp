@@ -26,12 +26,9 @@ long commerceShippingMethodId = 0;
 if (commerceShippingMethod != null) {
 	commerceShippingMethodId = commerceShippingMethod.getCommerceShippingMethodId();
 }
-
-String name = BeanParamUtil.getString(commerceShippingMethod, request, "name", commerceShippingMethodsDisplayContext.getCommerceShippingMethodEngineName(locale));
-String description = BeanParamUtil.getString(commerceShippingMethod, request, "description", commerceShippingMethodsDisplayContext.getCommerceShippingMethodEngineDescription(locale));
 %>
 
-<portlet:actionURL name="editCommerceShippingMethod" var="editCommerceShippingMethodActionURL" />
+<portlet:actionURL name="/commerce_shipping_methods/edit_commerce_shipping_method" var="editCommerceShippingMethodActionURL" />
 
 <aui:form action="<%= editCommerceShippingMethodActionURL %>" enctype="multipart/form-data" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commerceShippingMethodId <= 0) ? Constants.ADD : Constants.UPDATE %>" />
@@ -50,11 +47,11 @@ String description = BeanParamUtil.getString(commerceShippingMethod, request, "d
 	</c:if>
 
 	<commerce-ui:panel>
-		<aui:input autoFocus="<%= true %>" label="name" localized="<%= true %>" name="nameMapAsXML" type="text" value="<%= name %>">
+		<aui:input autoFocus="<%= true %>" label="name" localized="<%= true %>" name="nameMapAsXML" type="text" value='<%= BeanParamUtil.getString(commerceShippingMethod, request, "name", commerceShippingMethodsDisplayContext.getCommerceShippingMethodEngineName(locale)) %>'>
 			<aui:validator name="required" />
 		</aui:input>
 
-		<aui:input label="description" localized="<%= true %>" name="descriptionMapAsXML" type="text" value="<%= description %>" />
+		<aui:input label="description" localized="<%= true %>" name="descriptionMapAsXML" type="text" value='<%= BeanParamUtil.getString(commerceShippingMethod, request, "description", commerceShippingMethodsDisplayContext.getCommerceShippingMethodEngineDescription(locale)) %>' />
 
 		<aui:model-context bean="<%= commerceShippingMethod %>" model="<%= CommerceShippingMethod.class %>" />
 
@@ -78,7 +75,7 @@ String description = BeanParamUtil.getString(commerceShippingMethod, request, "d
 
 		<aui:input name="priority" />
 
-		<aui:input checked="<%= (commerceShippingMethod == null) ? false : commerceShippingMethod.isActive() %>" name="active" type="toggle-switch" />
+		<aui:input checked="<%= (commerceShippingMethod == null) ? false : commerceShippingMethod.isActive() %>" inlineLabel="right" labelCssClass="simple-toggle-switch" name="active" type="toggle-switch" />
 	</commerce-ui:panel>
 
 	<aui:button-row>

@@ -38,8 +38,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,7 +51,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,7 +75,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = HtmlPreviewEntryPersistence.class)
+@Component(service = {HtmlPreviewEntryPersistence.class, BasePersistence.class})
 public class HtmlPreviewEntryPersistenceImpl
 	extends BasePersistenceImpl<HtmlPreviewEntry>
 	implements HtmlPreviewEntryPersistence {
@@ -180,8 +180,7 @@ public class HtmlPreviewEntryPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_C_C, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByG_C_C, finderArgs);
 		}
 
 		if (result instanceof HtmlPreviewEntry) {
@@ -305,7 +304,7 @@ public class HtmlPreviewEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, classNameId, classPK};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -416,9 +415,7 @@ public class HtmlPreviewEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(HtmlPreviewEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(HtmlPreviewEntryImpl.class);
 	}
 
 	/**
@@ -443,9 +440,7 @@ public class HtmlPreviewEntryPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(HtmlPreviewEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(HtmlPreviewEntryImpl.class, primaryKey);
@@ -461,10 +456,9 @@ public class HtmlPreviewEntryPersistenceImpl
 			htmlPreviewEntryModelImpl.getClassPK()
 		};
 
+		finderCache.putResult(_finderPathCountByG_C_C, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByG_C_C, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByG_C_C, args, htmlPreviewEntryModelImpl, false);
+			_finderPathFetchByG_C_C, args, htmlPreviewEntryModelImpl);
 	}
 
 	/**
@@ -789,7 +783,7 @@ public class HtmlPreviewEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<HtmlPreviewEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -859,7 +853,7 @@ public class HtmlPreviewEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -915,29 +909,28 @@ public class HtmlPreviewEntryPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new HtmlPreviewEntryModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", HtmlPreviewEntry.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathFetchByG_C_C = _createFinderPath(
+		_finderPathFetchByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, true);
 
-		_finderPathCountByG_C_C = _createFinderPath(
+		_finderPathCountByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
@@ -950,12 +943,6 @@ public class HtmlPreviewEntryPersistenceImpl
 		entityCache.removeCache(HtmlPreviewEntryImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -1015,36 +1002,13 @@ public class HtmlPreviewEntryPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		HtmlPreviewEntryPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(PreviewPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class HtmlPreviewEntryModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1095,6 +1059,16 @@ public class HtmlPreviewEntryPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return HtmlPreviewEntryImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return HtmlPreviewEntryTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

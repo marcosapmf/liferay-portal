@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
+
 	var workflowAssetType = "Web Content Article";
 
 	setUp {
@@ -90,7 +91,6 @@ definition {
 
 	@priority = "3"
 	test WithdrawTaskAssignedToMeByDetails {
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 
@@ -146,7 +146,6 @@ definition {
 
 	@priority = "4"
 	test WithdrawTaskAssignedToMyRolesByActions {
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 
@@ -239,7 +238,6 @@ definition {
 
 	@priority = "4"
 	test WithdrawTaskCompletedNoByActions {
-
 		var webContentContent = "WC WebContent Content";
 		var webContentTitle = "WC WebContent Title";
 

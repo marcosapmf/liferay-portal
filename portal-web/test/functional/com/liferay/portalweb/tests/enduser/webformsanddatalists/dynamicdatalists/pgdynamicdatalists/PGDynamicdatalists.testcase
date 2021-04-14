@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Dynamic Data Lists";
+
 	var pageName = "Dynamic Data Lists Display Page";
 	var portletName = "Dynamic Data Lists Display";
 
@@ -44,6 +45,8 @@ definition {
 
 	@priority = "3"
 	test AddFormTemplate {
+		property portal.upstream = "quarantine";
+
 		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
 
 		DDLList.addViaDDLDisplayPG();
@@ -310,6 +313,7 @@ definition {
 	@priority = "3"
 	test AddVelocityDisplayTemplate {
 		property custom.properties = "freemarker.engine.restricted.variables=${line.separator}restricted.variables=";
+		property portal.upstream = "quarantine";
 
 		var ddlDisplayTemplateScript = '''
 				#set ($records = $ddlDisplayTemplateHelper.getRecords($reserved_record_set_id))${line.separator}${line.separator}
@@ -706,6 +710,14 @@ definition {
 
 		PortletEntry.publish();
 
+		SitePages.configurePage(
+			columnName = "1 Column",
+			pageName = "Dynamic Data Lists Display Page",
+			privacy = "Public Pages",
+			sitePageType = "Widget Page");
+
+		Navigator.gotoPage(pageName = "Dynamic Data Lists Display Page");
+
 		DDLRecord.viewViaDDLDisplayPG(
 			ddlListName = "List Name",
 			ddlRecordFieldData = "Text Edit",
@@ -1061,8 +1073,12 @@ definition {
 
 	@priority = "3"
 	test ViewDateFieldPredefinedValue {
-		property portal.upstream = "quarantine";
 		property custom.properties = "default.layout.template.id=1_column";
+		property portal.upstream = "quarantine";
+
+		var currentDateYear = DateUtil.getCurrentYear();
+		var currentDatelastYear = ${currentDateYear} - 1;
+		var currentDatelastYearShort = StringUtil.substring("${currentDatelastYear}", "2", "4");
 
 		Navigator.openURL();
 
@@ -1081,10 +1097,10 @@ definition {
 			field = "Date",
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
-			fieldPredefinedValue = "09/01/2019",
+			fieldPredefinedValue = "09/01/${currentDatelastYear}",
 			fieldPredefinedValueDay = "1",
 			fieldPredefinedValueMonth = "September",
-			fieldPredefinedValueYear = "2019");
+			fieldPredefinedValueYear = "${currentDatelastYear}");
 
 		DDLDataDefinition.save();
 
@@ -1106,14 +1122,14 @@ definition {
 			field = "Date",
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
-			fieldPredefinedValue = "09/01/2019");
+			fieldPredefinedValue = "09/01/${currentDatelastYear}");
 
 		PortletEntry.publish();
 
 		DDLRecord.viewViaDDLDisplayPG(
 			ddlListName = "List Name",
-			ddlRecordFieldData = "9/1/2019",
-			ddlRecordFieldData_1 = "9/1/19",
+			ddlRecordFieldData = "9/1/${currentDatelastYear}",
+			ddlRecordFieldData_1 = "9/1/${currentDatelastYearShort}",
 			field = "Date",
 			fieldFieldLabel = "Date");
 
@@ -1127,10 +1143,10 @@ definition {
 			field = "Date",
 			fieldFieldLabel = "Date",
 			fieldName = "Date",
-			fieldPredefinedValue = "09/01/2019");
+			fieldPredefinedValue = "09/01/${currentDatelastYear}");
 
 		DDLRecord.populateFieldDate(
-			ddlRecordFieldData = "05/13/2019",
+			ddlRecordFieldData = "05/13/${currentDatelastYear}",
 			fieldFieldLabel = "Date",
 			fieldName = "Date");
 
@@ -1138,8 +1154,8 @@ definition {
 
 		DDLRecord.viewViaDDLDisplayPG(
 			ddlListName = "List Name",
-			ddlRecordFieldData = "5/13/2019",
-			ddlRecordFieldData_1 = "5/13/19",
+			ddlRecordFieldData = "5/13/${currentDatelastYear}",
+			ddlRecordFieldData_1 = "5/13/${currentDatelastYearShort}",
 			field = "Date",
 			fieldFieldLabel = "Date");
 	}
@@ -1410,6 +1426,7 @@ definition {
 			fieldFieldLabel = "Text");
 	}
 
+	@ignore = "true"
 	@priority = "5"
 	test ViewListRecordWithUploadedFreeMarkerDisplayTemplate {
 		property custom.properties = "freemarker.engine.restricted.variables=${line.separator}restricted.variables=";

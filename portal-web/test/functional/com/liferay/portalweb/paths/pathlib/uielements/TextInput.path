@@ -20,12 +20,12 @@
 </tr>
 <tr>
 	<td>ANSWER</td>
-	<td>//div[label[contains(.,'Answer')]]/input[@type='text']</td>
+	<td>//div[label[contains(.,'Answer')]]/input[@type='password']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>ANSWER_LOCALIZED</td>
-	<td>//div[label[contains(.,'${key_localizedAnswer}')]]/input[@type='text']</td>
+	<td>//div[label[contains(.,'${key_localizedAnswer}')]]/input[@type='password']</td>
 	<td></td>
 </tr>
 <tr>
@@ -56,6 +56,11 @@
 <tr>
 	<td>CUSTOM_CANONICAL_URL</td>
 	<td>//input[@type='text' and contains(@id,'canonicalURL')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CUSTOM_CANONICAL_URL_ENABLED</td>
+	<td>//input[contains(@placeholder,'${key_text}') and not(contains(@class,'disabled'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -106,6 +111,11 @@
 <tr>
 	<td>DATA_DEFINITION</td>
 	<td>//div[label[contains(.,'Data Definition')]]/input[@type='text']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DEPOT_ID</td>
+	<td>//input[contains(@id,'assetLibraryId')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -229,6 +239,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FILE_PRESENT</td>
+	<td>//input[contains(@class,'success-field')][@type='file']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FRIENDLY_URL</td>
 	<td>//input[contains(@id,'friendlyURL')]</td>
 	<td></td>
@@ -265,7 +280,7 @@
 </tr>
 <tr>
 	<td>IMAGE_DESCRIPTION</td>
-	<td>//label[contains(.,'Image Description')]/following-sibling::input</td>
+	<td>//label[contains(.,'Image Description')]/following-sibling::input | //input[@type='text' and contains(@placeholder,'Add image description')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -384,13 +399,23 @@
 	<td></td>
 </tr>
 <tr>
+	<td>NUMERIC</td>
+	<td>//label[contains(.,'Numeric')]/following-sibling::input[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NUMERIC_2</td>
+	<td>//div[@class="ddm-field"][2]//label[contains(.,'Numeric')]/following-sibling::input[1]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>OPEN_GRAPH_CUSTOM_TITLE</td>
 	<td>//div[input[contains(@id,'openGraphTitle')]]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>OPEN_GRAPH_CUSTOM_IMAGE_INPUT</td>
-	<td>//div[label[contains(.,'Image')]]//input[contains(@value,'${key_dmDocumentURL}')]</td>
+	<td>//div[label[contains(.,'Image')]]//input[contains(@value,'${key_dmDocumentURL}') and @readonly='true']</td>
 	<td></td>
 </tr>
 <tr>
@@ -494,6 +519,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SELECTOR_INPUT</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']/following-sibling::div//div[contains(@class,'input-group')]//input[contains(@type,'text')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SEO_META_TAGS_DESCRIPTION</td>
 	<td>//div[label[contains(.,'Description')]]//input</td>
 	<td></td>
@@ -525,7 +555,7 @@
 </tr>
 <tr>
 	<td>SEARCH</td>
-	<td>//input[contains(@title,'S') or contains(@title,'s')][contains(@title,'earch')] | //input[contains(@aria-label,'S') or contains(@title,'s')][contains(@aria-label,'earch')]</td>
+	<td>//input[contains(@title,'S') or contains(@title,'s')][contains(@title,'earch')] | //input[contains(@aria-label,'S') or contains(@title,'s')][contains(@aria-label,'earch')] | //input[contains(@name,'keywords')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -574,13 +604,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SPECIFIC_FIELD_REQUIRED_ALERT</td>
-	<td>//div[@data-fieldname='${key_fieldName}']//div[@class='required']</td>
+	<td>STREET_1</td>
+	<td>//div[label[contains(.,'Street 1')]]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
-	<td>STREET_1</td>
-	<td>//div[label[contains(.,'Street 1')]]//input[@type='text']</td>
+	<td>STREET_N</td>
+	<td>//div[label[contains(.,'Street ${key_streetNumber}')]]//input[@type='text']</td>
 	<td></td>
 </tr>
 <tr>
@@ -599,6 +629,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>TEXT_SPECIFIC</td>
+	<td>//label[contains(.,'Text')]/following-sibling::input[1]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>TITLE</td>
 	<td>//input[contains(@id,'title')]</td>
 	<td></td>
@@ -610,7 +645,7 @@
 </tr>
 <tr>
 	<td>TRANSLATIONS_TARGET_FIELD</td>
-	<td>//input[contains(@id,'${key_fieldName}') and (not(contains(@readonly,'true')))]</td>
+	<td>//div[contains(@class,'form-group') and contains(.,'${key_fieldName}')]//input[not(contains(@readonly,'true'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -631,6 +666,11 @@
 <tr>
 	<td>URL_REQUIRED</td>
 	<td>//div[contains(@id,'urlHelper')]/div[contains(@role,'alert')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VIDEO_URL</td>
+	<td>//input[contains(@id,'VideoExternalShortcutURL')]</td>
 	<td></td>
 </tr>
 <tr>

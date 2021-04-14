@@ -16,10 +16,17 @@ import {fetch} from 'frontend-js-web';
 import React, {useCallback, useEffect, useReducer} from 'react';
 
 import Navigation from './components/Navigation';
+import {ChartStateContextProvider} from './context/ChartStateContext';
 import ConnectionContext from './context/ConnectionContext';
-import {StoreContextProvider} from './context/store';
+import {StoreContextProvider} from './context/StoreContext';
 
 import '../css/analytics-reports-app.scss';
+
+const initialState = {
+	data: null,
+	error: null,
+	loading: false,
+};
 
 const dataReducer = (state, action) => {
 	switch (action.type) {
@@ -53,18 +60,18 @@ const dataReducer = (state, action) => {
 	}
 };
 
-const initialState = {
-	data: null,
-	error: null,
-	loading: false,
-};
-
 export default function ({context}) {
 	const {analyticsReportsDataURL} = context;
 
 	const isMounted = useIsMounted();
 
 	const [state, dispatch] = useReducer(dataReducer, initialState);
+
+	const safeDispatch = (action) => {
+		if (isMounted()) {
+			dispatch(action);
+		}
+	};
 
 	const getData = (fetchURL, timeSpanKey, timeSpanOffset) => {
 		safeDispatch({type: 'LOAD_DATA'});
@@ -94,20 +101,14 @@ export default function ({context}) {
 			});
 	};
 
-	const safeDispatch = (action) => {
-		if (isMounted()) {
-			dispatch(action);
-		}
-	};
-
 	useEffect(() => {
 		getData(analyticsReportsDataURL);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [analyticsReportsDataURL]);
 
 	const handleSelectedLanguageClick = useCallback(
-		(url, timeSpanOffset, timeSpanOption) => {
-			getData(url, timeSpanOffset, timeSpanOption);
+		(url, timeSpanKey, timeSpanOffset) => {
+			getData(url, timeSpanKey, timeSpanOffset);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[]
@@ -132,25 +133,29 @@ export default function ({context}) {
 						publishedToday: state.data.publishedToday,
 					}}
 				>
-					<div className="analytics-reports-app">
-						<Navigation
-							author={state.data.author}
-							canonicalURL={state.data.canonicalURL}
-							endpoints={state.data.endpoints}
-							languageTag={state.data.languageTag}
-							namespace={state.data.namespace}
-							onSelectedLanguageClick={
-								handleSelectedLanguageClick
-							}
-							page={state.data.page}
-							pagePublishDate={state.data.publishDate}
-							pageTitle={state.data.title}
-							timeRange={state.data.timeRange}
-							timeSpanKey={state.data.timeSpanKey}
-							timeSpanOptions={state.data.timeSpans}
-							viewURLs={state.data.viewURLs}
-						/>
-					</div>
+					<ChartStateContextProvider
+						publishDate={state.data.publishDate}
+						timeRange={state.data.timeRange}
+						timeSpanKey={state.data.timeSpanKey}
+					>
+						<div className="analytics-reports-app">
+							<Navigation
+								author={state.data.author}
+								canonicalURL={state.data.canonicalURL}
+								endpoints={state.data.endpoints}
+								languageTag={state.data.languageTag}
+								namespace={state.data.namespace}
+								onSelectedLanguageClick={
+									handleSelectedLanguageClick
+								}
+								page={state.data.page}
+								pagePublishDate={state.data.publishDate}
+								pageTitle={state.data.title}
+								timeSpanOptions={state.data.timeSpans}
+								viewURLs={state.data.viewURLs}
+							/>
+						</div>
+					</ChartStateContextProvider>
 				</StoreContextProvider>
 			</ConnectionContext.Provider>
 		)

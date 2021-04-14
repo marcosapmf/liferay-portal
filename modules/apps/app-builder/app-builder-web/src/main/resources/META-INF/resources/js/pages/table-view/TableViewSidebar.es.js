@@ -12,6 +12,7 @@
  * details.
  */
 
+import {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import {
@@ -23,7 +24,6 @@ import {
 } from 'data-engine-taglib';
 import React, {useContext, useState} from 'react';
 
-import Button from '../../components/button/Button.es';
 import EditTableViewContext, {
 	UPDATE_FOCUSED_COLUMN,
 } from './EditTableViewContext.es';
@@ -31,7 +31,7 @@ import TableViewFiltersList from './TableViewFilters.es';
 import {getFieldLabel, getFieldTypeLabel} from './utils.es';
 
 const BtnAction = ({angle = 'left', className, onClick}) => (
-	<Button
+	<ClayButtonWithIcon
 		className={className}
 		displayType="secondary"
 		onClick={onClick}
@@ -120,6 +120,12 @@ const FieldsTabContent = ({keywords, onAddFieldName}) => {
 	return (
 		<FieldTypeList
 			dragType={DragTypes.DRAG_FIELD_TYPE}
+			emptyState={{
+				description: Liferay.Language.get(
+					'columns-are-needed-to-create-table-views-for-this-object'
+				),
+				title: Liferay.Language.get('there-are-no-columns-yet'),
+			}}
 			fieldTypes={fieldTypesItems}
 			keywords={keywords}
 			onDoubleClick={({name}) => onAddFieldName(name, fieldNames.length)}

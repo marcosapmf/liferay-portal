@@ -188,7 +188,7 @@ definition {
 				scope = "Master");
 
 			PageEditor.editLayoutContainer(
-				backgroundImage = "Manual Selection",
+				backgroundImage = "Direct",
 				panel = "Styles",
 				uploadFileName = "Document_1.png");
 
@@ -206,7 +206,6 @@ definition {
 
 			PageEditor.configureFragment(
 				alignment = "Center",
-				marginBottom = "1",
 				textColor = "Danger");
 
 			PageEditor.gotoConfiguration(fragmentName = "Heading");
@@ -217,7 +216,6 @@ definition {
 				alignment = "center",
 				fragmentName = "heading",
 				headingLevel = "h2",
-				marginBottom = "1",
 				textColor = "danger");
 
 			Button.click(button = "Publish Master");
@@ -254,7 +252,6 @@ definition {
 				alignment = "center",
 				fragmentName = "heading",
 				headingLevel = "h2",
-				marginBottom = "1",
 				textColor = "danger");
 		}
 	}
@@ -519,7 +516,7 @@ definition {
 			IFrame.selectPermissionsFrame();
 
 			Check(
-				key_roleTitle = "account-manager",
+				key_roleTitle = "account-administrator",
 				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
 
 			Button.clickSave();
@@ -577,7 +574,7 @@ definition {
 			IFrame.selectPermissionsFrame();
 
 			AssertChecked(
-				key_roleTitle = "account-manager",
+				key_roleTitle = "account-administrator",
 				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
 		}
 	}

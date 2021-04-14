@@ -12,7 +12,7 @@
  * details.
  */
 
-import dom from 'metal-dom';
+import {buildFragment} from 'frontend-js-web';
 
 import Builder from '../../../../src/main/resources/META-INF/resources/js/components/FormBuilder/FormBuilder.es';
 import Pages from '../../__mock__/mockPages.es';
@@ -123,9 +123,15 @@ describe('Builder', () => {
 
 		jest.useFakeTimers();
 
-		dom.enterDocument('<button id="addFieldButton"></button>');
-		dom.enterDocument('<div class="ddm-translation-manager"></div>');
-		dom.enterDocument('<div class="ddm-form-basic-info"></div>');
+		document.body.appendChild(
+			buildFragment('<button id="addFieldButton"></button>')
+		);
+		document.body.appendChild(
+			buildFragment('<div class="ddm-translation-manager"></div>')
+		);
+		document.body.appendChild(
+			buildFragment('<div class="ddm-form-basic-info"></div>')
+		);
 
 		addButton = document.querySelector('#addFieldButton');
 		basicInfo = document.querySelector('.ddm-form-basic-info');
@@ -143,9 +149,9 @@ describe('Builder', () => {
 	});
 
 	afterEach(() => {
-		dom.exitDocument(addButton);
-		dom.exitDocument(basicInfo);
-		dom.exitDocument(translationManager);
+		addButton.remove();
+		basicInfo.remove();
+		translationManager.remove();
 
 		if (component) {
 			component.dispose();

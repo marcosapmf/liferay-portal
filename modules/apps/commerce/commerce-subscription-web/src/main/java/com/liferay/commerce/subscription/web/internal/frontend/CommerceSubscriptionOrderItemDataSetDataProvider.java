@@ -29,6 +29,7 @@ import com.liferay.commerce.product.util.CPSubscriptionType;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceSubscriptionEntryService;
+import com.liferay.commerce.subscription.web.internal.frontend.constants.CommerceSubscriptionDataSetConstants;
 import com.liferay.commerce.subscription.web.internal.model.OrderItem;
 import com.liferay.frontend.taglib.clay.data.Filter;
 import com.liferay.frontend.taglib.clay.data.Pagination;
@@ -100,20 +101,23 @@ public class CommerceSubscriptionOrderItemDataSetDataProvider
 				commerceOrderItem.getQuantity(), commerceContext);
 
 		if (commerceProductPrice != null) {
-			CommerceMoney unitPrice = commerceProductPrice.getUnitPrice();
-			CommerceMoney finalPrice = commerceProductPrice.getFinalPrice();
+			CommerceMoney unitPriceCommerceMoney =
+				commerceProductPrice.getUnitPrice();
+			CommerceMoney finalPriceCommerceMoney =
+				commerceProductPrice.getFinalPrice();
 
-			price = HtmlUtil.escape(unitPrice.format(locale));
-			total = HtmlUtil.escape(finalPrice.format(locale));
+			price = HtmlUtil.escape(unitPriceCommerceMoney.format(locale));
+			total = HtmlUtil.escape(finalPriceCommerceMoney.format(locale));
 
 			CommerceDiscountValue discountValue =
 				commerceProductPrice.getDiscountValue();
 
 			if (discountValue != null) {
-				CommerceMoney discountAmount =
+				CommerceMoney discountAmountCommerceMoney =
 					discountValue.getDiscountAmount();
 
-				discount = HtmlUtil.escape(discountAmount.format(locale));
+				discount = HtmlUtil.escape(
+					discountAmountCommerceMoney.format(locale));
 			}
 		}
 

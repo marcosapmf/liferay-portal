@@ -117,6 +117,7 @@ if (portletTitleBasedNavigation) {
 %>
 
 <clay:container-fluid
+	cssClass="container-form-lg"
 	id='<%= liferayPortletResponse.getNamespace() + "mbEditPageContainer" %>'
 >
 	<c:if test="<%= !portletTitleBasedNavigation %>">
@@ -376,15 +377,15 @@ if (portletTitleBasedNavigation) {
 
 							try {
 								String priorityName = priority[0];
-								double priorityValue = GetterUtil.getDouble(priority[2]);
 
-								if (priorityValue > 0) {
+								double priorityValue = GetterUtil.getDouble(priority[2]);
 						%>
 
+								<c:if test="<%= priorityValue > 0 %>">
 									<aui:option label="<%= HtmlUtil.escape(priorityName) %>" selected="<%= threadPriority == priorityValue %>" value="<%= priorityValue %>" />
+								</c:if>
 
 						<%
-								}
 							}
 							catch (Exception e) {
 							}
@@ -410,84 +411,61 @@ if (portletTitleBasedNavigation) {
 			<c:if test="<%= (message == null) && captchaConfiguration.messageBoardsEditMessageCaptchaEnabled() %>">
 				<liferay-captcha:captcha />
 			</c:if>
-		</aui:fieldset-group>
-
-		<%
-		boolean pending = false;
-
-		if (message != null) {
-			pending = message.isPending();
-		}
-		%>
-
-		<c:if test="<%= pending %>">
-			<div class="alert alert-info">
-				<liferay-ui:message key="there-is-a-publication-workflow-in-process" />
-			</div>
-		</c:if>
-
-		<aui:button-row>
 
 			<%
-			String saveButtonLabel = "save";
+			boolean pending = false;
 
-			if ((message == null) || message.isDraft() || message.isApproved()) {
-				saveButtonLabel = "save-as-draft";
-			}
-
-			String publishButtonLabel = "publish";
-
-			if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, MBMessage.class.getName())) {
-				publishButtonLabel = "submit-for-publication";
+			if (message != null) {
+				pending = message.isPending();
 			}
 			%>
 
-			<c:if test="<%= (message != null) && message.isApproved() && WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(message.getCompanyId(), message.getGroupId(), MBMessage.class.getName()) %>">
+			<c:if test="<%= pending %>">
 				<div class="alert alert-info">
-					<liferay-ui:message arguments="<%= ResourceActionsUtil.getModelResource(locale, MBMessage.class.getName()) %>" key="this-x-is-approved.-publishing-these-changes-will-cause-it-to-be-unpublished-and-go-through-the-approval-process-again" translateArguments="<%= false %>" />
+					<liferay-ui:message key="there-is-a-publication-workflow-in-process" />
 				</div>
 			</c:if>
 
-			<aui:button disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
+			<div class="sheet-footer">
 
-			<c:if test="<%= themeDisplay.isSignedIn() %>">
-				<aui:button name="saveButton" value="<%= saveButtonLabel %>" />
-			</c:if>
+				<%
+				String saveButtonLabel = "save";
 
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
+				if ((message == null) || message.isDraft() || message.isApproved()) {
+					saveButtonLabel = "save-as-draft";
+				}
+
+				String publishButtonLabel = "publish";
+
+				if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, MBMessage.class.getName())) {
+					publishButtonLabel = "submit-for-publication";
+				}
+				%>
+
+				<c:if test="<%= (message != null) && message.isApproved() && WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(message.getCompanyId(), message.getGroupId(), MBMessage.class.getName()) %>">
+					<div class="alert alert-info">
+						<liferay-ui:message arguments="<%= ResourceActionsUtil.getModelResource(locale, MBMessage.class.getName()) %>" key="this-x-is-approved.-publishing-these-changes-will-cause-it-to-be-unpublished-and-go-through-the-approval-process-again" translateArguments="<%= false %>" />
+					</div>
+				</c:if>
+
+				<aui:button disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
+
+				<c:if test="<%= themeDisplay.isSignedIn() %>">
+					<aui:button name="saveButton" value="<%= saveButtonLabel %>" />
+				</c:if>
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
+		</aui:fieldset-group>
 	</aui:form>
 </clay:container-fluid>
 
-<aui:script require='<%= npmResolvedPackageName + "/message_boards/js/MBPortlet.es as MBPortlet" %>'>
-	new MBPortlet.default({
-		constants: {
-			ACTION_PUBLISH: '<%= WorkflowConstants.ACTION_PUBLISH %>',
-			ACTION_SAVE_DRAFT: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>',
-			CMD: '<%= Constants.CMD %>',
-		},
-		currentAction:
-			'<%= (message == null) ? Constants.ADD : Constants.UPDATE %>',
+<%
+MBEditMessageDisplayContext mbEditMessageDisplayContext = new MBEditMessageDisplayContext(liferayPortletRequest, liferayPortletResponse, message);
+%>
 
-		<c:if test="<%= message != null %>">
-			<portlet:resourceURL id="/message_boards/get_attachments" var="getAttachmentsURL">
-				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
-			</portlet:resourceURL>
-
-			getAttachmentsURL: '<%= getAttachmentsURL %>',
-		</c:if>
-
-		namespace: '<portlet:namespace />',
-		rootNode: '#<portlet:namespace />mbEditPageContainer',
-
-		<c:if test="<%= message != null %>">
-			<portlet:renderURL var="viewTrashAttachmentsURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-				<portlet:param name="mvcRenderCommandName" value="/message_boards/view_deleted_message_attachments" />
-				<portlet:param name="redirect" value="<%= currentURL %>" />
-				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
-			</portlet:renderURL>
-
-			viewTrashAttachmentsURL: '<%= viewTrashAttachmentsURL %>',
-		</c:if>
-	});
-</aui:script>
+<liferay-frontend:component
+	context="<%= mbEditMessageDisplayContext.getMBPortletComponentContext() %>"
+	module="message_boards/js/MBPortlet.es"
+	servletContext="<%= application %>"
+/>

@@ -14,7 +14,7 @@
 
 // Gateway
 
-import uuidv1 from 'uuid/v1';
+import uuidv4 from 'uuid/v4';
 
 import Client from './client';
 import EventQueue from './eventQueue';
@@ -24,15 +24,17 @@ import defaultPlugins from './plugins/defaults';
 import {
 	FLUSH_INTERVAL,
 	QUEUE_PRIORITY_IDENTITY,
-	STORAGE_KEY_CONTEXTS,
 	STORAGE_KEY_EVENTS,
 	STORAGE_KEY_IDENTITY,
 	STORAGE_KEY_MESSAGE_IDENTITY,
 	STORAGE_KEY_USER_ID,
+	TRACK_DEFAULT_OPTIONS,
 } from './utils/constants';
+import {getContexts, setContexts} from './utils/contexts';
 import {normalizeEvent} from './utils/events';
 import hash from './utils/hash';
 import {getItem, setItem} from './utils/storage';
+import {upgradeStorage} from './utils/storage_version';
 
 // Constants
 
@@ -61,9 +63,11 @@ class Analytics {
 		}
 
 		instance.delay = config.flushInterval || FLUSH_INTERVAL;
+		instance.projectId = config.projectId;
 
 		const client = new Client({
 			delay: instance.delay,
+			projectId: instance.projectId,
 		});
 
 		const endpointUrl = (config.endpointUrl || '').replace(/\/$/, '');
@@ -81,6 +85,10 @@ class Analytics {
 
 		this._initializeEventQueue();
 		this._initializeIdentityQueue();
+
+		// Upgrade storage
+
+		upgradeStorage();
 
 		// Initializes default plugins
 
@@ -143,11 +151,12 @@ class Analytics {
 	 * @example
 	 * Analytics.create(
 	 *   {
-	 *     endpointUrl: 'https://osbasahpublisher-projectid.lfr.cloud'
-	 *     flushInterval: 2000,
-	 *     userId: 'id-s7uatimmxgo',
 	 *     channelId: '123456789',
 	 *     dataSourceId: 'MyDataSourceId',
+	 *     endpointUrl: 'https://osbasahpublisher-projectid.lfr.cloud'
+	 *     flushInterval: 2000,
+	 *     projectId: '123456'
+	 *     userId: 'id-s7uatimmxgo',
 	 *   }
 	 * );
 	 */
@@ -191,7 +200,12 @@ class Analytics {
 	 * Set stored context to the current context.
 	 */
 	resetContext() {
-		setItem(STORAGE_KEY_CONTEXTS, [this._getContext()]);
+		const context = this._getContext();
+
+		const contextsMap = new Map();
+		contextsMap.set(hash(context), context);
+
+		setContexts(contextsMap);
 	}
 
 	/**
@@ -228,28 +242,41 @@ class Analytics {
 	/**
 	 * Registers an event that is to be sent to Analytics Cloud
 	 * @param {string} eventId Id of the event
-	 * @param {string} applicationId ID of the application that triggered the event
 	 * @param {Object} eventProps Complementary information about the event
+	 * @param {Object} options Complementary information about the request
 	 */
-	send(eventId, applicationId, eventProps) {
-		if (
-			this._isTrackingDisabled() ||
-			!applicationId ||
-			instance._disposed
-		) {
+	track(eventId, eventProps, options = {}) {
+		if (this._isTrackingDisabled() || instance._disposed) {
 			return;
 		}
+
+		//eslint-disable-next-line
+		const mergedOptions = Object.assign({}, TRACK_DEFAULT_OPTIONS, options);
 
 		const currentContextHash = this._getCurrentContextHash();
 
 		instance._eventQueue.addItem(
 			normalizeEvent(
 				eventId,
-				applicationId,
+				mergedOptions.applicationId,
 				eventProps,
 				currentContextHash
 			)
 		);
+	}
+
+	/**
+	 * Registers an event that is to be sent to Analytics Cloud
+	 * @param {string} eventId Id of the event
+	 * @param {string} applicationId ID of the application that triggered the event
+	 * @param {Object} eventProps Complementary information about the event
+	 */
+	send(eventId, applicationId, eventProps) {
+		if (!applicationId) {
+			return;
+		}
+
+		this.track(eventId, eventProps, {applicationId});
 	}
 
 	/**
@@ -265,10 +292,18 @@ class Analytics {
 			return;
 		}
 
-		this.config.identity = identity;
+		if (!identity.email) {
+			return console.error(
+				'Unable to send identity message due invalid email'
+			);
+		}
+
+		const hashedIdentity = {emailAddressHashed: hash(identity.email)};
+
+		this.config.identity = hashedIdentity;
 
 		return this._getUserId().then((userId) =>
-			this._sendIdentity(identity, userId)
+			this._sendIdentity(hashedIdentity, userId)
 		);
 	}
 
@@ -302,7 +337,7 @@ class Analytics {
 	 * @returns {string} The generated id
 	 */
 	_generateUserId() {
-		const userId = uuidv1();
+		const userId = uuidv4();
 
 		setItem(STORAGE_KEY_USER_ID, userId);
 		this._setCookie(STORAGE_KEY_USER_ID, userId);
@@ -315,15 +350,12 @@ class Analytics {
 	_getCurrentContextHash() {
 		const currentContext = this._getContext();
 		const currentContextHash = hash(currentContext);
+		const contextsMap = getContexts();
 
-		const storedContexts = getItem(STORAGE_KEY_CONTEXTS) || [];
+		if (!contextsMap.has(currentContextHash)) {
+			contextsMap.set(currentContextHash, currentContext);
 
-		const hasStoredContext = storedContexts.find(
-			(storedContext) => hash(storedContext) === currentContextHash
-		);
-
-		if (!hasStoredContext) {
-			setItem(STORAGE_KEY_CONTEXTS, [...storedContexts, currentContext]);
+			setContexts(contextsMap);
 		}
 
 		return currentContextHash;
@@ -422,6 +454,7 @@ class Analytics {
 	 */
 	_sendIdentity(identity, userId) {
 		const {channelId, dataSourceId} = this.config;
+		const {emailAddressHashed} = identity;
 
 		const newIdentityHash = this._getIdentityHash(
 			dataSourceId,
@@ -438,8 +471,8 @@ class Analytics {
 			instance._identityQueue.addItem({
 				channelId,
 				dataSourceId,
+				emailAddressHashed,
 				id: newIdentityHash,
-				identity,
 				userId,
 			});
 

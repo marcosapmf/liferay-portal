@@ -28,10 +28,10 @@ const getPredefinedValues = ({locale, localizedValue, options}) => {
 
 export const getFilteredSettingsContext = ({
 	config,
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
 	editingLanguageId,
 	settingsContext,
 }) => {
-	const defaultLanguageId = themeDisplay.getDefaultLanguageId();
 	const unsupportedTabs = [...config.disabledTabs];
 
 	const pages = settingsContext.pages.filter(
@@ -58,6 +58,13 @@ export const getFilteredSettingsContext = ({
 						editingLanguageId,
 					};
 
+					const {visibleProperties} = config;
+
+					if (visibleProperties.includes(fieldName)) {
+						updatedField.visibilityExpression = 'TRUE';
+						updatedField.visible = true;
+					}
+
 					if (unsupportedProperties.includes(fieldName)) {
 						return {
 							...updatedField,
@@ -76,6 +83,13 @@ export const getFilteredSettingsContext = ({
 						};
 					}
 
+					if (fieldName === 'localizable') {
+						return {
+							...updatedField,
+							showAsSwitcher: true,
+						};
+					}
+
 					if (fieldName === 'name') {
 						return {
 							...updatedField,
@@ -87,6 +101,14 @@ export const getFilteredSettingsContext = ({
 						field.localizedValue[
 							field.locale
 						] = getPredefinedValues(field);
+					}
+
+					if (fieldName === 'repeatable') {
+						return {
+							...updatedField,
+							name: generateName(name, updatedField),
+							showMaximumRepetitionsInfo: false,
+						};
 					}
 
 					return {

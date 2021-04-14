@@ -5,7 +5,13 @@ create index IX_867C5A9 on BigDecimalEntry (bigDecimalValue);
 
 create unique index IX_1CF99E19 on CacheDisabledEntry (name[$COLUMN_LENGTH:75$]);
 
+create index IX_32F1A726 on ERCCompanyEntry (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
+
+create index IX_DA61F9E2 on ERCGroupEntry (groupId, externalReferenceCode[$COLUMN_LENGTH:75$]);
+
 create unique index IX_6E042099 on EagerBlobEntry (uuid_[$COLUMN_LENGTH:75$], groupId);
+
+create index IX_420C1E47 on FinderWhereClauseEntry (name[$COLUMN_LENGTH:75$]);
 
 create index IX_C28A6270 on LVEntry (groupId, head);
 create unique index IX_70D6DE35 on LVEntry (groupId, uniqueGroupKey[$COLUMN_LENGTH:75$], head);

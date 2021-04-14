@@ -12,12 +12,12 @@
  * details.
  */
 
+import {confirmDelete} from 'data-engine-js-components-web/js/utils/client.es';
 import {useContext} from 'react';
 import {__RouterContext as RouterContext} from 'react-router-dom';
 
 import {AppContext} from '../AppContext.es';
 import {navigateToEditPage} from '../pages/entry/utils.es';
-import {confirmDelete} from '../utils/client.es';
 import usePermissions from './usePermissions.es';
 
 export default function useEntriesActions(showOptions) {
@@ -42,6 +42,7 @@ export default function useEntriesActions(showOptions) {
 				action: ({id}) =>
 					Promise.resolve(
 						navigateToEditPage(basePortletURL, {
+							backURL: window.location.href,
 							dataRecordId: id,
 							languageId: userLanguageId,
 						})

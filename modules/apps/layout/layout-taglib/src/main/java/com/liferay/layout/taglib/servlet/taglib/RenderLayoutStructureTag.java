@@ -18,11 +18,11 @@ import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.layout.taglib.internal.display.context.RenderLayoutStructureDisplayContext;
 import com.liferay.layout.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.taglib.servlet.PipingServletResponse;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
@@ -37,8 +37,10 @@ public class RenderLayoutStructureTag extends IncludeTag {
 			RenderLayoutStructureDisplayContext.class.getName(),
 			new RenderLayoutStructureDisplayContext(
 				getFieldValues(),
+				ServletContextUtil.getFragmentEntryProcessorHelper(),
 				ServletContextUtil.getFrontendTokenDefinitionRegistry(),
-				request, (HttpServletResponse)pageContext.getResponse(),
+				request,
+				PipingServletResponse.createPipingServletResponse(pageContext),
 				ServletContextUtil.getInfoItemServiceTracker(),
 				ServletContextUtil.getInfoListRendererTracker(),
 				ServletContextUtil.getLayoutDisplayPageProviderTracker(),

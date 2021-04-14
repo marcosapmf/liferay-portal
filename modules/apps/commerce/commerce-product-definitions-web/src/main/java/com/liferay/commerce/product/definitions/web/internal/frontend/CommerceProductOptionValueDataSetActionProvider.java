@@ -15,6 +15,7 @@
 package com.liferay.commerce.product.definitions.web.internal.frontend;
 
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.definitions.web.internal.frontend.constants.CommerceProductDataSetConstants;
 import com.liferay.commerce.product.definitions.web.internal.model.ProductOptionValue;
 import com.liferay.commerce.product.definitions.web.internal.security.permission.resource.CommerceCatalogPermission;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -132,7 +133,8 @@ public class CommerceProductOptionValueDataSetActionProvider
 			_portal.getCurrentURL(httpServletRequest));
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "editProductDefinitionOptionValueRel");
+			ActionRequest.ACTION_NAME,
+			"/cp_definitions/edit_cp_definition_option_value_rel");
 		portletURL.setParameter(Constants.CMD, Constants.DELETE);
 		portletURL.setParameter("redirect", redirect);
 		portletURL.setParameter(
@@ -152,7 +154,8 @@ public class CommerceProductOptionValueDataSetActionProvider
 			PortletProvider.Action.MANAGE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editProductDefinitionOptionValueRel");
+			"mvcRenderCommandName",
+			"/cp_definitions/edit_cp_definition_option_value_rel");
 
 		CPDefinitionOptionRel cpDefinitionOptionRel =
 			cpDefinitionOptionValueRel.getCPDefinitionOptionRel();
@@ -192,7 +195,8 @@ public class CommerceProductOptionValueDataSetActionProvider
 			_portal.getCurrentURL(httpServletRequest));
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "editProductDefinitionOptionValueRel");
+			ActionRequest.ACTION_NAME,
+			"/cp_definitions/edit_cp_definition_option_value_rel");
 		portletURL.setParameter(Constants.CMD, "updatePreselected");
 		portletURL.setParameter("redirect", redirect);
 		portletURL.setParameter(

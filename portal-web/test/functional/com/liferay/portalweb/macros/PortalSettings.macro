@@ -194,7 +194,6 @@ definition {
 
 	macro configureLDAPSetting {
 		for (var enableSetting : list "${enableSettingList}") {
-
 			if ("${enableSetting}" == "enabled") {
 				PortalSettings.gotoConfiguration(
 					configurationCategory = "LDAP",
@@ -703,6 +702,15 @@ definition {
 			configurationScope = "Virtual Instance Scope");
 	}
 
+	macro setCurrentInstanceLanguageCP {
+		PortalSettings.gotoConfiguration(
+			configurationCategory = "Localization",
+			configurationName = "Language",
+			configurationScope = "Virtual Instance Scope");
+
+		PortalSettings.configureCurrentLanguagesCP(defaultPortalLanguage = "${newLanguage}");
+	}
+
 	macro tearDownAuthenticationCP {
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "User Authentication",
@@ -825,6 +833,12 @@ definition {
 		var key_modalTitle = "OpenSSO";
 
 		Click(locator1 = "Button#CLOSE_MODAL");
+	}
+
+	macro uncheckStrangersVerifyEmailCheckbox {
+		Uncheck(locator1 = "PortalSettingsAuthentication#AUTHENTICATION_GENERAL_REQUIRE_STRANGERS_TO_VERIFY_THEIR_EMAIL_ADDRESS_CHECKBOX");
+
+		PortletEntry.save();
 	}
 
 	macro viewAuthenticationCASCP {
@@ -1287,7 +1301,6 @@ definition {
 
 	macro viewEnabledLDAPSetting {
 		for (var enableSetting : list "${enableSettingList}") {
-
 			if ("${enableSetting}" == "enabled") {
 				PortalSettings.gotoConfiguration(
 					configurationCategory = "LDAP",

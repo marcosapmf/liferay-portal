@@ -20,9 +20,7 @@
 
 <liferay-util:include page="/polls/management_bar.jsp" servletContext="<%= application %>" />
 
-<clay:container-fluid
-	cssClass="main-content-body"
->
+<clay:container-fluid>
 	<aui:form method="post" name="fm">
 		<aui:input name="deleteQuestionIds" type="hidden" />
 
@@ -37,7 +35,6 @@
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.polls.model.PollsQuestion"
-				cssClass="entry-display-style"
 				keyProperty="questionId"
 				modelVar="question"
 			>

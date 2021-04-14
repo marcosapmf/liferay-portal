@@ -15,7 +15,6 @@
 package com.liferay.document.library.web.internal.display.context;
 
 import com.liferay.document.library.kernel.model.DLFileEntryType;
-import com.liferay.document.library.web.internal.configuration.FFDocumentLibraryDDMEditorConfigurationUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -62,7 +61,7 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 			).put(
 				"pluginEntryPoint",
 				npmResolvedPackageName +
-					"/document_library/js/ddm/panels/index.es"
+					"/document_library/js/data-engine/panels/index.es"
 			).put(
 				"sidebarPanelId", "details"
 			).put(
@@ -95,7 +94,7 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 			).put(
 				"pluginEntryPoint",
 				npmResolvedPackageName +
-					"/document_library/js/ddm/panels/index.es"
+					"/document_library/js/data-engine/panels/index.es"
 			).put(
 				"sidebarPanelId", "additionalMetadataFields"
 			).put(
@@ -133,7 +132,7 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 				).put(
 					"pluginEntryPoint",
 					npmResolvedPackageName +
-						"/document_library/js/ddm/panels/index.es"
+						"/document_library/js/data-engine/panels/index.es"
 				).put(
 					"sidebarPanelId", "permissions"
 				).put(
@@ -153,11 +152,6 @@ public class DLEditFileEntryTypeDataEngineDisplayContext {
 		}
 
 		return additionalPanels;
-	}
-
-	public boolean useDataEngineEditor() {
-		return FFDocumentLibraryDDMEditorConfigurationUtil.
-			useDataEngineEditor();
 	}
 
 	private final HttpServletRequest _httpServletRequest;

@@ -14,12 +14,12 @@
 
 package com.liferay.commerce.subscription.web.internal.frontend;
 
+import com.liferay.commerce.subscription.web.internal.frontend.constants.CommerceSubscriptionDataSetConstants;
 import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.BaseTableClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchema;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilder;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilderFactory;
-import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaField;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,10 +45,7 @@ public class CommerceSubscriptionOrderItemClayTableDataSetDisplayView
 
 		clayTableSchemaBuilder.addClayTableSchemaField("name", "name");
 
-		ClayTableSchemaField priceField =
-			clayTableSchemaBuilder.addClayTableSchemaField("price", "price");
-
-		priceField.setContentRenderer("commerceTableCellSubscription");
+		clayTableSchemaBuilder.addClayTableSchemaField("price", "price");
 
 		clayTableSchemaBuilder.addClayTableSchemaField("discount", "discount");
 

@@ -28,7 +28,7 @@
 			);
 
 			if (publishGlobalLink) {
-				publishGlobalLink.addEventListener('click', function (event) {
+				publishGlobalLink.addEventListener('click', (event) => {
 					event.preventDefault();
 
 					Liferay.Util.openWindow({
@@ -60,7 +60,7 @@
 
 		<c:if test="<%= (liveGroup != null) && GroupPermissionUtil.contains(permissionChecker, liveGroup, ActionKeys.PUBLISH_STAGING) %>">
 			<liferay-portlet:renderURL portletName="<%= PortletKeys.EXPORT_IMPORT %>" var="publishRedirectURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-				<portlet:param name="mvcRenderCommandName" value="publishLayouts" />
+				<portlet:param name="mvcRenderCommandName" value="/export_import/publish_layouts" />
 				<portlet:param name="<%= Constants.CMD %>" value="<%= localPublishing ? Constants.PUBLISH_TO_LIVE : Constants.PUBLISH_TO_REMOTE %>" />
 				<portlet:param name="tabs2" value="current-and-previous" />
 				<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
@@ -73,7 +73,7 @@
 			%>
 
 			<liferay-portlet:renderURL portletName="<%= PortletKeys.EXPORT_IMPORT %>" varImpl="simplePublishLayoutsURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-				<portlet:param name="mvcRenderCommandName" value="publishLayoutsSimple" />
+				<portlet:param name="mvcRenderCommandName" value="/export_import/publish_layouts_simple" />
 				<portlet:param name="<%= Constants.CMD %>" value="<%= localPublishing ? Constants.PUBLISH_TO_LIVE : Constants.PUBLISH_TO_REMOTE %>" />
 				<portlet:param name="redirect" value="<%= publishRedirectURL %>" />
 				<portlet:param name="backURL" value="<%= currentURL %>" />
@@ -106,6 +106,7 @@
 					layoutSetBranch = LayoutSetBranchLocalServiceUtil.getLayoutSetBranch(layoutSetBranchId);
 
 					simplePublishLayoutsURL.setParameter("layoutSetBranchName", layoutSetBranch.getName());
+
 					simplePublishLayoutsURL.setParameter("layoutSetBranchId", String.valueOf(layoutSetBranchId));
 
 					publishRenderURL.setParameter("layoutSetBranchId", String.valueOf(layoutSetBranchId));
@@ -187,20 +188,15 @@
 									List<LayoutRevision> childLayoutRevisions = layoutRevision.getChildren();
 
 									LayoutRevision firstChildLayoutRevision = childLayoutRevisions.get(0);
-
-									if (firstChildLayoutRevision.isInactive()) {
 									%>
 
+									<c:if test="<%= firstChildLayoutRevision.isInactive() %>">
 										<li>
 											<a class="dropdown-icon" href="javascript:Liferay.fire('<%= liferayPortletResponse.getNamespace() %>redo', {layoutRevisionId: '<%= firstChildLayoutRevision.getLayoutRevisionId() %>', layoutSetBranchId: '<%= firstChildLayoutRevision.getLayoutSetBranchId() %>'}); void(0);">
 												<liferay-ui:message key="redo" />
 											</a>
 										</li>
-
-									<%
-									}
-									%>
-
+									</c:if>
 								</c:if>
 							</c:if>
 						</ul>
@@ -225,7 +221,7 @@
 				);
 
 				if (publishLink) {
-					publishLink.addEventListener('click', function (event) {
+					publishLink.addEventListener('click', (event) => {
 						event.preventDefault();
 
 						Liferay.Util.openWindow({
@@ -253,7 +249,7 @@
 				);
 
 				if (publishToLiveLink) {
-					publishToLiveLink.addEventListener('click', function (event) {
+					publishToLiveLink.addEventListener('click', (event) => {
 						event.preventDefault();
 
 						Liferay.Util.openWindow({
@@ -310,7 +306,7 @@
 				);
 
 				if (layoutSetBranchesLink) {
-					layoutSetBranchesLink.addEventListener('click', function (event) {
+					layoutSetBranchesLink.addEventListener('click', (event) => {
 						event.preventDefault();
 
 						Liferay.Util.openWindow({

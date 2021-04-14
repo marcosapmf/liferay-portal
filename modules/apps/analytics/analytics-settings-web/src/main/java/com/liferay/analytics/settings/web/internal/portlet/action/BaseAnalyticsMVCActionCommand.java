@@ -146,6 +146,16 @@ public abstract class BaseAnalyticsMVCActionCommand
 					actionRequest, actionResponse,
 					ParamUtil.getString(actionRequest, "redirect"));
 			}
+
+			if (SessionErrors.contains(
+					actionRequest, "unableToNotifyAnalyticsCloud")) {
+
+				hideDefaultErrorMessage(actionRequest);
+
+				sendRedirect(
+					actionRequest, actionResponse,
+					ParamUtil.getString(actionRequest, "redirect"));
+			}
 		}
 		catch (PrincipalException principalException) {
 			_log.error(principalException, principalException);
@@ -236,7 +246,7 @@ public abstract class BaseAnalyticsMVCActionCommand
 				"liferayAnalyticsDataSourceId", "liferayAnalyticsEndpointURL",
 				"liferayAnalyticsFaroBackendSecuritySignature",
 				"liferayAnalyticsFaroBackendURL", "liferayAnalyticsGroupIds",
-				"liferayAnalyticsURL"
+				"liferayAnalyticsProjectId", "liferayAnalyticsURL"
 			});
 	}
 

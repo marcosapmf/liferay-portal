@@ -18,14 +18,13 @@ import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.model.CommerceMoneyFactory;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.percentage.PercentageFormatter;
 import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.tax.engine.fixed.model.CommerceTaxFixedRateAddressRel;
 import com.liferay.commerce.tax.engine.fixed.service.CommerceTaxFixedRateAddressRelService;
+import com.liferay.commerce.tax.engine.fixed.web.internal.frontend.constants.CommerceTaxRateSettingDataSetConstants;
 import com.liferay.commerce.tax.engine.fixed.web.internal.model.TaxRateSetting;
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.frontend.taglib.clay.data.Filter;
@@ -33,6 +32,8 @@ import com.liferay.frontend.taglib.clay.data.Pagination;
 import com.liferay.frontend.taglib.clay.data.set.provider.ClayDataSetDataProvider;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -103,13 +104,12 @@ public class CommerceTaxRateSettingDataSetDataProvider
 			taxRateSettings.add(
 				new TaxRateSetting(
 					_getCountry(
-						commerceTaxFixedRateAddressRel.getCommerceCountry(),
+						commerceTaxFixedRateAddressRel.getCountry(),
 						themeDisplay.getLanguageId()),
 					_getLocalizedRate(
 						commerceCurrency, commerceTaxFixedRateAddressRel,
 						themeDisplay.getLocale()),
-					_getRegion(
-						commerceTaxFixedRateAddressRel.getCommerceRegion()),
+					_getRegion(commerceTaxFixedRateAddressRel.getRegion()),
 					cpTaxCategory.getName(themeDisplay.getLanguageId()),
 					commerceTaxFixedRateAddressRel.
 						getCommerceTaxFixedRateAddressRelId(),
@@ -138,14 +138,12 @@ public class CommerceTaxRateSettingDataSetDataProvider
 				commerceChannel.getGroupId(), commerceTaxMethodId);
 	}
 
-	private String _getCountry(
-		CommerceCountry commerceCountry, String languageId) {
-
-		if (commerceCountry == null) {
+	private String _getCountry(Country country, String languageId) {
+		if (country == null) {
 			return StringPool.STAR;
 		}
 
-		return commerceCountry.getName(languageId);
+		return country.getTitle(languageId);
 	}
 
 	private String _getLocalizedRate(
@@ -172,12 +170,12 @@ public class CommerceTaxRateSettingDataSetDataProvider
 		return commerceMoney.format(locale);
 	}
 
-	private String _getRegion(CommerceRegion commerceRegion) {
-		if (commerceRegion == null) {
+	private String _getRegion(Region region) {
+		if (region == null) {
 			return StringPool.STAR;
 		}
 
-		return commerceRegion.getName();
+		return region.getName();
 	}
 
 	private String _getZip(String zip) {

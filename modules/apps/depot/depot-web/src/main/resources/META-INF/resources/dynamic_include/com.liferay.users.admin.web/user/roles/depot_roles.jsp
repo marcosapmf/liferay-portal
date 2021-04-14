@@ -85,7 +85,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 		modelVar="userGroupRole"
 	>
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="title"
 		>
 			<liferay-ui:icon
@@ -96,7 +96,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 		</liferay-ui:search-container-column-text>
 
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="<%= depotAdminRolesDisplayContext.getAssetLibraryLabel() %>"
 		>
 			<liferay-staging:descriptive-name
@@ -130,14 +130,14 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 			searchContainerContentBox
 				.all('.modify-link')
 				.getData()
-				.map(function (data) {
+				.map((data) => {
 					return data.groupid + '-' + data.rowid;
 				})
 		);
 
 		searchContainerContentBox.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				var link = event.currentTarget;
 				var tr = link.ancestor('tr');
 
@@ -209,9 +209,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 			);
 		}
 
-		A.one('#<portlet:namespace />selectDepotRoleLink').on('click', function (
-			event
-		) {
+		A.one('#<portlet:namespace />selectDepotRoleLink').on('click', (event) => {
 			Util.openSelectionModal({
 				onSelect: function (event) {
 					var A = AUI();

@@ -56,6 +56,8 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -84,6 +86,8 @@ import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
 import com.liferay.segments.service.SegmentsEntryServiceUtil;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -453,6 +457,9 @@ public class EditAssetListDisplayContext {
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -935,6 +942,9 @@ public class EditAssetListDisplayContext {
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -987,6 +997,34 @@ public class EditAssetListDisplayContext {
 		return GetterUtil.getBoolean(anyAssetType, true);
 	}
 
+	public boolean isLiveGroup() {
+		if (_liveGroup != null) {
+			return _liveGroup;
+		}
+
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (group.isLayout()) {
+			group = group.getParentGroup();
+		}
+
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
+
+		if (stagingGroupHelper.isLiveGroup(group) &&
+			stagingGroupHelper.isStagedPortlet(
+				group, AssetListPortletKeys.ASSET_LIST)) {
+
+			_liveGroup = true;
+
+			return _liveGroup;
+		}
+
+		_liveGroup = false;
+
+		return _liveGroup;
+	}
+
 	public Boolean isNoAssetTypeSelected() {
 		String anyAssetType = _unicodeProperties.getProperty("anyAssetType");
 
@@ -995,10 +1033,6 @@ public class EditAssetListDisplayContext {
 		}
 
 		return false;
-	}
-
-	public boolean isShowSubtypeFieldsFilter() {
-		return true;
 	}
 
 	public boolean isSubtypeFieldsFilterEnabled() {
@@ -1194,6 +1228,9 @@ public class EditAssetListDisplayContext {
 
 	private static final long _DEFAULT_SUBTYPE_SELECTION_ID = 0;
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditAssetListDisplayContext.class);
+
 	private AssetListEntry _assetListEntry;
 	private Long _assetListEntryId;
 	private List<AssetListEntrySegmentsEntryRel>
@@ -1211,6 +1248,7 @@ public class EditAssetListDisplayContext {
 	private String _ddmStructureFieldValue;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
+	private Boolean _liveGroup;
 	private String _orderByColumn1;
 	private String _orderByColumn2;
 	private String _orderByType1;

@@ -23,10 +23,13 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -124,8 +127,9 @@ public class SiteNavigationAdminDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_httpServletRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_httpServletRequest,
+			SiteNavigationAdminPortletKeys.SITE_NAVIGATION_ADMIN, "list");
 
 		return _displayStyle;
 	}
@@ -264,7 +268,7 @@ public class SiteNavigationAdminDisplayContext {
 
 				actionURL.setParameter(
 					ActionRequest.ACTION_NAME,
-					"/navigation_menu/delete_site_navigation_menu_item");
+					"/site_navigation_admin/delete_site_navigation_menu_item");
 
 				return actionURL.toString();
 			}
@@ -276,7 +280,8 @@ public class SiteNavigationAdminDisplayContext {
 
 				actionURL.setParameter(
 					ActionRequest.ACTION_NAME,
-					"/navigation_menu/edit_site_navigation_menu_item_parent");
+					"/site_navigation_admin" +
+						"/edit_site_navigation_menu_item_parent");
 
 				actionURL.setParameter(
 					"redirect",
@@ -312,6 +317,15 @@ public class SiteNavigationAdminDisplayContext {
 			}
 		).put(
 			"id", _liferayPortletResponse.getNamespace() + "sidebar"
+		).put(
+			"languageId",
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)_httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				return themeDisplay.getLanguageId();
+			}
 		).put(
 			"redirect", PortalUtil.getCurrentURL(_liferayPortletRequest)
 		).put(
@@ -430,6 +444,10 @@ public class SiteNavigationAdminDisplayContext {
 			addURL.setWindowState(LiferayWindowState.POP_UP);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException, windowStateException);
+			}
+
 			return StringPool.BLANK;
 		}
 
@@ -483,6 +501,9 @@ public class SiteNavigationAdminDisplayContext {
 
 		return siteNavigationMenuItemsJSONArray;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SiteNavigationAdminDisplayContext.class);
 
 	private String _displayStyle;
 	private final HttpServletRequest _httpServletRequest;

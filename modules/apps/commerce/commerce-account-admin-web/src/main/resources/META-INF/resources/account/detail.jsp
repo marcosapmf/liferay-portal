@@ -23,9 +23,9 @@ CommerceAccount commerceAccount = commerceAccountAdminDisplayContext.getCommerce
 long commerceAccountId = commerceAccountAdminDisplayContext.getCommerceAccountId();
 %>
 
-<portlet:actionURL name="editCommerceAccount" var="editCommerceAccountActionURL" />
+<portlet:actionURL name="/commerce_account_admin/edit_commerce_account" var="editCommerceAccountActionURL" />
 
-<aui:form action="<%= editCommerceAccountActionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= editCommerceAccountActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commerceAccount == null) ? Constants.ADD : Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="commerceAccountId" type="hidden" value="<%= commerceAccountId %>" />
@@ -119,7 +119,7 @@ long commerceAccountId = commerceAccountAdminDisplayContext.getCommerceAccountId
 			<c:if test="<%= commerceAccountAdminDisplayContext.hasCustomAttributesAvailable() %>">
 				<aui:fieldset collapsible="<%= true %>" label="custom-attribute">
 					<liferay-expando:custom-attribute-list
-						className="<%= CommerceAccount.class.getName() %>"
+						className="<%= AccountEntry.class.getName() %>"
 						classPK="<%= commerceAccountId %>"
 						editable="<%= true %>"
 						label="<%= true %>"

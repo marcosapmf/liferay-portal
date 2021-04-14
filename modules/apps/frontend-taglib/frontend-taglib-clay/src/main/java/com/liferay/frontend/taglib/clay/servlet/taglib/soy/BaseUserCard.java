@@ -15,6 +15,8 @@
 package com.liferay.frontend.taglib.clay.servlet.taglib.soy;
 
 import com.liferay.portal.kernel.dao.search.RowChecker;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -44,6 +46,11 @@ public abstract class BaseUserCard
 	}
 
 	@Override
+	public String getIcon() {
+		return "user";
+	}
+
+	@Override
 	public String getImageSrc() {
 		if (user.getPortraitId() <= 0) {
 			return null;
@@ -53,6 +60,9 @@ public abstract class BaseUserCard
 			return user.getPortraitURL(themeDisplay);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -68,8 +78,15 @@ public abstract class BaseUserCard
 		return user.getScreenName();
 	}
 
+	@Override
+	public String getUserColorClass() {
+		return "primary";
+	}
+
 	protected final RenderRequest renderRequest;
 	protected final ThemeDisplay themeDisplay;
 	protected final User user;
+
+	private static final Log _log = LogFactoryUtil.getLog(BaseUserCard.class);
 
 }

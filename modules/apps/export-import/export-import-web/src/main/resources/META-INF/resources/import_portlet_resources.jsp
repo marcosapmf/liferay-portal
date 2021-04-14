@@ -28,12 +28,12 @@ FileEntry fileEntry = ExportImportHelperUtil.getTempFileEntry(groupId, themeDisp
 ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(themeDisplay.getUserId(), groupId, new HashMap<String, String[]>(), fileEntry);
 %>
 
-<portlet:actionURL name="exportImport" var="importPortletActionURL">
-	<portlet:param name="mvcRenderCommandName" value="exportImport" />
+<portlet:actionURL name="/export_import/export_import" var="importPortletActionURL">
+	<portlet:param name="mvcRenderCommandName" value="/export_import/export_import" />
 </portlet:actionURL>
 
 <portlet:renderURL var="importPortletRenderURL">
-	<portlet:param name="mvcRenderCommandName" value="exportImport" />
+	<portlet:param name="mvcRenderCommandName" value="/export_import/export_import" />
 	<portlet:param name="tabs2" value="import" />
 	<portlet:param name="tabs3" value="current-and-previous" />
 	<portlet:param name="redirect" value="<%= redirect %>" />
@@ -133,13 +133,17 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 											<li>
 												<span class="selected-labels" id="<portlet:namespace />selectedConfiguration_<%= selPortlet.getRootPortletId() %>"></span>
 
-												<%
-												Map<String, Object> data = HashMapBuilder.<String, Object>put(
-													"portletid", selPortlet.getRootPortletId()
-												).build();
-												%>
-
-												<aui:a cssClass="configuration-link modify-link" data="<%= data %>" href="javascript:;" label="change" method="get" />
+												<aui:a
+													cssClass="configuration-link modify-link"
+													data='<%=
+														HashMapBuilder.<String, Object>put(
+															"portletid", selPortlet.getRootPortletId()
+														).build()
+													%>'
+													href="javascript:;"
+													label="change"
+													method="get"
+												/>
 											</li>
 										</ul>
 
@@ -188,10 +192,9 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 										<%
 										PortletDataHandlerControl[] importControls = portletDataHandler.getImportControls();
 										PortletDataHandlerControl[] metadataControls = portletDataHandler.getImportMetadataControls();
-
-										if (ArrayUtil.isNotEmpty(importControls) || ArrayUtil.isNotEmpty(metadataControls)) {
 										%>
 
+										<c:if test="<%= ArrayUtil.isNotEmpty(importControls) || ArrayUtil.isNotEmpty(metadataControls) %>">
 											<div class="hide" id="<portlet:namespace />content_<%= selPortlet.getRootPortletId() %>">
 												<ul class="lfr-tree list-unstyled">
 													<li class="tree-item">
@@ -221,19 +224,22 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 																	PortletDataHandlerBoolean control = (PortletDataHandlerBoolean)metadataControl;
 
 																	PortletDataHandlerControl[] childrenControls = control.getChildren();
-
-																	if (ArrayUtil.isNotEmpty(childrenControls)) {
-																		request.setAttribute("render_controls.jsp-controls", childrenControls);
 																%>
+
+																	<c:if test="<%= ArrayUtil.isNotEmpty(childrenControls) %>">
+
+																		<%
+																		request.setAttribute("render_controls.jsp-controls", childrenControls);
+																		%>
 
 																		<aui:field-wrapper label="content-metadata">
 																			<ul class="lfr-tree list-unstyled">
 																				<liferay-util:include page="/render_controls.jsp" servletContext="<%= application %>" />
 																			</ul>
 																		</aui:field-wrapper>
+																	</c:if>
 
 																<%
-																	}
 																}
 																%>
 
@@ -247,13 +253,18 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 												<li class="tree-item">
 													<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= selPortlet.getRootPortletId() %>"></span>
 
-													<%
-													Map<String, Object> data = HashMapBuilder.<String, Object>put(
-														"portletid", selPortlet.getRootPortletId()
-													).build();
-													%>
-
-													<aui:a cssClass="content-link modify-link" data="<%= data %>" href="javascript:;" id='<%= "contentLink_" + selPortlet.getRootPortletId() %>' label="change" method="get" />
+													<aui:a
+														cssClass="content-link modify-link"
+														data='<%=
+															HashMapBuilder.<String, Object>put(
+																"portletid", selPortlet.getRootPortletId()
+															).build()
+														%>'
+														href="javascript:;"
+														id='<%= "contentLink_" + selPortlet.getRootPortletId() %>'
+														label="change"
+														method="get"
+													/>
 												</li>
 											</ul>
 
@@ -263,11 +274,7 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 													'<portlet:namespace />showChangeContent<%= StringPool.UNDERLINE + selPortlet.getRootPortletId() %>'
 												);
 											</aui:script>
-
-										<%
-										}
-										%>
-
+										</c:if>
 									</li>
 								</ul>
 
@@ -345,7 +352,7 @@ ManifestSummary manifestSummary = ExportImportHelperUtil.getManifestSummary(them
 
 	<aui:button-row>
 		<portlet:renderURL var="backURL">
-			<portlet:param name="mvcRenderCommandName" value="exportImport" />
+			<portlet:param name="mvcRenderCommandName" value="/export_import/export_import" />
 			<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.VALIDATE %>" />
 			<portlet:param name="tabs2" value="import" />
 			<portlet:param name="portletResource" value="<%= String.valueOf(portletResource) %>" />

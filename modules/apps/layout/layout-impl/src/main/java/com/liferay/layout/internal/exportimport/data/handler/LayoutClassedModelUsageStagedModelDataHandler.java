@@ -25,6 +25,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.layout.model.LayoutClassedModelUsage;
+import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -89,6 +90,13 @@ public class LayoutClassedModelUsageStagedModelDataHandler
 
 		Element element = portletDataContext.getExportDataElement(
 			layoutClassedModelUsage);
+
+		element.addAttribute(
+			"layout-classed-model-class-name",
+			_portal.getClassName(layoutClassedModelUsage.getClassNameId()));
+		element.addAttribute(
+			"layout-classed-model-container-class-name",
+			_portal.getClassName(layoutClassedModelUsage.getContainerType()));
 
 		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
@@ -165,15 +173,18 @@ public class LayoutClassedModelUsageStagedModelDataHandler
 
 		importedLayoutClassedModelUsage.setGroupId(
 			portletDataContext.getScopeGroupId());
+		importedLayoutClassedModelUsage.setCompanyId(
+			portletDataContext.getCompanyId());
 
 		Map<Long, Long> plids =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				Layout.class);
 
-		importedLayoutClassedModelUsage.setPlid(
-			MapUtil.getLong(
-				plids, layoutClassedModelUsage.getPlid(),
-				layoutClassedModelUsage.getPlid()));
+		long plid = MapUtil.getLong(
+			plids, layoutClassedModelUsage.getPlid(),
+			layoutClassedModelUsage.getPlid());
+
+		importedLayoutClassedModelUsage.setPlid(plid);
 
 		importedLayoutClassedModelUsage.setClassNameId(
 			_portal.getClassNameId(layoutClassedModelUsage.getClassName()));
@@ -182,15 +193,31 @@ public class LayoutClassedModelUsageStagedModelDataHandler
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
 				layoutClassedModelUsage.getClassName());
 
-		importedLayoutClassedModelUsage.setClassPK(
-			MapUtil.getLong(
-				classPKs, layoutClassedModelUsage.getClassPK(),
-				layoutClassedModelUsage.getClassPK()));
+		long classPK = MapUtil.getLong(
+			classPKs, layoutClassedModelUsage.getClassPK(),
+			layoutClassedModelUsage.getClassPK());
+
+		importedLayoutClassedModelUsage.setClassPK(classPK);
+
+		Element element = portletDataContext.getImportDataStagedModelElement(
+			layoutClassedModelUsage);
 
 		LayoutClassedModelUsage existingLayoutClassedModelUsage =
-			_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
-				layoutClassedModelUsage.getUuid(),
-				portletDataContext.getScopeGroupId());
+			_layoutClassedModelUsageLocalService.fetchLayoutClassedModelUsage(
+				_portal.getClassNameId(
+					element.attributeValue("layout-classed-model-class-name")),
+				classPK, importedLayoutClassedModelUsage.getContainerKey(),
+				_portal.getClassNameId(
+					element.attributeValue(
+						"layout-classed-model-container-class-name")),
+				plid);
+
+		if (existingLayoutClassedModelUsage == null) {
+			existingLayoutClassedModelUsage =
+				_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
+					layoutClassedModelUsage.getUuid(),
+					portletDataContext.getScopeGroupId());
+		}
 
 		if ((existingLayoutClassedModelUsage == null) ||
 			!portletDataContext.isDataStrategyMirror()) {
@@ -223,6 +250,10 @@ public class LayoutClassedModelUsageStagedModelDataHandler
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutClassedModelUsageStagedModelDataHandler.class);
+
+	@Reference
+	private LayoutClassedModelUsageLocalService
+		_layoutClassedModelUsageLocalService;
 
 	@Reference
 	private Portal _portal;

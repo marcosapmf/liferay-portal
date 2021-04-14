@@ -63,7 +63,7 @@
 		${viewCategorizedPagesURL.setParameter("mvcRenderCommandName", "/wiki/view_categorized_pages")}
 		${viewCategorizedPagesURL.setParameter("nodeId", entry.getNodeId()?string)}
 
-		<@liferay_ui["asset-categories-summary"]
+		<@liferay_asset["asset-categories-summary"]
 			className=wikiPageClassName
 			classPK=entry.getResourcePrimKey()
 			portletURL=viewCategorizedPagesURL
@@ -76,7 +76,7 @@
 		${viewTaggedPagesURL.setParameter("mvcRenderCommandName", "/wiki/view_tagged_pages")}
 		${viewTaggedPagesURL.setParameter("nodeId", entry.getNodeId()?string)}
 
-		<@liferay_ui["asset-tags-summary"]
+		<@liferay_asset["asset-tags-summary"]
 			className=wikiPageClassName
 			classPK=entry.getResourcePrimKey()
 			portletURL=viewTaggedPagesURL
@@ -241,7 +241,7 @@
 >
 	<#if wikiPortletInstanceConfiguration.enablePageRatings()>
 		<div class="${cssClass}">
-			<@liferay_ui["ratings"]
+			<@liferay_ratings["ratings"]
 				className=wikiPageClassName
 				classPK=entry.getResourcePrimKey()
 			/>

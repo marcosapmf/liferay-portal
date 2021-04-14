@@ -63,10 +63,12 @@ export const CommonStyles = ({commonStylesValues, item}) => {
 			{commonStyles.map((fieldSet, index) => {
 				return (
 					<FieldSet
+						availableLanguages={config.availableLanguages}
 						fields={fieldSet.styles}
 						item={item}
 						key={index}
 						label={fieldSet.label}
+						languageId={config.defaultLanguageId}
 						onValueSelect={onCommonStylesValueSelect}
 						values={commonStylesValues}
 					/>

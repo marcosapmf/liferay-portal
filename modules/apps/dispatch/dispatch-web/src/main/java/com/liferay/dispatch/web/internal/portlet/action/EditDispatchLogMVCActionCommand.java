@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import java.util.Objects;
+
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 
@@ -37,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + DispatchPortletKeys.DISPATCH,
-		"mvc.command.name=editDispatchLog"
+		"mvc.command.name=/dispatch/edit_dispatch_log"
 	},
 	service = MVCActionCommand.class
 )
@@ -71,7 +73,7 @@ public class EditDispatchLogMVCActionCommand extends BaseMVCActionCommand {
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
 		try {
-			if (Constants.DELETE.equals(cmd)) {
+			if (Objects.equals(cmd, Constants.DELETE)) {
 				deleteDispatchLog(actionRequest);
 			}
 		}

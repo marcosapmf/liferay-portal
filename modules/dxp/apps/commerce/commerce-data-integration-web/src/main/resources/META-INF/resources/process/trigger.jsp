@@ -26,9 +26,9 @@ if ((commerceDataIntegrationProcess != null) && (commerceDataIntegrationProcess.
 }
 %>
 
-<portlet:actionURL name="editCommerceDataIntegrationProcessTrigger" var="editCommerceDataIntegrationProcessTriggerActionURL" />
+<portlet:actionURL name="/commerce_data_integration/edit_commerce_data_integration_process_trigger" var="editCommerceDataIntegrationProcessTriggerActionURL" />
 
-<aui:form action="<%= editCommerceDataIntegrationProcessTriggerActionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= editCommerceDataIntegrationProcessTriggerActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="commerceDataIntegrationProcessId" type="hidden" value="<%= String.valueOf(commerceDataIntegrationProcess.getCommerceDataIntegrationProcessId()) %>" />
 

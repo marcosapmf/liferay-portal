@@ -29,15 +29,15 @@ LayoutPrototypeDisplayContext layoutPrototypeDisplayContext = new LayoutPrototyp
 LayoutPrototypeManagementToolbarDisplayContext layoutPrototypeManagementToolbarDisplayContext = new LayoutPrototypeManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, layoutPrototypeDisplayContext);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= layoutPrototypeManagementToolbarDisplayContext %>"
 />
 
-<portlet:actionURL name="/layout_prototype/delete_layout_prototype" var="deleteLayoutPrototypesURL">
+<portlet:actionURL name="/layout_page_template_admin/delete_layout_prototype" var="deleteLayoutPrototypesURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteLayoutPrototypesURL %>" cssClass="container-fluid-1280" name="fm">
+<aui:form action="<%= deleteLayoutPrototypesURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
 	<liferay-ui:error embed="<%= false %>" exception="<%= RequiredLayoutPrototypeException.class %>" message="you-cannot-delete-page-templates-that-are-used-by-a-page" />
 
 	<liferay-ui:search-container
@@ -45,7 +45,6 @@ LayoutPrototypeManagementToolbarDisplayContext layoutPrototypeManagementToolbarD
 	>
 		<liferay-ui:search-container-row
 			className="com.liferay.layout.page.template.model.LayoutPageTemplateEntry"
-			cssClass="selectable"
 			escapedModel="<%= true %>"
 			keyProperty="layoutPrototypeId"
 			modelVar="layoutPageTemplateEntry"
@@ -54,17 +53,15 @@ LayoutPrototypeManagementToolbarDisplayContext layoutPrototypeManagementToolbarD
 			<%
 			LayoutPrototype layoutPrototype = LayoutPrototypeServiceUtil.getLayoutPrototype(layoutPageTemplateEntry.getLayoutPrototypeId());
 
-			row.setCssClass("entry-card lfr-asset-item");
-
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"actions", layoutPrototypeManagementToolbarDisplayContext.getAvailableActions(layoutPrototype)
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"actions", layoutPrototypeManagementToolbarDisplayContext.getAvailableActions(layoutPrototype)
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text>
 				<clay:vertical-card
+					propsTransformer="js/propsTransformers/LayoutPrototypeDropdownPropsTransformer"
 					verticalCard="<%= new LayoutPrototypeVerticalCard(layoutPrototype, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
 				/>
 			</liferay-ui:search-container-column-text>
@@ -76,11 +73,6 @@ LayoutPrototypeManagementToolbarDisplayContext layoutPrototypeManagementToolbarD
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= LayoutPageTemplateAdminWebKeys.LAYOUT_PROTOTYPE_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/LayoutPrototypeDropdownDefaultEventHandler.es"
-/>
 
 <liferay-frontend:component
 	componentId="<%= layoutPrototypeManagementToolbarDisplayContext.getDefaultEventHandler() %>"

@@ -15,12 +15,12 @@
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
@@ -46,6 +46,7 @@ import com.liferay.portal.search.internal.script.ScriptsImpl;
 import com.liferay.portal.search.script.Script;
 import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
+import com.liferay.portal.util.PropsImpl;
 
 import java.io.IOException;
 
@@ -78,6 +79,8 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
+		PropsUtil.setProps(new PropsImpl());
+
 		_elasticsearchFixture = new ElasticsearchFixture(
 			ElasticsearchSearchEngineAdapterDocumentRequestTest.class);
 
@@ -565,8 +568,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 				id,
 				_scripts.script(
 					StringBundler.concat(
-						"ctx._source.", _FIELD_NAME, StringPool.EQUAL,
-						"\"false\" ")),
+						"ctx._source.", _FIELD_NAME, "=\"false\" ")),
 				false);
 
 		Assert.assertEquals(
@@ -587,8 +589,7 @@ public class ElasticsearchSearchEngineAdapterDocumentRequestTest {
 			id,
 			_scripts.script(
 				StringBundler.concat(
-					"ctx._source.", _FIELD_NAME, StringPool.EQUAL,
-					"\"true\" ")),
+					"ctx._source.", _FIELD_NAME, "=\"true\" ")),
 			true);
 
 		GetResponse getResponse = _getDocument(id);

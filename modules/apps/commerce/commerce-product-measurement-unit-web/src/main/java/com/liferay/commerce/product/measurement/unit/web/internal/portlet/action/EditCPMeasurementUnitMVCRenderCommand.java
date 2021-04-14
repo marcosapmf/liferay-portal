@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_MEASUREMENT_UNIT,
-		"mvc.command.name=editCPMeasurementUnit"
+		"mvc.command.name=/cp_measurement_unit/edit_cp_measurement_unit"
 	},
 	service = MVCRenderCommand.class
 )
@@ -41,7 +41,7 @@ public class EditCPMeasurementUnitMVCRenderCommand implements MVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/edit_measurement_unit.jsp";
+		return "/edit_cp_measurement_unit.jsp";
 	}
 
 }

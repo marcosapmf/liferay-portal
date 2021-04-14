@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.account.admin.web.internal.display.context;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.service.CommerceAccountService;
@@ -40,16 +41,13 @@ public class CommerceAccountAdminDisplayContext
 	extends BaseCommerceAccountAdminDisplayContext<CommerceAccount> {
 
 	public CommerceAccountAdminDisplayContext(
-		ModelResourcePermission<CommerceAccount>
-			commerceAccountModelResourcePermission,
 		CommerceAccountService commerceAccountService,
 		CommerceAddressService commerceAddressService,
+		ModelResourcePermission<CommerceAccount> modelResourcePermission,
 		RenderRequest renderRequest,
 		UserFileUploadsConfiguration userFileUploadsConfiguration) {
 
-		super(
-			commerceAccountModelResourcePermission, commerceAccountService,
-			renderRequest);
+		super(commerceAccountService, modelResourcePermission, renderRequest);
 
 		_commerceAddressService = commerceAddressService;
 		_userFileUploadsConfiguration = userFileUploadsConfiguration;
@@ -137,7 +135,7 @@ public class CommerceAccountAdminDisplayContext
 	public boolean hasCustomAttributesAvailable() throws Exception {
 		return CustomAttributesUtil.hasCustomAttributes(
 			commerceAccountAdminRequestHelper.getCompanyId(),
-			CommerceAccount.class.getName(), getCommerceAccountId(), null);
+			AccountEntry.class.getName(), getCommerceAccountId(), null);
 	}
 
 	protected Boolean getActive() {

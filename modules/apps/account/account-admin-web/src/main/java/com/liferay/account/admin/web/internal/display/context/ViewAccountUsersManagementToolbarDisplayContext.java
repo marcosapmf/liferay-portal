@@ -88,7 +88,8 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 					"removeUsersURL", removeUsersURL.toString());
 
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "remove"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "remove"));
 				dropdownItem.setQuickAction(true);
 
 				return dropdownItem;
@@ -111,14 +112,9 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "selectAccountUsers");
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "assign-users"));
+					LanguageUtil.get(httpServletRequest, "assign-users"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "ACCOUNT_USERS_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override
@@ -135,8 +131,8 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 				labelItem.setCloseable(true);
 
 				String label = String.format(
-					"%s: %s", LanguageUtil.get(request, "status"),
-					LanguageUtil.get(request, getNavigation()));
+					"%s: %s", LanguageUtil.get(httpServletRequest, "status"),
+					LanguageUtil.get(httpServletRequest, getNavigation()));
 
 				labelItem.setLabel(label);
 			}
@@ -145,7 +141,7 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 
 	@Override
 	public String getFilterNavigationDropdownItemsLabel() {
-		return LanguageUtil.get(request, "filter-by-status");
+		return LanguageUtil.get(httpServletRequest, "filter-by-status");
 	}
 
 	@Override
@@ -220,8 +216,9 @@ public class ViewAccountUsersManagementToolbarDisplayContext
 	}
 
 	private boolean _hasManageUsersPermission() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			if (AccountEntryPermission.contains(

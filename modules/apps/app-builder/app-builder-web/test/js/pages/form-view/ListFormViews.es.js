@@ -177,7 +177,7 @@ describe('ListFormViews', () => {
 		expect(navigate.mock.calls[0][0]).toBe(portletURL);
 
 		const buttonNewFormViewPlus = container.querySelector(
-			'[data-title="new-form-view"]'
+			'[title="new-form-view"]'
 		);
 
 		fireEvent.click(buttonNewFormViewPlus);

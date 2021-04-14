@@ -217,6 +217,26 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 		return _jenkinsSlavesMap.get(jenkinsSlaveName);
 	}
 
+	public List<String> getJenkinsSlaveNames() {
+		List<JenkinsSlave> jenkinsSlaves = getJenkinsSlaves();
+
+		List<String> jenkinsSlaveNames = new ArrayList<>(jenkinsSlaves.size());
+
+		for (JenkinsSlave jenkinsSlave : jenkinsSlaves) {
+			jenkinsSlaveNames.add(jenkinsSlave.getName());
+		}
+
+		return jenkinsSlaveNames;
+	}
+
+	public List<JenkinsSlave> getJenkinsSlaves() {
+		if (_jenkinsSlavesMap.isEmpty()) {
+			update();
+		}
+
+		return new ArrayList<>(_jenkinsSlavesMap.values());
+	}
+
 	@Override
 	public String getName() {
 		return _masterName;
@@ -441,12 +461,12 @@ public class JenkinsMaster implements JenkinsNode<JenkinsMaster> {
 
 	private boolean _available;
 	private final Map<Long, Integer> _batchSizes = new TreeMap<>();
-	private List<String> _buildURLs = new ArrayList<>();
+	private final List<String> _buildURLs = new ArrayList<>();
 	private final Map<String, JenkinsSlave> _jenkinsSlavesMap = new HashMap<>();
 	private final String _masterName;
 	private final String _masterURL;
 	private int _queueCount;
-	private List<String> _queuedBuildURLs = new ArrayList<>();
+	private final List<String> _queuedBuildURLs = new ArrayList<>();
 	private int _reportedAvailableSlavesCount;
 	private final Integer _slaveRAM;
 	private final Integer _slavesPerHost;

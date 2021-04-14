@@ -54,7 +54,6 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
-import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapter;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageAdapterTracker;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
@@ -283,6 +282,23 @@ public class DDMFormAdminDisplayContext {
 		return ddmFormBuilderSettingsResponse.getDataProviderInstancesURL();
 	}
 
+	public Map<String, Object> getDDMFormContext(RenderRequest renderRequest)
+		throws Exception {
+
+		return getDDMFormContext(renderRequest, true);
+	}
+
+	public Map<String, Object> getDDMFormContext(
+			RenderRequest renderRequest, boolean readOnly)
+		throws Exception {
+
+		DDMFormViewFormInstanceRecordDisplayContext
+			formViewRecordDisplayContext = getFormViewRecordDisplayContext();
+
+		return formViewRecordDisplayContext.getDDMFormContext(
+			renderRequest, readOnly);
+	}
+
 	public JSONArray getDDMFormFieldTypesJSONArray() throws PortalException {
 		List<DDMFormFieldType> availableDDMFormFieldTypes =
 			_removeDDMFormFieldTypesOutOfScope(
@@ -340,22 +356,6 @@ public class DDMFormAdminDisplayContext {
 		return jsonArray;
 	}
 
-	public String getDDMFormHTML(RenderRequest renderRequest)
-		throws PortalException {
-
-		return getDDMFormHTML(renderRequest, true);
-	}
-
-	public String getDDMFormHTML(RenderRequest renderRequest, boolean readOnly)
-		throws PortalException {
-
-		DDMFormViewFormInstanceRecordDisplayContext
-			formViewRecordDisplayContext = getFormViewRecordDisplayContext();
-
-		return formViewRecordDisplayContext.getDDMFormHTML(
-			renderRequest, readOnly);
-	}
-
 	public DDMFormInstance getDDMFormInstance() throws PortalException {
 		if (_ddmFormInstance != null) {
 			return _ddmFormInstance;
@@ -386,6 +386,33 @@ public class DDMFormAdminDisplayContext {
 		DDMFormInstanceRecord formInstanceRecord = getDDMFormInstanceRecord();
 
 		return formInstanceRecord.getLatestFormInstanceRecordVersion();
+	}
+
+	public Map<String, Object> getDDMFormSettingsContext(
+			PageContext pageContext)
+		throws Exception {
+
+		long formInstanceId = ParamUtil.getLong(
+			renderRequest, "formInstanceId");
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		DDMFormRenderingContext ddmFormRenderingContext =
+			createDDMFormRenderingContext(pageContext, renderRequest);
+
+		setDDMFormRenderingContextDDMFormValues(
+			ddmFormRenderingContext, formInstanceId);
+
+		DDMFormLayout ddmFormLayout = DDMFormLayoutFactory.create(
+			DDMFormInstanceSettings.class);
+
+		ddmFormLayout.setPaginationMode(DDMFormLayout.TABBED_MODE);
+
+		DDMForm ddmForm = createSettingsDDMForm(formInstanceId, themeDisplay);
+
+		return ddmFormRenderer.getDDMFormTemplateContext(
+			ddmForm, ddmFormLayout, ddmFormRenderingContext);
 	}
 
 	public DDMStructure getDDMStructure() throws PortalException {
@@ -1130,32 +1157,6 @@ public class DDMFormAdminDisplayContext {
 		return ParamUtil.getBoolean(renderRequest, "showPublishAlert");
 	}
 
-	public String serializeSettingsForm(PageContext pageContext)
-		throws PortalException {
-
-		long formInstanceId = ParamUtil.getLong(
-			renderRequest, "formInstanceId");
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		DDMFormRenderingContext ddmFormRenderingContext =
-			createDDMFormRenderingContext(pageContext, renderRequest);
-
-		setDDMFormRenderingContextDDMFormValues(
-			ddmFormRenderingContext, formInstanceId);
-
-		DDMFormLayout ddmFormLayout = DDMFormLayoutFactory.create(
-			DDMFormInstanceSettings.class);
-
-		ddmFormLayout.setPaginationMode(DDMFormLayout.TABBED_MODE);
-
-		DDMForm ddmForm = createSettingsDDMForm(formInstanceId, themeDisplay);
-
-		return ddmFormRenderer.render(
-			ddmForm, ddmFormLayout, ddmFormRenderingContext);
-	}
-
 	protected DDMFormRenderingContext createDDMFormRenderingContext(
 		PageContext pageContext, RenderRequest renderRequest) {
 
@@ -1554,9 +1555,8 @@ public class DDMFormAdminDisplayContext {
 			return;
 		}
 
-		DDMFormValues ddmFormValues = formInstance.getSettingsDDMFormValues();
-
-		ddmFormRenderingContext.setDDMFormValues(ddmFormValues);
+		ddmFormRenderingContext.setDDMFormValues(
+			formInstance.getSettingsDDMFormValues());
 	}
 
 	protected final DDMFormRenderer ddmFormRenderer;

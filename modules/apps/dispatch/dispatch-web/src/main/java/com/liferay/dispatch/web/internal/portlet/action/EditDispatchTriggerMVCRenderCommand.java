@@ -15,12 +15,11 @@
 package com.liferay.dispatch.web.internal.portlet.action;
 
 import com.liferay.dispatch.constants.DispatchPortletKeys;
+import com.liferay.dispatch.executor.DispatchTaskExecutorRegistry;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
 import com.liferay.dispatch.web.internal.display.context.DispatchTriggerDisplayContext;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.util.Collections;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -35,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + DispatchPortletKeys.DISPATCH,
-		"mvc.command.name=editDispatchTrigger"
+		"mvc.command.name=/dispatch/edit_dispatch_trigger"
 	},
 	service = MVCRenderCommand.class
 )
@@ -48,7 +47,7 @@ public class EditDispatchTriggerMVCRenderCommand implements MVCRenderCommand {
 
 		DispatchTriggerDisplayContext dispatchTriggerDisplayContext =
 			new DispatchTriggerDisplayContext(
-				Collections.emptySet(), _dispatchTriggerLocalService,
+				_dispatchTaskExecutorRegistry, _dispatchTriggerLocalService,
 				renderRequest);
 
 		renderRequest.setAttribute(
@@ -56,6 +55,9 @@ public class EditDispatchTriggerMVCRenderCommand implements MVCRenderCommand {
 
 		return "/edit_dispatch_trigger.jsp";
 	}
+
+	@Reference
+	private DispatchTaskExecutorRegistry _dispatchTaskExecutorRegistry;
 
 	@Reference
 	private DispatchTriggerLocalService _dispatchTriggerLocalService;

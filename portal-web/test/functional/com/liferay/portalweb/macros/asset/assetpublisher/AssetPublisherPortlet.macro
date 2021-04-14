@@ -233,6 +233,49 @@ definition {
 		IFrame.selectTopFrame();
 	}
 
+	macro configureCollectionProviderPG {
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
+		if (isSet(columnNumnber)) {
+			MouseOver.mouseOverNotVisible(
+				key_columnNumber = "${columnNumnber}",
+				key_portletName = "Asset Publisher",
+				locator1 = "Home#PAGE_COLUMN_PORTLET_HEADER_ELLIPSIS");
+
+			Click.waitForMenuToggleJSClick(
+				key_columnNumber = "${columnNumnber}",
+				key_portletName = "Asset Publisher",
+				locator1 = "Home#PAGE_COLUMN_PORTLET_HEADER_ELLIPSIS");
+
+			MenuItem.click(menuItem = "Configuration");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		}
+		else {
+			AssetPublisherPortlet.gotoConfigurationPG(portletName = "Asset Publisher");
+		}
+
+		Navigator.gotoNavTab(navTab = "Asset Selection");
+
+		Panel.expandPanel(panel = "Asset Selection");
+
+		Click(locator1 = "APConfiguration#ASSET_SELECTION_INFO_LIST_PROVIDER");
+
+		Alert.viewSuccessMessage();
+
+		Panel.expandPanel(panel = "Select Collection Provider");
+
+		Select(
+			locator1 = "APConfiguration#SELECT_COLLECTION_PROVIDER_FIELD",
+			value1 = "${collectionProviderName}");
+
+		Pause(locator1 = "3000");
+
+		PortletEntry.save();
+
+		IFrame.closeFrame();
+	}
+
 	macro configureDisplayConversionsPG {
 		AssetPublisherPortlet.gotoConfigurationPG();
 
@@ -323,19 +366,21 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#SELECT_STRUCTURE_FIELD");
 
-		var key_fieldName = "${fieldFilter}";
-
 		if (isSet(fieldFilter)) {
-			Check(locator1 = "APConfigurationFilterbyfield#FIELD_FILTER_RADIO_BUTTON");
+			Check(
+				key_fieldName = "${fieldFilter}",
+				locator1 = "APConfigurationFilterbyfield#FIELD_FILTER_RADIO_BUTTON");
 		}
 
 		if (isSet(fieldValue)) {
 			Type(
-				locator1 = "TextInput#FIELD_FILTER_INPUT",
+				key_fieldFieldLabel = "${fieldFilter}",
+				locator1 = "WCEditWebContent#TEXT_INPUT",
 				value1 = "${fieldValue}");
 		}
 
 		AssertClick(
+			key_fieldName = "${fieldFilter}",
 			locator1 = "Button#FIELD_FILTER_APPLY",
 			value1 = "Apply");
 
@@ -369,10 +414,43 @@ definition {
 
 		Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL");
 
+		if (isSet(depotName)) {
+			Panel.expandPanel(panel = "Scope");
+
+			Click(locator1 = "Configuration#SCOPE_SELECT");
+
+			MenuItem.click(menuItem = "Other Site or Asset Library...");
+
+			SelectFrame(value1 = "relative=top");
+
+			SelectFrame(locator1 = "IFrame#SELECT_SITES");
+
+			Navigator.gotoNavTab(navTab = "Asset Libraries");
+
+			if (isSet(noConnectedDepot)) {
+				AssertTextEquals(
+					locator1 = "Message#EMPTY_INFO",
+					value1 = "No asset libraries were found.");
+			}
+
+			else {
+				SiteSelector.selectSite(site = "${depotName}");
+
+				SelectFrame(locator1 = "IFrame#MODAL_BODY");
+			}
+		}
+
 		if (isSet(assetTitle)) {
 			Panel.expandPanel(panel = "Asset Entries");
 
-			Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_BUTTON");
+			if (isSet(depotName)) {
+				Click(
+					key_depotName = "${depotName}",
+					locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_IN_DEPOT");
+			}
+			else {
+				Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_BUTTON");
+			}
 
 			var key_assetType = "${assetType}";
 
@@ -386,18 +464,25 @@ definition {
 
 			var key_assetTitle = "${assetTitle}";
 
-			Click(
-				key_rowEntry = "${assetTitle}",
-				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
+			if (isSet(viewNoRelatedAsset)) {
+				AssertElementNotPresent(
+					key_rowEntry = "${assetTitle}",
+					locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
+			}
+			else {
+				Click(
+					key_rowEntry = "${assetTitle}",
+					locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX");
 
-			SelectFrameTop();
+				SelectFrameTop();
 
-			SelectFrame(locator1 = "IFrame#CONFIGURATION");
+				SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-			Button.clickAdd();
+				Button.clickAdd();
+
+				Alert.viewSuccessMessage();
+			}
 		}
-
-		Alert.viewSuccessMessage();
 
 		SelectFrameTop();
 	}
@@ -866,13 +951,26 @@ definition {
 
 		AssetPublisherPortlet.clickAssetTitle(assetTitle = "${assetTitle}");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "AP#ASSET_ABSTRACT_TITLE",
-			value1 = "${assetTitle}");
+		if ("${assetType}" == "Web Content Folder") {
+			AssertTextEquals.assertPartialText(
+				key_position = "1",
+				locator1 = "AP#ASSET_ABSTRACT_DETAIL_WEB_CONTENT_FOLDER_CONTENT",
+				value1 = "${assetSubfolderDetails}");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "AP#ASSET_ABSTRACT_DETAIL_CONTENT",
-			value1 = "${assetContent}");
+			AssertTextEquals.assertPartialText(
+				key_position = "2",
+				locator1 = "AP#ASSET_ABSTRACT_DETAIL_WEB_CONTENT_FOLDER_CONTENT",
+				value1 = "${assetArticleDetails}");
+		}
+		else {
+			AssertTextEquals.assertPartialText(
+				locator1 = "AP#ASSET_ABSTRACT_TITLE",
+				value1 = "${assetTitle}");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "AP#ASSET_ABSTRACT_DETAIL_CONTENT",
+				value1 = "${assetContent}");
+		}
 	}
 
 	macro viewAssetMetadataPG {
@@ -893,6 +991,19 @@ definition {
 		AssertTextNotPresent(
 			locator1 = "AP#ASSET_ABSTRACT_DESCRIPTION",
 			value1 = "${assetContent}");
+	}
+
+	macro viewAssetOrderPG {
+		var n = "1";
+
+		for (var assetTitle : list "${assetTitleList}") {
+			AssertVisible(
+				key_assetTitle = "${assetTitle}",
+				key_index = "${n}",
+				locator1 = "AP#ASSET_ORDER");
+
+			var n = ${n} + 1;
+		}
 	}
 
 	macro viewAssetPG {
@@ -1017,7 +1128,14 @@ definition {
 
 			SelectFrame(locator1 = "IFrame#SELECT_SITES");
 
-			Navigator.gotoNavTab(navTab = "Sites That I Administer");
+			AssertClick.assertPartialTextClickAt(
+				key_tab = "Sites That I Administer",
+				locator1 = "NavTab#TAB_LINK",
+				value1 = "Sites That I Administer");
+
+			AssertElementPresent(
+				key_tab = "Sites That I Administer",
+				locator1 = "NavTab#ACTIVE_TAB_LINK");
 
 			var key_siteName = "${liferaySiteName}";
 
@@ -1102,9 +1220,9 @@ definition {
 
 		AssertElementPresent(locator1 = "Icon#FLAG");
 
-		AssertElementPresent(locator1 = "Ratings#YOUR_RATING_LABEL");
+		AssertElementPresent(locator1 = "Ratings#YOUR_RATING_STAR");
 
-		AssertElementPresent(locator1 = "Ratings#AVERAGE_LABEL");
+		AssertElementPresent(locator1 = "Ratings#AVERAGE_STAR");
 
 		AssertElementPresent(locator1 = "Button#SUBSCRIBE");
 
@@ -1223,7 +1341,7 @@ definition {
 			for (var assetSubtypeField : list "${assetSubtypeFields}") {
 				var key_fieldName = "${assetSubtypeField}";
 
-				AssertTextEquals.assertPartialText(
+				AssertTextEquals(
 					locator1 = "APConfigurationFilterbyfield#FIELD_FILTER_FIELD_NAME",
 					value1 = "${assetSubtypeField}");
 			}

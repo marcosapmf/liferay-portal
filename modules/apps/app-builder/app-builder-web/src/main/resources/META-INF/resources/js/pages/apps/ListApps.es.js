@@ -12,21 +12,21 @@
  * details.
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayLabel from '@clayui/label';
+import ListView from 'data-engine-js-components-web/js/components/list-view/ListView.es';
+import {confirmDelete} from 'data-engine-js-components-web/js/utils/client.es';
+import {concatValues} from 'data-engine-js-components-web/js/utils/utils.es';
 import {compile} from 'path-to-regexp';
 import React, {useContext} from 'react';
 import {Link} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
-import Button from '../../components/button/Button.es';
-import ListView from '../../components/list-view/ListView.es';
 import useBackUrl from '../../hooks/useBackUrl.es';
 import useDataDefinition from '../../hooks/useDataDefinition.es';
 import useDeployApp from '../../hooks/useDeployApp.es';
-import {confirmDelete} from '../../utils/client.es';
 import {getLocalizedValue} from '../../utils/lang.es';
 import {fromNow} from '../../utils/time.es';
-import {concatValues} from '../../utils/utils.es';
 import {
 	COLUMNS,
 	DEPLOYMENT_ACTION,
@@ -34,13 +34,25 @@ import {
 	STATUSES,
 } from './constants.es';
 
-export const Actions = () => {
+export const Actions = (validateFormViewMissingRequiredFields) => {
 	const {getStandaloneURL} = useContext(AppContext);
 	const {deployApp, undeployApp} = useDeployApp();
 
 	return [
 		{
-			action: (app) => (app.active ? undeployApp(app) : deployApp(app)),
+			action: (app) => {
+				if (app.active) {
+					return undeployApp(app);
+				}
+
+				if (validateFormViewMissingRequiredFields) {
+					return validateFormViewMissingRequiredFields(app).then(
+						(callback) => callback ?? deployApp(app)
+					);
+				}
+
+				return deployApp(app);
+			},
 			name: ({active}) =>
 				DEPLOYMENT_ACTION[active ? 'undeploy' : 'deploy'],
 			show: ({appDeployments}) => appDeployments.length > 0,
@@ -60,7 +72,7 @@ export const Actions = () => {
 	];
 };
 
-export default ({
+const ListApps = ({
 	editPath = [
 		`/:objectType/:dataDefinitionId(\\d+)/apps/deploy`,
 		`/:objectType/:dataDefinitionId(\\d+)/apps/:appId(\\d+)`,
@@ -69,6 +81,7 @@ export default ({
 	match: {
 		params: {dataDefinitionId, objectType},
 	},
+	history,
 }) => {
 	const {scope} = useContext(AppContext);
 	const withBackUrl = useBackUrl();
@@ -78,19 +91,22 @@ export default ({
 	const newAppLink = compile(editPath[0])({dataDefinitionId, objectType});
 
 	const ADD_BUTTON = () => (
-		<Button
-			className="nav-btn nav-btn-monospaced"
-			href={newAppLink}
-			symbol="plus"
-			tooltip={Liferay.Language.get('new-app')}
-		/>
+		<Link to={newAppLink}>
+			<ClayButtonWithIcon
+				className="nav-btn nav-btn-monospaced"
+				symbol="plus"
+				title={Liferay.Language.get('new-app')}
+			/>
+		</Link>
 	);
 
 	const EMPTY_STATE = {
 		button: () => (
-			<Button displayType="secondary" href={newAppLink}>
-				{Liferay.Language.get('new-app')}
-			</Button>
+			<Link to={newAppLink}>
+				<ClayButton displayType="secondary">
+					{Liferay.Language.get('new-app')}
+				</ClayButton>
+			</Link>
 		),
 		description: Liferay.Language.get(
 			'select-the-form-and-table-view-you-want-and-deploy-your-app-as-a-widget-standalone-or-place-it-in-the-product-menu'
@@ -117,6 +133,7 @@ export default ({
 			columns={COLUMNS}
 			emptyState={EMPTY_STATE}
 			endpoint={ENDPOINT}
+			history={history}
 			{...listViewProps}
 		>
 			{(app) => {
@@ -145,3 +162,5 @@ export default ({
 		</ListView>
 	);
 };
+
+export default ListApps;

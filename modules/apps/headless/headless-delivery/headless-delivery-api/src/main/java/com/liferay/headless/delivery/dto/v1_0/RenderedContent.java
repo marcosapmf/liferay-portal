@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("RenderedContent")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "RenderedContent")
-public class RenderedContent {
+public class RenderedContent implements Serializable {
 
 	public static RenderedContent toDTO(String json) {
 		return ObjectMapperUtil.readValue(RenderedContent.class, json);
@@ -80,7 +82,7 @@ public class RenderedContent {
 	protected String contentTemplateId;
 
 	@Schema(
-		description = "The name of the template used to render the content."
+		description = "The name of the template or display page used to render the content."
 	)
 	public String getContentTemplateName() {
 		return contentTemplateName;
@@ -106,7 +108,7 @@ public class RenderedContent {
 	}
 
 	@GraphQLField(
-		description = "The name of the template used to render the content."
+		description = "The name of the template or display page used to render the content."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String contentTemplateName;
@@ -143,6 +145,38 @@ public class RenderedContent {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> contentTemplateName_i18n;
+
+	@Schema(
+		description = "Specifies if the template or display page are marked as default to display the content"
+	)
+	public Boolean getMarkedAsDefault() {
+		return markedAsDefault;
+	}
+
+	public void setMarkedAsDefault(Boolean markedAsDefault) {
+		this.markedAsDefault = markedAsDefault;
+	}
+
+	@JsonIgnore
+	public void setMarkedAsDefault(
+		UnsafeSupplier<Boolean, Exception> markedAsDefaultUnsafeSupplier) {
+
+		try {
+			markedAsDefault = markedAsDefaultUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "Specifies if the template or display page are marked as default to display the content"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean markedAsDefault;
 
 	@Schema(description = "An absolute URL to the rendered content.")
 	public String getRenderedContentURL() {
@@ -267,6 +301,16 @@ public class RenderedContent {
 			sb.append("\"contentTemplateName_i18n\": ");
 
 			sb.append(_toJSON(contentTemplateName_i18n));
+		}
+
+		if (markedAsDefault != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"markedAsDefault\": ");
+
+			sb.append(markedAsDefault);
 		}
 
 		if (renderedContentURL != null) {

@@ -28,6 +28,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -51,7 +53,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("Document")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Document")
-public class Document {
+public class Document implements Serializable {
 
 	public static Document toDTO(String json) {
 		return ObjectMapperUtil.readValue(Document.class, json);
@@ -616,6 +618,40 @@ public class Document {
 	protected RelatedContent[] relatedContents;
 
 	@Schema(
+		description = "A list of rendered documents, which results from using a display page to process the document and return HTML."
+	)
+	@Valid
+	public RenderedContent[] getRenderedContents() {
+		return renderedContents;
+	}
+
+	public void setRenderedContents(RenderedContent[] renderedContents) {
+		this.renderedContents = renderedContents;
+	}
+
+	@JsonIgnore
+	public void setRenderedContents(
+		UnsafeSupplier<RenderedContent[], Exception>
+			renderedContentsUnsafeSupplier) {
+
+		try {
+			renderedContents = renderedContentsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A list of rendered documents, which results from using a display page to process the document and return HTML."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected RenderedContent[] renderedContents;
+
+	@Schema(
 		description = "The ID of the site to which this document is scoped."
 	)
 	public Long getSiteId() {
@@ -1098,6 +1134,26 @@ public class Document {
 				sb.append(String.valueOf(relatedContents[i]));
 
 				if ((i + 1) < relatedContents.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (renderedContents != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"renderedContents\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < renderedContents.length; i++) {
+				sb.append(String.valueOf(renderedContents[i]));
+
+				if ((i + 1) < renderedContents.length) {
 					sb.append(", ");
 				}
 			}

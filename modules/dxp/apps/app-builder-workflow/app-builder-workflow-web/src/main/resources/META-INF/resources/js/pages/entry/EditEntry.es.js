@@ -13,11 +13,15 @@ import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import {AppContext} from 'app-builder-web/js/AppContext.es';
 import {ControlMenuBase} from 'app-builder-web/js/components/control-menu/ControlMenu.es';
-import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
 import useDataDefinition from 'app-builder-web/js/hooks/useDataDefinition.es';
-import {getItem} from 'app-builder-web/js/utils/client.es';
 import {getLocalizedUserPreferenceValue} from 'app-builder-web/js/utils/lang.es';
-import {errorToast, successToast} from 'app-builder-web/js/utils/toast.es';
+import Loading from 'data-engine-js-components-web/js/components/loading/Loading.es';
+import {getItem} from 'data-engine-js-components-web/js/utils/client.es';
+import {
+	errorToast,
+	successToast,
+} from 'data-engine-js-components-web/js/utils/toast.es';
+import {useTimeout} from 'frontend-js-react-web';
 import {createResourceURL, fetch} from 'frontend-js-web';
 import React, {
 	useCallback,
@@ -37,6 +41,7 @@ import useDDMForms, {
 import useDataLayouts from '../../hooks/useDataLayouts.es';
 import useDataRecordApps from '../../hooks/useDataRecordApps.es';
 import ReassignEntryModal from './ReassignEntryModal.es';
+import {METRIC_INDEXES_KEY, refreshIndex} from './actions.es';
 
 const WorkflowInfoPortal = ({children}) => {
 	const portalElementId = 'workflowInfoBar';
@@ -83,6 +88,7 @@ export default function EditEntry({
 		appId,
 		useMemo(() => [dataRecordId], [dataRecordId])
 	);
+	const delay = useTimeout();
 
 	const appWorkflow = useAppWorkflow(appId);
 
@@ -113,41 +119,63 @@ export default function EditEntry({
 		)
 	);
 
-	const doFetch = useCallback(() => {
-		setLoading(true);
+	const doFetch = useCallback(
+		({newAssignee} = {}) => {
+			setLoading(true);
 
-		if (appWorkflowDefinitionId) {
-			if (isEdit) {
-				getItem(
-					`/o/portal-workflow-metrics/v1.0/processes/${appWorkflowDefinitionId}/instances`,
-					{classPKs: [dataRecordId]}
-				).then(({items}) => {
-					setLoading(false);
+			if (appWorkflowDefinitionId) {
+				if (isEdit) {
+					const getWorkflowInfo = () => {
+						getItem(
+							`/o/portal-workflow-metrics/v1.0/processes/${appWorkflowDefinitionId}/instances`,
+							{classPKs: [dataRecordId]}
+						).then(({items}) => {
+							let retryCount = 0;
+							if (items.length) {
+								const {id, ...instance} = items.pop();
 
-					if (items.length) {
-						const {id, ...instance} = items.pop();
+								const [assignee] = instance.assignees || [];
 
-						const [assignee] = instance.assignees || [];
+								if (
+									newAssignee &&
+									newAssignee.id !== assignee?.id &&
+									retryCount <= 5
+								) {
+									retryCount++;
 
-						const assignedToUser =
-							Number(themeDisplay.getUserId()) === assignee?.id;
+									return delay(getWorkflowInfo, 1000);
+								}
 
-						setWorkflowInfo({
-							...instance,
-							appVersion,
-							canReassign: assignedToUser || assignee?.reviewer,
-							instanceId: id,
-							tasks: appWorkflowTasks,
+								const assignedToUser =
+									Number(themeDisplay.getUserId()) ===
+									assignee?.id;
+
+								setLoading(false);
+								setWorkflowInfo({
+									...instance,
+									appVersion,
+									canReassign:
+										assignedToUser || assignee?.reviewer,
+									instanceId: id,
+									tasks: appWorkflowTasks,
+								});
+							}
+							else {
+								setLoading(false);
+							}
 						});
-					}
-				});
+					};
+
+					getWorkflowInfo();
+				}
+				else {
+					setLoading(false);
+				}
 			}
-			else {
-				setLoading(false);
-			}
-		}
+		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [appWorkflowDefinitionId, dataRecordId, isEdit]);
+		[appWorkflowDefinitionId, dataRecordId, isEdit]
+	);
 
 	const onCancel = useCallback(() => {
 		if (redirect) {
@@ -158,14 +186,6 @@ export default function EditEntry({
 		}
 	}, [basePortletURL, redirect]);
 
-	const onCloseModal = (isRefetch) => {
-		setModalVisible(false);
-
-		if (isRefetch) {
-			doFetch();
-		}
-	};
-
 	const saveDataRecord = useCallback(
 		({transitionName}, dataRecord) => {
 			const params = {
@@ -174,7 +194,9 @@ export default function EditEntry({
 				dataRecordId,
 			};
 
-			const resource = `${isEdit ? 'update' : 'add'}_data_record`;
+			const resource = `${
+				isEdit ? 'app_builder_workflow/update' : 'app_builder/add'
+			}_data_record`;
 
 			if (workflowInfo) {
 				const {
@@ -197,7 +219,7 @@ export default function EditEntry({
 
 			fetch(
 				createResourceURL(baseResourceURL, {
-					p_p_resource_id: `/app_builder/${resource}`,
+					p_p_resource_id: `/${resource}`,
 				}),
 				{
 					body: new URLSearchParams(
@@ -212,7 +234,10 @@ export default function EditEntry({
 							? Liferay.Language.get('an-entry-was-updated')
 							: Liferay.Language.get('an-entry-was-added')
 					);
-					onCancel();
+
+					refreshIndex(METRIC_INDEXES_KEY)
+						.then(onCancel)
+						.catch(onCancel);
 				})
 				.catch(() => {
 					errorToast();
@@ -348,6 +373,7 @@ export default function EditEntry({
 					<WorkflowInfoPortal>
 						<div className="d-flex justify-content-center mt-4">
 							<WorkflowInfoBar
+								className="bar-sm"
 								{...workflowInfo}
 								hideColumns={['step']}
 							/>
@@ -388,7 +414,8 @@ export default function EditEntry({
 			{isModalVisible && (
 				<ReassignEntryModal
 					entry={workflowInfo}
-					onCloseModal={onCloseModal}
+					onCloseModal={() => setModalVisible(false)}
+					refetch={doFetch}
 				/>
 			)}
 		</>

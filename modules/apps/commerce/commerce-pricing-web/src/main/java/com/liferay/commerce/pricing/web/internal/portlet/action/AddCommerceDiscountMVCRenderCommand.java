@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_DISCOUNT,
-		"mvc.command.name=addCommerceDiscount"
+		"mvc.command.name=/commerce_discount/add_commerce_discount"
 	},
 	service = MVCRenderCommand.class
 )
@@ -41,7 +41,7 @@ public class AddCommerceDiscountMVCRenderCommand implements MVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/discount/add_discount.jsp";
+		return "/discount/add_commerce_discount.jsp";
 	}
 
 }

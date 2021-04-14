@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -99,10 +100,11 @@ public class EditStyleBookEntryDisplayContext {
 		).put(
 			"redirectURL", _getRedirect()
 		).put(
-			"saveDraftURL",
-			_getActionURL("/style_book/save_draft_style_book_entry")
+			"saveDraftURL", _getActionURL("/style_book/edit_style_book_entry")
 		).put(
 			"styleBookEntryId", _getStyleBookEntryId()
+		).put(
+			"themeName", _getThemeName()
 		).build();
 	}
 
@@ -210,6 +212,15 @@ public class EditStyleBookEntryDisplayContext {
 		StyleBookEntry styleBookEntry = _getStyleBookEntry();
 
 		return styleBookEntry.getName();
+	}
+
+	private String _getThemeName() {
+		LayoutSet layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(
+			_themeDisplay.getSiteGroupId(), false);
+
+		Theme theme = layoutSet.getTheme();
+
+		return theme.getName();
 	}
 
 	private void _setViewAttributes() {

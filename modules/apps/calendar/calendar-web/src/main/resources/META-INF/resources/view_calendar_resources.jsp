@@ -26,7 +26,6 @@ CalendarResourceDisplayTerms displayTerms = new CalendarResourceDisplayTerms(ren
 	disabled="<%= calendarDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= calendarDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= calendarDisplayContext.getTotalItems() %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= calendarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="<%= calendarDisplayContext.getSearchContainerId() %>"
 	searchFormName="fm"

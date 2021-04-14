@@ -76,6 +76,10 @@ $emptyItemMinHeight: 180px;
 	}
 
 	&__col__border {
+		.page-editor__col--master > & {
+			border: none;
+		}
+
 		border: 1px solid $primary-l2;
 		height: 100%;
 	}
@@ -276,5 +280,9 @@ $emptyItemMinHeight: 180px;
 	lfr-editable {
 		cursor: pointer;
 		display: block;
+	}
+
+	.portlet-borderless .portlet-content {
+		padding: 0;
 	}
 }

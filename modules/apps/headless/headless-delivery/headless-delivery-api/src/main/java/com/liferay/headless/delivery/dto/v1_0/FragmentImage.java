@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("FragmentImage")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentImage")
-public class FragmentImage {
+public class FragmentImage implements Serializable {
 
 	public static FragmentImage toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentImage.class, json);
@@ -79,6 +81,39 @@ public class FragmentImage {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object description;
+
+	@Schema
+	@Valid
+	public FragmentImageClassPKReference getFragmentImageClassPKReference() {
+		return fragmentImageClassPKReference;
+	}
+
+	public void setFragmentImageClassPKReference(
+		FragmentImageClassPKReference fragmentImageClassPKReference) {
+
+		this.fragmentImageClassPKReference = fragmentImageClassPKReference;
+	}
+
+	@JsonIgnore
+	public void setFragmentImageClassPKReference(
+		UnsafeSupplier<FragmentImageClassPKReference, Exception>
+			fragmentImageClassPKReferenceUnsafeSupplier) {
+
+		try {
+			fragmentImageClassPKReference =
+				fragmentImageClassPKReferenceUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentImageClassPKReference fragmentImageClassPKReference;
 
 	@Schema
 	@Valid
@@ -171,6 +206,16 @@ public class FragmentImage {
 			sb.append("\"description\": ");
 
 			sb.append(String.valueOf(description));
+		}
+
+		if (fragmentImageClassPKReference != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentImageClassPKReference\": ");
+
+			sb.append(String.valueOf(fragmentImageClassPKReference));
 		}
 
 		if (title != null) {

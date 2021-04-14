@@ -158,8 +158,9 @@ public class StylebookEntryStagedModelDataHandler
 			importedStyleBookEntry.setPreviewFileEntryId(previewFileEntryId);
 
 			importedStyleBookEntry =
-				_styleBookEntryLocalService.updateStyleBookEntry(
-					importedStyleBookEntry);
+				_styleBookEntryLocalService.updatePreviewFileEntryId(
+					importedStyleBookEntry.getStyleBookEntryId(),
+					previewFileEntryId);
 		}
 
 		portletDataContext.importClassedModel(

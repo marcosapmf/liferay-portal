@@ -34,7 +34,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -70,12 +69,14 @@ public class DDMFormValuesToMapConverterImpl
 		Map<String, DDMFormField> ddmFormFields =
 			ddmStructure.getFullHierarchyDDMFormFieldsMap(true);
 
-		Map<String, Object> values = new HashMap<>(ddmFormFields.size());
+		Map<String, Object> values = new LinkedHashMap<>(ddmFormFields.size());
 
 		for (DDMFormFieldValue ddmFormFieldValue :
 				ddmFormValues.getDDMFormFieldValues()) {
 
-			_addValues(ddmFormFields, ddmFormFieldValue, values);
+			if (ddmFormFields.containsKey(ddmFormFieldValue.getName())) {
+				_addValues(ddmFormFields, ddmFormFieldValue, values);
+			}
 		}
 
 		return values;
@@ -227,7 +228,9 @@ public class DDMFormValuesToMapConverterImpl
 
 		return stream.collect(
 			Collectors.toMap(
-				LanguageUtil::getLanguageId, localizedValue::getString));
+				LanguageUtil::getLanguageId,
+				locale -> GetterUtil.getString(
+					localizedValue.getString(locale))));
 	}
 
 	private List<String> _toStringList(

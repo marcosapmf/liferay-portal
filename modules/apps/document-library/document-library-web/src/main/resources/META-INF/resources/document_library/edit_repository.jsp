@@ -33,7 +33,9 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle(headerTitle);
 %>
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
 	<portlet:actionURL name="/document_library/edit_repository" var="editRepositoryURL">
 		<portlet:param name="mvcRenderCommandName" value="/document_library/edit_repository" />
 	</portlet:actionURL>
@@ -99,19 +101,18 @@ renderResponse.setTitle(headerTitle);
 
 							for (RepositoryConfiguration.Parameter repositoryConfigurationParameter : repositoryConfiguration.getParameters()) {
 								String parameterValue = typeSettingsProperties.getProperty(repositoryConfigurationParameter.getName());
-
-								if (Validator.isNotNull(parameterValue)) {
 							%>
 
+								<c:if test="<%= Validator.isNotNull(parameterValue) %>">
 									<dt>
 										<%= HtmlUtil.escape(repositoryConfigurationParameter.getLabel(locale)) %>
 									</dt>
 									<dd>
 										<%= HtmlUtil.escape(parameterValue) %>
 									</dd>
+								</c:if>
 
 							<%
-								}
 							}
 							%>
 
@@ -127,13 +128,13 @@ renderResponse.setTitle(headerTitle);
 					/>
 				</aui:fieldset>
 			</c:if>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 
 	<div class="hide" id="<portlet:namespace />settingsSupported">
@@ -171,7 +172,7 @@ renderResponse.setTitle(headerTitle);
 	</div>
 </clay:container-fluid>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script sandbox="<%= true %>">
 	var settingsParametersContainer = document.getElementById(
 		'<portlet:namespace />settingsParameters'
 	);
@@ -186,7 +187,7 @@ renderResponse.setTitle(headerTitle);
 			);
 
 			if (settingsParametersElement) {
-				dom.append(settingsSupported, settingsParametersElement);
+				settingsSupported.append(settingsParametersElement);
 			}
 
 			var className = select.value;
@@ -200,7 +201,7 @@ renderResponse.setTitle(headerTitle);
 			);
 
 			if (repositoryParameters) {
-				dom.append(settingsParametersContainer, repositoryParameters);
+				settingsParametersContainer.append(repositoryParameters);
 			}
 		}
 	}
@@ -210,7 +211,7 @@ renderResponse.setTitle(headerTitle);
 	);
 
 	if (repositoryTypesSelect) {
-		repositoryTypesSelect.addEventListener('change', function (event) {
+		repositoryTypesSelect.addEventListener('change', (event) => {
 			showConfiguration(repositoryTypesSelect);
 		});
 

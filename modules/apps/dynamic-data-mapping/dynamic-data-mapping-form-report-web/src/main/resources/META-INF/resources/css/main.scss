@@ -1,4 +1,6 @@
 .portlet-ddm-form-report {
+	margin-top: -20px;
+
 	#container {
 		overflow: hidden;
 	}
@@ -36,6 +38,7 @@
 
 				ul {
 					font-size: 14px;
+					padding-left: 0;
 
 					li {
 						display: flex;
@@ -43,7 +46,7 @@
 
 						p {
 							margin-bottom: 0;
-							max-width: 94%;
+							max-width: 90%;
 							min-width: auto;
 							padding-left: 8px;
 							position: relative;
@@ -135,6 +138,10 @@
 				padding-bottom: 10px;
 				width: 100%;
 			}
+
+			#tooltip-label {
+				max-width: 90%;
+			}
 		}
 
 		.field-info {
@@ -201,7 +208,6 @@
 
 	.custom-chart-size {
 		display: flex;
-		height: 400px !important;
 		min-height: 400px;
 		min-width: 400px;
 		width: 100%;
@@ -283,6 +289,8 @@
 
 			ul {
 				list-style-type: none;
+				max-height: calc(100vh - 92px);
+				overflow-y: auto;
 				padding: 0;
 				width: 240px;
 
@@ -301,6 +309,7 @@
 							font-size: 14px;
 							font-weight: normal;
 							line-height: 150%;
+							word-break: break-word;
 						}
 
 						&:hover {

@@ -154,7 +154,7 @@ public class LayoutsTreeDisplayContext {
 			PortletRequest.RENDER_PHASE);
 
 		configureLayoutSetURL.setParameter(
-			"mvcRenderCommandName", "/layout/edit_layout_set");
+			"mvcRenderCommandName", "/layout_admin/edit_layout_set");
 
 		Layout layout = _themeDisplay.getLayout();
 
@@ -177,7 +177,7 @@ public class LayoutsTreeDisplayContext {
 			PortletRequest.RENDER_PHASE);
 
 		configureLayoutURL.setParameter(
-			"mvcRenderCommandName", "/layout/edit_layout");
+			"mvcRenderCommandName", "/layout_admin/edit_layout");
 
 		Layout layout = _themeDisplay.getLayout();
 
@@ -246,7 +246,8 @@ public class LayoutsTreeDisplayContext {
 						PRODUCT_NAVIGATION_PRODUCT_MENU,
 					PortletRequest.RESOURCE_PHASE);
 
-				findLayoutsURL.setResourceID("/product_menu/find_layouts");
+				findLayoutsURL.setResourceID(
+					"/product_navigation_product_menu/find_layouts");
 
 				return findLayoutsURL.toString();
 			}
@@ -335,7 +336,7 @@ public class LayoutsTreeDisplayContext {
 		return StringBundler.concat(
 			portletURL, StringPool.AMPERSAND,
 			PortalUtil.getPortletNamespace(AssetListPortletKeys.ASSET_LIST),
-			"collectionPK={collectionPK}", StringPool.AMPERSAND,
+			"collectionPK={collectionPK}&",
 			PortalUtil.getPortletNamespace(AssetListPortletKeys.ASSET_LIST),
 			"collectionType={collectionType}");
 	}

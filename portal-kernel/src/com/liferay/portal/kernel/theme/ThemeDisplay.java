@@ -566,6 +566,10 @@ public class ThemeDisplay
 		return _pathContext;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public String getPathFlash() {
 		return _pathFlash;
 	}
@@ -1507,6 +1511,10 @@ public class ThemeDisplay
 		_pathContext = pathContext;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setPathFlash(String pathFlash) {
 		_pathFlash = pathFlash;
 	}
@@ -1956,7 +1964,7 @@ public class ThemeDisplay
 	private String _portalDomain = StringPool.BLANK;
 	private String _portalURL = StringPool.BLANK;
 	private PortletDisplay _portletDisplay = new PortletDisplay();
-	private Map<EmbeddedPortletCacheKey, Boolean> _portletEmbeddedMap =
+	private final Map<EmbeddedPortletCacheKey, Boolean> _portletEmbeddedMap =
 		new HashMap<>();
 	private String _ppid = StringPool.BLANK;
 	private String _realCompanyLogo = StringPool.BLANK;

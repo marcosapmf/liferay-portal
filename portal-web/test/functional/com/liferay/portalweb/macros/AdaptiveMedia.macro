@@ -18,8 +18,6 @@ definition {
 		AssertVisible(locator1 = "AdaptiveMediaTable#PROGRESS");
 
 		AssertElementPresent(locator1 = "AdaptiveMediaTable#PROGRESS_SUCCESS");
-
-		Alert.viewSuccessMessage();
 	}
 
 	macro addImageResolution {
@@ -31,20 +29,24 @@ definition {
 			PortletEntry.inputDescription(description = "${description}");
 		}
 
-		Type(
-			locator1 = "TextInput#MAX_WIDTH",
-			value1 = "${maxWidth}");
+		if (isSet(maxWidth)) {
+			Type(
+				locator1 = "TextInput#MAX_WIDTH",
+				value1 = "${maxWidth}");
+		}
 
-		Type(
-			locator1 = "TextInput#MAX_HEIGHT",
-			value1 = "${maxHeight}");
+		if (isSet(maxHeight)) {
+			Type(
+				locator1 = "TextInput#MAX_HEIGHT",
+				value1 = "${maxHeight}");
+		}
 
 		if (isSet(addHighDensityDisplay)) {
-			Check(locator1 = "Checkbox#ADD_HIGH_DENSITY_DISPLAY");
+			Check.checkNotVisible(locator1 = "Checkbox#ADD_HIGH_DENSITY_DISPLAY");
 		}
 
 		if (isSet(customID)) {
-			Click(locator1 = "Radio#CUSTOM_URL");
+			Click.clickAtNotVisible(locator1 = "Radio#CUSTOM_URL");
 
 			Type(
 				locator1 = "TextInput#IMAGE_ID",
@@ -59,11 +61,13 @@ definition {
 			Alert.viewErrorMessage(errorMessage = "A configuration with this ID already exists. Please enter a unique ID.");
 		}
 		else if (isSet(zero)) {
-			Alert.viewErrorMessage(errorMessage = "Please enter a max width or max height value larger than 0.");
+			AssertTextEquals(
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
+				value1 = "Please enter a max width or max height value larger than 0.");
 		}
 		else if (isSet(noDimensions)) {
 			AssertTextEquals(
-				locator1 = "Message#REQUIRED_INFO",
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
 				value1 = "At least one value is required.");
 		}
 		else {
@@ -90,8 +94,8 @@ definition {
 
 		AssertElementNotPresent(locator1 = "Message#SUCCESS");
 
-		AssertTextEquals(
-			locator1 = "Message#REQUIRED_INFO",
+		AssertTextEquals.assertPartialText(
+			locator1 = "TextInput#REQUIRED_ALERT",
 			value1 = "At least one value is required.");
 	}
 
@@ -145,9 +149,9 @@ definition {
 
 			AssertNotEditable(locator1 = "TextInput#MAX_WIDTH");
 
-			AssertNotEditable(locator1 = "Radio#AUTOMATIC_URL");
+			AssertElementPresent(locator1 = "Radio#AUTOMATIC_URL_DISABLED");
 
-			AssertNotEditable(locator1 = "Radio#CUSTOM_URL");
+			AssertElementPresent(locator1 = "Radio#CUSTOM_URL_DISABLED");
 		}
 		else {
 			if (!(contains("${maxHeightEdit}", "{maxHeightEdit}"))) {
@@ -163,7 +167,7 @@ definition {
 			}
 
 			if (!(contains("${imageIDEdit}", "{imageIDEdit}"))) {
-				Click(locator1 = "Radio#CUSTOM_URL");
+				Click.clickAtNotVisible(locator1 = "Radio#CUSTOM_URL");
 
 				Type(
 					locator1 = "TextInput#IMAGE_ID",
@@ -177,8 +181,13 @@ definition {
 
 		if (isSet(noDimensions)) {
 			AssertTextEquals(
-				locator1 = "Message#REQUIRED_INFO",
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
 				value1 = "At least one value is required.");
+		}
+		else if (isSet(zero)) {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
+				value1 = "Please enter a max width or max height value larger than 0.");
 		}
 		else {
 			AssertElementNotPresent(locator1 = "Message#ERROR");

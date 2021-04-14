@@ -64,6 +64,10 @@
 			<contains>No theme found for specified theme id userdashboard_WAR_userdashboardtheme</contains>
 			<matches></matches>
 		</ignore-error>
+		<ignore-error description="COMMERCE-5588 - temporarily ignore until fixed">
+			<contains>IX_1B108A04</contains>
+			<matches></matches>
+		</ignore-error>
 		<ignore-error description="LPS-22821">
 			<contains>Exception sending context destroyed event to listener instance of class com.liferay.portal.spring.context.PortalContextLoaderListener</contains>
 			<matches></matches>
@@ -168,10 +172,6 @@
 			<contains></contains>
 			<matches>.*Table.*does not exist.*</matches>
 		</ignore-error>
-		<ignore-error description="LPS-65878, temporary workaround until Tina Tian fixes it">
-			<contains>The addSearchEngineConfigurator method has thrown an exception</contains>
-			<matches></matches>
-		</ignore-error>
 		<ignore-error description="LPS-68846 and LPS-66321">
 			<contains>Unable to call .* of /documents</contains>
 			<matches></matches>
@@ -187,10 +187,6 @@
 		<ignore-error description="LPS-88391, LPS-88417">
 			<contains></contains>
 			<matches>Successfully recreated and upgraded table .*</matches>
-		</ignore-error>
-		<ignore-error description="LPS-88395 - temporarily ignore until fixed">
-			<contains>IX_CED31606</contains>
-			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LPS-88412 - temporarily ignore until fixed">
 			<contains>drop table if exists Kaleo</contains>
@@ -224,12 +220,8 @@
 			<contains>IX_717B97E1</contains>
 			<matches></matches>
 		</ignore-error>
-		<ignore-error description="LPS-88553 - temporarily ignore until fixed">
+		<ignore-error description="LPS-88553">
 			<contains>Returning the default theme</contains>
-			<matches></matches>
-		</ignore-error>
-		<ignore-error description="LPS-97522 - temporarily ignore until fixed">
-			<contains>IX_14E638B0</contains>
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LPS-105385 - temporarily ignore until fixed">
@@ -238,6 +230,18 @@
 		</ignore-error>
 		<ignore-error description="LPS-111433 - temporarily ignore until fixed">
 			<contains>IX_EE41CBEB</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-123610">
+			<contains>No default user was found for company</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-127275 - temporarily ignore until fixed">
+			<contains>com.liferay.analytics.message.sender.impl</contains>
+			<matches></matches>
+		</ignore-error>
+		<ignore-error description="LPS-127285 - temporarily ignore until fixed">
+			<contains>StyleBookEntryVersion</contains>
 			<matches></matches>
 		</ignore-error>
 		<ignore-error description="LRQA-24859">

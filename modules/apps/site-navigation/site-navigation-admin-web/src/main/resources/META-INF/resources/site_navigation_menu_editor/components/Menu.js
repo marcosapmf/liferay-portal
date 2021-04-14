@@ -12,11 +12,8 @@
  * details.
  */
 
-import PropTypes from 'prop-types';
 import React from 'react';
-import {useDrop} from 'react-dnd';
 
-import {ACCEPTING_ITEM_TYPE} from '../constants/acceptingItemType';
 import {useItems} from '../contexts/ItemsContext';
 import {MenuItem} from './MenuItem';
 
@@ -24,45 +21,10 @@ export const Menu = () => {
 	const items = useItems();
 
 	return (
-		<div className="container p-3">
-			<MenuContent items={items} />
+		<div className="container p-3" role="list">
+			{items.map((item) => (
+				<MenuItem item={item} key={item.siteNavigationMenuItemId} />
+			))}
 		</div>
 	);
-};
-
-const MenuContent = ({items}) => {
-	const [, drop] = useDrop({
-		accept: ACCEPTING_ITEM_TYPE,
-		canDrop(source, monitor) {
-			return monitor.isOver({shallow: true});
-		},
-		drop(source, monitor) {
-			if (monitor.canDrop()) {
-
-				// to-do: drop logic
-
-			}
-		},
-	});
-
-	return items.map((item) => (
-		<div key={item.siteNavigationMenuItemId}>
-			<MenuItem item={item} />
-
-			<div className="pl-5" ref={drop}>
-				{!!item.children.length && (
-					<MenuContent items={item.children} />
-				)}
-			</div>
-		</div>
-	));
-};
-
-MenuContent.propTypes = {
-	items: PropTypes.arrayOf(
-		PropTypes.shape({
-			children: PropTypes.array.isRequired,
-			siteNavigationMenuItemId: PropTypes.string.isRequired,
-		})
-	),
 };

@@ -23,16 +23,16 @@ CommerceInventoryWarehousesDisplayContext commerceInventoryWarehousesDisplayCont
 <c:if test="<%= commerceInventoryWarehousesDisplayContext.hasManageCommerceInventoryWarehousePermission() %>">
 
 	<%
-	String commerceCountryTwoLettersIsoCode = commerceInventoryWarehousesDisplayContext.getCommerceCountryTwoLettersIsoCode();
+	String countryTwoLettersIsoCode = commerceInventoryWarehousesDisplayContext.getCountryTwoLettersIsoCode();
 	List<ManagementBarFilterItem> managementBarFilterItems = commerceInventoryWarehousesDisplayContext.getManagementBarFilterItems();
 
 	String managementBarFilterValue = null;
 
-	if (Validator.isNotNull(commerceCountryTwoLettersIsoCode)) {
-		CommerceCountry commerceCountry = commerceInventoryWarehousesDisplayContext.getCommerceCountry(commerceCountryTwoLettersIsoCode);
+	if (Validator.isNotNull(countryTwoLettersIsoCode)) {
+		Country country = commerceInventoryWarehousesDisplayContext.getCountry(countryTwoLettersIsoCode);
 
 		for (ManagementBarFilterItem managementBarFilterItem : managementBarFilterItems) {
-			if (commerceCountry.getCommerceCountryId() == Long.valueOf(managementBarFilterItem.getId())) {
+			if (country.getCountryId() == Long.valueOf(managementBarFilterItem.getId())) {
 				managementBarFilterValue = managementBarFilterItem.getLabel();
 
 				break;
@@ -83,9 +83,9 @@ CommerceInventoryWarehousesDisplayContext commerceInventoryWarehousesDisplayCont
 			/>
 
 			<portlet:renderURL var="addCommerceInventoryWarehouseURL">
-				<portlet:param name="mvcRenderCommandName" value="editCommerceInventoryWarehouse" />
+				<portlet:param name="mvcRenderCommandName" value="/commerce_inventory_warehouse/edit_commerce_inventory_warehouse" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
-				<portlet:param name="commerceCountryId" value="<%= String.valueOf(commerceCountryTwoLettersIsoCode) %>" />
+				<portlet:param name="commerceCountryId" value="<%= String.valueOf(countryTwoLettersIsoCode) %>" />
 			</portlet:renderURL>
 
 			<liferay-frontend:add-menu
@@ -99,7 +99,7 @@ CommerceInventoryWarehousesDisplayContext commerceInventoryWarehousesDisplayCont
 		</liferay-frontend:management-bar-buttons>
 	</liferay-frontend:management-bar>
 
-	<div class="container-fluid-1280">
+	<div class="container-fluid container-fluid-max-xl">
 		<liferay-ui:search-container
 			id="commerceInventoryWarehouses"
 			searchContainer="<%= commerceInventoryWarehousesDisplayContext.getSearchContainer() %>"
@@ -113,26 +113,26 @@ CommerceInventoryWarehousesDisplayContext commerceInventoryWarehousesDisplayCont
 				<%
 				PortletURL rowURL = renderResponse.createRenderURL();
 
-				rowURL.setParameter("mvcRenderCommandName", "editCommerceInventoryWarehouse");
+				rowURL.setParameter("mvcRenderCommandName", "/commerce_inventory_warehouse/edit_commerce_inventory_warehouse");
 				rowURL.setParameter("redirect", currentURL);
 				rowURL.setParameter("commerceInventoryWarehouseId", String.valueOf(commerceInventoryWarehouse.getCommerceInventoryWarehouseId()));
 				%>
 
 				<liferay-ui:search-container-column-text
-					cssClass="important table-cell-content"
+					cssClass="important table-cell-expand"
 					href="<%= rowURL %>"
 					name="name"
 					value="<%= HtmlUtil.escape(commerceInventoryWarehouse.getName()) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="city"
 					value="<%= HtmlUtil.escape(commerceInventoryWarehouse.getCity()) %>"
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="active"
 				>
 					<c:choose>

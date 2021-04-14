@@ -21,11 +21,11 @@ import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.exception.NoSuchAddressException;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -44,7 +44,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ADDRESS_CONTENT,
-		"mvc.command.name=editCommerceAddress"
+		"mvc.command.name=/commerce_address_content/edit_commerce_address"
 	},
 	service = MVCRenderCommand.class
 )
@@ -59,9 +59,9 @@ public class EditCommerceAddressMVCRenderCommand implements MVCRenderCommand {
 			CommerceAddressDisplayContext commerceAddressDisplayContext =
 				new CommerceAddressDisplayContext(
 					_actionHelper, _commerceAccountHelper,
-					_commerceAddressService, _commerceCountryService,
-					_commerceRegionService,
-					_portal.getHttpServletRequest(renderRequest));
+					_commerceAddressService, _countryService,
+					_portal.getHttpServletRequest(renderRequest),
+					_regionService);
 
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAddressDisplayContext);
@@ -80,7 +80,7 @@ public class EditCommerceAddressMVCRenderCommand implements MVCRenderCommand {
 			throw new PortletException(exception);
 		}
 
-		return "/edit_address.jsp";
+		return "/edit_commerce_address.jsp";
 	}
 
 	protected void setCommerceAddressRequestAttribute(
@@ -104,12 +104,12 @@ public class EditCommerceAddressMVCRenderCommand implements MVCRenderCommand {
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
-
-	@Reference
-	private CommerceRegionService _commerceRegionService;
+	private CountryService _countryService;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RegionService _regionService;
 
 }

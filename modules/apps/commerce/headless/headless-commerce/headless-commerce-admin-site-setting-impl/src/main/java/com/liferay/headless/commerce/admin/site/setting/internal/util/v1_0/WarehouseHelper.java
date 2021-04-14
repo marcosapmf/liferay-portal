@@ -149,7 +149,8 @@ public class WarehouseHelper {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Unable to find availabilityEstimate with ID: " +
-						warehouse.getId());
+						warehouse.getId(),
+					noSuchWarehouseException);
 			}
 		}
 
@@ -158,13 +159,12 @@ public class WarehouseHelper {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			_commerceInventoryWarehouseService.addCommerceInventoryWarehouse(
-				warehouse.getName(), warehouse.getDescription(),
+				null, warehouse.getName(), warehouse.getDescription(),
 				GetterUtil.get(warehouse.getActive(), false),
 				warehouse.getStreet1(), warehouse.getStreet2(),
 				warehouse.getStreet3(), warehouse.getCity(), warehouse.getZip(),
 				"", "", GetterUtil.get(warehouse.getLatitude(), 0D),
-				GetterUtil.get(warehouse.getLongitude(), 0D), null,
-				serviceContext);
+				GetterUtil.get(warehouse.getLongitude(), 0D), serviceContext);
 
 		return _dtoMapper.modelToDTO(commerceInventoryWarehouse);
 	}

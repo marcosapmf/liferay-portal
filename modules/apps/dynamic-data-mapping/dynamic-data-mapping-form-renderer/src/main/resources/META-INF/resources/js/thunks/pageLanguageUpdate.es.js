@@ -16,72 +16,32 @@ import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import {fetch} from 'frontend-js-web';
 
 import {EVENT_TYPES} from '../actions/eventTypes.es';
+import setDataRecord from '../util/setDataRecord.es';
+
+const formatFieldValue = ({dataType, symbols, value}) => {
+	if (dataType === 'double') {
+		return String(value).replace(symbols.decimalSymbol, '.');
+	}
+
+	return value;
+};
 
 const formatDataRecord = (languageId, pages, preserveValue) => {
-	const dataRecordValues = {};
-
 	const visitor = new PagesVisitor(pages);
 
-	const setDataRecord = ({
-		fieldName,
-		localizable,
-		localizedValue,
-		repeatable,
-		type,
-		value,
-		visible,
-	}) => {
-		if (type === 'fieldset') {
-			return;
-		}
-
-		let _value = value;
-
-		if (!visible) {
-			_value = '';
-		}
-
-		if (localizable) {
-			if (!dataRecordValues[fieldName]) {
-				if (preserveValue) {
-					dataRecordValues[fieldName] = {
-						...localizedValue,
-						[languageId]: [],
-					};
-				}
-				else {
-					dataRecordValues[fieldName] = {
-						[languageId]: [],
-						...localizedValue,
-					};
-				}
-			}
-
-			if (repeatable) {
-				dataRecordValues[fieldName][languageId].push(_value);
-			}
-			else {
-				dataRecordValues[fieldName] = {
-					...localizedValue,
-					[languageId]: _value,
-				};
-			}
-
-			if (preserveValue) {
-				Object.keys(dataRecordValues[fieldName]).forEach((key) => {
-					dataRecordValues[fieldName][key] =
-						dataRecordValues[fieldName][languageId];
-				});
-			}
-		}
-		else {
-			dataRecordValues[fieldName] = _value;
-		}
-	};
+	const dataRecordValues = {};
 
 	visitor.mapFields(
 		(field) => {
-			setDataRecord(field);
+			setDataRecord(
+				{
+					...field,
+					value: formatFieldValue(field),
+				},
+				dataRecordValues,
+				languageId,
+				preserveValue
+			);
 		},
 		true,
 		true
@@ -94,45 +54,40 @@ const getDataRecordValues = ({
 	nextEditingLanguageId,
 	pages,
 	preserveValue,
-	prevDataRecordValues,
 	prevEditingLanguageId,
 }) => {
 	if (preserveValue) {
 		return formatDataRecord(nextEditingLanguageId, pages, true);
 	}
 
-	const dataRecordValues = formatDataRecord(prevEditingLanguageId, pages);
-	const newDataRecordValues = {...prevDataRecordValues};
+	return formatDataRecord(prevEditingLanguageId, pages);
+};
 
-	Object.keys(dataRecordValues).forEach((key) => {
-		if (newDataRecordValues[key]) {
-			newDataRecordValues[key][prevEditingLanguageId] =
-				dataRecordValues[key][prevEditingLanguageId];
-		}
-		else {
-			newDataRecordValues[key] = dataRecordValues[key];
-		}
-	});
+const getFieldProperties = (fieldName, pages) => {
+	const visitor = new PagesVisitor(pages);
 
-	return newDataRecordValues;
+	const {itemSelectorURL, localizedValueEdited} = visitor.findField(
+		(field) => field.fieldName === fieldName
+	);
+
+	return {itemSelectorURL, localizedValueEdited};
 };
 
 export default function pageLanguageUpdate({
 	ddmStructureLayoutId,
+	defaultLanguageId,
 	nextEditingLanguageId,
 	pages,
 	portletNamespace,
 	preserveValue,
-	prevDataRecordValues,
 	prevEditingLanguageId,
 	readOnly,
 }) {
 	return (dispatch) => {
-		const newDataRecordValues = getDataRecordValues({
+		const dataRecordValues = getDataRecordValues({
 			nextEditingLanguageId,
 			pages,
 			preserveValue,
-			prevDataRecordValues,
 			prevEditingLanguageId,
 		});
 
@@ -140,10 +95,12 @@ export default function pageLanguageUpdate({
 			`/o/data-engine/v2.0/data-layouts/${ddmStructureLayoutId}/context`,
 			{
 				body: JSON.stringify({
-					dataRecordValues: newDataRecordValues,
+					dataRecordValues,
 					namespace: portletNamespace,
 					pathThemeImages: themeDisplay.getPathThemeImages(),
 					readOnly,
+					scopeGroupId: themeDisplay.getScopeGroupId(),
+					siteGroupId: themeDisplay.getSiteGroupId(),
 				}),
 				headers: {
 					'Accept-Language': nextEditingLanguageId.replace('_', '-'),
@@ -153,36 +110,25 @@ export default function pageLanguageUpdate({
 			}
 		)
 			.then((response) => response.json())
-			.then(({pages}) => {
-				const visitor = new PagesVisitor(pages);
+			.then((response) => {
+				const visitor = new PagesVisitor(response.pages);
 				const newPages = visitor.mapFields(
-					(field, index) => {
+					(field) => {
 						if (!field.localizedValue) {
 							field.localizedValue = {};
 						}
 
-						if (field.repeatable) {
-							let values = {};
-							Object.keys(
-								newDataRecordValues[field.fieldName]
-							).forEach((key) => {
-								values = {
-									...values,
-									[key]:
-										newDataRecordValues[field.fieldName][
-											key
-										][index],
-								};
-							});
-							field.localizedValue = values;
-						}
-						else if (newDataRecordValues[field.fieldName]) {
+						if (!field.localizable) {
 							field.localizedValue = {
-								...newDataRecordValues[field.fieldName],
+								[defaultLanguageId]: field.value,
 							};
 						}
 
-						return field;
+						return {
+							...field,
+							...getFieldProperties(field.fieldName, pages),
+							editingLanguageId: nextEditingLanguageId,
+						};
 					},
 					true,
 					true
@@ -194,11 +140,6 @@ export default function pageLanguageUpdate({
 						pages: newPages,
 					},
 					type: EVENT_TYPES.ALL,
-				});
-
-				dispatch({
-					payload: newDataRecordValues,
-					type: EVENT_TYPES.UPDATE_DATA_RECORD_VALUES,
 				});
 			});
 	};

@@ -31,8 +31,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -52,7 +53,6 @@ import java.lang.reflect.InvocationHandler;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,7 +78,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Supritha Sundaram
  * @generated
  */
-@Component(service = WeDeployAuthTokenPersistence.class)
+@Component(
+	service = {WeDeployAuthTokenPersistence.class, BasePersistence.class}
+)
 public class WeDeployAuthTokenPersistenceImpl
 	extends BasePersistenceImpl<WeDeployAuthToken>
 	implements WeDeployAuthTokenPersistence {
@@ -175,8 +177,7 @@ public class WeDeployAuthTokenPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByT_T, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByT_T, finderArgs);
 		}
 
 		if (result instanceof WeDeployAuthToken) {
@@ -302,7 +303,7 @@ public class WeDeployAuthTokenPersistenceImpl
 
 		Object[] finderArgs = new Object[] {token, type};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -450,7 +451,7 @@ public class WeDeployAuthTokenPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByCI_T_T, finderArgs, this);
+				_finderPathFetchByCI_T_T, finderArgs);
 		}
 
 		if (result instanceof WeDeployAuthToken) {
@@ -599,7 +600,7 @@ public class WeDeployAuthTokenPersistenceImpl
 
 		Object[] finderArgs = new Object[] {clientId, token, type};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -751,9 +752,7 @@ public class WeDeployAuthTokenPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(WeDeployAuthTokenImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(WeDeployAuthTokenImpl.class);
 	}
 
 	/**
@@ -779,9 +778,7 @@ public class WeDeployAuthTokenPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(WeDeployAuthTokenImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(WeDeployAuthTokenImpl.class, primaryKey);
@@ -796,10 +793,9 @@ public class WeDeployAuthTokenPersistenceImpl
 			weDeployAuthTokenModelImpl.getType()
 		};
 
+		finderCache.putResult(_finderPathCountByT_T, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByT_T, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByT_T, args, weDeployAuthTokenModelImpl, false);
+			_finderPathFetchByT_T, args, weDeployAuthTokenModelImpl);
 
 		args = new Object[] {
 			weDeployAuthTokenModelImpl.getClientId(),
@@ -807,10 +803,9 @@ public class WeDeployAuthTokenPersistenceImpl
 			weDeployAuthTokenModelImpl.getType()
 		};
 
+		finderCache.putResult(_finderPathCountByCI_T_T, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByCI_T_T, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByCI_T_T, args, weDeployAuthTokenModelImpl, false);
+			_finderPathFetchByCI_T_T, args, weDeployAuthTokenModelImpl);
 	}
 
 	/**
@@ -1139,7 +1134,7 @@ public class WeDeployAuthTokenPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<WeDeployAuthToken>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1209,7 +1204,7 @@ public class WeDeployAuthTokenPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1270,32 +1265,31 @@ public class WeDeployAuthTokenPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new WeDeployAuthTokenModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", WeDeployAuthToken.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathFetchByT_T = _createFinderPath(
+		_finderPathFetchByT_T = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByT_T",
 			new String[] {String.class.getName(), Integer.class.getName()},
 			new String[] {"token", "type_"}, true);
 
-		_finderPathCountByT_T = _createFinderPath(
+		_finderPathCountByT_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByT_T",
 			new String[] {String.class.getName(), Integer.class.getName()},
 			new String[] {"token", "type_"}, false);
 
-		_finderPathFetchByCI_T_T = _createFinderPath(
+		_finderPathFetchByCI_T_T = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByCI_T_T",
 			new String[] {
 				String.class.getName(), String.class.getName(),
@@ -1303,7 +1297,7 @@ public class WeDeployAuthTokenPersistenceImpl
 			},
 			new String[] {"clientId", "token", "type_"}, true);
 
-		_finderPathCountByCI_T_T = _createFinderPath(
+		_finderPathCountByCI_T_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCI_T_T",
 			new String[] {
 				String.class.getName(), String.class.getName(),
@@ -1317,12 +1311,6 @@ public class WeDeployAuthTokenPersistenceImpl
 		entityCache.removeCache(WeDeployAuthTokenImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -1385,36 +1373,13 @@ public class WeDeployAuthTokenPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"type"});
 
-	static {
-		try {
-			Class.forName(WeDeployAuthPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class WeDeployAuthTokenModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1465,6 +1430,16 @@ public class WeDeployAuthTokenPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return WeDeployAuthTokenImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return WeDeployAuthTokenTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

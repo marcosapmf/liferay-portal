@@ -17,6 +17,8 @@ package com.liferay.site.browser.web.internal.servlet.taglib.clay;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -50,37 +52,40 @@ public class SiteVerticalCard implements VerticalCard {
 	}
 
 	@Override
-	public Map<String, String> getData() {
-		if (!_siteBrowserDisplayContext.isShowLink(_group)) {
-			return null;
-		}
-
-		try {
-			return HashMapBuilder.put(
-				"entityid", String.valueOf(_group.getGroupId())
-			).put(
-				"entityname",
-				_group.getDescriptiveName(_themeDisplay.getLocale())
-			).put(
-				"grouptarget", _siteBrowserDisplayContext.getTarget()
-			).put(
-				"grouptype",
-				LanguageUtil.get(_httpServletRequest, _group.getTypeLabel())
-			).put(
-				"url", _group.getDisplayURL(_themeDisplay)
-			).build();
-		}
-		catch (Exception exception) {
+	public String getCssClass() {
+		if (_siteBrowserDisplayContext.isShowLink(_group)) {
+			return "card-interactive card-interactive-secondary " +
+				"selector-button";
 		}
 
 		return null;
 	}
 
 	@Override
-	public String getElementClasses() {
-		if (_siteBrowserDisplayContext.isShowLink(_group)) {
-			return "card-interactive card-interactive-secondary " +
-				"selector-button";
+	public Map<String, String> getDynamicAttributes() {
+		if (!_siteBrowserDisplayContext.isShowLink(_group)) {
+			return null;
+		}
+
+		try {
+			return HashMapBuilder.put(
+				"data-entityid", String.valueOf(_group.getGroupId())
+			).put(
+				"data-entityname",
+				_group.getDescriptiveName(_themeDisplay.getLocale())
+			).put(
+				"data-grouptarget", _siteBrowserDisplayContext.getTarget()
+			).put(
+				"data-grouptype",
+				LanguageUtil.get(_httpServletRequest, _group.getTypeLabel())
+			).put(
+				"data-url", _group.getDisplayURL(_themeDisplay)
+			).build();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -115,6 +120,9 @@ public class SiteVerticalCard implements VerticalCard {
 				_group.getDescriptiveName(_themeDisplay.getLocale()));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return HtmlUtil.escape(_group.getName(_themeDisplay.getLocale()));
@@ -124,6 +132,9 @@ public class SiteVerticalCard implements VerticalCard {
 	public boolean isSelectable() {
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SiteVerticalCard.class);
 
 	private final Group _group;
 	private final HttpServletRequest _httpServletRequest;

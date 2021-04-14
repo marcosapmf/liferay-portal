@@ -16,10 +16,10 @@ package com.liferay.account.internal.search.spi.model.index.contributor;
 
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRelModel;
-import com.liferay.account.model.AccountGroupAccountEntryRel;
+import com.liferay.account.model.AccountGroupRel;
 import com.liferay.account.retriever.AccountUserRetriever;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
-import com.liferay.account.service.AccountGroupAccountEntryRelLocalService;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.model.User;
@@ -57,14 +57,14 @@ public class AccountEntryModelDocumentContributor
 			"organizationIds", _getOrganizationIds(accountEntry));
 		document.addKeyword(
 			"parentAccountEntryId", accountEntry.getParentAccountEntryId());
+		document.addText("taxIdNumber", accountEntry.getTaxIdNumber());
 	}
 
 	private long[] _getAccountGroupIds(AccountEntry accountEntry) {
 		return ListUtil.toLongArray(
-			_accountGroupAccountEntryRelLocalService.
-				getAccountGroupAccountEntryRelsByAccountEntryId(
-					accountEntry.getAccountEntryId()),
-			AccountGroupAccountEntryRel::getAccountGroupId);
+			_accountGroupRelLocalService.getAccountGroupRels(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId()),
+			AccountGroupRel::getAccountGroupId);
 	}
 
 	private long[] _getAccountUserIds(AccountEntry accountEntry) {
@@ -92,8 +92,7 @@ public class AccountEntryModelDocumentContributor
 		_accountEntryOrganizationRelLocalService;
 
 	@Reference
-	private AccountGroupAccountEntryRelLocalService
-		_accountGroupAccountEntryRelLocalService;
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 	@Reference
 	private AccountUserRetriever _accountUserRetriever;

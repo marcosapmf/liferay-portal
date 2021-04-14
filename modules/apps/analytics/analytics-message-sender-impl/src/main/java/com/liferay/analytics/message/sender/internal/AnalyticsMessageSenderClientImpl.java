@@ -14,15 +14,33 @@
 
 package com.liferay.analytics.message.sender.internal;
 
+import aQute.bnd.annotation.metatype.Meta;
+
 import com.liferay.analytics.message.sender.client.AnalyticsMessageSenderClient;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.servlet.HttpMethods;
+import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
+import com.liferay.portal.kernel.settings.Settings;
+import com.liferay.portal.kernel.settings.SettingsDescriptor;
+import com.liferay.portal.kernel.settings.SettingsFactory;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.net.UnknownHostException;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Set;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -35,6 +53,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rachael Koestartyo
@@ -57,10 +76,11 @@ public class AnalyticsMessageSenderClientImpl
 			analyticsConfiguration.
 				liferayAnalyticsFaroBackendSecuritySignature(),
 			HttpMethods.POST,
+			analyticsConfiguration.liferayAnalyticsProjectId(),
 			analyticsConfiguration.liferayAnalyticsEndpointURL() +
 				"/dxp-entities");
 
-		return _execute(companyId, httpUriRequest);
+		return _execute(analyticsConfiguration, companyId, httpUriRequest);
 	}
 
 	@Override
@@ -72,21 +92,31 @@ public class AnalyticsMessageSenderClientImpl
 		AnalyticsConfiguration analyticsConfiguration =
 			analyticsConfigurationTracker.getAnalyticsConfiguration(companyId);
 
+		_checkEndpoints(analyticsConfiguration, companyId);
+
 		HttpUriRequest httpUriRequest = _buildHttpUriRequest(
 			null, analyticsConfiguration.liferayAnalyticsDataSourceId(),
 			analyticsConfiguration.
 				liferayAnalyticsFaroBackendSecuritySignature(),
-			HttpMethods.GET,
+			HttpMethods.GET, analyticsConfiguration.liferayAnalyticsProjectId(),
 			analyticsConfiguration.liferayAnalyticsEndpointURL() +
 				"/api/1.0/data-sources/" +
 					analyticsConfiguration.liferayAnalyticsDataSourceId());
 
-		_execute(companyId, httpUriRequest);
+		_execute(analyticsConfiguration, companyId, httpUriRequest);
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.analytics.settings.web)(release.schema.version>=1.0.1))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
 	}
 
 	private HttpUriRequest _buildHttpUriRequest(
 			String body, String dataSourceId,
-			String faroBackendSecuritySignature, String method, String url)
+			String faroBackendSecuritySignature, String method,
+			String projectId, String url)
 		throws Exception {
 
 		HttpUriRequest httpUriRequest = null;
@@ -111,13 +141,81 @@ public class AnalyticsMessageSenderClientImpl
 			httpUriRequest.setHeader(
 				"OSB-Asah-Faro-Backend-Security-Signature",
 				faroBackendSecuritySignature);
+			httpUriRequest.setHeader("OSB-Asah-Project-ID", projectId);
 		}
 
 		return httpUriRequest;
 	}
 
+	private void _checkEndpoints(
+			AnalyticsConfiguration analyticsConfiguration, long companyId)
+		throws Exception {
+
+		HttpGet httpGet = new HttpGet(
+			analyticsConfiguration.liferayAnalyticsURL() + "/endpoints/" +
+				analyticsConfiguration.liferayAnalyticsProjectId());
+
+		try (CloseableHttpClient closeableHttpClient =
+				getCloseableHttpClient()) {
+
+			CloseableHttpResponse closeableHttpResponse =
+				closeableHttpClient.execute(httpGet);
+
+			JSONObject responseJSONObject = null;
+
+			try {
+				responseJSONObject = JSONFactoryUtil.createJSONObject(
+					EntityUtils.toString(
+						closeableHttpResponse.getEntity(),
+						Charset.defaultCharset()));
+			}
+			catch (Exception exception) {
+				_log.error(
+					"Unable to check Analytics Cloud endpoints", exception);
+
+				return;
+			}
+
+			String liferayAnalyticsEndpointURL = responseJSONObject.getString(
+				"liferayAnalyticsEndpointURL");
+			String liferayAnalyticsFaroBackendURL =
+				responseJSONObject.getString("liferayAnalyticsFaroBackendURL");
+
+			if (liferayAnalyticsEndpointURL.equals(
+					PrefsPropsUtil.getString(
+						companyId, "liferayAnalyticsEndpointURL")) &&
+				liferayAnalyticsFaroBackendURL.equals(
+					PrefsPropsUtil.getString(
+						companyId, "liferayAnalyticsFaroBackendURL"))) {
+
+				return;
+			}
+
+			UnicodeProperties unicodeProperties = new UnicodeProperties(true);
+
+			unicodeProperties.setProperty(
+				"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL);
+			unicodeProperties.setProperty(
+				"liferayAnalyticsFaroBackendURL",
+				liferayAnalyticsFaroBackendURL);
+
+			companyLocalService.updatePreferences(companyId, unicodeProperties);
+
+			Dictionary<String, Object> configurationProperties =
+				_getConfigurationProperties(companyId);
+
+			configurationProperties.put(
+				"liferayAnalyticsEndpointURL", liferayAnalyticsEndpointURL);
+
+			configurationProvider.saveCompanyConfiguration(
+				AnalyticsConfiguration.class, companyId,
+				configurationProperties);
+		}
+	}
+
 	private CloseableHttpResponse _execute(
-			long companyId, HttpUriRequest httpUriRequest)
+			AnalyticsConfiguration analyticsConfiguration, long companyId,
+			HttpUriRequest httpUriRequest)
 		throws Exception {
 
 		try (CloseableHttpClient closeableHttpClient =
@@ -142,6 +240,57 @@ public class AnalyticsMessageSenderClientImpl
 
 			return closeableHttpResponse;
 		}
+		catch (UnknownHostException unknownHostException) {
+			_checkEndpoints(analyticsConfiguration, companyId);
+
+			throw unknownHostException;
+		}
 	}
+
+	private Dictionary<String, Object> _getConfigurationProperties(
+			long companyId)
+		throws Exception {
+
+		Dictionary<String, Object> configurationProperties = new Hashtable<>();
+
+		Class<?> clazz = AnalyticsConfiguration.class;
+
+		Meta.OCD ocd = clazz.getAnnotation(Meta.OCD.class);
+
+		Settings settings = _settingsFactory.getSettings(
+			new CompanyServiceSettingsLocator(companyId, ocd.id()));
+
+		SettingsDescriptor settingsDescriptor =
+			_settingsFactory.getSettingsDescriptor(ocd.id());
+
+		if (settingsDescriptor == null) {
+			return configurationProperties;
+		}
+
+		Set<String> multiValuedKeys = settingsDescriptor.getMultiValuedKeys();
+
+		for (String multiValuedKey : multiValuedKeys) {
+			configurationProperties.put(
+				multiValuedKey,
+				settings.getValues(multiValuedKey, new String[0]));
+		}
+
+		Set<String> keys = settingsDescriptor.getAllKeys();
+
+		keys.removeAll(multiValuedKeys);
+
+		for (String key : keys) {
+			configurationProperties.put(
+				key, settings.getValue(key, StringPool.BLANK));
+		}
+
+		return configurationProperties;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AnalyticsMessageSenderClientImpl.class);
+
+	@Reference
+	private SettingsFactory _settingsFactory;
 
 }

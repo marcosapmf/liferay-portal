@@ -12,7 +12,7 @@
  * details.
  */
 
-(function (A, Liferay) {
+(function (A) {
 	var CLICK_EVENTS = {};
 	var Util = Liferay.Util;
 
@@ -102,7 +102,7 @@
 			}
 
 			if (!hasErrors) {
-				var action = event.action || form.attr('action');
+				var action = event.action || form.getAttribute('action');
 
 				var singleSubmit = event.singleSubmit;
 
@@ -204,4 +204,4 @@
 			dialog.hide();
 		}
 	});
-})(AUI(), Liferay);
+})(AUI());

@@ -545,6 +545,9 @@ public class SubscriptionSender implements Serializable {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		this.scopeGroupId = scopeGroupId;
@@ -796,6 +799,14 @@ public class SubscriptionSender implements Serializable {
 			sendEmail(to, locale);
 		}
 		else {
+			if (!user.isActive()) {
+				if (_log.isDebugEnabled()) {
+					_log.debug("Skip inactive user " + user.getUserId());
+				}
+
+				return;
+			}
+
 			sendNotification(user);
 		}
 	}

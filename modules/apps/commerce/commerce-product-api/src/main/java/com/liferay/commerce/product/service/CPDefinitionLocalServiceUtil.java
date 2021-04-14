@@ -898,6 +898,15 @@ public class CPDefinitionLocalServiceUtil {
 	}
 
 	public static com.liferay.commerce.product.model.CPDefinition
+			updateExternalReferenceCode(
+				long cpDefinitionId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return getService().updateExternalReferenceCode(
+			cpDefinitionId, externalReferenceCode);
+	}
+
+	public static com.liferay.commerce.product.model.CPDefinition
 			updateShippingInfo(
 				long cpDefinitionId, boolean shippable, boolean freeShipping,
 				boolean shipSeparately, double shippingExtraPrice, double width,

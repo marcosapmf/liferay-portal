@@ -733,7 +733,7 @@ public class PluginPackageUtil {
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to parse date " + text);
+					_log.warn("Unable to parse date " + text, exception);
 				}
 			}
 		}
@@ -1071,7 +1071,7 @@ public class PluginPackageUtil {
 		PluginPackage pluginPackage = new PluginPackageImpl(
 			StringBundler.concat(
 				artifactGroupId, StringPool.SLASH, artifactId, StringPool.SLASH,
-				version, StringPool.SLASH, "war"));
+				version, "/war"));
 
 		pluginPackage.setName(artifactId);
 

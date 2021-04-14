@@ -93,6 +93,8 @@ public class DDMFormFieldOptionsFactoryImpl
 			ddmFormFieldOptions.addOptionLabel(
 				option.get("value"), ddmFormFieldRenderingContext.getLocale(),
 				option.get("label"));
+			ddmFormFieldOptions.addOptionReference(
+				option.get("value"), option.get("reference"));
 		}
 
 		return ddmFormFieldOptions;
@@ -189,6 +191,10 @@ public class DDMFormFieldOptionsFactoryImpl
 			return jsonArray.getString(0);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return value;
 		}
 	}

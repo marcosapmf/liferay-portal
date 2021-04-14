@@ -173,11 +173,175 @@ const dataDefinitionField = {
 	nestedDataDefinitionFields: [],
 	readOnly: false,
 	repeatable: false,
-	required: false,
+	required: true,
 	showLabel: true,
 	tip: {
 		en_US: '',
 	},
+};
+
+export const dataDefinitionWithAllTypes = {
+	availableLanguageIds: ['en_US'],
+	dataDefinitionFields: [
+		{
+			customProperties: {},
+			fieldType: 'date',
+			label: {
+				en_US: 'School Date',
+			},
+			localizable: true,
+			name: 'fieldDate',
+			nestedDataDefinitionFields: [],
+			readOnly: false,
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {
+				displayStyle: 'singleline',
+			},
+			fieldType: 'text',
+			label: {
+				en_US: 'School',
+			},
+			localizable: true,
+			name: 'fieldText',
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {
+				multiple: false,
+				options: {
+					en_US: [
+						{
+							label: 'Grade A',
+							value: 'Opo72476108',
+						},
+						{
+							label: 'Grade B',
+							value: 'Opo58255447',
+						},
+					],
+				},
+			},
+			fieldType: 'select',
+			label: {
+				en_US: 'School Grade',
+			},
+			localizable: true,
+			name: 'fieldSchoolGrade',
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {
+				fieldReference: 'fieldRadio',
+				options: {
+					en_US: [
+						{
+							label: 'Option A',
+							value: 'Opo40716029',
+						},
+						{
+							label: 'Option B',
+							value: 'Opo72919976',
+						},
+					],
+				},
+			},
+			fieldType: 'radio',
+			label: {
+				en_US: 'School Option',
+			},
+			localizable: true,
+			name: 'fieldRadio',
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {
+				fieldReference: 'fieldSchoolMark',
+				options: {
+					en_US: [
+						{
+							label: 'Logo A',
+							value: 'Opo17059431',
+						},
+						{
+							label: 'Logo B',
+							value: 'Opo96017747',
+						},
+					],
+				},
+				showAsSwitcher: false,
+			},
+			fieldType: 'checkbox_multiple',
+			label: {
+				en_US: 'School Mark',
+			},
+			localizable: true,
+			name: 'fieldSchoolMark',
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {},
+			fieldType: 'numeric',
+			label: {
+				en_US: 'School Number',
+			},
+			localizable: true,
+			name: 'fieldNumber',
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {},
+			fieldType: 'document_library',
+			label: {
+				en_US: 'School Register',
+			},
+			localizable: true,
+			name: 'fieldRegister',
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+		{
+			customProperties: {},
+			fieldType: 'fieldset',
+			label: {en_US: 'FieldSet Address'},
+			localizable: false,
+			name: 'fieldSetAddress',
+			nestedDataDefinitionFields: [
+				{
+					customProperties: {
+						displayStyle: 'singleline',
+						fieldReference: 'fieldFSAddress',
+						nativeField: false,
+					},
+					fieldType: 'text',
+					label: {en_US: 'Text EN'},
+					localizable: true,
+					name: 'fieldFSAddress',
+					repeatable: false,
+					required: false,
+					showLabel: true,
+				},
+			],
+			repeatable: false,
+			required: false,
+			showLabel: true,
+		},
+	],
+	defaultLanguageId: 'en_US',
 };
 
 const dataDefinition = {
@@ -297,6 +461,133 @@ export const DATA_DEFINITION_RESPONSES = {
 	},
 };
 
+export const ENTRY = {
+	DATA_DEFINITION: {
+		availableLanguageIds: ['en_US'],
+		contentType: 'app-builder',
+		dataDefinitionFields: [
+			{
+				customProperties: {
+					autocomplete: false,
+					dataSourceType: 'manual',
+					dataType: 'string',
+					ddmDataProviderInstanceId: '[]',
+					ddmDataProviderInstanceOutput: '[]',
+					displayStyle: 'singleline',
+					fieldNamespace: '',
+					options: {
+						en_US: [
+							{
+								label: 'Option',
+								value: 'Option',
+							},
+						],
+					},
+					placeholder: {
+						en_US: '',
+					},
+					tooltip: {
+						en_US: '',
+					},
+					visibilityExpression: '',
+				},
+				defaultValue: {
+					en_US: '',
+				},
+				fieldType: 'text',
+				indexType: 'keyword',
+				indexable: true,
+				label: {
+					en_US: 'Name',
+				},
+				localizable: true,
+				name: 'Text',
+				nestedDataDefinitionFields: [],
+				readOnly: false,
+				repeatable: false,
+				required: true,
+				showLabel: true,
+				tip: {
+					en_US: '',
+				},
+			},
+		],
+		dataDefinitionKey: '38301',
+		dateCreated: '2020-06-22T21:14:23Z',
+		dateModified: '2020-06-22T21:14:44Z',
+		defaultLanguageId: 'en_US',
+		description: {},
+		id: 1,
+		name: {
+			en_US: 'Request',
+		},
+		siteId: 1,
+		storageType: 'json',
+		userId: 1,
+	},
+	DATA_LAYOUT: {
+		dataDefinitionId: 1,
+		dataLayoutKey: '38309',
+		dataLayoutPages: [
+			{
+				dataLayoutRows: [
+					{
+						dataLayoutColumns: [
+							{
+								columnSize: 12,
+								fieldNames: ['Text'],
+							},
+						],
+					},
+				],
+				description: {
+					en_US: '',
+				},
+				title: {
+					en_US: '',
+				},
+			},
+		],
+		dataRules: [],
+		dateCreated: '2020-06-22T21:14:44Z',
+		dateModified: '2020-06-22T21:14:44Z',
+		description: {},
+		id: 1,
+		name: {
+			en_US: 'Request Form',
+		},
+		paginationMode: 'wizard',
+	},
+	DATA_LIST_VIEW: {
+		appliedFilters: {},
+		dataDefinitionId: 1,
+		dateCreated: '2020-06-22T21:14:53Z',
+		dateModified: '2020-06-22T21:14:53Z',
+		fieldNames: ['Text'],
+		id: 1,
+		name: {
+			en_US: 'Table',
+		},
+		sortField: '',
+	},
+	DATA_RECORDS: (size = 1) => ({
+		items: Array.apply(null, Array(size)).map((_, id) => ({
+			dataRecordCollectionId: id,
+			dataRecordValues: {
+				Text: {
+					en_US: `Name Test ${id}`,
+				},
+			},
+			id,
+			status: 0,
+		})),
+		lastPage: 1,
+		page: 1,
+		pageSize: size,
+		totalCount: size,
+	}),
+};
+
 const fieldTypes = [
 	{
 		label: 'Date',
@@ -402,6 +693,32 @@ const FORM_VIEW_CONTEXT = {
 	dataDefinition: DATA_DEFINITION_RESPONSES.THREE_ITEMS,
 	dataDefinitionId: 0,
 	dataLayout: {
+		dataLayoutFields: {
+			Field53354166: {
+				label: {
+					en_US: 'Name',
+				},
+				placeholder: {
+					en_US: '',
+				},
+			},
+			SelectFromList: {
+				label: {
+					en_US: 'Name',
+				},
+				placeholder: {
+					en_US: '',
+				},
+			},
+			Text: {
+				label: {
+					en_US: 'Name',
+				},
+				placeholder: {
+					en_US: '',
+				},
+			},
+		},
 		dataLayoutPages: [],
 		dataRules: [],
 		name: {
@@ -417,6 +734,7 @@ const FORM_VIEW_CONTEXT = {
 	focusedCustomObjectField: {},
 	focusedField: {},
 	hoveredField: {},
+	initialAvailableLanguageIds: [],
 	sidebarOpen: true,
 	sidebarPanelId: 'fields',
 	spritemap: 'icons.svg',
@@ -438,7 +756,17 @@ export const FORM_VIEW = {
 			...dataLayoutBuilder,
 			dispatch: jest.fn(),
 			dispatchAction: jest.fn(),
-			getDDMFormFieldSettingsContext: jest.fn(),
+			getDDMFormFieldSettingsContext: jest
+				.fn()
+				.mockImplementation(() => ({pages: []})),
+			getDDMSettingsContextWithVisualProperties: jest
+				.fn()
+				.mockImplementation(() => ({
+					label: dataDefinitionField.label,
+					placeholder:
+						dataDefinitionField.customProperties.placeholder,
+					required: dataDefinitionField.required,
+				})),
 			getFieldTypes: () => {
 				return [
 					{

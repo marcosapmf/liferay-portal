@@ -126,6 +126,14 @@ public abstract class AccountEntryServiceBaseImpl
 	protected com.liferay.portal.kernel.service.GroupService groupService;
 
 	@Reference
+	protected com.liferay.portal.kernel.service.OrganizationLocalService
+		organizationLocalService;
+
+	@Reference
+	protected com.liferay.portal.kernel.service.OrganizationService
+		organizationService;
+
+	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
@@ -143,5 +151,9 @@ public abstract class AccountEntryServiceBaseImpl
 	@Reference
 	protected com.liferay.asset.kernel.service.AssetEntryService
 		assetEntryService;
+
+	@Reference
+	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
+		expandoRowLocalService;
 
 }

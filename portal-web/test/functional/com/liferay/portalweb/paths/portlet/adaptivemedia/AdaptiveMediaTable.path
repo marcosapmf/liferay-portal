@@ -15,7 +15,7 @@
 </tr>
 <tr>
 	<td>INFO_ICON</td>
-	<td>//nav[contains(@class,'management-bar')]//div[contains(@class,'container-fluid')]//button[contains(@class,'nav-link')]</td>
+	<td>//nav[contains(@class,'management-bar')]//div[contains(@class,'container-fluid')]//button[*[name()='svg'][contains(@class,'info-circle')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,7 +61,7 @@
 <!--IMAGE_INFO_DETAILS-->
 <tr>
 	<td>IMAGE_INFO_DETAILS_ADAPTED_IMAGES</td>
-	<td>//dl[contains(@class,'sidebar-block')]/dt[contains(.,'Adapted Images')]/following-sibling::dd[contains(.,'${key_numberOfAdaptedImages}')]</td>
+	<td>//dl[contains(@class,'sidebar-section')]/dt[contains(.,'Adapted Images')]/following-sibling::dd[contains(.,'${key_numberOfAdaptedImages}')]</td>
 	<td></td>
 </tr>
 </tbody>

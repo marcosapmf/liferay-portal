@@ -28,14 +28,8 @@ SelectLayoutCollectionDisplayContext selectLayoutCollectionDisplayContext = (Sel
 	>
 		<liferay-ui:search-container-row
 			className="com.liferay.info.list.provider.InfoListProvider"
-			cssClass="entry"
 			modelVar="infoListProvider"
 		>
-
-			<%
-			row.setCssClass("entry-card entry-display-style lfr-asset-item " + row.getCssClass());
-			%>
-
 			<liferay-ui:search-container-column-text>
 				<clay:vertical-card
 					verticalCard="<%= new CollectionProvidersVerticalCard(selectLayoutCollectionDisplayContext.getSelGroupId(), infoListProvider, renderRequest, renderResponse) %>"

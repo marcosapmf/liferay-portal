@@ -24,17 +24,19 @@ SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplay
 List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPageTemplateEntries();
 %>
 
-<aui:form cssClass="container-fluid-1280 mt-3" name="fm">
+<aui:form cssClass="container-fluid container-fluid-max-xl container-view" name="fm">
 	<ul class="card-page card-page-equal-height">
 
 		<%
 		for (LayoutPageTemplateEntry masterLayoutPageTemplateEntry : masterLayoutPageTemplateEntries) {
 		%>
 
-			<li class="card-page-item col-md-3 col-sm-6 form-check-card">
-				<clay:vertical-card
-					verticalCard="<%= new SelectMasterLayoutVerticalCard(masterLayoutPageTemplateEntry, renderRequest) %>"
-				/>
+			<li class="card-page-item card-page-item-asset">
+				<div class="form-check form-check-card">
+					<clay:vertical-card
+						verticalCard="<%= new SelectMasterLayoutVerticalCard(masterLayoutPageTemplateEntry, renderRequest) %>"
+					/>
+				</div>
 			</li>
 
 		<%
@@ -44,20 +46,27 @@ List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPage
 	</ul>
 </aui:form>
 
-<aui:script require="metal-dom/src/dom as dom">
-	var delegateHandler = dom.delegate(
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+	var delegate = delegateModule.default;
+
+	var delegateHandler = delegate(
 		document.body,
 		'click',
 		'.select-master-layout-option',
-		function (event) {
-			dom.removeClasses(
-				document.querySelectorAll('.form-check-card.active'),
-				'active'
-			);
-			dom.addClasses(
-				dom.closest(event.delegateTarget, '.form-check-card'),
-				'active'
-			);
+		(event) => {
+			var activeCards = document.querySelectorAll('.form-check-card.active');
+
+			if (activeCards.length) {
+				activeCards.forEach((card) => {
+					card.classList.remove('active');
+				});
+			}
+
+			var newSelectedCard = event.delegateTarget.closest('.form-check-card');
+
+			if (newSelectedCard) {
+				newSelectedCard.classList.add('active');
+			}
 
 			Liferay.Util.getOpener().Liferay.fire(
 				'<%= HtmlUtil.escape(eventName) %>',
@@ -69,7 +78,7 @@ List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPage
 	);
 
 	var onDestroyPortlet = function () {
-		delegateHandler.removeListener();
+		delegateHandler.dipose();
 
 		Liferay.detach('destroyPortlet', onDestroyPortlet);
 	};

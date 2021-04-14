@@ -29,8 +29,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,7 +51,6 @@ import java.sql.Timestamp;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +76,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Mika Koivisto
  * @generated
  */
-@Component(service = SamlSpAuthRequestPersistence.class)
+@Component(
+	service = {SamlSpAuthRequestPersistence.class, BasePersistence.class}
+)
 public class SamlSpAuthRequestPersistenceImpl
 	extends BasePersistenceImpl<SamlSpAuthRequest>
 	implements SamlSpAuthRequestPersistence {
@@ -186,7 +188,7 @@ public class SamlSpAuthRequestPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SamlSpAuthRequest>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SamlSpAuthRequest samlSpAuthRequest : list) {
@@ -577,7 +579,7 @@ public class SamlSpAuthRequestPersistenceImpl
 
 		Object[] finderArgs = new Object[] {_getTime(createDate)};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -713,7 +715,7 @@ public class SamlSpAuthRequestPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchBySIEI_SSARK, finderArgs, this);
+				_finderPathFetchBySIEI_SSARK, finderArgs);
 		}
 
 		if (result instanceof SamlSpAuthRequest) {
@@ -862,7 +864,7 @@ public class SamlSpAuthRequestPersistenceImpl
 			samlIdpEntityId, samlSpAuthRequestKey
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -996,9 +998,7 @@ public class SamlSpAuthRequestPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(SamlSpAuthRequestImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(SamlSpAuthRequestImpl.class);
 	}
 
 	/**
@@ -1024,9 +1024,7 @@ public class SamlSpAuthRequestPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(SamlSpAuthRequestImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(SamlSpAuthRequestImpl.class, primaryKey);
@@ -1042,10 +1040,9 @@ public class SamlSpAuthRequestPersistenceImpl
 		};
 
 		finderCache.putResult(
-			_finderPathCountBySIEI_SSARK, args, Long.valueOf(1), false);
+			_finderPathCountBySIEI_SSARK, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchBySIEI_SSARK, args, samlSpAuthRequestModelImpl,
-			false);
+			_finderPathFetchBySIEI_SSARK, args, samlSpAuthRequestModelImpl);
 	}
 
 	/**
@@ -1349,7 +1346,7 @@ public class SamlSpAuthRequestPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SamlSpAuthRequest>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1419,7 +1416,7 @@ public class SamlSpAuthRequestPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1475,22 +1472,21 @@ public class SamlSpAuthRequestPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new SamlSpAuthRequestModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", SamlSpAuthRequest.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByCreateDate = _createFinderPath(
+		_finderPathWithPaginationFindByCreateDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCreateDate",
 			new String[] {
 				Date.class.getName(), Integer.class.getName(),
@@ -1498,17 +1494,17 @@ public class SamlSpAuthRequestPersistenceImpl
 			},
 			new String[] {"createDate"}, true);
 
-		_finderPathWithPaginationCountByCreateDate = _createFinderPath(
+		_finderPathWithPaginationCountByCreateDate = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByCreateDate",
 			new String[] {Date.class.getName()}, new String[] {"createDate"},
 			false);
 
-		_finderPathFetchBySIEI_SSARK = _createFinderPath(
+		_finderPathFetchBySIEI_SSARK = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchBySIEI_SSARK",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"samlIdpEntityId", "samlSpAuthRequestKey"}, true);
 
-		_finderPathCountBySIEI_SSARK = _createFinderPath(
+		_finderPathCountBySIEI_SSARK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countBySIEI_SSARK",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"samlIdpEntityId", "samlSpAuthRequestKey"}, false);
@@ -1519,12 +1515,6 @@ public class SamlSpAuthRequestPersistenceImpl
 		entityCache.removeCache(SamlSpAuthRequestImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -1592,36 +1582,13 @@ public class SamlSpAuthRequestPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		SamlSpAuthRequestPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(SamlPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class SamlSpAuthRequestModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1672,6 +1639,16 @@ public class SamlSpAuthRequestPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return SamlSpAuthRequestImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return SamlSpAuthRequestTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

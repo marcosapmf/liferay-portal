@@ -17,6 +17,8 @@ package com.liferay.source.formatter;
 import com.liferay.petra.nio.CharsetDecoderUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -106,7 +108,7 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 
 		_sourceChecks = _getSourceChecks(
 			_sourceFormatterConfiguration, _containsModuleFile(fileNames),
-			_sourceFormatterArgs.getCheckName());
+			_sourceFormatterArgs.getCheckNames());
 
 		addProgressStatusUpdate(
 			new ProgressStatusUpdate(
@@ -520,10 +522,9 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 					file.delete();
 				}
 			}
-			else {
-				_sourceMismatchExceptions.add(
-					new SourceMismatchException(fileName, content, newContent));
-			}
+
+			_sourceMismatchExceptions.add(
+				new SourceMismatchException(fileName, content, newContent));
 		}
 
 		if (_sourceFormatterArgs.isPrintErrors()) {
@@ -593,6 +594,10 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 			charsetDecoder.decode(ByteBuffer.wrap(bytes));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			processMessage(fileName, "UTF-8");
 		}
 	}
@@ -650,7 +655,7 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 
 	private List<SourceCheck> _getSourceChecks(
 			SourceFormatterConfiguration sourceFormatterConfiguration,
-			boolean includeModuleChecks, String checkName)
+			boolean includeModuleChecks, List<String> checkNames)
 		throws Exception {
 
 		Class<?> clazz = getClass();
@@ -658,7 +663,7 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 		List<SourceCheck> sourceChecks = SourceChecksUtil.getSourceChecks(
 			sourceFormatterConfiguration, clazz.getSimpleName(),
 			getPropertiesMap(), _sourceFormatterArgs.getSkipCheckNames(),
-			_portalSource, _subrepository, includeModuleChecks, checkName);
+			_portalSource, _subrepository, includeModuleChecks, checkNames);
 
 		for (SourceCheck sourceCheck : sourceChecks) {
 			_initSourceCheck(sourceCheck);
@@ -720,6 +725,9 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return absolutePath.contains("/modules/");
@@ -779,6 +787,9 @@ public abstract class BaseSourceProcessor implements SourceProcessor {
 
 		return sourceChecksResult;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BaseSourceProcessor.class);
 
 	private List<String> _allFileNames;
 	private boolean _browserStarted;

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 import com.liferay.multi.factor.authentication.fido2.credential.model.MFAFIDO2CredentialEntry;
 import com.liferay.multi.factor.authentication.fido2.credential.service.MFAFIDO2CredentialEntryLocalService;
+import com.liferay.multi.factor.authentication.fido2.web.internal.audit.MFAFIDO2AuditMessageBuilder;
 import com.liferay.multi.factor.authentication.fido2.web.internal.configuration.MFAFIDO2Configuration;
 import com.liferay.multi.factor.authentication.fido2.web.internal.constants.MFAFIDO2WebKeys;
 import com.liferay.multi.factor.authentication.fido2.web.internal.util.ConvertUtil;
@@ -30,9 +31,11 @@ import com.liferay.multi.factor.authentication.spi.checker.browser.BrowserMFAChe
 import com.liferay.multi.factor.authentication.spi.checker.setup.SetupMFAChecker;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.audit.AuditMessage;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
@@ -80,6 +83,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * @author Arthur Chan
@@ -131,37 +135,29 @@ public class FIDO2BrowserSetupMFAChecker
 			_mfaFIDO2CredentialEntryLocalService.
 				getMFAFIDO2CredentialEntriesByUserId(userId);
 
-		if (mfaFIDO2CredentialEntries.size() >=
+		if (mfaFIDO2CredentialEntries.size() <
 				_mfaFIDO2Configuration.allowedCredentialsPerUser()) {
 
-			RequestDispatcher requestDispatcher =
-				_servletContext.getRequestDispatcher(
-					"/mfa_fido2_checker/setup_completed.jsp");
+			String mfaFIDO2PKCCOptions = _objectMapper.writeValueAsString(
+				_getPublicKeyCredentialCreationOptions(userId));
 
-			requestDispatcher.include(httpServletRequest, httpServletResponse);
+			httpServletRequest.setAttribute(
+				MFAFIDO2WebKeys.MFA_FIDO2_PKCC_OPTIONS, mfaFIDO2PKCCOptions);
 
-			return;
+			HttpServletRequest originalHttpServletRequest =
+				_portal.getOriginalServletRequest(httpServletRequest);
+
+			HttpSession httpSession = originalHttpServletRequest.getSession();
+
+			httpSession.setAttribute(
+				MFAFIDO2WebKeys.MFA_FIDO2_PKCC_OPTIONS, mfaFIDO2PKCCOptions);
 		}
-
-		String mfaFIDO2PKCCOptions = _objectMapper.writeValueAsString(
-			_getPublicKeyCredentialCreationOptions(userId));
-
-		httpServletRequest.setAttribute(
-			MFAFIDO2WebKeys.MFA_FIDO2_PKCC_OPTIONS, mfaFIDO2PKCCOptions);
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(
 				"/mfa_fido2_checker/setup.jsp");
 
 		requestDispatcher.include(httpServletRequest, httpServletResponse);
-
-		HttpServletRequest originalHttpServletRequest =
-			_portal.getOriginalServletRequest(httpServletRequest);
-
-		HttpSession httpSession = originalHttpServletRequest.getSession();
-
-		httpSession.setAttribute(
-			MFAFIDO2WebKeys.MFA_FIDO2_PKCC_OPTIONS, mfaFIDO2PKCCOptions);
 	}
 
 	@Override
@@ -254,6 +250,12 @@ public class FIDO2BrowserSetupMFAChecker
 						userId);
 			}
 
+			_routeAuditMessage(
+				_mfaFIDO2AuditMessageBuilder.
+					buildNonexistentUserVerificationFailureAuditMessage(
+						CompanyThreadLocal.getCompanyId(), userId,
+						_getClassName()));
+
 			return false;
 		}
 
@@ -263,6 +265,12 @@ public class FIDO2BrowserSetupMFAChecker
 					"Requested FIDO2 verification for user " + userId +
 						" with incomplete configuration");
 			}
+
+			_routeAuditMessage(
+				_mfaFIDO2AuditMessageBuilder.
+					buildUnconfiguredUserVerificationFailureAuditMessage(
+						CompanyThreadLocal.getCompanyId(), user,
+						_getClassName()));
 
 			return false;
 		}
@@ -277,6 +285,12 @@ public class FIDO2BrowserSetupMFAChecker
 				_mfaFIDO2CredentialEntryLocalService.updateAttempts(
 					userId, credentialIdByteArray.getBase64(), 0);
 
+				_routeAuditMessage(
+					_mfaFIDO2AuditMessageBuilder.
+						buildVerificationFailureAuditMessage(
+							user, _getClassName(),
+							"Incorrect FIDO2 verification"));
+
 				return false;
 			}
 
@@ -285,6 +299,10 @@ public class FIDO2BrowserSetupMFAChecker
 				assertionResult.getSignatureCount());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return false;
 		}
 
@@ -298,6 +316,10 @@ public class FIDO2BrowserSetupMFAChecker
 			System.currentTimeMillis());
 		httpSession.setAttribute(
 			MFAFIDO2WebKeys.MFA_FIDO2_VALIDATED_USER_ID, userId);
+
+		_routeAuditMessage(
+			_mfaFIDO2AuditMessageBuilder.buildVerifiedAuditMessage(
+				user, _getClassName()));
 
 		return true;
 	}
@@ -382,16 +404,28 @@ public class FIDO2BrowserSetupMFAChecker
 	}
 
 	protected boolean isVerified(HttpSession httpSession, long userId) {
-		if (httpSession == null) {
-			return false;
-		}
+		User user = _userLocalService.fetchUser(userId);
 
-		if (_userLocalService.fetchUser(userId) == null) {
+		if (user == null) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					"Requested FIDO2 verification for nonexistent user " +
 						userId);
 			}
+
+			_routeAuditMessage(
+				_mfaFIDO2AuditMessageBuilder.
+					buildNonexistentUserVerificationFailureAuditMessage(
+						CompanyThreadLocal.getCompanyId(), userId,
+						_getClassName()));
+
+			return false;
+		}
+
+		if (httpSession == null) {
+			_routeAuditMessage(
+				_mfaFIDO2AuditMessageBuilder.buildNotVerifiedAuditMessage(
+					user, _getClassName(), "Empty session"));
 
 			return false;
 		}
@@ -442,6 +476,12 @@ public class FIDO2BrowserSetupMFAChecker
 			).build());
 	}
 
+	private String _getClassName() {
+		Class<?> clazz = getClass();
+
+		return clazz.getName();
+	}
+
 	private PublicKeyCredentialCreationOptions
 		_getPublicKeyCredentialCreationOptions(long userId) {
 
@@ -489,8 +529,17 @@ public class FIDO2BrowserSetupMFAChecker
 			).build());
 	}
 
+	private void _routeAuditMessage(AuditMessage auditMessage) {
+		if (_mfaFIDO2AuditMessageBuilder != null) {
+			_mfaFIDO2AuditMessageBuilder.routeAuditMessage(auditMessage);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		FIDO2BrowserSetupMFAChecker.class);
+
+	@Reference(cardinality = ReferenceCardinality.OPTIONAL)
+	private MFAFIDO2AuditMessageBuilder _mfaFIDO2AuditMessageBuilder;
 
 	private MFAFIDO2Configuration _mfaFIDO2Configuration;
 

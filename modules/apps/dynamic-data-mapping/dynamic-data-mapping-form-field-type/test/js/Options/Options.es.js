@@ -22,6 +22,9 @@ import Options from '../../../src/main/resources/META-INF/resources/Options/Opti
 const DEFAULT_OPTION_NAME_REGEX = /^Option[0-9]{8}$/;
 
 let liferayLanguageSpy;
+
+const globalLanguageDirection = Liferay.Language.direction;
+
 const spritemap = 'icons.svg';
 
 const OptionsWithProvider = (props) => (
@@ -33,11 +36,15 @@ const OptionsWithProvider = (props) => (
 const optionsValue = {
 	[themeDisplay.getLanguageId()]: [
 		{
+			id: 'option1',
 			label: 'Option 1',
+			reference: 'Option1',
 			value: 'Option1',
 		},
 		{
+			id: 'option2',
 			label: 'Option 2',
+			reference: 'Option2',
 			value: 'Option2',
 		},
 	],
@@ -71,11 +78,17 @@ describe('Options', () => {
 			}
 			originalWarn.call(console, ...args);
 		};
+
+		Liferay.Language.direction = {
+			en_US: 'rtl',
+		};
 	});
 
 	afterAll(() => {
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
+
+		Liferay.Language.direction = globalLanguageDirection;
 	});
 
 	afterEach(cleanup);
@@ -91,6 +104,7 @@ describe('Options', () => {
 		const {container} = render(
 			<OptionsWithProvider
 				name="options"
+				showKeyword={true}
 				spritemap={spritemap}
 				value={optionsValue}
 			/>
@@ -99,6 +113,16 @@ describe('Options', () => {
 		act(() => {
 			jest.runAllTimers();
 		});
+
+		const referenceInputs = container.querySelectorAll(
+			'.key-value-reference-input'
+		);
+
+		expect(referenceInputs[2].value).toEqual(
+			expect.stringMatching(DEFAULT_OPTION_NAME_REGEX)
+		);
+
+		referenceInputs[2].setAttribute('value', 'Any<String>');
 
 		const valueInputs = container.querySelectorAll('.key-value-input');
 
@@ -120,10 +144,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				keywordReadOnly={true}
 				name="options"
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option1',
 							label: 'Option 1',
 							value: 'Option1',
 						},
@@ -152,10 +178,12 @@ describe('Options', () => {
 				keywordReadOnly={false}
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option1',
 							label: 'Option 1',
 							value: 'Option1',
 						},
@@ -185,10 +213,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
@@ -229,12 +259,14 @@ describe('Options', () => {
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
 					],
 					pt_BR: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
@@ -259,10 +291,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option1',
 							label: 'Option 1',
 							value: 'Option1',
 						},
@@ -291,10 +325,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
@@ -329,10 +365,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
@@ -369,16 +407,19 @@ describe('Options', () => {
 				editingLanguageId="pt_BR"
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
 					],
 					pt_BR: [
 						{
+							id: 'option',
 							label: 'Option',
 							value: 'Option',
 						},
@@ -411,10 +452,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'foo',
 							label: 'Foo',
 							value: 'Foo',
 						},
@@ -449,14 +492,17 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'bar',
 							label: 'Bar',
 							value: 'Bar',
 						},
 						{
+							id: 'foo',
 							label: 'Foo',
 							value: 'Foo',
 						},
@@ -487,10 +533,12 @@ describe('Options', () => {
 			<OptionsWithProvider
 				name="options"
 				onChange={jest.fn()}
+				showKeyword={true}
 				spritemap={spritemap}
 				value={{
 					[themeDisplay.getLanguageId()]: [
 						{
+							id: 'bar',
 							label: 'Bar',
 							value: 'Bar',
 						},
@@ -514,5 +562,117 @@ describe('Options', () => {
 		const valueInput = container.querySelector('.key-value-input');
 
 		expect(valueInput.value).toBe('Bar');
+	});
+
+	it('removes an option when click on remove button', () => {
+		const {container} = render(
+			<OptionsWithProvider
+				defaultLanguageId={themeDisplay.getLanguageId()}
+				editingLanguageId="pt_BR"
+				name="options"
+				onChange={jest.fn()}
+				spritemap={spritemap}
+				value={{
+					...optionsValue,
+					pt_BR: [
+						{
+							id: 'option1',
+							label: 'Option 1',
+							reference: 'Option1',
+							value: 'Option1',
+						},
+						{
+							id: 'option2',
+							label: 'Option 2',
+							reference: 'Option2',
+							value: 'Option2',
+						},
+					],
+				}}
+			/>
+		);
+
+		let options = container.querySelectorAll('.ddm-field-options');
+
+		expect(options.length).toEqual(3);
+
+		const removeOptionButton = document.querySelector(
+			'.ddm-option-entry .close'
+		);
+
+		fireEvent.click(removeOptionButton);
+
+		options = container.querySelectorAll('.ddm-field-options');
+
+		expect(options.length).toEqual(2);
+	});
+
+	it('checks if the initial value of the option reference matches the option value', () => {
+		mockLiferayLanguage();
+
+		const {container} = render(
+			<OptionsWithProvider
+				name="options"
+				showKeyword={true}
+				spritemap={spritemap}
+				value={optionsValue}
+			/>
+		);
+
+		const referenceInputs = container.querySelectorAll(
+			'.key-value-reference-input'
+		);
+
+		expect(referenceInputs[2].value).toEqual(
+			expect.stringMatching(DEFAULT_OPTION_NAME_REGEX)
+		);
+
+		const valueInputs = container.querySelectorAll('.key-value-input');
+
+		expect(referenceInputs[2].value).toBe(valueInputs[2].value);
+
+		unmockLiferayLanguage();
+	});
+
+	it('adds the default option value to the reference property when it is empty and leaves the field', () => {
+		mockLiferayLanguage();
+
+		const {container} = render(
+			<OptionsWithProvider
+				name="options"
+				onChange={jest.fn()}
+				spritemap={spritemap}
+				value={{
+					[themeDisplay.getLanguageId()]: [
+						{
+							id: 'bar',
+							label: 'Bar',
+							reference: 'Bar',
+							value: 'Bar',
+						},
+					],
+				}}
+			/>
+		);
+
+		const referenceInput = container.querySelector(
+			'.key-value-reference-input'
+		);
+
+		expect(referenceInput.value).toBe('Bar');
+
+		fireEvent.input(referenceInput, {target: {value: ''}});
+
+		fireEvent.blur(referenceInput);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(referenceInput.value).toEqual(
+			expect.stringMatching(DEFAULT_OPTION_NAME_REGEX)
+		);
+
+		unmockLiferayLanguage();
 	});
 });

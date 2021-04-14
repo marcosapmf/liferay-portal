@@ -29,6 +29,7 @@ import com.liferay.headless.commerce.admin.inventory.resource.v1_0.WarehouseItem
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -36,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import javax.ws.rs.core.Response;
 
@@ -51,9 +50,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v1_0/warehouse-item.properties",
-	scope = ServiceScope.PROTOTYPE, service = WarehouseItemResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {NestedFieldSupport.class, WarehouseItemResource.class}
 )
-public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
+public class WarehouseItemResourceImpl
+	extends BaseWarehouseItemResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public Response deleteWarehouseItem(Long id) throws Exception {
@@ -67,7 +68,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 	@Override
 	public Response deleteWarehouseItemByExternalReferenceCode(
-			@NotNull String externalReferenceCode)
+			String externalReferenceCode)
 		throws Exception {
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
@@ -99,7 +100,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -135,7 +136,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 	@Override
 	public WarehouseItem getWarehouseItemByExternalReferenceCode(
-			@NotNull String externalReferenceCode)
+			String externalReferenceCode)
 		throws Exception {
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
@@ -232,7 +233,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 	@Override
 	public Response patchWarehouseItemByExternalReferenceCode(
-			@NotNull String externalReferenceCode, WarehouseItem warehouseItem)
+			String externalReferenceCode, WarehouseItem warehouseItem)
 		throws Exception {
 
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
@@ -265,7 +266,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -279,10 +280,10 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 			commerceInventoryWarehouseItem =
 				_commerceInventoryWarehouseItemService.
 					upsertCommerceInventoryWarehouseItem(
+						warehouseItem.getExternalReferenceCode(),
 						contextUser.getCompanyId(), contextUser.getUserId(),
 						commerceInventoryWarehouse.
 							getCommerceInventoryWarehouseId(),
-						warehouseItem.getExternalReferenceCode(),
 						warehouseItem.getSku(), warehouseItem.getQuantity());
 		}
 		else {
@@ -304,7 +305,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 	@Override
 	public WarehouseItem postWarehouseItemByExternalReferenceCode(
-			@NotNull String externalReferenceCode, WarehouseItem warehouseItem)
+			String externalReferenceCode, WarehouseItem warehouseItem)
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse = null;
@@ -318,8 +319,8 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 		else if (warehouseItem.getWarehouseExternalReferenceCode() != null) {
 			commerceInventoryWarehouse =
 				_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-					contextUser.getCompanyId(),
-					warehouseItem.getWarehouseExternalReferenceCode());
+					warehouseItem.getWarehouseExternalReferenceCode(),
+					contextUser.getCompanyId());
 		}
 
 		if (commerceInventoryWarehouse == null) {
@@ -341,11 +342,10 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 		commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
 				addCommerceInventoryWarehouseItem(
-					contextUser.getUserId(),
+					externalReferenceCode, contextUser.getUserId(),
 					commerceInventoryWarehouse.
 						getCommerceInventoryWarehouseId(),
-					externalReferenceCode, warehouseItem.getSku(),
-					warehouseItem.getQuantity());
+					warehouseItem.getSku(), warehouseItem.getQuantity());
 
 		return _warehouseItemDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
@@ -366,10 +366,10 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
 			_commerceInventoryWarehouseItemService.
 				addCommerceInventoryWarehouseItem(
+					warehouseItem.getExternalReferenceCode(),
 					contextUser.getUserId(),
 					commerceInventoryWarehouse.
 						getCommerceInventoryWarehouseId(),
-					warehouseItem.getExternalReferenceCode(),
 					warehouseItem.getSku(), warehouseItem.getQuantity());
 
 		return _warehouseItemDTOConverter.toDTO(

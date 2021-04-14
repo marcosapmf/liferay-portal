@@ -12,6 +12,7 @@
  * details.
  */
 
+import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -19,7 +20,9 @@ import React from 'react';
 import {FRAGMENT_CONFIGURATION_FIELDS} from '../../../../app/components/fragment-configuration-fields/index';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../app/config/constants/layoutDataItemTypes';
 import {VIEWPORT_SIZES} from '../../../../app/config/constants/viewportSizes';
+import {config} from '../../../../app/config/index';
 import {useSelector} from '../../../../app/store/index';
+import getLanguages from '../../../../app/utils/getLanguages';
 import {ConfigurationFieldPropTypes} from '../../../../prop-types/index';
 
 const DISPLAY_SIZES = {
@@ -31,15 +34,36 @@ const fieldIsDisabled = (item, field) =>
 	item.config?.widthType === 'fixed' &&
 	(field.name === 'marginRight' || field.name === 'marginLeft');
 
-export const FieldSet = ({fields, item = {}, label, onValueSelect, values}) => {
-	const selectedViewportSize = useSelector(
-		(state) => state.selectedViewportSize
-	);
+export const FieldSet = ({
+	availableLanguages,
+	fields,
+	item = {},
+	label,
+	languageId,
+	onValueSelect,
+	values,
+}) => {
+	const store = useSelector((state) => state);
+
+	const {
+		availableSegmentsExperiences,
+		segmentsExperienceId,
+		selectedViewportSize,
+	} = store;
 
 	const availableFields =
 		selectedViewportSize === VIEWPORT_SIZES.desktop
 			? fields
-			: fields.filter((field) => field.responsive);
+			: fields.filter(
+					(field) =>
+						field.responsive || field.name === 'backgroundImage'
+			  );
+
+	const languages = getLanguages(
+		availableLanguages,
+		availableSegmentsExperiences,
+		segmentsExperienceId
+	);
 
 	return (
 		availableFields.length > 0 && (
@@ -56,8 +80,27 @@ export const FieldSet = ({fields, item = {}, label, onValueSelect, values}) => {
 							field.type &&
 							FRAGMENT_CONFIGURATION_FIELDS[field.type];
 
-						const fieldValue =
-							values[field.name] || field.defaultValue;
+						const fieldValueObject = values[field.name];
+						let fieldValue = field.defaultValue;
+
+						if (field.localizable) {
+							fieldValue = Object.keys(fieldValueObject).includes(
+								languageId
+							)
+								? fieldValueObject[languageId]
+								: Object.keys(fieldValueObject).includes(
+										config.defaultLanguageId
+								  )
+								? values[field.name][config.defaultLanguageId]
+								: field.defaultValue;
+						}
+						else {
+							fieldValue = Object.keys(values).includes(
+								field.name
+							)
+								? values[field.name]
+								: field.defaultValue;
+						}
 
 						const visible =
 							!field.dependencies ||
@@ -71,6 +114,7 @@ export const FieldSet = ({fields, item = {}, label, onValueSelect, values}) => {
 							visible && (
 								<div
 									className={classNames(
+										'autofit-row',
 										'page-editor__sidebar__fieldset__field',
 										{
 											'page-editor__sidebar__fieldset__field-small':
@@ -80,12 +124,39 @@ export const FieldSet = ({fields, item = {}, label, onValueSelect, values}) => {
 									)}
 									key={index}
 								>
-									<FieldComponent
-										disabled={fieldIsDisabled(item, field)}
-										field={field}
-										onValueSelect={onValueSelect}
-										value={fieldValue}
-									/>
+									<div className="autofit-col autofit-col-expand">
+										<FieldComponent
+											disabled={fieldIsDisabled(
+												item,
+												field
+											)}
+											field={field}
+											onValueSelect={onValueSelect}
+											value={fieldValue}
+										/>
+									</div>
+
+									{field.localizable && (
+										<div
+											className="align-self-end autofit-col ml-1 p-2"
+											data-title={Liferay.Language.get(
+												'localizable'
+											)}
+										>
+											<ClayIcon
+												symbol={
+													languages[languageId]
+														.languageIcon
+												}
+											/>
+											<span className="sr-only">
+												{
+													languages[languageId]
+														.w3cLanguageId
+												}
+											</span>
+										</div>
+									)}
 								</div>
 							)
 						);
@@ -97,8 +168,19 @@ export const FieldSet = ({fields, item = {}, label, onValueSelect, values}) => {
 };
 
 FieldSet.propTypes = {
+	availableLanguages: PropTypes.objectOf(
+		PropTypes.shape({
+			default: PropTypes.bool.isRequired,
+			displayName: PropTypes.string.isRequired,
+			languageIcon: PropTypes.string.isRequired,
+			languageId: PropTypes.string.isRequired,
+			w3cLanguageId: PropTypes.string.isRequired,
+		})
+	).isRequired,
 	fields: PropTypes.arrayOf(PropTypes.shape(ConfigurationFieldPropTypes)),
+	item: PropTypes.object,
 	label: PropTypes.string,
+	languageId: PropTypes.string.isRequired,
 	onValueSelect: PropTypes.func.isRequired,
 	values: PropTypes.object,
 };

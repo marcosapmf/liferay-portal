@@ -25,11 +25,11 @@ ConfigurationScopeDisplayContext configurationScopeDisplayContext = Configuratio
 <portlet:renderURL var="redirectURL" />
 
 <portlet:renderURL var="searchURL">
-	<portlet:param name="mvcRenderCommandName" value="/search" />
+	<portlet:param name="mvcRenderCommandName" value="/configuration_admin/search_results" />
 	<portlet:param name="redirect" value="<%= redirectURL %>" />
 </portlet:renderURL>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	searchActionURL="<%= searchURL %>"
 	selectable="<%= false %>"
 	showSearch="<%= true %>"

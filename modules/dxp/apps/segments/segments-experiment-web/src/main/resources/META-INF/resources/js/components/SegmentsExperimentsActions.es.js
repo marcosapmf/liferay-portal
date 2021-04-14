@@ -40,7 +40,7 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 		experiment,
 		reviewExperimentModal,
 		variants,
-		viewExperimentURL,
+		viewExperimentDetailsURL,
 	} = useContext(StateContext);
 	const dispatch = useContext(DispatchContext);
 
@@ -129,11 +129,11 @@ function SegmentsExperimentsActions({onEditSegmentsExperimentStatus}) {
 					variants={variants}
 				/>
 			)}
-			{viewExperimentURL && (
+			{viewExperimentDetailsURL && (
 				<ClayLink
 					className="btn btn-secondary btn-sm mt-3 w-100"
 					displayType="secondary"
-					href={viewExperimentURL}
+					href={viewExperimentDetailsURL}
 					target="_blank"
 				>
 					{Liferay.Language.get('view-data-in-analytics-cloud')}

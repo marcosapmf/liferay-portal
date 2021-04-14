@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.DataLimitException;
 import com.liferay.portal.kernel.exception.DuplicateOrganizationException;
 import com.liferay.portal.kernel.exception.OrganizationNameException;
 import com.liferay.portal.kernel.exception.OrganizationParentException;
@@ -245,6 +246,14 @@ public class OrganizationLocalServiceImpl
 		// Organization
 
 		User user = userPersistence.findByPrimaryKey(userId);
+
+		if ((PropsValues.DATA_LIMIT_MAX_ORGANIZATION_COUNT > 0) &&
+			(organizationPersistence.countByCompanyId(user.getCompanyId()) >=
+				PropsValues.DATA_LIMIT_MAX_ORGANIZATION_COUNT)) {
+
+			throw new DataLimitException(
+				"Unable to exceed maximum number of allowed organizations");
+		}
 
 		parentOrganizationId = getParentOrganizationId(
 			user.getCompanyId(), parentOrganizationId);
@@ -2167,6 +2176,7 @@ public class OrganizationLocalServiceImpl
 
 		searchContext.setCompanyId(companyId);
 		searchContext.setEnd(end);
+		searchContext.setGroupIds(new long[] {-1L});
 
 		if (params != null) {
 			String keywords = (String)params.remove("keywords");
@@ -2455,7 +2465,7 @@ public class OrganizationLocalServiceImpl
 	}
 
 	private static final String _TYPE_FIELD_NAME = Field.getSortableFieldName(
-		StringBundler.concat(Field.TYPE, StringPool.UNDERLINE, "String"));
+		Field.TYPE + "_String");
 
 	private static volatile OrganizationTypesSettings
 		_organizationTypesSettings =

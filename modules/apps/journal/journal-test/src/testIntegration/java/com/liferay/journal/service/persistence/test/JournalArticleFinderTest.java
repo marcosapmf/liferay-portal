@@ -44,8 +44,10 @@ import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -59,18 +61,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 
 /**
  * @author Zsolt Berentey
@@ -166,20 +162,6 @@ public class JournalArticleFinderTest {
 		_folderIds.add(folder.getFolderId());
 
 		_article = _articles.get(0);
-
-		Bundle bundle = FrameworkUtil.getBundle(getClass());
-
-		_bundleContext = bundle.getBundleContext();
-
-		_serviceReference = _bundleContext.getServiceReference(
-			JournalArticleFinder.class);
-
-		_journalArticleFinder = _bundleContext.getService(_serviceReference);
-	}
-
-	@After
-	public void tearDown() {
-		_bundleContext.ungetService(_serviceReference);
 	}
 
 	@Test
@@ -360,6 +342,76 @@ public class JournalArticleFinderTest {
 				null, null, true, queryDefinition);
 
 		Assert.assertEquals(articles.toString(), 1, articles.size());
+	}
+
+	@Test
+	public void testLocalizedQueryByG_F_L() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		JournalFolder folder = JournalTestUtil.addFolder(
+			_group.getGroupId(), "Localized folder 1");
+
+		List<Long> folderIds = new ArrayList<>();
+
+		folderIds.add(folder.getFolderId());
+
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.FRANCE, "AA"
+		).put(
+			LocaleUtil.US, "FF"
+		).build();
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(), folder.getFolderId(),
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, titleMap, titleMap,
+			titleMap, LocaleUtil.US, true, true, serviceContext);
+
+		titleMap = HashMapBuilder.put(
+			LocaleUtil.FRANCE, "BB"
+		).put(
+			LocaleUtil.US, "EE"
+		).build();
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(), folder.getFolderId(),
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, titleMap, titleMap,
+			titleMap, LocaleUtil.US, true, true, serviceContext);
+
+		titleMap = HashMapBuilder.put(
+			LocaleUtil.FRANCE, "CC"
+		).put(
+			LocaleUtil.US, "DD"
+		).build();
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(), folder.getFolderId(),
+			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, titleMap, titleMap,
+			titleMap, LocaleUtil.US, true, true, serviceContext);
+
+		QueryDefinition<JournalArticle> queryDefinition =
+			new QueryDefinition<>();
+
+		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
+
+		int actualCount = _journalArticleFinder.countByG_F(
+			_group.getGroupId(), folderIds, queryDefinition);
+
+		Assert.assertEquals(3, actualCount);
+
+		testLocalizedQueryByG_F_L(
+			_group.getGroupId(), folderIds, LocaleUtil.FRANCE, true, "AA", "BB",
+			"CC");
+		testLocalizedQueryByG_F_L(
+			_group.getGroupId(), folderIds, LocaleUtil.FRANCE, false, "CC",
+			"BB", "AA");
+		testLocalizedQueryByG_F_L(
+			_group.getGroupId(), folderIds, LocaleUtil.US, true, "DD", "EE",
+			"FF");
+		testLocalizedQueryByG_F_L(
+			_group.getGroupId(), folderIds, LocaleUtil.US, false, "FF", "EE",
+			"DD");
 	}
 
 	@Test
@@ -555,6 +607,40 @@ public class JournalArticleFinderTest {
 		}
 	}
 
+	protected void testLocalizedQueryByG_F_L(
+			long groupId, List<Long> folderIds, Locale locale,
+			boolean ascending, String... expectedTitles)
+		throws Exception {
+
+		QueryDefinition<JournalArticle> queryDefinition =
+			new QueryDefinition<>();
+
+		queryDefinition.setStatus(WorkflowConstants.STATUS_ANY);
+
+		OrderByComparator<JournalArticle> orderByComparator =
+			OrderByComparatorFactoryUtil.create(
+				"JournalArticleLocalization", "title", ascending);
+
+		queryDefinition.setOrderByComparator(orderByComparator);
+
+		List<JournalArticle> articles = _journalArticleFinder.findByG_F_L(
+			groupId, folderIds, locale, queryDefinition);
+
+		int actualCount = articles.size();
+
+		Assert.assertEquals(expectedTitles.length, actualCount);
+
+		String[] actualTitles = new String[actualCount];
+
+		for (int i = 0; i < actualCount; ++i) {
+			JournalArticle article = articles.get(i);
+
+			actualTitles[i] = article.getTitle(locale);
+		}
+
+		Assert.assertArrayEquals(expectedTitles, actualTitles);
+	}
+
 	protected void testQueryByC_G_F_C_A_V_T_D_C_T_S_T_D_R(
 			long companyId, long groupId, List<Long> folderIds,
 			long classNameId, String articleId, Double version, String title,
@@ -674,19 +760,18 @@ public class JournalArticleFinderTest {
 
 	private static final long _USER_ID = 1234L;
 
+	@Inject
+	private static JournalArticleFinder _journalArticleFinder;
+
 	private JournalArticle _article;
 	private final List<JournalArticle> _articles = new ArrayList<>();
 	private DDMStructure _basicWebContentDDMStructure;
 	private DDMTemplate _basicWebContentDDMTemplate;
-	private BundleContext _bundleContext;
 	private DDMStructure _ddmStructure;
 	private JournalFolder _folder;
 	private final List<Long> _folderIds = new ArrayList<>();
 
 	@DeleteAfterTestRun
 	private Group _group;
-
-	private JournalArticleFinder _journalArticleFinder;
-	private ServiceReference<JournalArticleFinder> _serviceReference;
 
 }

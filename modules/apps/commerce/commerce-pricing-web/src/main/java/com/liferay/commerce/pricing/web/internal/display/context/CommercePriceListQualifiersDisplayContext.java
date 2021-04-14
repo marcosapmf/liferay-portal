@@ -17,19 +17,19 @@ package com.liferay.commerce.pricing.web.internal.display.context;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListAccountRelService;
+import com.liferay.commerce.price.list.service.CommercePriceListChannelRelService;
 import com.liferay.commerce.price.list.service.CommercePriceListCommerceAccountGroupRelService;
 import com.liferay.commerce.price.list.service.CommercePriceListService;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceCatalogService;
-import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.frontend.taglib.clay.data.set.servlet.taglib.util.ClayDataSetActionDropdownItem;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.util.ListUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.PortletURL;
@@ -44,8 +44,8 @@ public class CommercePriceListQualifiersDisplayContext
 
 	public CommercePriceListQualifiersDisplayContext(
 		CommerceCatalogService commerceCatalogService,
-		CommerceChannelRelService commerceChannelRelService,
 		CommercePriceListAccountRelService commercePriceListAccountRelService,
+		CommercePriceListChannelRelService commercePriceListChannelRelService,
 		CommercePriceListCommerceAccountGroupRelService
 			commercePriceListCommerceAccountGroupRelService,
 		ModelResourcePermission<CommercePriceList>
@@ -57,9 +57,10 @@ public class CommercePriceListQualifiersDisplayContext
 			commerceCatalogService, commercePriceListModelResourcePermission,
 			commercePriceListService, httpServletRequest);
 
-		_commerceChannelRelService = commerceChannelRelService;
 		_commercePriceListAccountRelService =
 			commercePriceListAccountRelService;
+		_commercePriceListChannelRelService =
+			commercePriceListChannelRelService;
 		_commercePriceListCommerceAccountGroupRelService =
 			commercePriceListCommerceAccountGroupRelService;
 	}
@@ -88,13 +89,11 @@ public class CommercePriceListQualifiersDisplayContext
 	}
 
 	public String getActiveChannelEligibility() throws PortalException {
-		long commercePriceListId = getCommercePriceListId();
+		int commercePriceListChannelRelsCount =
+			_commercePriceListChannelRelService.
+				getCommercePriceListChannelRelsCount(getCommercePriceListId());
 
-		long commerceChannelRelsCount =
-			_commerceChannelRelService.getCommerceChannelRelsCount(
-				CommercePriceList.class.getName(), commercePriceListId);
-
-		if (commerceChannelRelsCount > 0) {
+		if (commercePriceListChannelRelsCount > 0) {
 			return "channels";
 		}
 
@@ -109,7 +108,9 @@ public class CommercePriceListQualifiersDisplayContext
 			httpServletRequest, CommerceAccount.class.getName(),
 			PortletProvider.Action.EDIT);
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceAccount");
+		portletURL.setParameter(
+			"mvcRenderCommandName",
+			"/commerce_account_admin/edit_commerce_account");
 		portletURL.setParameter(
 			"redirect", commercePricingRequestHelper.getCurrentURL());
 		portletURL.setParameter("commerceAccountId", "{account.id}");
@@ -121,16 +122,11 @@ public class CommercePriceListQualifiersDisplayContext
 			getPriceListAccountGroupClayDataSetActionDropdownItems()
 		throws PortalException {
 
-		List<ClayDataSetActionDropdownItem> clayDataSetActionDropdownItems =
-			new ArrayList<>();
-
-		clayDataSetActionDropdownItems.add(
+		return ListUtil.fromArray(
 			new ClayDataSetActionDropdownItem(
 				null, "trash", "delete",
 				LanguageUtil.get(httpServletRequest, "delete"), "delete",
 				"delete", "headless"));
-
-		return clayDataSetActionDropdownItems;
 	}
 
 	public String getPriceListAccountGroupsApiURL() throws PortalException {
@@ -153,7 +149,8 @@ public class CommercePriceListQualifiersDisplayContext
 			httpServletRequest, CommerceChannel.class.getName(),
 			PortletProvider.Action.MANAGE);
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceChannel");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_channels/edit_commerce_channel");
 		portletURL.setParameter(
 			"redirect", commercePricingRequestHelper.getCurrentURL());
 		portletURL.setParameter("commerceChannelId", "{channel.id}");
@@ -167,9 +164,10 @@ public class CommercePriceListQualifiersDisplayContext
 				"/price-list-channels?nestedFields=channel";
 	}
 
-	private final CommerceChannelRelService _commerceChannelRelService;
 	private final CommercePriceListAccountRelService
 		_commercePriceListAccountRelService;
+	private final CommercePriceListChannelRelService
+		_commercePriceListChannelRelService;
 	private final CommercePriceListCommerceAccountGroupRelService
 		_commercePriceListCommerceAccountGroupRelService;
 

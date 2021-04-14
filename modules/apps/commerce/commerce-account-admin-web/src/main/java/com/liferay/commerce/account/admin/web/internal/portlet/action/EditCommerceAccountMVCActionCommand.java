@@ -14,6 +14,9 @@
 
 package com.liferay.commerce.account.admin.web.internal.portlet.action;
 
+import com.liferay.account.model.AccountEntry;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.commerce.account.constants.CommerceAccountPortletKeys;
 import com.liferay.commerce.account.exception.CommerceAccountNameException;
 import com.liferay.commerce.account.exception.CommerceAccountOrdersException;
@@ -21,6 +24,7 @@ import com.liferay.commerce.account.exception.NoSuchAccountException;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -29,14 +33,18 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+
+import java.io.Serializable;
+
+import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -53,7 +61,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceAccountPortletKeys.COMMERCE_ACCOUNT_ADMIN,
-		"mvc.command.name=editCommerceAccount"
+		"mvc.command.name=/commerce_account_admin/edit_commerce_account"
 	},
 	service = MVCActionCommand.class
 )
@@ -113,7 +121,8 @@ public class EditCommerceAccountMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "editCommerceAccount");
+					"mvcRenderCommandName",
+					"/commerce_account_admin/edit_commerce_account");
 			}
 			else if (exception instanceof NoSuchAccountException ||
 					 exception instanceof PrincipalException) {
@@ -144,7 +153,8 @@ public class EditCommerceAccountMVCActionCommand extends BaseMVCActionCommand {
 			portletURL.setParameter("backURL", portletURL.toString());
 
 			portletURL.setParameter(
-				"mvcRenderCommandName", "editCommerceAccount");
+				"mvcRenderCommandName",
+				"/commerce_account_admin/edit_commerce_account");
 			portletURL.setParameter(
 				"commerceAccountId",
 				String.valueOf(commerceAccount.getCommerceAccountId()));
@@ -188,11 +198,8 @@ public class EditCommerceAccountMVCActionCommand extends BaseMVCActionCommand {
 
 		String name = ParamUtil.getString(actionRequest, "name");
 		boolean deleteLogo = ParamUtil.getBoolean(actionRequest, "deleteLogo");
-		long parentCommerceAccountId = ParamUtil.getLong(
-			actionRequest, "parentCommerceAccountId");
 		String email = ParamUtil.getString(actionRequest, "email");
 		String taxId = ParamUtil.getString(actionRequest, "taxId");
-		int type = ParamUtil.getInteger(actionRequest, "type");
 		boolean active = ParamUtil.getBoolean(actionRequest, "active");
 
 		byte[] logoBytes = null;
@@ -205,12 +212,16 @@ public class EditCommerceAccountMVCActionCommand extends BaseMVCActionCommand {
 			logoBytes = FileUtil.getBytes(fileEntry.getContentStream());
 		}
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			CommerceAccount.class.getName(), actionRequest);
+		ServiceContext serviceContext = _getServiceContext(
+			actionRequest, commerceAccountId);
 
 		CommerceAccount commerceAccount = null;
 
 		if (commerceAccountId <= 0) {
+			long parentCommerceAccountId = ParamUtil.getLong(
+				actionRequest, "parentCommerceAccountId");
+			int type = ParamUtil.getInteger(actionRequest, "type");
+
 			commerceAccount = _commerceAccountService.addCommerceAccount(
 				name, parentCommerceAccountId, email, taxId, type, active,
 				StringPool.BLANK, serviceContext);
@@ -230,8 +241,45 @@ public class EditCommerceAccountMVCActionCommand extends BaseMVCActionCommand {
 		return commerceAccount;
 	}
 
+	private ServiceContext _getServiceContext(
+			ActionRequest actionRequest, long commerceAccountId)
+		throws Exception {
+
+		ServiceContext serviceContext = new ServiceContext();
+
+		serviceContext.setCompanyId(_portal.getCompanyId(actionRequest));
+		serviceContext.setScopeGroupId(_portal.getScopeGroupId(actionRequest));
+		serviceContext.setUserId(_portal.getUserId(actionRequest));
+
+		if (commerceAccountId > 0) {
+			AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+				_classNameLocalService.getClassNameId(AccountEntry.class),
+				commerceAccountId);
+
+			serviceContext.setAssetCategoryIds(assetEntry.getCategoryIds());
+			serviceContext.setAssetTagNames(assetEntry.getTagNames());
+		}
+
+		Map<String, Serializable> expandoBridgeAttributes =
+			_portal.getExpandoBridgeAttributes(
+				ExpandoBridgeFactoryUtil.getExpandoBridge(
+					serviceContext.getCompanyId(),
+					AccountEntry.class.getName()),
+				actionRequest);
+
+		serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
+
+		return serviceContext;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		EditCommerceAccountMVCActionCommand.class);
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private CommerceAccountService _commerceAccountService;

@@ -34,7 +34,7 @@ List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vo
 				<div class="form-group" id="<%= "namespace_assetCategoriesSelector_" + vocabularyId %>">
 					<c:if test='<%= Validator.isNotNull(vocabulary.get("title")) %>'>
 						<label>
-							<%= vocabulary.get("title") %>
+							<%= HtmlUtil.escape(GetterUtil.getString(vocabulary.get("title"))) %>
 
 							<c:if test='<%= GetterUtil.getBoolean(vocabulary.get("required")) %>'>
 								<span class="reference-mark">
@@ -63,16 +63,14 @@ List<Map<String, Object>> vocabularies = (List<Map<String, Object>>)data.get("vo
 
 										<%
 										for (Map<String, Object> selectedItem : selectedItems) {
-											String selectedItemLabel = GetterUtil.getString(selectedItem.get("label"));
-											String selectedItemValue = GetterUtil.getString(selectedItem.get("value"));
 										%>
 
 											<clay:label
 												dismissible="<%= true %>"
-												label="<%= selectedItemLabel %>"
+												label='<%= GetterUtil.getString(selectedItem.get("label")) %>'
 											/>
 
-											<input name="<%= (String)data.get("inputName") %>" type="hidden" value="<%= selectedItemValue %>" />
+											<input name="<%= (String)data.get("inputName") %>" type="hidden" value="<%= GetterUtil.getString(selectedItem.get("value")) %>" />
 
 										<%
 										}

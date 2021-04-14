@@ -52,11 +52,11 @@ public class AccountGroupLocalServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountGroup addAccountGroup(
-			long userId, String name, String description)
+			long userId, String description, String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupLocalService.addAccountGroup(
-			userId, name, description);
+			userId, description, name);
 	}
 
 	/**
@@ -310,6 +310,13 @@ public class AccountGroupLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.account.model.AccountGroup getDefaultAccountGroup(
+		long companyId) {
+
+		return _accountGroupLocalService.getDefaultAccountGroup(companyId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 
@@ -335,6 +342,11 @@ public class AccountGroupLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupLocalService.getPersistedModel(primaryKeyObj);
+	}
+
+	@Override
+	public boolean hasDefaultAccountGroup(long companyId) {
+		return _accountGroupLocalService.hasDefaultAccountGroup(companyId);
 	}
 
 	@Override
@@ -367,11 +379,11 @@ public class AccountGroupLocalServiceWrapper
 
 	@Override
 	public com.liferay.account.model.AccountGroup updateAccountGroup(
-			long accountGroupId, String name, String description)
+			long accountGroupId, String description, String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _accountGroupLocalService.updateAccountGroup(
-			accountGroupId, name, description);
+			accountGroupId, description, name);
 	}
 
 	@Override

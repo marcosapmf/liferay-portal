@@ -261,6 +261,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ASSET_SELECTION_MANUAL_ASSET_ENTRIES_SELECT_IN_DEPOT</td>
+	<td>//div[contains(.,'Asset Entries')]/following-sibling::div//a[@title='Select in ${key_depotName}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ASSET_SELECTION_MANUAL_ASSET_ENTRIES_ASSET</td>
 	<td>//a[@data-title='Select ${key_assetType}']</td>
 	<td></td>
@@ -269,6 +274,11 @@
 <tr>
 	<td>SELECT_COLLECTION_PROVIDER_FIELD</td>
 	<td>//select[contains(@id,'infoListProviderClassName')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_COLLECTION_PROVIDER_FIELD_VALUE</td>
+	<td>//select[contains(@id,'infoListProviderClassName')]/option[normalize-space(text())='${key_value}']</td>
 	<td></td>
 </tr>
 </tbody>

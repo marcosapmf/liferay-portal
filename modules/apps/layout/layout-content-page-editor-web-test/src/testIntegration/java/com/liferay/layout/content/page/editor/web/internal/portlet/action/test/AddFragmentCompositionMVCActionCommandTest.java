@@ -315,13 +315,13 @@ public class AddFragmentCompositionMVCActionCommandTest {
 		LayoutStructureItem rootLayoutStructureItem =
 			layoutStructure.addRootLayoutStructureItem();
 
-		LayoutStructureItem containerLayoutStructureItem =
-			layoutStructure.addContainerLayoutStructureItem(
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				rootLayoutStructureItem.getItemId(), 0);
 
-		layoutStructure.addFragmentLayoutStructureItem(
+		layoutStructure.addFragmentStyledLayoutStructureItem(
 			fragmentEntryLink.getFragmentEntryLinkId(),
-			containerLayoutStructureItem.getItemId(), 0);
+			containerStyledLayoutStructureItem.getItemId(), 0);
 
 		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
 			TestPropsValues.getUserId(), _group.getGroupId(), _layout.getPlid(),
@@ -336,7 +336,7 @@ public class AddFragmentCompositionMVCActionCommandTest {
 			"fragmentCollectionId",
 			String.valueOf(fragmentCollection.getFragmentCollectionId()));
 		mockLiferayPortletActionRequest.addParameter(
-			"itemId", containerLayoutStructureItem.getItemId());
+			"itemId", containerStyledLayoutStructureItem.getItemId());
 		mockLiferayPortletActionRequest.addParameter(
 			"name", RandomTestUtil.randomString());
 		mockLiferayPortletActionRequest.addParameter(
@@ -542,7 +542,7 @@ public class AddFragmentCompositionMVCActionCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/content_layout/add_fragment_composition"
+		filter = "mvc.command.name=/layout_content_page_editor/add_fragment_composition"
 	)
 	private MVCActionCommand _mvcActionCommand;
 

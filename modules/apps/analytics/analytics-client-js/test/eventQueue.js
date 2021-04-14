@@ -28,14 +28,6 @@ import {
 
 jest.mock('../src/plugins/timing');
 
-jest.mock('../src/messageQueue', () => {
-	return jest.fn().mockImplementation(() => {
-		return {
-			addItem: () => Promise.resolve(true),
-		};
-	});
-});
-
 const FLUSH_INTERVAL = 100;
 
 const INITIAL_CONFIG = {
@@ -80,7 +72,7 @@ describe('EventQueue', () => {
 		};
 		const contextHash = hash(mockContext);
 
-		setItem(eventQueue.keys.contexts, [mockContext]);
+		setItem(eventQueue.keys.contexts, [[contextHash, mockContext]]);
 
 		for (let i = 0; i < 3; i++) {
 			eventQueue.addItem({

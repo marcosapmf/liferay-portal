@@ -25,6 +25,8 @@ AUI.add(
 
 		var TABS_SECTION_STR = 'TabsSection';
 
+		var REGEX_EMAIL = /^[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:\w(?:[\w-]*\w)?\.)+(\w(?:[\w-]*\w))$/;
+
 		var REGEX_NUMBER = /^[+-]?(\d+)([.|,]\d+)*([eE][+-]?\d+)?$/;
 
 		var REGEX_URL = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(https?:\/\/|www.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[\w]*))((.*):(\d*)\/?(.*))?)/;
@@ -35,6 +37,10 @@ AUI.add(
 			}
 
 			return defaultAcceptFiles(val, node, ruleValue);
+		};
+
+		var email = function (val) {
+			return REGEX_EMAIL.test(val);
 		};
 
 		var maxFileSize = function (_val, node, ruleValue) {
@@ -59,6 +65,7 @@ AUI.add(
 			DEFAULTS_FORM_VALIDATOR.RULES,
 			{
 				acceptFiles,
+				email,
 				maxFileSize,
 				number,
 				url,
@@ -240,7 +247,7 @@ AUI.add(
 
 					if (field) {
 						var fieldWrapper = field.ancestor(
-							'form > fieldset > div'
+							'form > fieldset > div, form > div'
 						);
 
 						var formTabs = formNode.one('.lfr-nav');
@@ -317,7 +324,7 @@ AUI.add(
 							.get('children')
 							.all('.has-error');
 
-						if (errorFields.size() > 0 && !panel.hasClass('in')) {
+						if (errorFields.size() > 0 && !panel.hasClass('show')) {
 							var panelNode = panel.getDOM();
 
 							Liferay.CollapseProvider.show({panel: panelNode});
@@ -483,6 +490,8 @@ AUI.add(
 					if (formNode) {
 						var formValidator = new A.FormValidator({
 							boundingBox: formNode,
+							stackErrorContainer:
+								'<div class="form-feedback-item form-validator-stack help-block"></div>',
 							validateOnBlur: instance.get('validateOnBlur'),
 						});
 

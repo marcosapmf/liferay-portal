@@ -1,7 +1,6 @@
 {
 	"dependencies": {
-		"metal": "2.16.8",
-		"metal-dom": "2.16.8",
+		"frontend-js-web": "*",
 		"metal-state": "2.16.8"
 	},
 	"name": "map-common",
@@ -11,5 +10,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "5.0.8"
+	"version": "6.0.0"
 }

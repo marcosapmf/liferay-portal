@@ -21,6 +21,7 @@ import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -47,6 +48,15 @@ public class LinkEditableElementMapper implements EditableElementMapper {
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
+		JSONObject localizedJSONObject = configJSONObject.getJSONObject(
+			LocaleUtil.toLanguageId(fragmentEntryProcessorContext.getLocale()));
+
+		if ((localizedJSONObject != null) &&
+			(localizedJSONObject.length() > 0)) {
+
+			configJSONObject = localizedJSONObject;
+		}
+
 		String href = configJSONObject.getString("href");
 
 		boolean assetDisplayPage =
@@ -54,11 +64,13 @@ public class LinkEditableElementMapper implements EditableElementMapper {
 				fragmentEntryProcessorContext.getMode());
 		boolean collectionMapped =
 			_fragmentEntryProcessorHelper.isMappedCollection(configJSONObject);
+		boolean layoutMapped = _fragmentEntryProcessorHelper.isMappedLayout(
+			configJSONObject);
 		boolean mapped = _fragmentEntryProcessorHelper.isMapped(
 			configJSONObject);
 
 		if (Validator.isNull(href) && !assetDisplayPage && !collectionMapped &&
-			!mapped) {
+			!layoutMapped && !mapped) {
 
 			return;
 		}
@@ -66,6 +78,11 @@ public class LinkEditableElementMapper implements EditableElementMapper {
 		if (collectionMapped) {
 			href = GetterUtil.getString(
 				_fragmentEntryProcessorHelper.getMappedCollectionValue(
+					configJSONObject, fragmentEntryProcessorContext));
+		}
+		else if (layoutMapped) {
+			href = GetterUtil.getString(
+				_fragmentEntryProcessorHelper.getMappedLayoutValue(
 					configJSONObject, fragmentEntryProcessorContext));
 		}
 		else if (mapped) {
@@ -101,8 +118,16 @@ public class LinkEditableElementMapper implements EditableElementMapper {
 			replaceLink = true;
 		}
 
-		if (configJSONObject.has("target")) {
-			linkElement.attr("target", configJSONObject.getString("target"));
+		String target = configJSONObject.getString("target");
+
+		if (Validator.isNotNull(target)) {
+			if (StringUtil.equalsIgnoreCase(target, "_parent") ||
+				StringUtil.equalsIgnoreCase(target, "_top")) {
+
+				target = "_self";
+			}
+
+			linkElement.attr("target", target);
 		}
 
 		String mappedField = configJSONObject.getString("mappedField");

@@ -18,12 +18,16 @@ import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.search.facet.RangeFacet;
 import com.liferay.portal.kernel.search.facet.util.RangeParserUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.facet.nested.NestedFacet;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.lucene.search.join.ScoreMode;
 
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -67,7 +71,27 @@ public class AggregationFilteringFacetProcessorContext
 
 		String fieldName = facet.getFieldName();
 
-		if (facet instanceof RangeFacet) {
+		if (facet instanceof NestedFacet) {
+			NestedFacet nestedFacet = (NestedFacet)facet;
+
+			BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+			if (Validator.isNotNull(nestedFacet.getFilterField())) {
+				boolQueryBuilder.must(
+					QueryBuilders.termsQuery(
+						nestedFacet.getFilterField(),
+						nestedFacet.getFilterValue()));
+			}
+
+			boolQueryBuilder.must(
+				QueryBuilders.termsQuery(
+					facet.getFieldName(), facet.getSelections()));
+
+			queryBuilders.add(
+				QueryBuilders.nestedQuery(
+					nestedFacet.getPath(), boolQueryBuilder, ScoreMode.Total));
+		}
+		else if (facet instanceof RangeFacet) {
 			for (String value : facet.getSelections()) {
 				queryBuilders.add(
 					rangeQuery(fieldName, RangeParserUtil.parserRange(value)));
@@ -90,13 +114,13 @@ public class AggregationFilteringFacetProcessorContext
 			if ((facet instanceof com.liferay.portal.search.facet.Facet) &&
 				!facet.isStatic()) {
 
-				com.liferay.portal.search.facet.Facet facet2 =
+				com.liferay.portal.search.facet.Facet osgiFacet =
 					(com.liferay.portal.search.facet.Facet)facet;
 
-				if (!ArrayUtil.isEmpty(facet2.getSelections())) {
+				if (!ArrayUtil.isEmpty(osgiFacet.getSelections())) {
 					map.put(
-						facet2.getAggregationName(),
-						getSelectionFilters(facet2));
+						osgiFacet.getAggregationName(),
+						getSelectionFilters(osgiFacet));
 				}
 			}
 		}

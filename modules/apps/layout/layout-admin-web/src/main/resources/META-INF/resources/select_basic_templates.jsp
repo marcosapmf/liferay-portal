@@ -27,7 +27,7 @@ SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplay
 		for (LayoutPageTemplateEntry masterLayoutPageTemplateEntry : selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPageTemplateEntries()) {
 		%>
 
-			<li class="card-page-item col-md-4 col-sm-6">
+			<li class="card-page-item card-page-item-asset">
 				<clay:vertical-card
 					verticalCard="<%= new SelectBasicTemplatesVerticalCard(masterLayoutPageTemplateEntry, renderRequest, renderResponse) %>"
 				/>
@@ -50,9 +50,9 @@ SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplay
 			for (String type : selectLayoutPageTemplateEntryDisplayContext.getTypes()) {
 			%>
 
-				<li class="card-page-item col-md-4 col-sm-6">
-					<clay:horizontal-card
-						horizontalCard="<%= new SelectBasicTemplatesHorizontalCard(type, renderRequest, renderResponse) %>"
+				<li class="card-page-item card-page-item-directory">
+					<clay:navigation-card
+						navigationCard="<%= new SelectBasicTemplatesNavigationCard(type, renderRequest, renderResponse) %>"
 					/>
 				</li>
 

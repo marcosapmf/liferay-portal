@@ -25,7 +25,6 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
-import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordLocalService;
@@ -78,14 +77,15 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 			httpServletRequest);
 	}
 
-	public String getDDMFormHTML(RenderRequest renderRequest)
-		throws PortalException {
+	public Map<String, Object> getDDMFormContext(RenderRequest renderRequest)
+		throws Exception {
 
-		return getDDMFormHTML(renderRequest, true);
+		return getDDMFormContext(renderRequest, true);
 	}
 
-	public String getDDMFormHTML(RenderRequest renderRequest, boolean readOnly)
-		throws PortalException {
+	public Map<String, Object> getDDMFormContext(
+			RenderRequest renderRequest, boolean readOnly)
+		throws Exception {
 
 		DDMFormInstanceRecord formInstanceRecord = getDDMFormInstanceRecord();
 
@@ -98,17 +98,17 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 		DDMStructureVersion structureVersion =
 			formInstanceVersion.getStructureVersion();
 
-		DDMFormRenderingContext formRenderingContext =
+		DDMFormRenderingContext ddmFormRenderingContext =
 			createDDMFormRenderingContext(
 				structureVersion.getDDMForm(), readOnly);
 
 		DDMFormValues formValues = getDDMFormValues(
 			renderRequest, formInstanceRecord, structureVersion);
 
-		formRenderingContext.setContainerId(
+		ddmFormRenderingContext.setContainerId(
 			"ddmForm".concat(StringUtil.randomString()));
-		formRenderingContext.setDDMFormValues(formValues);
-		formRenderingContext.setLocale(formValues.getDefaultLocale());
+		ddmFormRenderingContext.setDDMFormValues(formValues);
+		ddmFormRenderingContext.setLocale(formValues.getDefaultLocale());
 
 		DDMFormInstanceVersion latestApprovedFormInstanceVersion =
 			_ddmFormInstanceVersionLocalService.getLatestFormInstanceVersion(
@@ -122,10 +122,9 @@ public class DDMFormViewFormInstanceRecordDisplayContext {
 			structureVersion.getDDMForm(),
 			latestApprovedStructureVersion.getDDMForm());
 
-		DDMFormLayout formLayout = structureVersion.getDDMFormLayout();
-
-		return _ddmFormRenderer.render(
-			structureVersion.getDDMForm(), formLayout, formRenderingContext);
+		return _ddmFormRenderer.getDDMFormTemplateContext(
+			structureVersion.getDDMForm(), structureVersion.getDDMFormLayout(),
+			ddmFormRenderingContext);
 	}
 
 	protected DDMFormRenderingContext createDDMFormRenderingContext(

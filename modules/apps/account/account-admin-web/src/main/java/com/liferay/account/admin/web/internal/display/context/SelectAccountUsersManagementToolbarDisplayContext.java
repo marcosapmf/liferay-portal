@@ -72,18 +72,10 @@ public class SelectAccountUsersManagementToolbarDisplayContext
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
 				dropdownItem.putData("action", "addAccountEntryUser");
-				dropdownItem.setLabel(LanguageUtil.get(request, "new-user"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "new-user"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		if (!isShowCreateButton()) {
-			return null;
-		}
-
-		return "SELECT_ACCOUNT_USERS_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override
@@ -107,7 +99,7 @@ public class SelectAccountUsersManagementToolbarDisplayContext
 	}
 
 	public boolean isOpenModalOnRedirect() {
-		return ParamUtil.getBoolean(request, "openModalOnRedirect");
+		return ParamUtil.getBoolean(httpServletRequest, "openModalOnRedirect");
 	}
 
 	@Override

@@ -78,7 +78,7 @@ public class SearchResultSummaryDisplayBuilderTest {
 		setUpGroupLocalService();
 		setUpHtmlUtil();
 		setUpLocaleThreadLocal();
-		setUpProps();
+		setUpPropsUtil();
 
 		themeDisplay = createThemeDisplay();
 	}
@@ -525,7 +525,7 @@ public class SearchResultSummaryDisplayBuilderTest {
 		LocaleThreadLocal.setThemeDisplayLocale(LocaleUtil.US);
 	}
 
-	protected void setUpProps() {
+	protected void setUpPropsUtil() {
 		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 

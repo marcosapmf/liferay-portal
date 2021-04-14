@@ -1,0 +1,731 @@
+@component-name = "data-engine"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Data Engine";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+		}
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test CheckDefaultStructureTitleDisplayedOnStructureList {
+		var defaultStructureName = "WC Structure Name EN";
+		var defaultStructureName_pt = "WC Structure Name PT";
+		var key_urlAppend = "pt/group/test-site-name/~/control_panel/manage?p_p_id=com_liferay_journal_web_portlet_JournalPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view&_com_liferay_journal_web_portlet_JournalPortlet_mvcPath=%2Fview_ddm_structures.jsp";
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "WC Structure Description",
+			structureName = "${defaultStructureName}");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContentStructures.addName(structureName = "${defaultStructureName_pt}");
+
+		WebContentStructures.saveCP();
+
+		WebContentStructures.viewCP(structureName = "${defaultStructureName}");
+
+		Navigator.openWithAppendToBaseURL(urlAppend = "${key_urlAppend}");
+
+		AssertTextEquals(
+			key_columnName = "name",
+			key_tableEntry = "${defaultStructureName_pt}",
+			locator1 = "LexiconTable#TABLE_ENTRY_INFO",
+			value1 = "${defaultStructureName_pt}");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test CheckLanguageSelector {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		PortletEntry.viewLocale(locale = "en-US");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		PortletEntry.viewLocale(locale = "pt-BR");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test CheckLocalizationOfFieldsUponLanguageChange {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text Test",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Texto teste ajuda");
+
+		WebContentStructures.addName(structureName = "Teste");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Texto Teste");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		WebContentStructures.viewCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		LexiconEntry.gotoEntry(rowEntry = "Test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "//label[@class='ddm-label' and contains(text(),'Texto Teste')]",
+			value1 = "Texto Teste");
+
+		AssertTextEquals(
+			locator1 = "//span[@class='form-text' and contains(text(),'Texto teste ajuda')]",
+			value1 = "Texto teste ajuda");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Teste");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test DefaultTitleIsDisplayedUponLocaleChange {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "WC Structure Description",
+			structureName = "WC Structure Name");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "WC Structure Name");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test DefaultTitlePersistsAfterTranslatingForAnotherLocale {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text",
+			fieldHelp = "Text Help Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContentStructures.addName(structureName = "Nome da Estrutura WC");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "Texto");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Texto",
+			fieldHelp = "Texto de ajuda");
+
+		PortletEntry.changeLocale(locale = "en-US");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "WC Structure Name");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "Text");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text",
+			locator1 = "DDMEditStructure#SETTINGS_TEXT",
+			value1 = "Text Help Text");
+
+		WebContentStructures.saveCP();
+
+		WebContentStructures.viewCP(structureName = "WC Structure Name");
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "WC Structure Name");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "Text");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text",
+			locator1 = "DDMEditStructure#SETTINGS_TEXT",
+			value1 = "Text Help Text");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test DefaultTitlePersistsUponFirstlyTranslatingForAnotherLocale {
+		property portal.acceptance = "false";
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		LexiconEntry.gotoAdd();
+
+		AssertVisible(locator1 = "Sidebar#FORM_BUILDER");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Lbltest",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Lbltest",
+			fieldHelp = "Help Text test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Lbltest",
+			fieldHelp = "Texto de ajuda");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Lbltest",
+			label = "Lbltest pt");
+
+		WebContentStructures.addName(structureName = "Titulo teste");
+
+		PortletEntry.changeLocale(locale = "en-US");
+
+		WebContentStructures.addName(structureName = "Structure1");
+
+		WebContentStructures.saveCP();
+
+		WebContentStructures.viewCP(structureName = "Structure1");
+
+		LexiconEntry.gotoEntry(rowEntry = "Structure1");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Titulo teste");
+
+		WebContentStructures.saveCP();
+
+		WebContentStructures.deleteCP(structureName = "Structure1");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test DuplicateTranslatedField {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContentStructures.addName(structureName = "Nome da Estrutura WC");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "Texto");
+
+		DataEngine.duplicate(fieldFieldLabel = "Texto");
+
+		WebContentStructures.saveCP();
+
+		WebContentStructures.viewCP(structureName = "WC Structure Name");
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertVisible(
+			key_fieldFieldLabel = "Texto",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+
+		AssertVisible(
+			key_fieldFieldLabel = "Copy of Texto",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "5"
+	test TranslateStructureWithAllFields {
+		property portal.acceptance = "false";
+
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Web Content");
+
+		NavItem.click(navItem = "Structures");
+
+		LexiconEntry.gotoAdd();
+
+		PortletEntry.inputName(name = "Structure Title");
+
+		DataEngine.addFields(fieldNameList = "Web Content,Date,Rich Text,Single Selection,Grid,Select from List,Numeric,Link to Page,Image,Upload,Color,Text,Multiple Selection,Geolocation,Separator");
+
+		var index = "1";
+		for (var optionValue : list "Value 1,Value 2") {
+			DataEngine.addFieldOption(
+				fieldFieldLabel = "Multiple Selection",
+				index = "${index}",
+				optionValue = "${optionValue}");
+			var index = ${index} + 1;
+		}
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContentStructures.addName(structureName = "Testando");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text",
+			label = "Texto");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Link to Page",
+			label = "Link para Página");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Numeric",
+			label = "Numérico");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Web Content",
+			label = "Conteúdo Web");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Separator",
+			label = "Separador");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Select from List",
+			label = "Selecionar da Lista");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Image",
+			label = "Imagem");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Rich Text",
+			label = "Texto Completo");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Geolocation",
+			label = "Localização Terrestre");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Single Selection",
+			label = "Seleção Única");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Grid",
+			label = "Grade");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Multiple Selection",
+			label = "Seleção Múltipla");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Date",
+			label = "Data");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Upload",
+			label = "Enviar");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Color",
+			label = "Cor");
+
+		WebContentStructures.saveCP();
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "Structure Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		for (var key_fieldFieldLabel : list "Conteúdo Web,Numérico,Data,Enviar,Imagem,Texto Completo,Cor,Seleção Única,Seleção Múltipla,Texto,Grade,Localização Terrestre,Selecionar da Lista,Separador,Link para Página") {
+			AssertTextEquals(
+				key_fieldFieldLabel = "${key_fieldFieldLabel}",
+				locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+				value1 = "${key_fieldFieldLabel}");
+		}
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test TranslateStructureWithoutDefaultTitle {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		LexiconEntry.gotoAdd();
+
+		AssertVisible(locator1 = "Sidebar#FORM_BUILDER");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "Texto");
+
+		WebContentStructures.addName(structureName = "Nome da Estrutura WC");
+
+		PortletEntry.changeLocale(locale = "en-US");
+
+		Button.clickSave();
+
+		AssertElementPresent(locator1 = "TextInput#REQUIRED_ALERT");
+
+		Alert.viewErrorMessage(errorMessage = "Please enter a valid title for the default language: en-US");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "5"
+	test TranslationDoesNotChangeAnother {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text Test",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Help Text test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Texto teste ajuda");
+
+		WebContentStructures.addName(structureName = "Teste");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Texto Teste");
+
+		PortletEntry.changeLocale(locale = "de-DE");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Text test help German");
+
+		WebContentStructures.addName(structureName = "Test German");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Text test German");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		WebContentStructures.viewCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		LexiconEntry.gotoEntry(rowEntry = "Test");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text Test",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "Text Test");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text Test",
+			locator1 = "DDMEditStructure#SETTINGS_TEXT",
+			value1 = "Help Text test");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Texto Teste",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "Texto Teste");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Texto Teste",
+			locator1 = "DDMEditStructure#SETTINGS_TEXT",
+			value1 = "Texto teste ajuda");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Teste");
+
+		PortletEntry.changeLocale(locale = "de-DE");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text test German",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER_LABEL",
+			value1 = "Text test German");
+
+		AssertTextEquals(
+			key_fieldFieldLabel = "Text test German",
+			locator1 = "DDMEditStructure#SETTINGS_TEXT",
+			value1 = "Text test help German");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Test German");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "5"
+	test TranslationPersistsAfterEditingAnother {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text Test",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Help Text test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Texto teste ajuda");
+
+		WebContentStructures.addName(structureName = "Teste");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Texto Teste");
+
+		PortletEntry.changeLocale(locale = "de-DE");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Text test help German");
+
+		WebContentStructures.addName(structureName = "Test German");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Text test German");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		WebContentStructures.viewCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		LexiconEntry.gotoEntry(rowEntry = "Test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Texto Teste",
+			fieldHelp = "Texto teste ajuda editado");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Texto Teste",
+			label = "Texto Teste editado");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		WebContentStructures.viewCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		LexiconEntry.gotoEntry(rowEntry = "Test");
+
+		PortletEntry.changeLocale(locale = "de-DE");
+
+		AssertTextEquals(
+			locator1 = "//label[@class='ddm-label' and contains(text(),'Text test German')]",
+			value1 = "Text test German");
+
+		AssertTextEquals(
+			locator1 = "//span[@class='form-text' and contains(text(),'Text test help German')]",
+			value1 = "Text test help German");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "5"
+	test TranslationsRemainUponSavingStructure {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text Test",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Help Text test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Texto teste ajuda");
+
+		WebContentStructures.addName(structureName = "Teste");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Texto Teste");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		WebContentStructures.viewCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		LexiconEntry.gotoEntry(rowEntry = "Test");
+
+		AssertTextEquals(
+			locator1 = "//label[@class='ddm-label' and contains(text(),'Text Test')]",
+			value1 = "Text Test");
+
+		AssertTextEquals(
+			locator1 = "//span[@class='form-text' and contains(text(),'Help Text test')]",
+			value1 = "Help Text test");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "//label[@class='ddm-label' and contains(text(),'Texto Teste')]",
+			value1 = "Texto Teste");
+
+		AssertTextEquals(
+			locator1 = "//span[@class='form-text' and contains(text(),'Texto teste ajuda')]",
+			value1 = "Texto teste ajuda");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "Teste");
+	}
+
+	@description = "This is a test for LPS-122278. As Content Creator, I want to define reusable translations when creating WEM Structures without nested fields or fieldsets"
+	@priority = "4"
+	test VerifyDefaultLanguageIsFirstShown {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text Test",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Help Text test");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Texto teste ajuda");
+
+		WebContentStructures.addName(structureName = "Teste");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Texto Teste");
+
+		WebContentStructures.saveCP(structureName = "Test");
+
+		WebContentStructures.viewCP(
+			structureDescription = "Test",
+			structureName = "Test");
+
+		LexiconEntry.gotoEntry(rowEntry = "Test");
+
+		PortletEntry.viewLocale(locale = "en-US");
+	}
+
+}

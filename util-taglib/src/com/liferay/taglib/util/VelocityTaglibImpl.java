@@ -15,7 +15,6 @@
 package com.liferay.taglib.util;
 
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletProvider;
@@ -35,16 +34,10 @@ import com.liferay.taglib.security.PermissionsURLTag;
 import com.liferay.taglib.servlet.PageContextWrapper;
 import com.liferay.taglib.theme.MetaTagsTag;
 import com.liferay.taglib.theme.WrapPortletTag;
-import com.liferay.taglib.ui.AssetCategoriesSummaryTag;
-import com.liferay.taglib.ui.AssetTagsSummaryTag;
 import com.liferay.taglib.ui.BreadcrumbTag;
 import com.liferay.taglib.ui.IconHelpTag;
 import com.liferay.taglib.ui.IconTag;
-import com.liferay.taglib.ui.JournalArticleTag;
 import com.liferay.taglib.ui.LanguageTag;
-import com.liferay.taglib.ui.RatingsTag;
-import com.liferay.taglib.ui.SitesDirectoryTag;
-import com.liferay.taglib.ui.ToggleTag;
 
 import java.io.Writer;
 
@@ -165,45 +158,6 @@ public class VelocityTaglibImpl implements VelocityTaglib {
 	}
 
 	@Override
-	public void assetCategoriesSummary(
-			String className, long classPK, String message,
-			PortletURL portletURL)
-		throws Exception {
-
-		AssetCategoriesSummaryTag<?> assetCategorySummaryTag =
-			new AssetCategoriesSummaryTag<>();
-
-		setUp(assetCategorySummaryTag);
-
-		assetCategorySummaryTag.setClassName(className);
-		assetCategorySummaryTag.setClassPK(classPK);
-		assetCategorySummaryTag.setMessage(message);
-		assetCategorySummaryTag.setPortletURL(portletURL);
-
-		assetCategorySummaryTag.runTag();
-	}
-
-	@Override
-	public void assetTagsSummary(
-			String className, long classPK, String message,
-			String assetTagNames, PortletURL portletURL)
-		throws Exception {
-
-		AssetTagsSummaryTag<?> assetTagsSummaryTag =
-			new AssetTagsSummaryTag<>();
-
-		setUp(assetTagsSummaryTag);
-
-		assetTagsSummaryTag.setClassName(className);
-		assetTagsSummaryTag.setClassPK(classPK);
-		assetTagsSummaryTag.setMessage(message);
-		assetTagsSummaryTag.setPortletURL(portletURL);
-		assetTagsSummaryTag.setAssetTagNames(assetTagNames);
-
-		assetTagsSummaryTag.runTag();
-	}
-
-	@Override
 	public void breadcrumb() throws Exception {
 		BreadcrumbTag breadcrumbTag = new BreadcrumbTag();
 
@@ -239,28 +193,6 @@ public class VelocityTaglibImpl implements VelocityTaglib {
 	}
 
 	@Override
-	public AssetCategoriesSummaryTag<?> getAssetCategoriesSummaryTag()
-		throws Exception {
-
-		AssetCategoriesSummaryTag<?> assetCategoriesSummaryTag =
-			new AssetCategoriesSummaryTag<>();
-
-		setUp(assetCategoriesSummaryTag);
-
-		return assetCategoriesSummaryTag;
-	}
-
-	@Override
-	public AssetTagsSummaryTag<?> getAssetTagsSummaryTag() throws Exception {
-		AssetTagsSummaryTag<?> assetTagsSummaryTag =
-			new AssetTagsSummaryTag<>();
-
-		setUp(assetTagsSummaryTag);
-
-		return assetTagsSummaryTag;
-	}
-
-	@Override
 	public BreadcrumbTag getBreadcrumbTag() throws Exception {
 		BreadcrumbTag breadcrumbTag = new BreadcrumbTag();
 
@@ -279,26 +211,8 @@ public class VelocityTaglibImpl implements VelocityTaglib {
 	}
 
 	@Override
-	public JournalArticleTag getJournalArticleTag() throws Exception {
-		JournalArticleTag journalArticleTag = new JournalArticleTag();
-
-		setUp(journalArticleTag);
-
-		return journalArticleTag;
-	}
-
-	@Override
 	public PageContext getPageContext() {
 		return _pageContext;
-	}
-
-	@Override
-	public RatingsTag getRatingsTag() throws Exception {
-		RatingsTag ratingsTag = new RatingsTag();
-
-		setUp(ratingsTag);
-
-		return ratingsTag;
 	}
 
 	@Override
@@ -359,24 +273,6 @@ public class VelocityTaglibImpl implements VelocityTaglib {
 				_servletContext, page);
 
 		requestDispatcher.include(_httpServletRequest, _httpServletResponse);
-	}
-
-	@Override
-	public void journalArticle(
-			String articleId, long groupId, String ddmTemplateKey)
-		throws Exception {
-
-		JournalArticleTag journalArticleTag = new JournalArticleTag();
-
-		setUp(journalArticleTag);
-
-		journalArticleTag.setArticleId(articleId);
-		journalArticleTag.setGroupId(groupId);
-		journalArticleTag.setLanguageId(
-			LanguageUtil.getLanguageId(_httpServletRequest));
-		journalArticleTag.setDDMTemplateKey(ddmTemplateKey);
-
-		journalArticleTag.runTag();
 	}
 
 	@Override
@@ -484,25 +380,6 @@ public class VelocityTaglibImpl implements VelocityTaglib {
 		iconPortletTag.setPortlet(portlet);
 
 		iconPortletTag.runTag();
-	}
-
-	@Override
-	public void ratings(
-			String className, long classPK, int numberOfStars, String type,
-			String url)
-		throws Exception {
-
-		RatingsTag ratingsTag = new RatingsTag();
-
-		setUp(ratingsTag);
-
-		ratingsTag.setClassName(className);
-		ratingsTag.setClassPK(classPK);
-		ratingsTag.setNumberOfStars(numberOfStars);
-		ratingsTag.setType(type);
-		ratingsTag.setUrl(url);
-
-		ratingsTag.runTag();
 	}
 
 	@Override
@@ -653,41 +530,6 @@ public class VelocityTaglibImpl implements VelocityTaglib {
 		RuntimeTag.doTag(
 			portletName, instanceId, queryString, defaultPreferences,
 			_pageContext, _httpServletRequest, _httpServletResponse);
-	}
-
-	@Override
-	public void sitesDirectory() throws Exception {
-		SitesDirectoryTag sitesDirectoryTag = new SitesDirectoryTag();
-
-		setUp(sitesDirectoryTag);
-
-		sitesDirectoryTag.runTag();
-	}
-
-	@Override
-	public void sitesDirectory(String displayStyle, String sites)
-		throws Exception {
-
-		SitesDirectoryTag sitesDirectoryTag = new SitesDirectoryTag();
-
-		setUp(sitesDirectoryTag);
-
-		sitesDirectoryTag.setDisplayStyle(displayStyle);
-		sitesDirectoryTag.setSites(sites);
-
-		sitesDirectoryTag.runTag();
-	}
-
-	@Override
-	public void toggle(
-			String id, String showImage, String hideImage, String showMessage,
-			String hideMessage, boolean defaultShowContent)
-		throws Exception {
-
-		ToggleTag.doTag(
-			id, showImage, hideImage, showMessage, hideMessage,
-			defaultShowContent, null, _servletContext, _httpServletRequest,
-			_httpServletResponse);
 	}
 
 	@Override

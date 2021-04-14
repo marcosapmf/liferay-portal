@@ -14,16 +14,19 @@
 
 package com.liferay.commerce.account.service.impl;
 
+import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.commerce.account.configuration.CommerceAccountServiceConfiguration;
 import com.liferay.commerce.account.exception.CommerceAccountTypeException;
 import com.liferay.commerce.account.exception.CommerceAccountUserRelEmailAddressException;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.model.CommerceAccountUserRel;
+import com.liferay.commerce.account.model.impl.CommerceAccountUserRelImpl;
 import com.liferay.commerce.account.service.base.CommerceAccountUserRelLocalServiceBaseImpl;
 import com.liferay.commerce.account.service.persistence.CommerceAccountUserRelPK;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
@@ -32,6 +35,9 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.spring.extender.service.ServiceReference;
+import com.liferay.portal.vulcan.util.TransformUtil;
+
+import java.io.Serializable;
 
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +50,13 @@ import java.util.stream.Stream;
  */
 public class CommerceAccountUserRelLocalServiceImpl
 	extends CommerceAccountUserRelLocalServiceBaseImpl {
+
+	@Override
+	public CommerceAccountUserRel addCommerceAccountUserRel(
+		CommerceAccountUserRel commerceAccountUserRel) {
+
+		throw new UnsupportedOperationException();
+	}
 
 	@Override
 	public CommerceAccountUserRel addCommerceAccountUserRel(
@@ -70,29 +83,10 @@ public class CommerceAccountUserRelLocalServiceImpl
 
 		validate(commerceAccountId, commerceAccountUserId);
 
-		User user = userLocalService.getUser(serviceContext.getUserId());
-
-		CommerceAccountUserRelPK commerceAccountUserRelPK =
-			new CommerceAccountUserRelPK(
-				commerceAccountId, commerceAccountUserId);
-
 		CommerceAccountUserRel commerceAccountUserRel =
-			commerceAccountUserRelPersistence.fetchByPrimaryKey(
-				commerceAccountUserRelPK);
-
-		if (commerceAccountUserRel == null) {
-			commerceAccountUserRel = commerceAccountUserRelPersistence.create(
-				commerceAccountUserRelPK);
-		}
-
-		commerceAccountUserRel.setCommerceAccountId(commerceAccountId);
-		commerceAccountUserRel.setCommerceAccountUserId(commerceAccountUserId);
-		commerceAccountUserRel.setCompanyId(user.getCompanyId());
-		commerceAccountUserRel.setUserId(user.getUserId());
-		commerceAccountUserRel.setUserName(user.getFullName());
-
-		commerceAccountUserRel = commerceAccountUserRelPersistence.update(
-			commerceAccountUserRel);
+			CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+				accountEntryUserRelLocalService.addAccountEntryUserRel(
+					commerceAccountId, commerceAccountUserId));
 
 		// Default roles
 
@@ -183,8 +177,8 @@ public class CommerceAccountUserRelLocalServiceImpl
 		).toArray();
 
 		List<CommerceAccountUserRel> commerceAccountUserRels =
-			commerceAccountUserRelPersistence.findByCommerceAccountUserId(
-				userId);
+			commerceAccountUserRelLocalService.
+				getCommerceAccountUserRelsByCommerceAccountUserId(userId);
 
 		for (CommerceAccountUserRel commerceAccountUserRel :
 				commerceAccountUserRels) {
@@ -199,16 +193,66 @@ public class CommerceAccountUserRelLocalServiceImpl
 	}
 
 	@Override
+	public CommerceAccountUserRel createCommerceAccountUserRel(
+		CommerceAccountUserRelPK commerceAccountUserRelPK) {
+
+		AccountEntryUserRel accountEntryUserRel =
+			accountEntryUserRelLocalService.createAccountEntryUserRel(
+				counterLocalService.increment());
+
+		accountEntryUserRel.setAccountEntryId(
+			commerceAccountUserRelPK.getCommerceAccountId());
+		accountEntryUserRel.setAccountUserId(
+			commerceAccountUserRelPK.getCommerceAccountUserId());
+
+		return CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+			accountEntryUserRel);
+	}
+
+	@Override
+	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		return createCommerceAccountUserRel(
+			(CommerceAccountUserRelPK)primaryKeyObj);
+	}
+
+	@Override
+	public CommerceAccountUserRel deleteCommerceAccountUserRel(
+		CommerceAccountUserRel commerceAccountUserRel) {
+
+		AccountEntryUserRel accountEntryUserRel =
+			accountEntryUserRelLocalService.fetchAccountEntryUserRel(
+				commerceAccountUserRel.getCommerceAccountId(),
+				commerceAccountUserRel.getCommerceAccountUserId());
+
+		return CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+			accountEntryUserRelLocalService.deleteAccountEntryUserRel(
+				accountEntryUserRel));
+	}
+
+	@Override
+	public CommerceAccountUserRel deleteCommerceAccountUserRel(
+			CommerceAccountUserRelPK commerceAccountUserRelPK)
+		throws PortalException {
+
+		AccountEntryUserRel accountEntryUserRel =
+			accountEntryUserRelLocalService.getAccountEntryUserRel(
+				commerceAccountUserRelPK.getCommerceAccountId(),
+				commerceAccountUserRelPK.getCommerceAccountUserId());
+
+		return CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+			accountEntryUserRelLocalService.deleteAccountEntryUserRel(
+				accountEntryUserRel.getAccountEntryUserRelId()));
+	}
+
+	@Override
 	public void deleteCommerceAccountUserRels(
 			long commerceAccountId, long[] userIds)
 		throws PortalException {
 
-		for (long userId : userIds) {
-			CommerceAccountUserRelPK commerceAccountUserRelPK =
-				new CommerceAccountUserRelPK(commerceAccountId, userId);
-
-			commerceAccountUserRelPersistence.remove(commerceAccountUserRelPK);
-		}
+		accountEntryUserRelLocalService.deleteAccountEntryUserRels(
+			commerceAccountId, userIds);
 
 		CommerceAccount commerceAccount =
 			commerceAccountLocalService.getCommerceAccount(commerceAccountId);
@@ -221,38 +265,78 @@ public class CommerceAccountUserRelLocalServiceImpl
 	public void deleteCommerceAccountUserRelsByCommerceAccountId(
 		long commerceAccountId) {
 
-		List<CommerceAccountUserRel> commerceAccountUserRels =
-			commerceAccountUserRelPersistence.findByCommerceAccountId(
-				commerceAccountId);
-
-		for (CommerceAccountUserRel commerceAccountUserRel :
-				commerceAccountUserRels) {
-
-			commerceAccountUserRelPersistence.remove(commerceAccountUserRel);
-		}
+		accountEntryUserRelLocalService.
+			deleteAccountEntryUserRelsByAccountEntryId(commerceAccountId);
 	}
 
 	@Override
 	public void deleteCommerceAccountUserRelsByCommerceAccountUserId(
 		long userId) {
 
-		commerceAccountUserRelPersistence.removeByCommerceAccountUserId(userId);
+		accountEntryUserRelLocalService.
+			deleteAccountEntryUserRelsByAccountUserId(userId);
+	}
+
+	@Override
+	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
+		throws PortalException {
+
+		CommerceAccountUserRel commerceAccountUserRel =
+			(CommerceAccountUserRel)persistedModel;
+
+		return deleteCommerceAccountUserRel(
+			commerceAccountUserRel.getPrimaryKey());
+	}
+
+	@Override
+	public CommerceAccountUserRel fetchCommerceAccountUserRel(
+		CommerceAccountUserRelPK commerceAccountUserRelPK) {
+
+		return CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+			accountEntryUserRelLocalService.fetchAccountEntryUserRel(
+				commerceAccountUserRelPK.getCommerceAccountId(),
+				commerceAccountUserRelPK.getCommerceAccountUserId()));
+	}
+
+	@Override
+	public CommerceAccountUserRel getCommerceAccountUserRel(
+			CommerceAccountUserRelPK commerceAccountUserRelPK)
+		throws PortalException {
+
+		return CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+			accountEntryUserRelLocalService.getAccountEntryUserRel(
+				commerceAccountUserRelPK.getCommerceAccountId(),
+				commerceAccountUserRelPK.getCommerceAccountUserId()));
+	}
+
+	@Override
+	public List<CommerceAccountUserRel> getCommerceAccountUserRels(
+		int start, int end) {
+
+		return TransformUtil.transform(
+			accountEntryUserRelLocalService.getAccountEntryUserRels(start, end),
+			CommerceAccountUserRelImpl::fromAccountEntryUserRel);
 	}
 
 	@Override
 	public List<CommerceAccountUserRel> getCommerceAccountUserRels(
 		long commerceAccountId) {
 
-		return commerceAccountUserRelPersistence.findByCommerceAccountId(
-			commerceAccountId);
+		return TransformUtil.transform(
+			accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountEntryId(commerceAccountId),
+			CommerceAccountUserRelImpl::fromAccountEntryUserRel);
 	}
 
 	@Override
 	public List<CommerceAccountUserRel> getCommerceAccountUserRels(
 		long commerceAccountId, int start, int end) {
 
-		return commerceAccountUserRelPersistence.findByCommerceAccountId(
-			commerceAccountId, start, end);
+		return TransformUtil.transform(
+			accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountEntryId(
+					commerceAccountId, start, end),
+			CommerceAccountUserRelImpl::fromAccountEntryUserRel);
 	}
 
 	@Override
@@ -260,14 +344,35 @@ public class CommerceAccountUserRelLocalServiceImpl
 		getCommerceAccountUserRelsByCommerceAccountUserId(
 			long commerceAccountUserId) {
 
-		return commerceAccountUserRelPersistence.findByCommerceAccountUserId(
-			commerceAccountUserId);
+		return TransformUtil.transform(
+			accountEntryUserRelLocalService.
+				getAccountEntryUserRelsByAccountUserId(commerceAccountUserId),
+			CommerceAccountUserRelImpl::fromAccountEntryUserRel);
+	}
+
+	@Override
+	public int getCommerceAccountUserRelsCount() {
+		return accountEntryUserRelLocalService.getAccountEntryUserRelsCount();
 	}
 
 	@Override
 	public int getCommerceAccountUserRelsCount(long commerceAccountId) {
-		return commerceAccountUserRelPersistence.countByCommerceAccountId(
-			commerceAccountId);
+		return (int)
+			accountEntryUserRelLocalService.
+				getAccountEntryUserRelsCountByAccountEntryId(commerceAccountId);
+	}
+
+	@Override
+	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
+
+		CommerceAccountUserRelPK commerceAccountUserRelPK =
+			(CommerceAccountUserRelPK)primaryKeyObj;
+
+		return CommerceAccountUserRelImpl.fromAccountEntryUserRel(
+			accountEntryUserRelLocalService.getAccountEntryUserRel(
+				commerceAccountUserRelPK.getCommerceAccountId(),
+				commerceAccountUserRelPK.getCommerceAccountUserId()));
 	}
 
 	@Override
@@ -323,14 +428,21 @@ public class CommerceAccountUserRelLocalServiceImpl
 		return commerceAccountUserRel;
 	}
 
+	@Override
+	public CommerceAccountUserRel updateCommerceAccountUserRel(
+		CommerceAccountUserRel commerceAccountUserRel) {
+
+		throw new UnsupportedOperationException();
+	}
+
 	protected void updateRoles(
 			long commerceAccountId, long userId, long[] roleIds)
 		throws PortalException {
 
-		Group group = commerceAccountLocalService.getCommerceAccountGroup(
-			commerceAccountId);
-
 		if (roleIds != null) {
+			Group group = commerceAccountLocalService.getCommerceAccountGroup(
+				commerceAccountId);
+
 			userGroupRoleLocalService.addUserGroupRoles(
 				userId, group.getGroupId(), roleIds);
 		}
@@ -343,19 +455,8 @@ public class CommerceAccountUserRelLocalServiceImpl
 			commerceAccountLocalService.getCommerceAccount(commerceAccountId);
 
 		if (commerceAccount.isPersonalAccount()) {
-			CommerceAccountUserRel commerceAccountUserRel =
-				commerceAccountUserRelPersistence.
-					fetchByCommerceAccountId_First(commerceAccountId, null);
-
-			if ((commerceAccountUserRel != null) &&
-				(commerceAccountUserRel.getCommerceAccountUserId() ==
-					commerceAccountUserId)) {
-
-				throw new CommerceAccountTypeException();
-			}
-
 			List<CommerceAccountUserRel> commerceAccountUserRels =
-				commerceAccountUserRelPersistence.findByCommerceAccountUserId(
+				getCommerceAccountUserRelsByCommerceAccountUserId(
 					commerceAccountUserId);
 
 			for (CommerceAccountUserRel curCommerceAccountUserRel :

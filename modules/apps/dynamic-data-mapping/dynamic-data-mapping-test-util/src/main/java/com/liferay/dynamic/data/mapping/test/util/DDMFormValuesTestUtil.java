@@ -22,11 +22,11 @@ import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -50,6 +50,7 @@ public class DDMFormValuesTestUtil {
 
 		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
+		ddmFormFieldValue.setFieldReference(name);
 		ddmFormFieldValue.setInstanceId(instanceId);
 		ddmFormFieldValue.setName(name);
 		ddmFormFieldValue.setValue(value);
@@ -61,6 +62,17 @@ public class DDMFormValuesTestUtil {
 		String name, Value value) {
 
 		return createDDMFormFieldValue(StringUtil.randomString(), name, value);
+	}
+
+	public static DDMFormFieldValue createDDMFormFieldValueWithReference(
+		String name, String reference, Value value) {
+
+		DDMFormFieldValue ddmFormFieldValue = createDDMFormFieldValue(
+			StringUtil.randomString(), name, value);
+
+		ddmFormFieldValue.setFieldReference(reference);
+
+		return ddmFormFieldValue;
 	}
 
 	public static DDMFormValues createDDMFormValues(DDMForm ddmForm) {
@@ -83,18 +95,36 @@ public class DDMFormValuesTestUtil {
 		return ddmFormValues;
 	}
 
-	public static DDMFormValues createDDMFormValuesWithDefaultFieldValues(
-		DDMForm ddmForm, Set<Locale> availableLocales, Locale defaultLocale) {
+	public static DDMFormValues createDDMFormValuesWithDefaultValues(
+		DDMForm ddmForm) {
 
-		DDMFormValues ddmFormValues = createDDMFormValues(
-			ddmForm, availableLocales, defaultLocale);
+		DDMFormValues ddmFormValues = createDDMFormValues(ddmForm);
 
-		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
-
-		for (DDMFormField ddmFormField : ddmFormFields) {
+		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
 			ddmFormValues.addDDMFormFieldValue(
 				createUnlocalizedDDMFormFieldValue(
 					ddmFormField.getName(), StringPool.BLANK));
+		}
+
+		return ddmFormValues;
+	}
+
+	public static DDMFormValues createDDMFormValuesWithRandomValues(
+		DDMForm ddmForm) {
+
+		DDMFormValues ddmFormValues = createDDMFormValues(ddmForm);
+
+		for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
+			if (ddmFormField.isLocalizable()) {
+				ddmFormValues.addDDMFormFieldValue(
+					createLocalizedDDMFormFieldValue(
+						ddmFormField.getName(), RandomTestUtil.randomString()));
+			}
+			else {
+				ddmFormValues.addDDMFormFieldValue(
+					createUnlocalizedDDMFormFieldValue(
+						ddmFormField.getName(), RandomTestUtil.randomString()));
+			}
 		}
 
 		return ddmFormValues;

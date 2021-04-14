@@ -1,10 +1,11 @@
 @component-name = "portal-calendar"
 definition {
 
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property testray.main.component.name = "Calendar";
+
 	var pageName = "Calendar Page";
 	var portletName = "Calendar";
 
@@ -215,6 +216,8 @@ definition {
 			user = "userfn userln");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
+
+		Calendar.hideCurrentSiteCalendar();
 
 		CalendarEvent.addRSVP(
 			eventTitle = "Calendar Event All Day Title",
@@ -522,7 +525,6 @@ definition {
 
 	@priority = "3"
 	test AddRepeatingRSVPYes {
-
 		CalendarNavigator.gotoAddEvent();
 
 		CalendarEvent.add(
@@ -798,6 +800,8 @@ definition {
 
 	@priority = "4"
 	test AddWithRelatedAssetViaAssetPublisher {
+		property portal.upstream = "quarantine";
+
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		ProductMenu.gotoPortlet(

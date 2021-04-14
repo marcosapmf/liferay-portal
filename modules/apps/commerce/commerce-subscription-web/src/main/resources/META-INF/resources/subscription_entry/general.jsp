@@ -103,8 +103,8 @@ if (deliveryMaxSubscriptionCycles > 0) {
 			title='<%= LanguageUtil.get(request, "payment-status") %>'
 		>
 			<clay:label
+				displayType="<%= CommerceOrderPaymentConstants.getOrderPaymentLabelStyle(orderPaymentStatus) %>"
 				label="<%= LanguageUtil.get(request, CommerceOrderPaymentConstants.getOrderPaymentStatusLabel(orderPaymentStatus)) %>"
-				style="<%= CommerceOrderPaymentConstants.getOrderPaymentLabelStyle(orderPaymentStatus) %>"
 			/>
 		</commerce-ui:info-box>
 	</div>
@@ -120,7 +120,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 </div>
 </commerce-ui:panel>
 
-<portlet:actionURL name="editCommerceSubscriptionEntry" var="editCommerceSubscriptionEntryActionURL" />
+<portlet:actionURL name="/commerce_subscription_entry/edit_commerce_subscription_entry" var="editCommerceSubscriptionEntryActionURL" />
 
 <aui:form action="<%= editCommerceSubscriptionEntryActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -159,8 +159,10 @@ if (deliveryMaxSubscriptionCycles > 0) {
 							<aui:validator name="digits" />
 
 							<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
-								function(val, fieldNode, ruleValue) {
-									if (window.document.querySelector('#<portlet:namespace />neverEnds')[0].checked) {
+								function(val) {
+									var subscriptionNeverEndsCheckbox = window.document.querySelector('#<portlet:namespace />neverEnds');
+
+									if (subscriptionNeverEndsCheckbox && subscriptionNeverEndsCheckbox.checked) {
 										return true;
 									}
 
@@ -282,8 +284,10 @@ if (deliveryMaxSubscriptionCycles > 0) {
 							<aui:validator name="digits" />
 
 							<aui:validator errorMessage='<%= LanguageUtil.format(request, "please-enter-a-value-greater-than-or-equal-to-x", 1) %>' name="custom">
-								function(val, fieldNode, ruleValue) {
-									if (window.document.querySelector('#<portlet:namespace />deliveryNeverEnds')[0].checked) {
+								function(val) {
+									var deliveryNeverEndsCheckbox = window.document.querySelector('#<portlet:namespace />deliveryNeverEnds');
+
+									if (deliveryNeverEndsCheckbox && deliveryNeverEndsCheckbox.checked) {
 										return true;
 									}
 
@@ -394,7 +398,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectSubscriptionType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var subscriptionLength = A.one(
@@ -423,7 +427,7 @@ if (deliveryMaxSubscriptionCycles > 0) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectDeliverySubscriptionType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var deliverySubscriptionLength = A.one(
@@ -460,14 +464,14 @@ if (deliveryMaxSubscriptionCycles > 0) {
 </aui:script>
 
 <aui:script use="liferay-form">
-	A.one('#<portlet:namespace />neverEnds').on('change', function (event) {
+	A.one('#<portlet:namespace />neverEnds').on('change', (event) => {
 		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
 			.formValidator;
 
 		formValidator.validateField('<portlet:namespace />maxSubscriptionCycles');
 	});
 
-	A.one('#<portlet:namespace />deliveryNeverEnds').on('change', function (event) {
+	A.one('#<portlet:namespace />deliveryNeverEnds').on('change', (event) => {
 		var formValidator = Liferay.Form.get('<portlet:namespace />fm')
 			.formValidator;
 

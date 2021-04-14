@@ -27,7 +27,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -69,7 +68,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/add_collection_layout"
+		"mvc.command.name=/layout_admin/add_collection_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -93,13 +92,13 @@ public class AddCollectionLayoutMVCActionCommand
 					"redirectURL",
 					getContentRedirectURL(actionRequest, layout)));
 		}
-		catch (PortalException portalException) {
+		catch (Exception exception) {
 			SessionErrors.add(actionRequest, "layoutNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
-			_layoutExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, portalException);
+			_layoutExceptionRequestHandler.handleException(
+				actionRequest, actionResponse, exception);
 		}
 	}
 
@@ -147,8 +146,8 @@ public class AddCollectionLayoutMVCActionCommand
 			groupId, privateLayout, parentLayoutId, nameMap, new HashMap<>(),
 			new HashMap<>(), new HashMap<>(), new HashMap<>(),
 			LayoutConstants.TYPE_COLLECTION,
-			typeSettingsUnicodeProperties.toString(), false, masterLayoutPlid,
-			new HashMap<>(), serviceContext);
+			typeSettingsUnicodeProperties.toString(), false, new HashMap<>(),
+			masterLayoutPlid, serviceContext);
 
 		ActionUtil.updateLookAndFeel(
 			actionRequest, themeDisplay.getCompanyId(), liveGroupId,

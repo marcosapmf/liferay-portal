@@ -28,6 +28,8 @@ import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedAttributeDefinition;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -127,16 +129,19 @@ public class ConfigurationModelToDDMFormConverter {
 				return DDMFormFactory.create(formClass);
 			}
 			catch (IllegalArgumentException illegalArgumentException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						illegalArgumentException, illegalArgumentException);
+				}
 			}
 		}
 
 		return null;
 	}
 
-	protected DDMFormFieldOptions getDDMFieldOptions(
-		AttributeDefinition attributeDefinition) {
-
-		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
+	protected ConfigurationFieldOptionsProvider
+		getConfigurationFieldOptionsProvider(
+			AttributeDefinition attributeDefinition) {
 
 		String pid = _configurationModel.getID();
 
@@ -144,10 +149,18 @@ public class ConfigurationModelToDDMFormConverter {
 			pid = _configurationModel.getFactoryPid();
 		}
 
+		return ConfigurationFieldOptionsProviderUtil.
+			getConfigurationFieldOptionsProvider(
+				pid, attributeDefinition.getID());
+	}
+
+	protected DDMFormFieldOptions getDDMFieldOptions(
+		AttributeDefinition attributeDefinition) {
+
+		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
+
 		ConfigurationFieldOptionsProvider configurationFieldOptionsProvider =
-			ConfigurationFieldOptionsProviderUtil.
-				getConfigurationFieldOptionsProvider(
-					pid, attributeDefinition.getID());
+			getConfigurationFieldOptionsProvider(attributeDefinition);
 
 		if (configurationFieldOptionsProvider != null) {
 			for (ConfigurationFieldOptionsProvider.Option option :
@@ -275,7 +288,12 @@ public class ConfigurationModelToDDMFormConverter {
 			return DDMFormFieldType.LOCALIZABLE_TEXT;
 		}
 
-		if (!SetUtil.isEmpty(ddmFormFieldOptions.getOptionsValues())) {
+		ConfigurationFieldOptionsProvider configurationFieldOptionsProvider =
+			getConfigurationFieldOptionsProvider(attributeDefinition);
+
+		if (!SetUtil.isEmpty(ddmFormFieldOptions.getOptionsValues()) ||
+			(configurationFieldOptionsProvider != null)) {
+
 			return DDMFormFieldType.SELECT;
 		}
 
@@ -285,9 +303,7 @@ public class ConfigurationModelToDDMFormConverter {
 	protected void setDDMFormFieldDataType(
 		AttributeDefinition attributeDefinition, DDMFormField ddmFormField) {
 
-		String dataType = getDDMFormFieldDataType(attributeDefinition);
-
-		ddmFormField.setDataType(dataType);
+		ddmFormField.setDataType(getDDMFormFieldDataType(attributeDefinition));
 	}
 
 	protected void setDDMFormFieldDisplayStyle(DDMFormField ddmFormField) {
@@ -432,10 +448,13 @@ public class ConfigurationModelToDDMFormConverter {
 				ExtendedAttributeDefinition.XML_NAMESPACE);
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ConfigurationModelToDDMFormConverter.class);
+
 	private final ConfigurationModel _configurationModel;
 	private final Locale _locale;
 
-	private Predicate<AttributeDefinition> _requiredInputPredicate =
+	private final Predicate<AttributeDefinition> _requiredInputPredicate =
 		attributeDefinition -> {
 			Map<String, String> extensionAttributes = _getExtensionAttributes(
 				attributeDefinition);

@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=addProductDefinition"
+		"mvc.command.name=/cp_definitions/add_cp_definition"
 	},
 	service = MVCRenderCommand.class
 )
@@ -81,7 +81,7 @@ public class AddCPDefinitionMVCRenderCommand implements MVCRenderCommand {
 			throw new PortletException(exception);
 		}
 
-		return "/definition/add_definition.jsp";
+		return "/definition/add_cp_definition.jsp";
 	}
 
 	protected void setCPDefinitionRequestAttribute(RenderRequest renderRequest)

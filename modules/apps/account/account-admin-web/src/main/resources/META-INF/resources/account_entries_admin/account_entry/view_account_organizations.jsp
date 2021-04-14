@@ -30,7 +30,8 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 %>
 
 <clay:management-toolbar
-	displayContext="<%= viewAccountOrganizationsManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= viewAccountOrganizationsManagementToolbarDisplayContext %>"
+	propsTransformer="account_entries_admin/js/AccountOrganizationsManagementToolbarPropsTransformer"
 />
 
 <clay:container-fluid>
@@ -83,8 +84,3 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<liferay-frontend:component
-	componentId="<%= viewAccountOrganizationsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="account_entries_admin/js/AccountOrganizationsManagementToolbarDefaultEventHandler.es"
-/>

@@ -1,0 +1,211 @@
+@component-name = "data-engine"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Data Engine";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+		DMNavigator.gotoDocumentType();
+
+		DMDocumentType.add(
+			dmDocumentTypeDescription = "Document Type Description",
+			dmDocumentTypeFieldNames = "Separator",
+			dmDocumentTypeName = "Document Type Name");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+
+			User.logoutPG();
+		}
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test AddSeparatorOnFormByDragAndDrop {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 AddSeparatorOnFormByDragAndDrop pending implementation
+
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test DeleteSeparatorOnBuilder {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 DeleteSeparatorOnBuilder pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "4"
+	test DuplicateSeparatorOnBuilder {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 DuplicateSeparatorOnBuilder pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test EditHelpTextOfSeparator {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 EditHelpTextOfSeparator pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test EditLabelOfSeparator {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 EditLabelOfSeparator pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "5"
+	test EditReferenceOfSeparator {
+		property portal.acceptance = "false";
+
+		DMDocumentType.add(
+			dmDocumentTypeDescription = "Document Type Description",
+			dmDocumentTypeFieldNames = "Separator",
+			dmDocumentTypeName = "Document Type Name");
+
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "Document Type Name");
+
+		var assertFieldReference = "Myreference123";
+
+		DataEngine.editFieldReference(
+			assertFieldReference = "${assertFieldReference}",
+			fieldFieldLabel = "Separator",
+			fieldName = "Separator",
+			fieldReference = "${assertFieldReference}");
+
+		Button.clickSave();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
+
+		DataEngine.viewFieldReference(
+			fieldFieldLabel = "Separator",
+			fieldName = "Separator",
+			fieldReference = "${assertFieldReference}");
+
+		Button.clickSave();
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "4"
+	test EditReferenceOfSeparatorWithInvalidCharacters {
+		property portal.acceptance = "false";
+
+		var assertFieldReference = "Myreference";
+
+		var fieldReferenceWithInvalidChars = "Myreference@#$%¨&*";
+
+		DMNavigator.gotoDocumentType();
+
+		DMDocumentType.add(
+			dmDocumentTypeDescription = "Document Type Description",
+			dmDocumentTypeFieldNames = "Separator",
+			dmDocumentTypeName = "Document Type Name");
+
+		DMNavigator.gotoEditDocumentType(dmDocumentTypeName = "Document Type Name");
+
+		DataEngine.editFieldReference(
+			assertFieldReference = "${assertFieldReference}",
+			fieldFieldLabel = "Separator",
+			fieldName = "Separator",
+			fieldReference = "${fieldReferenceWithInvalidChars}");
+
+		Button.clickSave();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
+
+		DataEngine.viewFieldReference(
+			fieldFieldLabel = "Separator",
+			fieldName = "Separator",
+			fieldReference = "${assertFieldReference}");
+
+		Button.clickSave();
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@ignore = "true"
+	@priority = "5"
+	test RepeatSeparatorOnUpload {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98081 RepeatSeparatorOnUpload pending implementation
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "4"
+	test SetSeparatorRepeatable {
+		property portal.acceptance = "false";
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
+
+		DataEngine.editFieldRepeatable(fieldFieldLabel = "Separator");
+
+		Button.clickSave();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
+
+		AssertElementPresent(locator1 = "FormFields#FIELD_ADD_DUPLICATE");
+	}
+
+	@description = "This is a test for LPS-98081. As a Developer, I want to use separators"
+	@priority = "3"
+	test ShowAndHideSeparatorLabel {
+		property portal.acceptance = "false";
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
+
+		DataEngine.viewField(
+			fieldFieldLabel = "Separator",
+			fieldName = "Separator");
+
+		FormViewBuilder.switchToAdvancedTab();
+
+		FormFields.viewSwitcherLabel(
+			fieldLabel = "Separator",
+			fieldName = "Separator");
+
+		Uncheck.uncheckToggleSwitch(
+			checkboxName = "Show Label",
+			locator1 = "Checkbox#ANY_CHECKBOX");
+
+		FormFields.viewSwitcherLabelNotPresent(
+			fieldLabel = "Separator Label",
+			fieldName = "Separator");
+
+		Button.clickSave();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document Type Name");
+
+		AssertElementNotPresent(locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER");
+
+		Button.clickSave();
+	}
+
+}

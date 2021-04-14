@@ -22,7 +22,7 @@ CommercePaymentMethodGroupRelsDisplayContext commercePaymentMethodGroupRelsDispl
 long commerceChannelId = commercePaymentMethodGroupRelsDisplayContext.getCommerceChannelId();
 %>
 
-<portlet:actionURL name="editCommercePaymentMethodAddressRestriction" var="editCommercePaymentMethodAddressRestrictionActionURL" />
+<portlet:actionURL name="/commerce_channels/edit_commerce_payment_method_group_rel_address_restriction" var="editCommercePaymentMethodAddressRestrictionActionURL" />
 
 <aui:form action="<%= editCommercePaymentMethodAddressRestrictionActionURL %>" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -37,7 +37,7 @@ long commerceChannelId = commercePaymentMethodGroupRelsDisplayContext.getCommerc
 		dataProviderKey="<%= CommercePaymentRestrictionsPageClayTable.NAME %>"
 		formId="fm"
 		id="<%= CommercePaymentRestrictionsPageClayTable.NAME %>"
-		itemsPerPage="<%= commercePaymentMethodGroupRelsDisplayContext.getCommerceCountriesCount() %>"
+		itemsPerPage="<%= commercePaymentMethodGroupRelsDisplayContext.getCountriesCount() %>"
 		namespace="<%= liferayPortletResponse.getNamespace() %>"
 		pageNumber="<%= 1 %>"
 		portletURL="<%= currentURLObj %>"

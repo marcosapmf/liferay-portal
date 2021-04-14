@@ -21,17 +21,21 @@ GroupDisplayContextHelper groupDisplayContextHelper = new GroupDisplayContextHel
 
 liveGroup = groupDisplayContextHelper.getLiveGroup();
 liveGroupId = groupDisplayContextHelper.getLiveGroupId();
+
 UnicodeProperties liveGroupTypeSettings = liveGroup.getTypeSettingsProperties();
 
 LayoutSet privateLayoutSet = LayoutSetLocalServiceUtil.getLayoutSet(liveGroup.getGroupId(), true);
 LayoutSet publicLayoutSet = LayoutSetLocalServiceUtil.getLayoutSet(liveGroup.getGroupId(), false);
 
 boolean liveGroupRemoteStaging = liveGroup.hasRemoteStagingGroup() && PropsValues.STAGING_LIVE_GROUP_REMOTE_STAGING_ENABLED;
+
 boolean stagedLocally = liveGroup.isStaged() && !liveGroup.isStagedRemotely();
+
 boolean stagedRemotely = liveGroup.isStaged() && !stagedLocally;
 
 if (stagedLocally) {
 	stagingGroup = liveGroup.getStagingGroup();
+
 	stagingGroupId = stagingGroup.getGroupId();
 }
 
@@ -63,7 +67,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 				</portlet:actionURL>
 
 				<portlet:renderURL var="redirectURL">
-					<portlet:param name="mvcRenderCommandName" value="staging" />
+					<portlet:param name="mvcRenderCommandName" value="/staging_configuration/view" />
 				</portlet:renderURL>
 
 				<aui:form action="<%= editStagingConfigurationURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveGroup();" %>'>
@@ -98,7 +102,7 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 							</div>
 						</clay:sheet-footer>
 
-						<aui:script require="metal-dom/src/dom as dom">
+						<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 							var pwcWarning = document.getElementById('<portlet:namespace />pwcWarning');
 							var remoteStagingOptions = document.getElementById(
 								'<portlet:namespace />remoteStagingOptions'
@@ -116,8 +120,10 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 								remoteStagingOptions &&
 								trashWarning
 							) {
-								dom.delegate(stagingTypes, 'click', 'input', function (event) {
-									var value = event.delegateTarget.value;
+								var delegate = delegateModule.default;
+
+								delegate(stagingTypes, 'click', 'input', (event) => {
+									var value = event.target.closest('input').value;
 
 									if (value != '<%= StagingConstants.TYPE_LOCAL_STAGING %>') {
 										pwcWarning.classList.add('hide');
@@ -234,8 +240,8 @@ BackgroundTask lastCompletedInitialPublicationBackgroundTask = BackgroundTaskMan
 		);
 
 		if (selectAllCheckbox) {
-			selectAllCheckbox.addEventListener('change', function () {
-				Array.prototype.forEach.call(allCheckboxes, function (checkbox) {
+			selectAllCheckbox.addEventListener('change', () => {
+				Array.prototype.forEach.call(allCheckboxes, (checkbox) => {
 					checkbox.checked = selectAllCheckbox.checked;
 				});
 			});

@@ -15,7 +15,7 @@
 --%>
 
 <div class="<%= (liveGroup.isStaged() || (stagingType != StagingConstants.TYPE_NOT_STAGED)) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />stagedPortlets">
-	<c:if test="<%= !liveGroup.isCompany() && !liveGroupRemoteStaging %>">
+	<c:if test="<%= GroupCapabilityUtil.isSupportsPages(liveGroup) && !liveGroup.isCompany() && !liveGroupRemoteStaging %>">
 		<div class="sheet-section">
 			<div class="sheet-subtitle">
 				<liferay-ui:message key="page-versioning" />
@@ -24,10 +24,6 @@
 			<div class="sheet-text">
 				<liferay-ui:message key="page-versioning-help" />
 			</div>
-
-			<%
-			boolean branchingPrivate = GetterUtil.getBoolean(liveGroupTypeSettings.getProperty("branchingPrivate"));
-			%>
 
 			<div class="custom-distance">
 				<liferay-staging:checkbox
@@ -39,7 +35,7 @@
 
 			<div class="custom-distance">
 				<liferay-staging:checkbox
-					checked="<%= branchingPrivate %>"
+					checked='<%= GetterUtil.getBoolean(liveGroupTypeSettings.getProperty("branchingPrivate")) %>'
 					label="enabled-on-private-pages"
 					name="branchingPrivate"
 				/>
@@ -108,6 +104,10 @@
 				PortletDataHandler portletDataHandler = curPortlet.getPortletDataHandlerInstance();
 
 				if (!portletDataHandler.isConfigurationEnabled()) {
+					continue;
+				}
+
+				if (!GroupCapabilityUtil.isSupportsPortlet(liveGroup, curPortlet)) {
 					continue;
 				}
 

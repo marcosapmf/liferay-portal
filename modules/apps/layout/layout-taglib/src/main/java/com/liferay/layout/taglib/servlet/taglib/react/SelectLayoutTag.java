@@ -25,10 +25,12 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -41,7 +43,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
@@ -68,10 +69,18 @@ public class SelectLayoutTag extends IncludeTag {
 		return _namespace;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public String getPathThemeImages() {
 		return _pathThemeImages;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public String getViewType() {
 		return _viewType;
 	}
@@ -131,6 +140,10 @@ public class SelectLayoutTag extends IncludeTag {
 		setServletContext(ServletContextUtil.getServletContext());
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setPathThemeImages(String pathThemeImages) {
 		_pathThemeImages = pathThemeImages;
 	}
@@ -143,6 +156,10 @@ public class SelectLayoutTag extends IncludeTag {
 		_showHiddenLayouts = showHiddenLayouts;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setViewType(String viewType) {
 		_viewType = viewType;
 	}
@@ -181,6 +198,9 @@ public class SelectLayoutTag extends IncludeTag {
 	}
 
 	private Map<String, Object> _getData() throws Exception {
+		String[] selectedLayoutIds = ParamUtil.getStringValues(
+			request, "layoutUuid");
+
 		return HashMapBuilder.<String, Object>put(
 			"followURLOnTitleClick", _followURLOnTitleClick
 		).put(
@@ -190,11 +210,9 @@ public class SelectLayoutTag extends IncludeTag {
 		).put(
 			"namespace", _namespace
 		).put(
-			"nodes", _getLayoutsJSONArray()
+			"nodes", _getLayoutsJSONArray(selectedLayoutIds)
 		).put(
-			"pathThemeImages", _pathThemeImages
-		).put(
-			"viewType", _viewType
+			"selectedLayoutIds", selectedLayoutIds
 		).build();
 	}
 
@@ -233,34 +251,9 @@ public class SelectLayoutTag extends IncludeTag {
 		return sb.toString();
 	}
 
-	private JSONArray _getLayoutsJSONArray() throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		String layoutUuid = ParamUtil.getString(request, "layoutUuid");
-
-		return JSONUtil.put(
-			JSONUtil.put(
-				"children",
-				_getLayoutsJSONArray(
-					themeDisplay.getScopeGroupId(), _privateLayout, 0,
-					layoutUuid)
-			).put(
-				"disabled", true
-			).put(
-				"expanded", true
-			).put(
-				"icon", "home"
-			).put(
-				"id", "0"
-			).put(
-				"name", themeDisplay.getScopeGroupName()
-			));
-	}
-
 	private JSONArray _getLayoutsJSONArray(
 			long groupId, boolean privateLayout, long parentLayoutId,
-			String selectedLayoutUuid)
+			String[] selectedLayoutUuid)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
@@ -311,7 +304,7 @@ public class SelectLayoutTag extends IncludeTag {
 				"url", PortalUtil.getLayoutRelativeURL(layout, themeDisplay)
 			);
 
-			if (Objects.equals(layout.getUuid(), selectedLayoutUuid)) {
+			if (ArrayUtil.contains(selectedLayoutUuid, layout.getUuid())) {
 				jsonObject.put("selected", true);
 			}
 
@@ -321,6 +314,39 @@ public class SelectLayoutTag extends IncludeTag {
 		}
 
 		return jsonArray;
+	}
+
+	private JSONArray _getLayoutsJSONArray(String[] selectedLayoutIds)
+		throws Exception {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		Group group = themeDisplay.getScopeGroup();
+
+		if ((_privateLayout && !group.hasPrivateLayouts()) ||
+			(!_privateLayout && !group.hasPublicLayouts())) {
+
+			return JSONFactoryUtil.createJSONArray();
+		}
+
+		return JSONUtil.put(
+			JSONUtil.put(
+				"children",
+				_getLayoutsJSONArray(
+					themeDisplay.getScopeGroupId(), _privateLayout, 0,
+					selectedLayoutIds)
+			).put(
+				"disabled", true
+			).put(
+				"expanded", true
+			).put(
+				"icon", "home"
+			).put(
+				"id", "0"
+			).put(
+				"name", themeDisplay.getScopeGroupName()
+			));
 	}
 
 	private long _getSelPlid() {

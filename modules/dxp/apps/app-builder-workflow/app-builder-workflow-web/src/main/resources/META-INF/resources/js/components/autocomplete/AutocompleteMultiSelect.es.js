@@ -54,6 +54,17 @@ function AutocompleteMultiSelect({
 		target.value = '';
 	};
 
+	const onSelect = (item) => {
+		const newSelectedItems = [...selectedItems, item];
+
+		setSearch('');
+		onChange(newSelectedItems);
+
+		if (inputRef.current) {
+			inputRef.current.focus();
+		}
+	};
+
 	const onKeyDown = ({key}) => {
 		const item = filteredItems[activeItem];
 
@@ -89,17 +100,6 @@ function AutocompleteMultiSelect({
 		);
 
 		onChange(newSelectedItems);
-	};
-
-	const onSelect = (item) => {
-		const newSelectedItems = [...selectedItems, item];
-
-		setSearch('');
-		onChange(newSelectedItems);
-
-		if (inputRef.current) {
-			inputRef.current.focus();
-		}
 	};
 
 	useEffect(() => {
@@ -141,7 +141,7 @@ function AutocompleteMultiSelect({
 
 	return (
 		<ClayAutocomplete className={className} ref={wrapperRef}>
-			<div className="col-12 d-flex flex-wrap p-0">
+			<div className="col-11 d-flex flex-wrap p-0">
 				{selectedItems.map(({id, name}, index) => (
 					<AutocompleteMultiSelect.Item
 						key={index}
@@ -161,27 +161,27 @@ function AutocompleteMultiSelect({
 					type="text"
 					value={search}
 				/>
-
-				{selectedItems.length > 0 && (
-					<ClayTooltipProvider>
-						<ClayButton
-							borderless
-							className="ml-2 pl-0 pr-1 py-0"
-							displayType="light"
-							onClick={() => onChange([])}
-							style={{position: 'absolute', right: 0}}
-						>
-							<ClayIcon
-								className="text-secondary tooltip-icon"
-								data-tooltip-align="top"
-								data-tooltip-delay="0"
-								symbol="times-circle"
-								title={Liferay.Language.get('clear-all')}
-							/>
-						</ClayButton>
-					</ClayTooltipProvider>
-				)}
 			</div>
+
+			{selectedItems.length > 0 && (
+				<ClayTooltipProvider>
+					<ClayButton
+						borderless
+						className="ml-2 pl-0 pr-1 py-0"
+						displayType="light"
+						onClick={() => onChange([])}
+						style={{position: 'absolute', right: '1rem'}}
+					>
+						<ClayIcon
+							className="text-secondary tooltip-icon"
+							data-tooltip-align="top"
+							data-tooltip-delay="0"
+							symbol="times-circle"
+							title={Liferay.Language.get('clear-all')}
+						/>
+					</ClayButton>
+				</ClayTooltipProvider>
+			)}
 
 			<AutocompleteDropDown
 				active={dropDownVisible}

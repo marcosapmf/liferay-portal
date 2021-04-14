@@ -940,7 +940,6 @@ definition {
 
 	@priority = "3"
 	test ViewTaskCount {
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -982,6 +981,8 @@ definition {
 				panel = "Site Administration",
 				portlet = "Blogs");
 
+			Pause(locator1 = "3000");
+
 			Blogs.addWithWorkflow(
 				entryContent = "Blogs Entry Content ${number}",
 				entrySubtitle = "Subtitle ${number}",
@@ -1009,13 +1010,13 @@ definition {
 
 		Pagination.viewResults(results = "Showing 1 to 6 of 6 entries.");
 
-		AssertElementPresent(locator1 = "xpath=(//div[contains(@id,'workflowTasksSearchContainer')]//tr[contains(@class,'entry-display-style')])[6]");
+		AssertElementPresent(locator1 = "xpath=(//div[contains(@id,'workflowTasksSearchContainer')]//tr[@data-qa-id])[6]");
 
 		Pagination.changePagination(itemsPerPage = "4");
 
 		Pagination.viewResults(results = "Showing 1 to 4 of 6 entries.");
 
-		AssertElementNotPresent(locator1 = "xpath=(//div[contains(@id,'workflowTasksSearchContainer')]//tr[contains(@class,'entry-display-style')])[6]");
+		AssertElementNotPresent(locator1 = "xpath=(//div[contains(@id,'workflowTasksSearchContainer')]//tr[@data-qa-id])[6]");
 	}
 
 	@priority = "3"
@@ -1201,6 +1202,8 @@ definition {
 				panel = "Site Administration",
 				portlet = "Blogs");
 
+			Pause(locator1 = "3000");
+
 			Blogs.addWithWorkflow(
 				entryContent = "User ${n} Blog Content Approved",
 				entrySubtitle = "User ${n} Blog Subtitle Approved",
@@ -1212,6 +1215,8 @@ definition {
 				category = "Content &amp; Data",
 				panel = "Site Administration",
 				portlet = "Blogs");
+
+			Pause(locator1 = "3000");
 
 			Blogs.addWithWorkflow(
 				entryContent = "User ${n} Blog Content Pending",

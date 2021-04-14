@@ -21,6 +21,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -61,7 +63,8 @@ public class EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteUsers");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -89,7 +92,7 @@ public class EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext
 					dropdownItem.putData("action", "selectUser");
 
 					ThemeDisplay themeDisplay =
-						(ThemeDisplay)request.getAttribute(
+						(ThemeDisplay)httpServletRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
 
 					PortletURL selectUserURL =
@@ -109,17 +112,22 @@ public class EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext
 						"selectUserURL", selectUserURL.toString());
 
 					String title = LanguageUtil.format(
-						request, "add-new-user-to-x",
+						httpServletRequest, "add-new-user-to-x",
 						_editSiteTeamAssignmentsUsersDisplayContext.
 							getTeamName());
 
 					dropdownItem.putData("title", title);
 
-					dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+					dropdownItem.setLabel(
+						LanguageUtil.get(httpServletRequest, "add"));
 				}
 			).build();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return null;
 		}
 	}
@@ -165,6 +173,9 @@ public class EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"first-name", "screen-name"};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditSiteTeamAssignmentsUsersManagementToolbarDisplayContext.class);
 
 	private final EditSiteTeamAssignmentsUsersDisplayContext
 		_editSiteTeamAssignmentsUsersDisplayContext;

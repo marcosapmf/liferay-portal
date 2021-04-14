@@ -24,6 +24,8 @@ import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -68,6 +70,7 @@ public class CPDefinitionAssetRendererFactory
 		setLinkable(true);
 		setPortletId(CPPortletKeys.CP_DEFINITIONS);
 		setSearchable(true);
+		setSelectable(false);
 	}
 
 	@Override
@@ -123,7 +126,7 @@ public class CPDefinitionAssetRendererFactory
 			CPPortletKeys.CP_DEFINITIONS, 0, 0, PortletRequest.RENDER_PHASE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editProductDefinition");
+			"mvcRenderCommandName", "/cp_definitions/edit_cp_definition");
 
 		return portletURL;
 	}
@@ -141,6 +144,9 @@ public class CPDefinitionAssetRendererFactory
 			liferayPortletURL.setWindowState(windowState);
 		}
 		catch (WindowStateException windowStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(windowStateException, windowStateException);
+			}
 		}
 
 		return liferayPortletURL;
@@ -167,6 +173,9 @@ public class CPDefinitionAssetRendererFactory
 		return (Group)liferayPortletRequest.getAttribute(
 			ASSET_RENDERER_FACTORY_GROUP);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CPDefinitionAssetRendererFactory.class);
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.product.model.CommerceCatalog)"

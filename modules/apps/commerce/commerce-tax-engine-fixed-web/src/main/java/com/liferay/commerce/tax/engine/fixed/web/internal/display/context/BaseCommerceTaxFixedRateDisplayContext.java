@@ -54,19 +54,17 @@ public class BaseCommerceTaxFixedRateDisplayContext {
 
 	public BaseCommerceTaxFixedRateDisplayContext(
 		CommerceChannelLocalService commerceChannelLocalService,
-		ModelResourcePermission<CommerceChannel>
-			commerceChannelModelResourcePermission,
 		CommerceCurrencyLocalService commerceCurrencyLocalService,
 		CommerceTaxMethodService commerceTaxMethodService,
 		CPTaxCategoryService cpTaxCategoryService,
+		ModelResourcePermission<CommerceChannel> modelResourcePermission,
 		PercentageFormatter percentageFormatter, RenderRequest renderRequest) {
 
 		this.commerceChannelLocalService = commerceChannelLocalService;
-		this.commerceChannelModelResourcePermission =
-			commerceChannelModelResourcePermission;
 		this.commerceCurrencyLocalService = commerceCurrencyLocalService;
 		this.commerceTaxMethodService = commerceTaxMethodService;
 		this.cpTaxCategoryService = cpTaxCategoryService;
+		this.modelResourcePermission = modelResourcePermission;
 		this.percentageFormatter = percentageFormatter;
 
 		commerceTaxFixedRateRequestHelper =
@@ -175,7 +173,8 @@ public class BaseCommerceTaxFixedRateDisplayContext {
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceTaxMethod");
+			"mvcRenderCommandName",
+			"/commerce_tax_methods/edit_commerce_tax_method");
 		portletURL.setParameter(
 			"screenNavigationCategoryKey",
 			getSelectedScreenNavigationCategoryKey());
@@ -222,7 +221,7 @@ public class BaseCommerceTaxFixedRateDisplayContext {
 			commerceChannelLocalService.getCommerceChannel(
 				getCommerceChannelId());
 
-		return commerceChannelModelResourcePermission.contains(
+		return modelResourcePermission.contains(
 			commerceTaxFixedRateRequestHelper.getPermissionChecker(),
 			commerceChannel, ActionKeys.UPDATE);
 	}
@@ -234,13 +233,13 @@ public class BaseCommerceTaxFixedRateDisplayContext {
 	}
 
 	protected final CommerceChannelLocalService commerceChannelLocalService;
-	protected final ModelResourcePermission<CommerceChannel>
-		commerceChannelModelResourcePermission;
 	protected final CommerceCurrencyLocalService commerceCurrencyLocalService;
 	protected final CommerceTaxFixedRateRequestHelper
 		commerceTaxFixedRateRequestHelper;
 	protected final CommerceTaxMethodService commerceTaxMethodService;
 	protected final CPTaxCategoryService cpTaxCategoryService;
+	protected final ModelResourcePermission<CommerceChannel>
+		modelResourcePermission;
 	protected final PercentageFormatter percentageFormatter;
 
 	private CommerceTaxMethod _commerceTaxMethod;

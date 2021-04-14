@@ -26,11 +26,20 @@ definition {
 		BlogsNavigator.gotoAddEntry();
 
 		BlogsEntry.addEntryContent(
+			depotName = "${depotName}",
 			embedVideo = "${embedVideo}",
 			entryContent = "${entryContent}",
 			entrySubtitle = "${entrySubtitle}",
 			entryTitle = "${entryTitle}",
-			videoService = "${videoService}");
+			extractedVideoShortcutTitle = "${extractedVideoShortcutTitle}",
+			navTab = "${navTab}",
+			videoName = "${videoName}",
+			videoService = "${videoService}",
+			videoShortcutDescription = "${videoShortcutDescription}",
+			videoShortcutPreview = "${videoShortcutPreview}",
+			videoShortcutTitle = "${videoShortcutTitle}",
+			videoURL = "${videoURL}",
+			viewInternalVideoPreview = "${viewInternalVideoPreview}");
 
 		if (isSet(readingTime)) {
 			var key_readingTime = "${readingTime}";

@@ -12,7 +12,7 @@
  * details.
  */
 
-import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import {cleanup, fireEvent, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {PageProvider} from 'dynamic-data-mapping-form-renderer';
 import React from 'react';
@@ -49,7 +49,6 @@ describe('Grid', () => {
 	afterEach(cleanup);
 
 	beforeEach(() => {
-		jest.useFakeTimers();
 		fetch.mockResponseOnce(JSON.stringify({}));
 	});
 
@@ -70,10 +69,6 @@ describe('Grid', () => {
 			/>
 		);
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(container).toMatchSnapshot();
 	});
 
@@ -81,10 +76,6 @@ describe('Grid', () => {
 		const {container} = render(
 			<GridWithProvider columns={[]} spritemap={spritemap} />
 		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(container).toMatchSnapshot();
 	});
@@ -94,10 +85,6 @@ describe('Grid', () => {
 			<GridWithProvider readOnly={true} spritemap={spritemap} />
 		);
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(container).toMatchSnapshot();
 	});
 
@@ -105,10 +92,6 @@ describe('Grid', () => {
 		const {container} = render(
 			<GridWithProvider spritemap={spritemap} tip="Type something" />
 		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(container).toMatchSnapshot();
 	});
@@ -118,10 +101,6 @@ describe('Grid', () => {
 			<GridWithProvider id="Id" spritemap={spritemap} />
 		);
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(container).toMatchSnapshot();
 	});
 
@@ -130,10 +109,6 @@ describe('Grid', () => {
 			<GridWithProvider label="label" spritemap={spritemap} />
 		);
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(container).toMatchSnapshot();
 	});
 
@@ -141,10 +116,6 @@ describe('Grid', () => {
 		const {container} = render(
 			<GridWithProvider required={false} spritemap={spritemap} />
 		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(container).toMatchSnapshot();
 	});
@@ -166,10 +137,6 @@ describe('Grid', () => {
 			/>
 		);
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(container).toMatchSnapshot();
 	});
 
@@ -178,10 +145,6 @@ describe('Grid', () => {
 			<GridWithProvider rows={[]} spritemap={spritemap} />
 		);
 
-		act(() => {
-			jest.runAllTimers();
-		});
-
 		expect(container).toMatchSnapshot();
 	});
 
@@ -189,10 +152,6 @@ describe('Grid', () => {
 		const {container} = render(
 			<GridWithProvider label="text" showLabel spritemap={spritemap} />
 		);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(container).toMatchSnapshot();
 	});
@@ -212,6 +171,7 @@ describe('Grid', () => {
 						value: 'colFieldId2',
 					},
 				]}
+				name="name"
 				onBlur={handleFieldBlurred}
 				readOnly={false}
 				rows={[
@@ -229,14 +189,10 @@ describe('Grid', () => {
 		);
 
 		const radioInputElement = container.querySelector(
-			'input[value][type="radio"][name="rowFieldId1"]:not([value="colFieldId2"])'
+			'input[value][type="radio"][name="name_rowFieldId1"]:not([value="colFieldId2"])'
 		);
 
 		fireEvent.blur(radioInputElement);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(handleFieldBlurred).toHaveBeenCalled();
 	});
@@ -256,6 +212,7 @@ describe('Grid', () => {
 						value: 'colFieldId2',
 					},
 				]}
+				name="name"
 				onChange={handleFieldEdited}
 				readOnly={false}
 				rows={[
@@ -273,14 +230,10 @@ describe('Grid', () => {
 		);
 
 		const radioInputElement = container.querySelector(
-			'input[value][type="radio"][name="rowFieldId1"]:not([value="colFieldId2"])'
+			'input[value][type="radio"][name="name_rowFieldId1"]:not([value="colFieldId2"])'
 		);
 
 		userEvent.click(radioInputElement);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(handleFieldEdited).toHaveBeenCalled();
 	});
@@ -300,6 +253,7 @@ describe('Grid', () => {
 						value: 'colFieldId2',
 					},
 				]}
+				name="name"
 				onFocus={handleFieldFocused}
 				readOnly={false}
 				rows={[
@@ -317,14 +271,10 @@ describe('Grid', () => {
 		);
 
 		const radioInputElement = container.querySelector(
-			'input[value][type="radio"][name="rowFieldId1"]:not([value="colFieldId2"])'
+			'input[value][type="radio"][name="name_rowFieldId1"]:not([value="colFieldId2"])'
 		);
 
 		fireEvent.focus(radioInputElement);
-
-		act(() => {
-			jest.runAllTimers();
-		});
 
 		expect(handleFieldFocused).toHaveBeenCalled();
 	});

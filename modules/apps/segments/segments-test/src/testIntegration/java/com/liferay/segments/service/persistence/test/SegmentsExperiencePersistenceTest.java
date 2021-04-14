@@ -158,6 +158,8 @@ public class SegmentsExperiencePersistenceTest {
 
 		newSegmentsExperience.setActive(RandomTestUtil.randomBoolean());
 
+		newSegmentsExperience.setTypeSettings(RandomTestUtil.randomString());
+
 		newSegmentsExperience.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_segmentsExperiences.add(_persistence.update(newSegmentsExperience));
@@ -218,6 +220,9 @@ public class SegmentsExperiencePersistenceTest {
 		Assert.assertEquals(
 			existingSegmentsExperience.isActive(),
 			newSegmentsExperience.isActive());
+		Assert.assertEquals(
+			existingSegmentsExperience.getTypeSettings(),
+			newSegmentsExperience.getTypeSettings());
 		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingSegmentsExperience.getLastPublishDate()),
@@ -311,6 +316,15 @@ public class SegmentsExperiencePersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_C_C_LtP() throws Exception {
+		_persistence.countByG_C_C_LtP(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
+
+		_persistence.countByG_C_C_LtP(0L, 0L, 0L, 0);
+	}
+
+	@Test
 	public void testCountByG_C_C_A() throws Exception {
 		_persistence.countByG_C_C_A(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -376,8 +390,8 @@ public class SegmentsExperiencePersistenceTest {
 			"companyId", true, "userId", true, "userName", true, "createDate",
 			true, "modifiedDate", true, "segmentsEntryId", true,
 			"segmentsExperienceKey", true, "classNameId", true, "classPK", true,
-			"name", true, "priority", true, "active", true, "lastPublishDate",
-			true);
+			"name", true, "priority", true, "active", true, "typeSettings",
+			true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -737,6 +751,8 @@ public class SegmentsExperiencePersistenceTest {
 		segmentsExperience.setPriority(RandomTestUtil.nextInt());
 
 		segmentsExperience.setActive(RandomTestUtil.randomBoolean());
+
+		segmentsExperience.setTypeSettings(RandomTestUtil.randomString());
 
 		segmentsExperience.setLastPublishDate(RandomTestUtil.nextDate());
 

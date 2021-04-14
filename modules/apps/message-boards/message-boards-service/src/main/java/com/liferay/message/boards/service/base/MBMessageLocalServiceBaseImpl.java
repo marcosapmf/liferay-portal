@@ -265,6 +265,21 @@ public abstract class MBMessageLocalServiceBaseImpl
 	}
 
 	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message, or <code>null</code> if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage fetchMBMessageByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return mbMessagePersistence.fetchByG_ERC(
+			groupId, externalReferenceCode);
+	}
+
+	/**
 	 * Returns the message-boards message with the primary key.
 	 *
 	 * @param messageId the primary key of the message-boards message
@@ -472,6 +487,7 @@ public abstract class MBMessageLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -488,6 +504,7 @@ public abstract class MBMessageLocalServiceBaseImpl
 		return mbMessageLocalService.deleteMBMessage((MBMessage)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<MBMessage> getBasePersistence() {
 		return mbMessagePersistence;
 	}

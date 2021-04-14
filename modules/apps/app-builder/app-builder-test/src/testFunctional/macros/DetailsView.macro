@@ -1,5 +1,17 @@
 definition {
 
+	macro assertStatus {
+		AssertElementPresent(
+			key_status = "${status}",
+			locator1 = "DetailsView#STATUS_INFO");
+	}
+
+	macro assertStep {
+		AssertElementPresent(
+			key_step = "${step}",
+			locator1 = "DetailsView#STEP_INFO");
+	}
+
 	macro backButton {
 		Click(locator1 = "DetailsView#BACK_BUTTON");
 	}
@@ -9,7 +21,6 @@ definition {
 	}
 
 	macro deleteEntry {
-
 		WaitForElementPresent(locator1 = "DetailsView#DELETE_ENTRY");
 		ClickNoError.clickNoMouseOver(locator1 = "DetailsView#DELETE_ENTRY");
 		AssertConfirm(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
@@ -22,7 +33,6 @@ definition {
 	}
 
 	macro editEntry {
-
 		WaitForElementPresent(locator1 = "DetailsView#EDIT_ENTRY");
 		Click.clickNoMouseOver(locator1 = "DetailsView#EDIT_ENTRY");
 	}

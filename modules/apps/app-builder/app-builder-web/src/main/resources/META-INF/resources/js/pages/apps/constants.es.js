@@ -12,6 +12,13 @@
  * details.
  */
 
+const ADMINISTRATION_SCOPE_VALUE = 'site_administration.content';
+const APPLICATIONS_SCOPE_VALUE = 'applications_menu.applications';
+
+const COLORS = {
+	secondary: '#A7A9BC',
+};
+
 const COLUMNS = [
 	{
 		key: 'name',
@@ -25,7 +32,7 @@ const COLUMNS = [
 	{
 		key: 'dateCreated',
 		sortable: true,
-		value: Liferay.Language.get('create-date'),
+		value: Liferay.Language.get('created-date'),
 	},
 	{
 		asc: false,
@@ -91,11 +98,29 @@ const FILTERS = [
 	},
 ];
 
+const SCOPES = [
+	{
+		label: Liferay.Language.get('applications'),
+		value: [APPLICATIONS_SCOPE_VALUE],
+	},
+	{
+		label: Liferay.Language.get('site-menu'),
+		value: [ADMINISTRATION_SCOPE_VALUE],
+	},
+	{
+		label: Liferay.Language.get('applications-and-site-menu'),
+		value: [APPLICATIONS_SCOPE_VALUE, ADMINISTRATION_SCOPE_VALUE],
+	},
+];
+
 export {
+	COLORS,
 	COLUMNS,
 	DEPLOYMENT_ACTION,
 	DEPLOYMENT_TYPES,
 	FILTERS,
 	FILTER_NAMES,
+	ADMINISTRATION_SCOPE_VALUE,
 	STATUSES,
+	SCOPES,
 };

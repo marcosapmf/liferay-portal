@@ -14,6 +14,9 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author Michael Hashimoto
  */
@@ -26,8 +29,53 @@ public class MarketplaceAppPluginsTopLevelBuild extends PluginsTopLevelBuild {
 	}
 
 	@Override
+	public String getBaseGitRepositoryName() {
+		String branchName = getBranchName();
+
+		if (branchName.equals("master")) {
+			return "liferay-portal";
+		}
+
+		return "liferay-portal-ee";
+	}
+
+	@Override
+	public String getBranchName() {
+		Matcher matcher = _pattern.matcher(
+			getParameterValue("TEST_PORTAL_BUILD_NUMBER"));
+
+		if (!matcher.find()) {
+			throw new RuntimeException("Please set 'TEST_PORTAL_BUILD_NUMBER'");
+		}
+
+		return JenkinsResultsParserUtil.combine(
+			matcher.group("major"), ".", matcher.group("minor"), ".x");
+	}
+
+	@Override
+	public Job.BuildProfile getBuildProfile() {
+		Matcher matcher = _pattern.matcher(
+			getParameterValue("TEST_PORTAL_BUILD_NUMBER"));
+
+		if (!matcher.find()) {
+			throw new RuntimeException("Please set 'TEST_PORTAL_BUILD_NUMBER'");
+		}
+
+		String fix = matcher.group("fix");
+
+		if (fix.startsWith("1")) {
+			return Job.BuildProfile.DXP;
+		}
+
+		return Job.BuildProfile.PORTAL;
+	}
+
+	@Override
 	public String getPluginName() {
 		return getParameterValue("TEST_PACKAGE_FILE_NAME");
 	}
+
+	private static final Pattern _pattern = Pattern.compile(
+		"(?<major>\\d)(?<minor>\\d)(?<fix>\\d+)");
 
 }

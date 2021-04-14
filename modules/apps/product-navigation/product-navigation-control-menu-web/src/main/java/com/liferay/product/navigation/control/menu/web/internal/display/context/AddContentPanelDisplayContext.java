@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -73,6 +74,7 @@ import com.liferay.product.navigation.control.menu.constants.ProductNavigationCo
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -134,7 +136,8 @@ public class AddContentPanelDisplayContext {
 				ResourceURL resourceURL =
 					_liferayPortletResponse.createResourceURL();
 
-				resourceURL.setResourceID("/add_content_panel/get_contents");
+				resourceURL.setResourceID(
+					"/product_navigation_control_menu/get_contents");
 
 				return resourceURL.toString();
 			}
@@ -475,6 +478,28 @@ public class AddContentPanelDisplayContext {
 				locale -> LanguageUtil.get(locale, "lang.dir")));
 	}
 
+	private Set<String> _getLayoutDecodedPortletNames() {
+		if (_layoutDecodedPortletNames != null) {
+			return _layoutDecodedPortletNames;
+		}
+
+		Set<String> layoutDecodedPortletNames = new HashSet<>();
+
+		LayoutTypePortlet layoutTypePortlet =
+			_themeDisplay.getLayoutTypePortlet();
+
+		for (Portlet layoutPortlet : layoutTypePortlet.getPortlets()) {
+			String decodedPortletName = PortletIdCodec.decodePortletName(
+				layoutPortlet.getPortletId());
+
+			layoutDecodedPortletNames.add(decodedPortletName);
+		}
+
+		_layoutDecodedPortletNames = layoutDecodedPortletNames;
+
+		return _layoutDecodedPortletNames;
+	}
+
 	private String _getPortletCategoryTitle(PortletCategory portletCategory) {
 		for (String portletId :
 				PortletCategoryUtil.getFirstChildPortletIds(portletCategory)) {
@@ -652,10 +677,9 @@ public class AddContentPanelDisplayContext {
 			return false;
 		}
 
-		LayoutTypePortlet layoutTypePortlet =
-			_themeDisplay.getLayoutTypePortlet();
+		Set<String> layoutDecodedPortletNames = _getLayoutDecodedPortletNames();
 
-		if (layoutTypePortlet.hasPortletId(portlet.getPortletId())) {
+		if (layoutDecodedPortletNames.contains(portlet.getPortletId())) {
 			return true;
 		}
 
@@ -673,6 +697,7 @@ public class AddContentPanelDisplayContext {
 	private Boolean _hasLayoutUpdatePermission;
 	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
+	private Set<String> _layoutDecodedPortletNames;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final ThemeDisplay _themeDisplay;

@@ -17,15 +17,16 @@ package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.DocumentImpl;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.elasticsearch7.internal.document.DefaultElasticsearchDocumentFactory;
 import com.liferay.portal.search.elasticsearch7.internal.document.ElasticsearchDocumentFactory;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentRequest;
-import com.liferay.portal.search.engine.adapter.document.BulkableDocumentRequestTranslator;
 import com.liferay.portal.search.engine.adapter.document.DeleteDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
+import com.liferay.portal.util.PropsImpl;
 
 import org.elasticsearch.action.bulk.BulkRequest;
 
@@ -41,25 +42,28 @@ public class BulkDocumentRequestExecutorTest {
 
 	@Before
 	public void setUp() throws Exception {
+		PropsUtil.setProps(new PropsImpl());
+
 		ElasticsearchFixture elasticsearchFixture = new ElasticsearchFixture(
 			getClass());
 
 		ElasticsearchDocumentFactory elasticsearchDocumentFactory =
 			new DefaultElasticsearchDocumentFactory();
 
-		BulkableDocumentRequestTranslator bulkableDocumentRequestTranslator =
-			new ElasticsearchBulkableDocumentRequestTranslator() {
-				{
-					setElasticsearchDocumentFactory(
-						elasticsearchDocumentFactory);
-				}
-			};
+		ElasticsearchBulkableDocumentRequestTranslator
+			elasticsearchBulkableDocumentRequestTranslator =
+				new ElasticsearchBulkableDocumentRequestTranslatorImpl() {
+					{
+						setElasticsearchDocumentFactory(
+							elasticsearchDocumentFactory);
+					}
+				};
 
 		_bulkDocumentRequestExecutorImpl =
 			new BulkDocumentRequestExecutorImpl() {
 				{
-					setBulkableDocumentRequestTranslator(
-						bulkableDocumentRequestTranslator);
+					setElasticsearchBulkableDocumentRequestTranslator(
+						elasticsearchBulkableDocumentRequestTranslator);
 					setElasticsearchClientResolver(elasticsearchFixture);
 				}
 			};

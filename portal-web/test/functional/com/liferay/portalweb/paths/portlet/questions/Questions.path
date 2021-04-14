@@ -69,6 +69,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PAGINATION_NEXT_LINK</td>
+	<td>//a[contains(@class, 'page-link')]//*[contains(@class,'lexicon-icon-angle-right')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PAGINATION_RESULTS</td>
 	<td>//div[@class='pagination-results']</td>
 	<td></td>
@@ -136,6 +141,11 @@
 <tr>
 	<td>QUESTIONS_HOME_ICON</td>
 	<td>//ol[contains(@class,'breadcrumb')]/li//a[*[name()='svg'][contains(@class,'lexicon-icon-home')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>QUESTIONS_LOCKED_ICON</td>
+	<td>//h1[contains(.,'${key_questionTitle}')]//*[name()='svg'][contains(@class,'lexicon-icon-lock')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -229,6 +239,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>VOTE_BUTTON_DISABLED</td>
+	<td>//button[contains(@class,'text-reset') and @disabled]//*[name()='svg'][contains(@class,'${key_caretName}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>VOTED_RESULT</td>
 	<td>//div[contains(@class,'questions-container')]//span[contains(@class,'c-px-2') and normalize-space()='${key_votedResult}']</td>
 	<td></td>
@@ -271,6 +286,17 @@
 <tr>
 	<td>TAGS_LIST_TAB_USED_TIMES</td>
 	<td>//a[contains(@href, '${key_tagName}')]//*[contains(.,'Used ${key_amountOfUsedTimes} Times')]</td>
+	<td></td>
+</tr>
+<!--RELATED_QUESTIONS-->
+<tr>
+	<td>RELATED_QUESTIONS_EMPTY_TEXT</td>
+	<td>//h2[contains(@class,'text-secondary') and contains(.,'No related questions were found.')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RELATED_QUESTIONS_QUESTIONS_TITLE</td>
+	<td>//a[contains(@class,'questions-title')]/h3[contains(.,'${key_questionTitle}')]</td>
 	<td></td>
 </tr>
 </tbody>

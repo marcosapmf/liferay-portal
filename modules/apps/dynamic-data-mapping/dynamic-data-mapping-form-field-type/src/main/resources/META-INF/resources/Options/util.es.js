@@ -81,43 +81,33 @@ export const dedupValue = (
 	fields,
 	value,
 	id,
-	generateOptionValueUsingOptionLabel
+	generateOptionValueUsingOptionLabel,
+	propertyName
 ) => {
-	if (generateOptionValueUsingOptionLabel) {
-		let counter = 0;
+	let counter = 0;
 
-		const recursive = (fields, currentValue) => {
-			const field = fields.find((field) => field.value === currentValue);
+	const recursive = (fields, currentValue) => {
+		const field = fields.find(
+			(field) => field[propertyName] === currentValue
+		);
 
-			if (field && field.id !== id) {
+		if (field && field.id !== id) {
+			if (generateOptionValueUsingOptionLabel) {
 				counter += 1;
 				recursive(fields, value + counter);
 			}
 			else {
-				value = currentValue;
-			}
-		};
-
-		recursive(fields, value);
-
-		return value;
-	}
-	else {
-		const recursive = (fields, currentValue) => {
-			const field = fields.find((field) => field.value === currentValue);
-
-			if (field && field.id !== id) {
 				recursive(fields, getDefaultFieldName(true));
 			}
-			else {
-				value = currentValue;
-			}
-		};
+		}
+		else {
+			value = currentValue;
+		}
+	};
 
-		recursive(fields, value);
+	recursive(fields, value);
 
-		return value;
-	}
+	return value;
 };
 
 export const getDefaultOptionValue = (
@@ -144,11 +134,12 @@ export const getDefaultOptionValue = (
 export const normalizeValue = (
 	fields,
 	currentField,
-	generateOptionValueUsingOptionLabel
+	generateOptionValueUsingOptionLabel,
+	propertyName
 ) => {
-	const {label, value: prevValue} = currentField;
-	let value = prevValue
-		? prevValue
+	const {label} = currentField;
+	let value = currentField[propertyName]
+		? currentField[propertyName]
 		: getDefaultOptionValue(generateOptionValueUsingOptionLabel, label);
 
 	if (!value) {
@@ -159,10 +150,23 @@ export const normalizeValue = (
 		fields,
 		value,
 		currentField.id,
-		generateOptionValueUsingOptionLabel
+		generateOptionValueUsingOptionLabel,
+		propertyName
 	);
 
 	return normalizeFieldName(value);
+};
+
+export const normalizeFieldReference = (currentIndex, fields) => {
+	const duplicateReference = fields
+		.filter((field, index) => index !== currentIndex)
+		.some(({reference}) => reference === fields[currentIndex].reference);
+
+	if (duplicateReference) {
+		fields[currentIndex].reference = getDefaultFieldName(true);
+	}
+
+	return fields;
 };
 
 export const normalizeFields = (
@@ -172,10 +176,17 @@ export const normalizeFields = (
 	return fields.map((field) => {
 		return {
 			...field,
+			reference: normalizeValue(
+				fields,
+				field,
+				generateOptionValueUsingOptionLabel,
+				'reference'
+			),
 			value: normalizeValue(
 				fields,
 				field,
-				generateOptionValueUsingOptionLabel
+				generateOptionValueUsingOptionLabel,
+				'value'
 			),
 		};
 	});

@@ -51,7 +51,6 @@ page import="com.liferay.portal.kernel.util.UnicodeProperties" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.kernel.workflow.WorkflowConstants" %><%@
-page import="com.liferay.site.teams.web.internal.constants.SiteTeamsWebKeys" %><%@
 page import="com.liferay.site.teams.web.internal.display.context.EditSiteTeamAssignmentsDisplayContext" %><%@
 page import="com.liferay.site.teams.web.internal.display.context.EditSiteTeamAssignmentsUserGroupsDisplayContext" %><%@
 page import="com.liferay.site.teams.web.internal.display.context.EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext" %><%@
@@ -70,8 +69,7 @@ page import="com.liferay.site.teams.web.internal.servlet.taglib.clay.UserUserCar
 page import="com.liferay.site.teams.web.internal.servlet.taglib.util.UserActionDropdownItemsProvider" %><%@
 page import="com.liferay.taglib.util.LexiconUtil" %>
 
-<%@ page import="java.util.LinkedHashMap" %><%@
-page import="java.util.Map" %><%@
+<%@ page import="java.util.Map" %><%@
 page import="java.util.Objects" %>
 
 <%@ page import="javax.portlet.PortletURL" %><%@

@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("DataLayoutRenderingContext")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "DataLayoutRenderingContext")
-public class DataLayoutRenderingContext {
+public class DataLayoutRenderingContext implements Serializable {
 
 	public static DataLayoutRenderingContext toDTO(String json) {
 		return ObjectMapperUtil.readValue(
@@ -194,6 +196,62 @@ public class DataLayoutRenderingContext {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean readOnly;
 
+	@Schema
+	public Long getScopeGroupId() {
+		return scopeGroupId;
+	}
+
+	public void setScopeGroupId(Long scopeGroupId) {
+		this.scopeGroupId = scopeGroupId;
+	}
+
+	@JsonIgnore
+	public void setScopeGroupId(
+		UnsafeSupplier<Long, Exception> scopeGroupIdUnsafeSupplier) {
+
+		try {
+			scopeGroupId = scopeGroupIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long scopeGroupId;
+
+	@Schema
+	public Long getSiteGroupId() {
+		return siteGroupId;
+	}
+
+	public void setSiteGroupId(Long siteGroupId) {
+		this.siteGroupId = siteGroupId;
+	}
+
+	@JsonIgnore
+	public void setSiteGroupId(
+		UnsafeSupplier<Long, Exception> siteGroupIdUnsafeSupplier) {
+
+		try {
+			siteGroupId = siteGroupIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long siteGroupId;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -283,6 +341,26 @@ public class DataLayoutRenderingContext {
 			sb.append("\"readOnly\": ");
 
 			sb.append(readOnly);
+		}
+
+		if (scopeGroupId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"scopeGroupId\": ");
+
+			sb.append(scopeGroupId);
+		}
+
+		if (siteGroupId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteGroupId\": ");
+
+			sb.append(siteGroupId);
 		}
 
 		sb.append("}");

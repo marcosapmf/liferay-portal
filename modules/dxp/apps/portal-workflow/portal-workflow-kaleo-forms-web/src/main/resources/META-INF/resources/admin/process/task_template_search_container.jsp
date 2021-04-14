@@ -24,11 +24,10 @@ KaleoProcess kaleoProcess = (KaleoProcess)request.getAttribute(KaleoFormsWebKeys
 long kaleoProcessId = BeanParamUtil.getLong(kaleoProcess, request, "kaleoProcessId");
 
 long ddmStructureId = KaleoFormsUtil.getKaleoProcessDDMStructureId(kaleoProcessId, portletSession);
+
 String workflowDefinition = ParamUtil.getString(request, "workflowDefinition");
 
-String initialStateName = KaleoFormsUtil.getInitialStateName(company.getCompanyId(), workflowDefinition);
-
-KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialStateKaleoTaskFormPair(kaleoProcessId, ddmStructureId, workflowDefinition, initialStateName, portletSession);
+KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialStateKaleoTaskFormPair(kaleoProcessId, ddmStructureId, workflowDefinition, KaleoFormsUtil.getInitialStateName(company.getCompanyId(), workflowDefinition), portletSession);
 %>
 
 <div id="<portlet:namespace />formsSearchContainer">
@@ -52,7 +51,6 @@ KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialState
 
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.workflow.kaleo.forms.model.KaleoTaskFormPair"
-			cssClass="entry-display-style"
 			modelVar="taskFormsPair"
 		>
 			<liferay-ui:search-container-row-parameter
@@ -113,7 +111,7 @@ KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialState
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectFormTemplate',
-		function (classPK, mode, sessionParamName) {
+		(classPK, mode, sessionParamName) => {
 			Liferay.Util.openDDMPortlet(
 				{
 					basePortletURL:
@@ -138,7 +136,7 @@ KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialState
 						'<%= liferayPortletResponse.getNamespace() + "getAvailableFields" %>',
 					title: '<liferay-ui:message key="form" />',
 				},
-				function (event) {
+				(event) => {
 					var A = AUI();
 
 					var data = {};
@@ -167,7 +165,7 @@ KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialState
 	Liferay.provide(
 		window,
 		'<portlet:namespace />editFormTemplate',
-		function (uri) {
+		(uri) => {
 			var A = AUI();
 
 			var WIN = A.config.win;
@@ -185,7 +183,7 @@ KaleoTaskFormPair initialStateKaleoTaskFormPair = KaleoFormsUtil.getInitialState
 	Liferay.provide(
 		window,
 		'<portlet:namespace />unassignForm',
-		function (event) {
+		(event) => {
 			var A = AUI();
 
 			var taskFormPairsParamName = event.taskFormPairsParamName;

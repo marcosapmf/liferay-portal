@@ -113,7 +113,7 @@ boolean nodeInGroup = false;
 					if (nodeIdSelect) {
 						var nodeId = nodeIdSelect.value;
 
-						nodeIdSelect.addEventListener('change', function () {
+						nodeIdSelect.addEventListener('change', () => {
 							if (pageSelectorContainer) {
 								if (nodeIdSelect.value === nodeId) {
 									pageSelectorContainer.classList.remove('hide');
@@ -124,13 +124,14 @@ boolean nodeInGroup = false;
 							}
 
 							if (nodeIdSelect.value && nodeIdSelect.value !== nodeId) {
-								var configurationRenderURL = Liferay.PortletURL.createURL(
-									'<%= configurationRenderURL %>'
+								var renderURL = Liferay.Util.PortletURL.createRenderURL(
+									'<%= configurationRenderURL %>',
+									{
+										nodeId: nodeIdSelect.value,
+									}
 								);
 
-								configurationRenderURL.setParameter('nodeId', nodeIdSelect.value);
-
-								document.<portlet:namespace />fm.action = configurationRenderURL;
+								document.<portlet:namespace />fm.action = renderURL;
 								document.<portlet:namespace />fm.submit();
 							}
 						});

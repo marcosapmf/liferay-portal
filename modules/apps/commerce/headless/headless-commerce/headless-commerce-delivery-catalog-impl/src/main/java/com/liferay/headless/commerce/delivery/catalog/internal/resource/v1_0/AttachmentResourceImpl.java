@@ -14,9 +14,9 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.resource.v1_0;
 
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
@@ -29,13 +29,12 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,15 +46,16 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v1_0/attachment.properties",
-	scope = ServiceScope.PROTOTYPE, service = AttachmentResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {AttachmentResource.class, NestedFieldSupport.class}
 )
-public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
+public class AttachmentResourceImpl
+	extends BaseAttachmentResourceImpl implements NestedFieldSupport {
 
 	@NestedField(parentClass = Product.class, value = "attachments")
 	@Override
 	public Page<Attachment> getChannelProductAttachmentsPage(
-			@NotNull Long channelId,
-			@NestedFieldId("productId") @NotNull Long productId,
+			Long channelId, @NestedFieldId("productId") Long productId,
 			Pagination pagination)
 		throws Exception {
 
@@ -75,8 +75,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 	@NestedField(parentClass = Product.class, value = "images")
 	@Override
 	public Page<Attachment> getChannelProductImagesPage(
-			@NotNull Long channelId,
-			@NestedFieldId("productId") @NotNull Long productId,
+			Long channelId, @NestedFieldId("productId") Long productId,
 			Pagination pagination)
 		throws Exception {
 

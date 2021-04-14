@@ -14,12 +14,17 @@
 
 import React from 'react';
 
-import datasetDisplayLauncher from '../../../src/main/resources/META-INF/resources/components/dataset_display/entry';
+import datasetDisplayLauncher from '../../../../../frontend-taglib/frontend-taglib-clay/src/main/resources/META-INF/resources/data_set_display/entry';
 import sidePanelLauncher from '../../../src/main/resources/META-INF/resources/components/side_panel/entry';
 
+import '../../../src/main/resources/META-INF/resources/styles/main.scss';
+
+import '../../../../../frontend-taglib/frontend-taglib-clay/src/main/resources/META-INF/resources/data_set_display/styles/main.scss';
+
 const fluidDataSetDisplayProps = {
-	activeView: 2,
-	apiUrl: '/dataset-display-nested-items',
+	activeViewSettings: {},
+	apiURL: '/dataset-display-nested-items',
+	appURL: '/o/frontend-taglib-clay/app',
 	bulkActions: [
 		{
 			href: '/side-panel/edit.html',
@@ -34,13 +39,15 @@ const fluidDataSetDisplayProps = {
 			method: 'delete',
 		},
 	],
-	creationMenuItems: [
-		{
-			href: 'modal/url',
-			label: 'Add',
-			target: 'modal',
-		},
-	],
+	creationMenu: {
+		primaryItems: [
+			{
+				href: 'modal/url',
+				label: 'Add',
+				target: 'modal',
+			},
+		],
+	},
 	filters: [
 		{
 			id: 'number-test',
@@ -50,7 +57,6 @@ const fluidDataSetDisplayProps = {
 			min: 20,
 			operator: 'eq',
 			type: 'number',
-			value: 123,
 		},
 		{
 			id: 'order-date',
@@ -67,18 +73,6 @@ const fluidDataSetDisplayProps = {
 			},
 			placeholder: 'dd/mm/yyyy',
 			type: 'dateRange',
-			value: {
-				from: {
-					day: 18,
-					month: 7,
-					year: 2020,
-				},
-				to: {
-					day: 18,
-					month: 7,
-					year: 2025,
-				},
-			},
 		},
 	],
 	id: 'tableTest',
@@ -114,13 +108,97 @@ const fluidDataSetDisplayProps = {
 	},
 	showPagination: true,
 	sidePanelId: 'sidePanelTestId',
-	spritemap: './assets/icons.svg',
+	spritemap: './assets/clay/icons.svg',
 	style: 'fluid',
 	views: [
 		{
+			contentRenderer: 'table',
+			label: 'Table',
+			name: 'table',
+			schema: {
+				fields: [
+					{
+						contentRenderer: 'image',
+						fieldName: 'img',
+						hideColumnLabel: true,
+						label: 'Thumbnail',
+					},
+					{
+						contentRenderer: 'actionLink',
+						fieldName: 'name',
+						label: 'Name',
+						sortable: true,
+					},
+					{
+						actionId: 'edit',
+						contentRenderer: 'actionLink',
+						hideColumnLabel: true,
+						label: 'Edit action',
+					},
+					{
+						actionId: 'delete',
+						contentRenderer: 'actionLink',
+						hideColumnLabel: true,
+						label: 'Delete Action',
+					},
+					{
+						actionId: 'alert',
+						contentRenderer: 'actionLink',
+						hideColumnLabel: true,
+						label: 'Alert',
+					},
+					{
+						actionId: 'select',
+						contentRenderer: 'actionLink',
+						hideColumnLabel: true,
+						label: 'Select',
+					},
+					{
+						contentRenderer: 'tooltipSummary',
+						details: {
+							rowsDefinitions: [
+								{
+									label: 'Name',
+									valueFieldKey: 'name',
+								},
+								{
+									label: 'NestedItem',
+									valueFieldKey: ['testLink', 'href'],
+								},
+								{
+									contentRenderer: 'image',
+									label: 'Thumbnail',
+									valueFieldKey: 'img',
+								},
+								{
+									divider: true,
+									label: 'Price',
+									valueFieldKey: 'price',
+								},
+								{
+									divider: true,
+									highlighted: true,
+									label: 'Price Copy',
+									valueFieldKey: 'price',
+								},
+							],
+						},
+						fieldName: 'price',
+						label: 'Price',
+					},
+					{
+						contentRenderer: 'quantitySelector',
+						fieldName: 'testQuantity',
+						label: 'Qt. Selector',
+					},
+				],
+			},
+			thumbnail: 'table',
+		},
+		{
 			contentRenderer: 'cards',
-			icon: 'documents-and-media',
 			label: 'Cards',
+			name: 'cards',
 			schema: {
 				description: 'name',
 				href: 'productPage',
@@ -129,6 +207,7 @@ const fluidDataSetDisplayProps = {
 				stickerProps: 'type',
 				title: 'skuId',
 			},
+			thumbnail: 'documents-and-media',
 		},
 		{
 			component: (props) => {
@@ -149,62 +228,17 @@ const fluidDataSetDisplayProps = {
 					</>
 				);
 			},
-			icon: 'merge',
-			id: 'custom-table',
-			label: "Hey you don't know me",
+			label: 'Custom table name',
+			name: 'custom-table',
 			schema: {},
-		},
-		{
-			contentRenderer: 'table',
-			icon: 'table',
-			label: 'Table',
-			schema: {
-				fields: [
-					{
-						contentRenderer: 'image',
-						fieldName: 'img',
-						label: '',
-					},
-					{
-						contentRenderer: 'actionLink',
-						fieldName: 'name',
-						label: 'Name',
-						sortable: true,
-					},
-					{
-						actionId: 'edit',
-						contentRenderer: 'actionLink',
-					},
-					{
-						actionId: 'delete',
-						contentRenderer: 'actionLink',
-					},
-					{
-						actionId: 'alert',
-						contentRenderer: 'actionLink',
-					},
-					{
-						actionId: 'select',
-						contentRenderer: 'actionLink',
-					},
-					{
-						contentRenderer: 'tooltipPrice',
-						fieldName: 'price',
-						label: 'Price',
-					},
-					{
-						contentRenderer: 'quantitySelector',
-						fieldName: 'testQuantity',
-						label: 'Qt. Selector',
-					},
-				],
-			},
+			thumbnail: 'merge',
 		},
 	],
 };
 
 const emailsDataSetDisplayProps = {
-	apiUrl: '/dataset-display-email-data',
+	activeViewSettings: {},
+	apiURL: '/dataset-display-email-data',
 	creationMenuItems: [
 		{
 			href: '/standard/edit',
@@ -245,19 +279,20 @@ const emailsDataSetDisplayProps = {
 	},
 	showPagination: true,
 	sidePanelId: 'sidePanelTestId',
-	spritemap: './assets/icons.svg',
+	spritemap: './assets/clay/icons.svg',
 	style: 'stacked',
 	views: [
 		{
 			contentRenderer: 'emailsList',
-			icon: 'email',
 			label: 'Email',
+			thumbnail: 'email',
 		},
 	],
 };
 
 const selectableTableProps = {
-	apiUrl: '/dataset-display-selectable-data',
+	activeViewSettings: {},
+	apiURL: '/dataset-display-selectable-data',
 	formId: 'form-id',
 	id: 'tableTest',
 	pageSize: 5,
@@ -289,16 +324,16 @@ const selectableTableProps = {
 	selectedItemsKey: 'countryId',
 	showPagination: true,
 	sidePanelId: 'sidePanelTestId',
-	spritemap: './assets/icons.svg',
+	spritemap: './assets/clay/icons.svg',
 	views: [
 		{
 			contentRenderer: 'selectableTable',
-			icon: 'table',
 			label: 'Table',
 			schema: {
 				firstColumnLabel: 'Country',
 				firstColumnName: 'countryName',
 			},
+			thumbnail: 'table',
 		},
 	],
 };
@@ -306,9 +341,13 @@ const selectableTableProps = {
 const today = new Date();
 
 const ordersDataSetDisplayProps = {
-	apiUrl:
+	activeViewSettings: {
+		name: 'table',
+	},
+	apiURL:
 		'/o/headless-commerce-admin-order/v1.0/orders?nestedFields=account,channel',
-	batchTasksStatusApiUrl: '/o/fake-batch-engine/v1.0/import-task',
+	appURL: '/o/frontend-taglib-clay/app',
+	batchTasksStatusApiURL: '/o/fake-batch-engine/v1.0/import-task',
 	bulkActions: [
 		{
 			bodyKeys: ['id', 'productId'],
@@ -319,16 +358,18 @@ const ordersDataSetDisplayProps = {
 			target: 'async',
 		},
 	],
-	creationMenuItems: [
-		{
-			href: 'modal/url',
-			label: 'Add',
-			target: 'modal',
-		},
-	],
+	creationMenu: {
+		primaryItems: [
+			{
+				href: 'modal/url',
+				label: 'Add',
+				target: 'modal',
+			},
+		],
+	},
 	filters: [
 		{
-			apiUrl: '/o/headless-commerce-admin-account/v1.0/accounts',
+			apiURL: '/o/headless-commerce-admin-account/v1.0/accounts',
 			id: 'accountId',
 			inputPlaceholder: 'Search for account',
 			itemKey: 'id',
@@ -338,7 +379,7 @@ const ordersDataSetDisplayProps = {
 			type: 'autocomplete',
 		},
 		{
-			apiUrl: '/o/headless-commerce-admin-channel/v1.0/channels',
+			apiURL: '/o/headless-commerce-admin-channel/v1.0/channels',
 			id: 'channelId',
 			inputPlaceholder: 'Search for Channel',
 			itemKey: 'id',
@@ -397,6 +438,8 @@ const ordersDataSetDisplayProps = {
 			target: 'async',
 		},
 	],
+	namespace:
+		'_com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_',
 	pageSize: 5,
 	pagination: {
 		deltas: [
@@ -432,12 +475,12 @@ const ordersDataSetDisplayProps = {
 			key: 'createDate',
 		},
 	],
-	spritemap: './assets/icons.svg',
+	spritemap: './assets/clay/icons.svg',
 	views: [
 		{
 			contentRenderer: 'table',
-			icon: 'table',
 			label: 'Table',
+			name: 'table',
 			schema: {
 				fields: [
 					{
@@ -482,13 +525,15 @@ const ordersDataSetDisplayProps = {
 					},
 				],
 			},
+			thumbnail: 'table',
 		},
 	],
 };
 
 const productsDataSetDisplayProps = {
-	apiUrl:
-		'/o/headless-commerce-admin-catalog/v1.0/products?nestedFields=skus,catalog&filter=(categoryIds/any(x:(x eq 41315)))',
+	activeViewSettings: {},
+	apiURL:
+		'/o/headless-commerce-admin-catalog/v1.0/products/?nestedFields=skus%2Ccatalog',
 	bulkActions: [
 		{
 			href: '/delete',
@@ -506,9 +551,9 @@ const productsDataSetDisplayProps = {
 	],
 	filters: [
 		{
-			id: 'blbl',
+			id: 'customFilterId',
 			label: 'Custom Filter',
-			moduleUrl: '/blblasd/asd/basdkj',
+			moduleURL: '/custom/filter/module/url',
 		},
 		{
 			id: 'createDate',
@@ -527,7 +572,7 @@ const productsDataSetDisplayProps = {
 			type: 'dateRange',
 		},
 		{
-			apiUrl:
+			apiURL:
 				'/o/headless-admin-taxonomy/v1.0/taxonomy-categories/0/taxonomy-categories',
 			id: 'categoryIds',
 			inputPlaceholder: 'Search for Category',
@@ -537,7 +582,7 @@ const productsDataSetDisplayProps = {
 			type: 'autocomplete',
 		},
 		{
-			apiUrl: '/o/headless-commerce-admin-catalog/v1.0/catalogs',
+			apiURL: '/o/headless-commerce-admin-catalog/v1.0/catalogs',
 			id: 'catalogId',
 			inputPlaceholder: 'Search for Catalog',
 			itemKey: 'id',
@@ -564,6 +609,14 @@ const productsDataSetDisplayProps = {
 		},
 	],
 	id: 'tableTest',
+	inlineAddingSettings: {
+		apiURL: '/o/fake-new-inline-item-endpoint',
+		defaultBodyContent: {
+			testKey: 'testValue',
+		},
+		method: 'POST',
+	},
+	inlineEditingSettings: true,
 	itemsActions: [
 		{
 			href: '/page/{id}',
@@ -618,23 +671,26 @@ const productsDataSetDisplayProps = {
 			key: 'modifiedDate',
 		},
 	],
-	spritemap: './assets/icons.svg',
+	spritemap: './assets/clay/icons.svg',
 	views: [
 		{
 			contentRenderer: 'table',
-			icon: 'table',
 			label: 'Table',
 			schema: {
 				fields: [
 					{
 						contentRenderer: 'image',
 						fieldName: 'thumbnail',
-						labelKey: ['name', 'LANG'],
+						hideColumnLabel: true,
+						label: 'Thumbnail',
 					},
 					{
 						actionId: 'view',
 						contentRenderer: 'actionLink',
 						fieldName: ['name', 'LANG'],
+						inlineEditSettings: {
+							type: 'text',
+						},
 						label: 'Name',
 						sortable: true,
 					},
@@ -644,10 +700,12 @@ const productsDataSetDisplayProps = {
 					},
 					{
 						contentRenderer: 'list',
+						details: {
+							multipleItemsLabel: 'Multiple-skus',
+						},
 						fieldName: 'skus',
 						label: 'Sku',
 						labelKey: 'sku',
-						multipleItemsLabel: 'Multiple-skus',
 					},
 					{
 						fieldName: ['catalog', 'name'],
@@ -656,6 +714,9 @@ const productsDataSetDisplayProps = {
 					{
 						contentRenderer: 'date',
 						fieldName: 'createDate',
+						inlineEditSettings: {
+							type: 'dateTime',
+						},
 						label: 'Created Date',
 						sortable: true,
 					},
@@ -677,38 +738,157 @@ const productsDataSetDisplayProps = {
 					},
 				],
 			},
+			thumbnail: 'table',
+		},
+	],
+};
+
+const priceListsDataSetDisplayProps = {
+	activeViewSettings: {},
+	apiURL: '/o/headless-commerce-admin-pricing/v2.0/price-lists',
+	enableInlineEditMode: false,
+	id: 'tableTest',
+	inlineAddingSettings: {
+		apiURL: '/o/fake-new-inline-item-endpoint',
+		defaultBodyContent: {
+			testKey: 'testValue',
+		},
+		method: 'POST',
+	},
+	inlineEditingSettings: {
+		alwaysOn: true,
+	},
+	itemsActions: [
+		{
+			href: '/page/{id}',
+			icon: 'view',
+			id: 'view',
+			label: 'View',
+			permissionKey: 'get',
+		},
+		{
+			href:
+				'/o/headless-commerce-admin-catalog/v1.0/products/{productId}',
+			icon: 'trash',
+			id: 'delete',
+			label: 'Delete',
+			method: 'delete',
+			permissionKey: 'delete',
+			target: 'async',
+		},
+	],
+	pageSize: 5,
+	pagination: {
+		deltas: [
+			{
+				label: 5,
+			},
+			{
+				label: 10,
+			},
+			{
+				label: 20,
+			},
+			{
+				label: 30,
+			},
+			{
+				label: 50,
+			},
+			{
+				href:
+					'http://localhost:8080/group/test-1/pending-orders?p_p_id=com_liferay_commerce_order_content_web_internal_portlet_CommerceOpenOrderContentPortlet&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_com_liferay_commerce_order_content_web_internal_portlet_CommerceOpenOrderContentPortlet_delta=75',
+				label: 75,
+			},
+		],
+		initialDelta: 10,
+	},
+	selectedItemsKey: 'id',
+	showPagination: true,
+	sidePanelId: 'sidePanelTestId',
+	spritemap: './assets/clay/icons.svg',
+	views: [
+		{
+			contentRenderer: 'table',
+			label: 'Table',
+			schema: {
+				fields: [
+					{
+						actionId: 'view',
+						contentRenderer: 'actionLink',
+						fieldName: 'name',
+						inlineEditSettings: {
+							type: 'text',
+						},
+						label: 'Name',
+						sortable: true,
+					},
+					{
+						contentRenderer: 'date',
+						fieldName: 'createDate',
+						inlineEditSettings: {
+							type: 'dateTime',
+						},
+						label: 'Created Date',
+						sortable: true,
+					},
+					{
+						contentRenderer: 'date',
+						fieldName: 'displayDate',
+						inlineEditSettings: {
+							type: 'dateTime',
+						},
+						label: 'Display Date',
+						sortable: true,
+					},
+					{
+						contentRenderer: 'status',
+						fieldName: 'workflowStatusInfo',
+						label: 'Status',
+					},
+					{
+						contentRenderer: 'boolean',
+						fieldName: 'active',
+						inlineEditSettings: {
+							type: 'checkbox',
+						},
+						label: 'Active',
+					},
+				],
+			},
+			thumbnail: 'table',
 		},
 	],
 };
 
 datasetDisplayLauncher(
-	'orders-dataset-display',
-	'orders-dataset-display-root',
-	ordersDataSetDisplayProps
+	ordersDataSetDisplayProps,
+	document.getElementById('orders-dataset-display-root')
 );
 
 datasetDisplayLauncher(
-	'products-dataset-display',
-	'products-dataset-display-root',
-	productsDataSetDisplayProps
+	productsDataSetDisplayProps,
+	document.getElementById('products-dataset-display-root')
 );
 
 datasetDisplayLauncher(
-	'fluid-dataset-display',
-	'fluid-dataset-display-root',
-	fluidDataSetDisplayProps
+	priceListsDataSetDisplayProps,
+	document.getElementById('price-list-dataset-display-root')
 );
 
 datasetDisplayLauncher(
-	'selectable-dataset-display',
-	'selectable-dataset-display-root',
-	selectableTableProps
+	fluidDataSetDisplayProps,
+	document.getElementById('fluid-dataset-display-root')
 );
 
 datasetDisplayLauncher(
-	'emails-dataset-display',
-	'emails-dataset-display-root',
-	emailsDataSetDisplayProps
+	selectableTableProps,
+	document.getElementById('selectable-dataset-display-root')
+);
+
+datasetDisplayLauncher(
+	emailsDataSetDisplayProps,
+	document.getElementById('emails-dataset-display-root')
 );
 
 sidePanelLauncher('sidePanel', 'side-panel-root', {
@@ -732,6 +912,6 @@ sidePanelLauncher('sidePanel', 'side-panel-root', {
 		},
 	],
 	size: 'md',
-	spritemap: './assets/icons.svg',
+	spritemap: './assets/clay/icons.svg',
 	topAnchorSelector: '.top-anchor',
 });

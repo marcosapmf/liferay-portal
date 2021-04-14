@@ -68,6 +68,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -254,6 +255,10 @@ public class OrderResourceImpl
 			CommerceOrder commerceOrder)
 		throws NoSuchMethodException, PortalException {
 
+		if (contextUriInfo == null) {
+			return Collections.emptyMap();
+		}
+
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
 			_addAction(
@@ -336,7 +341,8 @@ public class OrderResourceImpl
 
 			for (OrderItem orderItem : orderItems) {
 				OrderItemUtil.upsertCommerceOrderItem(
-					_cpInstanceService, _commerceOrderItemService, orderItem,
+					_cpInstanceService, _commerceOrderItemService,
+					_commerceOrderModelResourcePermission, orderItem,
 					commerceOrder,
 					_commerceContextFactory.create(
 						contextCompany.getCompanyId(),
@@ -499,7 +505,8 @@ public class OrderResourceImpl
 		}
 
 		CommerceOrder commerceOrder = _commerceOrderService.upsertCommerceOrder(
-			contextUser.getUserId(), commerceChannel.getGroupId(),
+			order.getExternalReferenceCode(), contextUser.getUserId(),
+			commerceChannel.getGroupId(),
 			commerceAccount.getCommerceAccountId(),
 			commerceCurrency.getCommerceCurrencyId(),
 			GetterUtil.getLong(order.getBillingAddressId()),
@@ -515,7 +522,7 @@ public class OrderResourceImpl
 			GetterUtil.getInteger(
 				order.getOrderStatus(),
 				CommerceOrderConstants.ORDER_STATUS_PENDING),
-			order.getAdvanceStatus(), order.getExternalReferenceCode(),
+			order.getAdvanceStatus(),
 			_commerceContextFactory.create(
 				contextCompany.getCompanyId(), commerceChannel.getGroupId(),
 				contextUser.getUserId(), 0,

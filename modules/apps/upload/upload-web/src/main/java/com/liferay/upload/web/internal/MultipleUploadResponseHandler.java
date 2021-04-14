@@ -15,6 +15,7 @@
 package com.liferay.upload.web.internal;
 
 import com.liferay.document.library.configuration.DLConfiguration;
+import com.liferay.document.library.exception.DLStorageQuotaExceededException;
 import com.liferay.document.library.kernel.antivirus.AntivirusScannerException;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.FileExtensionException;
@@ -27,7 +28,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.ServletResponseConstants;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -35,6 +36,7 @@ import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.upload.UploadResponseHandler;
 
 import java.util.Map;
@@ -64,6 +66,7 @@ public class MultipleUploadResponseHandler implements UploadResponseHandler {
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
 		if (portalException instanceof AntivirusScannerException ||
+			portalException instanceof DLStorageQuotaExceededException ||
 			portalException instanceof DuplicateFileEntryException ||
 			portalException instanceof FileExtensionException ||
 			portalException instanceof FileNameException ||
@@ -88,7 +91,15 @@ public class MultipleUploadResponseHandler implements UploadResponseHandler {
 					ServletResponseConstants.SC_FILE_ANTIVIRUS_EXCEPTION;
 			}
 
-			if (portalException instanceof DuplicateFileEntryException) {
+			if (portalException instanceof DLStorageQuotaExceededException) {
+				errorMessage = themeDisplay.translate(
+					"you-have-exceeded-the-x-storage-quota-for-this-instance",
+					_language.formatStorageSize(
+						PropsValues.DATA_LIMIT_MAX_DL_STORAGE_SIZE,
+						themeDisplay.getLocale()));
+				errorType = ServletResponseConstants.SC_FILE_SIZE_EXCEPTION;
+			}
+			else if (portalException instanceof DuplicateFileEntryException) {
 				errorMessage = themeDisplay.translate(
 					"please-enter-a-unique-document-name");
 				errorType =
@@ -109,7 +120,7 @@ public class MultipleUploadResponseHandler implements UploadResponseHandler {
 				errorMessage = themeDisplay.translate(
 					"please-enter-a-file-with-a-valid-file-size-no-larger-" +
 						"than-x",
-					LanguageUtil.formatStorageSize(
+					_language.formatStorageSize(
 						_dlValidator.getMaxAllowableSize(),
 						themeDisplay.getLocale()));
 			}
@@ -164,5 +175,8 @@ public class MultipleUploadResponseHandler implements UploadResponseHandler {
 
 	@Reference
 	private DLValidator _dlValidator;
+
+	@Reference
+	private Language _language;
 
 }

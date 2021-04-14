@@ -20,6 +20,9 @@ import com.liferay.headless.commerce.admin.account.client.dto.v1_0.AccountMember
 import com.liferay.headless.commerce.admin.account.client.dto.v1_0.AccountOrganization;
 import com.liferay.headless.commerce.admin.account.client.json.BaseJSONParser;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -56,6 +59,9 @@ public class AccountSerDes {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{");
+
+		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
 		if (account.getAccountAddresses() != null) {
 			if (sb.length() > 1) {
@@ -127,6 +133,35 @@ public class AccountSerDes {
 			sb.append(_toJSON(account.getCustomFields()));
 		}
 
+		if (account.getDateCreated() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateCreated\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(account.getDateCreated()));
+
+			sb.append("\"");
+		}
+
+		if (account.getDateModified() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateModified\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				liferayToJSONDateFormat.format(account.getDateModified()));
+
+			sb.append("\"");
+		}
+
 		if (account.getEmailAddresses() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -183,6 +218,20 @@ public class AccountSerDes {
 			sb.append("\"logoId\": ");
 
 			sb.append(account.getLogoId());
+		}
+
+		if (account.getLogoURL() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"logoURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(account.getLogoURL()));
+
+			sb.append("\"");
 		}
 
 		if (account.getName() != null) {
@@ -251,6 +300,9 @@ public class AccountSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
 		if (account.getAccountAddresses() == null) {
 			map.put("accountAddresses", null);
 		}
@@ -284,6 +336,24 @@ public class AccountSerDes {
 			map.put("customFields", String.valueOf(account.getCustomFields()));
 		}
 
+		if (account.getDateCreated() == null) {
+			map.put("dateCreated", null);
+		}
+		else {
+			map.put(
+				"dateCreated",
+				liferayToJSONDateFormat.format(account.getDateCreated()));
+		}
+
+		if (account.getDateModified() == null) {
+			map.put("dateModified", null);
+		}
+		else {
+			map.put(
+				"dateModified",
+				liferayToJSONDateFormat.format(account.getDateModified()));
+		}
+
 		if (account.getEmailAddresses() == null) {
 			map.put("emailAddresses", null);
 		}
@@ -313,6 +383,13 @@ public class AccountSerDes {
 		}
 		else {
 			map.put("logoId", String.valueOf(account.getLogoId()));
+		}
+
+		if (account.getLogoURL() == null) {
+			map.put("logoURL", null);
+		}
+		else {
+			map.put("logoURL", String.valueOf(account.getLogoURL()));
 		}
 
 		if (account.getName() == null) {
@@ -408,6 +485,18 @@ public class AccountSerDes {
 						(Map)AccountSerDes.toMap((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
+				if (jsonParserFieldValue != null) {
+					account.setDateCreated(
+						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
+				if (jsonParserFieldValue != null) {
+					account.setDateModified(
+						toDate((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "emailAddresses")) {
 				if (jsonParserFieldValue != null) {
 					account.setEmailAddresses(
@@ -431,6 +520,11 @@ public class AccountSerDes {
 				if (jsonParserFieldValue != null) {
 					account.setLogoId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "logoURL")) {
+				if (jsonParserFieldValue != null) {
+					account.setLogoURL((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {

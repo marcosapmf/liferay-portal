@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -46,6 +47,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.GroupSearch;
 import com.liferay.portlet.usersadmin.search.GroupSearchTerms;
+import com.liferay.site.browser.web.internal.constants.SiteBrowserPortletKeys;
 import com.liferay.sites.kernel.util.SitesUtil;
 
 import java.util.ArrayList;
@@ -80,8 +82,8 @@ public class SiteBrowserDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_httpServletRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_httpServletRequest, SiteBrowserPortletKeys.SITE_BROWSER, "list");
 
 		return _displayStyle;
 	}
@@ -240,8 +242,7 @@ public class SiteBrowserDisplayContext {
 			return NavigationItemListBuilder.add(
 				navigationItem -> {
 					navigationItem.setActive(true);
-					navigationItem.setHref(
-						_liferayPortletResponse.createRenderURL());
+					navigationItem.setHref(getPortletURL());
 					navigationItem.setLabel(
 						LanguageUtil.get(_httpServletRequest, "sites"));
 				}
@@ -379,6 +380,9 @@ public class SiteBrowserDisplayContext {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return false;

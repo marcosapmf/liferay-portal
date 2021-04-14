@@ -64,7 +64,7 @@ if (portletTitleBasedNavigation) {
 		<clay:content-col
 			expand="<%= true %>"
 		>
-			<h3><%= HtmlUtil.escape(message.getSubject()) %></h3>
+			<h3 class="component-title"><%= HtmlUtil.escape(message.getSubject()) %></h3>
 		</clay:content-col>
 
 		<clay:content-col>
@@ -299,13 +299,13 @@ if (portletTitleBasedNavigation) {
 	</c:if>
 </div>
 
-<aui:script require="metal-dom/src/all/dom as dom">
+<aui:script require="frontend-js-web/liferay/util/run_scripts_in_element.es as runScriptsInElement">
 	var moreMessagesButton = document.getElementById(
 		'<portlet:namespace />moreMessages'
 	);
 
 	if (moreMessagesButton) {
-		moreMessagesButton.addEventListener('click', function (event) {
+		moreMessagesButton.addEventListener('click', (event) => {
 			var form = document.<portlet:namespace />fm;
 
 			var index = Liferay.Util.getFormElement(form, 'index');
@@ -329,27 +329,29 @@ if (portletTitleBasedNavigation) {
 				body: formData,
 				method: 'POST',
 			})
-				.then(function (response) {
+				.then((response) => {
 					return response.text();
 				})
-				.then(function (response) {
+				.then((response) => {
 					var messageContainer = document.getElementById(
 						'<portlet:namespace />messageContainer'
 					);
 
 					if (messageContainer) {
-						dom.append(messageContainer, response);
-
-						dom.globalEval.runScriptsInElement(
-							messageContainer.parentElement
+						messageContainer.appendChild(
+							document
+								.createRange()
+								.createContextualFragment(response)
 						);
+
+						runScriptsInElement.default(messageContainer.parentElement);
 
 						var replyContainer = document.querySelector(
 							'#<portlet:namespace />messageContainer > .reply-container'
 						);
 
 						if (replyContainer) {
-							dom.append(messageContainer, replyContainer);
+							messageContainer.append(replyContainer);
 						}
 					}
 				});

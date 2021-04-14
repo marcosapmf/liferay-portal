@@ -58,6 +58,7 @@ jest.mock('dynamic-data-mapping-form-renderer', () => ({
 				{fieldName: 'Text2', value: 'text2'},
 			].map(callback),
 	})),
+	setDataRecord: jest.fn().mockImplementation((params) => params),
 }));
 
 jest.mock('frontend-js-web', () => ({
@@ -95,12 +96,13 @@ const mockGetItem = jest
 		totalCount: 1,
 	});
 
-jest.mock('app-builder-web/js/utils/client.es', () => ({
+jest.mock('data-engine-js-components-web/js/utils/client.es', () => ({
 	addItem: () => mockAddItem(),
 	getItem: () => mockGetItem(),
+	request: jest.fn().mockResolvedValue(),
 }));
 
-jest.mock('app-builder-web/js/utils/toast.es', () => ({
+jest.mock('data-engine-js-components-web/js/utils/toast.es', () => ({
 	__esModule: true,
 	errorToast: (title) => mockToast(title),
 	successToast: (title) => mockToast(title),
@@ -108,11 +110,7 @@ jest.mock('app-builder-web/js/utils/toast.es', () => ({
 
 describe('EditEntry', () => {
 	const dataRecord = JSON.stringify({
-		dataRecordValues: {
-			Text: {en_US: 'text'},
-			Text1: {en_US: ['text1']},
-			Text2: {en_US: ''},
-		},
+		dataRecordValues: {},
 	});
 
 	afterEach(cleanup);
@@ -233,7 +231,7 @@ describe('EditEntry', () => {
 		});
 
 		expect(mockFetch).toHaveBeenCalledWith(
-			`${context.baseResourceURL}?p_p_resource_id=/app_builder/update_data_record`,
+			`${context.baseResourceURL}?p_p_resource_id=/app_builder_workflow/update_data_record`,
 			{
 				body: {
 					appBuilderAppId: 1,

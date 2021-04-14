@@ -29,11 +29,11 @@ long classPK = ParamUtil.getLong(request, "classPK");
 List<MDRRuleGroupInstance> ruleGroupInstances = MDRRuleGroupInstanceServiceUtil.getRuleGroupInstances(className, classPK, QueryUtil.ALL_POS, QueryUtil.ALL_POS, RuleGroupInstancePriorityComparator.INSTANCE_ASCENDING);
 %>
 
-<portlet:actionURL name="/mobile_device_rules/edit_rule_group_instance" var="editRuleGroupInstancesURL">
-	<portlet:param name="mvcRenderCommandName" value="/mobile_device_rules/edit_rule_group_instance" />
+<portlet:actionURL name="/mobile_device_rules/edit_rule_group_instance_priorities" var="editRuleGroupInstancesURL">
+	<portlet:param name="mvcRenderCommandName" value="/mobile_device_rules/edit_rule_group_instance_priorities" />
 </portlet:actionURL>
 
-<aui:form action="<%= editRuleGroupInstancesURL %>" cssClass="container-fluid-1280" method="post" name="fm" onSubmit='<%= liferayPortletResponse.getNamespace() + "saveRuleGroupInstancesPriorities(event)" %>'>
+<aui:form action="<%= editRuleGroupInstancesURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= liferayPortletResponse.getNamespace() + "saveRuleGroupInstancesPriorities(event)" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 	<aui:input name="ruleGroupsInstancesJSON" type="hidden" />
@@ -91,15 +91,14 @@ List<MDRRuleGroupInstance> ruleGroupInstances = MDRRuleGroupInstanceServiceUtil.
 				ruleGroupInstanceNodes
 			);
 
-			var ruleGroupInstances = ruleGroupInstanceNodesArray.map(function (
-				item,
-				index
-			) {
-				return {
-					priority: index,
-					ruleGroupInstanceId: item.dataset.ruleGroupInstanceId,
-				};
-			});
+			var ruleGroupInstances = ruleGroupInstanceNodesArray.map(
+				(item, index) => {
+					return {
+						priority: index,
+						ruleGroupInstanceId: item.dataset.ruleGroupInstanceId,
+					};
+				}
+			);
 
 			ruleGroupsInstancesJSONElement.value = JSON.stringify(
 				ruleGroupInstances
@@ -151,7 +150,7 @@ List<MDRRuleGroupInstance> ruleGroupInstances = MDRRuleGroupInstanceServiceUtil.
 
 				var nodes = container.all('.list-group-item');
 
-				nodes.each(function (item, index, collection) {
+				nodes.each((item, index, collection) => {
 					var priorityNode = item.one(
 						'.rule-group-instance-priority-value'
 					);

@@ -33,7 +33,7 @@ import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -183,7 +183,8 @@ public class CommerceAccountGroupAdminDisplayContext {
 
 		if (commerceAccountGroupId > 0) {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "editCommerceAccountGroup");
+				"mvcRenderCommandName",
+				"/commerce_account_group_admin/edit_commerce_account_group");
 			portletURL.setParameter(
 				"commerceAccountGroupId",
 				String.valueOf(commerceAccountGroupId));
@@ -277,9 +278,13 @@ public class CommerceAccountGroupAdminDisplayContext {
 	}
 
 	public boolean hasPermission(String actionId) {
-		return PortalPermissionUtil.contains(
+		PortletResourcePermission portletResourcePermission =
+			_commerceAccountGroupModelResourcePermission.
+				getPortletResourcePermission();
+
+		return portletResourcePermission.contains(
 			_commerceAccountGroupAdminRequestHelper.getPermissionChecker(),
-			actionId);
+			null, actionId);
 	}
 
 	private String _getKeywords() {

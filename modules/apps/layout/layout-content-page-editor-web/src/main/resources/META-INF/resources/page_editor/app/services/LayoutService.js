@@ -15,6 +15,12 @@
 import {config} from '../config/index';
 import serviceFetch from './serviceFetch';
 
+const layoutServiceFetch = (url, options, onNetworkStatus) => {
+	return serviceFetch(url, options, onNetworkStatus, {
+		requestGenerateDraft: true,
+	});
+};
+
 export default {
 
 	/**
@@ -104,6 +110,26 @@ export default {
 				},
 			},
 			onNetworkStatus
+		);
+	},
+
+	/**
+	 * @param {string} groupId
+	 * @param {string} layoutId
+	 * @param {boolean} privateLayout
+	 * @returns {Promise<{error: Error, friendlyURL: string}>}
+	 */
+	getLayoutFriendlyURL({groupId, layoutId, privateLayout}) {
+		return layoutServiceFetch(
+			config.getLayoutFriendlyURL,
+			{
+				body: {
+					groupId,
+					layoutId,
+					privateLayout,
+				},
+			},
+			() => {}
 		);
 	},
 
@@ -264,10 +290,4 @@ export default {
 			onNetworkStatus
 		);
 	},
-};
-
-const layoutServiceFetch = (url, options, onNetworkStatus) => {
-	return serviceFetch(url, options, onNetworkStatus, {
-		requestGenerateDraft: true,
-	});
 };

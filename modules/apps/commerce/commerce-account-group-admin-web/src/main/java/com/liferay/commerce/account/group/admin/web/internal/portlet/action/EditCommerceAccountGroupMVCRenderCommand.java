@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceAccountPortletKeys.COMMERCE_ACCOUNT_GROUP_ADMIN,
-		"mvc.command.name=editCommerceAccountGroup"
+		"mvc.command.name=/commerce_account_group_admin/edit_commerce_account_group"
 	},
 	service = MVCRenderCommand.class
 )
@@ -42,7 +42,7 @@ public class EditCommerceAccountGroupMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/edit_account_group.jsp";
+		return "/edit_commerce_account_group.jsp";
 	}
 
 }

@@ -14,7 +14,6 @@
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
-import com.liferay.jenkins.results.parser.GitWorkingDirectoryFactory;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.PluginsGitWorkingDirectory;
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
@@ -29,7 +28,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import java.util.Collections;
-import java.util.Properties;
 
 /**
  * @author Michael Hashimoto
@@ -64,23 +62,12 @@ public class PluginsBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	protected PluginsBatchTestClassGroup(
-		String batchName, BuildProfile buildProfile,
-		PortalTestClassJob portalTestClassJob) {
+		String batchName, PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, buildProfile, portalTestClassJob);
-
-		Properties portalReleaseProperties =
-			JenkinsResultsParserUtil.getProperties(
-				new File(
-					portalGitWorkingDirectory.getWorkingDirectory(),
-					"release.properties"));
+		super(batchName, portalTestClassJob);
 
 		_pluginsGitWorkingDirectory =
-			(PluginsGitWorkingDirectory)
-				GitWorkingDirectoryFactory.newGitWorkingDirectory(
-					portalGitWorkingDirectory.getUpstreamBranchName(),
-					JenkinsResultsParserUtil.getProperty(
-						portalReleaseProperties, "lp.plugins.dir"));
+			portalGitWorkingDirectory.getPluginsGitWorkingDirectory();
 
 		excludesPathMatchers.addAll(
 			getPathMatchers(
@@ -111,6 +98,8 @@ public class PluginsBatchTestClassGroup extends BatchTestClassGroup {
 		setTestClasses();
 
 		setAxisTestClassGroups();
+
+		setSegmentTestClassGroups();
 	}
 
 	protected void setTestClasses() {

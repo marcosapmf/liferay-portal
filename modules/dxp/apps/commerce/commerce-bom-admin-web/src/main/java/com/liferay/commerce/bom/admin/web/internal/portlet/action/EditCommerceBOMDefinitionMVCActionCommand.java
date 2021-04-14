@@ -19,9 +19,9 @@ import com.liferay.commerce.bom.exception.NoSuchBOMDefinitionException;
 import com.liferay.commerce.bom.model.CommerceBOMDefinition;
 import com.liferay.commerce.bom.model.CommerceBOMFolder;
 import com.liferay.commerce.bom.service.CommerceBOMDefinitionService;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.DuplicateCPAttachmentFileEntryException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -63,7 +63,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceBOMPortletKeys.COMMERCE_BOM_ADMIN,
-		"mvc.command.name=editCommerceBOMDefinition"
+		"mvc.command.name=/commerce_bom_admin/edit_commerce_bom_definition"
 	},
 	service = MVCActionCommand.class
 )
@@ -139,7 +139,8 @@ public class EditCommerceBOMDefinitionMVCActionCommand
 			PortletProvider.Action.MANAGE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceBOMDefinition");
+			"mvcRenderCommandName",
+			"/commerce_bom_admin/edit_commerce_bom_definition");
 
 		portletURL.setParameter(
 			"commerceBOMFolderId",

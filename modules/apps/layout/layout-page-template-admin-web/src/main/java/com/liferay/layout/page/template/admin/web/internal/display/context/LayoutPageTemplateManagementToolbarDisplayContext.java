@@ -72,7 +72,8 @@ public class LayoutPageTemplateManagementToolbarDisplayContext
 				dropdownItem.putData(
 					"action", "deleteLayoutPageTemplateEntries");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -83,7 +84,8 @@ public class LayoutPageTemplateManagementToolbarDisplayContext
 					"exportLayoutPageTemplateEntryURL",
 					_getExportLayoutPageTemplateEntryURL());
 				dropdownItem.setIcon("download");
-				dropdownItem.setLabel(LanguageUtil.get(request, "export"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "export"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -131,7 +133,8 @@ public class LayoutPageTemplateManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.setHref(_getSelectMasterLayoutURL());
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "content-page-template"));
+					LanguageUtil.get(
+						httpServletRequest, "content-page-template"));
 			}
 		).addPrimaryDropdownItem(
 			() -> {
@@ -144,7 +147,8 @@ public class LayoutPageTemplateManagementToolbarDisplayContext
 				dropdownItem.putData(
 					"addPageTemplateURL", _getAddLayoutPrototypeURL());
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "widget-page-template"));
+					LanguageUtil.get(
+						httpServletRequest, "widget-page-template"));
 			}
 		).build();
 	}
@@ -188,7 +192,7 @@ public class LayoutPageTemplateManagementToolbarDisplayContext
 
 		actionURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/layout_prototype/add_layout_prototype");
+			"/layout_page_template_admin/add_layout_prototype");
 		actionURL.setParameter("backURL", _themeDisplay.getURLCurrent());
 		actionURL.setParameter(
 			"layoutPageTemplateCollectionId",
@@ -213,7 +217,7 @@ public class LayoutPageTemplateManagementToolbarDisplayContext
 				_layoutPageTemplateDisplayContext.
 					getLayoutPageTemplateCollectionId()));
 		exportLayoutPageTemplateURL.setResourceID(
-			"/layout_page_template/export_layout_page_template_entry");
+			"/layout_page_template_admin/export_layout_page_template_entries");
 
 		return exportLayoutPageTemplateURL.toString();
 	}

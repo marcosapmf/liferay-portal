@@ -15,11 +15,11 @@
 package com.liferay.commerce.product.definitions.web.internal.portlet.action;
 
 import com.liferay.commerce.product.configuration.AttachmentsConfiguration;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.ddm.DDMHelper;
 import com.liferay.commerce.product.definitions.web.internal.display.context.CPAttachmentFileEntriesDisplayContext;
 import com.liferay.commerce.product.exception.NoSuchCPAttachmentFileEntryException;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelService;
@@ -54,7 +54,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editCPAttachmentFileEntry"
+		"mvc.command.name=/cp_definitions/edit_cp_attachment_file_entry"
 	},
 	service = MVCRenderCommand.class
 )
@@ -97,10 +97,10 @@ public class EditCPAttachmentFileEntryMVCRenderCommand
 			renderRequest, "type", CPAttachmentFileEntryConstants.TYPE_IMAGE);
 
 		if (type == CPAttachmentFileEntryConstants.TYPE_IMAGE) {
-			return "/edit_attachment_file_entry_image.jsp";
+			return "/edit_cp_attachment_file_entry_image.jsp";
 		}
 
-		return "/edit_attachment_file_entry_attachment.jsp";
+		return "/edit_cp_attachment_file_entry_attachment.jsp";
 	}
 
 	@Activate

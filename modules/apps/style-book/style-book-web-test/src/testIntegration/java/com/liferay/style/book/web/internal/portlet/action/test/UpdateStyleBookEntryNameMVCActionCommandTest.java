@@ -79,15 +79,14 @@ public class UpdateStyleBookEntryNameMVCActionCommandTest {
 
 		_themeDisplay.setCompany(
 			_companyLocalService.getCompany(TestPropsValues.getCompanyId()));
-
 		_themeDisplay.setLanguageId(
 			LanguageUtil.getLanguageId(LocaleUtil.getDefault()));
 		_themeDisplay.setPermissionChecker(
 			PermissionThreadLocal.getPermissionChecker());
+		_themeDisplay.setRealUser(TestPropsValues.getUser());
 		_themeDisplay.setScopeGroupId(_group.getGroupId());
 		_themeDisplay.setSiteGroupId(_group.getGroupId());
 		_themeDisplay.setUser(TestPropsValues.getUser());
-		_themeDisplay.setRealUser(TestPropsValues.getUser());
 	}
 
 	@After

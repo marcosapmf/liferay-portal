@@ -20,6 +20,7 @@ import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -204,6 +205,9 @@ public class DDMFormFieldFactoryHelper {
 				ddmFormFieldOptions.addOptionLabel(
 					optionValues[i], _defaultLocale, optionLabel);
 			}
+
+			ddmFormFieldOptions.addOptionReference(
+				optionValues[i], optionValues[i]);
 		}
 
 		return ddmFormFieldOptions;
@@ -360,7 +364,9 @@ public class DDMFormFieldFactoryHelper {
 	}
 
 	protected boolean isLocalizableValue(String value) {
-		if (StringUtil.startsWith(value, StringPool.PERCENT)) {
+		if ((value != null) && !value.isEmpty() &&
+			(value.charAt(0) == CharPool.PERCENT)) {
+
 			return true;
 		}
 
@@ -376,9 +382,7 @@ public class DDMFormFieldFactoryHelper {
 	}
 
 	private com.liferay.dynamic.data.mapping.model.DDMForm _getNestedDDMForm() {
-		Class<?> returnType = _getReturnType();
-
-		return DDMFormFactory.create(returnType);
+		return DDMFormFactory.create(_getReturnType());
 	}
 
 	private Class<?> _getReturnType() {

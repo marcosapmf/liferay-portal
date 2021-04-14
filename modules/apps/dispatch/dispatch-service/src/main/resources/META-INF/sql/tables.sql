@@ -24,10 +24,12 @@ create table DispatchTrigger (
 	modifiedDate DATE null,
 	active_ BOOLEAN,
 	cronExpression VARCHAR(75) null,
+	dispatchTaskClusterMode INTEGER,
+	dispatchTaskExecutorType VARCHAR(75) null,
+	dispatchTaskSettings TEXT null,
 	endDate DATE null,
 	name VARCHAR(75) null,
+	overlapAllowed BOOLEAN,
 	startDate DATE null,
-	system_ BOOLEAN,
-	taskSettings TEXT null,
-	taskType VARCHAR(75) null
+	system_ BOOLEAN
 );

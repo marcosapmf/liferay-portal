@@ -14,6 +14,7 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal.adapter;
 
+import com.liferay.petra.io.BigEndianCodec;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -25,9 +26,15 @@ import com.liferay.portal.osgi.web.servlet.context.helper.definition.WebXMLDefin
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.FilterRegistrationImpl;
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ServletRegistrationImpl;
 
+import java.io.File;
+import java.io.IOException;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -321,6 +328,39 @@ public class ModifiableServletContextAdapter
 		return _servletContext.equals(servletContext);
 	}
 
+	public Object getAttribute(String name) {
+		if (_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED.equals(name)) {
+			File file = _bundle.getDataFile(
+				_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED);
+
+			if ((file != null) && file.exists()) {
+				try {
+					byte[] data = Files.readAllBytes(file.toPath());
+
+					if (data.length == 16) {
+						long bundleLastModified = BigEndianCodec.getLong(
+							data, 0);
+
+						if (bundleLastModified == _bundle.getLastModified()) {
+							return BigEndianCodec.getLong(data, 8);
+						}
+					}
+
+					file.delete();
+				}
+				catch (IOException ioException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(ioException, ioException);
+					}
+				}
+
+				return null;
+			}
+		}
+
+		return _servletContext.getAttribute(name);
+	}
+
 	@Override
 	public Bundle getBundle() {
 		return _bundle;
@@ -388,7 +428,8 @@ public class ModifiableServletContextAdapter
 			catch (Exception exception) {
 				_log.error(
 					"Bundle " + _bundle + " is unable to load listener " +
-						eventListenerClass);
+						eventListenerClass,
+					exception);
 			}
 		}
 
@@ -505,7 +546,8 @@ public class ModifiableServletContextAdapter
 			catch (Exception exception) {
 				_log.error(
 					"Bundle " + _bundle + " is unable to load filter " +
-						filterClassName);
+						filterClassName,
+					exception);
 			}
 		}
 
@@ -569,7 +611,8 @@ public class ModifiableServletContextAdapter
 			catch (Exception exception) {
 				_log.error(
 					"Bundle " + _bundle + " is unable to load servlet " +
-						servletClassName);
+						servletClassName,
+					exception);
 			}
 		}
 
@@ -582,6 +625,36 @@ public class ModifiableServletContextAdapter
 				addServlet(servletDefinition.getName(), servlet);
 			}
 		}
+	}
+
+	public void setAttribute(String name, Object value) {
+		if (_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED.equals(name)) {
+			File file = _bundle.getDataFile(
+				_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED);
+
+			if (file != null) {
+				byte[] data = new byte[16];
+
+				BigEndianCodec.putLong(data, 0, _bundle.getLastModified());
+				BigEndianCodec.putLong(data, 8, (Long)value);
+
+				try {
+					Files.write(
+						file.toPath(), data, StandardOpenOption.CREATE,
+						StandardOpenOption.TRUNCATE_EXISTING,
+						StandardOpenOption.WRITE);
+				}
+				catch (IOException ioException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(ioException, ioException);
+					}
+				}
+			}
+
+			return;
+		}
+
+		_servletContext.setAttribute(name, value);
 	}
 
 	public boolean setInitParameter(String name, String value)
@@ -648,6 +721,9 @@ public class ModifiableServletContextAdapter
 			methods.put(hashCodeMethod, hashCodeHandlerMethod);
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchMethodException, noSuchMethodException);
+			}
 		}
 
 		return Collections.unmodifiableMap(methods);
@@ -656,6 +732,9 @@ public class ModifiableServletContextAdapter
 	private static final Class<?>[] _INTERFACES = new Class<?>[] {
 		ModifiableServletContext.class, ServletContext.class
 	};
+
+	private static final String _LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED =
+		"LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ModifiableServletContextAdapter.class);

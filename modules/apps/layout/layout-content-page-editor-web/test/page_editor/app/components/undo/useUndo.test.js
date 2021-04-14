@@ -50,8 +50,9 @@ describe('useUndo', () => {
 		Actions.UPDATE_REDO_ACTIONS,
 		ExperienceActions.CREATE_SEGMENTS_EXPERIENCE,
 		ExperienceActions.DELETE_SEGMENTS_EXPERIENCE,
+		ExperienceActions.DUPLICATE_SEGMENTS_EXPERIENCE,
 		ExperienceActions.UPDATE_SEGMENTS_EXPERIENCE,
-		ExperienceActions.UPDATE_SEGMENTS_EXPERIENCE_PRIORITY,
+		ExperienceActions.UPDATE_SEGMENTS_EXPERIENCES_LIST,
 	];
 
 	const dispatch = jest.fn();

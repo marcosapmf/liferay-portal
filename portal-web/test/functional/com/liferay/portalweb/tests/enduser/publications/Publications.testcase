@@ -36,8 +36,6 @@ definition {
 
 	@priority = "5"
 	test ConflictingPublicationsAutomaticallyResolved {
-		property test.name.skip.portal.instance = "Publications#ConflictingPublicationsAutomaticallyResolved";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -123,8 +121,6 @@ definition {
 
 	@priority = "4"
 	test ConflictingPublicationsNeedManualResolution {
-		property test.name.skip.portal.instance = "Publications#ConflictingPublicationsNeedManualResolution";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
@@ -216,28 +212,23 @@ definition {
 		Publications.gotoPublish(publicationsName = "Publication 2 Name");
 
 		Publications.viewNeedsManualResolution(
-			entryTitle = "Test Test modified a Asset",
+			entryTitle = "WC WebContent Title 2 Edit",
 			warningMessage = "Modification conflicts with a deletion.");
 
-		Publications.gotoViewDiffInConflictingPublications(entryTitle = "Test Test modified a Asset");
+		Publications.gotoViewDiffInConflictingPublications(entryTitle = "WC WebContent Title 2 Edit");
 
 		Publications.viewPublicationsDiff(
 			columnName = "Title",
 			columnValueInPublication = "WC WebContent Title 2 Edit",
-			entryTitle = "Test Test modified a Asset",
-			publicationsName = "Publication 2 Name");
-
-		Publications.viewPublicationsDiff(
-			columnName = "ct-collection-id",
-			columnValueInPublication = "2",
-			entryTitle = "Test Test modified a Asset",
 			publicationsName = "Publication 2 Name");
 
 		IFrame.closeFrame();
 
+		Pause(locator1 = "3000");
+
 		Publications.discardPublications(
 			conflictingPublications = "true",
-			entryTitle = "Test Test modified a Asset",
+			entryTitle = "WC WebContent Title 2 Edit",
 			publicationsCategory = "Asset",
 			publicationsTitle = "WC WebContent Title 2 Edit");
 
@@ -268,8 +259,6 @@ definition {
 
 	@priority = "4"
 	test DiscardSubsetsofChangesInPublication {
-		property test.name.skip.portal.instance = "Publications#DiscardSubsetsofChangesInPublication";
-
 		Publications.createNewPublication(publicationsName = "Publication Name");
 
 		Navigator.openURL();
@@ -292,8 +281,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -386,7 +374,10 @@ definition {
 
 	@priority = "5"
 	test PublishParallelPublications {
-		property test.name.skip.portal.instance = "Publications#PublishParallelPublications";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property environment.acceptance = "true";
+		property portal.acceptance = "true";
 
 		Navigator.openURL();
 
@@ -469,8 +460,6 @@ definition {
 
 	@priority = "5"
 	test RescheduleAndCancelScheduledPublication {
-		property test.name.skip.portal.instance = "Publications#RescheduleAndCancelScheduledPublication";
-
 		Publications.createNewPublication(publicationsName = "Publication Name");
 
 		Navigator.openURL();
@@ -489,8 +478,6 @@ definition {
 
 		Publications.schedulePublication(publicationsName = "Publication Name");
 
-		Publications.gotoScheduledPublications();
-
 		Publications.schedulePublication(
 			publicationsName = "Publication Name",
 			reschedule = "true");
@@ -504,8 +491,6 @@ definition {
 
 	@priority = "5"
 	test RevertPublicationAndPublishNow {
-		property test.name.skip.portal.instance = "Publications#RevertPublicationAndPublishNow";
-
 		Publications.createNewPublication(publicationsName = "Publication Name");
 
 		Navigator.openURL();
@@ -525,10 +510,6 @@ definition {
 		Publications.gotoPublish(publicationsName = "Publication Name");
 
 		Publications.publishPublication(publicationsName = "Publication Name");
-
-		Publications.viewPublishedPublicationDetails(
-			publicationPublishedBy = "Test Test",
-			publicationsName = "Publication Name");
 
 		AssertTextPresent(
 			key_publicationsName = "Production",
@@ -571,8 +552,6 @@ definition {
 
 	@priority = "5"
 	test SchedulePublication {
-		property test.name.skip.portal.instance = "Publications#SchedulePublication";
-
 		Publications.createNewPublication(publicationsName = "Publication Name 1");
 
 		Navigator.openURL();
@@ -591,7 +570,7 @@ definition {
 
 		Publications.schedulePublication(publicationsName = "Publication Name 1");
 
-		Pause(locator1 = "120000");
+		Pause(locator1 = "240000");
 
 		Publications.assertScheduledPublicationPublished(publicationsName = "Publication Name 1");
 
@@ -615,7 +594,7 @@ definition {
 			gotoManagePublications = "true",
 			publicationsName = "Publication Name 2");
 
-		Pause(locator1 = "120000");
+		Pause(locator1 = "240000");
 
 		Publications.assertScheduledPublicationPublished(publicationsName = "Publication Name 2");
 
@@ -639,15 +618,13 @@ definition {
 			gotoReviewPublications = "true",
 			publicationsName = "Publication Name 3");
 
-		Pause(locator1 = "120000");
+		Pause(locator1 = "240000");
 
 		Publications.assertScheduledPublicationPublished(publicationsName = "Publication Name 3");
 	}
 
 	@priority = "5"
 	test SearchPublishedPublications {
-		property test.name.skip.portal.instance = "Publications#SearchPublishedPublications";
-
 		Publications.createNewPublication(publicationsName = "Apple");
 
 		Publications.createNewPublication(publicationsName = "Banana");

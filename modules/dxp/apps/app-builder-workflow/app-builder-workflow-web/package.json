@@ -1,17 +1,18 @@
 {
 	"dependencies": {
-		"@clayui/badge": "3.1.0",
-		"@clayui/button": "3.4.0",
-		"@clayui/drop-down": "3.7.0",
-		"@clayui/form": "3.11.1",
-		"@clayui/icon": "3.0.5",
+		"@clayui/badge": "3.2.0",
+		"@clayui/button": "3.6.0",
+		"@clayui/drop-down": "3.9.1",
+		"@clayui/form": "3.14.4",
+		"@clayui/icon": "3.1.0",
 		"@clayui/link": "3.2.0",
-		"@clayui/modal": "3.7.2",
-		"@clayui/popover": "3.4.7",
-		"@clayui/tooltip": "3.3.5",
+		"@clayui/modal": "3.8.5",
+		"@clayui/popover": "3.5.5",
+		"@clayui/tooltip": "3.4.5",
 		"classnames": "2.2.6",
 		"frontend-js-react-web": "*",
 		"frontend-js-web": "*",
+		"moment": "2.24.0",
 		"path-to-regexp": "3.0.0"
 	},
 	"description": "",
@@ -35,5 +36,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "1.0.25"
+	"version": "2.0.0"
 }

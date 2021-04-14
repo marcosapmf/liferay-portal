@@ -63,7 +63,8 @@ public class ExportTemplatesToolbarDisplayContext
 		PortletURL clearResultsURL = getRenderURL();
 
 		clearResultsURL.setParameter(
-			"mvcPath", "/export/export_templates/view.jsp");
+			"mvcPath",
+			"/export/export_templates/view_export_configurations.jsp");
 
 		return clearResultsURL.toString();
 	}
@@ -73,16 +74,18 @@ public class ExportTemplatesToolbarDisplayContext
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
 				GroupDisplayContextHelper groupDisplayContextHelper =
-					new GroupDisplayContextHelper(request);
+					new GroupDisplayContextHelper(httpServletRequest);
 
 				dropdownItem.setHref(
 					getRenderURL(), "mvcRenderCommandName",
-					"editExportConfiguration", Constants.CMD, Constants.ADD,
-					"groupId", groupDisplayContextHelper.getGroupId(),
-					"liveGroupId", groupDisplayContextHelper.getLiveGroupId(),
-					"privateLayout", Boolean.FALSE.toString());
+					"/export_import/edit_export_configuration", Constants.CMD,
+					Constants.ADD, "groupId",
+					groupDisplayContextHelper.getGroupId(), "liveGroupId",
+					groupDisplayContextHelper.getLiveGroupId(), "privateLayout",
+					Boolean.FALSE.toString());
 
-				dropdownItem.setLabel(LanguageUtil.get(request, "new"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "new"));
 			}
 		).build();
 	}
@@ -97,7 +100,8 @@ public class ExportTemplatesToolbarDisplayContext
 		PortletURL searchActionURL = getRenderURL();
 
 		searchActionURL.setParameter(
-			"mvcRenderCommandName", "viewExportConfigurations");
+			"mvcRenderCommandName",
+			"/export_import/view_export_configurations");
 
 		return searchActionURL.toString();
 	}

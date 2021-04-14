@@ -52,10 +52,7 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testConstructorParameterOrder() throws Exception {
-		test(
-			"ConstructorParameterOrder.testjava",
-			"'_value = value;' should come before '_attribute = attribute;' " +
-				"to match order of constructor parameters");
+		test("ConstructorParameterOrder.testjava");
 	}
 
 	@Test
@@ -428,6 +425,7 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 		test("SortJavaTerms2.testjava");
 		test("SortJavaTerms3.testjava");
 		test("SortJavaTerms4.testjava");
+		test("SortJavaTerms5.testjava");
 	}
 
 	@Test

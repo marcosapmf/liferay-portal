@@ -41,10 +41,11 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -88,7 +89,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = DDMTemplatePersistence.class)
+@Component(service = {DDMTemplatePersistence.class, BasePersistence.class})
 public class DDMTemplatePersistenceImpl
 	extends BasePersistenceImpl<DDMTemplate> implements DDMTemplatePersistence {
 
@@ -207,7 +208,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -596,7 +597,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {uuid};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -732,7 +733,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof DDMTemplate) {
@@ -852,7 +853,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {uuid, groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1024,7 +1025,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -1446,7 +1447,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {uuid, companyId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1607,7 +1608,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -2302,7 +2303,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2490,7 +2491,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -2857,7 +2858,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {classPK};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3004,7 +3005,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -3399,7 +3400,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {templateKey};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3554,7 +3555,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -3943,7 +3944,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {type};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4101,7 +4102,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -4494,7 +4495,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {language};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4622,7 +4623,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchBySmallImageId, finderArgs, this);
+				_finderPathFetchBySmallImageId, finderArgs);
 		}
 
 		if (result instanceof DDMTemplate) {
@@ -4736,7 +4737,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {smallImageId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4885,7 +4886,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -5627,7 +5628,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {groupId, classNameId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5837,7 +5838,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -6803,7 +6804,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_CPK, finderArgs, this);
+				_finderPathWithPaginationFindByG_CPK, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -6924,7 +6925,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {groupId, classPK};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -6995,7 +6996,7 @@ public class DDMTemplatePersistenceImpl
 			finderArgs = new Object[] {StringUtil.merge(groupIds), classPK};
 
 			count = (Long)finderCache.getResult(
-				_finderPathWithPaginationCountByG_CPK, finderArgs, this);
+				_finderPathWithPaginationCountByG_CPK, finderArgs);
 		}
 
 		if (count == null) {
@@ -7303,7 +7304,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -8330,7 +8331,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_C_C, finderArgs, this);
+				_finderPathWithPaginationFindByG_C_C, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -8458,7 +8459,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {groupId, classNameId, classPK};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -8536,7 +8537,7 @@ public class DDMTemplatePersistenceImpl
 			};
 
 			count = (Long)finderCache.getResult(
-				_finderPathWithPaginationCountByG_C_C, finderArgs, this);
+				_finderPathWithPaginationCountByG_C_C, finderArgs);
 		}
 
 		if (count == null) {
@@ -8840,8 +8841,7 @@ public class DDMTemplatePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_C_T, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByG_C_T, finderArgs);
 		}
 
 		if (result instanceof DDMTemplate) {
@@ -8972,7 +8972,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {groupId, classNameId, templateKey};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -9158,7 +9158,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -9604,7 +9604,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {classNameId, classPK, type};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -9798,7 +9798,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -10672,7 +10672,7 @@ public class DDMTemplatePersistenceImpl
 
 			finderArgs = new Object[] {groupId, classNameId, classPK, type};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -10965,7 +10965,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMTemplate ddmTemplate : list) {
@@ -11928,7 +11928,7 @@ public class DDMTemplatePersistenceImpl
 				groupId, classNameId, classPK, type, mode
 			};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -12216,9 +12216,7 @@ public class DDMTemplatePersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(DDMTemplateImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DDMTemplateImpl.class);
 	}
 
 	/**
@@ -12242,9 +12240,7 @@ public class DDMTemplatePersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DDMTemplateImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(DDMTemplateImpl.class, primaryKey);
@@ -12258,17 +12254,16 @@ public class DDMTemplatePersistenceImpl
 			ddmTemplateModelImpl.getUuid(), ddmTemplateModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, ddmTemplateModelImpl, false);
+			_finderPathFetchByUUID_G, args, ddmTemplateModelImpl);
 
 		args = new Object[] {ddmTemplateModelImpl.getSmallImageId()};
 
 		finderCache.putResult(
-			_finderPathCountBySmallImageId, args, Long.valueOf(1), false);
+			_finderPathCountBySmallImageId, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchBySmallImageId, args, ddmTemplateModelImpl, false);
+			_finderPathFetchBySmallImageId, args, ddmTemplateModelImpl);
 
 		args = new Object[] {
 			ddmTemplateModelImpl.getGroupId(),
@@ -12276,10 +12271,9 @@ public class DDMTemplatePersistenceImpl
 			ddmTemplateModelImpl.getTemplateKey()
 		};
 
+		finderCache.putResult(_finderPathCountByG_C_T, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByG_C_T, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByG_C_T, args, ddmTemplateModelImpl, false);
+			_finderPathFetchByG_C_T, args, ddmTemplateModelImpl);
 	}
 
 	/**
@@ -12733,7 +12727,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMTemplate>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -12809,7 +12803,7 @@ public class DDMTemplatePersistenceImpl
 
 		if (productionMode) {
 			count = (Long)finderCache.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -12952,22 +12946,21 @@ public class DDMTemplatePersistenceImpl
 
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class, new DDMTemplateModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", DDMTemplate.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = _createFinderPath(
+		_finderPathWithPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -12975,27 +12968,27 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			true);
 
-		_finderPathCountByUuid = _createFinderPath(
+		_finderPathCountByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
-		_finderPathFetchByUUID_G = _createFinderPath(
+		_finderPathFetchByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = _createFinderPath(
+		_finderPathCountByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
@@ -13004,17 +12997,17 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = _createFinderPath(
+		_finderPathCountByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -13022,17 +13015,17 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			true);
 
-		_finderPathCountByGroupId = _createFinderPath(
+		_finderPathCountByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathWithPaginationFindByClassPK = _createFinderPath(
+		_finderPathWithPaginationFindByClassPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByClassPK",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -13040,17 +13033,17 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"classPK"}, true);
 
-		_finderPathWithoutPaginationFindByClassPK = _createFinderPath(
+		_finderPathWithoutPaginationFindByClassPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByClassPK",
 			new String[] {Long.class.getName()}, new String[] {"classPK"},
 			true);
 
-		_finderPathCountByClassPK = _createFinderPath(
+		_finderPathCountByClassPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByClassPK",
 			new String[] {Long.class.getName()}, new String[] {"classPK"},
 			false);
 
-		_finderPathWithPaginationFindByTemplateKey = _createFinderPath(
+		_finderPathWithPaginationFindByTemplateKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByTemplateKey",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -13058,17 +13051,17 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"templateKey"}, true);
 
-		_finderPathWithoutPaginationFindByTemplateKey = _createFinderPath(
+		_finderPathWithoutPaginationFindByTemplateKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByTemplateKey",
 			new String[] {String.class.getName()}, new String[] {"templateKey"},
 			true);
 
-		_finderPathCountByTemplateKey = _createFinderPath(
+		_finderPathCountByTemplateKey = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByTemplateKey",
 			new String[] {String.class.getName()}, new String[] {"templateKey"},
 			false);
 
-		_finderPathWithPaginationFindByType = _createFinderPath(
+		_finderPathWithPaginationFindByType = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByType",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -13076,17 +13069,17 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"type_"}, true);
 
-		_finderPathWithoutPaginationFindByType = _createFinderPath(
+		_finderPathWithoutPaginationFindByType = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByType",
 			new String[] {String.class.getName()}, new String[] {"type_"},
 			true);
 
-		_finderPathCountByType = _createFinderPath(
+		_finderPathCountByType = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByType",
 			new String[] {String.class.getName()}, new String[] {"type_"},
 			false);
 
-		_finderPathWithPaginationFindByLanguage = _createFinderPath(
+		_finderPathWithPaginationFindByLanguage = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLanguage",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -13094,27 +13087,27 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"language"}, true);
 
-		_finderPathWithoutPaginationFindByLanguage = _createFinderPath(
+		_finderPathWithoutPaginationFindByLanguage = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLanguage",
 			new String[] {String.class.getName()}, new String[] {"language"},
 			true);
 
-		_finderPathCountByLanguage = _createFinderPath(
+		_finderPathCountByLanguage = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByLanguage",
 			new String[] {String.class.getName()}, new String[] {"language"},
 			false);
 
-		_finderPathFetchBySmallImageId = _createFinderPath(
+		_finderPathFetchBySmallImageId = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchBySmallImageId",
 			new String[] {Long.class.getName()}, new String[] {"smallImageId"},
 			true);
 
-		_finderPathCountBySmallImageId = _createFinderPath(
+		_finderPathCountBySmallImageId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countBySmallImageId",
 			new String[] {Long.class.getName()}, new String[] {"smallImageId"},
 			false);
 
-		_finderPathWithPaginationFindByG_C = _createFinderPath(
+		_finderPathWithPaginationFindByG_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13123,17 +13116,17 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId"}, true);
 
-		_finderPathWithoutPaginationFindByG_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "classNameId"}, true);
 
-		_finderPathCountByG_C = _createFinderPath(
+		_finderPathCountByG_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "classNameId"}, false);
 
-		_finderPathWithPaginationFindByG_CPK = _createFinderPath(
+		_finderPathWithPaginationFindByG_CPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_CPK",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13142,22 +13135,22 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByG_CPK = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_CPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_CPK",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "classPK"}, true);
 
-		_finderPathCountByG_CPK = _createFinderPath(
+		_finderPathCountByG_CPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_CPK",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "classPK"}, false);
 
-		_finderPathWithPaginationCountByG_CPK = _createFinderPath(
+		_finderPathWithPaginationCountByG_CPK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_CPK",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByG_C_C = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13166,28 +13159,28 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, true);
 
-		_finderPathCountByG_C_C = _createFinderPath(
+		_finderPathCountByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationCountByG_C_C = _createFinderPath(
+		_finderPathWithPaginationCountByG_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "classNameId", "classPK"}, false);
 
-		_finderPathFetchByG_C_T = _createFinderPath(
+		_finderPathFetchByG_C_T = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13195,7 +13188,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "templateKey"}, true);
 
-		_finderPathCountByG_C_T = _createFinderPath(
+		_finderPathCountByG_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13203,7 +13196,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "templateKey"}, false);
 
-		_finderPathWithPaginationFindByC_C_T = _createFinderPath(
+		_finderPathWithPaginationFindByC_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13212,7 +13205,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "type_"}, true);
 
-		_finderPathWithoutPaginationFindByC_C_T = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13220,7 +13213,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "type_"}, true);
 
-		_finderPathCountByC_C_T = _createFinderPath(
+		_finderPathCountByC_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13228,7 +13221,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "type_"}, false);
 
-		_finderPathWithPaginationFindByG_C_C_T = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13238,7 +13231,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "classPK", "type_"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_C_T = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13246,7 +13239,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "classPK", "type_"}, true);
 
-		_finderPathCountByG_C_C_T = _createFinderPath(
+		_finderPathCountByG_C_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13254,7 +13247,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			new String[] {"groupId", "classNameId", "classPK", "type_"}, false);
 
-		_finderPathWithPaginationFindByG_C_C_T_M = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_C_T_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_C_T_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13267,7 +13260,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			true);
 
-		_finderPathWithoutPaginationFindByG_C_C_T_M = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_C_T_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_C_T_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13279,7 +13272,7 @@ public class DDMTemplatePersistenceImpl
 			},
 			true);
 
-		_finderPathCountByG_C_C_T_M = _createFinderPath(
+		_finderPathCountByG_C_C_T_M = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_C_T_M",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -13297,12 +13290,6 @@ public class DDMTemplatePersistenceImpl
 		entityCache.removeCache(DDMTemplateImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -13391,36 +13378,13 @@ public class DDMTemplatePersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "type", "mode"});
 
-	static {
-		try {
-			Class.forName(DDMPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class DDMTemplateModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -13469,6 +13433,16 @@ public class DDMTemplatePersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return DDMTemplateImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return DDMTemplateTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

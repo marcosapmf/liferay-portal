@@ -19,7 +19,9 @@ import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
@@ -74,7 +76,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/get_collection_field"
+		"mvc.command.name=/layout_content_page_editor/get_collection_field"
 	},
 	service = MVCResourceCommand.class
 )
@@ -155,9 +157,8 @@ public class GetCollectionFieldMVCResourceCommand
 
 				defaultLayoutListRetrieverContext.setPagination(
 					Pagination.of(size, 0));
-				defaultLayoutListRetrieverContext.
-					setSegmentsExperienceIdsOptional(
-						new long[] {segmentsExperienceId});
+				defaultLayoutListRetrieverContext.setSegmentsExperienceIds(
+					new long[] {segmentsExperienceId});
 
 				ListObjectReference listObjectReference =
 					listObjectReferenceFactory.getListObjectReference(
@@ -182,7 +183,7 @@ public class GetCollectionFieldMVCResourceCommand
 				if (infoItemFieldValuesProvider == null) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
-							"Unable to get info item form provdier for class " +
+							"Unable to get info item form provider for class " +
 								itemType);
 					}
 
@@ -265,6 +266,15 @@ public class GetCollectionFieldMVCResourceCommand
 				WebImage webImage = (WebImage)value;
 
 				value = webImage.toJSONObject();
+
+				long fileEntryId = _getFileEntryId(webImage);
+
+				if (fileEntryId != 0) {
+					JSONObject valueJSONObject = (JSONObject)value;
+
+					valueJSONObject.put(
+						"fileEntryId", String.valueOf(fileEntryId));
+				}
 			}
 			else {
 				value = _fragmentEntryProcessorHelper.formatMappedValue(
@@ -288,6 +298,31 @@ public class GetCollectionFieldMVCResourceCommand
 		}
 
 		return displayObjectJSONObject;
+	}
+
+	private long _getFileEntryId(WebImage webImage) {
+		InfoItemReference infoItemReference = webImage.getInfoItemReference();
+
+		if ((infoItemReference == null) ||
+			!Objects.equals(
+				infoItemReference.getClassName(), FileEntry.class.getName())) {
+
+			return 0;
+		}
+
+		InfoItemIdentifier fileEntryInfoItemIdentifier =
+			infoItemReference.getInfoItemIdentifier();
+
+		if (!(fileEntryInfoItemIdentifier instanceof
+				ClassPKInfoItemIdentifier)) {
+
+			return 0;
+		}
+
+		ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+			(ClassPKInfoItemIdentifier)fileEntryInfoItemIdentifier;
+
+		return classPKInfoItemIdentifier.getClassPK();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

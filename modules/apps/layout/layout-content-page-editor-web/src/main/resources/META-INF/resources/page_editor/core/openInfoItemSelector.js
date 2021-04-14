@@ -14,24 +14,46 @@
 
 import {openSelectionModal} from 'frontend-js-web';
 
-export function openInfoItemSelector(
+export function openInfoItemSelector({
 	callback,
 	eventName,
 	itemSelectorURL,
-	destroyedCallback = null
-) {
+	destroyedCallback = null,
+	modalProps = {},
+}) {
 	openSelectionModal({
 		onClose: destroyedCallback,
 		onSelect: (selectedItem) => {
-			const infoItem = {
-				...JSON.parse(selectedItem.value),
-				type: selectedItem.returnType,
+			let infoItem = {
+				...selectedItem,
+				type: selectedItem.returnType || '',
 			};
+
+			let value;
+
+			if (typeof selectedItem.value === 'string') {
+				try {
+					value = JSON.parse(selectedItem.value);
+				}
+				catch (error) {}
+			}
+			else if (
+				selectedItem.value &&
+				typeof selectedItem.value === 'object'
+			) {
+				value = selectedItem.value;
+			}
+
+			if (value) {
+				delete infoItem.value;
+				infoItem = {...infoItem, ...value};
+			}
 
 			callback(infoItem);
 		},
 		selectEventName: eventName,
 		title: Liferay.Language.get('select'),
 		url: itemSelectorURL,
+		...modalProps,
 	});
 }

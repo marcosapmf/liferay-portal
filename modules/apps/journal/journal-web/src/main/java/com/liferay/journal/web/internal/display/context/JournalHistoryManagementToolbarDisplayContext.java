@@ -23,6 +23,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -59,8 +61,9 @@ public class JournalHistoryManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return new DropdownItemList() {
 			{
@@ -87,12 +90,16 @@ public class JournalHistoryManagementToolbarDisplayContext
 									deleteArticlesURL.toString());
 								dropdownItem.setIcon("times-circle");
 								dropdownItem.setLabel(
-									LanguageUtil.get(request, "delete"));
+									LanguageUtil.get(
+										httpServletRequest, "delete"));
 								dropdownItem.setQuickAction(true);
 							});
 					}
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception, exception);
+					}
 				}
 
 				try {
@@ -118,12 +125,16 @@ public class JournalHistoryManagementToolbarDisplayContext
 									expireArticlesURL.toString());
 								dropdownItem.setIcon("time");
 								dropdownItem.setLabel(
-									LanguageUtil.get(request, "expire"));
+									LanguageUtil.get(
+										httpServletRequest, "expire"));
 								dropdownItem.setQuickAction(true);
 							});
 					}
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception, exception);
+					}
 				}
 			}
 		};
@@ -132,8 +143,9 @@ public class JournalHistoryManagementToolbarDisplayContext
 	public String getAvailableActions(JournalArticle article)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		List<String> availableActions = new ArrayList<>();
 
@@ -184,6 +196,9 @@ public class JournalHistoryManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"version", "display-date", "modified-date"};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalHistoryManagementToolbarDisplayContext.class);
 
 	private final JournalArticle _article;
 

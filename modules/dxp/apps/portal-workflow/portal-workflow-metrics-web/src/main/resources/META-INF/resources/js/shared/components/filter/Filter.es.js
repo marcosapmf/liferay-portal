@@ -45,7 +45,6 @@ const Filter = ({
 	prefixKey = '',
 	preventClick,
 	withoutRouteParams,
-	...otherProps
 }) => {
 	const {dispatchFilter} = useFilter({withoutRouteParams});
 	const [expanded, setExpanded] = useState(false);
@@ -84,6 +83,8 @@ const Filter = ({
 			: items;
 	}, [items, labelPropertyName, searchTerm]);
 
+	const getSelectedItems = (items) => items.filter((item) => item.active);
+
 	const applyFilterChanges = useCallback(() => {
 		if (!withoutRouteParams) {
 			const query = getSelectedItemsQuery(
@@ -104,8 +105,6 @@ const Filter = ({
 		setExpanded(false);
 		setSearchTerm('');
 	};
-
-	const getSelectedItems = (items) => items.filter((item) => item.active);
 
 	const onClick = (item) => (onClickFilter ? onClickFilter(item) : true);
 
@@ -184,7 +183,7 @@ const Filter = ({
 	}, [applyFilterChanges, expanded, changed]);
 
 	return (
-		<li className={classes.dropdown} ref={wrapperRef} {...otherProps}>
+		<li className={classes.dropdown} ref={wrapperRef}>
 			<button
 				className={classes.custom}
 				disabled={disabled}

@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Optional;
@@ -54,7 +55,7 @@ public class JournalArticleContentDashboardItemFactory
 
 		AssetEntry assetEntry = null;
 
-		if (!journalArticle.isApproved() &&
+		if (!journalArticle.isApproved() && !journalArticle.isExpired() &&
 			(journalArticle.getVersion() !=
 				JournalArticleConstants.VERSION_DEFAULT)) {
 
@@ -65,6 +66,12 @@ public class JournalArticleContentDashboardItemFactory
 			assetEntry = _assetEntryLocalService.fetchEntry(
 				JournalArticle.class.getName(),
 				journalArticle.getResourcePrimKey());
+		}
+
+		if (assetEntry == null) {
+			throw new NoSuchModelException(
+				"Unable to find an asset entry for journal article " +
+					journalArticle.getPrimaryKey());
 		}
 
 		Optional<ContentDashboardItemTypeFactory>
@@ -96,7 +103,7 @@ public class JournalArticleContentDashboardItemFactory
 				ddmStructure.getStructureId()),
 			_groupLocalService.fetchGroup(journalArticle.getGroupId()),
 			infoItemFieldValuesProvider, journalArticle, _language,
-			latestApprovedJournalArticle);
+			latestApprovedJournalArticle, _portal);
 	}
 
 	@Reference
@@ -121,6 +128,9 @@ public class JournalArticleContentDashboardItemFactory
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private UserLocalService _userLocalService;

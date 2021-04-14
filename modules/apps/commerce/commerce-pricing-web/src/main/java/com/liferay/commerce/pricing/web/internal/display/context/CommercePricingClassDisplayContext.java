@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -71,7 +71,8 @@ public class CommercePricingClassDisplayContext
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "addCommercePricingClass");
+			"mvcRenderCommandName",
+			"/commerce_pricing_classes/add_commerce_pricing_class");
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return portletURL.toString();
@@ -133,7 +134,8 @@ public class CommercePricingClassDisplayContext
 			PortletRequest.ACTION_PHASE);
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "editCommercePricingClass");
+			ActionRequest.ACTION_NAME,
+			"/commerce_pricing_classes/edit_commerce_pricing_class");
 		portletURL.setParameter(Constants.CMD, Constants.UPDATE);
 		portletURL.setParameter(
 			"commercePricingClassId",
@@ -150,7 +152,8 @@ public class CommercePricingClassDisplayContext
 			PortletRequest.RENDER_PHASE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommercePricingClass");
+			"mvcRenderCommandName",
+			"/commerce_pricing_classes/edit_commerce_pricing_class");
 
 		return portletURL;
 	}
@@ -179,8 +182,12 @@ public class CommercePricingClassDisplayContext
 	}
 
 	public boolean hasAddPermission() throws PortalException {
-		return PortalPermissionUtil.contains(
-			commercePricingRequestHelper.getPermissionChecker(),
+		PortletResourcePermission portletResourcePermission =
+			_commercePricingClassModelResourcePermission.
+				getPortletResourcePermission();
+
+		return portletResourcePermission.contains(
+			commercePricingRequestHelper.getPermissionChecker(), null,
 			CommercePricingClassActionKeys.ADD_COMMERCE_PRICING_CLASS);
 	}
 

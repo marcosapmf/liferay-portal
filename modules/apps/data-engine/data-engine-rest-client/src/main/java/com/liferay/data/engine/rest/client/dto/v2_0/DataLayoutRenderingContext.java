@@ -17,6 +17,8 @@ package com.liferay.data.engine.rest.client.dto.v2_0;
 import com.liferay.data.engine.rest.client.function.UnsafeSupplier;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataLayoutRenderingContextSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DataLayoutRenderingContext implements Cloneable {
+public class DataLayoutRenderingContext implements Cloneable, Serializable {
 
 	public static DataLayoutRenderingContext toDTO(String json) {
 		return DataLayoutRenderingContextSerDes.toDTO(json);
@@ -138,6 +140,48 @@ public class DataLayoutRenderingContext implements Cloneable {
 	}
 
 	protected Boolean readOnly;
+
+	public Long getScopeGroupId() {
+		return scopeGroupId;
+	}
+
+	public void setScopeGroupId(Long scopeGroupId) {
+		this.scopeGroupId = scopeGroupId;
+	}
+
+	public void setScopeGroupId(
+		UnsafeSupplier<Long, Exception> scopeGroupIdUnsafeSupplier) {
+
+		try {
+			scopeGroupId = scopeGroupIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long scopeGroupId;
+
+	public Long getSiteGroupId() {
+		return siteGroupId;
+	}
+
+	public void setSiteGroupId(Long siteGroupId) {
+		this.siteGroupId = siteGroupId;
+	}
+
+	public void setSiteGroupId(
+		UnsafeSupplier<Long, Exception> siteGroupIdUnsafeSupplier) {
+
+		try {
+			siteGroupId = siteGroupIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long siteGroupId;
 
 	@Override
 	public DataLayoutRenderingContext clone()

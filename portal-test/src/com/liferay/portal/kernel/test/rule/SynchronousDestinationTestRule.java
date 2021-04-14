@@ -40,7 +40,7 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.registry.Filter;
 import com.liferay.registry.Registry;
 import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.dependency.ServiceDependencyManager;
+import com.liferay.registry.ServiceTracker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -127,9 +127,6 @@ public class SynchronousDestinationTestRule
 		}
 
 		public void enableSync() {
-			ServiceDependencyManager serviceDependencyManager =
-				new ServiceDependencyManager();
-
 			Filter auditFilter = _registerDestinationFilter(
 				DestinationNames.AUDIT);
 			Filter asyncFilter = _registerDestinationFilter(
@@ -162,17 +159,18 @@ public class SynchronousDestinationTestRule
 				"liferay/segments_entry_reindex");
 			Filter subscrpitionSenderFilter = _registerDestinationFilter(
 				DestinationNames.SUBSCRIPTION_SENDER);
+			Filter tensorflowModelDownloadFilter = _registerDestinationFilter(
+				"liferay/tensorflow_model_download");
 
-			serviceDependencyManager.registerDependencies(
+			_waitForDependencies(
 				auditFilter, asyncFilter, backgroundTaskFilter,
 				backgroundTaskStatusFilter, commerceOrderFilter,
 				commercePaymentFilter, commerceShipmentFilter,
 				commerceStockFilter, commerceSubscriptionFilter,
 				ddmStructureReindexFilter, kaleoGraphWalkerFilter, mailFilter,
 				pdfProcessorFilter, rawMetaDataProcessorFilter,
-				segmentsEntryReindexFilter, subscrpitionSenderFilter);
-
-			serviceDependencyManager.waitForDependencies();
+				segmentsEntryReindexFilter, subscrpitionSenderFilter,
+				tensorflowModelDownloadFilter);
 
 			_destinations = ReflectionTestUtil.getFieldValue(
 				MessageBusUtil.getMessageBus(), "_destinations");
@@ -204,6 +202,7 @@ public class SynchronousDestinationTestRule
 			replaceDestination("liferay/shipment_status");
 			replaceDestination("liferay/stock_quantity");
 			replaceDestination("liferay/subscription_status");
+			replaceDestination("liferay/tensorflow_model_download");
 
 			if (_sync != null) {
 				for (String name : _sync.destinationNames()) {
@@ -372,6 +371,40 @@ public class SynchronousDestinationTestRule
 				StringBundler.concat(
 					"(&(destination.name=", destinationName, ")(objectClass=",
 					Destination.class.getName(), "))"));
+		}
+
+		private void _waitForDependencies(Filter... filters) {
+			Registry registry = RegistryUtil.getRegistry();
+
+			for (Filter filter : filters) {
+				ServiceTracker<Object, Object> serviceTracker =
+					registry.trackServices(filter);
+
+				serviceTracker.open();
+
+				while (true) {
+					try {
+						Object service = serviceTracker.waitForService(2000);
+
+						if (service != null) {
+							serviceTracker.close();
+
+							break;
+						}
+
+						System.out.println(
+							"Waiting for destination " + filter.toString());
+					}
+					catch (InterruptedException interruptedException) {
+						System.out.println(
+							StringBundler.concat(
+								"Stopped waiting for destination ",
+								filter.toString(), " due to interruption"));
+
+						return;
+					}
+				}
+			}
 		}
 
 		private final List<String> _absentDestinationNames = new ArrayList<>();

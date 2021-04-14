@@ -86,23 +86,23 @@ public class PublishLayoutMVCActionCommandTest {
 				LocaleUtil.US, RandomTestUtil.randomString()
 			).build(),
 			new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(),
-			LayoutConstants.TYPE_CONTENT, StringPool.BLANK, false, false, 0,
-			new HashMap<>(), _serviceContext);
+			LayoutConstants.TYPE_CONTENT, StringPool.BLANK, false, false,
+			new HashMap<>(), 0, _serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		LayoutStructure layoutStructure = _getLayoutStructure(draftLayout);
 
 		LayoutStructureItem layoutStructureItem1 =
-			layoutStructure.addContainerLayoutStructureItem(
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0);
 
 		LayoutStructureItem layoutStructureItem2 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0, 3);
 
 		LayoutStructureItem layoutStructureItem3 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
@@ -164,7 +164,9 @@ public class PublishLayoutMVCActionCommandTest {
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
-	@Inject(filter = "mvc.command.name=/content_layout/publish_layout")
+	@Inject(
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout"
+	)
 	private MVCActionCommand _mvcActionCommand;
 
 	private ServiceContext _serviceContext;

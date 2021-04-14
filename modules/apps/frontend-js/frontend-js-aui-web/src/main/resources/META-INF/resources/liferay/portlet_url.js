@@ -305,19 +305,22 @@ AUI.add(
 
 			RESOURCE_PHASE: '2',
 
-			createActionURL() {
+			// These are constructor functions and so must not use the concise
+			// method syntax. See COMMERCE-5035.
+
+			createActionURL: function createActionURL() {
 				return new PortletURL(PortletURL.ACTION_PHASE);
 			},
 
-			createRenderURL() {
+			createRenderURL: function createRenderURL() {
 				return new PortletURL(PortletURL.RENDER_PHASE);
 			},
 
-			createResourceURL() {
+			createResourceURL: function createResourceURL() {
 				return new PortletURL(PortletURL.RESOURCE_PHASE);
 			},
 
-			createURL(basePortletURL, params) {
+			createURL: function createURL(basePortletURL, params) {
 				return new PortletURL(null, params, basePortletURL);
 			},
 		});

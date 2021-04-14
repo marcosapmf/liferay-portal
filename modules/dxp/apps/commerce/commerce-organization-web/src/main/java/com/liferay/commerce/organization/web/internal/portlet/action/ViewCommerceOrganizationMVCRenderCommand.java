@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceOrganizationPortletKeys.COMMERCE_ORGANIZATION,
-		"mvc.command.name=viewCommerceOrganization"
+		"mvc.command.name=/commerce_organization/view_commerce_organization"
 	},
 	service = MVCRenderCommand.class
 )
@@ -42,7 +42,7 @@ public class ViewCommerceOrganizationMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/view_organization.jsp";
+		return "/view_commerce_organization.jsp";
 	}
 
 }

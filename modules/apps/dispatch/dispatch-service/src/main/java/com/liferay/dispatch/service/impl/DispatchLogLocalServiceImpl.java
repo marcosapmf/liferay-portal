@@ -14,11 +14,17 @@
 
 package com.liferay.dispatch.service.impl;
 
+import com.liferay.dispatch.exception.DispatchLogStartDateException;
+import com.liferay.dispatch.exception.DispatchLogStatusException;
+import com.liferay.dispatch.executor.DispatchTaskStatus;
 import com.liferay.dispatch.model.DispatchLog;
+import com.liferay.dispatch.model.DispatchTrigger;
+import com.liferay.dispatch.model.impl.DispatchLogModelImpl;
 import com.liferay.dispatch.service.base.DispatchLogLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 
 import java.util.Date;
 import java.util.List;
@@ -27,6 +33,7 @@ import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Igor Beslic
  */
 @Component(
 	property = "model.class.name=com.liferay.dispatch.model.DispatchLog",
@@ -38,8 +45,15 @@ public class DispatchLogLocalServiceImpl
 	@Override
 	public DispatchLog addDispatchLog(
 			long userId, long dispatchTriggerId, Date endDate, String error,
-			String output, Date startDate, int status)
+			String output, Date startDate,
+			DispatchTaskStatus dispatchTaskStatus)
 		throws PortalException {
+
+		_checkDispatchLogPeriod(startDate, endDate);
+		_checkDispatchTaskStatus(dispatchTaskStatus);
+
+		DispatchTrigger dispatchTrigger =
+			dispatchTriggerPersistence.findByPrimaryKey(dispatchTriggerId);
 
 		User user = userLocalService.getUser(userId);
 
@@ -49,12 +63,13 @@ public class DispatchLogLocalServiceImpl
 		dispatchLog.setCompanyId(user.getCompanyId());
 		dispatchLog.setUserId(user.getUserId());
 		dispatchLog.setUserName(user.getFullName());
-		dispatchLog.setDispatchTriggerId(dispatchTriggerId);
+		dispatchLog.setDispatchTriggerId(
+			dispatchTrigger.getDispatchTriggerId());
 		dispatchLog.setEndDate(endDate);
 		dispatchLog.setError(error);
 		dispatchLog.setOutput(output);
 		dispatchLog.setStartDate(startDate);
-		dispatchLog.setStatus(status);
+		dispatchLog.setStatus(dispatchTaskStatus.getStatus());
 
 		return dispatchLogPersistence.update(dispatchLog);
 	}
@@ -62,6 +77,22 @@ public class DispatchLogLocalServiceImpl
 	@Override
 	public void deleteDispatchLogs(long dispatchTriggerId) {
 		dispatchLogPersistence.removeByDispatchTriggerId(dispatchTriggerId);
+	}
+
+	@Override
+	public DispatchLog fetchLatestDispatchLog(long dispatchTriggerId) {
+		return dispatchLogPersistence.fetchByDispatchTriggerId_First(
+			dispatchTriggerId, null);
+	}
+
+	@Override
+	public DispatchLog fetchLatestDispatchLog(
+		long dispatchTriggerId, DispatchTaskStatus dispatchTaskStatus) {
+
+		return dispatchLogPersistence.fetchByDTI_S_First(
+			dispatchTriggerId, dispatchTaskStatus.getStatus(),
+			OrderByComparatorFactoryUtil.create(
+				DispatchLogModelImpl.TABLE_NAME, "startDate", "false"));
 	}
 
 	@Override
@@ -81,18 +112,48 @@ public class DispatchLogLocalServiceImpl
 	@Override
 	public DispatchLog updateDispatchLog(
 			long dispatchLogId, Date endDate, String error, String output,
-			int status)
+			DispatchTaskStatus dispatchTaskStatus)
 		throws PortalException {
 
 		DispatchLog dispatchLog = dispatchLogPersistence.findByPrimaryKey(
 			dispatchLogId);
 
+		_checkDispatchLogPeriod(dispatchLog.getStartDate(), endDate);
+
+		_checkDispatchTaskStatus(dispatchTaskStatus);
+
 		dispatchLog.setEndDate(endDate);
 		dispatchLog.setError(error);
 		dispatchLog.setOutput(output);
-		dispatchLog.setStatus(status);
+		dispatchLog.setStatus(dispatchTaskStatus.getStatus());
 
 		return dispatchLogPersistence.update(dispatchLog);
+	}
+
+	private void _checkDispatchLogPeriod(Date startDate, Date endDate)
+		throws PortalException {
+
+		if (startDate == null) {
+			throw new DispatchLogStartDateException("Start date is required");
+		}
+
+		if (endDate == null) {
+			return;
+		}
+
+		if (startDate.after(endDate)) {
+			throw new DispatchLogStartDateException(
+				"Start date must precede end date");
+		}
+	}
+
+	private void _checkDispatchTaskStatus(DispatchTaskStatus dispatchTaskStatus)
+		throws PortalException {
+
+		if (dispatchTaskStatus == null) {
+			throw new DispatchLogStatusException(
+				"Dispatch task status is required");
+		}
 	}
 
 }

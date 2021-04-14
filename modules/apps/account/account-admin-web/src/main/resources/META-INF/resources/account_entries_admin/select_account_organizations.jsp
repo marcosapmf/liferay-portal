@@ -23,7 +23,7 @@ SearchContainer<Organization> organizationSearchContainer = AssignableAccountOrg
 %>
 
 <clay:management-toolbar
-	displayContext="<%= new SelectAccountOrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationSearchContainer) %>"
+	managementToolbarDisplayContext="<%= new SelectAccountOrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationSearchContainer) %>"
 />
 
 <clay:container-fluid>
@@ -59,7 +59,7 @@ SearchContainer<Organization> organizationSearchContainer = AssignableAccountOrg
 		'<portlet:namespace />organizations'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var selectedItems = event.elements.allSelectedElements;
 
 		var result = {};

@@ -65,7 +65,8 @@ public class CommercePriceEntryDisplayContext
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "addCommerceTierPriceEntry");
+			"mvcRenderCommandName",
+			"/commerce_price_list/add_commerce_tier_price_entry");
 		portletURL.setParameter(
 			"commercePriceEntryId", String.valueOf(getCommercePriceEntryId()));
 		portletURL.setParameter(
@@ -89,10 +90,12 @@ public class CommercePriceEntryDisplayContext
 			return StringPool.DASH;
 		}
 
-		CommerceMoney priceMoney = instanceBaseCommercePriceEntry.getPriceMoney(
-			commercePriceList.getCommerceCurrencyId());
+		CommerceMoney priceCommerceMoney =
+			instanceBaseCommercePriceEntry.getPriceMoney(
+				commercePriceList.getCommerceCurrencyId());
 
-		return priceMoney.format(commercePricingRequestHelper.getLocale());
+		return priceCommerceMoney.format(
+			commercePricingRequestHelper.getLocale());
 	}
 
 	public CommercePriceEntry getCommercePriceEntry() throws PortalException {
@@ -150,7 +153,8 @@ public class CommercePriceEntryDisplayContext
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommercePriceEntry");
+			"mvcRenderCommandName",
+			"/commerce_price_list/edit_commerce_price_entry");
 		portletURL.setParameter(
 			"redirect", commercePricingRequestHelper.getCurrentURL());
 		portletURL.setParameter(

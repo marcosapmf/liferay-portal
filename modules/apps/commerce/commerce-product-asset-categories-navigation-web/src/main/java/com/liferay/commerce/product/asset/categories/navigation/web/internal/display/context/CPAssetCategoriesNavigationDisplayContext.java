@@ -21,9 +21,9 @@ import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
 import com.liferay.commerce.media.CommerceMediaResolver;
 import com.liferay.commerce.product.asset.categories.navigation.web.internal.configuration.CPAssetCategoriesNavigationPortletInstanceConfiguration;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
@@ -32,6 +32,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -159,11 +161,9 @@ public class CPAssetCategoriesNavigationDisplayContext {
 	public String getDefaultImageSrc(long categoryId, ThemeDisplay themeDisplay)
 		throws Exception {
 
-		long classNameId = _portal.getClassNameId(AssetCategory.class);
-
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryService.getCPAttachmentFileEntries(
-				classNameId, categoryId,
+				_portal.getClassNameId(AssetCategory.class), categoryId,
 				CPAttachmentFileEntryConstants.TYPE_IMAGE,
 				WorkflowConstants.STATUS_APPROVED, 0, 1);
 
@@ -217,9 +217,6 @@ public class CPAssetCategoriesNavigationDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		String groupFriendlyURL = _portal.getGroupFriendlyURL(
-			themeDisplay.getLayoutSet(), themeDisplay);
-
 		long classNameId = _portal.getClassNameId(AssetCategory.class);
 
 		FriendlyURLEntry friendlyURLEntry = null;
@@ -230,8 +227,15 @@ public class CPAssetCategoriesNavigationDisplayContext {
 					classNameId, categoryId);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return StringPool.BLANK;
 		}
+
+		String groupFriendlyURL = _portal.getGroupFriendlyURL(
+			themeDisplay.getLayoutSet(), themeDisplay);
 
 		String languageId = LanguageUtil.getLanguageId(
 			themeDisplay.getLocale());
@@ -355,6 +359,9 @@ public class CPAssetCategoriesNavigationDisplayContext {
 
 		return assetCategory;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CPAssetCategoriesNavigationDisplayContext.class);
 
 	private List<AssetCategory> _assetCategories;
 	private final AssetCategoryService _assetCategoryService;

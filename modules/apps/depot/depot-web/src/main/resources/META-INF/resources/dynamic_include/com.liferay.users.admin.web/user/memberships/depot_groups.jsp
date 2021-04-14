@@ -92,13 +92,13 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 		rowIdProperty="friendlyURL"
 	>
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="name"
 			value="<%= HtmlUtil.escape(group.getName(locale)) %>"
 		/>
 
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="roles"
 			value="<%= HtmlUtil.escape(depotAdminMembershipsDisplayContext.getRoles(group)) %>"
 		/>
@@ -132,7 +132,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			'<portlet:namespace />selectDepotGroupLink'
 		);
 
-		selectDepotGroupLink.addEventListener('click', function (event) {
+		selectDepotGroupLink.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (selectedItem) {
 					if (selectedItem) {
@@ -180,7 +180,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		var handleOnModifyLink = searchContainerContentBox.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				var link = event.currentTarget;
 
 				var rowId = link.attr('data-rowId');

@@ -30,8 +30,6 @@ if (calendarResource != null) {
 
 	calendars = CalendarServiceUtil.getCalendarResourceCalendars(themeDisplay.getScopeGroupId(), calendarResourceId);
 }
-
-String code = BeanParamUtil.getString(calendarResource, request, "code");
 %>
 
 <liferay-ui:header
@@ -42,7 +40,7 @@ String code = BeanParamUtil.getString(calendarResource, request, "code");
 
 <liferay-portlet:actionURL name="updateCalendarResource" var="updateCalendarResourceURL" />
 
-<aui:form action="<%= updateCalendarResourceURL %>" cssClass="container-fluid-1280" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updateCalendarResource();" %>'>
+<aui:form action="<%= updateCalendarResourceURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updateCalendarResource();" %>'>
 	<aui:input name="mvcPath" type="hidden" value="/edit_calendar_resource.jsp" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="calendarResourceId" type="hidden" value="<%= String.valueOf(calendarResourceId) %>" />
@@ -61,12 +59,14 @@ String code = BeanParamUtil.getString(calendarResource, request, "code");
 		<aui:input name="name" />
 
 		<liferay-ui:panel-container
+			cssClass="panel-group-flush panel-group-sm"
 			extended="<%= true %>"
 			id="calendarResourceDetailsPanelContainer"
 			persistState="<%= true %>"
 		>
 			<liferay-ui:panel
 				collapsible="<%= true %>"
+				cssClass="panel-unstyled"
 				defaultState="closed"
 				extended="<%= false %>"
 				id="calendarResourceDetailsPanel"
@@ -81,7 +81,7 @@ String code = BeanParamUtil.getString(calendarResource, request, "code");
 						</c:if>
 					</c:when>
 					<c:otherwise>
-						<aui:input name="code" type="resource" value="<%= code %>" />
+						<aui:input name="code" type="resource" value='<%= BeanParamUtil.getString(calendarResource, request, "code") %>' />
 					</c:otherwise>
 				</c:choose>
 
@@ -108,6 +108,7 @@ String code = BeanParamUtil.getString(calendarResource, request, "code");
 
 			<liferay-ui:panel
 				collapsible="<%= true %>"
+				cssClass="panel-unstyled"
 				defaultState="closed"
 				extended="<%= false %>"
 				id="calendarResourceCategorizationPanel"
@@ -130,6 +131,7 @@ String code = BeanParamUtil.getString(calendarResource, request, "code");
 			<c:if test="<%= calendarResource == null %>">
 				<liferay-ui:panel
 					collapsible="<%= true %>"
+					cssClass="panel-unstyled"
 					defaultState="closed"
 					extended="<%= false %>"
 					id="calendarResourcePermissionsPanel"

@@ -1,0 +1,908 @@
+@component-name = "data-engine"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Data Engine";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+		}
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "4"
+	test CheckDefaultWebContentTitleOnWebContentList {
+		property portal.acceptance = "false";
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Title");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Title");
+
+		WebContent.addWithStructureCP(webContentTitle = "WC Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContent.addWithStructureCP(webContentTitle = "Titulo do WC");
+
+		PortletEntry.publish();
+
+		AssertElementPresent(
+			key_webContentTitle = "WC Title",
+			locator1 = "WC#ENTRY_LIST_TITLE_NAME");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "5"
+	test CheckDuplicatedRepeatableStructureOnWebContent {
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text",
+			fieldHelp = "Text Field Help Text");
+
+		DataEngine.editFieldRepeatable(fieldFieldLabel = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "Texto");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Texto",
+			fieldHelp = "Texto de ajuda do campo de texto");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(webContentTitle = "Web Content Title");
+
+		DataEngine.addRepeatableField(fieldName = "Text");
+
+		Type(
+			index = "1",
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "This is a Text field");
+
+		Type(
+			index = "2",
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "This is a duplicated Text field");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContent.addWithStructureCP(webContentTitle = "Título do conteúdo da web");
+
+		Type(
+			index = "1",
+			key_fieldFieldLabel = "Texto",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "Este é um campo de texto");
+
+		Type(
+			index = "2",
+			key_fieldFieldLabel = "Texto",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "Este é um campo de texto duplicado");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Web Content Title");
+
+		AssertTextEquals.assertValue(
+			index = "1",
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "This is a Text field");
+
+		AssertTextEquals.assertValue(
+			index = "2",
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "This is a duplicated Text field");
+
+		for (var n : list "1,2") {
+			AssertTextEquals(
+				key_fieldFieldLabel = "Text",
+				key_index = "${n}",
+				locator1 = "DDMEditStructure#SETTINGS_TEXT_ANY",
+				value1 = "Text Field Help Text");
+		}
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Título do conteúdo da web");
+
+		AssertTextEquals.assertValue(
+			index = "1",
+			key_fieldFieldLabel = "Texto",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "Este é um campo de texto");
+
+		AssertTextEquals.assertValue(
+			index = "2",
+			key_fieldFieldLabel = "Texto",
+			locator1 = "WCEditWebContent#ANY_TEXT_INPUT",
+			value1 = "Este é um campo de texto duplicado");
+
+		for (var n : list "1,2") {
+			AssertTextEquals(
+				key_fieldFieldLabel = "Texto",
+				key_index = "${n}",
+				locator1 = "DDMEditStructure#SETTINGS_TEXT_ANY",
+				value1 = "Texto de ajuda do campo de texto");
+		}
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@ignore = "true"
+	@priority = "4"
+	test CheckLanguageSelector {
+		property portal.acceptance = "false";
+
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addCP(
+			webContentContent = "Test Content",
+			webContentTitle = "Test Title");
+
+		PortletEntry.viewLocale(locale = "en-US");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		PortletEntry.viewLocale(locale = "pt-BR");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "5"
+	test CheckLocalizationOfWebContentUponLanguageChange {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(
+			webContentText = "This is a Text field",
+			webContentTitle = "Web Content Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Este é um campo de texto",
+			webContentTitle = "Título do conteúdo da web");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Este es un campo de texto",
+			webContentTitle = "Título de contenido web");
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field",
+			webContentTitle = "Web Content Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Título do conteúdo da web");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "Este é um campo de texto");
+
+		PortletEntry.changeLocale(locale = "es-ES");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Título de contenido web");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "Este es un campo de texto");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "5"
+	test CheckStructureTranslationsOnWebContent {
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Structure Description Test",
+			structureName = "Structure Name Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "文本");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Structure Name Test");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Test",
+			webContentTitle = "Test");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		WebContent.addWithStructureCP(
+			webContentText = "测试",
+			webContentTextFieldLabel = "文本",
+			webContentTitle = "测试");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Test");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "测试");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "文本",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "测试");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@ignore = "true"
+	@priority = "4"
+	test DefaultTitleIsDisplayedUponLocaleChange {
+		property portal.acceptance = "false";
+
+		// TODO LPS-122317 DefaultTitleIsDisplayedUponLocaleChange pending implementation
+
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "4"
+	test DefaultTitlePersistsAfterTranslatingForAnotherLocale {
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addCP(webContentTitle = "Test");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		WebContent.addCP(webContentTitle = "测试");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Test");
+
+		AssertAttributeValue(
+			attribute1 = "value",
+			locator1 = "TextInput#TITLE",
+			value1 = "Test");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		AssertAttributeValue(
+			attribute1 = "value",
+			locator1 = "TextInput#TITLE",
+			value1 = "测试");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@ignore = "true"
+	@priority = "4"
+	test DefaultTitlePersistsUponFirstlyTranslatingForAnotherLocale {
+		property portal.acceptance = "false";
+
+		// TODO LPS-122317 DefaultTitlePersistsUponFirstlyTranslatingForAnotherLocale pending implementation
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "4"
+	test DefaultValuesDisplayedForNonTranslatedWebContent {
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "Texto");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(
+			webContentText = "This is a Text field",
+			webContentTitle = "Web Content Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Este é um campo de texto",
+			webContentTextFieldLabel = "Texto",
+			webContentTitle = "Título do conteúdo da web");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Web Content Title");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "This is a Text field");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "5"
+	test TranslateWebContentWithAllFields {
+		for (var n : list "1,2") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name ${n}");
+		}
+
+		for (var n : list "1,2") {
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = "Test Site Name",
+				title = "Web Content Title ${n}");
+		}
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addFields(fieldNameList = "Text,Select from List,Single Selection,Multiple Selection,Grid,Date,Numeric,Image,Rich Text,Upload,Color,Web Content,Geolocation,Separator,Link to Page");
+
+		WebContentStructures.addLocalization(
+			locale = "zh-CN",
+			localization1Name = "网页内容结构");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "文本框");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Select from List",
+			fieldFieldLabelEdit = "下拉列表");
+
+		DataEngine.addFieldOption(
+			fieldFieldLabel = "下拉列表",
+			index = "1",
+			optionValue = "选择 2");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Single Selection",
+			fieldFieldLabelEdit = "单选列表框");
+
+		DataEngine.addFieldOption(
+			fieldFieldLabel = "单选列表框",
+			index = "1",
+			optionValue = "选择 3");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Multiple Selection",
+			fieldFieldLabelEdit = "复选列表框");
+
+		DataEngine.addFieldOption(
+			fieldFieldLabel = "复选列表框",
+			index = "1",
+			optionValue = "选择 1");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Grid",
+			fieldFieldLabelEdit = "网格");
+
+		var index = "1";
+
+		for (var optionValue : list "R3,R4") {
+			DataEngine.addFieldOption(
+				fieldFieldLabel = "网格",
+				index = "${index}",
+				optionFieldLabel = "Rows",
+				optionValue = "行 ${index}");
+
+			DataEngine.editFieldReferenceOfFieldOption(
+				fieldFieldLabel = "网格",
+				fieldReferenceOfFieldOption = "${optionValue}",
+				index = "${index}",
+				optionFieldLabel = "Rows");
+
+			var index = ${index} + 1;
+		}
+
+		var index = "1";
+
+		for (var optionValue : list "C3,C4") {
+			DataEngine.addFieldOption(
+				fieldFieldLabel = "网格",
+				index = "${index}",
+				optionFieldLabel = "Columns",
+				optionValue = "列 ${index}");
+
+			DataEngine.editFieldReferenceOfFieldOption(
+				fieldFieldLabel = "网格",
+				fieldReferenceOfFieldOption = "${optionValue}",
+				index = "${index}",
+				optionFieldLabel = "Rows");
+
+			var index = ${index} + 1;
+		}
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Date",
+			fieldFieldLabelEdit = "日期");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Numeric",
+			fieldFieldLabelEdit = "数字");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Image",
+			fieldFieldLabelEdit = "图片");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Rich Text",
+			fieldFieldLabelEdit = "多格式文本框");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Upload",
+			fieldFieldLabelEdit = "文件");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Color",
+			fieldFieldLabelEdit = "颜色");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Web Content",
+			fieldFieldLabelEdit = "网页内容");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Geolocation",
+			fieldFieldLabelEdit = "地理位置");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Separator",
+			fieldFieldLabelEdit = "分割线");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Link to Page",
+			fieldFieldLabelEdit = "网页链接");
+
+		WebContentStructures.saveCP();
+
+		WebContentNavigator.gotoManageTemplatesViaStructures(structureName = "WC Structure Name");
+
+		WebContentTemplates.addCP(
+			templateFieldNames = "Text,Select from List,Single Selection,Multiple Selection,Grid,Date,Numeric,Image,Rich Text,Upload,Color,Web Content,Geolocation,Link to Page",
+			templateName = "WC Template Name");
+
+		Navigator.gotoNavItem(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(
+			column = "1",
+			dmNavTab = "User Personal Folder",
+			navTab = "Web Content Images",
+			row = "1",
+			webContentColor = "FF0D0D",
+			webContentDate = "10/10/2020",
+			webContentGrid = "true",
+			webContentImage = "Document_3.png",
+			webContentLinkToPage = "Test Page Name 1",
+			webContentMultipleSelection = "Option 1",
+			webContentNumeric = "9",
+			webContentRichText = "This is a Rich Text field",
+			webContentSelectFromList = "Option 2",
+			webContentSingleSelection = "Option 3",
+			webContentText = "This is a Text field",
+			webContentTitle = "WC Title",
+			webContentUpload = "Document_1.jpg",
+			webContentWebContent = "Web Content Title 1");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		WebContent.addWithStructureCP(
+			column = "2",
+			dmNavTab = "User Personal Folder",
+			navTab = "Web Content Images",
+			row = "2",
+			webContentColor = "2BA676",
+			webContentColorFieldLabel = "颜色",
+			webContentDate = "2020/01/01",
+			webContentDateFieldLabel = "日期",
+			webContentGrid = "true",
+			webContentGridFieldLabel = "网格",
+			webContentImage = "Document_1.png",
+			webContentImageFieldLabel = "图片",
+			webContentLinkToPage = "Test Page Name 2",
+			webContentLinkToPageFieldLabel = "网页链接",
+			webContentMultipleSelection = "选择 1",
+			webContentMultipleSelectionFieldLabel = "复选列表框",
+			webContentNumeric = "123",
+			webContentNumericFieldLabel = "数字",
+			webContentRichText = "这是多格式文本框",
+			webContentRichTextFieldLabel = "多格式文本框",
+			webContentSelectFromList = "选择 2",
+			webContentSelectFromListFieldLabel = "下拉列表",
+			webContentSingleSelection = "选择 3",
+			webContentSingleSelectionFieldLabel = "单选列表框",
+			webContentText = "这是文本框",
+			webContentTextFieldLabel = "文本框",
+			webContentTitle = "网页内容标题",
+			webContentUpload = "Document_2.jpg",
+			webContentUploadFieldLabel = "文件",
+			webContentWebContent = "Web Content Title 2",
+			webContentWebContentFieldLabel = "网页内容");
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			column = "1",
+			dmNavTab = "User Personal Folder",
+			navTab = "Web Content Images",
+			row = "1",
+			webContentColor = "FF0D0D",
+			webContentDate = "10/10/2020",
+			webContentGeolocation = "true",
+			webContentGrid = "true",
+			webContentImage = "Document_3.png",
+			webContentLinkToPage = "Test Page Name 1",
+			webContentMultipleSelection = "Option 1",
+			webContentNumeric = "9",
+			webContentRichText = "This is a Rich Text field",
+			webContentSelectFromList = "Option 2",
+			webContentSeparator = "true",
+			webContentSingleSelection = "Option 3",
+			webContentText = "This is a Text field",
+			webContentTitle = "WC Title",
+			webContentUpload = "Document_1.jpg",
+			webContentWebContent = "Web Content Title 1");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "网页内容标题");
+
+		WebContent.viewWithStructureCP(
+			column = "2",
+			dmNavTab = "User Personal Folder",
+			navTab = "Web Content Images",
+			predefinedValue = "true",
+			row = "2",
+			webContentColor = "2BA676",
+			webContentColorFieldLabel = "颜色",
+			webContentDate = "2020/01/01",
+			webContentDateFieldLabel = "日期",
+			webContentGeolocation = "true",
+			webContentGeolocationFieldLabel = "地理位置",
+			webContentGrid = "true",
+			webContentGridFieldLabel = "网格",
+			webContentImage = "Document_1.png",
+			webContentImageFieldLabel = "图片",
+			webContentLinkToPage = "Test Page Name 2",
+			webContentLinkToPageFieldLabel = "网页链接",
+			webContentMultipleSelection = "选择 1",
+			webContentMultipleSelectionFieldLabel = "复选列表框",
+			webContentNumeric = "123",
+			webContentNumericFieldLabel = "数字",
+			webContentRichText = "这是多格式文本框",
+			webContentRichTextFieldLabel = "多格式文本框",
+			webContentSelectFromList = "选择 2",
+			webContentSelectFromListFieldLabel = "下拉列表",
+			webContentSeparator = "true",
+			webContentSeparatorFieldLabel = "分割线",
+			webContentSingleSelection = "选择 3",
+			webContentSingleSelectionFieldLabel = "单选列表框",
+			webContentText = "这是文本框",
+			webContentTextFieldLabel = "文本框",
+			webContentUpload = "Document_2.jpg",
+			webContentUploadFieldLabel = "文件",
+			webContentWebContent = "Web Content Title 2",
+			webContentWebContentFieldLabel = "网页内容");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@ignore = "true"
+	@priority = "5"
+	test TranslationDoesNotChangeAnother {
+		property portal.acceptance = "false";
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContentNavigator.gotoAddCP();
+
+		WebContent.addCP(
+			webContentContent = "Test Content",
+			webContentTitle = "Test Title");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		WebContent.addCP(
+			webContentContent = "测试内容",
+			webContentTitle = "测试标题");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Test Title");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "测试标题");
+
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
+		AssertTextEquals(
+			locator1 = "CKEditor#BODY",
+			value1 = "测试内容");
+
+		SelectFrameTop();
+
+		PortletEntry.changeLocale(locale = "en-US");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Test Title");
+
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
+		AssertTextEquals(
+			locator1 = "CKEditor#BODY",
+			value1 = "Test Content");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "5"
+	test TranslationPersistsAfterEditingAnother {
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Structure Description Test",
+			structureName = "Structure Name Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "文本");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Structure Name Test");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Test",
+			webContentTitle = "Test");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		WebContent.addWithStructureCP(
+			webContentText = "测试",
+			webContentTextFieldLabel = "文本",
+			webContentTitle = "测试");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Test");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Test Text",
+			webContentTitle = "Test Title");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		WebContent.addWithStructureCP(
+			webContentText = "测试文本",
+			webContentTextFieldLabel = "文本",
+			webContentTitle = "测试标题");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Test");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Test Title");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "Text",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "Test Text");
+
+		PortletEntry.changeLocale(locale = "zh-CN");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "测试标题");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "文本",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "测试文本");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "5"
+	test TranslationsRemainsUponSavingWebContent {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		DataEngine.editFieldLabel(
+			fieldFieldLabel = "Text",
+			fieldFieldLabelEdit = "Texto");
+
+		WebContentStructures.saveCP();
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
+
+		WebContent.addWithStructureCP(
+			webContentText = "This is a Text field",
+			webContentTitle = "Web Content Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		WebContent.addWithStructureCP(
+			webContentText = "Este é um campo de texto",
+			webContentTextFieldLabel = "Texto",
+			webContentTitle = "Título do conteúdo da web");
+
+		PortletEntry.publish();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		PortletEntry.changeLocale(locale = "pt-BR");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Título do conteúdo da web");
+
+		AssertTextEquals.assertValue(
+			key_fieldFieldLabel = "Texto",
+			locator1 = "WCEditWebContent#TEXT_INPUT",
+			value1 = "Este é um campo de texto");
+	}
+
+	@description = "This is a test for LPS-122317. As Content Creator, I want to leverage the structures' translations without nested fields or fieldsets when creating a new Web Content"
+	@priority = "4"
+	test VerifyDefaultLanguageIsFirstShown {
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "Structure Description Test",
+			structureName = "Structure Name Test");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text Test",
+			fieldName = "Text");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Text Test",
+			fieldHelp = "Help Test");
+
+		WebContentStructures.addLocalization(
+			locale = "pt-BR",
+			localization1Name = "Novo nome do teste");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Text Test",
+			label = "Teste de nome");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Teste de nome",
+			fieldHelp = "Teste do campo de ajuda");
+
+		WebContentStructures.saveCP(structureName = "Structure Name Test");
+
+		NavItem.click(navItem = "Web Content");
+
+		WebContentNavigator.gotoAddWithStructureCP(structureName = "Structure Name Test");
+
+		PortletEntry.viewLocale(
+			locale = "en-US",
+			portletName = "Web Content");
+	}
+
+}

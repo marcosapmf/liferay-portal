@@ -22,6 +22,10 @@ import com.liferay.portal.kernel.spring.aop.InvocationHandlerFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author Shuyang Zhou
  */
@@ -41,6 +45,10 @@ public class MultiDestinationMessagingProxyInvocationHandler
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
 		throws Throwable {
+
+		if (_objectMethods.contains(method)) {
+			return method.invoke(_baseMultiDestinationProxyBean, args);
+		}
 
 		ProxyRequest proxyRequest = new ProxyRequest(method, args);
 
@@ -65,6 +73,9 @@ public class MultiDestinationMessagingProxyInvocationHandler
 			}
 
 		};
+
+	private static final Set<Method> _objectMethods = new HashSet<>(
+		Arrays.asList(Object.class.getDeclaredMethods()));
 
 	private final BaseMultiDestinationProxyBean _baseMultiDestinationProxyBean;
 

@@ -321,6 +321,16 @@ public class CPDefinitionServiceWrapper
 	}
 
 	@Override
+	public com.liferay.commerce.product.model.CPDefinition
+			updateExternalReferenceCode(
+				long cpDefinitionId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionService.updateExternalReferenceCode(
+			cpDefinitionId, externalReferenceCode);
+	}
+
+	@Override
 	public com.liferay.commerce.product.model.CPDefinition updateShippingInfo(
 			long cpDefinitionId, boolean shippable, boolean freeShipping,
 			boolean shipSeparately, double shippingExtraPrice, double width,

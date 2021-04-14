@@ -20,12 +20,54 @@ const HEADERS = {
 	'Content-Type': 'application/json',
 };
 
-export const addItem = (endpoint, item) => {
-	return fetch(getURL(endpoint), {
+function fetchItem(url, options) {
+	return new Promise((resolve, reject) => {
+		let isOk;
+
+		fetch(url, options)
+			.then((response) => {
+				isOk = response.ok;
+
+				return response.json();
+			})
+			.then((data) => {
+				if (isOk) {
+					resolve(data);
+				}
+				else {
+					reject(data);
+				}
+			})
+			.catch((error) => reject(error));
+	});
+}
+
+export const getURL = (path, params) => {
+	params = {
+		['p_auth']: Liferay.authToken,
+		t: Date.now(),
+		...params,
+	};
+
+	const uri = new URL(`${window.location.origin}${path}`);
+	const keys = Object.keys(params);
+
+	keys.forEach((key) => uri.searchParams.set(key, params[key]));
+
+	return uri.toString();
+};
+
+export const addItem = (endpoint, item) =>
+	fetchItem(getURL(endpoint), {
 		body: JSON.stringify(item),
 		headers: HEADERS,
 		method: 'POST',
-	}).then((response) => response.json());
+	});
+
+export const deleteItem = (endpoint) => {
+	return fetch(getURL(endpoint), {
+		method: 'DELETE',
+	});
 };
 
 export const confirmDelete = (endpoint) => (item) =>
@@ -44,12 +86,6 @@ export const confirmDelete = (endpoint) => (item) =>
 		}
 	});
 
-export const deleteItem = (endpoint) => {
-	return fetch(getURL(endpoint), {
-		method: 'DELETE',
-	});
-};
-
 export const request = (endpoint, method = 'GET') =>
 	fetch(getURL(endpoint), {
 		headers: HEADERS,
@@ -63,42 +99,9 @@ export const getItem = (endpoint) => {
 	}).then((response) => response.json());
 };
 
-export const getURL = (path, params) => {
-	params = {
-		['p_auth']: Liferay.authToken,
-		t: Date.now(),
-		...params,
-	};
-
-	const uri = new URL(`${window.location.origin}${path}`);
-	const keys = Object.keys(params);
-
-	keys.forEach((key) => uri.searchParams.set(key, params[key]));
-
-	return uri.toString();
-};
-
-export const updateItem = (endpoint, item, params) => {
-	return new Promise((resolve, reject) => {
-		let isOk;
-		fetch(getURL(endpoint, params), {
-			body: JSON.stringify(item),
-			headers: HEADERS,
-			method: 'PUT',
-		})
-			.then((response) => {
-				isOk = response.ok;
-
-				return response.json();
-			})
-			.then((data) => {
-				if (isOk) {
-					resolve(data);
-				}
-				else {
-					reject(data);
-				}
-			})
-			.catch((error) => reject(error));
+export const updateItem = (endpoint, item, params) =>
+	fetchItem(getURL(endpoint, params), {
+		body: JSON.stringify(item),
+		headers: HEADERS,
+		method: 'PUT',
 	});
-};

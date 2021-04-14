@@ -22,7 +22,6 @@ import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandl
 import com.liferay.layout.util.LayoutCopyHelper;
 import com.liferay.layout.util.template.LayoutConverterRegistry;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -56,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/move_layout"
+		"mvc.command.name=/layout_admin/move_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -121,11 +120,11 @@ public class MoveLayoutMVCActionCommand extends BaseAddLayoutMVCActionCommand {
 			JSONPortletResponseUtil.writeJSON(
 				liferayPortletRequest, liferayPortletResponse, jsonObject);
 		}
-		catch (PortalException portalException) {
+		catch (Exception exception) {
 			hideDefaultErrorMessage(actionRequest);
 
-			_layoutExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, portalException);
+			_layoutExceptionRequestHandler.handleException(
+				actionRequest, actionResponse, exception);
 		}
 	}
 

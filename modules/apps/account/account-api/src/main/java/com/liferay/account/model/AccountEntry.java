@@ -60,4 +60,10 @@ public interface AccountEntry extends AccountEntryModel, PersistedModel {
 
 	public long getAccountEntryGroupId();
 
+	public com.liferay.portal.kernel.model.Address getDefaultBillingAddress();
+
+	public com.liferay.portal.kernel.model.Address getDefaultShippingAddress();
+
+	public String[] getDomainsArray();
+
 }

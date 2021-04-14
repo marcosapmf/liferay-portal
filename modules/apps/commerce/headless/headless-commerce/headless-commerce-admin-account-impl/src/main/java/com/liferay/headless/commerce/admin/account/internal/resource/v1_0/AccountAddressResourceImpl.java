@@ -20,27 +20,26 @@ import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.exception.NoSuchAddressException;
 import com.liferay.commerce.model.CommerceAddress;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionLocalService;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountAddress;
 import com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountAddressDTOConverter;
 import com.liferay.headless.commerce.admin.account.resource.v1_0.AccountAddressResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
+import com.liferay.portal.kernel.service.CountryLocalService;
+import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import javax.ws.rs.core.Response;
 
@@ -54,9 +53,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v1_0/account-address.properties",
-	scope = ServiceScope.PROTOTYPE, service = AccountAddressResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {AccountAddressResource.class, NestedFieldSupport.class}
 )
-public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
+public class AccountAddressResourceImpl
+	extends BaseAccountAddressResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public Response deleteAccountAddress(Long id) throws Exception {
@@ -69,7 +70,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 	@Override
 	public Response deleteAccountAddressByExternalReferenceCode(
-			@NotNull String externalReferenceCode)
+			String externalReferenceCode)
 		throws Exception {
 
 		CommerceAddress commerceAddress =
@@ -92,15 +93,13 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 	@Override
 	public AccountAddress getAccountAddress(Long id) throws Exception {
-		CommerceAddress commerceAddress =
-			_commerceAddressService.getCommerceAddress(id);
-
-		return _toAccountAddress(commerceAddress);
+		return _toAccountAddress(
+			_commerceAddressService.getCommerceAddress(id));
 	}
 
 	@Override
 	public AccountAddress getAccountAddressByExternalReferenceCode(
-			@NotNull String externalReferenceCode)
+			String externalReferenceCode)
 		throws Exception {
 
 		CommerceAddress commerceAddress =
@@ -184,8 +183,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 	@Override
 	public Response patchAccountAddressByExternalReferenceCode(
-			@NotNull String externalReferenceCode,
-			AccountAddress accountAddress)
+			String externalReferenceCode, AccountAddress accountAddress)
 		throws Exception {
 
 		CommerceAddress commerceAddress =
@@ -318,10 +316,8 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 			CommerceAccount commerceAccount, AccountAddress accountAddress)
 		throws Exception {
 
-		CommerceCountry commerceCountry =
-			_commerceCountryService.getCommerceCountry(
-				commerceAccount.getCompanyId(),
-				accountAddress.getCountryISOCode());
+		Country country = _countryService.getCountryByA2(
+			commerceAccount.getCompanyId(), accountAddress.getCountryISOCode());
 
 		CommerceAddress commerceAddress =
 			_commerceAddressService.addCommerceAddress(
@@ -330,10 +326,8 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 				accountAddress.getName(), accountAddress.getDescription(),
 				accountAddress.getStreet1(), accountAddress.getStreet2(),
 				accountAddress.getStreet3(), accountAddress.getCity(),
-				accountAddress.getZip(),
-				_getCommerceRegionId(commerceCountry, accountAddress),
-				commerceCountry.getCommerceCountryId(),
-				accountAddress.getPhoneNumber(),
+				accountAddress.getZip(), _getRegionId(country, accountAddress),
+				country.getCountryId(), accountAddress.getPhoneNumber(),
 				GetterUtil.getInteger(
 					accountAddress.getType(),
 					CommerceAddressConstants.ADDRESS_TYPE_BILLING_AND_SHIPPING),
@@ -366,22 +360,19 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 			_toAccountAddresses(commerceAddresses), pagination, totalItems);
 	}
 
-	private long _getCommerceRegionId(
-			CommerceCountry commerceCountry, AccountAddress accountAddress)
+	private long _getRegionId(Country country, AccountAddress accountAddress)
 		throws Exception {
 
 		if (Validator.isNull(accountAddress.getRegionISOCode()) ||
-			(commerceCountry == null)) {
+			(country == null)) {
 
 			return 0;
 		}
 
-		CommerceRegion commerceRegion =
-			_commerceRegionLocalService.getCommerceRegion(
-				commerceCountry.getCommerceCountryId(),
-				accountAddress.getRegionISOCode());
+		Region region = _regionLocalService.getRegion(
+			country.getCountryId(), accountAddress.getRegionISOCode());
 
-		return commerceRegion.getCommerceRegionId();
+		return region.getRegionId();
 	}
 
 	private AccountAddress _toAccountAddress(CommerceAddress commerceAddress)
@@ -420,10 +411,10 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
+	private CountryLocalService _countryService;
 
 	@Reference
-	private CommerceRegionLocalService _commerceRegionLocalService;
+	private RegionLocalService _regionLocalService;
 
 	@Reference
 	private ServiceContextHelper _serviceContextHelper;

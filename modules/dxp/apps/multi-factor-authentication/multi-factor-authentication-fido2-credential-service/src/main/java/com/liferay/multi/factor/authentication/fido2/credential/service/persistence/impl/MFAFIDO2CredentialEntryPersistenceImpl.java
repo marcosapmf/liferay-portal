@@ -38,8 +38,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 
@@ -48,10 +49,8 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -74,7 +73,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Arthur Chan
  * @generated
  */
-@Component(service = MFAFIDO2CredentialEntryPersistence.class)
+@Component(
+	service = {MFAFIDO2CredentialEntryPersistence.class, BasePersistence.class}
+)
 public class MFAFIDO2CredentialEntryPersistenceImpl
 	extends BasePersistenceImpl<MFAFIDO2CredentialEntry>
 	implements MFAFIDO2CredentialEntryPersistence {
@@ -191,7 +192,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<MFAFIDO2CredentialEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry : list) {
@@ -560,7 +561,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {userId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -600,73 +601,73 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	private static final String _FINDER_COLUMN_USERID_USERID_2 =
 		"mfafido2CredentialEntry.userId = ?";
 
-	private FinderPath _finderPathWithPaginationFindByCredentialKey;
-	private FinderPath _finderPathWithoutPaginationFindByCredentialKey;
-	private FinderPath _finderPathCountByCredentialKey;
+	private FinderPath _finderPathWithPaginationFindByCredentialKeyHash;
+	private FinderPath _finderPathWithoutPaginationFindByCredentialKeyHash;
+	private FinderPath _finderPathCountByCredentialKeyHash;
 
 	/**
-	 * Returns all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the matching mfafido2 credential entries
 	 */
 	@Override
-	public List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey) {
+	public List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash) {
 
-		return findByCredentialKey(
-			credentialKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+		return findByCredentialKeyHash(
+			credentialKeyHash, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
 	/**
-	 * Returns a range of all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns a range of all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MFAFIDO2CredentialEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param start the lower bound of the range of mfafido2 credential entries
 	 * @param end the upper bound of the range of mfafido2 credential entries (not inclusive)
 	 * @return the range of matching mfafido2 credential entries
 	 */
 	@Override
-	public List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey, int start, int end) {
+	public List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash, int start, int end) {
 
-		return findByCredentialKey(credentialKey, start, end, null);
+		return findByCredentialKeyHash(credentialKeyHash, start, end, null);
 	}
 
 	/**
-	 * Returns an ordered range of all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns an ordered range of all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MFAFIDO2CredentialEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param start the lower bound of the range of mfafido2 credential entries
 	 * @param end the upper bound of the range of mfafido2 credential entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching mfafido2 credential entries
 	 */
 	@Override
-	public List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey, int start, int end,
+	public List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash, int start, int end,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator) {
 
-		return findByCredentialKey(
-			credentialKey, start, end, orderByComparator, true);
+		return findByCredentialKeyHash(
+			credentialKeyHash, start, end, orderByComparator, true);
 	}
 
 	/**
-	 * Returns an ordered range of all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns an ordered range of all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MFAFIDO2CredentialEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param start the lower bound of the range of mfafido2 credential entries
 	 * @param end the upper bound of the range of mfafido2 credential entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
@@ -674,12 +675,10 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	 * @return the ordered range of matching mfafido2 credential entries
 	 */
 	@Override
-	public List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey, int start, int end,
+	public List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash, int start, int end,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator,
 		boolean useFinderCache) {
-
-		credentialKey = Objects.toString(credentialKey, "");
 
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
@@ -688,14 +687,15 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			(orderByComparator == null)) {
 
 			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCredentialKey;
-				finderArgs = new Object[] {credentialKey};
+				finderPath =
+					_finderPathWithoutPaginationFindByCredentialKeyHash;
+				finderArgs = new Object[] {credentialKeyHash};
 			}
 		}
 		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCredentialKey;
+			finderPath = _finderPathWithPaginationFindByCredentialKeyHash;
 			finderArgs = new Object[] {
-				credentialKey, start, end, orderByComparator
+				credentialKeyHash, start, end, orderByComparator
 			};
 		}
 
@@ -703,12 +703,12 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<MFAFIDO2CredentialEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry : list) {
-					if (!credentialKey.equals(
-							mfaFIDO2CredentialEntry.getCredentialKey())) {
+					if (credentialKeyHash !=
+							mfaFIDO2CredentialEntry.getCredentialKeyHash()) {
 
 						list = null;
 
@@ -731,16 +731,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 			sb.append(_SQL_SELECT_MFAFIDO2CREDENTIALENTRY_WHERE);
 
-			boolean bindCredentialKey = false;
-
-			if (credentialKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_3);
-			}
-			else {
-				bindCredentialKey = true;
-
-				sb.append(_FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_2);
-			}
+			sb.append(_FINDER_COLUMN_CREDENTIALKEYHASH_CREDENTIALKEYHASH_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -761,9 +752,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 				QueryPos queryPos = QueryPos.getInstance(query);
 
-				if (bindCredentialKey) {
-					queryPos.add(credentialKey);
-				}
+				queryPos.add(credentialKeyHash);
 
 				list = (List<MFAFIDO2CredentialEntry>)QueryUtil.list(
 					query, getDialect(), start, end);
@@ -786,21 +775,22 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the first mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the first mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
-	public MFAFIDO2CredentialEntry findByCredentialKey_First(
-			String credentialKey,
+	public MFAFIDO2CredentialEntry findByCredentialKeyHash_First(
+			long credentialKeyHash,
 			OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator)
 		throws NoSuchMFAFIDO2CredentialEntryException {
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry =
-			fetchByCredentialKey_First(credentialKey, orderByComparator);
+			fetchByCredentialKeyHash_First(
+				credentialKeyHash, orderByComparator);
 
 		if (mfaFIDO2CredentialEntry != null) {
 			return mfaFIDO2CredentialEntry;
@@ -810,8 +800,8 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		sb.append("credentialKey=");
-		sb.append(credentialKey);
+		sb.append("credentialKeyHash=");
+		sb.append(credentialKeyHash);
 
 		sb.append("}");
 
@@ -819,19 +809,19 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the first mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the first mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
-	public MFAFIDO2CredentialEntry fetchByCredentialKey_First(
-		String credentialKey,
+	public MFAFIDO2CredentialEntry fetchByCredentialKeyHash_First(
+		long credentialKeyHash,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator) {
 
-		List<MFAFIDO2CredentialEntry> list = findByCredentialKey(
-			credentialKey, 0, 1, orderByComparator);
+		List<MFAFIDO2CredentialEntry> list = findByCredentialKeyHash(
+			credentialKeyHash, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -841,21 +831,21 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the last mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the last mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
-	public MFAFIDO2CredentialEntry findByCredentialKey_Last(
-			String credentialKey,
+	public MFAFIDO2CredentialEntry findByCredentialKeyHash_Last(
+			long credentialKeyHash,
 			OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator)
 		throws NoSuchMFAFIDO2CredentialEntryException {
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry =
-			fetchByCredentialKey_Last(credentialKey, orderByComparator);
+			fetchByCredentialKeyHash_Last(credentialKeyHash, orderByComparator);
 
 		if (mfaFIDO2CredentialEntry != null) {
 			return mfaFIDO2CredentialEntry;
@@ -865,8 +855,8 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
 
-		sb.append("credentialKey=");
-		sb.append(credentialKey);
+		sb.append("credentialKeyHash=");
+		sb.append(credentialKeyHash);
 
 		sb.append("}");
 
@@ -874,25 +864,25 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the last mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the last mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
-	public MFAFIDO2CredentialEntry fetchByCredentialKey_Last(
-		String credentialKey,
+	public MFAFIDO2CredentialEntry fetchByCredentialKeyHash_Last(
+		long credentialKeyHash,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator) {
 
-		int count = countByCredentialKey(credentialKey);
+		int count = countByCredentialKeyHash(credentialKeyHash);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<MFAFIDO2CredentialEntry> list = findByCredentialKey(
-			credentialKey, count - 1, count, orderByComparator);
+		List<MFAFIDO2CredentialEntry> list = findByCredentialKeyHash(
+			credentialKeyHash, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
 			return list.get(0);
@@ -902,21 +892,19 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the mfafido2 credential entries before and after the current mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the mfafido2 credential entries before and after the current mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
 	 * @param mfaFIDO2CredentialEntryId the primary key of the current mfafido2 credential entry
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the previous, current, and next mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a mfafido2 credential entry with the primary key could not be found
 	 */
 	@Override
-	public MFAFIDO2CredentialEntry[] findByCredentialKey_PrevAndNext(
-			long mfaFIDO2CredentialEntryId, String credentialKey,
+	public MFAFIDO2CredentialEntry[] findByCredentialKeyHash_PrevAndNext(
+			long mfaFIDO2CredentialEntryId, long credentialKeyHash,
 			OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator)
 		throws NoSuchMFAFIDO2CredentialEntryException {
-
-		credentialKey = Objects.toString(credentialKey, "");
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry = findByPrimaryKey(
 			mfaFIDO2CredentialEntryId);
@@ -929,14 +917,14 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			MFAFIDO2CredentialEntry[] array =
 				new MFAFIDO2CredentialEntryImpl[3];
 
-			array[0] = getByCredentialKey_PrevAndNext(
-				session, mfaFIDO2CredentialEntry, credentialKey,
+			array[0] = getByCredentialKeyHash_PrevAndNext(
+				session, mfaFIDO2CredentialEntry, credentialKeyHash,
 				orderByComparator, true);
 
 			array[1] = mfaFIDO2CredentialEntry;
 
-			array[2] = getByCredentialKey_PrevAndNext(
-				session, mfaFIDO2CredentialEntry, credentialKey,
+			array[2] = getByCredentialKeyHash_PrevAndNext(
+				session, mfaFIDO2CredentialEntry, credentialKeyHash,
 				orderByComparator, false);
 
 			return array;
@@ -949,9 +937,9 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 		}
 	}
 
-	protected MFAFIDO2CredentialEntry getByCredentialKey_PrevAndNext(
+	protected MFAFIDO2CredentialEntry getByCredentialKeyHash_PrevAndNext(
 		Session session, MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry,
-		String credentialKey,
+		long credentialKeyHash,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator,
 		boolean previous) {
 
@@ -968,16 +956,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		sb.append(_SQL_SELECT_MFAFIDO2CREDENTIALENTRY_WHERE);
 
-		boolean bindCredentialKey = false;
-
-		if (credentialKey.isEmpty()) {
-			sb.append(_FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_3);
-		}
-		else {
-			bindCredentialKey = true;
-
-			sb.append(_FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_2);
-		}
+		sb.append(_FINDER_COLUMN_CREDENTIALKEYHASH_CREDENTIALKEYHASH_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
@@ -1048,9 +1027,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		QueryPos queryPos = QueryPos.getInstance(query);
 
-		if (bindCredentialKey) {
-			queryPos.add(credentialKey);
-		}
+		queryPos.add(credentialKeyHash);
 
 		if (orderByComparator != null) {
 			for (Object orderByConditionValue :
@@ -1072,15 +1049,15 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Removes all the mfafido2 credential entries where credentialKey = &#63; from the database.
+	 * Removes all the mfafido2 credential entries where credentialKeyHash = &#63; from the database.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 */
 	@Override
-	public void removeByCredentialKey(String credentialKey) {
+	public void removeByCredentialKeyHash(long credentialKeyHash) {
 		for (MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry :
-				findByCredentialKey(
-					credentialKey, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				findByCredentialKeyHash(
+					credentialKeyHash, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 					null)) {
 
 			remove(mfaFIDO2CredentialEntry);
@@ -1088,36 +1065,25 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the number of mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns the number of mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the number of matching mfafido2 credential entries
 	 */
 	@Override
-	public int countByCredentialKey(String credentialKey) {
-		credentialKey = Objects.toString(credentialKey, "");
+	public int countByCredentialKeyHash(long credentialKeyHash) {
+		FinderPath finderPath = _finderPathCountByCredentialKeyHash;
 
-		FinderPath finderPath = _finderPathCountByCredentialKey;
+		Object[] finderArgs = new Object[] {credentialKeyHash};
 
-		Object[] finderArgs = new Object[] {credentialKey};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
 
 			sb.append(_SQL_COUNT_MFAFIDO2CREDENTIALENTRY_WHERE);
 
-			boolean bindCredentialKey = false;
-
-			if (credentialKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_3);
-			}
-			else {
-				bindCredentialKey = true;
-
-				sb.append(_FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_2);
-			}
+			sb.append(_FINDER_COLUMN_CREDENTIALKEYHASH_CREDENTIALKEYHASH_2);
 
 			String sql = sb.toString();
 
@@ -1130,9 +1096,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 				QueryPos queryPos = QueryPos.getInstance(query);
 
-				if (bindCredentialKey) {
-					queryPos.add(credentialKey);
-				}
+				queryPos.add(credentialKeyHash);
 
 				count = (Long)query.uniqueResult();
 
@@ -1149,29 +1113,28 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_2 =
-		"mfafido2CredentialEntry.credentialKey = ?";
-
-	private static final String _FINDER_COLUMN_CREDENTIALKEY_CREDENTIALKEY_3 =
-		"(mfafido2CredentialEntry.credentialKey IS NULL OR mfafido2CredentialEntry.credentialKey = '')";
+	private static final String
+		_FINDER_COLUMN_CREDENTIALKEYHASH_CREDENTIALKEYHASH_2 =
+			"mfafido2CredentialEntry.credentialKeyHash = ?";
 
 	private FinderPath _finderPathFetchByU_C;
 	private FinderPath _finderPathCountByU_C;
 
 	/**
-	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; or throws a <code>NoSuchMFAFIDO2CredentialEntryException</code> if it could not be found.
+	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; or throws a <code>NoSuchMFAFIDO2CredentialEntryException</code> if it could not be found.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the matching mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
-	public MFAFIDO2CredentialEntry findByU_C(long userId, String credentialKey)
+	public MFAFIDO2CredentialEntry findByU_C(
+			long userId, long credentialKeyHash)
 		throws NoSuchMFAFIDO2CredentialEntryException {
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry = fetchByU_C(
-			userId, credentialKey);
+			userId, credentialKeyHash);
 
 		if (mfaFIDO2CredentialEntry == null) {
 			StringBundler sb = new StringBundler(6);
@@ -1181,8 +1144,8 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			sb.append("userId=");
 			sb.append(userId);
 
-			sb.append(", credentialKey=");
-			sb.append(credentialKey);
+			sb.append(", credentialKeyHash=");
+			sb.append(credentialKeyHash);
 
 			sb.append("}");
 
@@ -1197,44 +1160,41 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
 	public MFAFIDO2CredentialEntry fetchByU_C(
-		long userId, String credentialKey) {
+		long userId, long credentialKeyHash) {
 
-		return fetchByU_C(userId, credentialKey, true);
+		return fetchByU_C(userId, credentialKeyHash, true);
 	}
 
 	/**
-	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
 	@Override
 	public MFAFIDO2CredentialEntry fetchByU_C(
-		long userId, String credentialKey, boolean useFinderCache) {
-
-		credentialKey = Objects.toString(credentialKey, "");
+		long userId, long credentialKeyHash, boolean useFinderCache) {
 
 		Object[] finderArgs = null;
 
 		if (useFinderCache) {
-			finderArgs = new Object[] {userId, credentialKey};
+			finderArgs = new Object[] {userId, credentialKeyHash};
 		}
 
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByU_C, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByU_C, finderArgs);
 		}
 
 		if (result instanceof MFAFIDO2CredentialEntry) {
@@ -1242,9 +1202,8 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 				(MFAFIDO2CredentialEntry)result;
 
 			if ((userId != mfaFIDO2CredentialEntry.getUserId()) ||
-				!Objects.equals(
-					credentialKey,
-					mfaFIDO2CredentialEntry.getCredentialKey())) {
+				(credentialKeyHash !=
+					mfaFIDO2CredentialEntry.getCredentialKeyHash())) {
 
 				result = null;
 			}
@@ -1257,16 +1216,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 			sb.append(_FINDER_COLUMN_U_C_USERID_2);
 
-			boolean bindCredentialKey = false;
-
-			if (credentialKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_U_C_CREDENTIALKEY_3);
-			}
-			else {
-				bindCredentialKey = true;
-
-				sb.append(_FINDER_COLUMN_U_C_CREDENTIALKEY_2);
-			}
+			sb.append(_FINDER_COLUMN_U_C_CREDENTIALKEYHASH_2);
 
 			String sql = sb.toString();
 
@@ -1281,9 +1231,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 				queryPos.add(userId);
 
-				if (bindCredentialKey) {
-					queryPos.add(credentialKey);
-				}
+				queryPos.add(credentialKeyHash);
 
 				List<MFAFIDO2CredentialEntry> list = query.list();
 
@@ -1319,39 +1267,37 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	}
 
 	/**
-	 * Removes the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; from the database.
+	 * Removes the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; from the database.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the mfafido2 credential entry that was removed
 	 */
 	@Override
 	public MFAFIDO2CredentialEntry removeByU_C(
-			long userId, String credentialKey)
+			long userId, long credentialKeyHash)
 		throws NoSuchMFAFIDO2CredentialEntryException {
 
 		MFAFIDO2CredentialEntry mfaFIDO2CredentialEntry = findByU_C(
-			userId, credentialKey);
+			userId, credentialKeyHash);
 
 		return remove(mfaFIDO2CredentialEntry);
 	}
 
 	/**
-	 * Returns the number of mfafido2 credential entries where userId = &#63; and credentialKey = &#63;.
+	 * Returns the number of mfafido2 credential entries where userId = &#63; and credentialKeyHash = &#63;.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the number of matching mfafido2 credential entries
 	 */
 	@Override
-	public int countByU_C(long userId, String credentialKey) {
-		credentialKey = Objects.toString(credentialKey, "");
-
+	public int countByU_C(long userId, long credentialKeyHash) {
 		FinderPath finderPath = _finderPathCountByU_C;
 
-		Object[] finderArgs = new Object[] {userId, credentialKey};
+		Object[] finderArgs = new Object[] {userId, credentialKeyHash};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1360,16 +1306,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 			sb.append(_FINDER_COLUMN_U_C_USERID_2);
 
-			boolean bindCredentialKey = false;
-
-			if (credentialKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_U_C_CREDENTIALKEY_3);
-			}
-			else {
-				bindCredentialKey = true;
-
-				sb.append(_FINDER_COLUMN_U_C_CREDENTIALKEY_2);
-			}
+			sb.append(_FINDER_COLUMN_U_C_CREDENTIALKEYHASH_2);
 
 			String sql = sb.toString();
 
@@ -1384,9 +1321,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 				queryPos.add(userId);
 
-				if (bindCredentialKey) {
-					queryPos.add(credentialKey);
-				}
+				queryPos.add(credentialKeyHash);
 
 				count = (Long)query.uniqueResult();
 
@@ -1406,11 +1341,8 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	private static final String _FINDER_COLUMN_U_C_USERID_2 =
 		"mfafido2CredentialEntry.userId = ? AND ";
 
-	private static final String _FINDER_COLUMN_U_C_CREDENTIALKEY_2 =
-		"mfafido2CredentialEntry.credentialKey = ?";
-
-	private static final String _FINDER_COLUMN_U_C_CREDENTIALKEY_3 =
-		"(mfafido2CredentialEntry.credentialKey IS NULL OR mfafido2CredentialEntry.credentialKey = '')";
+	private static final String _FINDER_COLUMN_U_C_CREDENTIALKEYHASH_2 =
+		"mfafido2CredentialEntry.credentialKeyHash = ?";
 
 	public MFAFIDO2CredentialEntryPersistenceImpl() {
 		setModelClass(MFAFIDO2CredentialEntry.class);
@@ -1436,7 +1368,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			_finderPathFetchByU_C,
 			new Object[] {
 				mfaFIDO2CredentialEntry.getUserId(),
-				mfaFIDO2CredentialEntry.getCredentialKey()
+				mfaFIDO2CredentialEntry.getCredentialKeyHash()
 			},
 			mfaFIDO2CredentialEntry);
 	}
@@ -1473,9 +1405,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(MFAFIDO2CredentialEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(MFAFIDO2CredentialEntryImpl.class);
 	}
 
 	/**
@@ -1505,9 +1435,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(MFAFIDO2CredentialEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -1520,14 +1448,12 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		Object[] args = new Object[] {
 			mfaFIDO2CredentialEntryModelImpl.getUserId(),
-			mfaFIDO2CredentialEntryModelImpl.getCredentialKey()
+			mfaFIDO2CredentialEntryModelImpl.getCredentialKeyHash()
 		};
 
+		finderCache.putResult(_finderPathCountByU_C, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByU_C, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByU_C, args, mfaFIDO2CredentialEntryModelImpl,
-			false);
+			_finderPathFetchByU_C, args, mfaFIDO2CredentialEntryModelImpl);
 	}
 
 	/**
@@ -1866,7 +1792,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<MFAFIDO2CredentialEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1937,7 +1863,7 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1994,22 +1920,21 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new MFAFIDO2CredentialEntryModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", MFAFIDO2CredentialEntry.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUserId = _createFinderPath(
+		_finderPathWithPaginationFindByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -2017,42 +1942,42 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			},
 			new String[] {"userId"}, true);
 
-		_finderPathWithoutPaginationFindByUserId = _createFinderPath(
+		_finderPathWithoutPaginationFindByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
-		_finderPathCountByUserId = _createFinderPath(
+		_finderPathCountByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"},
 			false);
 
-		_finderPathWithPaginationFindByCredentialKey = _createFinderPath(
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCredentialKey",
+		_finderPathWithPaginationFindByCredentialKeyHash = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCredentialKeyHash",
 			new String[] {
-				String.class.getName(), Integer.class.getName(),
+				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
 			},
-			new String[] {"credentialKey"}, true);
+			new String[] {"credentialKeyHash"}, true);
 
-		_finderPathWithoutPaginationFindByCredentialKey = _createFinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCredentialKey",
-			new String[] {String.class.getName()},
-			new String[] {"credentialKey"}, true);
+		_finderPathWithoutPaginationFindByCredentialKeyHash = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"findByCredentialKeyHash", new String[] {Long.class.getName()},
+			new String[] {"credentialKeyHash"}, true);
 
-		_finderPathCountByCredentialKey = _createFinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCredentialKey",
-			new String[] {String.class.getName()},
-			new String[] {"credentialKey"}, false);
+		_finderPathCountByCredentialKeyHash = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"countByCredentialKeyHash", new String[] {Long.class.getName()},
+			new String[] {"credentialKeyHash"}, false);
 
-		_finderPathFetchByU_C = _createFinderPath(
+		_finderPathFetchByU_C = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByU_C",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"userId", "credentialKey"}, true);
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"userId", "credentialKeyHash"}, true);
 
-		_finderPathCountByU_C = _createFinderPath(
+		_finderPathCountByU_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"userId", "credentialKey"}, false);
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"userId", "credentialKeyHash"}, false);
 	}
 
 	@Deactivate
@@ -2060,12 +1985,6 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 		entityCache.removeCache(MFAFIDO2CredentialEntryImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -2126,37 +2045,13 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		MFAFIDO2CredentialEntryPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(
-				MFAFIDOTwoCredentialPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class MFAFIDO2CredentialEntryModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -2209,6 +2104,16 @@ public class MFAFIDO2CredentialEntryPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return MFAFIDO2CredentialEntryImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return MFAFIDO2CredentialEntryTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

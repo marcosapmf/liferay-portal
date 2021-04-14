@@ -17,10 +17,7 @@ package com.liferay.translation.web.internal.application.list;
 import com.liferay.application.list.BasePanelApp;
 import com.liferay.application.list.PanelApp;
 import com.liferay.application.list.constants.PanelCategoryKeys;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.translation.web.internal.constants.TranslationPortletKeys;
 
 import org.osgi.service.component.annotations.Component;
@@ -32,8 +29,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"panel.app.order:Integer=210",
-		"panel.category.key=" + PanelCategoryKeys.SITE_ADMINISTRATION_CONFIGURATION
+		"panel.app.order:Integer=1300",
+		"panel.category.key=" + PanelCategoryKeys.SITE_ADMINISTRATION_CONTENT
 	},
 	service = PanelApp.class
 )
@@ -42,13 +39,6 @@ public class TranslationPanelApp extends BasePanelApp {
 	@Override
 	public String getPortletId() {
 		return TranslationPortletKeys.TRANSLATION;
-	}
-
-	@Override
-	public boolean isShow(PermissionChecker permissionChecker, Group group)
-		throws PortalException {
-
-		return false;
 	}
 
 	@Override

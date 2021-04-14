@@ -50,9 +50,10 @@ public class StyleBookVerticalCard
 
 		super(baseModel, rowChecker);
 
-		_styleBookEntry = (StyleBookEntry)baseModel;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
+
+		_styleBookEntry = (StyleBookEntry)baseModel;
 
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -149,6 +150,11 @@ public class StyleBookVerticalCard
 		}
 
 		return null;
+	}
+
+	@Override
+	public String getStickerStyle() {
+		return "primary";
 	}
 
 	@Override

@@ -15,6 +15,8 @@
 package com.liferay.asset.list.web.internal.portlet.action;
 
 import com.liferay.asset.list.constants.AssetListPortletKeys;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
@@ -103,14 +105,8 @@ public class GetFieldValueMVCResourceCommand extends BaseMVCResourceCommand {
 				return;
 			}
 
-			DDMStructure ddmStructure = field.getDDMStructure();
-
-			String type = ddmStructure.getFieldType(fieldName);
-
-			Serializable displayValue = DDMUtil.getDisplayFieldValue(
-				themeDisplay, fieldValue, type);
-
-			jsonObject.put("displayValue", String.valueOf(displayValue));
+			jsonObject.put(
+				"displayValue", _getDisplayFieldValue(field, themeDisplay));
 
 			if (fieldValue instanceof Boolean) {
 				jsonObject.put("value", (Boolean)fieldValue);
@@ -144,6 +140,32 @@ public class GetFieldValueMVCResourceCommand extends BaseMVCResourceCommand {
 		catch (Exception exception) {
 			throw new PortletException(exception);
 		}
+	}
+
+	private String _getDisplayFieldValue(Field field, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		String fieldValue = String.valueOf(
+			DDMUtil.getDisplayFieldValue(
+				themeDisplay, field.getValue(themeDisplay.getLocale(), 0),
+				field.getType()));
+
+		DDMStructure ddmStructure = field.getDDMStructure();
+
+		DDMFormField ddmFormField = ddmStructure.getDDMFormField(
+			field.getName());
+
+		DDMFormFieldOptions ddmFormFieldOptions =
+			ddmFormField.getDDMFormFieldOptions();
+
+		String optionReference = ddmFormFieldOptions.getOptionReference(
+			String.valueOf(fieldValue));
+
+		if (optionReference != null) {
+			return optionReference;
+		}
+
+		return fieldValue;
 	}
 
 }

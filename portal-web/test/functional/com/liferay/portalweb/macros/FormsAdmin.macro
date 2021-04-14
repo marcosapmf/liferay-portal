@@ -123,7 +123,7 @@ definition {
 			AssertElementNotPresent(locator1 = "FormFields#FIELD_ADD");
 		}
 		else {
-			AssertElementNotPresent(locator1 = "Button#SUBMIT");
+			AssertElementNotPresent(locator1 = "FormPortlet#SUBMIT_BUTTON");
 
 			AssertElementNotPresent(locator1 = "FormFields#FIELD_ADD");
 		}
@@ -140,6 +140,18 @@ definition {
 			fieldValue = "${fieldValue}");
 
 		AssertElementPresent(locator1 = "FormFields#CHECKBOX");
+	}
+
+	macro viewColorEntry {
+		FormsAdmin.viewCannotEditFormEntries(onSitePage = "${onSitePage}");
+
+		FormFields.viewColorLabel(
+			fieldLabel = "${fieldLabel}",
+			fieldName = "${fieldName}");
+
+		FormFields.viewColorValue(
+			fieldName = "${fieldName}",
+			fieldValue = "${fieldValue}");
 	}
 
 	macro viewDateEntry {

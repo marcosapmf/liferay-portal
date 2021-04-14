@@ -20,6 +20,7 @@
 CommerceDataIntegrationProcessLogDisplayContext commerceDataIntegrationProcessLogDisplayContext = (CommerceDataIntegrationProcessLogDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 CommerceDataIntegrationProcess commerceDataIntegrationProcess = commerceDataIntegrationProcessLogDisplayContext.getCommerceDataIntegrationProcess();
+
 PortletURL portletURL = commerceDataIntegrationProcessLogDisplayContext.getPortletURL();
 
 portletURL.setParameter("searchContainerId", "commerceDataIntegrationProcessLogs");
@@ -32,7 +33,7 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 </liferay-util:include>
 
 <div id="<portlet:namespace />processLogsContainer">
-	<div class="closed container-fluid-1280" id="<portlet:namespace />infoPanelId">
+	<div class="closed container-fluid container-fluid-max-xl" id="<portlet:namespace />infoPanelId">
 		<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" />
 			<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
@@ -45,7 +46,6 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 				>
 					<liferay-ui:search-container-row
 						className="com.liferay.commerce.data.integration.model.CommerceDataIntegrationProcessLog"
-						cssClass="entry-display-style"
 						keyProperty="commerceDataIntegrationProcessLogId"
 						modelVar="commerceDataIntegrationProcessLog"
 					>
@@ -53,13 +53,13 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 						<%
 						PortletURL rowURL = renderResponse.createRenderURL();
 
-						rowURL.setParameter("mvcRenderCommandName", "viewCommerceDataIntegrationProcessLog");
+						rowURL.setParameter("mvcRenderCommandName", "/commerce_data_integration/view_commerce_data_integration_process_log");
 						rowURL.setParameter("redirect", currentURL);
 						rowURL.setParameter("cDataIntegrationProcessLogId", String.valueOf(commerceDataIntegrationProcessLog.getCommerceDataIntegrationProcessLogId()));
 						%>
 
 						<liferay-ui:search-container-column-text
-							cssClass="important table-cell-content"
+							cssClass="important table-cell-expand"
 							href="<%= rowURL %>"
 							name="start-date"
 						>
@@ -67,14 +67,14 @@ request.setAttribute("view.jsp-portletURL", portletURL);
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							name="runtime"
 						>
 							<%= (commerceDataIntegrationProcessLog.getEndDate() == null) ? StringPool.DASH : String.valueOf(commerceDataIntegrationProcessLog.getEndDate().getTime() - commerceDataIntegrationProcessLog.getStartDate().getTime()) + " ms" %>
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							name="process"
 							value="<%= HtmlUtil.escape(commerceDataIntegrationProcess.getName()) %>"
 						/>

@@ -18,27 +18,28 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.product.model.CPMeasurementUnit;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionService;
+import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodService;
 import com.liferay.commerce.shipping.engine.fixed.constants.CommerceShippingEngineFixedWebKeys;
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOption;
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOptionRel;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionRelService;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionService;
-import com.liferay.commerce.shipping.engine.fixed.web.internal.servlet.taglib.ui.CommerceShippingMethodFixedOptionSettingsScreenNavigationEntry;
+import com.liferay.commerce.shipping.engine.fixed.web.internal.frontend.taglib.servlet.taglib.CommerceShippingMethodFixedOptionSettingsScreenNavigationCategory;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -58,31 +59,31 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 	extends BaseCommerceShippingFixedOptionDisplayContext {
 
 	public CommerceShippingFixedOptionRelsDisplayContext(
-		CommerceCountryService commerceCountryService,
+		CommerceChannelLocalService commerceChannelLocalService,
 		CommerceCurrencyLocalService commerceCurrencyLocalService,
-		CommerceRegionService commerceRegionService,
-		CommerceShippingMethodService commerceShippingMethodService,
-		CommerceShippingFixedOptionService commerceShippingFixedOptionService,
 		CommerceInventoryWarehouseService commerceInventoryWarehouseService,
 		CommerceShippingFixedOptionRelService
 			commerceShippingFixedOptionRelService,
+		CommerceShippingFixedOptionService commerceShippingFixedOptionService,
+		CommerceShippingMethodService commerceShippingMethodService,
+		CountryService countryService,
 		CPMeasurementUnitLocalService cpMeasurementUnitLocalService,
-		Portal portal, RenderRequest renderRequest,
+		Portal portal, RegionService regionService, RenderRequest renderRequest,
 		RenderResponse renderResponse) {
 
 		super(
-			commerceCurrencyLocalService, commerceShippingMethodService,
-			renderRequest, renderResponse);
+			commerceChannelLocalService, commerceCurrencyLocalService,
+			commerceShippingMethodService, renderRequest, renderResponse);
 
-		_commerceCountryService = commerceCountryService;
-		_commerceRegionService = commerceRegionService;
-		_commerceShippingFixedOptionService =
-			commerceShippingFixedOptionService;
 		_commerceInventoryWarehouseService = commerceInventoryWarehouseService;
 		_commerceShippingFixedOptionRelService =
 			commerceShippingFixedOptionRelService;
+		_commerceShippingFixedOptionService =
+			commerceShippingFixedOptionService;
+		_countryService = countryService;
 		_cpMeasurementUnitLocalService = cpMeasurementUnitLocalService;
 		_portal = portal;
+		_regionService = regionService;
 	}
 
 	public String getAddShippingFixedOptionURL() throws Exception {
@@ -92,7 +93,9 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 				PortletRequest.RENDER_PHASE);
 
 		editCommerceChannelPortletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceShippingFixedOptionRel");
+			"mvcRenderCommandName",
+			"/commerce_shipping_methods" +
+				"/edit_commerce_shipping_fixed_option_rel");
 		editCommerceChannelPortletURL.setParameter(
 			"commerceShippingMethodId",
 			String.valueOf(getCommerceShippingMethodId()));
@@ -100,14 +103,6 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 		editCommerceChannelPortletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return editCommerceChannelPortletURL.toString();
-	}
-
-	public List<CommerceCountry> getCommerceCountries() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return _commerceCountryService.getCommerceCountries(
-			themeDisplay.getCompanyId(), true);
 	}
 
 	public long getCommerceCountryId() throws PortalException {
@@ -148,11 +143,6 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 		}
 
 		return commerceRegionId;
-	}
-
-	public List<CommerceRegion> getCommerceRegions() throws PortalException {
-		return _commerceRegionService.getCommerceRegions(
-			getCommerceCountryId(), true);
 	}
 
 	public CommerceShippingFixedOptionRel getCommerceShippingFixedOptionRel()
@@ -196,6 +186,14 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 				QueryUtil.ALL_POS);
 	}
 
+	public List<Country> getCountries() {
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		return _countryService.getCompanyCountries(
+			themeDisplay.getCompanyId(), true);
+	}
+
 	public String getCPMeasurementUnitName(int type) {
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -227,10 +225,13 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 		).build();
 	}
 
+	public List<Region> getRegions() throws PortalException {
+		return _regionService.getRegions(getCommerceCountryId(), true);
+	}
+
 	@Override
 	public String getScreenNavigationCategoryKey() {
-		return CommerceShippingMethodFixedOptionSettingsScreenNavigationEntry.
-			CATEGORY_KEY;
+		return CommerceShippingMethodFixedOptionSettingsScreenNavigationCategory.CATEGORY_KEY;
 	}
 
 	public boolean isVisible() throws PortalException {
@@ -244,15 +245,15 @@ public class CommerceShippingFixedOptionRelsDisplayContext
 		return true;
 	}
 
-	private final CommerceCountryService _commerceCountryService;
 	private final CommerceInventoryWarehouseService
 		_commerceInventoryWarehouseService;
-	private final CommerceRegionService _commerceRegionService;
 	private final CommerceShippingFixedOptionRelService
 		_commerceShippingFixedOptionRelService;
 	private final CommerceShippingFixedOptionService
 		_commerceShippingFixedOptionService;
+	private final CountryService _countryService;
 	private final CPMeasurementUnitLocalService _cpMeasurementUnitLocalService;
 	private final Portal _portal;
+	private final RegionService _regionService;
 
 }

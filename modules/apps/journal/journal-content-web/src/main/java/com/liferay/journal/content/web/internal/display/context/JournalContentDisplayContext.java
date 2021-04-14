@@ -73,7 +73,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.LiferayPortletUtil;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
@@ -549,14 +548,14 @@ public class JournalContentDisplayContext {
 			return _latestArticle;
 		}
 
-		JournalArticleDisplay articleDisplay = getArticleDisplay();
+		JournalArticle article = getArticle();
 
-		if (articleDisplay == null) {
+		if (article == null) {
 			return null;
 		}
 
 		_latestArticle = JournalArticleLocalServiceUtil.fetchLatestArticle(
-			articleDisplay.getGroupId(), articleDisplay.getArticleId(),
+			article.getGroupId(), article.getArticleId(),
 			WorkflowConstants.STATUS_ANY);
 
 		return _latestArticle;
@@ -827,23 +826,8 @@ public class JournalContentDisplayContext {
 	}
 
 	public boolean isEnableViewCountIncrement() {
-		if (_enableViewCountIncrement != null) {
-			return _enableViewCountIncrement;
-		}
-
-		if (Validator.isNotNull(
-				_journalContentPortletInstanceConfiguration.
-					enableViewCountIncrement())) {
-
-			_enableViewCountIncrement = GetterUtil.getBoolean(
-				_journalContentPortletInstanceConfiguration.
-					enableViewCountIncrement());
-		}
-		else {
-			_enableViewCountIncrement = PropsValues.VIEW_COUNT_ENABLED;
-		}
-
-		return _enableViewCountIncrement;
+		return _journalContentPortletInstanceConfiguration.
+			enableViewCountIncrement();
 	}
 
 	public boolean isExpired() throws PortalException {
@@ -1081,6 +1065,9 @@ public class JournalContentDisplayContext {
 			return (JournalArticle)assetRenderer.getAssetObject();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -1089,15 +1076,15 @@ public class JournalContentDisplayContext {
 	private DDMTemplate _getDDMTemplate(String ddmTemplateKey)
 		throws PortalException {
 
-		JournalArticleDisplay articleDisplay = getArticleDisplay();
+		JournalArticle article = getArticle();
 
-		if (articleDisplay == null) {
+		if (article == null) {
 			return null;
 		}
 
 		return DDMTemplateLocalServiceUtil.fetchTemplate(
-			articleDisplay.getGroupId(), _ddmStructureClassNameId,
-			ddmTemplateKey, true);
+			article.getGroupId(), _ddmStructureClassNameId, ddmTemplateKey,
+			true);
 	}
 
 	private static final boolean _STAGING_LIVE_GROUP_LOCKING_ENABLED =
@@ -1168,7 +1155,6 @@ public class JournalContentDisplayContext {
 		_ddmTemplateModelResourcePermission;
 	private List<DDMTemplate> _ddmTemplates;
 	private DDMTemplate _defaultDDMTemplate;
-	private Boolean _enableViewCountIncrement;
 	private Boolean _expired;
 	private Boolean _hasViewPermission;
 	private final JournalContentPortletInstanceConfiguration

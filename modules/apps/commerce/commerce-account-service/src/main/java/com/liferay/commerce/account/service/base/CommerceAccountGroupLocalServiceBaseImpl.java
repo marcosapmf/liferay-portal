@@ -16,7 +16,6 @@ package com.liferay.commerce.account.service.base;
 
 import com.liferay.commerce.account.model.CommerceAccountGroup;
 import com.liferay.commerce.account.service.CommerceAccountGroupLocalService;
-import com.liferay.commerce.account.service.persistence.CommerceAccountFinder;
 import com.liferay.commerce.account.service.persistence.CommerceAccountGroupCommerceAccountRelPersistence;
 import com.liferay.commerce.account.service.persistence.CommerceAccountGroupFinder;
 import com.liferay.commerce.account.service.persistence.CommerceAccountGroupPersistence;
@@ -338,6 +337,7 @@ public abstract class CommerceAccountGroupLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -356,6 +356,7 @@ public abstract class CommerceAccountGroupLocalServiceBaseImpl
 			(CommerceAccountGroup)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<CommerceAccountGroup> getBasePersistence() {
 		return commerceAccountGroupPersistence;
 	}
@@ -457,26 +458,6 @@ public abstract class CommerceAccountGroupLocalServiceBaseImpl
 		CommerceAccountPersistence commerceAccountPersistence) {
 
 		this.commerceAccountPersistence = commerceAccountPersistence;
-	}
-
-	/**
-	 * Returns the commerce account finder.
-	 *
-	 * @return the commerce account finder
-	 */
-	public CommerceAccountFinder getCommerceAccountFinder() {
-		return commerceAccountFinder;
-	}
-
-	/**
-	 * Sets the commerce account finder.
-	 *
-	 * @param commerceAccountFinder the commerce account finder
-	 */
-	public void setCommerceAccountFinder(
-		CommerceAccountFinder commerceAccountFinder) {
-
-		this.commerceAccountFinder = commerceAccountFinder;
 	}
 
 	/**
@@ -1014,9 +995,6 @@ public abstract class CommerceAccountGroupLocalServiceBaseImpl
 
 	@BeanReference(type = CommerceAccountPersistence.class)
 	protected CommerceAccountPersistence commerceAccountPersistence;
-
-	@BeanReference(type = CommerceAccountFinder.class)
-	protected CommerceAccountFinder commerceAccountFinder;
 
 	@BeanReference(type = CommerceAccountGroupLocalService.class)
 	protected CommerceAccountGroupLocalService commerceAccountGroupLocalService;

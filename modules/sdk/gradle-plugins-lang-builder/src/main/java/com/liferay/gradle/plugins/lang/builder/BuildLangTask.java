@@ -16,6 +16,7 @@ package com.liferay.gradle.plugins.lang.builder;
 
 import com.liferay.gradle.plugins.lang.builder.internal.util.StringUtil;
 import com.liferay.gradle.util.FileUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.GradleUtil;
 import com.liferay.gradle.util.Validator;
 import com.liferay.lang.builder.LangBuilderArgs;
@@ -36,7 +37,6 @@ import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -168,7 +168,7 @@ public class BuildLangTask extends JavaExec {
 	private static final Logger _logger = Logging.getLogger(
 		BuildLangTask.class);
 
-	private Set<Object> _excludedLanguageIds = new LinkedHashSet<>();
+	private final Set<Object> _excludedLanguageIds = new LinkedHashSet<>();
 	private Object _langDir;
 	private Object _langFileName = LangBuilderArgs.LANG_FILE_NAME;
 	private boolean _titleCapitalization = LangBuilderArgs.TITLE_CAPITALIZATION;

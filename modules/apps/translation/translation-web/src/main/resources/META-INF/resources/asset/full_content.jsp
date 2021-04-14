@@ -25,9 +25,9 @@ ViewTranslationDisplayContext viewTranslationDisplayContext = (ViewTranslationDi
 </liferay-util:html-top>
 
 <clay:container-fluid
-	cssClass="container-view"
+	cssClass="container-view translation"
 >
-	<div class="sheet translate-body-form">
+	<div class="sheet translation-edit-body-form">
 		<clay:row>
 			<clay:col
 				md="6"
@@ -73,10 +73,9 @@ ViewTranslationDisplayContext viewTranslationDisplayContext = (ViewTranslationDi
 			}
 
 			String infoFieldSetLabel = viewTranslationDisplayContext.getInfoFieldSetLabel(infoFieldSetEntry, locale);
-
-			if (Validator.isNotNull(infoFieldSetLabel)) {
 		%>
 
+			<c:if test="<%= Validator.isNotNull(infoFieldSetLabel) %>">
 				<clay:row>
 					<clay:col
 						md="6"
@@ -94,10 +93,9 @@ ViewTranslationDisplayContext viewTranslationDisplayContext = (ViewTranslationDi
 						</div>
 					</clay:col>
 				</clay:row>
+			</c:if>
 
 			<%
-			}
-
 			for (InfoField<TextInfoFieldType> infoField : infoFields) {
 				boolean html = viewTranslationDisplayContext.getBooleanValue(infoField, TextInfoFieldType.HTML);
 				String label = viewTranslationDisplayContext.getInfoFieldLabel(infoField);
@@ -120,7 +118,7 @@ ViewTranslationDisplayContext viewTranslationDisplayContext = (ViewTranslationDi
 									<%= label %>
 								</label>
 
-								<div class="translate-editor-preview" dir="<%= sourceContentDir %>">
+								<div class="translation-editor-preview" dir="<%= sourceContentDir %>">
 									<%= sourceContent %>
 								</div>
 							</c:when>
@@ -136,7 +134,6 @@ ViewTranslationDisplayContext viewTranslationDisplayContext = (ViewTranslationDi
 
 						<%
 						String targetContent = viewTranslationDisplayContext.getStringValue(infoField, viewTranslationDisplayContext.getTargetLocale());
-						String targetContentDir = LanguageUtil.get(viewTranslationDisplayContext.getTargetLocale(), "lang.dir");
 						%>
 
 						<c:choose>
@@ -145,7 +142,7 @@ ViewTranslationDisplayContext viewTranslationDisplayContext = (ViewTranslationDi
 									<%= label %>
 								</label>
 
-								<div class="translate-editor-preview" dir="<%= targetContentDir %>">
+								<div class="translation-editor-preview" dir="<%= LanguageUtil.get(viewTranslationDisplayContext.getTargetLocale(), "lang.dir") %>">
 									<%= targetContent %>
 								</div>
 							</c:when>

@@ -12,11 +12,11 @@
  * details.
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayPopover from '@clayui/popover';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 
 import {AppContext} from '../../AppContext.es';
-import Button from '../../components/button/Button.es';
 import isClickOutside from '../../utils/clickOutside.es';
 import ListApps from './ListApps.es';
 import NewAppPopover from './NewAppPopover.es';
@@ -73,13 +73,13 @@ export default ({scope, ...restProps}) => {
 
 	const emptyState = {
 		button: () => (
-			<Button
+			<ClayButton
 				displayType="secondary"
 				onClick={onClickAddButton}
 				onMouseOver={({target}) => updateAlignElement(target)}
 			>
 				{Liferay.Language.get('create-new-app')}
-			</Button>
+			</ClayButton>
 		),
 		description: Liferay.Language.get(
 			'create-a-standard-app-to-collect-and-manage-an-objects-data'
@@ -112,7 +112,7 @@ export default ({scope, ...restProps}) => {
 							header={Liferay.Language.get('standard-app')}
 							show={showTooltip && !isPopoverVisible}
 							trigger={
-								<Button
+								<ClayButtonWithIcon
 									className="nav-btn nav-btn-monospaced"
 									onClick={onClickAddButton}
 									onMouseOut={() => setShowTooltip(false)}

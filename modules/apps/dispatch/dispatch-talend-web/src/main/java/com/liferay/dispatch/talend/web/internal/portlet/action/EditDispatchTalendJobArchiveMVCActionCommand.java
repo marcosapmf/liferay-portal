@@ -15,16 +15,20 @@
 package com.liferay.dispatch.talend.web.internal.portlet.action;
 
 import com.liferay.dispatch.constants.DispatchPortletKeys;
-import com.liferay.dispatch.talend.web.internal.executor.DispatchTalendScheduledTaskExecutorHelper;
+import com.liferay.dispatch.repository.DispatchFileRepository;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -38,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + DispatchPortletKeys.DISPATCH,
-		"mvc.command.name=editDispatchTalendJobArchive"
+		"mvc.command.name=/dispatch_talend/edit_dispatch_talend_job_archive"
 	},
 	service = MVCActionCommand.class
 )
@@ -51,14 +55,15 @@ public class EditDispatchTalendJobArchiveMVCActionCommand
 		throws PortalException {
 
 		try {
+			_checkPermission(actionRequest);
+
 			UploadPortletRequest uploadPortletRequest =
 				_portal.getUploadPortletRequest(actionRequest);
 
 			long dispatchTriggerId = ParamUtil.getLong(
 				uploadPortletRequest, "dispatchTriggerId");
 
-			_dispatchTalendScheduledTaskExecutorHelper.addFileEntry(
-				_portal.getCompanyId(actionRequest),
+			_dispatchFileRepository.addFileEntry(
 				_portal.getUserId(actionRequest), dispatchTriggerId,
 				uploadPortletRequest.getFileName("jobArchive"),
 				uploadPortletRequest.getSize("jobArchive"),
@@ -72,12 +77,25 @@ public class EditDispatchTalendJobArchiveMVCActionCommand
 		}
 	}
 
+	private void _checkPermission(ActionRequest actionRequest)
+		throws PrincipalException {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		PermissionChecker permissionChecker =
+			themeDisplay.getPermissionChecker();
+
+		if (!permissionChecker.isOmniadmin()) {
+			throw new PrincipalException();
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		EditDispatchTalendJobArchiveMVCActionCommand.class);
 
 	@Reference
-	private DispatchTalendScheduledTaskExecutorHelper
-		_dispatchTalendScheduledTaskExecutorHelper;
+	private DispatchFileRepository _dispatchFileRepository;
 
 	@Reference
 	private Portal _portal;

@@ -70,7 +70,7 @@ public interface JournalArticleInfoItemFields {
 			InfoLocalizedValue.localize(
 				JournalArticleInfoItemFields.class, "display-date")
 		).build();
-	public static final InfoField<URLInfoFieldType> displayPageUrlInfoField =
+	public static final InfoField<URLInfoFieldType> displayPageURLInfoField =
 		InfoField.builder(
 		).infoFieldType(
 			URLInfoFieldType.INSTANCE

@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
@@ -37,6 +38,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsActionKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
@@ -60,12 +62,13 @@ public class SegmentsDisplayContext {
 
 	public SegmentsDisplayContext(
 		HttpServletRequest httpServletRequest, RenderRequest renderRequest,
-		RenderResponse renderResponse,
+		RenderResponse renderResponse, boolean roleSegmentationEnabled,
 		SegmentsEntryService segmentsEntryService) {
 
 		_httpServletRequest = httpServletRequest;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
+		_roleSegmentationEnabled = roleSegmentationEnabled;
 		_segmentsEntryService = segmentsEntryService;
 
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
@@ -110,7 +113,8 @@ public class SegmentsDisplayContext {
 			dropdownItem -> {
 				dropdownItem.setHref(
 					_renderResponse.createRenderURL(), "mvcRenderCommandName",
-					"editSegmentsEntry", "type", User.class.getName());
+					"/segments/edit_segments_entry", "type",
+					User.class.getName());
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "user-segment"));
 			}
@@ -122,8 +126,9 @@ public class SegmentsDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_renderRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			PortalUtil.getHttpServletRequest(_renderRequest),
+			SegmentsPortletKeys.SEGMENTS, "list");
 
 		return _displayStyle;
 	}
@@ -236,7 +241,8 @@ public class SegmentsDisplayContext {
 
 		PortletURL portletURL = _renderResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editSegmentsEntry");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/segments/edit_segments_entry");
 		portletURL.setParameter(
 			"redirect", PortalUtil.getCurrentURL(_renderRequest));
 		portletURL.setParameter(
@@ -295,6 +301,10 @@ public class SegmentsDisplayContext {
 		}
 
 		return true;
+	}
+
+	public boolean isRoleSegmentationEnabled() {
+		return _roleSegmentationEnabled;
 	}
 
 	public boolean isShowCreationMenu() {
@@ -453,6 +463,7 @@ public class SegmentsDisplayContext {
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private final boolean _roleSegmentationEnabled;
 	private SearchContainer<SegmentsEntry> _searchContainer;
 	private final SegmentsEntryService _segmentsEntryService;
 	private final ThemeDisplay _themeDisplay;

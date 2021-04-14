@@ -21,6 +21,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.PwdGenerator;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -130,6 +132,10 @@ public class JavaParser {
 					JavaParserUtil.NO_MAX_LINE_LENGTH, true);
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
+
 				failureCount++;
 
 				if (failureCount > 5) {
@@ -407,10 +413,9 @@ public class JavaParser {
 
 		Position startPosition = DetailASTUtil.getStartPosition(detailAST);
 
-		String expectedIndent = _getExpectedIndent(detailAST, fileContents);
-
 		String javaTermContent = javaTerm.toString(
-			expectedIndent, StringPool.BLANK, maxLineLength);
+			_getExpectedIndent(detailAST, fileContents), StringPool.BLANK,
+			maxLineLength);
 
 		if (javaTermContent.contains(
 				"\n" + JavaClassCall.NESTED_CODE_BLOCK + "\n") ||
@@ -1280,6 +1285,8 @@ public class JavaParser {
 
 		return parsedJavaClass;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(JavaParser.class);
 
 	private static class ContentModifications {
 

@@ -133,15 +133,17 @@ export default class Gallery extends React.Component {
 
 		return (
 			<div className="product-gallery">
-				<MainImage
-					background={background}
-					loading={loading}
-					onNext={images.length > 1 ? this.goToNext : null}
-					onPrev={images.length > 1 ? this.goToPrev : null}
-					onZoom={this.fullscreenOpen}
-					src={images[selected].url}
-					title={images[selected].title}
-				/>
+				{images && images.length > 0 && (
+					<MainImage
+						background={background}
+						loading={loading}
+						onNext={images.length > 1 ? this.goToNext : null}
+						onPrev={images.length > 1 ? this.goToPrev : null}
+						onZoom={this.fullscreenOpen}
+						src={images[selected].url}
+						title={images[selected].title}
+					/>
+				)}
 
 				{images.length > 1 ? (
 					<Thumbnails

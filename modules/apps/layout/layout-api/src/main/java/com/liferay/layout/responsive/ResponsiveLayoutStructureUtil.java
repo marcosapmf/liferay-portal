@@ -40,8 +40,20 @@ import java.util.Set;
  */
 public class ResponsiveLayoutStructureUtil {
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getColumnCssClass(ColumnLayoutStructureItem, RowStyledLayoutStructureItem)}
+	 */
+	@Deprecated
 	public static String getColumnCssClass(
 		ColumnLayoutStructureItem columnLayoutStructureItem) {
+
+		return getColumnCssClass(columnLayoutStructureItem, null);
+	}
+
+	public static String getColumnCssClass(
+		ColumnLayoutStructureItem columnLayoutStructureItem,
+		RowStyledLayoutStructureItem rowStyledLayoutStructureItem) {
 
 		StringBundler sb = new StringBundler();
 
@@ -67,19 +79,27 @@ public class ResponsiveLayoutStructureUtil {
 			sb.append(columnSize);
 		}
 
+		if ((rowStyledLayoutStructureItem != null) &&
+			Objects.equals(
+				rowStyledLayoutStructureItem.getVerticalAlignment(),
+				"middle")) {
+
+			sb.append("d-flex flex-column ");
+		}
+
 		return sb.toString();
 	}
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getColumnCssClass(ColumnLayoutStructureItem)}
+	 *             #getColumnCssClass(ColumnLayoutStructureItem, RowStyledLayoutStructureItem)}
 	 */
 	@Deprecated
 	public static String getColumnCssClass(
 		RowLayoutStructureItem rowLayoutStructureItem,
 		ColumnLayoutStructureItem columnLayoutStructureItem) {
 
-		return getColumnCssClass(columnLayoutStructureItem);
+		return getColumnCssClass(columnLayoutStructureItem, null);
 	}
 
 	public static String getResponsiveCssClassValues(

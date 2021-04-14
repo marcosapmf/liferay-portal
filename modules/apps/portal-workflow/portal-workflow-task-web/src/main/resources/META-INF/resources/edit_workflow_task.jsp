@@ -57,12 +57,10 @@ if (assetRenderer != null) {
 	}
 }
 
-String headerTitle = workflowTaskDisplayContext.getHeaderTitle(workflowTask);
-
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(backURL);
 
-renderResponse.setTitle(headerTitle);
+renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask));
 %>
 
 <clay:container-fluid>
@@ -251,7 +249,7 @@ renderResponse.setTitle(headerTitle);
 								icon="<%= workflowHandler.getIconCssClass() %>"
 								label="<%= true %>"
 								markupView="lexicon"
-								message="<%= workflowTaskDisplayContext.getAssetTitle(workflowTask) %>"
+								message="<%= HtmlUtil.escape(workflowTaskDisplayContext.getAssetTitle(workflowTask)) %>"
 							/>
 						</h3>
 
@@ -282,8 +280,8 @@ renderResponse.setTitle(headerTitle);
 							<liferay-comment:discussion
 								assetEntryVisible="<%= false %>"
 								className="<%= assetRenderer.getClassName() %>"
-								classPK="<%= assetEntry.getClassPK() %>"
-								formName='<%= "fm" + assetEntry.getClassPK() %>'
+								classPK="<%= classPK %>"
+								formName='<%= "fm" + classPK %>'
 								ratingsEnabled="<%= false %>"
 								redirect="<%= currentURL %>"
 								userId="<%= user.getUserId() %>"

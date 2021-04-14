@@ -14,9 +14,14 @@
 
 module.exports = [
 	{
-		entry: 'DatasetDisplay',
-		name: 'Dataset display',
-		page: 'dataset-display.html',
+		entry: 'AddToCart',
+		name: 'Add To Cart',
+		page: 'add-to-cart.html',
+	},
+	{
+		entry: 'AddToWishList',
+		name: 'Add To Wish List',
+		page: 'add-to-wish-list.html',
 	},
 	{
 		entry: 'Autocomplete',
@@ -24,14 +29,9 @@ module.exports = [
 		page: 'autocomplete.html',
 	},
 	{
-		entry: 'ItemFinder',
-		name: 'Item finder',
-		page: 'item-finder.html',
-	},
-	{
-		entry: 'Summary',
-		name: 'Summary',
-		page: 'summary.html',
+		entry: 'DatasetDisplay',
+		name: 'Dataset display',
+		page: 'dataset-display.html',
 	},
 	{
 		entry: 'Dropdown',
@@ -44,6 +44,16 @@ module.exports = [
 		page: 'gallery.html',
 	},
 	{
+		entry: 'GlobalSearch',
+		name: 'Global Search',
+		page: 'global-search.html',
+	},
+	{
+		entry: 'ItemFinder',
+		name: 'Item finder',
+		page: 'item-finder.html',
+	},
+	{
 		entry: 'Modal',
 		name: 'Modal',
 		page: 'modal.html',
@@ -54,6 +64,11 @@ module.exports = [
 		page: 'mini-cart.html',
 	},
 	{
+		entry: 'MiniCompare',
+		name: 'Mini Compare',
+		page: 'mini-compare.html',
+	},
+	{
 		entry: 'SidePanel',
 		name: 'Side panel',
 		page: 'side-panel.html',
@@ -62,5 +77,20 @@ module.exports = [
 		entry: 'StepTracker',
 		name: 'Step tracker',
 		page: 'step-tracker.html',
+	},
+	{
+		entry: 'Summary',
+		name: 'Summary',
+		page: 'summary.html',
+	},
+	{
+		entry: 'QuantitySelector',
+		name: 'Quantity Selector',
+		page: 'quantity-selector.html',
+	},
+	{
+		entry: 'AccountSelector',
+		name: 'Account Selector',
+		page: 'account-selector.html',
 	},
 ];

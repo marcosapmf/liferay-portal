@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceBOMPortletKeys.COMMERCE_BOM_ADMIN,
-		"mvc.command.name=editCommerceBOMDefinition"
+		"mvc.command.name=/commerce_bom_admin/edit_commerce_bom_definition"
 	},
 	service = MVCRenderCommand.class
 )
@@ -42,7 +42,7 @@ public class EditCommerceBOMDefinitionMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/edit_bom_definition.jsp";
+		return "/edit_commerce_bom_definition.jsp";
 	}
 
 }

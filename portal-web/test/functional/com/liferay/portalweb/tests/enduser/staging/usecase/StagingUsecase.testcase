@@ -32,6 +32,41 @@ definition {
 		}
 	}
 
+	@priority = "5"
+	test ActivateStagingForSiteWithTheme {
+		property test.name.skip.portal.instance = "Theme#ActivateStagingForSiteWithTheme";
+
+		FileInstall.deployFileOnServer(liferayDependencyJars = "test-theme.war");
+
+		WaitForConsoleTextPresent(value1 = "STARTED test-theme");
+
+		User.firstLoginPG();
+
+		Page.changeSinglePageTheme(themeName = "test-theme-7-4");
+
+		Navigator.gotoBack();
+
+		Button.clickPublish();
+
+		Staging.openStagingAdmin(siteURLKey = "guest");
+
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		Staging.activateStagingCP(
+			pageVersioningEnabled = "true",
+			siteName = "${siteName}");
+
+		Navigator.openStagingSiteURL(defaultSite = "true");
+
+		// Workaround for LPS-110206
+
+		//Theme.viewTestThemeBackgroundColor();
+
+		Navigator.openURL();
+
+		Theme.viewTestThemeBackgroundColor();
+	}
+
 	@description = "This is a use case for LPS-98170"
 	@priority = "4"
 	test AssertAssetPriorityNotBeResetAfterPublication {
@@ -108,10 +143,9 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Link to Page",
+		DataEngine.addField(
 			fieldFieldLabel = "Link to Page",
-			fieldName = "LinkToPage");
+			fieldName = "Link to Page");
 
 		WebContentStructures.saveCP(structureName = "WC Structure Name");
 
@@ -130,10 +164,9 @@ definition {
 		WebContentNavigator.gotoAddWithStructureCP(structureName = "WC Structure Name");
 
 		WebContent.addWithStructureCP(
-			linkedPageName = "Second Test Page",
-			linkFieldName = "LinkToPage",
 			structureName = "WC Structure Name",
 			templateName = "WC Template Name",
+			webContentLinkToPage = "Second Test Page",
 			webContentTitle = "WC WebContent Title 2");
 
 		PortletEntry.publish();
@@ -396,6 +429,8 @@ definition {
 
 	@priority = "5"
 	test ContentCannotBeCreatedOnLive {
+		property portal.acceptance = "quarantine";
+
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		ProductMenu.gotoPortlet(
@@ -456,6 +491,7 @@ definition {
 
 	@priority = "4"
 	test EditPublishTemplate {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "StagingUsecase#EditPublishTemplate";
 
 		SitePages.openPagesAdmin(siteURLKey = "site-name-staging");
@@ -574,6 +610,7 @@ definition {
 	@priority = "5"
 	test ImportLARsOnStagedSite {
 		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 		property testray.component.names = "Training";
 
 		LAR.importSiteCP(
@@ -749,6 +786,7 @@ definition {
 
 	@priority = "5"
 	test PublishPortlet {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
@@ -793,6 +831,81 @@ definition {
 		Team.viewCP(
 			teamDescription = "Site Team Description",
 			teamName = "Site Team Name");
+	}
+
+	// Ignore test until LPS-126081 is resolved
+
+	@ignore = "true"
+	@priority = "5"
+	test PublishThemeFromStagedToLive {
+		property test.name.skip.portal.instance = "Theme#PublishThemeFromStagedToLive";
+
+		FileInstall.deployFileOnServer(liferayDependencyJars = "test-theme.war");
+
+		WaitForConsoleTextPresent(value1 = "STARTED test-theme");
+
+		User.firstLoginPG();
+
+		Staging.openStagingAdmin(siteURLKey = "guest");
+
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		Staging.activateStagingCP(
+			pageVersioningEnabled = "true",
+			siteName = "${siteName}");
+
+		Navigator.openStagingSiteURL(defaultSite = "true");
+
+		Page.changeSinglePageTheme(themeName = "test-theme-7-4");
+
+		Navigator.gotoBack();
+
+		Button.clickPublish();
+
+		// Workaround for LPS-110206
+
+		//Theme.viewTestThemeBackgroundColor();
+
+		Navigator.openURL();
+
+		Theme.viewClassicThemeBackgroundColor();
+
+		Navigator.openStagingSiteURL(defaultSite = "true");
+
+		Staging.gotoPublishToLive();
+
+		Staging.publishToLive();
+
+		Navigator.openURL();
+
+		Theme.viewTestThemeBackgroundColor();
+	}
+
+	@description = "This is a use case for LPS-127207."
+	@priority = "4"
+	test PublishWebContentFolderWithChildFolders {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
+
+		WebContentFolder.addCP(
+			folderDescription = "WC Folder Description",
+			folderName = "WC Folder Name");
+
+		for (var subfolderCount : list "1,2,3") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
+
+			WebContentFolder.addSubfolderCP(
+				folderName = "WC Folder Name",
+				subfolderDescription = "WC SubFolder Description",
+				subfolderName = "WC SubFolder Name ${subfolderCount}");
+		}
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
+
+		Staging.publishViaSAP(
+			confirmMessage = "Are you sure you want to publish the selected folder?",
+			entry = "WC Folder Name");
+
+		AssertConsoleTextNotPresent(value1 = "java.lang.OutOfMemoryError");
 	}
 
 	@priority = "3"
@@ -913,6 +1026,8 @@ definition {
 
 		Button.clickPublish();
 
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
+
 		Navigator.gotoStagedSitePage(
 			pageName = "Second Page",
 			siteName = "Site Name");
@@ -944,6 +1059,8 @@ definition {
 	@description = "This is a use case for LPS-84418 and LPS-117578."
 	@priority = "5"
 	test PublishWithImpossibleDateRange {
+		property portal.acceptance = "true";
+
 		Navigator.openStagingSiteURL(siteName = "Site Name");
 
 		Staging.addRepeatEvent(
@@ -1201,10 +1318,9 @@ definition {
 			structureDescription = "Structure Description",
 			structureName = "Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Web Content",
+		DataEngine.addField(
 			fieldFieldLabel = "Web Content",
-			fieldName = "WebContent");
+			fieldName = "Web Content");
 
 		WebContentStructures.saveCP(structureName = "Structure Name");
 
@@ -1222,9 +1338,8 @@ definition {
 
 		WebContent.addWithStructureCP(
 			description = "WC WebContent 1 Description",
-			fieldName = "WebContent",
-			webContentSelectWCFile = "WC WebContent Title",
-			webContentTitle = "WC WebContent 1 Title");
+			webContentTitle = "WC WebContent 1 Title",
+			webContentWebContent = "WC WebContent Title");
 
 		PortletEntry.publish();
 

@@ -15,14 +15,14 @@
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayButtonGroup from '@clayui/button/lib/Group';
 import {ClayTooltipProvider} from '@clayui/tooltip';
+import {confirmDelete} from 'data-engine-js-components-web/js/utils/client.es';
+import {sub} from 'data-engine-js-components-web/js/utils/lang.es';
 import React, {useContext} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
 import UpperToolbar from '../../components/upper-toolbar/UpperToolbar.es';
 import usePermissions from '../../hooks/usePermissions.es';
-import {confirmDelete} from '../../utils/client.es';
-import {sub} from '../../utils/lang.es';
 import {navigateToEditPage} from './utils.es';
 
 function ViewEntryUpperToolbar({
@@ -43,7 +43,11 @@ function ViewEntryUpperToolbar({
 	const permissions = usePermissions();
 
 	const changeEntryIndex = (entryIndex) => {
-		history.push(`/entries/${entryIndex}?${window.location.search}`);
+		const {hash} = window.location;
+		const newHash = hash.substr(hash.indexOf('?') + 1);
+		const baseURL = `/entries/${entryIndex}`;
+
+		history.push(`${baseURL}?${newHash}`);
 	};
 
 	const onDelete = () => {

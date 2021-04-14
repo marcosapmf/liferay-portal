@@ -38,8 +38,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -50,7 +51,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +76,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = DLOpenerFileEntryReferencePersistence.class)
+@Component(
+	service = {
+		DLOpenerFileEntryReferencePersistence.class, BasePersistence.class
+	}
+)
 public class DLOpenerFileEntryReferencePersistenceImpl
 	extends BasePersistenceImpl<DLOpenerFileEntryReference>
 	implements DLOpenerFileEntryReferencePersistence {
@@ -167,7 +171,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByFileEntryId, finderArgs, this);
+				_finderPathFetchByFileEntryId, finderArgs);
 		}
 
 		if (result instanceof DLOpenerFileEntryReference) {
@@ -260,7 +264,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 
 		Object[] finderArgs = new Object[] {fileEntryId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -379,8 +383,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByR_F, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByR_F, finderArgs);
 		}
 
 		if (result instanceof DLOpenerFileEntryReference) {
@@ -497,7 +500,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 
 		Object[] finderArgs = new Object[] {referenceType, fileEntryId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -633,9 +636,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(DLOpenerFileEntryReferenceImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DLOpenerFileEntryReferenceImpl.class);
 	}
 
 	/**
@@ -668,9 +669,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DLOpenerFileEntryReferenceImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -687,21 +686,19 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		};
 
 		finderCache.putResult(
-			_finderPathCountByFileEntryId, args, Long.valueOf(1), false);
+			_finderPathCountByFileEntryId, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByFileEntryId, args,
-			dlOpenerFileEntryReferenceModelImpl, false);
+			dlOpenerFileEntryReferenceModelImpl);
 
 		args = new Object[] {
 			dlOpenerFileEntryReferenceModelImpl.getReferenceType(),
 			dlOpenerFileEntryReferenceModelImpl.getFileEntryId()
 		};
 
+		finderCache.putResult(_finderPathCountByR_F, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByR_F, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByR_F, args, dlOpenerFileEntryReferenceModelImpl,
-			false);
+			_finderPathFetchByR_F, args, dlOpenerFileEntryReferenceModelImpl);
 	}
 
 	/**
@@ -1045,7 +1042,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<DLOpenerFileEntryReference>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1118,7 +1115,7 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1180,38 +1177,36 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new DLOpenerFileEntryReferenceModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name",
-				DLOpenerFileEntryReference.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathFetchByFileEntryId = _createFinderPath(
+		_finderPathFetchByFileEntryId = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByFileEntryId",
 			new String[] {Long.class.getName()}, new String[] {"fileEntryId"},
 			true);
 
-		_finderPathCountByFileEntryId = _createFinderPath(
+		_finderPathCountByFileEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByFileEntryId",
 			new String[] {Long.class.getName()}, new String[] {"fileEntryId"},
 			false);
 
-		_finderPathFetchByR_F = _createFinderPath(
+		_finderPathFetchByR_F = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByR_F",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"referenceType", "fileEntryId"}, true);
 
-		_finderPathCountByR_F = _createFinderPath(
+		_finderPathCountByR_F = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_F",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"referenceType", "fileEntryId"}, false);
@@ -1222,12 +1217,6 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 		entityCache.removeCache(DLOpenerFileEntryReferenceImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -1291,36 +1280,13 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"type"});
 
-	static {
-		try {
-			Class.forName(DLOpenerPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class DLOpenerFileEntryReferenceModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1374,6 +1340,16 @@ public class DLOpenerFileEntryReferencePersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return DLOpenerFileEntryReferenceImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return DLOpenerFileEntryReferenceTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

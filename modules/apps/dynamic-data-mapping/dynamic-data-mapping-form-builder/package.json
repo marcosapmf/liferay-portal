@@ -1,18 +1,11 @@
 {
 	"dependencies": {
 		"classnames": "2.2.6",
-		"clay-alert": "2.21.4",
-		"clay-checkbox": "2.21.4",
-		"clay-dropdown": "2.21.4",
-		"clay-icon": "2.21.4",
-		"clay-management-toolbar": "2.21.4",
-		"clay-modal": "2.21.4",
-		"clay-radio": "2.21.4",
-		"metal-dom": "2.16.8",
+		"clay-dropdown": "2.22.3",
+		"clay-icon": "2.22.2",
+		"clay-modal": "2.22.2",
 		"metal-drag-drop": "3.3.1",
-		"metal-events": "2.16.8",
 		"metal-jsx": "2.16.8",
-		"metal-position": "2.1.2",
 		"metal-state": "2.16.8"
 	},
 	"jest": {
@@ -33,13 +26,20 @@
 		],
 		"testPathIgnorePatterns": [
 			"Evaluator",
+			"fieldSupport",
 			"FormBuilder",
 			"FormRenderer",
+			"LayoutProvider/handlers/columnResizedHandler",
+			"LayoutProvider/handlers/fieldBlurredHandler",
+			"LayoutProvider/handlers/fieldDeletedHandler",
+			"LayoutProvider/handlers/fieldEditedHandler",
 			"LayoutProvider/handlers/fieldSetAddedHandler",
+			"LayoutProvider/handlers/focusedFieldEvaluationEndedHandler",
+			"LayoutProvider/LayoutProvider",
 			"LayoutProvider/util",
 			"PageRenderer",
-			"RuleBuilder",
-			"RuleEditor"
+			"RuleBuilder/RulesSupport.",
+			"Sidebar/Sidebar"
 		]
 	},
 	"main": "js/index.es.js",
@@ -50,5 +50,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "metalsoy -s \"test/**/*.soy\" -d \"test\" && liferay-npm-scripts test"
 	},
-	"version": "3.0.51"
+	"version": "4.0.0"
 }

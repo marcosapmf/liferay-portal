@@ -120,15 +120,14 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 			<%
 			JSONArray definitionFieldsJSONArray = DDMUtil.getDDMFormFieldsJSONArray(structure, structure.getDefinition());
 
-			JSONObject definitionJSONObject = JSONUtil.put(
-				"definitionFields", definitionFieldsJSONArray
-			).put(
-				"definitionId", structure.getStructureId()
-			).put(
-				"definitionName", structure.getName(locale)
-			);
-
-			availableDefinitionsJSONArray.put(definitionJSONObject);
+			availableDefinitionsJSONArray.put(
+				JSONUtil.put(
+					"definitionFields", definitionFieldsJSONArray
+				).put(
+					"definitionId", structure.getStructureId()
+				).put(
+					"definitionName", structure.getName(locale)
+				));
 			%>
 
 			(<aui:a cssClass="kaleo-process-preview-definition" data-definition-id="<%= structure.getStructureId() %>" href="javascript:;" label="view-fields" />)
@@ -164,7 +163,7 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 <aui:script>
 	Liferay.on(
 		'<portlet:namespace />chooseDefinition',
-		function (event) {
+		(event) => {
 			var A = AUI();
 
 			var ddmStructureId = event.ddmStructureId;
@@ -196,7 +195,7 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 	Liferay.provide(
 		window,
 		'<portlet:namespace />editStructure',
-		function (title, uri) {
+		(title, uri) => {
 			var A = AUI();
 
 			var WIN = A.config.win;
@@ -230,7 +229,7 @@ JSONArray availableDefinitionsJSONArray = JSONFactoryUtil.createJSONArray();
 
 	A.one('#p_p_id<portlet:namespace />').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			var definitionId = event.target.attr('data-definition-id');
 
 			kaleoDefinitionPreview.select(definitionId);

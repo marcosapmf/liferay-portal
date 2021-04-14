@@ -853,8 +853,8 @@ public class UserBuilderTest extends BaseVLDAPTestCase {
 	}
 
 	@Override
-	protected void setUpProps() {
-		super.setUpProps();
+	protected void setUpPropsUtil() {
+		super.setUpPropsUtil();
 
 		when(
 			props.get(PortletPropsValues.POSIX_GROUP_ID)

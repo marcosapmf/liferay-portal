@@ -14,12 +14,14 @@
 
 package com.liferay.commerce.machine.learning.internal.forecast;
 
-import com.liferay.commerce.machine.learning.forecast.model.CommerceMLForecast;
+import com.liferay.commerce.machine.learning.forecast.CommerceMLForecast;
 import com.liferay.commerce.machine.learning.internal.forecast.constants.CommerceMLForecastField;
 import com.liferay.commerce.machine.learning.internal.forecast.constants.CommerceMLForecastPeriod;
 import com.liferay.commerce.machine.learning.internal.search.api.CommerceMLIndexer;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
@@ -178,6 +180,9 @@ public abstract class BaseCommerceMLForecastServiceImpl
 				document.getDate(CommerceMLForecastField.TIMESTAMP));
 		}
 		catch (ParseException parseException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(parseException, parseException);
+			}
 		}
 
 		return commerceMLForecast;
@@ -445,5 +450,8 @@ public abstract class BaseCommerceMLForecastServiceImpl
 	}
 
 	private static final String _INDEX_DATE_FORMAT_PATTERN = "yyyyMMddHHmmss";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BaseCommerceMLForecastServiceImpl.class);
 
 }

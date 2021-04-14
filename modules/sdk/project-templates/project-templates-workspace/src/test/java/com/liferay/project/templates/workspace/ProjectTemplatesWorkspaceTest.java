@@ -14,8 +14,6 @@
 
 package com.liferay.project.templates.workspace;
 
-import static org.junit.Assume.assumeTrue;
-
 import com.liferay.maven.executor.MavenExecutor;
 import com.liferay.project.templates.BaseProjectTemplatesTestCase;
 import com.liferay.project.templates.extensions.util.Validator;
@@ -35,6 +33,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -76,6 +75,10 @@ public class ProjectTemplatesWorkspaceTest
 		testExists(workspaceProjectDir, "gradle.properties");
 		testExists(workspaceProjectDir, "modules");
 		testExists(workspaceProjectDir, "themes");
+
+		testContains(
+			workspaceProjectDir, "GETTING_STARTED.markdown",
+			"liferay.workspace.product\n");
 
 		testNotExists(workspaceProjectDir, "modules/pom.xml");
 		testNotExists(workspaceProjectDir, "themes/pom.xml");
@@ -173,7 +176,7 @@ public class ProjectTemplatesWorkspaceTest
 
 	@Test
 	public void testBuildTemplateWorkspaceLocalProperties() throws Exception {
-		assumeTrue(isBuildProjects());
+		Assume.assumeTrue(isBuildProjects());
 
 		File workspaceProjectDir = buildWorkspace(
 			temporaryFolder, "gradle", "foo", getDefaultLiferayVersion(),
@@ -249,7 +252,7 @@ public class ProjectTemplatesWorkspaceTest
 
 	@Test
 	public void testBuildTemplateWorkspaceWithPortlet() throws Exception {
-		assumeTrue(isBuildProjects());
+		Assume.assumeTrue(isBuildProjects());
 
 		File gradleWorkspaceProjectDir = buildWorkspace(
 			temporaryFolder, "gradle", "withportlet",
@@ -285,7 +288,7 @@ public class ProjectTemplatesWorkspaceTest
 
 	@Test
 	public void testCompareAntBndPluginVersions() throws Exception {
-		assumeTrue(isBuildProjects());
+		Assume.assumeTrue(isBuildProjects());
 
 		String template = "mvc-portlet";
 		String name = "foo";
@@ -332,7 +335,7 @@ public class ProjectTemplatesWorkspaceTest
 	public void testComparePortalToolsBundleSupportPluginVersions()
 		throws Exception {
 
-		assumeTrue(isBuildProjects());
+		Assume.assumeTrue(isBuildProjects());
 
 		File workspaceDir = buildWorkspace(
 			temporaryFolder, getDefaultLiferayVersion());
@@ -361,7 +364,7 @@ public class ProjectTemplatesWorkspaceTest
 
 	@Test
 	public void testSassCompilerMavenWorkspace() throws Exception {
-		assumeTrue(isBuildProjects());
+		Assume.assumeTrue(isBuildProjects());
 
 		File nativeSassWorkspaceDir = buildTemplateWithMaven(
 			temporaryFolder, "workspace", "nativeSassMavenWS", "com.test",
@@ -420,7 +423,7 @@ public class ProjectTemplatesWorkspaceTest
 
 	@Test
 	public void testSassCompilerWorkspace() throws Exception {
-		assumeTrue(isBuildProjects());
+		Assume.assumeTrue(isBuildProjects());
 
 		String liferayVersion = getDefaultLiferayVersion();
 

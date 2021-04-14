@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER,
-		"mvc.command.name=editCommerceShipment"
+		"mvc.command.name=/commerce_order/edit_commerce_shipment"
 	},
 	service = MVCRenderCommand.class
 )
@@ -61,8 +61,8 @@ public class EditCommerceShipmentMVCRenderCommand implements MVCRenderCommand {
 				new CommerceOrderEditDisplayContext(
 					_commerceChannelLocalService,
 					_commerceNotificationQueueEntryLocalService,
-					_commerceOrderEngine, _commerceOrderService,
-					_commerceOrderItemService, _commerceOrderNoteService,
+					_commerceOrderEngine, _commerceOrderItemService,
+					_commerceOrderNoteService, _commerceOrderService,
 					_commerceOrderStatusRegistry,
 					_commercePaymentMethodGroupRelLocalService,
 					_commerceShipmentService, renderRequest);

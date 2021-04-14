@@ -374,34 +374,7 @@ public class InlineSQLHelperImplTest {
 
 		String sql = _replacePermissionCheckJoin(_SQL_PLAIN, _groupIds);
 
-		_assertWhereClause(sql, _CLASS_PK_FIELD);
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_RESOURCE_PERMISSION);
-		sb.append(".name = '");
-		sb.append(_CLASS_NAME);
-		sb.append("'");
-
-		Assert.assertTrue(sql, sql.contains(sb.toString()));
-
-		sb = new StringBundler(3);
-
-		sb.append(_RESOURCE_PERMISSION);
-		sb.append(".companyId = ");
-		sb.append(CompanyThreadLocal.getCompanyId());
-
-		Assert.assertTrue(sql, sql.contains(sb.toString()));
-
-		sb = new StringBundler(3);
-
-		sb.append(_USER_ID_FIELD);
-		sb.append(" = ");
-		sb.append(_user.getUserId());
-
-		Assert.assertTrue(sql, sql.contains(sb.toString()));
-
-		_assertValidSql(sql);
+		_checkSQLComposition(sql);
 
 		sql = _replacePermissionCheckJoin(_SQL_PLAIN + _SQL_WHERE, _groupIds);
 
@@ -413,6 +386,28 @@ public class InlineSQLHelperImplTest {
 				" AND " + _SQL_WHERE.substring(_WHERE_CLAUSE.length())));
 
 		_assertValidSql(sql);
+	}
+
+	@Test
+	public void testSQLCompositionNested() throws Exception {
+		_addGroupRole(_groupOne, RoleConstants.SITE_MEMBER);
+		_addGroupRole(_groupTwo, RoleConstants.SITE_MEMBER);
+
+		_setPermissionChecker();
+
+		StringBundler sb = new StringBundler(7);
+
+		sb.append("SELECT COUNT(*) FROM JournalArticle LEFT JOIN (SELECT ");
+		sb.append("JournalArticleLocalization.articlePK FROM ");
+		sb.append("JournalArticleLocalization WHERE ");
+		sb.append("JournalArticleLocalization.languageId = 'en_US') ");
+		sb.append("JournalArticleLocalization ON (JournalArticle.id_ = ");
+		sb.append("JournalArticleLocalization.articlePK) WHERE ");
+		sb.append("JournalArticle.urlTitle like '%test%'");
+
+		String sql = _replacePermissionCheckJoin(sb.toString(), _groupIds);
+
+		_checkSQLComposition(sql);
 	}
 
 	private void _addGroupRole(Group group, String roleName) throws Exception {
@@ -486,6 +481,37 @@ public class InlineSQLHelperImplTest {
 		Assert.assertTrue(sql, sql.contains(sb.toString()));
 	}
 
+	private void _checkSQLComposition(String sql) throws Exception {
+		_assertWhereClause(sql, _CLASS_PK_FIELD);
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_RESOURCE_PERMISSION);
+		sb.append(".name = '");
+		sb.append(_CLASS_NAME);
+		sb.append("'");
+
+		Assert.assertTrue(sql, sql.contains(sb.toString()));
+
+		sb = new StringBundler(3);
+
+		sb.append(_RESOURCE_PERMISSION);
+		sb.append(".companyId = ");
+		sb.append(CompanyThreadLocal.getCompanyId());
+
+		Assert.assertTrue(sql, sql.contains(sb.toString()));
+
+		sb = new StringBundler(3);
+
+		sb.append(_USER_ID_FIELD);
+		sb.append(" = ");
+		sb.append(_user.getUserId());
+
+		Assert.assertTrue(sql, sql.contains(sb.toString()));
+
+		_assertValidSql(sql);
+	}
+
 	private String _replacePermissionCheckJoin(String sql, long... groupIds) {
 		return _inlineSQLHelper.replacePermissionCheck(
 			sql, _CLASS_NAME, _CLASS_PK_FIELD, _USER_ID_FIELD, _GROUP_ID_FIELD,
@@ -493,10 +519,8 @@ public class InlineSQLHelperImplTest {
 	}
 
 	private void _setPermissionChecker() throws Exception {
-		PermissionChecker permissionChecker =
-			PermissionCheckerFactoryUtil.create(_user);
-
-		PermissionThreadLocal.setPermissionChecker(permissionChecker);
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
 	}
 
 	private static final String _CLASS_NAME =

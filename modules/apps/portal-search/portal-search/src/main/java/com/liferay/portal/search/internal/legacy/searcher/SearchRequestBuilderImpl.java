@@ -60,8 +60,9 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 		SearchContext searchContext) {
 
 		_searchRequestBuilderFactory = searchRequestBuilderFactory;
-		_facetContext = new FacetContextImpl(searchContext);
 		_searchContext = searchContext;
+
+		_facetContext = new FacetContextImpl(searchContext);
 	}
 
 	public SearchRequestBuilderImpl(
@@ -125,12 +126,41 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	}
 
 	@Override
+	public SearchRequestBuilder addPostFilterQueryPart(
+		ComplexQueryPart complexQueryPart) {
+
+		if (complexQueryPart != null) {
+			withSearchRequestImpl(
+				searchRequestImpl -> searchRequestImpl.addPostFilterQueryPart(
+					complexQueryPart));
+		}
+
+		return this;
+	}
+
+	@Override
+	public SearchRequestBuilder addRescore(Rescore rescore) {
+		withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.addRescore(rescore));
+
+		return this;
+	}
+
+	@Override
 	public SearchRequestBuilder addSelectedFieldNames(
 		String... selectedFieldNames) {
 
 		withSearchRequestImpl(
 			searchRequestImpl -> searchRequestImpl.addSelectedFieldNames(
 				selectedFieldNames));
+
+		return this;
+	}
+
+	@Override
+	public SearchRequestBuilder addSort(Sort sort) {
+		withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.addSort(sort));
 
 		return this;
 	}
@@ -349,9 +379,26 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 
 	@Override
 	public SearchRequestBuilder modelIndexerClasses(Class<?>... classes) {
+		String[] classNames = Stream.of(
+			classes
+		).map(
+			clazz -> clazz.getCanonicalName()
+		).toArray(
+			String[]::new
+		);
+
 		withSearchRequestImpl(
-			searchRequestImpl -> searchRequestImpl.setModelIndexerClasses(
-				classes));
+			searchRequestImpl -> searchRequestImpl.setModelIndexerClassNames(
+				classNames));
+
+		return this;
+	}
+
+	@Override
+	public SearchRequestBuilder modelIndexerClassNames(String... classNames) {
+		withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.setModelIndexerClassNames(
+				classNames));
 
 		return this;
 	}

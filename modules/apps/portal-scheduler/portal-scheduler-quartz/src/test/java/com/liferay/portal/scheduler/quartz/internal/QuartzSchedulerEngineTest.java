@@ -99,7 +99,7 @@ public class QuartzSchedulerEngineTest {
 
 		_quartzSchedulerEngine = new QuartzSchedulerEngine();
 
-		_quartzSchedulerEngine.setProps(setUpProps());
+		_quartzSchedulerEngine.setProps(setUpPropsUtil());
 
 		ReflectionTestUtil.setFieldValue(
 			_quartzSchedulerEngine, "_jsonFactory", setUpJSONFactory());
@@ -678,7 +678,7 @@ public class QuartzSchedulerEngineTest {
 		portalUUIDUtil.setPortalUUID(portalUUID);
 	}
 
-	protected Props setUpProps() {
+	protected Props setUpPropsUtil() {
 		return PropsTestUtil.setProps(PropsKeys.SCHEDULER_ENABLED, "true");
 	}
 

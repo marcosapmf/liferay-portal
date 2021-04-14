@@ -63,7 +63,7 @@ public class AddFormInstanceRecordMVCResourceCommandTest extends PowerMockito {
 
 		setUpAddFormInstanceRecordMVCResourceCommand();
 		setUpDDMFormInstance();
-		setUpProps();
+		setUpPropsUtil();
 		setUpLanguageUtil();
 	}
 
@@ -184,7 +184,7 @@ public class AddFormInstanceRecordMVCResourceCommandTest extends PowerMockito {
 		languageUtil.setLanguage(_language);
 	}
 
-	protected void setUpProps() {
+	protected void setUpPropsUtil() {
 		PropsUtil.setProps(new PropsImpl());
 	}
 

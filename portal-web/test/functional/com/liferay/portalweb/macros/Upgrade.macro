@@ -7,6 +7,8 @@ definition {
 			entryContent = "Alice's Adventures in Wonderland",
 			entryTitle = "Blogs Entry Title");
 
+		Pause(locator1 = "3000");
+
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/site-name/test-page");
 
 		AssertClick.assertTextClickAt(
@@ -54,9 +56,9 @@ definition {
 		Panel.expandPanel(panel = "Categorization");
 
 		AssertTextEquals(
-			key_tagName = "alice",
+			key_tagName = "adventures",
 			locator1 = "AssetCategorization#TAG",
-			value1 = "alice");
+			value1 = "adventures");
 	}
 
 	macro addContentPage {
@@ -369,7 +371,7 @@ definition {
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
-		Organization.addMemberCP(
+		Organization.assignUser(
 			orgName = "Sub-organization1",
 			userFirstName = "user2",
 			userLastName = "user2",
@@ -523,8 +525,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -751,7 +752,6 @@ definition {
 		}
 
 		task ("Assert could edit fragment upgrading from 7.2") {
-
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
 
 			FragmentsAdminNavigator.gotoEntry(entry = "Fragment Name");
@@ -768,13 +768,11 @@ definition {
 		}
 
 		task ("Assert could delete fragment upgrading from 7.2") {
-
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/test-fragment-content-page");
 
 			ContentPages.clickPencil();
 
 			PageEditor.removeFragment(fragmentName = "Fragment Name");
-
 		}
 
 		task ("Assert the experience survived and could edit") {
@@ -861,10 +859,9 @@ definition {
 
 			PortletEntry.inputTitle(title = "Webcontent Title Edit");
 
-			Type.typeCKEditorWaitForCKEditor(
-				key_fieldLabel = "content",
-				locator1 = "CKEditor#BODY_FIELD_WEB_CONTENT_ARTICLE",
-				value1 = "Webcontent Content Edit");
+			CKEditor.addContentInWebContent(
+				content = "Webcontent Content Edit",
+				fieldLabel = "content");
 
 			Button.clickPublish();
 
@@ -891,6 +888,86 @@ definition {
 				fragmentName = "Paragraph",
 				targetFragmentName = "Rich Text");
 		}
+	}
+
+	macro EditWCStructureAndTemplateAndViewInWCDandAssetPublisher {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		Navigator.gotoNavItem(navItem = "Structures");
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
+
+		if ("${webContentColor}" == "false") {
+			for (var fieldFieldLabel : list "Boolean,Date,Decimal,Documents and Media,Geolocation,HTML,Image,Integer,Link to Page,Number,Radio,Select,Separator,Text,Text Box,Web Content") {
+				DataEngine.editFieldLabel(
+					fieldFieldLabel = "${fieldFieldLabel}",
+					fieldFieldLabelEdit = "${fieldFieldLabel} Edit");
+			}
+		}
+		else {
+			for (var fieldFieldLabel : list "Boolean,Color,Date,Decimal,Documents and Media,Geolocation,HTML,Image,Integer,Link to Page,Number,Radio,Select,Separator,Text,Text Box,Web Content") {
+				DataEngine.editFieldLabel(
+					fieldFieldLabel = "${fieldFieldLabel}",
+					fieldFieldLabelEdit = "${fieldFieldLabel} Edit");
+			}
+		}
+
+		WebContentStructures.saveCP(structureName = "WC Structure Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field Edit",
+			webContentTextFieldLabel = "Text Edit",
+			webContentTitle = "Web Content Title Edit");
+
+		Navigator.gotoPage(pageName = "Web Content Display");
+
+		WebContent.viewPGViaWCD(
+			webContentContent = "This is a Text field Edit",
+			webContentTitle = "Web Content Title Edit");
+
+		Navigator.gotoPage(pageName = "Asset Publisher");
+
+		AssetPublisherPortlet.viewAssetDetailsPG(
+			assetContent = "This is a Text field Edit",
+			assetTitle = "Web Content Title Edit");
+	}
+
+	macro EditWebContentAndViewInWCDandAssetPublisher {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+		WebContent.addWithStructureCP(
+			webContentText = "This is a Text field Edit",
+			webContentTitle = "Web Content Title Edit");
+
+		PortletEntry.publish();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field Edit",
+			webContentTitle = "Web Content Title Edit");
+
+		Navigator.gotoPage(pageName = "Web Content Display");
+
+		WebContent.viewPGViaWCD(
+			webContentContent = "This is a Text field Edit",
+			webContentTitle = "Web Content Title Edit");
+
+		Navigator.gotoPage(pageName = "Asset Publisher");
+
+		Portlet.gotoPortletOptions(
+			portletName = "Asset Publisher",
+			portletOption = "Configuration");
+
+		AssetPublisherPortlet.configureDisplayTemplatePG(displayTemplate = "Full Content");
+
+		Navigator.gotoPage(pageName = "Asset Publisher");
+
+		AssetPublisherPortlet.viewAssetDetailsPG(
+			assetContent = "This is a Text field Edit",
+			assetTitle = "Web Content Title Edit");
 	}
 
 	macro publishStagedSite {
@@ -1017,6 +1094,8 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
 			portlet = "Blogs");
+
+		Pause(locator1 = "3000");
 
 		Blogs.addWithWorkflow(
 			entryContent = "Blogs Entry Content",
@@ -1521,11 +1600,20 @@ definition {
 
 		UserNavigator.gotoContact();
 
+		var testName = TestCase.getTestName();
+
+		if (contains("${testName}", "72")) {
+			var postalCode = "91765";
+		}
+		else {
+			var postalCode = "91789";
+		}
+
 		User.viewAddress(
 			addressType = "Business",
 			city = "Walnut",
 			country = "United States",
-			postalCode = "91789",
+			postalCode = "${postalCode}",
 			region = "California",
 			street1 = "1220 Brea Canyon Rd");
 
@@ -1543,18 +1631,23 @@ definition {
 
 		User.viewContactInformation(
 			searchContainerType = "websitesSearchContainer",
-			url = "https://www.google.com/",
-			websiteType = "Other");
+			url = "https://www.google.com/");
 
 		User.viewContactInformation(skype = "orgusersnskype");
 
 		UserNavigator.gotoPreferences();
 
-		for (var announcementType : list "General,News,Test") {
-			var key_announcementType = "${announcementType}";
-			var key_notificationType = "Email";
+		var testName = TestCase.getTestName();
 
-			AssertChecked(locator1 = "UsersAndOrganizationsEditUser#ALERTS_AND_ANNOUNCEMENTS_DELIVERY_CHECKBOX");
+		// Ignore these steps for 73 due to LPS-121271
+
+		if (!(contains("${testName}", "73"))) {
+			for (var announcementType : list "General,News,Test") {
+				AssertChecked(
+					key_announcementType = "${announcementType}",
+					key_notificationType = "Email",
+					locator1 = "UsersAndOrganizationsEditUser#ALERTS_AND_ANNOUNCEMENTS_DELIVERY_CHECKBOX");
+			}
 		}
 
 		Navigator.gotoNavNested(navNested = "Display Settings");
@@ -1645,7 +1738,7 @@ definition {
 
 		User.deleteProfileImage();
 
-		User.editDetailsViaMyAccount(
+		User.editUserInformation(
 			userFirstNameEdit = "userfn1",
 			userLastNameEdit = "userln1",
 			userScreenNameEdit = "usersn1");
@@ -1912,7 +2005,7 @@ definition {
 			AssertVisible(locator1 = "//div[contains(@class,'container')][contains(@class,'pb-3 pt-3')]");
 
 			AssertCssValue(
-				locator1 = "//div[contains(@class,'container')][contains(@class,'pb-3 pt-3')]",
+				locator1 = "//div[contains(@class,'container')][contains(@class,'pb-3 pt-3')]//parent::div",
 				locator2 = "background-color",
 				value1 = "rgba(46, 90, 172, 1)");
 
@@ -2032,7 +2125,7 @@ definition {
 
 		task ("Assert styles of Separator in view mode") {
 			PageEditor.viewFragmentStyle(
-				bottomSpacing = "3",
+				bottomSpacing = "1",
 				separatorColor = "dark");
 		}
 
@@ -2057,7 +2150,9 @@ definition {
 		}
 
 		task ("Navigate to page in edit mode") {
-			ContentPages.clickPencil();
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Fragment Content Page",
+				siteName = "Test Site Name");
 
 			Pause(locator1 = "10000");
 		}
@@ -2067,7 +2162,7 @@ definition {
 				containerWidth = "Fixed Width",
 				paddingBottom = "3",
 				paddingTop = "3",
-				position = "1");
+				position = "2");
 
 			AssertCssValue(
 				key_position = "1",
@@ -2097,10 +2192,7 @@ definition {
 				key_fragmentName = "card",
 				locator1 = "Fragment#FRAGMENT_CONFIGURATION_BORDER_RADIUS_IN_VIEW_MODE");
 
-			AssertElementPresent(
-				key_boxShadow = "rgba(0, 0, 0, 0.176) 0px 1rem 3rem",
-				key_fragmentName = "card",
-				locator1 = "Fragment#FRAGMENT_CONFIGURATION_BOX_SHADOW_IN_VIEW_MODE");
+			AssertElementPresent(locator1 = "//div[contains(@class,'page-editor__topper__bar') and contains(.,'Card')]/parent::div[contains(@style,'box-shadow: rgba(0, 0, 0, 0.176) 0px 1rem 3rem')]");
 		}
 
 		task ("Assert styles of Heading in edit mode") {
@@ -2117,10 +2209,9 @@ definition {
 		}
 
 		task ("Assert styles of HTML in edit mode") {
-			AssertElementPresent(
-				key_fragmentName = "html",
-				key_marginBottom = "1",
-				locator1 = "Fragment#FRAGMENT_CONFIGURATION_MARGIN_BOTTOM_IN_VIEW_MODE");
+			PageEditor.viewFragmentStyle(
+				fragmentName = "HTML",
+				marginBottom = "1");
 		}
 
 		task ("Assert styles of Image in edit mode") {
@@ -2145,7 +2236,7 @@ definition {
 
 		task ("Assert styles of Separator in edit mode") {
 			PageEditor.viewFragmentStyle(
-				bottomSpacing = "3",
+				bottomSpacing = "1",
 				separatorColor = "dark");
 		}
 
@@ -2166,7 +2257,9 @@ definition {
 				key_width = "300px",
 				locator1 = "Fragment#VIDEO_WIDTH");
 
-			AssertElementPresent(locator1 = "//div[contains(@class,'video')]/parent::div/parent::div/parent::div[contains(@class,'mb-1')]");
+			PageEditor.viewFragmentStyle(
+				fragmentName = "video",
+				marginBottom = "1");
 		}
 	}
 
@@ -2586,6 +2679,72 @@ definition {
 			threadSubject = "Message Boards Subject 3");
 	}
 
+	macro viewOutOfDatePublications {
+		AssertTextPresent(
+			key_publicationsName = "Production",
+			locator1 = "Publications#PUBLICATIONS_INDICATOR_TITLE",
+			value1 = "Production");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Publications",
+			panel = "Applications",
+			portlet = "Publications");
+
+		Navigator.gotoNavTab(navTab = "Ongoing");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		var key_publicationsName = "Publication 2 Name";
+
+		AssertTextEquals(
+			locator1 = "Publications#LIST_OUT_OF_DATE_STATUS",
+			value1 = "Out of Date");
+
+		Click(
+			key_publicationsName = "Publication 2 Name",
+			locator1 = "Publications#LIST_PUBLICATION_ELLIPSIS");
+
+		AssertVisible(
+			key_menuItem = "Publish",
+			locator1 = "MenuItem#DISABLED_MENU_ITEM");
+
+		AssertVisible(
+			key_menuItem = "Schedule",
+			locator1 = "MenuItem#DISABLED_MENU_ITEM");
+
+		Publications.gotoReviewPublications(
+			gotoManagePublications = "true",
+			key_publicationsName = "Publication 2 Name");
+
+		AssertVisible(
+			key_warningMessage = "This publication was created on a previous Liferay version. You cannot publish, revert, or make additional changes. You can only view or delete it.",
+			locator1 = "Message#WARNING_SPECIFIC");
+
+		AssertVisible(locator1 = "Publications#PUBLISH_DISABLED_NAV_BAR");
+
+		AssertVisible(locator1 = "Publications#SCHEDULE_DISABLED_NAV_BAR");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Publications",
+			panel = "Applications",
+			portlet = "Publications");
+
+		Publications.deletePublication(publicationsName = "Publication 2 Name");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Publications",
+			panel = "Applications",
+			portlet = "Publications");
+
+		Navigator.gotoNavTab(navTab = "History");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		AssertVisible(
+			key_publicationsName = "Publication 1 Name",
+			locator1 = "Publications#LIST_REVERT_DISABLED");
+	}
+
 	macro viewPolls {
 		Navigator.gotoPage(pageName = "Polls");
 
@@ -2606,6 +2765,22 @@ definition {
 			pollsQuestionTotalVotes = "1",
 			pollsQuestionVoteCount = "1",
 			pollsQuestionVotePercent = "100%");
+	}
+
+	macro viewPortalCORS {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "${name}");
+
+		AssertTextEquals(
+			key_configurationValue = "filter.mapping.url.pattern",
+			locator1 = "SystemSettings#CORS_CONFIGURATION",
+			value1 = "${urlPattern}");
+
+		AssertTextEquals(
+			key_configurationValue = "header",
+			locator1 = "SystemSettings#CORS_CONFIGURATION",
+			value1 = "${header}");
 	}
 
 	macro ViewPortletsPermissions {
@@ -2675,6 +2850,55 @@ definition {
 			siteName = "Site Name 2");
 
 		Portlet.viewNoPermissionPG();
+	}
+
+	macro viewSAMLGeneralConfiguration {
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
+			panel = "Control Panel",
+			portlet = "SAML Admin");
+
+		FormFields.viewCheckboxChecked(fieldName = "enabled");
+
+		if (isSet(samlRoleType)) {
+			AssertTextEquals(
+				locator1 = "CPSAMLAdmin#SAML_SELECTED_ROLE",
+				value1 = "${samlRoleType}");
+		}
+
+		AssertTextEquals(
+			locator1 = "CPSAMLAdmin#SAML_ENTITY_ID_FIELD",
+			value1 = "samlidp");
+	}
+
+	macro viewSAMLSPConnectionConfiguration {
+		SAMLNavigation.gotoServiceProviderConnection();
+
+		Click(locator1 = "CPSAMLAdminServiceProviderConnections#SERVICE_PROVIDER_CONNECTION_DROPDOWN");
+
+		MenuItem.click(menuItem = "Edit");
+
+		AssertTextEquals(
+			locator1 = "TextInput#NAME",
+			value1 = "samlsp");
+
+		AssertTextEquals(
+			locator1 = "CPSAMLAdminServiceProviderConnections#SERVICE_PROVIDER_CONNECTION_ENTITY_ID_FIELD",
+			value1 = "samlsp");
+
+		FormFields.viewCheckboxChecked(fieldName = "enabled");
+
+		if (isSet(forceEncryption)) {
+			FormFields.viewCheckboxChecked(fieldName = "encryptionForced");
+		}
+
+		AssertTextEquals(
+			locator1 = "TextInput#SAML_METADATA_URL_FIELD",
+			value1 = "http://www.able.com:9080//c/portal/saml/metadata");
+
+		AssertTextEquals(
+			locator1 = "CPSAMLAdminServiceProviderConnections#SERVICE_PROVIDER_CONNECTION_NAME_IDENTIFIER_ATTRIBUTE_NAME_FIELD",
+			value1 = "emailAddress");
 	}
 
 	macro viewSearchPortletsConfiguration {
@@ -3142,6 +3366,239 @@ definition {
 		SignOut.signOut();
 
 		SignIn.signIn();
+	}
+
+	macro ViewWebContentWCStructureWCTemplateWCDandAssetPublisher {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		if ("${webContentColor}" == "false") {
+			WebContent.viewWithStructureCP(
+				linkedPageName = "Home",
+				linkFieldName = "LinktoPage",
+				menuItem = "Basic Document",
+				structureName = "WC Structure Name",
+				webContentBoolean = "true",
+				webContentDate = "01/29/2021",
+				webContentDecimal = "0.5",
+				webContentDocumentsAndMedia = "DM Document Title",
+				webContentHTML = "This is a HTML field",
+				webContentImage = "Document_1.jpg",
+				webContentInteger = "9",
+				webContentNumber = "-1",
+				webContentRadio = "option 1",
+				webContentSelect = "option 2",
+				webContentSelectWCFile = "WC WebContent 1 Title",
+				webContentText = "This is a Text field",
+				webContentTextBox = "This is a Text Box field",
+				webContentTitle = "Web Content Title");
+		}
+		else {
+			WebContent.viewWithStructureCP(
+				linkedPageName = "Home",
+				linkFieldName = "LinktoPage",
+				menuItem = "Basic Document",
+				structureName = "WC Structure Name",
+				webContentBoolean = "true",
+				webContentColor = "000000",
+				webContentDate = "01/29/2021",
+				webContentDecimal = "0.5",
+				webContentDocumentsAndMedia = "DM Document Title",
+				webContentHTML = "This is a HTML field",
+				webContentImage = "Document_1.jpg",
+				webContentImageDescription = "Image Description",
+				webContentInteger = "9",
+				webContentNumber = "-1",
+				webContentRadio = "option 1",
+				webContentSelect = "option 2",
+				webContentSelectWCFile = "WC WebContent 1 Title",
+				webContentText = "This is a Text field",
+				webContentTextBox = "This is a Text Box field",
+				webContentTitle = "Web Content Title");
+		}
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content");
+
+		Navigator.gotoNavItem(navItem = "Structures");
+
+		WebContentStructures.viewCP(
+			structureDescription = "WC Structure Description",
+			structureName = "WC Structure Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content");
+
+		Navigator.gotoNavItem(navItem = "Templates");
+
+		WebContentTemplates.viewCP(
+			templateDescription = "WC Template Description",
+			templateName = "WC Template Name");
+
+		Navigator.gotoPage(pageName = "Web Content Display");
+
+		WebContent.viewPGViaWCD(webContentContent = "This is a Text Box field");
+
+		Navigator.gotoPage(pageName = "Asset Publisher");
+
+		AssetPublisherPortlet.viewAssetPG(
+			assetContent = "This is a HTML field",
+			assetTitle = "Web Content Title");
+	}
+
+	macro viewWebContentWithAllFields {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content",
+			site = "${siteName}");
+
+		for (var fieldName : list "Boolean,Date,Decimal,Documents and Media,HTML,Image,Integer,Link to Page,Number,Radio,Select,Separator,Text,Text Box") {
+			WebContentAdmin.viewEntryWorkflowStatus(
+				entry = "${fieldName} Web Content",
+				workflowStatus = "Approved");
+		}
+
+		WebContent.viewWithStructureCP(
+			webContentMultipleSelection = "Boolean",
+			webContentMultipleSelectionFieldLabel = "Boolean",
+			webContentTitle = "Boolean Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentDate = "10/10/2020",
+			webContentTitle = "Date Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentNumeric = "0.5",
+			webContentNumericFieldLabel = "Decimal",
+			webContentTitle = "Decimal Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentTitle = "Documents and Media Web Content",
+			webContentUpload = "Document Title",
+			webContentUploadFieldLabel = "Documents and Media");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentRichText = "This is a HTML field",
+			webContentRichTextFieldLabel = "HTML",
+			webContentTitle = "HTML Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentNumeric = "9",
+			webContentNumericFieldLabel = "Integer",
+			webContentTitle = "Integer Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentLinkToPage = "Welcome",
+			webContentTitle = "Link to Page Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentNumeric = "-1",
+			webContentNumericFieldLabel = "Number",
+			webContentTitle = "Number Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentSingleSelection = "option 1",
+			webContentSingleSelectionFieldLabel = "Radio",
+			webContentTitle = "Radio Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentSelectFromList = "option 2",
+			webContentSelectFromListFieldLabel = "Select",
+			webContentTitle = "Select Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentSeparator = "true",
+			webContentTitle = "Separator Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			webContentText = "This is a Text field",
+			webContentTitle = "Text Web Content");
+
+		Navigator.gotoBack();
+
+		WebContent.viewWithStructureCP(
+			fieldType = "Multiple Lines",
+			webContentText = "This is a Text Box field",
+			webContentTextFieldLabel = "Text Box",
+			webContentTitle = "Text Box Web Content");
+
+		Navigator.gotoBack();
+
+		WebContentNavigator.gotoEditCP(webContentTitle = "Image Web Content");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "Image Web Content");
+
+		var imageFieldValue = selenium.getElementValue("//label[normalize-space(text())='Image']/following-sibling::div//div[contains(@class,'input-group')]//input[contains(@type,'text')]");
+
+		TestUtils.assertNotEquals(
+			actual = "${imageFieldValue}",
+			expected = "");
+
+		AssertVisible(
+			key_fieldFieldLabel = "Image",
+			locator1 = "WCEditWebContent#CLEAR_BUTTON");
+
+		AssertElementPresent(
+			key_fieldFieldLabel = "Image",
+			key_image = "/documents/",
+			locator1 = "WCEditWebContent#IMAGE_PICKER_PREVIEW");
+	}
+
+	macro viewWebContentWithPredefinedValueInWebContentField {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Web Content",
+			site = "${siteName}");
+
+		for (var webContentTitle : list "Web Content Title,Web Content With Predefined Value") {
+			WebContentAdmin.viewEntryWorkflowStatus(
+				entry = "${webContentTitle}",
+				workflowStatus = "Approved");
+		}
+
+		WebContent.viewWithStructureCP(
+			webContentTitle = "Web Content With Predefined Value",
+			webContentWebContent = "Web Content Title");
+	}
+
+	macro viewWebContextsCORS {
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Edit",
+			rowEntry = "${filter}");
+
+		AssertTextEquals(
+			key_configurationValue = "filter.mapping.url.pattern",
+			locator1 = "SystemSettings#CORS_CONFIGURATION",
+			value1 = "${urlPattern}");
 	}
 
 }

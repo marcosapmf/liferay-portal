@@ -16,7 +16,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems='<%= ddmDisplayContext.getActionItemsDropdownItems("deleteStructures") %>'
 	clearResultsURL="<%= ddmDisplayContext.getClearResultsURL() %>"
 	componentId="ddmStructureManagementToolbar"
@@ -45,7 +45,7 @@
 			);
 
 			if (searchContainer) {
-				<portlet:actionURL name="deleteStructure" var="deleteStructuresURL">
+				<portlet:actionURL name="/dynamic_data_mapping/delete_structure" var="deleteStructuresURL">
 					<portlet:param name="mvcPath" value="/view.jsp" />
 				</portlet:actionURL>
 
@@ -66,15 +66,15 @@
 		deleteStructures: deleteStructures,
 	};
 
-	Liferay.componentReady('ddmStructureManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
+	Liferay.componentReady('ddmStructureManagementToolbar').then(
+		(managementToolbar) => {
+			managementToolbar.on('actionItemClicked', (event) => {
+				var itemData = event.data.item.data;
 
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
+				if (itemData && itemData.action && ACTIONS[itemData.action]) {
+					ACTIONS[itemData.action]();
+				}
+			});
+		}
+	);
 </aui:script>

@@ -223,6 +223,50 @@ public interface DispatchTriggerModel
 	public void setCronExpression(String cronExpression);
 
 	/**
+	 * Returns the dispatch task cluster mode of this dispatch trigger.
+	 *
+	 * @return the dispatch task cluster mode of this dispatch trigger
+	 */
+	public int getDispatchTaskClusterMode();
+
+	/**
+	 * Sets the dispatch task cluster mode of this dispatch trigger.
+	 *
+	 * @param dispatchTaskClusterMode the dispatch task cluster mode of this dispatch trigger
+	 */
+	public void setDispatchTaskClusterMode(int dispatchTaskClusterMode);
+
+	/**
+	 * Returns the dispatch task executor type of this dispatch trigger.
+	 *
+	 * @return the dispatch task executor type of this dispatch trigger
+	 */
+	@AutoEscape
+	public String getDispatchTaskExecutorType();
+
+	/**
+	 * Sets the dispatch task executor type of this dispatch trigger.
+	 *
+	 * @param dispatchTaskExecutorType the dispatch task executor type of this dispatch trigger
+	 */
+	public void setDispatchTaskExecutorType(String dispatchTaskExecutorType);
+
+	/**
+	 * Returns the dispatch task settings of this dispatch trigger.
+	 *
+	 * @return the dispatch task settings of this dispatch trigger
+	 */
+	@AutoEscape
+	public String getDispatchTaskSettings();
+
+	/**
+	 * Sets the dispatch task settings of this dispatch trigger.
+	 *
+	 * @param dispatchTaskSettings the dispatch task settings of this dispatch trigger
+	 */
+	public void setDispatchTaskSettings(String dispatchTaskSettings);
+
+	/**
 	 * Returns the end date of this dispatch trigger.
 	 *
 	 * @return the end date of this dispatch trigger
@@ -250,6 +294,27 @@ public interface DispatchTriggerModel
 	 * @param name the name of this dispatch trigger
 	 */
 	public void setName(String name);
+
+	/**
+	 * Returns the overlap allowed of this dispatch trigger.
+	 *
+	 * @return the overlap allowed of this dispatch trigger
+	 */
+	public boolean getOverlapAllowed();
+
+	/**
+	 * Returns <code>true</code> if this dispatch trigger is overlap allowed.
+	 *
+	 * @return <code>true</code> if this dispatch trigger is overlap allowed; <code>false</code> otherwise
+	 */
+	public boolean isOverlapAllowed();
+
+	/**
+	 * Sets whether this dispatch trigger is overlap allowed.
+	 *
+	 * @param overlapAllowed the overlap allowed of this dispatch trigger
+	 */
+	public void setOverlapAllowed(boolean overlapAllowed);
 
 	/**
 	 * Returns the start date of this dispatch trigger.
@@ -285,35 +350,5 @@ public interface DispatchTriggerModel
 	 * @param system the system of this dispatch trigger
 	 */
 	public void setSystem(boolean system);
-
-	/**
-	 * Returns the task settings of this dispatch trigger.
-	 *
-	 * @return the task settings of this dispatch trigger
-	 */
-	@AutoEscape
-	public String getTaskSettings();
-
-	/**
-	 * Sets the task settings of this dispatch trigger.
-	 *
-	 * @param taskSettings the task settings of this dispatch trigger
-	 */
-	public void setTaskSettings(String taskSettings);
-
-	/**
-	 * Returns the task type of this dispatch trigger.
-	 *
-	 * @return the task type of this dispatch trigger
-	 */
-	@AutoEscape
-	public String getTaskType();
-
-	/**
-	 * Sets the task type of this dispatch trigger.
-	 *
-	 * @param taskType the task type of this dispatch trigger
-	 */
-	public void setTaskType(String taskType);
 
 }

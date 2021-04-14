@@ -35,10 +35,17 @@ export function reducer(state, action) {
 				editingTarget: action.selector,
 			};
 
+		case 'invalidTarget':
+			return {
+				...state,
+				isValidTarget: false,
+			};
+
 		case 'selectTarget':
 			return {
 				...state,
 				editingTarget: null,
+				isValidTarget: true,
 				mode: 'active',
 				selectedTarget: action.selector,
 			};
@@ -47,13 +54,6 @@ export function reducer(state, action) {
 	}
 
 	return state;
-}
-
-export function getInitialState(target) {
-	return {
-		...INITIAL_STATE,
-		selectedTarget: target,
-	};
 }
 
 const INITIAL_STATE = {
@@ -69,6 +69,11 @@ const INITIAL_STATE = {
 	 * the `editingTarget` becomes the new `selectedTarget`.
 	 */
 	editingTarget: '',
+
+	/**
+	 * The click goal target is valid or not.
+	 */
+	isValidTarget: true,
 
 	/**
 	 * The mode of the component, which will be one of:
@@ -93,5 +98,12 @@ const INITIAL_STATE = {
 	 */
 	selectedTarget: '',
 };
+
+export function getInitialState(target) {
+	return {
+		...INITIAL_STATE,
+		selectedTarget: target,
+	};
+}
 
 export const StateContext = React.createContext(INITIAL_STATE);

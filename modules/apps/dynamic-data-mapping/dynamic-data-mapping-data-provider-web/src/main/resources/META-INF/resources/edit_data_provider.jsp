@@ -32,11 +32,11 @@ portletDisplay.setURLBack(redirect);
 renderResponse.setTitle((ddmDataProviderInstance == null) ? LanguageUtil.get(request, type) : ddmDataProviderInstance.getName(locale));
 %>
 
-<portlet:actionURL name="addDataProvider" var="addDataProviderURL">
+<portlet:actionURL name="/dynamic_data_mapping_data_provider/add_data_provider" var="addDataProviderURL">
 	<portlet:param name="mvcPath" value="/edit_data_provider.jsp" />
 </portlet:actionURL>
 
-<portlet:actionURL name="updateDataProvider" var="updateDataProviderURL">
+<portlet:actionURL name="/dynamic_data_mapping_data_provider/update_data_provider" var="updateDataProviderURL">
 	<portlet:param name="mvcPath" value="/edit_data_provider.jsp" />
 </portlet:actionURL>
 
@@ -50,7 +50,7 @@ renderResponse.setTitle((ddmDataProviderInstance == null) ? LanguageUtil.get(req
 	<%@ include file="/exceptions.jspf" %>
 
 	<clay:container-fluid
-		cssClass="lfr-ddm-edit-data-provider"
+		cssClass="container-form-lg lfr-ddm-edit-data-provider"
 	>
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
@@ -78,24 +78,24 @@ renderResponse.setTitle((ddmDataProviderInstance == null) ? LanguageUtil.get(req
 			</aui:fieldset>
 
 			<c:if test="<%= ddmDataProviderInstance == null %>">
-				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="permissions">
-					<liferay-ui:input-permissions
-						modelName="<%= DDMDataProviderInstance.class.getName() %>"
-					/>
-				</aui:fieldset>
+				<div id="<portlet:namespace />dataProviderPermissions">
+					<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="permissions">
+						<liferay-ui:input-permissions
+							modelName="<%= DDMDataProviderInstance.class.getName() %>"
+						/>
+					</aui:fieldset>
+				</div>
+			</c:if>
+
+			<c:if test="<%= !windowState.equals(LiferayWindowState.POP_UP) %>">
+				<div class="sheet-footer">
+					<aui:button id="submit" label="save" type="submit" />
+
+					<aui:button href="<%= redirect %>" name="cancelButton" type="cancel" />
+				</div>
 			</c:if>
 		</aui:fieldset-group>
 	</clay:container-fluid>
-
-	<c:if test="<%= !windowState.equals(LiferayWindowState.POP_UP) %>">
-		<clay:container-fluid>
-			<aui:button-row>
-				<aui:button id="submit" label="save" type="submit" />
-
-				<aui:button href="<%= redirect %>" name="cancelButton" type="cancel" />
-			</aui:button-row>
-		</clay:container-fluid>
-	</c:if>
 
 	<aui:button cssClass="hide" type="submit" />
 </aui:form>

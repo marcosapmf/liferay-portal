@@ -86,13 +86,13 @@ boolean portalUser = ParamUtil.getBoolean(request, "portalUser");
 											body: data,
 											method: 'POST',
 										})
-											.then(function (response) {
+											.then((response) => {
 												return response.text();
 											})
-											.then(function (data) {
+											.then((data) => {
 												location.href = '<%= HtmlUtil.escape(redirect) %>';
 											})
-											.catch(function () {
+											.catch(() => {
 												Liferay.component('contactsCenter').showMessage(false);
 											});
 									}
@@ -131,13 +131,8 @@ boolean portalUser = ParamUtil.getBoolean(request, "portalUser");
 			</c:if>
 
 			<span id="<portlet:namespace />contactsToolbar">
-
-				<%
-				boolean showDetailView = ParamUtil.getBoolean(request, "showDetailView");
-				%>
-
 				<c:choose>
-					<c:when test="<%= showDetailView %>">
+					<c:when test='<%= ParamUtil.getBoolean(request, "showDetailView") %>'>
 						<div class="lfr-button-column">
 							<div class="lfr-button-column-content">
 								<aui:button-row cssClass="edit-toolbar" id='<%= liferayPortletResponse.getNamespace() + "userToolbar" %>' />

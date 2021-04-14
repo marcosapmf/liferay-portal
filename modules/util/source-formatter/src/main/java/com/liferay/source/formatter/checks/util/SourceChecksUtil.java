@@ -18,6 +18,8 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.json.JSONObjectImpl;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.source.formatter.SourceFormatterMessage;
 import com.liferay.source.formatter.checks.FileCheck;
@@ -58,19 +60,19 @@ public class SourceChecksUtil {
 			String sourceProcessorName, Map<String, Properties> propertiesMap,
 			List<String> skipCheckNames, boolean portalSource,
 			boolean subrepository, boolean includeModuleChecks,
-			String checkName)
+			List<String> checkNames)
 		throws Exception {
 
 		List<SourceCheck> sourceChecks = _getSourceChecks(
 			sourceFormatterConfiguration, sourceProcessorName, propertiesMap,
 			skipCheckNames, portalSource, subrepository, includeModuleChecks,
-			checkName);
+			checkNames);
 
 		sourceChecks.addAll(
 			_getSourceChecks(
 				sourceFormatterConfiguration, "all", propertiesMap,
 				skipCheckNames, includeModuleChecks, subrepository,
-				includeModuleChecks, checkName));
+				includeModuleChecks, checkNames));
 
 		return sourceChecks;
 	}
@@ -221,7 +223,7 @@ public class SourceChecksUtil {
 			String sourceProcessorName, Map<String, Properties> propertiesMap,
 			List<String> skipCheckNames, boolean portalSource,
 			boolean subrepository, boolean includeModuleChecks,
-			String checkName)
+			List<String> checkNames)
 		throws Exception {
 
 		List<SourceCheck> sourceChecks = new ArrayList<>();
@@ -243,7 +245,9 @@ public class SourceChecksUtil {
 			String sourceCheckName = SourceFormatterUtil.getSimpleName(
 				sourceCheckConfiguration.getName());
 
-			if ((checkName != null) && !checkName.equals(sourceCheckName)) {
+			if (!checkNames.isEmpty() &&
+				!checkNames.contains(sourceCheckName)) {
+
 				continue;
 			}
 
@@ -256,6 +260,10 @@ public class SourceChecksUtil {
 				sourceCheckClass = Class.forName(sourceCheckName);
 			}
 			catch (ClassNotFoundException classNotFoundException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(classNotFoundException, classNotFoundException);
+				}
+
 				SourceFormatterUtil.printError(
 					"sourcechecks.xml",
 					"sourcechecks.xml: Class " + sourceCheckName +
@@ -380,5 +388,8 @@ public class SourceChecksUtil {
 
 		return sourceChecksResult;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SourceChecksUtil.class);
 
 }

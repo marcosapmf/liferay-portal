@@ -23,13 +23,9 @@ OAuth2Application oAuth2Application = oAuth2AdminPortletDisplayContext.getOAuth2
 
 Tree.Node<String> scopeAliasTreeNode = assignScopesTreeDisplayContext.getScopeAliasTreeNode();
 
-Set<String> assignedDeletedScopeAliases = assignScopesTreeDisplayContext.getAssignedDeletedScopeAliases();
-Set<String> assignedScopeAliases = assignScopesTreeDisplayContext.getAssignedScopeAliases();
-Map<String, String> scopeAliasesDescriptionsMap = assignScopesTreeDisplayContext.getScopeAliasesDescriptionsMap();
-
-pageContext.setAttribute("assignedDeletedScopeAliases", assignedDeletedScopeAliases);
-pageContext.setAttribute("assignedScopeAliases", assignedScopeAliases);
-pageContext.setAttribute("scopeAliasesDescriptionsMap", scopeAliasesDescriptionsMap);
+pageContext.setAttribute("assignedDeletedScopeAliases", assignScopesTreeDisplayContext.getAssignedDeletedScopeAliases());
+pageContext.setAttribute("assignedScopeAliases", assignScopesTreeDisplayContext.getAssignedScopeAliases());
+pageContext.setAttribute("scopeAliasesDescriptionsMap", assignScopesTreeDisplayContext.getScopeAliasesDescriptionsMap());
 %>
 
 <clay:container-fluid
@@ -61,8 +57,8 @@ pageContext.setAttribute("scopeAliasesDescriptionsMap", scopeAliasesDescriptions
 
 			<clay:row>
 				<clay:col>
-					<portlet:actionURL name="/admin/assign_scopes" var="assignScopesURL">
-						<portlet:param name="mvcRenderCommandName" value="/admin/assign_scopes" />
+					<portlet:actionURL name="/oauth2_provider/assign_scopes" var="assignScopesURL">
+						<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/assign_scopes" />
 						<portlet:param name="navigation" value="assign_scopes" />
 						<portlet:param name="backURL" value="<%= redirect %>" />
 						<portlet:param name="oAuth2ApplicationId" value="<%= String.valueOf(oAuth2Application.getOAuth2ApplicationId()) %>" />
@@ -154,8 +150,8 @@ pageContext.setAttribute("scopeAliasesDescriptionsMap", scopeAliasesDescriptions
 	</clay:sheet>
 </clay:container-fluid>
 
-<aui:script require="metal-dom/src/dom as dom">
-	AUI().use('node', 'aui-modal', function (A) {
+<aui:script sandbox="<%= true %>">
+	AUI().use('node', 'aui-modal', (A) => {
 		A.all('input[name="<portlet:namespace />scopeAliases"]').each(function () {
 			this.on('click', function () {
 				<portlet:namespace />recalculateScopeChildrens(this);

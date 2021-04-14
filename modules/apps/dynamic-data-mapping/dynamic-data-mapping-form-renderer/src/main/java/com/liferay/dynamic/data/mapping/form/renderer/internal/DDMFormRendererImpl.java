@@ -24,11 +24,10 @@ import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.template.soy.renderer.ComponentDescriptor;
-import com.liferay.portal.template.soy.renderer.SoyComponentRenderer;
+import com.liferay.portal.template.react.renderer.ComponentDescriptor;
+import com.liferay.portal.template.react.renderer.ReactRenderer;
 
 import java.io.Writer;
 
@@ -44,6 +43,36 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(immediate = true, service = DDMFormRenderer.class)
 public class DDMFormRendererImpl implements DDMFormRenderer {
+
+	@Override
+	public Map<String, Object> getDDMFormTemplateContext(
+			DDMForm ddmForm, DDMFormLayout ddmFormLayout,
+			DDMFormRenderingContext ddmFormRenderingContext)
+		throws Exception {
+
+		Map<String, Object> ddmFormTemplateContext =
+			_ddmFormTemplateContextFactory.create(
+				ddmForm, ddmFormLayout, ddmFormRenderingContext);
+
+		ddmFormTemplateContext.put("editable", false);
+
+		ddmFormTemplateContext.remove("fieldTypes");
+
+		HttpServletRequest httpServletRequest =
+			ddmFormRenderingContext.getHttpServletRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		String pathThemeImages = themeDisplay.getPathThemeImages();
+
+		String spriteMap = pathThemeImages.concat("/clay/icons.svg");
+
+		ddmFormTemplateContext.put("spritemap", spriteMap);
+
+		return ddmFormTemplateContext;
+	}
 
 	@Override
 	public String render(
@@ -85,53 +114,26 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 			DDMFormRenderingContext ddmFormRenderingContext)
 		throws Exception {
 
-		ComponentDescriptor componentDescriptor = new ComponentDescriptor(
-			_TEMPLATE_NAMESPACE, _npmResolver.resolveModuleName(_MODULE_NAME),
-			ddmFormRenderingContext.getContainerId());
-
 		Writer writer = new UnsyncStringWriter();
 
-		_soyComponentRenderer.renderSoyComponent(
-			ddmFormRenderingContext.getHttpServletRequest(), writer,
-			componentDescriptor,
-			getContext(ddmForm, ddmFormLayout, ddmFormRenderingContext));
+		writer.append("<div id=\"");
+		writer.append(ddmFormRenderingContext.getContainerId());
+		writer.append("\">");
+
+		_reactRenderer.renderReact(
+			new ComponentDescriptor(
+				_npmResolver.resolveModuleName(_MODULE_NAME)),
+			getDDMFormTemplateContext(
+				ddmForm, ddmFormLayout, ddmFormRenderingContext),
+			ddmFormRenderingContext.getHttpServletRequest(), writer);
+
+		writer.append("</div>");
 
 		return writer.toString();
 	}
 
-	protected Map<String, Object> getContext(
-			DDMForm ddmForm, DDMFormLayout ddmFormLayout,
-			DDMFormRenderingContext ddmFormRenderingContext)
-		throws PortalException {
-
-		Map<String, Object> ddmFormTemplateContext =
-			_ddmFormTemplateContextFactory.create(
-				ddmForm, ddmFormLayout, ddmFormRenderingContext);
-
-		ddmFormTemplateContext.put("editable", false);
-
-		ddmFormTemplateContext.remove("fieldTypes");
-
-		HttpServletRequest httpServletRequest =
-			ddmFormRenderingContext.getHttpServletRequest();
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		String pathThemeImages = themeDisplay.getPathThemeImages();
-
-		String spriteMap = pathThemeImages.concat("/clay/icons.svg");
-
-		ddmFormTemplateContext.put("spritemap", spriteMap);
-
-		return ddmFormTemplateContext;
-	}
-
 	private static final String _MODULE_NAME =
 		"dynamic-data-mapping-form-renderer/js/containers/Form.es";
-
-	private static final String _TEMPLATE_NAMESPACE = "FormRenderer.render";
 
 	@Reference
 	private DDM _ddm;
@@ -146,6 +148,6 @@ public class DDMFormRendererImpl implements DDMFormRenderer {
 	private NPMResolver _npmResolver;
 
 	@Reference
-	private SoyComponentRenderer _soyComponentRenderer;
+	private ReactRenderer _reactRenderer;
 
 }

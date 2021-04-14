@@ -257,8 +257,17 @@ public class BlogsEntryStagedModelDataHandler
 		if ((existingEntry == null) ||
 			!portletDataContext.isDataStrategyMirror()) {
 
+			String urlTitle = entry.getUrlTitle();
+
+			existingEntry = _blogsEntryLocalService.fetchEntry(
+				portletDataContext.getScopeGroupId(), entry.getUrlTitle());
+
+			if (existingEntry != null) {
+				urlTitle = null;
+			}
+
 			importedEntry = _blogsEntryLocalService.addEntry(
-				userId, entry.getTitle(), entry.getSubtitle(),
+				userId, entry.getTitle(), entry.getSubtitle(), urlTitle,
 				entry.getDescription(), entry.getContent(),
 				entry.getDisplayDate(), entry.isAllowPingbacks(),
 				entry.isAllowTrackbacks(), trackbacks,
@@ -267,7 +276,8 @@ public class BlogsEntryStagedModelDataHandler
 		else {
 			importedEntry = _blogsEntryLocalService.updateEntry(
 				userId, existingEntry.getEntryId(), entry.getTitle(),
-				entry.getSubtitle(), entry.getDescription(), entry.getContent(),
+				entry.getSubtitle(), entry.getUrlTitle(),
+				entry.getDescription(), entry.getContent(),
 				entry.getDisplayDate(), entry.isAllowPingbacks(),
 				entry.isAllowTrackbacks(), trackbacks,
 				entry.getCoverImageCaption(), null, null, serviceContext);
@@ -302,25 +312,30 @@ public class BlogsEntryStagedModelDataHandler
 
 			// Small image
 
+			long smallImageFileEntryId = 0;
+
 			if (entry.isSmallImage()) {
-				long smallImageFileEntryId = MapUtil.getLong(
+				smallImageFileEntryId = MapUtil.getLong(
 					fileEntryIds, entry.getSmallImageFileEntryId(), 0);
+			}
 
-				importedEntry.setSmallImageFileEntryId(smallImageFileEntryId);
+			importedEntry.setSmallImageFileEntryId(smallImageFileEntryId);
 
-				if (smallImageFileEntryId == 0) {
-					importedEntry.setSmallImage(false);
-				}
+			if (smallImageFileEntryId == 0) {
+				importedEntry.setSmallImage(false);
+			}
+			else {
+				importedEntry.setSmallImage(true);
+			}
 
-				importedEntry = _blogsEntryLocalService.updateBlogsEntry(
-					importedEntry);
+			importedEntry = _blogsEntryLocalService.updateBlogsEntry(
+				importedEntry);
 
-				if ((existingSmallImageFileEntryId != 0) &&
-					(entry.getSmallImageFileEntryId() == 0)) {
+			if ((existingSmallImageFileEntryId != 0) &&
+				(entry.getSmallImageFileEntryId() == 0)) {
 
-					_portletFileRepository.deletePortletFileEntry(
-						existingSmallImageFileEntryId);
-				}
+				_portletFileRepository.deletePortletFileEntry(
+					existingSmallImageFileEntryId);
 			}
 
 			Map<Long, Long> newPrimaryKeysMap =

@@ -47,6 +47,8 @@ public class SourceFormatterArgs {
 
 	public static final int MAX_LINE_LENGTH = 80;
 
+	public static final String OUTPUT_FILE_NAME = null;
+
 	public static final String OUTPUT_KEY_MODIFIED_FILES =
 		"source.formatter.modified.files";
 
@@ -79,8 +81,8 @@ public class SourceFormatterArgs {
 		return _baseDirName;
 	}
 
-	public String getCheckName() {
-		return _checkName;
+	public List<String> getCheckNames() {
+		return _checkNames;
 	}
 
 	public List<String> getFileExtensions() {
@@ -97,6 +99,10 @@ public class SourceFormatterArgs {
 
 	public int getMaxLineLength() {
 		return _maxLineLength;
+	}
+
+	public String getOutputFileName() {
+		return _outputFileName;
 	}
 
 	public int getProcessorThreadCount() {
@@ -179,8 +185,8 @@ public class SourceFormatterArgs {
 		_baseDirName = baseDirName;
 	}
 
-	public void setCheckName(String checkName) {
-		_checkName = checkName;
+	public void setCheckNames(List<String> checkNames) {
+		_checkNames = checkNames;
 	}
 
 	public void setFailOnAutoFix(boolean failOnAutoFix) {
@@ -236,6 +242,10 @@ public class SourceFormatterArgs {
 		_maxLineLength = maxLineLength;
 	}
 
+	public void setOutputFileName(String outputFileName) {
+		_outputFileName = outputFileName;
+	}
+
 	public void setPrintErrors(boolean printErrors) {
 		_printErrors = printErrors;
 	}
@@ -266,7 +276,7 @@ public class SourceFormatterArgs {
 
 	private boolean _autoFix = AUTO_FIX;
 	private String _baseDirName = BASE_DIR_NAME;
-	private String _checkName;
+	private List<String> _checkNames = new ArrayList<>();
 	private boolean _failOnAutoFix = FAIL_ON_AUTO_FIX;
 	private boolean _failOnHasWarning = FAIL_ON_HAS_WARNING;
 	private List<String> _fileExtensions = new ArrayList<>();
@@ -278,6 +288,7 @@ public class SourceFormatterArgs {
 	private boolean _includeGeneratedFiles = INCLUDE_GENERATED_FILES;
 	private boolean _includeSubrepositories = INCLUDE_SUBREPOSITORIES;
 	private int _maxLineLength = MAX_LINE_LENGTH;
+	private String _outputFileName = OUTPUT_FILE_NAME;
 	private boolean _printErrors = PRINT_ERRORS;
 	private int _processorThreadCount = PROCESSOR_THREAD_COUNT;
 	private final Set<String> _recentChangesFileNames = new HashSet<>();

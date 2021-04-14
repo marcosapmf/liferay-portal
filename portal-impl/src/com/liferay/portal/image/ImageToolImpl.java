@@ -643,7 +643,11 @@ public class ImageToolImpl implements ImageTool {
 
 					renderedImage = imageReader.read(0);
 				}
-				catch (IOException ioException) {
+				catch (ArrayIndexOutOfBoundsException | IOException exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception, exception);
+					}
+
 					continue;
 				}
 

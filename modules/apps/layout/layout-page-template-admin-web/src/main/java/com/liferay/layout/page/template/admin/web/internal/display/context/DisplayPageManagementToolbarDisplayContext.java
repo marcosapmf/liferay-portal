@@ -67,7 +67,8 @@ public class DisplayPageManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteSelectedDisplayPages");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -76,7 +77,8 @@ public class DisplayPageManagementToolbarDisplayContext
 				dropdownItem.putData(
 					"exportDisplayPageURL", _getExportDisplayPageURL());
 				dropdownItem.setIcon("download");
-				dropdownItem.setLabel(LanguageUtil.get(request, "export"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "export"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -132,7 +134,8 @@ public class DisplayPageManagementToolbarDisplayContext
 
 				dropdownItem.setHref(selectMasterLayoutURL.toString());
 
-				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add"));
 			}
 		).build();
 	}
@@ -182,7 +185,7 @@ public class DisplayPageManagementToolbarDisplayContext
 			liferayPortletResponse.createResourceURL();
 
 		exportDisplayPageURL.setResourceID(
-			"/layout_page_template/export_display_page");
+			"/layout_page_template_admin/export_display_pages");
 
 		return exportDisplayPageURL.toString();
 	}

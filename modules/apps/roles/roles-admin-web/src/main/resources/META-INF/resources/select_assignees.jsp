@@ -47,7 +47,7 @@ PortletURL portletURL = editRoleAssignmentsManagementToolbarDisplayContext.getPo
 	navigationItems="<%= roleDisplayContext.getSelectAssigneesNavigationItems(portletURL) %>"
 />
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= editRoleAssignmentsManagementToolbarDisplayContext.getClearResultsURL() %>"
 	creationMenu="<%= editRoleAssignmentsManagementToolbarDisplayContext.getCreationMenu() %>"
 	defaultEventHandler="<%= editRoleAssignmentsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
@@ -98,10 +98,10 @@ PortletURL portletURL = editRoleAssignmentsManagementToolbarDisplayContext.getPo
 		'<portlet:namespace />assigneesSearch'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var nodes = event.elements.currentPageSelectedElements.getDOMNodes();
 
-		var <portlet:namespace />assigneeIds = nodes.map(function (node) {
+		var <portlet:namespace />assigneeIds = nodes.map((node) => {
 			return node.value;
 		});
 

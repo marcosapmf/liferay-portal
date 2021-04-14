@@ -1,13 +1,10 @@
 @import 'components/breadcrumb';
 @import 'components/group-item';
 @import 'components/sidebar';
-@import 'components/splitter';
 @import 'components/table';
 @import 'portlet/portlet';
 
 body {
-	background-color: $bg-color;
-
 	.user-avatar-link {
 		position: relative;
 
@@ -30,16 +27,10 @@ body {
 			padding: 0;
 		}
 
-		.portlet-body .container-fluid-1280 {
+		.portlet-body .container-fluid-max-xl {
 			max-width: map-get($container-max-widths, xl);
 			position: relative;
 		}
-	}
-
-	.main-content-card {
-		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-		margin-top: 20px;
-		min-height: 200px;
 	}
 
 	.main-content-nav {

@@ -74,6 +74,10 @@ public class DDMForm implements Serializable {
 		_ddmFormRules.add(ddmFormRule);
 	}
 
+	public boolean allowInvalidAvailableLocalesForProperty() {
+		return _allowInvalidAvailableLocalesForProperty;
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -127,6 +131,25 @@ public class DDMForm implements Serializable {
 		return ddmFormFieldsMap;
 	}
 
+	public Map<String, DDMFormField> getDDMFormFieldsReferencesMap(
+		boolean includeNestedDDMFormFields) {
+
+		Map<String, DDMFormField> ddmFormFieldsReferencesMap =
+			new LinkedHashMap<>();
+
+		for (DDMFormField ddmFormField : _ddmFormFields) {
+			ddmFormFieldsReferencesMap.put(
+				ddmFormField.getFieldReference(), ddmFormField);
+
+			if (includeNestedDDMFormFields) {
+				ddmFormFieldsReferencesMap.putAll(
+					ddmFormField.getNestedDDMFormFieldsReferencesMap());
+			}
+		}
+
+		return ddmFormFieldsReferencesMap;
+	}
+
 	public List<DDMFormRule> getDDMFormRules() {
 		return _ddmFormRules;
 	}
@@ -162,6 +185,28 @@ public class DDMForm implements Serializable {
 		return ddmFormFieldsMap;
 	}
 
+	public Map<String, DDMFormField> getNontransientDDMFormFieldsReferencesMap(
+		boolean includeNestedDDMFormFields) {
+
+		Map<String, DDMFormField> ddmFormFieldsReferencesMap =
+			new LinkedHashMap<>();
+
+		for (DDMFormField ddmFormField : _ddmFormFields) {
+			if (!ddmFormField.isTransient()) {
+				ddmFormFieldsReferencesMap.put(
+					ddmFormField.getFieldReference(), ddmFormField);
+			}
+
+			if (includeNestedDDMFormFields) {
+				ddmFormFieldsReferencesMap.putAll(
+					ddmFormField.
+						getNontransientNestedDDMFormFieldsReferencesMap());
+			}
+		}
+
+		return ddmFormFieldsReferencesMap;
+	}
+
 	@Override
 	public int hashCode() {
 		int hash = HashUtil.hash(0, _availableLocales);
@@ -175,6 +220,13 @@ public class DDMForm implements Serializable {
 		hash = HashUtil.hash(hash, _ddmFormSuccessPageSettings);
 
 		return HashUtil.hash(hash, _definitionSchemaVersion);
+	}
+
+	public void setAllowInvalidAvailableLocalesForProperty(
+		boolean allowInvalidAvailableLocalesForProperty) {
+
+		_allowInvalidAvailableLocalesForProperty =
+			allowInvalidAvailableLocalesForProperty;
 	}
 
 	public void setAvailableLocales(Set<Locale> availableLocales) {
@@ -208,6 +260,7 @@ public class DDMForm implements Serializable {
 		_definitionSchemaVersion = definitionSchemaVersion;
 	}
 
+	private boolean _allowInvalidAvailableLocalesForProperty;
 	private Set<Locale> _availableLocales;
 	private List<DDMFormField> _ddmFormFields;
 	private List<DDMFormRule> _ddmFormRules;

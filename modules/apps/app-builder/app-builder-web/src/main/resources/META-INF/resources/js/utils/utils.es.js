@@ -12,22 +12,10 @@
  * details.
  */
 
-export const concatValues = (values) =>
-	values
-		.join(', ')
-		.replace(
-			/, ([^,]*)$/,
-			` ${Liferay.Language.get('and').toLowerCase()} $1`
-		);
-
-export const isEqualObjects = (firstObj = {}, secondObj = {}) => {
-	if (typeof firstObj !== 'object' || typeof secondObj !== 'object') {
-		return false;
+export const getValidName = (defaultName, name) => {
+	if (name?.toLowerCase() === 'null') {
+		return defaultName;
 	}
 
-	return JSON.stringify(firstObj) === JSON.stringify(secondObj);
-};
-
-export const getValidName = (defaultName, name) => {
-	return name && name.toLowerCase() !== 'null' ? name : defaultName;
+	return name;
 };

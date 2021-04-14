@@ -20,6 +20,9 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.segments.service.SegmentsExperienceService;
 
 import java.util.Collections;
@@ -37,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/update_segments_experience"
+		"mvc.command.name=/layout_content_page_editor/update_segments_experience"
 	},
 	service = MVCActionCommand.class
 )
@@ -55,12 +58,21 @@ public class UpdateSegmentsExperienceMVCActionCommand
 		long segmentsEntryId = ParamUtil.getLong(
 			actionRequest, "segmentsEntryId");
 		String name = ParamUtil.getString(actionRequest, "name");
+		String[] languageIds = StringUtil.split(
+			ParamUtil.getString(actionRequest, "languageIds"));
+
+		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
+			true);
+
+		typeSettingsUnicodeProperties.setProperty(
+			PropsKeys.LOCALES, StringUtil.merge(languageIds));
 
 		return JSONUtil.put(
 			"segmentsExperience",
 			_segmentsExperienceService.updateSegmentsExperience(
 				segmentsExperienceId, segmentsEntryId,
-				Collections.singletonMap(LocaleUtil.getDefault(), name), true));
+				Collections.singletonMap(LocaleUtil.getDefault(), name), true,
+				typeSettingsUnicodeProperties));
 	}
 
 	@Reference

@@ -20,7 +20,7 @@
 boolean includeCheckBox = ParamUtil.getBoolean(request, "includeCheckBox", true);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems='<%= ddmDisplayContext.getActionItemsDropdownItems("deleteTemplates") %>'
 	clearResultsURL="<%= ddmDisplayContext.getClearResultsURL() %>"
 	componentId="ddmTemplateManagementToolbar"
@@ -48,7 +48,7 @@ boolean includeCheckBox = ParamUtil.getBoolean(request, "includeCheckBox", true)
 				'<portlet:namespace />entriesContainer'
 			);
 
-			<portlet:actionURL name="deleteTemplate" var="deleteTemplatesURL">
+			<portlet:actionURL name="/dynamic_data_mapping/delete_template" var="deleteTemplatesURL">
 				<portlet:param name="mvcPath" value="/view_template.jsp" />
 			</portlet:actionURL>
 
@@ -70,15 +70,15 @@ boolean includeCheckBox = ParamUtil.getBoolean(request, "includeCheckBox", true)
 		deleteTemplates: deleteTemplates,
 	};
 
-	Liferay.componentReady('ddmTemplateManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
+	Liferay.componentReady('ddmTemplateManagementToolbar').then(
+		(managementToolbar) => {
+			managementToolbar.on('actionItemClicked', (event) => {
+				var itemData = event.data.item.data;
 
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
+				if (itemData && itemData.action && ACTIONS[itemData.action]) {
+					ACTIONS[itemData.action]();
+				}
+			});
+		}
+	);
 </aui:script>

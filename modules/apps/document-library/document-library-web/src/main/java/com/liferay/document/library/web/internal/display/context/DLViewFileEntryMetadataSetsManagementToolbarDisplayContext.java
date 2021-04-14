@@ -19,6 +19,8 @@ import com.liferay.document.library.web.internal.security.permission.resource.DD
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -29,6 +31,8 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.util.List;
 
 import javax.portlet.PortletURL;
 
@@ -52,9 +56,23 @@ public class DLViewFileEntryMetadataSetsManagementToolbarDisplayContext
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			dlViewFileEntryMetadataSetsDisplayContext.getStructureSearch());
 
-		_dlRequestHelper = new DLRequestHelper(httpServletRequest);
 		_dlViewFileEntryMetadataSetsDisplayContext =
 			dlViewFileEntryMetadataSetsDisplayContext;
+
+		_dlRequestHelper = new DLRequestHelper(httpServletRequest);
+	}
+
+	@Override
+	public List<DropdownItem> getActionDropdownItems() {
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "deleteMetadataSets");
+				dropdownItem.setIcon("times-circle");
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
+				dropdownItem.setQuickAction(true);
+			}
+		).build();
 	}
 
 	@Override
@@ -77,14 +95,19 @@ public class DLViewFileEntryMetadataSetsManagementToolbarDisplayContext
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(),
 					"mvcRenderCommandName",
-					"/document_library/ddm/edit_ddm_structure", "redirect",
+					"/document_library/edit_ddm_structure", "redirect",
 					themeDisplay.getURLCurrent(), "groupId",
 					String.valueOf(_dlRequestHelper.getScopeGroupId()));
 
 				dropdownItem.setLabel(
-					LanguageUtil.get(_dlRequestHelper.getRequest(), "add"));
+					LanguageUtil.get(_dlRequestHelper.getRequest(), "new"));
 			}
 		).build();
+	}
+
+	@Override
+	public String getDefaultEventHandler() {
+		return "dlDDMStructuresManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -99,8 +122,8 @@ public class DLViewFileEntryMetadataSetsManagementToolbarDisplayContext
 	}
 
 	@Override
-	public Boolean isSelectable() {
-		return false;
+	public String getSearchContainerId() {
+		return "ddmStructures";
 	}
 
 	@Override

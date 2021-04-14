@@ -60,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
-		"mvc.command.name=saveStructure"
+		"mvc.command.name=/dynamic_data_mapping_form/save_structure"
 	},
 	service = MVCActionCommand.class
 )
@@ -99,7 +99,7 @@ public class SaveStructureMVCActionCommand extends BaseMVCActionCommand {
 				groupId, DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 				_portal.getClassNameId(DDMFormInstance.class), structureKey,
 				nameMap, descriptionMap, ddmForm, ddmFormLayout,
-				StorageType.JSON.toString(),
+				StorageType.DEFAULT.toString(),
 				DDMStructureConstants.TYPE_FRAGMENT, serviceContext);
 		}
 		else {

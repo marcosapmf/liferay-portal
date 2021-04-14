@@ -85,6 +85,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class PunchOutSessionResourceImpl
 	extends BasePunchOutSessionResourceImpl {
 
+	@Override
 	public PunchOutSession postPunchOutSessionRequest(
 			@NotNull PunchOutSession punchOutSession)
 		throws Exception {
@@ -196,7 +197,7 @@ public class PunchOutSessionResourceImpl
 				cart.getCurrencyCode(), buyerLiferayUser.getEmailAddress(),
 				commerceOrderUuid, punchOutSessionAttributes);
 
-		String tokenString = String.valueOf(punchOutAccessToken.getToken());
+		String tokenString = new String(punchOutAccessToken.getToken());
 
 		punchOutStartURL +=
 			StringPool.QUESTION + _PUNCH_OUT_ACCESS_TOKEN_PARAMETER +
@@ -420,8 +421,8 @@ public class PunchOutSessionResourceImpl
 			}
 
 			_commerceOrderItemLocalService.addCommerceOrderItem(
-				commerceOrder.getCommerceOrderId(), cartItem.getSkuId(),
-				cartItem.getQuantity(), cartItem.getShippedQuantity(), null,
+				commerceOrder.getCommerceOrderId(), cartItem.getSkuId(), null,
+				cartItem.getQuantity(), cartItem.getShippedQuantity(),
 				commerceContext,
 				_serviceContextHelper.getServiceContext(groupId));
 		}

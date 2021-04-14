@@ -1,5 +1,59 @@
 # Poshi Runner Change Log
 
+## 1.0.296
+
+### Other
+
+* [LRCI-1916](https://issues.liferay.com/browse/LRCI-1916) - Allow Functional Batch Test Class Groups to have multiple test base dirs
+* [LRCI-1922](https://issues.liferay.com/browse/LRCI-1922) - Add support for QA Website test imports in Spira
+
+### Validation
+
+* [POSHI-140](https://issues.liferay.com/browse/POSHI-140) - Make validation more robust
+
+### WebDriver
+
+* [POSHI-12](https://issues.liferay.com/browse/POSHI-12) - As an Automation Tester, I'd like to have a function available to click the 'Cancel' button when the confirm dialog box pops up
+* [POSHI-92](https://issues.liferay.com/browse/POSHI-92) - Poshi cannot type some special characters on Safari
+
+## 1.0.291
+
+### Backend
+
+* [LRCI-1752](https://issues.liferay.com/browse/LRCI-1752) - Split Poshi Test Cases into lists so that it can be used in Jenkins Results Parser
+* [LRCI-1756](https://issues.liferay.com/browse/LRCI-1756) - Use Poshi Core within Jenkins Results Parser
+
+### Gradle
+
+* [POSHI-122](https://issues.liferay.com/browse/POSHI-122) - Use compile group for poshi-core in poshi-runner
+
+### PQL
+
+* [POSHI-120](https://issues.liferay.com/browse/POSHI-120) - Avoid unnecessary validation for poshi properties
+
+### Utils
+
+* [POSHI-131](https://issues.liferay.com/browse/POSHI-131) - Lower the timeout for JSONCurlUtil to 10 minutes
+
+### WebDriver
+
+* [POSHI-110](https://issues.liferay.com/browse/POSHI-110) - As a Tester writer, I should be able to use Ocular to compare images
+* [POSHI-119](https://issues.liferay.com/browse/POSHI-119) - Make StringUtil.randomString generate the same random string with backend
+* [POSHI-124](https://issues.liferay.com/browse/POSHI-124) - Update poshi runner to 'org.seleniumhq.selenium:selenium-java:3.141.59'
+* [POSHI-128](https://issues.liferay.com/browse/POSHI-128) - Additionally catch InvalidSelectorException for invalid arguments in javascript methods
+* [POSHI-133](https://issues.liferay.com/browse/POSHI-133) - Add triple click method to Poshi
+
+## 1.0.283
+
+### PQL
+
+* [POSHI-117](https://issues.liferay.com/browse/POSHI-117) - Ignore errors for Util classes to find Test Cases using PQL
+
+### Runner
+
+* [POSHI-107](https://issues.liferay.com/browse/POSHI-107) - Split Poshi Runner into 2 different modules
+* [POSHI-118](https://issues.liferay.com/browse/POSHI-118) - Path locators are not parsed correctly
+
 ## 1.0.280
 
 ### Runner

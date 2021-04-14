@@ -17,11 +17,10 @@
 <%@ include file="/info_box/init.jsp" %>
 
 <%
-String infoxBoxCssClasses = "info-box" + (Validator.isNotNull(elementClasses) ? StringPool.SPACE + elementClasses : StringPool.BLANK);
-String linkId = PortalUtil.generateRandomKey(request, "info-box") + StringPool.UNDERLINE + "action-link";
+String linkId = PortalUtil.generateRandomKey(request, "info-box") + "_action-link";
 %>
 
-<div class="<%= infoxBoxCssClasses %>">
+<div class="<%= "info-box" + (Validator.isNotNull(elementClasses) ? StringPool.SPACE + elementClasses : StringPool.BLANK) %>">
 	<header class="header pb-2">
 		<c:if test="<%= Validator.isNotNull(title) %>">
 			<h5 class="mb-0 title"><%= title %></h5>
@@ -33,7 +32,7 @@ String linkId = PortalUtil.generateRandomKey(request, "info-box") + StringPool.U
 					var link = document.getElementById('<%= linkId %>');
 
 					if (link) {
-						link.addEventListener('click', function (e) {
+						link.addEventListener('click', (e) => {
 							e.preventDefault();
 							Liferay.fire(eventsDefinitions.OPEN_MODAL, {
 								id: '<%= actionTargetId %>',

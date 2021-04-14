@@ -21,6 +21,7 @@ String action = (String)request.getAttribute("render_controls.jsp-action");
 boolean childControl = GetterUtil.getBoolean(String.valueOf(request.getAttribute("render_controls.jsp-childControl")));
 PortletDataHandlerControl[] controls = (PortletDataHandlerControl[])request.getAttribute("render_controls.jsp-controls");
 ManifestSummary manifestSummary = (ManifestSummary)request.getAttribute("render_controls.jsp-manifestSummary");
+
 String portletId = (String)request.getAttribute("render_controls.jsp-portletId");
 
 if (Validator.isNotNull(portletId)) {
@@ -76,16 +77,16 @@ for (int i = 0; i < controls.length; i++) {
 				String controlInputName = controlName;
 
 				boolean disabled = controls[i].isDisabled() || disableInputs;
-
-				if (disabled) {
-					controlInputName += "Display";
 				%>
+
+				<c:if test="<%= disabled %>">
+
+					<%
+					controlInputName += "Display";
+					%>
 
 					<aui:input name="<%= controlName %>" type="hidden" value="<%= MapUtil.getBoolean(parameterMap, controlName, control.getDefaultState()) || MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL) %>" />
-
-				<%
-				}
-				%>
+				</c:if>
 
 				<aui:input checked="<%= MapUtil.getBoolean(parameterMap, controlName, control.getDefaultState()) || MapUtil.getBoolean(parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL) %>" data="<%= data %>" disabled="<%= disabled %>" helpMessage="<%= control.getHelpMessage(locale, action) %>" ignoreRequestValue="<%= disabled %>" label="<%= controlLabel %>" name="<%= controlInputName %>" type="checkbox" />
 
@@ -127,13 +128,22 @@ for (int i = 0; i < controls.length; i++) {
 						String controlValue = MapUtil.getString(parameterMap, control.getNamespacedControlName(), defaultChoice);
 
 						String controlName = LanguageUtil.get(request, resourceBundle, choice);
-
-						Map<String, Object> data = HashMapBuilder.<String, Object>put(
-							"name", controlName
-						).build();
 					%>
 
-						<aui:input checked="<%= controlValue.equals(choices[j]) %>" data="<%= data %>" disabled="<%= disableInputs %>" helpMessage="<%= control.getHelpMessage(locale, action) %>" label="<%= choice %>" name="<%= control.getNamespacedControlName() %>" type="radio" value="<%= choices[j] %>" />
+						<aui:input
+							checked="<%= controlValue.equals(choices[j]) %>"
+							data='<%=
+								HashMapBuilder.<String, Object>put(
+									"name", controlName
+								).build()
+							%>'
+							disabled="<%= disableInputs %>"
+							helpMessage="<%= control.getHelpMessage(locale, action) %>"
+							label="<%= choice %>"
+							name="<%= control.getNamespacedControlName() %>"
+							type="radio"
+							value="<%= choices[j] %>"
+						/>
 
 					<%
 					}

@@ -40,8 +40,9 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -54,7 +55,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -80,7 +80,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = AppBuilderAppPersistence.class)
+@Component(service = {AppBuilderAppPersistence.class, BasePersistence.class})
 public class AppBuilderAppPersistenceImpl
 	extends BasePersistenceImpl<AppBuilderApp>
 	implements AppBuilderAppPersistence {
@@ -197,7 +197,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -579,7 +579,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -709,7 +709,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof AppBuilderApp) {
@@ -820,7 +820,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -986,7 +986,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -1402,7 +1402,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, companyId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1557,7 +1557,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -2247,7 +2247,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2433,7 +2433,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -2792,7 +2792,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2931,7 +2931,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -3297,7 +3297,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {ddmStructureId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -3441,7 +3441,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -4229,7 +4229,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, scope};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -4459,7 +4459,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -4849,7 +4849,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, active};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -5000,7 +5000,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -5416,7 +5416,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, scope};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -5590,7 +5590,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -6372,7 +6372,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, companyId, ddmStructureId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -6598,7 +6598,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -7036,7 +7036,7 @@ public class AppBuilderAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, active, scope};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -7227,7 +7227,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AppBuilderApp appBuilderApp : list) {
@@ -8102,7 +8102,7 @@ public class AppBuilderAppPersistenceImpl
 			groupId, companyId, ddmStructureId, scope
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -8317,9 +8317,7 @@ public class AppBuilderAppPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(AppBuilderAppImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(AppBuilderAppImpl.class);
 	}
 
 	/**
@@ -8343,9 +8341,7 @@ public class AppBuilderAppPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(AppBuilderAppImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(AppBuilderAppImpl.class, primaryKey);
@@ -8360,10 +8356,9 @@ public class AppBuilderAppPersistenceImpl
 			appBuilderAppModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, appBuilderAppModelImpl, false);
+			_finderPathFetchByUUID_G, args, appBuilderAppModelImpl);
 	}
 
 	/**
@@ -8694,7 +8689,7 @@ public class AppBuilderAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AppBuilderApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -8764,7 +8759,7 @@ public class AppBuilderAppPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -8824,22 +8819,21 @@ public class AppBuilderAppPersistenceImpl
 
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class, new AppBuilderAppModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", AppBuilderApp.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = _createFinderPath(
+		_finderPathWithPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -8847,27 +8841,27 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			true);
 
-		_finderPathCountByUuid = _createFinderPath(
+		_finderPathCountByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
-		_finderPathFetchByUUID_G = _createFinderPath(
+		_finderPathFetchByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = _createFinderPath(
+		_finderPathCountByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
@@ -8876,17 +8870,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = _createFinderPath(
+		_finderPathCountByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -8894,17 +8888,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			true);
 
-		_finderPathCountByGroupId = _createFinderPath(
+		_finderPathCountByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathWithPaginationFindByCompanyId = _createFinderPath(
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -8912,17 +8906,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"companyId"}, true);
 
-		_finderPathWithoutPaginationFindByCompanyId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			true);
 
-		_finderPathCountByCompanyId = _createFinderPath(
+		_finderPathCountByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			false);
 
-		_finderPathWithPaginationFindByDDMStructureId = _createFinderPath(
+		_finderPathWithPaginationFindByDDMStructureId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByDDMStructureId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -8930,17 +8924,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"ddmStructureId"}, true);
 
-		_finderPathWithoutPaginationFindByDDMStructureId = _createFinderPath(
+		_finderPathWithoutPaginationFindByDDMStructureId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByDDMStructureId",
 			new String[] {Long.class.getName()},
 			new String[] {"ddmStructureId"}, true);
 
-		_finderPathCountByDDMStructureId = _createFinderPath(
+		_finderPathCountByDDMStructureId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByDDMStructureId",
 			new String[] {Long.class.getName()},
 			new String[] {"ddmStructureId"}, false);
 
-		_finderPathWithPaginationFindByG_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -8949,17 +8943,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"groupId", "scope"}, true);
 
-		_finderPathWithoutPaginationFindByG_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "scope"}, true);
 
-		_finderPathCountByG_S = _createFinderPath(
+		_finderPathCountByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "scope"}, false);
 
-		_finderPathWithPaginationFindByC_A = _createFinderPath(
+		_finderPathWithPaginationFindByC_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -8968,17 +8962,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"companyId", "active_"}, true);
 
-		_finderPathWithoutPaginationFindByC_A = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_A",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"companyId", "active_"}, true);
 
-		_finderPathCountByC_A = _createFinderPath(
+		_finderPathCountByC_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_A",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"companyId", "active_"}, false);
 
-		_finderPathWithPaginationFindByC_S = _createFinderPath(
+		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -8987,17 +8981,17 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"companyId", "scope"}, true);
 
-		_finderPathWithoutPaginationFindByC_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "scope"}, true);
 
-		_finderPathCountByC_S = _createFinderPath(
+		_finderPathCountByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_S",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "scope"}, false);
 
-		_finderPathWithPaginationFindByG_C_D = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_D = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_D",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -9006,21 +9000,21 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"groupId", "companyId", "ddmStructureId"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_D = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_D = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_D",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "companyId", "ddmStructureId"}, true);
 
-		_finderPathCountByG_C_D = _createFinderPath(
+		_finderPathCountByG_C_D = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_D",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "companyId", "ddmStructureId"}, false);
 
-		_finderPathWithPaginationFindByC_A_S = _createFinderPath(
+		_finderPathWithPaginationFindByC_A_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_A_S",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -9029,7 +9023,7 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"companyId", "active_", "scope"}, true);
 
-		_finderPathWithoutPaginationFindByC_A_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_A_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_A_S",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -9037,7 +9031,7 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"companyId", "active_", "scope"}, true);
 
-		_finderPathCountByC_A_S = _createFinderPath(
+		_finderPathCountByC_A_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_A_S",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -9045,7 +9039,7 @@ public class AppBuilderAppPersistenceImpl
 			},
 			new String[] {"companyId", "active_", "scope"}, false);
 
-		_finderPathWithPaginationFindByG_C_DDMSI_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_DDMSI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_DDMSI_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -9056,7 +9050,7 @@ public class AppBuilderAppPersistenceImpl
 			new String[] {"groupId", "companyId", "ddmStructureId", "scope"},
 			true);
 
-		_finderPathWithoutPaginationFindByG_C_DDMSI_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_DDMSI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_DDMSI_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -9065,7 +9059,7 @@ public class AppBuilderAppPersistenceImpl
 			new String[] {"groupId", "companyId", "ddmStructureId", "scope"},
 			true);
 
-		_finderPathCountByG_C_DDMSI_S = _createFinderPath(
+		_finderPathCountByG_C_DDMSI_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_DDMSI_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -9080,12 +9074,6 @@ public class AppBuilderAppPersistenceImpl
 		entityCache.removeCache(AppBuilderAppImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -9171,36 +9159,13 @@ public class AppBuilderAppPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "active"});
 
-	static {
-		try {
-			Class.forName(AppBuilderPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class AppBuilderAppModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -9249,6 +9214,16 @@ public class AppBuilderAppPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return AppBuilderAppImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return AppBuilderAppTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

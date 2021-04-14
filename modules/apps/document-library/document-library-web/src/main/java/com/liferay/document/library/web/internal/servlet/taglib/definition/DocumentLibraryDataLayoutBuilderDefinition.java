@@ -29,11 +29,6 @@ public class DocumentLibraryDataLayoutBuilderDefinition
 	implements DataLayoutBuilderDefinition {
 
 	@Override
-	public boolean allowFieldSets() {
-		return true;
-	}
-
-	@Override
 	public boolean allowMultiplePages() {
 		return false;
 	}
@@ -46,8 +41,14 @@ public class DocumentLibraryDataLayoutBuilderDefinition
 	@Override
 	public String[] getUnimplementedProperties() {
 		return new String[] {
-			"fieldNamespace", "readOnly", "validation", "visibilityExpression"
+			"allowGuestUsers", "fieldNamespace", "readOnly", "validation",
+			"visibilityExpression"
 		};
+	}
+
+	@Override
+	public String[] getVisibleProperties() {
+		return new String[] {"localizable"};
 	}
 
 }

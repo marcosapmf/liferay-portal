@@ -52,31 +52,9 @@ definition {
 		}
 	}
 
-	@description = "Validate if the user can create a Experience"
+	@description = "When the user creates a new experience, it is always placed in the last position of the list, always below the default experience and always set as non-active"
 	@priority = "5"
-	test AddDefaultExperienceWithBannerCenter {
-		property portal.acceptance = "true";
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
-
-		ContentPages.clickPencil();
-
-		PageEditor.addFragment(
-			collectionName = "Featured Content",
-			fragmentName = "Banner Center");
-
-		Button.clickPublish();
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
-
-		AssertTextEquals(
-			locator1 = "Experience#BANNER_CENTER_TITLE_EXAMPLE_PORTLET",
-			value1 = "Banner Title Example");
-	}
-
-	@description = "Display correct experience for the logged user"
-	@priority = "5"
-	test DisplayUserExperience {
+	test AddNewAnyoneExperience {
 		property portal.acceptance = "true";
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
@@ -87,40 +65,31 @@ definition {
 			collectionName = "Basic Components",
 			fragmentName = "Heading");
 
-		PageEditor.addExperience(experienceName = "exp1");
+		PageEditor.editFragmentText(
+			fragmentName = "Heading",
+			id = "element-text",
+			text = "Default");
+
+		Button.clickPublish();
+
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
+
+		ContentPages.clickPencil();
+
+		PageEditor.addExperience(
+			experienceName = "NewAnyoneExperience",
+			segmentName = "Anyone");
 
 		Refresh();
 
-		PageEditor.changeExperience(newExperience = "exp1");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Heading Example");
+		PageEditor.changeExperience(newExperience = "NewAnyoneExperience");
 
 		PageEditor.editFragmentText(
 			fragmentName = "Heading",
 			id = "element-text",
-			text = "Edited Inline Text");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Edited Inline Text");
-
-		PageEditor.changeExperience(newExperience = "Default");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Heading Example");
+			text = "Anyone1");
 
 		Button.clickPublish();
-
-		Navigator.gotoSitePage(
-			pageName = "Experience Content Page",
-			siteName = "Test Site Name");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Edited Inline Text");
 
 		User.logoutPG();
 
@@ -130,9 +99,77 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Heading Example");
+			value1 = "Default");
 
 		User.firstLoginPG();
+	}
+
+	@description = "The Add new experience modals appears after click on cancel in the Edit experience modal"
+	@priority = "5"
+	test AddNewExperienceAfterCancelEdit {
+		property portal.acceptance = "true";
+
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
+
+		ContentPages.clickPencil();
+
+		PageEditor.addExperience(
+			experienceName = "NewExp1",
+			segmentName = "Anyone");
+
+		Refresh();
+
+		Click(locator1 = "PageEditor#EXPERIENCE_DEFAULT_BUTTON_NAME");
+
+		Click(locator1 = "PageEditor#EXPERIENCE_EDIT_BUTTON");
+
+		AssertClick(
+			locator1 = "Button#CANCEL",
+			value1 = "Cancel");
+
+		Click(locator1 = "PageEditor#EXPERIENCE_DEFAULT_BUTTON_NAME");
+
+		Click(
+			key_text = "New Experience",
+			locator1 = "Button#ANY");
+
+		SelectFrame(value1 = "relative=top");
+
+		AssertTextEquals(
+			locator1 = "PageEditor#EXPERIENCE_NEW_EXPERIENCE_MODAL_TITLE",
+			value1 = "New Experience");
+
+		AssertTextEquals(
+			locator1 = "PageEditor#EXPERIENCE_NAME",
+			value1 = "");
+
+		AssertClick(
+			locator1 = "Button#CANCEL",
+			value1 = "Cancel");
+
+		PageEditor.clickPublish();
+	}
+
+	@description = "When the user clicks on the Duplicate option of an experience, a new experience with [the same name] + Copy and the same audience (Segment) appears in the last position of the list, always below the default experience"
+	@priority = "5"
+	test DuplicateExperience {
+		property portal.acceptance = "true";
+
+		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
+
+		ContentPages.clickPencil();
+
+		PageEditor.addExperience(
+			experienceName = "NewExp1",
+			segmentName = "AddSegmentUserEmailAddressContains Test");
+
+		Refresh();
+
+		PageEditor.changeExperience(newExperience = "NewExp1");
+
+		PageEditor.duplicateExperience(experienceName = "NewExp1");
+
+		PageEditor.clickPublish();
 	}
 
 	@description = "Validate experience edition and deletion"
@@ -144,7 +181,9 @@ definition {
 
 		ContentPages.clickPencil();
 
-		PageEditor.addExperience(experienceName = "exp1");
+		PageEditor.addExperience(
+			experienceName = "exp1",
+			segmentName = "AddSegmentUserEmailAddressContains Test");
 
 		Refresh();
 
@@ -153,47 +192,6 @@ definition {
 		PageEditor.deleteExperience(experienceName = "exp1_edited");
 
 		PageEditor.clickPublish();
-	}
-
-	@description = "Validate inline text changes between experiences"
-	@priority = "5"
-	test EditInlineTextExperience {
-		property portal.acceptance = "true";
-
-		Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/experience-content-page");
-
-		ContentPages.clickPencil();
-
-		PageEditor.addFragment(
-			collectionName = "Basic Components",
-			fragmentName = "Heading");
-
-		PageEditor.addExperience(experienceName = "exp1");
-
-		Refresh();
-
-		PageEditor.changeExperience(newExperience = "exp1");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Heading Example");
-
-		PageEditor.editFragmentText(
-			fragmentName = "Heading",
-			id = "element-text",
-			text = "Edited Inline Text");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Edited Inline Text");
-
-		PageEditor.changeExperience(newExperience = "Default");
-
-		AssertTextEquals(
-			locator1 = "Experience#FRAGMENT_HEADING",
-			value1 = "Heading Example");
-
-		Button.clickPublish();
 	}
 
 }

@@ -50,8 +50,8 @@ export const TranslationManagerLabel = ({
 
 export default ({
 	availableLanguageIds,
-	defaultLanguageId,
-	editingLanguageId,
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
+	editingLanguageId = themeDisplay.getDefaultLanguageId(),
 	onActiveChange = () => {},
 	onEditingLanguageIdChange,
 	showUserView = false,
@@ -63,9 +63,7 @@ export default ({
 	const [available, setAvailable] = useState({});
 
 	useEffect(() => {
-		AUI().use('portal-available-languages', () => {
-			setAvailable(Liferay.Language.available);
-		});
+		setAvailable(Liferay.Language.available);
 	}, []);
 
 	useEffect(() => {

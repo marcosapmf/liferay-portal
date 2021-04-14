@@ -12,7 +12,6 @@
 import ClayBadge from '@clayui/badge';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import {AppContext} from 'app-builder-web/js/AppContext.es';
 import UpperToolbar, {
 	UpperToolbarInput,
 } from 'app-builder-web/js/components/upper-toolbar/UpperToolbar.es';
@@ -21,7 +20,7 @@ import EditAppContext, {
 	UPDATE_APP,
 	UPDATE_NAME,
 } from 'app-builder-web/js/pages/apps/edit/EditAppContext.es';
-import {errorToast} from 'app-builder-web/js/utils/toast.es';
+import {errorToast} from 'data-engine-js-components-web/js/utils/toast.es';
 import {TranslationManager} from 'data-engine-taglib';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
@@ -35,10 +34,9 @@ export default function EditAppToolbar({isSaving, onCancel, onSave}) {
 		dispatch,
 		setAppChangesModalVisible,
 		setDeployModalVisible,
+		setMissingFieldsModalVisible,
 		state: {app},
 	} = useContext(EditAppContext);
-	const {showTranslationManager} = useContext(AppContext);
-
 	const {availableLanguageIds, defaultLanguageId} = config.dataObject;
 
 	const {undeployApp} = useDeployApp();
@@ -130,16 +128,14 @@ export default function EditAppToolbar({isSaving, onCancel, onSave}) {
 
 	return (
 		<UpperToolbar className="align-items-center">
-			{showTranslationManager && (
-				<TranslationManager
-					availableLanguageIds={availableLanguages}
-					className="mr-1"
-					defaultLanguageId={defaultLanguageId}
-					editingLanguageId={editingLanguageId}
-					onEditingLanguageIdChange={onChangeEditingLanguageId}
-					translatedLanguageIds={app.name}
-				/>
-			)}
+			<TranslationManager
+				availableLanguageIds={availableLanguages}
+				className="mr-1"
+				defaultLanguageId={defaultLanguageId}
+				editingLanguageId={editingLanguageId}
+				onEditingLanguageIdChange={onChangeEditingLanguageId}
+				translatedLanguageIds={app.name}
+			/>
 
 			<UpperToolbarInput
 				maxLength={30}
@@ -183,6 +179,9 @@ export default function EditAppToolbar({isSaving, onCancel, onSave}) {
 						onClick={
 							app.active
 								? onClickUndeploy
+								: config.formView.missingRequiredFields
+										?.customField && appId
+								? () => setMissingFieldsModalVisible(true)
 								: () => setDeployModalVisible(true)
 						}
 						small

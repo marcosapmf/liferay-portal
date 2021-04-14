@@ -32,11 +32,10 @@
 
 		String siteImageURL = curGroup.getLogoURL(themeDisplay, false);
 
-		Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-			"actions", siteAdminManagementToolbarDisplayContext.getAvailableActions(curGroup)
-		).build();
-
-		row.setData(rowData);
+		row.setData(
+			HashMapBuilder.<String, Object>put(
+				"actions", siteAdminManagementToolbarDisplayContext.getAvailableActions(curGroup)
+			).build());
 		%>
 
 		<portlet:renderURL var="viewSubsitesURL">
@@ -66,43 +65,31 @@
 						<aui:a href="<%= !curGroup.isCompany() ? viewSubsitesURL : StringPool.BLANK %>" label="<%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %>" localizeLabel="<%= false %>" />
 					</h5>
 
-					<ul class="list-inline">
-						<li class="h6 text-default">
-							<c:choose>
-								<c:when test="<%= curGroup.isActive() %>">
-									<liferay-ui:message key="active" />
-								</c:when>
-								<c:otherwise>
-									<liferay-ui:message key="not-active" />
-								</c:otherwise>
-							</c:choose>
-						</li>
-						<li class="h6">
-							<c:choose>
-								<c:when test="<%= !curGroup.isCompany() %>">
-									<liferay-ui:message arguments="<%= String.valueOf(childSites.size()) %>" key="x-child-sites" />
-								</c:when>
-								<c:otherwise>
-									-
-								</c:otherwise>
-							</c:choose>
-						</li>
-					</ul>
+					<span class="text-secondary">
+						<c:choose>
+							<c:when test="<%= curGroup.isActive() %>">
+								<liferay-ui:message key="active" />
+							</c:when>
+							<c:otherwise>
+								<liferay-ui:message key="not-active" />
+							</c:otherwise>
+						</c:choose>
+					</span>
+					<span class="text-secondary">
+						<c:if test="<%= !curGroup.isCompany() %>">
+							<liferay-ui:message arguments="<%= String.valueOf(childSites.size()) %>" key="x-child-sites" />
+						</c:if>
+					</span>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text>
 					<clay:dropdown-actions
-						defaultEventHandler="<%= SiteAdminWebKeys.SITE_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
 						dropdownItems="<%= siteAdminDisplayContext.getActionDropdownItems(curGroup) %>"
+						propsTransformer="js/SiteDropdownDefaultPropsTransformer"
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:when>
 			<c:when test='<%= Objects.equals(siteAdminDisplayContext.getDisplayStyle(), "icon") %>'>
-
-				<%
-				row.setCssClass("entry-card lfr-asset-item " + row.getCssClass());
-				%>
-
 				<liferay-ui:search-container-column-text>
 					<clay:vertical-card
 						verticalCard="<%= new SiteVerticalCard(curGroup, liferayPortletRequest, liferayPortletResponse, searchContainer.getRowChecker(), siteAdminDisplayContext) %>"
@@ -130,8 +117,11 @@
 					List<String> names = SitesUtil.getOrganizationNames(curGroup, user);
 
 					names.addAll(SitesUtil.getUserGroupNames(curGroup, user));
+					%>
 
-					if (ListUtil.isNotEmpty(names)) {
+					<c:if test="<%= ListUtil.isNotEmpty(names) %>">
+
+						<%
 						String message = StringPool.BLANK;
 
 						if (names.size() == 1) {
@@ -142,14 +132,10 @@
 
 							message = LanguageUtil.format(request, "you-are-a-member-of-x-because-you-belong-to-x-and-x", new Object[] {HtmlUtil.escape(curGroup.getDescriptiveName(locale)), HtmlUtil.escape(StringUtil.merge(namesList.toArray(new String[names.size() - 1]), ", ")), HtmlUtil.escape(names.get(names.size() - 1))}, false);
 						}
-					%>
+						%>
 
 						<liferay-ui:icon-help message="<%= message %>" />
-
-					<%
-					}
-					%>
-
+					</c:if>
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
@@ -229,9 +215,8 @@
 
 				<liferay-ui:search-container-column-text>
 					<clay:dropdown-actions
-						defaultEventHandler="<%= SiteAdminWebKeys.SITE_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
 						dropdownItems="<%= siteAdminDisplayContext.getActionDropdownItems(curGroup) %>"
-						itemsIconAlignment="right"
+						propsTransformer="js/SiteDropdownDefaultPropsTransformer"
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:otherwise>
@@ -243,8 +228,3 @@
 		markupView="lexicon"
 	/>
 </liferay-ui:search-container>
-
-<liferay-frontend:component
-	componentId="<%= SiteAdminWebKeys.SITE_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/SiteDropdownDefaultEventHandler.es"
-/>

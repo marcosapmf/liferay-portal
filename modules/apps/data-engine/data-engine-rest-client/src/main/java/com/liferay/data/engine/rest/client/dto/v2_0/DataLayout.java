@@ -17,6 +17,8 @@ package com.liferay.data.engine.rest.client.dto.v2_0;
 import com.liferay.data.engine.rest.client.function.UnsafeSupplier;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataLayoutSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DataLayout implements Cloneable {
+public class DataLayout implements Cloneable, Serializable {
 
 	public static DataLayout toDTO(String json) {
 		return DataLayoutSerDes.toDTO(json);
@@ -75,6 +77,28 @@ public class DataLayout implements Cloneable {
 	}
 
 	protected Long dataDefinitionId;
+
+	public Map<String, Object> getDataLayoutFields() {
+		return dataLayoutFields;
+	}
+
+	public void setDataLayoutFields(Map<String, Object> dataLayoutFields) {
+		this.dataLayoutFields = dataLayoutFields;
+	}
+
+	public void setDataLayoutFields(
+		UnsafeSupplier<Map<String, Object>, Exception>
+			dataLayoutFieldsUnsafeSupplier) {
+
+		try {
+			dataLayoutFields = dataLayoutFieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, Object> dataLayoutFields;
 
 	public String getDataLayoutKey() {
 		return dataLayoutKey;

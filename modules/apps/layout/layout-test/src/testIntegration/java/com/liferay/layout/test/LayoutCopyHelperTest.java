@@ -134,7 +134,7 @@ public class LayoutCopyHelperTest {
 		layoutStructure.addRootLayoutStructureItem();
 
 		LayoutStructureItem containerLayoutStructureItem =
-			layoutStructure.addContainerLayoutStructureItem(
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0);
 
 		FragmentEntryLink fragmentEntryLink =
@@ -144,7 +144,7 @@ public class LayoutCopyHelperTest {
 				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
 				StringPool.BLANK, 0, null, _serviceContext);
 
-		layoutStructure.addFragmentLayoutStructureItem(
+		layoutStructure.addFragmentStyledLayoutStructureItem(
 			fragmentEntryLink.getFragmentEntryLinkId(),
 			containerLayoutStructureItem.getItemId(), 0);
 
@@ -154,7 +154,7 @@ public class LayoutCopyHelperTest {
 			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
 			StringPool.BLANK, 0, null, _serviceContext);
 
-		layoutStructure.addFragmentLayoutStructureItem(
+		layoutStructure.addFragmentStyledLayoutStructureItem(
 			fragmentEntryLink.getFragmentEntryLinkId(),
 			containerLayoutStructureItem.getItemId(), 0);
 
@@ -267,7 +267,8 @@ public class LayoutCopyHelperTest {
 		PortletPreferences sourcePortletPreferences =
 			PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 				sourceLayout, portletId,
-				"<portlet-preferences><layout1/></portlet-preferences>");
+				"<portlet-preferences><preference><name>layout</name><value>1" +
+					"</value></preference></portlet-preferences>");
 
 		Layout targetLayout = LayoutTestUtil.addLayout(
 			_group.getGroupId(), StringPool.BLANK);

@@ -19,8 +19,8 @@
 <%
 PortletURL portletURL = renderResponse.createRenderURL();
 
-portletURL.setParameter("mvcRenderCommandName", "/view_configuration_screen");
-portletURL.setParameter("configurationScreenKey", "synced-sites");
+portletURL.setParameter("mvcRenderCommandName", "/configuration_admin/view_configuration_screen");
+portletURL.setParameter("configurationScreenKey", "1-synced-sites");
 
 String redirect = portletURL.toString();
 
@@ -86,7 +86,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 		GroupDisplayContext groupDisplayContext = new GroupDisplayContext("/analytics_settings/add_channel", renderRequest, renderResponse);
 		%>
 
-		<clay:management-toolbar
+		<clay:management-toolbar-v2
 			displayContext="<%= new GroupManagementToolbarDisplayContext(groupDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
 		/>
 
@@ -166,17 +166,17 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 		}
 	}
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		return <portlet:namespace />handleSubmitButton(
 			event.elements.allSelectedElements
 		);
 	});
 
-	Liferay.componentReady('<portlet:namespace />selectGroups').then(function (
-		searchContainer
-	) {
-		return <portlet:namespace />handleSubmitButton(
-			searchContainer.select.getAllSelectedElements()
-		);
-	});
+	Liferay.componentReady('<portlet:namespace />selectGroups').then(
+		(searchContainer) => {
+			return <portlet:namespace />handleSubmitButton(
+				searchContainer.select.getAllSelectedElements()
+			);
+		}
+	);
 </aui:script>

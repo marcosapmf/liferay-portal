@@ -236,6 +236,10 @@ public class CalendarPortlet extends MVCPortlet {
 				jsonObject.put("success", true);
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
+
 				String message = themeDisplay.translate(
 					"an-unexpected-error-occurred-while-importing-your-file");
 
@@ -1051,9 +1055,7 @@ public class CalendarPortlet extends MVCPortlet {
 
 		recurrence.setFrequency(frequency);
 
-		int interval = ParamUtil.getInteger(actionRequest, "interval");
-
-		recurrence.setInterval(interval);
+		recurrence.setInterval(ParamUtil.getInteger(actionRequest, "interval"));
 
 		TimeZone timeZone = getTimeZone(actionRequest);
 

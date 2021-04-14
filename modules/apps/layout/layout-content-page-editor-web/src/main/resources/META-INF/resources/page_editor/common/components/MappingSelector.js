@@ -25,7 +25,8 @@ import {config} from '../../app/config/index';
 import CollectionService from '../../app/services/CollectionService';
 import InfoItemService from '../../app/services/InfoItemService';
 import {useDispatch, useSelector} from '../../app/store/index';
-import isMapped from '../../app/utils/isMapped';
+import isMapped from '../../app/utils/editable-value/isMapped';
+import isMappedToStructure from '../../app/utils/editable-value/isMappedToStructure';
 import {useId} from '../../app/utils/useId';
 import ItemSelector from './ItemSelector';
 
@@ -59,7 +60,8 @@ function loadFields({
 	else if (
 		selectedSourceTypeId === MAPPING_SOURCE_TYPE_IDS.content &&
 		selectedItem.classNameId &&
-		selectedItem.classPK
+		selectedItem.classPK &&
+		selectedItem.title
 	) {
 		promise = InfoItemService.getAvailableInfoItemMappingFields({
 			classNameId: selectedItem.classNameId,
@@ -82,7 +84,11 @@ function loadFields({
 	return Promise.resolve(null);
 }
 
-export default function ({fieldType, mappedItem, onMappingSelect}) {
+export default function MappingSelectorWrapper({
+	fieldType,
+	mappedItem,
+	onMappingSelect,
+}) {
 	const collectionConfig = useCollectionConfig();
 	const [collectionFieldSets, setCollectionFieldSets] = useState([]);
 	const [
@@ -172,7 +178,8 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 	const [selectedItem, setSelectedItem] = useState(mappedItem);
 
 	const [selectedSourceTypeId, setSelectedSourceTypeId] = useState(
-		mappedItem.mappedField || config.layoutType === LAYOUT_TYPES.display
+		isMappedToStructure(mappedItem) ||
+			config.layoutType === LAYOUT_TYPES.display
 			? MAPPING_SOURCE_TYPE_IDS.structure
 			: MAPPING_SOURCE_TYPE_IDS.content
 	);
@@ -181,13 +188,7 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 		setSelectedItem(selectedInfoItem);
 
 		if (isMapped(mappedItem)) {
-			onMappingSelect({
-				className: '',
-				classNameId: '',
-				classPK: '',
-				fieldId: '',
-				mappedField: '',
-			});
+			onMappingSelect({});
 		}
 	};
 
@@ -196,20 +197,9 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 
 		const data =
 			fieldValue === UNMAPPED_OPTION.value
-				? {
-						className: '',
-						classNameId: '',
-						classPK: '',
-						fieldId: '',
-						mappedField: '',
-				  }
+				? {}
 				: selectedSourceTypeId === MAPPING_SOURCE_TYPE_IDS.content
-				? {
-						className: selectedItem.className,
-						classNameId: selectedItem.classNameId,
-						classPK: selectedItem.classPK,
-						fieldId: fieldValue,
-				  }
+				? {...selectedItem, fieldId: fieldValue}
 				: {mappedField: fieldValue};
 
 		if (selectedSourceTypeId === MAPPING_SOURCE_TYPE_IDS.content) {
@@ -241,17 +231,18 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 	};
 
 	useEffect(() => {
-		const infoItem = mappedInfoItems.find(
-			(infoItem) =>
-				infoItem.classNameId === mappedItem.classNameId &&
-				infoItem.classPK === mappedItem.classPK
-		);
+		if (mappedItem.classNameId && mappedItem.classPK) {
+			const infoItem = mappedInfoItems.find(
+				(infoItem) =>
+					infoItem.classNameId === mappedItem.classNameId &&
+					infoItem.classPK === mappedItem.classPK
+			);
 
-		setSelectedItem((selectedItem) => ({
-			...infoItem,
-			...mappedItem,
-			...selectedItem,
-		}));
+			setSelectedItem({
+				...infoItem,
+				...mappedItem,
+			});
+		}
 	}, [mappedItem, mappedInfoItems, setSelectedItem]);
 
 	useEffect(() => {
@@ -299,12 +290,7 @@ function MappingSelector({fieldType, mappedItem, onMappingSelect}) {
 							setSelectedItem({});
 
 							if (isMapped(mappedItem)) {
-								onMappingSelect({
-									classNameId: '',
-									classPK: '',
-									fieldId: '',
-									mappedField: '',
-								});
+								onMappingSelect({});
 							}
 						}}
 						options={[
@@ -435,6 +421,11 @@ MappingSelector.propTypes = {
 			classNameId: PropTypes.string,
 			classPK: PropTypes.string,
 			fieldId: PropTypes.string,
+			fileEntryId: PropTypes.string,
+		}),
+		PropTypes.shape({
+			collectionFieldId: PropTypes.string,
+			fileEntryId: PropTypes.string,
 		}),
 		PropTypes.shape({mappedField: PropTypes.string}),
 	]),

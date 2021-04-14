@@ -126,9 +126,7 @@ for (long groupId : groupIds) {
 				continue;
 			}
 
-			String portletId = curRendererFactory.getPortletId();
-
-			if (group.isStagingGroup() && !group.isStagedPortlet(portletId)) {
+			if (group.isStagingGroup() && !group.isStagedPortlet(curRendererFactory.getPortletId())) {
 				curGroupId = group.getLiveGroupId();
 			}
 
@@ -227,12 +225,12 @@ for (long groupId : groupIds) {
 	}
 </script>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	function selectAssets(assetEntryList) {
 		var assetClassName = '';
 		var assetEntryIds = [];
 
-		Array.prototype.forEach.call(assetEntryList, function (assetEntry) {
+		Array.prototype.forEach.call(assetEntryList, (assetEntry) => {
 			assetEntryIds.push(assetEntry.entityid);
 
 			assetClassName = assetEntry.assetclassname;
@@ -248,11 +246,13 @@ for (long groupId : groupIds) {
 		});
 	}
 
-	var delegateHandler = dom.delegate(
+	var delegate = delegateModule.default;
+
+	var delegateHandler = delegate(
 		document.body,
 		'click',
 		'.asset-selector a',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var delegateTarget = event.delegateTarget;
@@ -272,7 +272,7 @@ for (long groupId : groupIds) {
 	);
 
 	function handleDestroyPortlet() {
-		delegateHandler.removeListener();
+		delegateHandler.dispose();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);
 	}

@@ -36,8 +36,9 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -47,7 +48,6 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,7 +72,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = AccountEntryUserRelPersistence.class)
+@Component(
+	service = {AccountEntryUserRelPersistence.class, BasePersistence.class}
+)
 public class AccountEntryUserRelPersistenceImpl
 	extends BasePersistenceImpl<AccountEntryUserRel>
 	implements AccountEntryUserRelPersistence {
@@ -192,7 +194,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AccountEntryUserRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AccountEntryUserRel accountEntryUserRel : list) {
@@ -563,7 +565,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {accountEntryId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -701,7 +703,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AccountEntryUserRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AccountEntryUserRel accountEntryUserRel : list) {
@@ -1072,7 +1074,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {accountUserId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1190,7 +1192,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByAEI_AUI, finderArgs, this);
+				_finderPathFetchByAEI_AUI, finderArgs);
 		}
 
 		if (result instanceof AccountEntryUserRel) {
@@ -1308,7 +1310,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {accountEntryId, accountUserId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1412,9 +1414,7 @@ public class AccountEntryUserRelPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(AccountEntryUserRelImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(AccountEntryUserRelImpl.class);
 	}
 
 	/**
@@ -1440,9 +1440,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(AccountEntryUserRelImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(AccountEntryUserRelImpl.class, primaryKey);
@@ -1457,11 +1455,9 @@ public class AccountEntryUserRelPersistenceImpl
 			accountEntryUserRelModelImpl.getAccountUserId()
 		};
 
+		finderCache.putResult(_finderPathCountByAEI_AUI, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByAEI_AUI, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByAEI_AUI, args, accountEntryUserRelModelImpl,
-			false);
+			_finderPathFetchByAEI_AUI, args, accountEntryUserRelModelImpl);
 	}
 
 	/**
@@ -1767,7 +1763,7 @@ public class AccountEntryUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AccountEntryUserRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1837,7 +1833,7 @@ public class AccountEntryUserRelPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1894,22 +1890,21 @@ public class AccountEntryUserRelPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new AccountEntryUserRelModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", AccountEntryUserRel.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByAEI = _createFinderPath(
+		_finderPathWithPaginationFindByAEI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByAEI",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1917,17 +1912,17 @@ public class AccountEntryUserRelPersistenceImpl
 			},
 			new String[] {"accountEntryId"}, true);
 
-		_finderPathWithoutPaginationFindByAEI = _createFinderPath(
+		_finderPathWithoutPaginationFindByAEI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByAEI",
 			new String[] {Long.class.getName()},
 			new String[] {"accountEntryId"}, true);
 
-		_finderPathCountByAEI = _createFinderPath(
+		_finderPathCountByAEI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByAEI",
 			new String[] {Long.class.getName()},
 			new String[] {"accountEntryId"}, false);
 
-		_finderPathWithPaginationFindByAUI = _createFinderPath(
+		_finderPathWithPaginationFindByAUI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByAUI",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1935,22 +1930,22 @@ public class AccountEntryUserRelPersistenceImpl
 			},
 			new String[] {"accountUserId"}, true);
 
-		_finderPathWithoutPaginationFindByAUI = _createFinderPath(
+		_finderPathWithoutPaginationFindByAUI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByAUI",
 			new String[] {Long.class.getName()}, new String[] {"accountUserId"},
 			true);
 
-		_finderPathCountByAUI = _createFinderPath(
+		_finderPathCountByAUI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByAUI",
 			new String[] {Long.class.getName()}, new String[] {"accountUserId"},
 			false);
 
-		_finderPathFetchByAEI_AUI = _createFinderPath(
+		_finderPathFetchByAEI_AUI = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByAEI_AUI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"accountEntryId", "accountUserId"}, true);
 
-		_finderPathCountByAEI_AUI = _createFinderPath(
+		_finderPathCountByAEI_AUI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByAEI_AUI",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"accountEntryId", "accountUserId"}, false);
@@ -1961,12 +1956,6 @@ public class AccountEntryUserRelPersistenceImpl
 		entityCache.removeCache(AccountEntryUserRelImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -2026,36 +2015,13 @@ public class AccountEntryUserRelPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		AccountEntryUserRelPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(AccountPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class AccountEntryUserRelModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -2108,6 +2074,16 @@ public class AccountEntryUserRelPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return AccountEntryUserRelImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return AccountEntryUserRelTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

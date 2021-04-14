@@ -21,7 +21,7 @@ SearchContainer<AccountEntryDisplay> accountEntryDisplaySearchContainer = Accoun
 %>
 
 <clay:management-toolbar
-	displayContext="<%= new SelectAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer) %>"
+	managementToolbarDisplayContext="<%= new SelectAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer) %>"
 />
 
 <clay:container-fluid>
@@ -61,7 +61,7 @@ SearchContainer<AccountEntryDisplay> accountEntryDisplaySearchContainer = Accoun
 		'<portlet:namespace />accountEntries'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var selectedItems = event.elements.allSelectedElements;
 
 		var result = {};

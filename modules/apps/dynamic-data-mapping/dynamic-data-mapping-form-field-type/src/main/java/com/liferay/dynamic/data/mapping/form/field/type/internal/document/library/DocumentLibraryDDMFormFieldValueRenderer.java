@@ -16,10 +16,13 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.document.libra
 
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueRenderer;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -32,7 +35,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pedro Queiroz
  */
 @Component(
-	immediate = true, property = "ddm.form.field.type.name=document_library",
+	immediate = true,
+	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.DOCUMENT_LIBRARY,
 	service = DDMFormFieldValueRenderer.class
 )
 public class DocumentLibraryDDMFormFieldValueRenderer
@@ -58,6 +62,10 @@ public class DocumentLibraryDDMFormFieldValueRenderer
 			return fileEntry.getTitle();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return LanguageUtil.format(
 				locale, "is-temporarily-unavailable", "content");
 		}
@@ -69,5 +77,8 @@ public class DocumentLibraryDDMFormFieldValueRenderer
 	@Reference
 	protected DocumentLibraryDDMFormFieldValueAccessor
 		documentLibraryDDMFormFieldValueAccessor;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DocumentLibraryDDMFormFieldValueRenderer.class);
 
 }

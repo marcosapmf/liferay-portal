@@ -1,0 +1,357 @@
+@component-name = "data-engine"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Data Engine";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+
+		JSONGroup.addGroup(groupName = "Test Site Name");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+		DMNavigator.gotoDocumentType();
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+
+			User.logoutPG();
+		}
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "5"
+	test DisableSearchableOfGeolocation {
+		property portal.acceptance = "false";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldSearchable(
+			fieldFieldLabel = "Geolocation",
+			searchableType = "Disable");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "Geolocation",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "Geolocation");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		FormFields.viewRadioValue(
+			fieldName = "indexType",
+			fieldValue = "Disable");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test DuplicateGeolocation {
+		property portal.acceptance = "false";
+
+		var key_Label = "Geolocation";
+
+		var key_fieldLabel = "Copy of ${key_Label}";
+
+		DMNavigator.gotoDocumentType();
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "${key_Label}",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.duplicate(fieldFieldLabel = "${key_Label}");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertElementPresent(locator1 = "FormFields#LABEL");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@ignore = "true"
+	@priority = "4"
+	test DuplicateRepeatableGeolocationOnRenderer {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98071 DuplicateRepeatableGeolocationOnRenderer pending implementation
+
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test SetGeolocationAsRepeatable {
+		property portal.acceptance = "false";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldRepeatable(fieldFieldLabel = "Geolocation");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertElementPresent(locator1 = "FormFields#FIELD_ADD_DUPLICATE");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "5"
+	test SetGeolocationLabel {
+		property portal.acceptance = "false";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		FormViewBuilder.editFieldLabel(
+			fieldLabel = "Geolocation",
+			label = "Localization");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		FormFields.viewTextLabel(
+			fieldLabel = "Localization",
+			fieldName = "Geolocation");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "5"
+	test SetHelpTextOfGeolocation {
+		property portal.acceptance = "false";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldTip(
+			fieldFieldLabel = "Geolocation",
+			fieldHelp = "help Geolocation");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		FormFields.viewFieldHelpText(
+			fieldHelpText = "help Geolocation",
+			fieldName = "Geolocation");
+
+		DDLDataDefinition.save();
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test SetReferenceOfGeolocation {
+		property portal.acceptance = "false";
+
+		DMNavigator.gotoDocumentType();
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldReference(
+			assertFieldReference = "GeolocationReference",
+			fieldFieldLabel = "Geolocation",
+			fieldReference = "GeolocationReference");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "Geolocation",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "Geolocation");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		AssertTextEquals(
+			locator1 = "Form#FIELD_REFERENCE",
+			value1 = "GeolocationReference");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test SetSearchableOfGeolocationAsKeyword {
+		property portal.acceptance = "false";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldSearchable(
+			fieldFieldLabel = "Geolocation",
+			searchableType = "Keyword");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "Geolocation",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "Geolocation");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		FormFields.viewRadioValue(
+			fieldName = "indexType",
+			fieldValue = "Keyword");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test SetSearchableOfGeolocationAsText {
+		property portal.acceptance = "false";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "Geolocation",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldSearchable(
+			fieldFieldLabel = "Geolocation",
+			searchableType = "Text");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "Geolocation",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "Geolocation");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		FormFields.viewRadioValue(
+			fieldName = "indexType",
+			fieldValue = "Text");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test ShowAndHideGeolocationLabel {
+		property portal.acceptance = "false";
+
+		var key_fieldLabel = "Geolocation";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "${key_fieldLabel}",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldShowLabel(fieldFieldLabel = "${key_fieldLabel}");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertElementPresent(locator1 = "FormFields#LABEL");
+
+		AssertClick.assertPartialTextClickAt(
+			key_fieldFieldLabel = "${key_fieldLabel}",
+			locator1 = "DDMEditStructure#FORM_FIELD_CONTAINER",
+			value1 = "${key_fieldLabel}");
+
+		if (IsElementNotPresent(locator1 = "NavTab#ACTIVE_TAB_LINK", key_tab = "Advanced")) {
+			Navigator.gotoNavTab(navTab = "Advanced");
+		}
+
+		Uncheck.uncheckToggleSwitch(
+			key_toggleSwitchLabel = "Show Label",
+			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Name");
+
+		AssertElementNotPresent(locator1 = "FormFields#LABEL");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@ignore = "true"
+	@priority = "4"
+	test VerifyDuplicatedGeolocationOnRenderer {
+		property portal.acceptance = "false";
+
+		var key_Label = "Geolocation";
+
+		var key_fieldLabel = "Copy of ${key_Label}";
+
+		DMNavigator.gotoDocumentType();
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "${key_Label}",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.duplicate(fieldFieldLabel = "${key_Label}");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.gotoDocumentsAndMedia();
+
+		LexiconEntry.gotoAdd();
+
+		MenuItem.click(menuItem = "DM Document Type Name");
+
+		AssertElementPresent(locator1 = "FormFields#LABEL");
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@ignore = "true"
+	@priority = "5"
+	test VerifyGeolocationEntriesOnRenderer {
+		property portal.acceptance = "false";
+
+		// TODO LPS-98071 VerifyGeolocationEntriesOnRenderer pending implementation
+	}
+
+	@description = "This is a test for LPS-98071. As a Developer, I want to Implement the geolocation field type"
+	@priority = "4"
+	test VerifyRequiredPropertyOfGeolocation {
+		property portal.acceptance = "false";
+
+		var fieldLabel = "Geolocation";
+
+		DMDocumentType.addWithoutSave(
+			dmDocumentTypeFieldNames = "${fieldLabel}",
+			dmDocumentTypeName = "DM Document Type Name");
+
+		DataEngine.editFieldRequired(fieldFieldLabel = "${fieldLabel}");
+
+		DDLDataDefinition.save();
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "DM Document Type Name");
+
+		AssertElementPresent(locator1 = "FormViewBuilder#FIELD_LABEL_REQUIRED");
+	}
+
+}

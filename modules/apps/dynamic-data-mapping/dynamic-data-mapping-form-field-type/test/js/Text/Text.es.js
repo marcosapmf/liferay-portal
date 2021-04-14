@@ -18,6 +18,8 @@ import React from 'react';
 
 import Text from '../../../src/main/resources/META-INF/resources/Text/Text.es';
 
+const globalLanguageDirection = Liferay.Language.direction;
+
 const spritemap = 'icons.svg';
 
 const defaultTextConfig = {
@@ -43,11 +45,17 @@ describe('Field Text', () => {
 			}
 			originalWarn.call(console, ...args);
 		};
+
+		Liferay.Language.direction = {
+			en_US: 'rtl',
+		};
 	});
 
 	afterAll(() => {
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
+
+		Liferay.Language.direction = globalLanguageDirection;
 	});
 
 	afterEach(cleanup);
@@ -132,6 +140,36 @@ describe('Field Text', () => {
 		expect(container).toMatchSnapshot();
 	});
 
+	it('hides autocomplete dropdown menu when container layout is hidden', () => {
+		const props = {
+			autocomplete: true,
+			options: [
+				{label: 'Option 1', value: 'Option1'},
+				{label: 'Option 2', value: 'Option2'},
+			],
+			value: 'Option',
+			...defaultTextConfig,
+		};
+
+		render(
+			<div className="ddm-page-container-layout hide">
+				<TextWithProvider {...props} />
+			</div>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		const autocompleteDropdownMenu = document.body.querySelector(
+			'.autocomplete-dropdown-menu'
+		);
+
+		const classList = autocompleteDropdownMenu.classList;
+
+		expect(classList.contains('show')).toBeFalsy();
+	});
+
 	it('is not required', () => {
 		const {container} = render(
 			<TextWithProvider {...defaultTextConfig} required={false} />
@@ -142,6 +180,36 @@ describe('Field Text', () => {
 		});
 
 		expect(container).toMatchSnapshot();
+	});
+
+	it('renders autocomplete dropdown menu', () => {
+		const props = {
+			autocomplete: true,
+			options: [
+				{label: 'Option 1', value: 'Option1'},
+				{label: 'Option 2', value: 'Option2'},
+			],
+			value: 'Option',
+			...defaultTextConfig,
+		};
+
+		render(
+			<div className="ddm-page-container-layout">
+				<TextWithProvider {...props} />
+			</div>
+		);
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		const autocompleteDropdownMenu = document.body.querySelector(
+			'.autocomplete-dropdown-menu'
+		);
+
+		const classList = autocompleteDropdownMenu.classList;
+
+		expect(classList.contains('show')).toBeTruthy();
 	});
 
 	it('renders Label if showLabel is true', () => {
@@ -192,5 +260,32 @@ describe('Field Text', () => {
 		});
 
 		expect(onChange).toHaveBeenCalled();
+	});
+
+	it('normalizes the field reference if it contains invalid characters', () => {
+		const onChange = jest.fn();
+
+		const {container} = render(
+			<TextWithProvider
+				{...defaultTextConfig}
+				fieldName="fieldReference"
+				key="input"
+				onChange={onChange}
+			/>
+		);
+
+		const input = container.querySelector('input');
+
+		fireEvent.change(input, {
+			target: {
+				value: 'Field¿êReference',
+			},
+		});
+
+		act(() => {
+			jest.runAllTimers();
+		});
+
+		expect(input.value).toEqual('FieldReference');
 	});
 });

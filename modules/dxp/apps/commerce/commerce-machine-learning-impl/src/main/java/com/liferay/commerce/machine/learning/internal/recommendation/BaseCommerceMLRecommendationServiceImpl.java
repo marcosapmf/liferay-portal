@@ -15,9 +15,11 @@
 package com.liferay.commerce.machine.learning.internal.recommendation;
 
 import com.liferay.commerce.machine.learning.internal.recommendation.constants.CommerceMLRecommendationField;
-import com.liferay.commerce.machine.learning.recommendation.model.CommerceMLRecommendation;
+import com.liferay.commerce.machine.learning.recommendation.CommerceMLRecommendation;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
@@ -89,9 +91,6 @@ public abstract class BaseCommerceMLRecommendationServiceImpl
 		commerceMLRecommendation.setCreateDate(
 			_getDate(document.get(Field.CREATE_DATE)));
 
-		commerceMLRecommendation.setEntryClassPK(
-			GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)));
-
 		commerceMLRecommendation.setJobId(
 			document.get(CommerceMLRecommendationField.JOB_ID));
 
@@ -110,18 +109,10 @@ public abstract class BaseCommerceMLRecommendationServiceImpl
 	protected Document getBaseDocument(T commerceMLRecommend) {
 		Document document = new DocumentImpl();
 
-		long hash = getHash(
-			commerceMLRecommend.getEntryClassPK(),
-			commerceMLRecommend.getRecommendedEntryClassPK());
-
-		document.addKeyword(Field.UID, String.valueOf(hash));
-
 		document.addNumber(
 			Field.COMPANY_ID, commerceMLRecommend.getCompanyId());
 		document.addDate(
 			Field.CREATE_DATE, commerceMLRecommend.getCreateDate());
-		document.addNumber(
-			Field.ENTRY_CLASS_PK, commerceMLRecommend.getEntryClassPK());
 		document.addText(
 			CommerceMLRecommendationField.JOB_ID,
 			commerceMLRecommend.getJobId());
@@ -192,6 +183,10 @@ public abstract class BaseCommerceMLRecommendationServiceImpl
 	protected List<T> toModelList(Hits hits) {
 		List<Document> documents = _getDocumentList(hits);
 
+		return toModelList(documents);
+	}
+
+	protected List<T> toModelList(List<Document> documents) {
 		Stream<Document> documentsStream = documents.stream();
 
 		return documentsStream.map(
@@ -214,6 +209,9 @@ public abstract class BaseCommerceMLRecommendationServiceImpl
 			return dateFormat.parse(dateString);
 		}
 		catch (ParseException parseException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(parseException, parseException);
+			}
 		}
 
 		return null;
@@ -233,5 +231,8 @@ public abstract class BaseCommerceMLRecommendationServiceImpl
 
 	private static final String _INDEX_DATE_FORMAT_PATTERN =
 		"yyyy-MM-dd'T'HH:mm:ss.SSSX";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		BaseCommerceMLRecommendationServiceImpl.class);
 
 }

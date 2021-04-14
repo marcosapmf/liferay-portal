@@ -463,6 +463,9 @@ public class JournalTransformer {
 			return new StringTemplateResource(langType, template);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -588,9 +591,15 @@ public class JournalTransformer {
 				}
 			}
 
+			DDMFormField ddmFormField = ddmFormFieldsMap.get(name);
+
+			if (ddmFormField == null) {
+				continue;
+			}
+
 			TemplateNode templateNode = new TemplateNode(
-				themeDisplay, name, StringUtil.stripCDATA(data), type,
-				attributes);
+				themeDisplay, ddmFormField.getFieldReference(),
+				StringUtil.stripCDATA(data), type, attributes);
 
 			if (dynamicElementElement.element("dynamic-element") != null) {
 				templateNode.appendChildren(
@@ -610,26 +619,20 @@ public class JournalTransformer {
 				}
 			}
 
-			DDMFormField ddmFormField = ddmFormFieldsMap.get(name);
+			DDMFormFieldOptions ddmFormFieldOptions =
+				ddmFormField.getDDMFormFieldOptions();
 
-			if (ddmFormField != null) {
-				DDMFormFieldOptions ddmFormFieldOptions =
-					ddmFormField.getDDMFormFieldOptions();
+			Map<String, LocalizedValue> options =
+				ddmFormFieldOptions.getOptions();
 
-				Map<String, LocalizedValue> options =
-					ddmFormFieldOptions.getOptions();
+			for (Map.Entry<String, LocalizedValue> entry : options.entrySet()) {
+				String optionValue = StringUtil.stripCDATA(entry.getKey());
 
-				for (Map.Entry<String, LocalizedValue> entry :
-						options.entrySet()) {
+				LocalizedValue localizedLabel = entry.getValue();
 
-					String optionValue = StringUtil.stripCDATA(entry.getKey());
+				String optionLabel = localizedLabel.getString(locale);
 
-					LocalizedValue localizedLabel = entry.getValue();
-
-					String optionLabel = localizedLabel.getString(locale);
-
-					templateNode.appendOptionMap(optionValue, optionLabel);
-				}
+				templateNode.appendOptionMap(optionValue, optionLabel);
 			}
 
 			TemplateNode prototypeTemplateNode = prototypeTemplateNodes.get(

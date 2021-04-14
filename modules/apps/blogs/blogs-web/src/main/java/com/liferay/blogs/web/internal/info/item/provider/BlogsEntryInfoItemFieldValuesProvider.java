@@ -21,6 +21,7 @@ import com.liferay.blogs.web.internal.info.item.BlogsEntryInfoItemFields;
 import com.liferay.expando.info.item.provider.ExpandoInfoItemFieldSetProvider;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
@@ -28,6 +29,7 @@ import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.type.WebImage;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -102,7 +104,11 @@ public class BlogsEntryInfoItemFieldValuesProvider
 
 			if (themeDisplay != null) {
 				WebImage smallWebImage = new WebImage(
-					blogsEntry.getSmallImageURL(themeDisplay));
+					blogsEntry.getSmallImageURL(themeDisplay),
+					new InfoItemReference(
+						FileEntry.class.getName(),
+						new ClassPKInfoItemIdentifier(
+							blogsEntry.getSmallImageFileEntryId())));
 
 				smallWebImage.setAlt(blogsEntry.getSmallImageAlt());
 
@@ -112,7 +118,11 @@ public class BlogsEntryInfoItemFieldValuesProvider
 						smallWebImage));
 
 				WebImage coverWebImage = new WebImage(
-					blogsEntry.getCoverImageURL(themeDisplay));
+					blogsEntry.getCoverImageURL(themeDisplay),
+					new InfoItemReference(
+						FileEntry.class.getName(),
+						new ClassPKInfoItemIdentifier(
+							blogsEntry.getCoverImageFileEntryId())));
 
 				coverWebImage.setAlt(blogsEntry.getCoverImageAlt());
 
@@ -157,7 +167,7 @@ public class BlogsEntryInfoItemFieldValuesProvider
 			if (themeDisplay != null) {
 				blogsEntryFieldValues.add(
 					new InfoFieldValue<>(
-						BlogsEntryInfoItemFields.displayPageUrlInfoField,
+						BlogsEntryInfoItemFields.displayPageURLInfoField,
 						_getDisplayPageURL(blogsEntry)));
 			}
 

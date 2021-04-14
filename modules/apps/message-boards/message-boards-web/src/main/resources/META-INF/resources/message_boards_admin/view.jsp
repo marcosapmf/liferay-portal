@@ -38,16 +38,14 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 	portletURL="<%= restoreTrashEntriesURL %>"
 />
 
-<%@ include file="/message_boards_admin/nav.jspf" %>
+<%@ include file="/message_boards/nav.jspf" %>
 
 <%
 MBAdminListDisplayContext mbAdminListDisplayContext = mbDisplayContextProvider.getMbAdminListDisplayContext(request, response, categoryId);
 
-int entriesDelta = mbAdminListDisplayContext.getEntriesDelta();
-
 PortletURL portletURL = mbEntriesManagementToolbarDisplayContext.getPortletURL();
 
-SearchContainer entriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur1", 0, entriesDelta, portletURL, null, "there-are-no-threads-or-categories");
+SearchContainer entriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur1", 0, mbAdminListDisplayContext.getEntriesDelta(), portletURL, null, "there-are-no-threads-or-categories");
 
 mbAdminListDisplayContext.setEntriesDelta(entriesSearchContainer);
 
@@ -71,7 +69,7 @@ mbAdminListDisplayContext.populateResultsAndTotal(entriesSearchContainer);
 String entriesNavigation = ParamUtil.getString(request, "entriesNavigation", "all");
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= mbEntriesManagementToolbarDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= mbEntriesManagementToolbarDisplayContext.getSearchActionURL() %>"
 	componentId="mbEntriesManagementToolbar"
@@ -143,15 +141,15 @@ if (category != null) {
 		unlockEntries: unlockEntries,
 	};
 
-	Liferay.componentReady('mbEntriesManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
+	Liferay.componentReady('mbEntriesManagementToolbar').then(
+		(managementToolbar) => {
+			managementToolbar.on('actionItemClicked', (event) => {
+				var itemData = event.data.item.data;
 
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
+				if (itemData && itemData.action && ACTIONS[itemData.action]) {
+					ACTIONS[itemData.action]();
+				}
+			});
+		}
+	);
 </aui:script>

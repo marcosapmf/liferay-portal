@@ -111,7 +111,7 @@
 	);
 
 	if (selectDisplayStyle) {
-		selectDisplayStyle.addEventListener('change', function (event) {
+		selectDisplayStyle.addEventListener('change', (event) => {
 			if (selectDisplayStyle.selectedIndex > -1) {
 				data[
 					'_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_displayStyle'
@@ -128,8 +128,8 @@
 	var checkBoxes = document.getElementById('<portlet:namespace />checkBoxes');
 
 	if (checkBoxes) {
-		checkBoxes.addEventListener('change', function (event) {
-			if (event.target.classList.contains('toggle-switch')) {
+		checkBoxes.addEventListener('change', (event) => {
+			if (event.target.classList.contains('toggle-switch-check')) {
 				var target = event.target;
 
 				data[target.dataset.key] = target.checked;
@@ -142,7 +142,7 @@
 		});
 	}
 
-	var handler = Liferay.on('portletReady', function (event) {
+	var handler = Liferay.on('portletReady', (event) => {
 		Liferay.Portlet.refresh(
 			'#p_p_id_<%= HtmlUtil.escapeJS(siteNavigationBreadcrumbDisplayContext.getPortletResource()) %>_',
 			data
@@ -153,7 +153,7 @@
 		handler = null;
 	});
 
-	var destroyHandler = Liferay.on('destroyHandler', function (event) {
+	var destroyHandler = Liferay.on('destroyHandler', (event) => {
 		if (handler) {
 			handler.detach();
 

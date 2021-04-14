@@ -31,8 +31,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -53,7 +54,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -79,7 +79,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = SiteNavigationMenuItemPersistence.class)
+@Component(
+	service = {SiteNavigationMenuItemPersistence.class, BasePersistence.class}
+)
 public class SiteNavigationMenuItemPersistenceImpl
 	extends BasePersistenceImpl<SiteNavigationMenuItem>
 	implements SiteNavigationMenuItemPersistence {
@@ -198,7 +200,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
@@ -590,7 +592,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -721,7 +723,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof SiteNavigationMenuItem) {
@@ -834,7 +836,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1002,7 +1004,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
@@ -1420,7 +1422,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, companyId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1479,6 +1481,512 @@ public class SiteNavigationMenuItemPersistenceImpl
 		"(siteNavigationMenuItem.uuid IS NULL OR siteNavigationMenuItem.uuid = '') AND ";
 
 	private static final String _FINDER_COLUMN_UUID_C_COMPANYID_2 =
+		"siteNavigationMenuItem.companyId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByCompanyId;
+	private FinderPath _finderPathWithoutPaginationFindByCompanyId;
+	private FinderPath _finderPathCountByCompanyId;
+
+	/**
+	 * Returns all the site navigation menu items where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the matching site navigation menu items
+	 */
+	@Override
+	public List<SiteNavigationMenuItem> findByCompanyId(long companyId) {
+		return findByCompanyId(
+			companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the site navigation menu items where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SiteNavigationMenuItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of site navigation menu items
+	 * @param end the upper bound of the range of site navigation menu items (not inclusive)
+	 * @return the range of matching site navigation menu items
+	 */
+	@Override
+	public List<SiteNavigationMenuItem> findByCompanyId(
+		long companyId, int start, int end) {
+
+		return findByCompanyId(companyId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the site navigation menu items where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SiteNavigationMenuItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of site navigation menu items
+	 * @param end the upper bound of the range of site navigation menu items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching site navigation menu items
+	 */
+	@Override
+	public List<SiteNavigationMenuItem> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+
+		return findByCompanyId(companyId, start, end, orderByComparator, true);
+	}
+
+	/**
+	 * Returns an ordered range of all the site navigation menu items where companyId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>SiteNavigationMenuItemModelImpl</code>.
+	 * </p>
+	 *
+	 * @param companyId the company ID
+	 * @param start the lower bound of the range of site navigation menu items
+	 * @param end the upper bound of the range of site navigation menu items (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching site navigation menu items
+	 */
+	@Override
+	public List<SiteNavigationMenuItem> findByCompanyId(
+		long companyId, int start, int end,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator,
+		boolean useFinderCache) {
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByCompanyId;
+				finderArgs = new Object[] {companyId};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByCompanyId;
+			finderArgs = new Object[] {
+				companyId, start, end, orderByComparator
+			};
+		}
+
+		List<SiteNavigationMenuItem> list = null;
+
+		if (useFinderCache) {
+			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
+				finderPath, finderArgs);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
+					if (companyId != siteNavigationMenuItem.getCompanyId()) {
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					3 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(3);
+			}
+
+			sb.append(_SQL_SELECT_SITENAVIGATIONMENUITEM_WHERE);
+
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(SiteNavigationMenuItemModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				list = (List<SiteNavigationMenuItem>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching site navigation menu item
+	 * @throws NoSuchMenuItemException if a matching site navigation menu item could not be found
+	 */
+	@Override
+	public SiteNavigationMenuItem findByCompanyId_First(
+			long companyId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws NoSuchMenuItemException {
+
+		SiteNavigationMenuItem siteNavigationMenuItem = fetchByCompanyId_First(
+			companyId, orderByComparator);
+
+		if (siteNavigationMenuItem != null) {
+			return siteNavigationMenuItem;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append("}");
+
+		throw new NoSuchMenuItemException(sb.toString());
+	}
+
+	/**
+	 * Returns the first site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching site navigation menu item, or <code>null</code> if a matching site navigation menu item could not be found
+	 */
+	@Override
+	public SiteNavigationMenuItem fetchByCompanyId_First(
+		long companyId,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+
+		List<SiteNavigationMenuItem> list = findByCompanyId(
+			companyId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching site navigation menu item
+	 * @throws NoSuchMenuItemException if a matching site navigation menu item could not be found
+	 */
+	@Override
+	public SiteNavigationMenuItem findByCompanyId_Last(
+			long companyId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws NoSuchMenuItemException {
+
+		SiteNavigationMenuItem siteNavigationMenuItem = fetchByCompanyId_Last(
+			companyId, orderByComparator);
+
+		if (siteNavigationMenuItem != null) {
+			return siteNavigationMenuItem;
+		}
+
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("companyId=");
+		sb.append(companyId);
+
+		sb.append("}");
+
+		throw new NoSuchMenuItemException(sb.toString());
+	}
+
+	/**
+	 * Returns the last site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching site navigation menu item, or <code>null</code> if a matching site navigation menu item could not be found
+	 */
+	@Override
+	public SiteNavigationMenuItem fetchByCompanyId_Last(
+		long companyId,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator) {
+
+		int count = countByCompanyId(companyId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<SiteNavigationMenuItem> list = findByCompanyId(
+			companyId, count - 1, count, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the site navigation menu items before and after the current site navigation menu item in the ordered set where companyId = &#63;.
+	 *
+	 * @param siteNavigationMenuItemId the primary key of the current site navigation menu item
+	 * @param companyId the company ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next site navigation menu item
+	 * @throws NoSuchMenuItemException if a site navigation menu item with the primary key could not be found
+	 */
+	@Override
+	public SiteNavigationMenuItem[] findByCompanyId_PrevAndNext(
+			long siteNavigationMenuItemId, long companyId,
+			OrderByComparator<SiteNavigationMenuItem> orderByComparator)
+		throws NoSuchMenuItemException {
+
+		SiteNavigationMenuItem siteNavigationMenuItem = findByPrimaryKey(
+			siteNavigationMenuItemId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			SiteNavigationMenuItem[] array = new SiteNavigationMenuItemImpl[3];
+
+			array[0] = getByCompanyId_PrevAndNext(
+				session, siteNavigationMenuItem, companyId, orderByComparator,
+				true);
+
+			array[1] = siteNavigationMenuItem;
+
+			array[2] = getByCompanyId_PrevAndNext(
+				session, siteNavigationMenuItem, companyId, orderByComparator,
+				false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected SiteNavigationMenuItem getByCompanyId_PrevAndNext(
+		Session session, SiteNavigationMenuItem siteNavigationMenuItem,
+		long companyId,
+		OrderByComparator<SiteNavigationMenuItem> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				4 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(3);
+		}
+
+		sb.append(_SQL_SELECT_SITENAVIGATIONMENUITEM_WHERE);
+
+		sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(SiteNavigationMenuItemModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(companyId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						siteNavigationMenuItem)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<SiteNavigationMenuItem> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the site navigation menu items where companyId = &#63; from the database.
+	 *
+	 * @param companyId the company ID
+	 */
+	@Override
+	public void removeByCompanyId(long companyId) {
+		for (SiteNavigationMenuItem siteNavigationMenuItem :
+				findByCompanyId(
+					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
+
+			remove(siteNavigationMenuItem);
+		}
+	}
+
+	/**
+	 * Returns the number of site navigation menu items where companyId = &#63;.
+	 *
+	 * @param companyId the company ID
+	 * @return the number of matching site navigation menu items
+	 */
+	@Override
+	public int countByCompanyId(long companyId) {
+		FinderPath finderPath = _finderPathCountByCompanyId;
+
+		Object[] finderArgs = new Object[] {companyId};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(2);
+
+			sb.append(_SQL_COUNT_SITENAVIGATIONMENUITEM_WHERE);
+
+			sb.append(_FINDER_COLUMN_COMPANYID_COMPANYID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(companyId);
+
+				count = (Long)query.uniqueResult();
+
+				finderCache.putResult(finderPath, finderArgs, count);
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
 		"siteNavigationMenuItem.companyId = ?";
 
 	private FinderPath _finderPathWithPaginationFindBySiteNavigationMenuId;
@@ -1584,7 +2092,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
@@ -1958,7 +2466,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {siteNavigationMenuId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2108,7 +2616,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
@@ -2496,7 +3004,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {parentSiteNavigationMenuItemId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2653,7 +3161,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
@@ -3060,7 +3568,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 			siteNavigationMenuId, parentSiteNavigationMenuItemId
 		};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -3205,7 +3713,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SiteNavigationMenuItem siteNavigationMenuItem : list) {
@@ -3627,7 +4135,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		Object[] finderArgs = new Object[] {siteNavigationMenuId, name};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -3757,9 +4265,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(SiteNavigationMenuItemImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(SiteNavigationMenuItemImpl.class);
 	}
 
 	/**
@@ -3789,9 +4295,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(SiteNavigationMenuItemImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -3807,11 +4311,9 @@ public class SiteNavigationMenuItemPersistenceImpl
 			siteNavigationMenuItemModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, siteNavigationMenuItemModelImpl,
-			false);
+			_finderPathFetchByUUID_G, args, siteNavigationMenuItemModelImpl);
 	}
 
 	/**
@@ -4159,7 +4661,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<SiteNavigationMenuItem>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -4229,7 +4731,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -4291,22 +4793,21 @@ public class SiteNavigationMenuItemPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new SiteNavigationMenuItemModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", SiteNavigationMenuItem.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = _createFinderPath(
+		_finderPathWithPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -4314,27 +4815,27 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			true);
 
-		_finderPathCountByUuid = _createFinderPath(
+		_finderPathCountByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
-		_finderPathFetchByUUID_G = _createFinderPath(
+		_finderPathFetchByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = _createFinderPath(
+		_finderPathCountByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
@@ -4343,17 +4844,35 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = _createFinderPath(
+		_finderPathCountByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindBySiteNavigationMenuId = _createFinderPath(
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"companyId"}, true);
+
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
+
+		_finderPathCountByCompanyId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
+
+		_finderPathWithPaginationFindBySiteNavigationMenuId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 			"findBySiteNavigationMenuId",
 			new String[] {
@@ -4362,20 +4881,18 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			new String[] {"siteNavigationMenuId"}, true);
 
-		_finderPathWithoutPaginationFindBySiteNavigationMenuId =
-			_createFinderPath(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-				"findBySiteNavigationMenuId",
-				new String[] {Long.class.getName()},
-				new String[] {"siteNavigationMenuId"}, true);
+		_finderPathWithoutPaginationFindBySiteNavigationMenuId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"findBySiteNavigationMenuId", new String[] {Long.class.getName()},
+			new String[] {"siteNavigationMenuId"}, true);
 
-		_finderPathCountBySiteNavigationMenuId = _createFinderPath(
+		_finderPathCountBySiteNavigationMenuId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countBySiteNavigationMenuId", new String[] {Long.class.getName()},
 			new String[] {"siteNavigationMenuId"}, false);
 
 		_finderPathWithPaginationFindByParentSiteNavigationMenuItemId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 				"findByParentSiteNavigationMenuItemId",
 				new String[] {
@@ -4385,19 +4902,19 @@ public class SiteNavigationMenuItemPersistenceImpl
 				new String[] {"parentSiteNavigationMenuItemId"}, true);
 
 		_finderPathWithoutPaginationFindByParentSiteNavigationMenuItemId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				"findByParentSiteNavigationMenuItemId",
 				new String[] {Long.class.getName()},
 				new String[] {"parentSiteNavigationMenuItemId"}, true);
 
-		_finderPathCountByParentSiteNavigationMenuItemId = _createFinderPath(
+		_finderPathCountByParentSiteNavigationMenuItemId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByParentSiteNavigationMenuItemId",
 			new String[] {Long.class.getName()},
 			new String[] {"parentSiteNavigationMenuItemId"}, false);
 
-		_finderPathWithPaginationFindByS_P = _createFinderPath(
+		_finderPathWithPaginationFindByS_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByS_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -4409,7 +4926,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			true);
 
-		_finderPathWithoutPaginationFindByS_P = _createFinderPath(
+		_finderPathWithoutPaginationFindByS_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByS_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {
@@ -4417,7 +4934,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			true);
 
-		_finderPathCountByS_P = _createFinderPath(
+		_finderPathCountByS_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByS_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {
@@ -4425,7 +4942,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			false);
 
-		_finderPathWithPaginationFindByS_LikeN = _createFinderPath(
+		_finderPathWithPaginationFindByS_LikeN = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByS_LikeN",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -4434,7 +4951,7 @@ public class SiteNavigationMenuItemPersistenceImpl
 			},
 			new String[] {"siteNavigationMenuId", "name"}, true);
 
-		_finderPathWithPaginationCountByS_LikeN = _createFinderPath(
+		_finderPathWithPaginationCountByS_LikeN = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByS_LikeN",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"siteNavigationMenuId", "name"}, false);
@@ -4445,12 +4962,6 @@ public class SiteNavigationMenuItemPersistenceImpl
 		entityCache.removeCache(SiteNavigationMenuItemImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -4514,36 +5025,13 @@ public class SiteNavigationMenuItemPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "type", "order"});
 
-	static {
-		try {
-			Class.forName(SiteNavigationPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class SiteNavigationMenuItemModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -4596,6 +5084,16 @@ public class SiteNavigationMenuItemPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return SiteNavigationMenuItemImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return SiteNavigationMenuItemTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

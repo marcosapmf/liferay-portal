@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
@@ -42,7 +42,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -186,7 +185,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<LocalizedEntryLocalization>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (LocalizedEntryLocalization localizedEntryLocalization :
@@ -560,7 +559,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 		Object[] finderArgs = new Object[] {localizedEntryId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -682,8 +681,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByLocalizedEntryId_LanguageId, finderArgs,
-				this);
+				_finderPathFetchByLocalizedEntryId_LanguageId, finderArgs);
 		}
 
 		if (result instanceof LocalizedEntryLocalization) {
@@ -806,7 +804,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 		Object[] finderArgs = new Object[] {localizedEntryId, languageId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -937,9 +935,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(LocalizedEntryLocalizationImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(LocalizedEntryLocalizationImpl.class);
 	}
 
 	/**
@@ -972,9 +968,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(LocalizedEntryLocalizationImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -993,10 +987,10 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 		finderCache.putResult(
 			_finderPathCountByLocalizedEntryId_LanguageId, args,
-			Long.valueOf(1), false);
+			Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByLocalizedEntryId_LanguageId, args,
-			localizedEntryLocalizationModelImpl, false);
+			localizedEntryLocalizationModelImpl);
 	}
 
 	/**
@@ -1314,7 +1308,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<LocalizedEntryLocalization>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1387,7 +1381,7 @@ public class LocalizedEntryLocalizationPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1446,23 +1440,21 @@ public class LocalizedEntryLocalizationPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new LocalizedEntryLocalizationModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name",
-				LocalizedEntryLocalization.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByLocalizedEntryId = _createFinderPath(
+		_finderPathWithPaginationFindByLocalizedEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByLocalizedEntryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1470,22 +1462,22 @@ public class LocalizedEntryLocalizationPersistenceImpl
 			},
 			new String[] {"localizedEntryId"}, true);
 
-		_finderPathWithoutPaginationFindByLocalizedEntryId = _createFinderPath(
+		_finderPathWithoutPaginationFindByLocalizedEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByLocalizedEntryId",
 			new String[] {Long.class.getName()},
 			new String[] {"localizedEntryId"}, true);
 
-		_finderPathCountByLocalizedEntryId = _createFinderPath(
+		_finderPathCountByLocalizedEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByLocalizedEntryId", new String[] {Long.class.getName()},
 			new String[] {"localizedEntryId"}, false);
 
-		_finderPathFetchByLocalizedEntryId_LanguageId = _createFinderPath(
+		_finderPathFetchByLocalizedEntryId_LanguageId = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByLocalizedEntryId_LanguageId",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"localizedEntryId", "languageId"}, true);
 
-		_finderPathCountByLocalizedEntryId_LanguageId = _createFinderPath(
+		_finderPathCountByLocalizedEntryId_LanguageId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByLocalizedEntryId_LanguageId",
 			new String[] {Long.class.getName(), String.class.getName()},
@@ -1496,12 +1488,6 @@ public class LocalizedEntryLocalizationPersistenceImpl
 		entityCache.removeCache(LocalizedEntryLocalizationImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -1536,27 +1522,13 @@ public class LocalizedEntryLocalizationPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		LocalizedEntryLocalizationPersistenceImpl.class);
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class LocalizedEntryLocalizationModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1610,6 +1582,16 @@ public class LocalizedEntryLocalizationPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return LocalizedEntryLocalizationImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return LocalizedEntryLocalizationTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

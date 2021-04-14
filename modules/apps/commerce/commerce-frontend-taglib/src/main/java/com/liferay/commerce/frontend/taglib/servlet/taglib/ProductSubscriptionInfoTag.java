@@ -15,6 +15,7 @@
 package com.liferay.commerce.frontend.taglib.servlet.taglib;
 
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
+import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPSubscriptionInfo;
 import com.liferay.commerce.product.service.CPInstanceLocalServiceUtil;
@@ -58,52 +59,64 @@ public class ProductSubscriptionInfoTag extends IncludeTag {
 				return SKIP_BODY;
 			}
 
-			_length = cpSubscriptionInfo.getSubscriptionLength();
+			CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
-			_deliveryLength =
-				cpSubscriptionInfo.getDeliverySubscriptionLength();
+			if (cpDefinition.isSubscriptionEnabled() ||
+				cpInstance.isSubscriptionEnabled()) {
 
-			_duration = _length * cpSubscriptionInfo.getMaxSubscriptionCycles();
+				_length = cpSubscriptionInfo.getSubscriptionLength();
 
-			_deliveryDuration =
-				_deliveryLength *
-					cpSubscriptionInfo.getDeliveryMaxSubscriptionCycles();
+				_duration =
+					_length * cpSubscriptionInfo.getMaxSubscriptionCycles();
 
-			String subscriptionType = cpSubscriptionInfo.getSubscriptionType();
+				String subscriptionType =
+					cpSubscriptionInfo.getSubscriptionType();
 
-			String deliverySubscriptionType =
-				cpSubscriptionInfo.getDeliverySubscriptionType();
+				String period = StringPool.BLANK;
 
-			String period = StringPool.BLANK;
+				CPSubscriptionType cpSubscriptionType =
+					cpSubscriptionTypeRegistry.getCPSubscriptionType(
+						subscriptionType);
 
-			String deliveryPeriod = StringPool.BLANK;
+				if (cpSubscriptionType != null) {
+					period = cpSubscriptionType.getLabel(LocaleUtil.US);
+				}
 
-			CPSubscriptionType cpSubscriptionType =
-				cpSubscriptionTypeRegistry.getCPSubscriptionType(
-					subscriptionType);
+				_subscriptionPeriodKey = _getPeriodKey(period, _length != 1);
 
-			CPSubscriptionType cpDeliverySubscriptionType =
-				cpSubscriptionTypeRegistry.getCPSubscriptionType(
-					deliverySubscriptionType);
-
-			if (cpSubscriptionType != null) {
-				period = cpSubscriptionType.getLabel(LocaleUtil.US);
+				_durationPeriodKey = _getPeriodKey(period, _duration != 1);
 			}
 
-			if (cpDeliverySubscriptionType != null) {
-				deliveryPeriod = cpDeliverySubscriptionType.getLabel(
-					LocaleUtil.US);
+			if (cpDefinition.isDeliverySubscriptionEnabled() ||
+				cpInstance.isDeliverySubscriptionEnabled()) {
+
+				_deliveryLength =
+					cpSubscriptionInfo.getDeliverySubscriptionLength();
+
+				_deliveryDuration =
+					_deliveryLength *
+						cpSubscriptionInfo.getDeliveryMaxSubscriptionCycles();
+
+				String deliverySubscriptionType =
+					cpSubscriptionInfo.getDeliverySubscriptionType();
+
+				String deliveryPeriod = StringPool.BLANK;
+
+				CPSubscriptionType cpDeliverySubscriptionType =
+					cpSubscriptionTypeRegistry.getCPSubscriptionType(
+						deliverySubscriptionType);
+
+				if (cpDeliverySubscriptionType != null) {
+					deliveryPeriod = cpDeliverySubscriptionType.getLabel(
+						LocaleUtil.US);
+				}
+
+				_deliverySubscriptionPeriodKey = _getPeriodKey(
+					deliveryPeriod, _deliveryLength != 1);
+
+				_deliveryDurationPeriodKey = _getPeriodKey(
+					deliveryPeriod, _deliveryDuration != 1);
 			}
-
-			_subscriptionPeriodKey = _getPeriodKey(period, _length != 1);
-
-			_deliverySubscriptionPeriodKey = _getPeriodKey(
-				deliveryPeriod, _deliveryLength != 1);
-
-			_durationPeriodKey = _getPeriodKey(period, _duration != 1);
-
-			_deliveryDurationPeriodKey = _getPeriodKey(
-				deliveryPeriod, _deliveryDuration != 1);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {

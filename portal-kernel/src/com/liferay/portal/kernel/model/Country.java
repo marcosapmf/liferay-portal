@@ -28,7 +28,7 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ImplementationClassName("com.liferay.portal.model.impl.CountryImpl")
 @ProviderType
-public interface Country extends CountryModel {
+public interface Country extends CountryModel, PersistedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -61,6 +61,8 @@ public interface Country extends CountryModel {
 
 	@com.liferay.portal.kernel.json.JSON
 	public String getNameCurrentValue();
+
+	public String getTitle(java.util.Locale locale);
 
 	public void setNameCurrentLanguageId(String languageId);
 

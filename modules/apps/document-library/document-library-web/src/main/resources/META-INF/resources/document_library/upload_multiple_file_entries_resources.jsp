@@ -131,7 +131,8 @@ else {
 					title="document-type"
 				>
 					<aui:input name="fileEntryTypeId" type="hidden" value="<%= (fileEntryTypeId > 0) ? fileEntryTypeId : 0 %>" />
-					<aui:input name="defaultLanguageId" type="hidden" value="<%= themeDisplay.getLanguageId() %>" />
+
+					<aui:input name="defaultLanguageId" type="hidden" value="<%= LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()) %>" />
 
 					<div class="document-type-selector" id="<portlet:namespace />documentTypeSelector">
 						<liferay-ui:icon-menu
@@ -146,6 +147,8 @@ else {
 							%>
 
 								<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/document_library/upload_multiple_file_entries" var="viewFileEntryTypeURL">
+									<portlet:param name="redirect" value="<%= redirect %>" />
+									<portlet:param name="portletResource" value='<%= ParamUtil.getString(request, "portletResource") %>' />
 									<portlet:param name="repositoryId" value="<%= String.valueOf(repositoryId) %>" />
 									<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
 									<portlet:param name="fileEntryTypeId" value="<%= String.valueOf(curFileEntryType.getFileEntryTypeId()) %>" />
@@ -166,8 +169,9 @@ else {
 						</liferay-ui:icon-menu>
 					</div>
 
-					<%
-					if (fileEntryTypeId > 0) {
+					<c:if test="<%= fileEntryTypeId > 0 %>">
+
+						<%
 						try {
 							List<DDMStructure> ddmStructures = fileEntryType.getDDMStructures();
 
@@ -185,46 +189,42 @@ else {
 								if (groupId <= 0) {
 									groupId = ddmStructure.getGroupId();
 								}
-					%>
-
-								<aui:input name="ddmFormFieldNamespace" type="hidden" value="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>" />
+						%>
 
 								<div class="document-type-fields">
-									<liferay-ddm:html
-										classNameId="<%= PortalUtil.getClassNameId(com.liferay.dynamic.data.mapping.model.DDMStructure.class) %>"
-										classPK="<%= ddmStructure.getPrimaryKey() %>"
-										ddmFormValues="<%= ddmFormValues %>"
-										defaultEditLocale="<%= LocaleUtil.fromLanguageId(themeDisplay.getLanguageId()) %>"
-										fieldsNamespace="<%= String.valueOf(ddmStructure.getPrimaryKey()) %>"
-										groupId="<%= groupId %>"
-										localizable="<%= true %>"
-										requestedLocale="<%= locale %>"
-										synchronousFormSubmission="<%= false %>"
+									<liferay-data-engine:data-layout-renderer
+										containerId='<%= liferayPortletResponse.getNamespace() + "dataEngineLayoutRenderer" + ddmStructure.getStructureId() %>'
+										dataDefinitionId="<%= ddmStructure.getStructureId() %>"
+										dataRecordValues="<%= DataRecordValuesUtil.getDataRecordValues(ddmFormValues, ddmStructure) %>"
+										namespace="<%= liferayPortletResponse.getNamespace() + ddmStructure.getStructureId() + StringPool.UNDERLINE %>"
 									/>
 								</div>
 
-					<%
+						<%
 							}
 						}
 						catch (Exception e) {
 						}
-					}
-					%>
+						%>
 
-					<aui:script position="inline" require="metal-dom/src/all/dom as dom">
+					</c:if>
+
+					<aui:script position="inline" require="frontend-js-web/liferay/delegate/delegate.es as delegateModule,frontend-js-web/liferay/util/run_scripts_in_element.es as runScriptsInElement">
 						var documentTypeMenuList = document.querySelector(
 							'#<portlet:namespace />documentTypeSelector .lfr-menu-list'
 						);
 
 						if (documentTypeMenuList) {
-							dom.delegate(documentTypeMenuList, 'click', 'li a', function (event) {
+							var delegate = delegateModule.default;
+
+							delegate(documentTypeMenuList, 'click', 'li a', (event) => {
 								event.preventDefault();
 
 								Liferay.Util.fetch(event.delegateTarget.getAttribute('href'))
-									.then(function (response) {
+									.then((response) => {
 										return response.text();
 									})
-									.then(function (response) {
+									.then((response) => {
 										var commonFileMetadataContainer = document.getElementById(
 											'<portlet:namespace />commonFileMetadataContainer'
 										);
@@ -232,9 +232,7 @@ else {
 										if (commonFileMetadataContainer) {
 											commonFileMetadataContainer.innerHTML = response;
 
-											dom.globalEval.runScriptsInElement(
-												commonFileMetadataContainer
-											);
+											runScriptsInElement.default(commonFileMetadataContainer);
 										}
 
 										var fileNodes = document.querySelectorAll(
@@ -243,7 +241,7 @@ else {
 
 										var selectedFileNodes = Array.prototype.filter.call(
 											fileNodes,
-											function (fileNode) {
+											(fileNode) => {
 												return fileNode.checked;
 											}
 										);

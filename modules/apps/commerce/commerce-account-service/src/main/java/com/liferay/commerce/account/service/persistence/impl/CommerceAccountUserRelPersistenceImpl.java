@@ -37,7 +37,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -48,7 +48,6 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -192,7 +191,7 @@ public class CommerceAccountUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAccountUserRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAccountUserRel commerceAccountUserRel : list) {
@@ -565,7 +564,7 @@ public class CommerceAccountUserRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceAccountId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -709,7 +708,7 @@ public class CommerceAccountUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAccountUserRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAccountUserRel commerceAccountUserRel : list) {
@@ -1084,7 +1083,7 @@ public class CommerceAccountUserRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceAccountUserId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1179,9 +1178,7 @@ public class CommerceAccountUserRelPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(CommerceAccountUserRelImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceAccountUserRelImpl.class);
 	}
 
 	/**
@@ -1211,9 +1208,7 @@ public class CommerceAccountUserRelPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceAccountUserRelImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -1557,7 +1552,7 @@ public class CommerceAccountUserRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAccountUserRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1627,7 +1622,7 @@ public class CommerceAccountUserRelPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1691,22 +1686,21 @@ public class CommerceAccountUserRelPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new CommerceAccountUserRelModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", CommerceAccountUserRel.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByCommerceAccountId = _createFinderPath(
+		_finderPathWithPaginationFindByCommerceAccountId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCommerceAccountId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1714,34 +1708,33 @@ public class CommerceAccountUserRelPersistenceImpl
 			},
 			new String[] {"commerceAccountId"}, true);
 
-		_finderPathWithoutPaginationFindByCommerceAccountId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCommerceAccountId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByCommerceAccountId", new String[] {Long.class.getName()},
 			new String[] {"commerceAccountId"}, true);
 
-		_finderPathCountByCommerceAccountId = _createFinderPath(
+		_finderPathCountByCommerceAccountId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceAccountId", new String[] {Long.class.getName()},
 			new String[] {"commerceAccountId"}, false);
 
-		_finderPathWithPaginationFindByCommerceAccountUserId =
-			_createFinderPath(
-				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-				"findByCommerceAccountUserId",
-				new String[] {
-					Long.class.getName(), Integer.class.getName(),
-					Integer.class.getName(), OrderByComparator.class.getName()
-				},
-				new String[] {"commerceAccountUserId"}, true);
+		_finderPathWithPaginationFindByCommerceAccountUserId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
+			"findByCommerceAccountUserId",
+			new String[] {
+				Long.class.getName(), Integer.class.getName(),
+				Integer.class.getName(), OrderByComparator.class.getName()
+			},
+			new String[] {"commerceAccountUserId"}, true);
 
 		_finderPathWithoutPaginationFindByCommerceAccountUserId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				"findByCommerceAccountUserId",
 				new String[] {Long.class.getName()},
 				new String[] {"commerceAccountUserId"}, true);
 
-		_finderPathCountByCommerceAccountUserId = _createFinderPath(
+		_finderPathCountByCommerceAccountUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceAccountUserId", new String[] {Long.class.getName()},
 			new String[] {"commerceAccountUserId"}, false);
@@ -1751,12 +1744,6 @@ public class CommerceAccountUserRelPersistenceImpl
 		entityCache.removeCache(CommerceAccountUserRelImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -1794,27 +1781,13 @@ public class CommerceAccountUserRelPersistenceImpl
 	private static final Set<String> _compoundPKColumnNames = SetUtil.fromArray(
 		new String[] {"commerceAccountId", "commerceAccountUserId"});
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class CommerceAccountUserRelModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1867,6 +1840,16 @@ public class CommerceAccountUserRelPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return CommerceAccountUserRelImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return CommerceAccountUserRelTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

@@ -17,15 +17,16 @@ package com.liferay.account.service.test;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.exception.AccountEntryTypeException;
 import com.liferay.account.exception.DuplicateAccountEntryIdException;
-import com.liferay.account.exception.DuplicateAccountEntryUserRelException;
 import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.exception.NoSuchEntryUserRelException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.model.AccountEntryUserRelModel;
+import com.liferay.account.model.AccountRole;
 import com.liferay.account.retriever.AccountUserRetriever;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
+import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.account.service.test.util.AccountEntryTestUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
@@ -36,16 +37,19 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
@@ -96,15 +100,20 @@ public class AccountEntryUserRelLocalServiceTest {
 				accountEntryUserRel.getPrimaryKey()));
 	}
 
-	@Test(expected = DuplicateAccountEntryUserRelException.class)
-	public void testAddAccountEntryUserRel1ThrowsDuplicateAccountEntryUserRelException()
+	@Test
+	public void testAddAccountEntryUserRel1DoesNotAddDuplicate()
 		throws Exception {
 
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			_accountEntry.getAccountEntryId(), _user.getUserId());
+		AccountEntryUserRel accountEntryUserRel1 =
+			_accountEntryUserRelLocalService.addAccountEntryUserRel(
+				_accountEntry.getAccountEntryId(), _user.getUserId());
+		AccountEntryUserRel accountEntryUserRel2 =
+			_accountEntryUserRelLocalService.addAccountEntryUserRel(
+				_accountEntry.getAccountEntryId(), _user.getUserId());
 
-		_accountEntryUserRelLocalService.addAccountEntryUserRel(
-			_accountEntry.getAccountEntryId(), _user.getUserId());
+		Assert.assertEquals(
+			accountEntryUserRel1.getAccountEntryUserRelId(),
+			accountEntryUserRel2.getAccountEntryUserRelId());
 	}
 
 	@Test(expected = NoSuchEntryException.class)
@@ -313,6 +322,68 @@ public class AccountEntryUserRelLocalServiceTest {
 		Assert.assertNull(
 			_userLocalService.fetchUserByScreenName(
 				TestPropsValues.getCompanyId(), _userInfo.screenName));
+	}
+
+	@Test
+	public void testAddAccountEntryUserRelByEmailAddressForExistingUser()
+		throws Exception {
+
+		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
+			TestPropsValues.getUserId(), _accountEntry.getAccountEntryId(),
+			RandomTestUtil.randomString(), null, null);
+
+		User user = UserTestUtil.addUser(
+			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(), null,
+			_userInfo.emailAddress, _userInfo.screenName,
+			LocaleUtil.getDefault(), _userInfo.firstName, _userInfo.lastName,
+			null, ServiceContextTestUtil.getServiceContext());
+
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelLocalService.
+				addAccountEntryUserRelByEmailAddress(
+					_accountEntry.getAccountEntryId(), _userInfo.emailAddress,
+					new long[] {accountRole.getAccountRoleId()}, null,
+					ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			user.getUserId(), accountEntryUserRel.getAccountUserId());
+
+		Assert.assertTrue(
+			_accountRoleLocalService.hasUserAccountRole(
+				_accountEntry.getAccountEntryId(),
+				accountRole.getAccountRoleId(), user.getUserId()));
+	}
+
+	@Test
+	public void testAddAccountEntryUserRelByEmailAddressForNonexistingUser()
+		throws Exception {
+
+		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
+			TestPropsValues.getUserId(), _accountEntry.getAccountEntryId(),
+			RandomTestUtil.randomString(), null, null);
+
+		Assert.assertNull(
+			_userLocalService.fetchUserByEmailAddress(
+				TestPropsValues.getCompanyId(), _userInfo.emailAddress));
+
+		AccountEntryUserRel accountEntryUserRel =
+			_accountEntryUserRelLocalService.
+				addAccountEntryUserRelByEmailAddress(
+					_accountEntry.getAccountEntryId(), _userInfo.emailAddress,
+					new long[] {accountRole.getAccountRoleId()}, null,
+					ServiceContextTestUtil.getServiceContext());
+
+		User user = _userLocalService.fetchUser(
+			accountEntryUserRel.getAccountUserId());
+
+		Assert.assertEquals(
+			user,
+			_userLocalService.fetchUserByEmailAddress(
+				TestPropsValues.getCompanyId(), _userInfo.emailAddress));
+		Assert.assertTrue(
+			_accountRoleLocalService.hasUserAccountRole(
+				_accountEntry.getAccountEntryId(),
+				accountRole.getAccountRoleId(), user.getUserId()));
 	}
 
 	@Test
@@ -676,10 +747,16 @@ public class AccountEntryUserRelLocalServiceTest {
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Inject
+	private AccountRoleLocalService _accountRoleLocalService;
+
+	@Inject
 	private AccountUserRetriever _accountUserRetriever;
 
 	@DeleteAfterTestRun
 	private User _user;
+
+	@Inject
+	private UserGroupRoleLocalService _userGroupRoleLocalService;
 
 	private final UserInfo _userInfo = new UserInfo();
 

@@ -21,7 +21,7 @@ long groupId = ParamUtil.getLong(request, "groupId");
 boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 %>
 
-<aui:form cssClass="lfr-export-dialog" method="post" name="fm1">
+<aui:form cssClass="lfr-export-dialog sheet" method="post" name="fm1">
 	<div class="lfr-dynamic-uploader">
 		<clay:container-fluid>
 			<div class="lfr-upload-container" id="<portlet:namespace />fileUpload"></div>
@@ -53,7 +53,7 @@ boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 			decimalSeparator: '<%= decimalFormatSymbols.getDecimalSeparator() %>',
 
 			deleteFile:
-				'<liferay-portlet:actionURL doAsUserId="<%= user.getUserId() %>" name="importLayouts"><portlet:param name="mvcRenderCommandName" value="importLayouts" /><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE_TEMP %>" /></liferay-portlet:actionURL>&ticketKey=<%= ticket.getKey() %><liferay-ui:input-permissions-params modelName="<%= Group.class.getName() %>" />',
+				'<liferay-portlet:actionURL doAsUserId="<%= user.getUserId() %>" name="/export_import/import_layouts"><portlet:param name="mvcRenderCommandName" value="/export_import/import_layouts" /><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE_TEMP %>" /></liferay-portlet:actionURL>&ticketKey=<%= ticket.getKey() %><liferay-ui:input-permissions-params modelName="<%= Group.class.getName() %>" />',
 
 			<%
 			DLConfiguration dlConfiguration = ConfigurationProviderUtil.getSystemConfiguration(DLConfiguration.class);
@@ -85,16 +85,16 @@ boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 				},
 			},
 			uploadFile:
-				'<liferay-portlet:actionURL doAsUserId="<%= user.getUserId() %>" name="importLayouts"><portlet:param name="mvcRenderCommandName" value="importLayouts" /><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD_TEMP %>" /><portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" /><portlet:param name="privateLayout" value="<%= String.valueOf(privateLayout) %>" /></liferay-portlet:actionURL>&ticketKey=<%= ticket.getKey() %><liferay-ui:input-permissions-params modelName="<%= Group.class.getName() %>" />',
+				'<liferay-portlet:actionURL doAsUserId="<%= user.getUserId() %>" name="/export_import/import_layouts"><portlet:param name="mvcRenderCommandName" value="/export_import/import_layouts" /><portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD_TEMP %>" /><portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" /><portlet:param name="privateLayout" value="<%= String.valueOf(privateLayout) %>" /></liferay-portlet:actionURL>&ticketKey=<%= ticket.getKey() %><liferay-ui:input-permissions-params modelName="<%= Group.class.getName() %>" />',
 		});
 
 		var continueButton = A.one('#<portlet:namespace />continueButton');
 
-		liferayUpload._uploader.on('alluploadscomplete', function (event) {
+		liferayUpload._uploader.on('alluploadscomplete', (event) => {
 			toggleContinueButton();
 		});
 
-		Liferay.on('tempFileRemoved', function (event) {
+		Liferay.on('tempFileRemoved', (event) => {
 			toggleContinueButton();
 		});
 
@@ -116,7 +116,7 @@ boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 <aui:script use="aui-base,aui-io-plugin-deprecated,aui-loading-mask-deprecated,io">
 	var form = A.one('#<portlet:namespace />fm1');
 
-	form.on('submit', function (event) {
+	form.on('submit', (event) => {
 		event.halt();
 
 		var exportImportOptions = A.one(
@@ -128,7 +128,7 @@ boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
 				id: '<portlet:namespace />fm1',
 			},
 
-			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="importLayouts" var="importPagesURL">
+			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/export_import/import_layouts" var="importPagesURL">
 				<portlet:param name="p_p_isolated" value="<%= Boolean.TRUE.toString() %>" />
 				<portlet:param name="groupId" value="<%= String.valueOf(groupId) %>" />
 				<portlet:param name="privateLayout" value="<%= String.valueOf(privateLayout) %>" />

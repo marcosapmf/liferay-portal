@@ -25,11 +25,12 @@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountAddressAdminDisplayContext" %><%@
+<%@ page import="com.liferay.account.model.AccountEntry" %><%@
+page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountAddressAdminDisplayContext" %><%@
 page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountAdminDisplayContext" %><%@
 page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountOrganizationRelAdminDisplayContext" %><%@
 page import="com.liferay.commerce.account.admin.web.internal.display.context.CommerceAccountUserRelAdminDisplayContext" %><%@
-page import="com.liferay.commerce.account.admin.web.internal.servlet.taglib.ui.CommerceAccountScreenNavigationConstants" %><%@
+page import="com.liferay.commerce.account.admin.web.internal.servlet.taglib.ui.constants.CommerceAccountScreenNavigationConstants" %><%@
 page import="com.liferay.commerce.account.constants.CommerceAccountActionKeys" %><%@
 page import="com.liferay.commerce.account.constants.CommerceAccountConstants" %><%@
 page import="com.liferay.commerce.account.exception.CommerceAccountNameException" %><%@
@@ -45,13 +46,13 @@ page import="com.liferay.commerce.exception.CommerceAddressStreetException" %><%
 page import="com.liferay.commerce.exception.CommerceAddressZipException" %><%@
 page import="com.liferay.commerce.exception.NoSuchAddressException" %><%@
 page import="com.liferay.commerce.model.CommerceAddress" %><%@
-page import="com.liferay.commerce.model.CommerceCountry" %><%@
-page import="com.liferay.commerce.model.CommerceRegion" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
+page import="com.liferay.portal.kernel.model.Country" %><%@
 page import="com.liferay.portal.kernel.model.Organization" %><%@
+page import="com.liferay.portal.kernel.model.Region" %><%@
 page import="com.liferay.portal.kernel.model.User" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@

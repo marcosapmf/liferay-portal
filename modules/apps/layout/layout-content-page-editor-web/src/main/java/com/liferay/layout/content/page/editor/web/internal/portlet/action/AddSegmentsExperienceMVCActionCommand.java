@@ -40,10 +40,12 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
@@ -54,6 +56,7 @@ import com.liferay.segments.service.SegmentsExperienceService;
 import com.liferay.segments.service.SegmentsExperimentRelService;
 import com.liferay.segments.service.SegmentsExperimentService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -70,7 +73,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/add_segments_experience"
+		"mvc.command.name=/layout_content_page_editor/add_segments_experience"
 	},
 	service = MVCActionCommand.class
 )
@@ -87,12 +90,16 @@ public class AddSegmentsExperienceMVCActionCommand
 		SegmentsExperiment segmentsExperiment = _getSegmentsExperiment(
 			actionRequest);
 
+		String[] languageIds = StringUtil.split(
+			ParamUtil.getString(actionRequest, "languageIds"));
+
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			actionRequest);
 
 		SegmentsExperience segmentsExperience = _addSegmentsExperience(
 			actionRequest, _portal.getClassNameId(Layout.class),
-			themeDisplay.getPlid(), segmentsExperiment, serviceContext);
+			themeDisplay.getPlid(), languageIds, segmentsExperiment,
+			serviceContext);
 
 		long baseSegmentsExperienceId = _getBaseSegmentsExperienceId(
 			segmentsExperiment);
@@ -117,7 +124,8 @@ public class AddSegmentsExperienceMVCActionCommand
 				segmentsExperience.getSegmentsExperienceId())
 		).put(
 			"segmentsExperience",
-			_getSegmentsExperienceJSONObject(segmentsExperience)
+			SegmentsExperienceUtil.getSegmentsExperienceJSONObject(
+				segmentsExperience)
 		);
 
 		if (segmentsExperiment == null) {
@@ -149,19 +157,18 @@ public class AddSegmentsExperienceMVCActionCommand
 
 	private SegmentsExperience _addSegmentsExperience(
 			ActionRequest actionRequest, long classNameId, long classPK,
-			SegmentsExperiment segmentsExperiment,
+			String[] languageIds, SegmentsExperiment segmentsExperiment,
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		boolean active = ParamUtil.getBoolean(actionRequest, "active", true);
+		UnicodeProperties typeSettingsUnicodeProperties = new UnicodeProperties(
+			true);
 
-		long segmentsEntryId = ParamUtil.getLong(
-			actionRequest, "segmentsEntryId");
+		typeSettingsUnicodeProperties.setProperty(
+			PropsKeys.LOCALES, StringUtil.merge(languageIds));
 
 		if (segmentsExperiment != null) {
-			active = false;
-
-			segmentsEntryId = SegmentsEntryConstants.ID_DEFAULT;
+			long segmentsEntryId = SegmentsEntryConstants.ID_DEFAULT;
 
 			if (segmentsExperiment.getSegmentsExperienceId() !=
 					SegmentsExperienceConstants.ID_DEFAULT) {
@@ -172,15 +179,23 @@ public class AddSegmentsExperienceMVCActionCommand
 
 				segmentsEntryId = segmentsExperience.getSegmentsEntryId();
 			}
+
+			return _segmentsExperienceService.appendSegmentsExperience(
+				segmentsEntryId, classNameId, classPK,
+				Collections.singletonMap(
+					LocaleUtil.getSiteDefault(),
+					ParamUtil.getString(actionRequest, "name")),
+				false, typeSettingsUnicodeProperties, serviceContext);
 		}
 
 		return _segmentsExperienceService.addSegmentsExperience(
-			segmentsEntryId, classNameId, classPK,
-			HashMapBuilder.put(
+			ParamUtil.getLong(actionRequest, "segmentsEntryId"), classNameId,
+			classPK,
+			Collections.singletonMap(
 				LocaleUtil.getSiteDefault(),
-				ParamUtil.getString(actionRequest, "name")
-			).build(),
-			active, serviceContext);
+				ParamUtil.getString(actionRequest, "name")),
+			ParamUtil.getBoolean(actionRequest, "active", true),
+			typeSettingsUnicodeProperties, serviceContext);
 	}
 
 	private SegmentsExperimentRel _addSegmentsExperimentRel(
@@ -241,22 +256,6 @@ public class AddSegmentsExperienceMVCActionCommand
 
 		return JSONFactoryUtil.createJSONObject(
 			layoutPageTemplateStructure.getData(segmentsExperienceId));
-	}
-
-	private JSONObject _getSegmentsExperienceJSONObject(
-		SegmentsExperience segmentsExperience) {
-
-		return JSONUtil.put(
-			"active", segmentsExperience.isActive()
-		).put(
-			"name", segmentsExperience.getNameCurrentValue()
-		).put(
-			"priority", segmentsExperience.getPriority()
-		).put(
-			"segmentsEntryId", segmentsExperience.getSegmentsEntryId()
-		).put(
-			"segmentsExperienceId", segmentsExperience.getSegmentsExperienceId()
-		);
 	}
 
 	private SegmentsExperiment _getSegmentsExperiment(

@@ -25,10 +25,10 @@ import {
 } from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/Controls';
 import {EditableProcessorContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/EditableProcessorContext';
 import FragmentContent from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/FragmentContent';
-import resolveEditableValue from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/resolveEditableValue';
 import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/backgroundImageFragmentEntryProcessor';
 import {VIEWPORT_SIZES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/store';
+import resolveEditableValue from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/editable-value/resolveEditableValue';
 
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/app/services/serviceFetch',
@@ -36,7 +36,7 @@ jest.mock(
 );
 
 jest.mock(
-	'../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/resolveEditableValue',
+	'../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/editable-value/resolveEditableValue',
 	() => jest.fn(() => Promise.resolve(['Default content']))
 );
 
@@ -176,9 +176,7 @@ describe('FragmentContent', () => {
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
-			fragmentEntryLink.editableValues,
-			'editable-id',
-			EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			{},
 			'en_US',
 			expect.any(Function)
 		);
@@ -195,9 +193,7 @@ describe('FragmentContent', () => {
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
-			fragmentEntryLink.editableValues,
-			'editable-id',
-			EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			{},
 			'en_US',
 			expect.any(Function)
 		);
@@ -209,7 +205,9 @@ describe('FragmentContent', () => {
 
 			editableValues: {
 				[BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR]: {
-					'background-id': {},
+					'background-id': {
+						defaultValue: 'image.jpg',
+					},
 				},
 			},
 		});
@@ -219,9 +217,7 @@ describe('FragmentContent', () => {
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
-			fragmentEntryLink.editableValues,
-			'background-id',
-			BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR,
+			{defaultValue: 'image.jpg'},
 			'en_US',
 			expect.any(Function)
 		);

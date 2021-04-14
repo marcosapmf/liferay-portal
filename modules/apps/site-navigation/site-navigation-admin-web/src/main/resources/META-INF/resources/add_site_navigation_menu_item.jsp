@@ -30,7 +30,7 @@ PortletURL addURL = siteNavigationMenuItemType.getAddURL(renderRequest, renderRe
 if (addURL == null) {
 	addURL = renderResponse.createActionURL();
 
-	addURL.setParameter(ActionRequest.ACTION_NAME, "/navigation_menu/add_site_navigation_menu_item");
+	addURL.setParameter(ActionRequest.ACTION_NAME, "/site_navigation_admin/add_site_navigation_menu_item");
 }
 
 portletDisplay.setShowBackIcon(true);
@@ -43,7 +43,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "add-x", siteNavigationMenu
 	<liferay-ui:message arguments='<%= ModelHintsUtil.getMaxLength(SiteNavigationMenuItem.class.getName(), "name") %>' key="please-enter-a-name-with-fewer-than-x-characters" translateArguments="<%= false %>" />
 </liferay-ui:error>
 
-<aui:form action="<%= addURL.toString() %>" cssClass="container-fluid-1280" name="fm" onSubmit="event.preventDefault();">
+<aui:form action="<%= addURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" name="fm" onSubmit="event.preventDefault();">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="siteNavigationMenuId" type="hidden" value="<%= siteNavigationMenuId %>" />
 	<aui:input name="type" type="hidden" value="<%= type %>" />
@@ -65,60 +65,17 @@ renderResponse.setTitle(LanguageUtil.format(request, "add-x", siteNavigationMenu
 	</aui:button-row>
 </aui:form>
 
-<aui:script>
-	var addButton = document.getElementById('<portlet:namespace />addButton');
+<%
+Portlet selPortlet = PortletLocalServiceUtil.getPortletById(company.getCompanyId(), portletDisplay.getId());
+%>
 
-	if (addButton) {
-		addButton.addEventListener('click', function () {
-			var form = document.getElementById('<portlet:namespace />fm');
-			var formData = new FormData();
-
-			Array.prototype.slice
-				.call(form.querySelectorAll('input'))
-				.forEach(function (input) {
-					if (input.name && input.value) {
-						formData.append(input.name, input.value);
-					}
-				});
-
-			var formValidator = Liferay.Form.get('<portlet:namespace />fm')
-				.formValidator;
-
-			formValidator.validate();
-
-			if (formValidator.hasErrors()) {
-				return;
-			}
-
-			Liferay.Util.fetch(form.action, {
-				body: formData,
-				method: 'POST',
-			})
-				.then(function (response) {
-					return response.json();
-				})
-				.then(function (response) {
-					if (response.siteNavigationMenuItemId) {
-						Liferay.fire('closeWindow', {
-
-							<%
-							Portlet selPortlet = PortletLocalServiceUtil.getPortletById(company.getCompanyId(), portletDisplay.getId());
-							%>
-
-							id:
-								'_<%= HtmlUtil.escapeJS(selPortlet.getPortletId()) %>_addMenuItem',
-							portletAjaxable: <%= selPortlet.isAjaxable() %>,
-							refresh:
-								'<%= HtmlUtil.escapeJS(selPortlet.getPortletId()) %>',
-						});
-					}
-					else {
-						Liferay.Util.openToast({
-							message: response.errorMessage,
-							type: 'danger',
-						});
-					}
-				});
-		});
-	}
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"selPortletId", HtmlUtil.escapeJS(selPortlet.getPortletId())
+		).put(
+			"selPortletIsAjaxable", selPortlet.isAjaxable()
+		).build()
+	%>'
+	module="js/AddSiteNavigationMenuItem"
+/>

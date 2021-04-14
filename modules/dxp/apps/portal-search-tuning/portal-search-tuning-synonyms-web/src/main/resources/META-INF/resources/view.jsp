@@ -34,7 +34,7 @@ page import="com.liferay.portal.search.tuning.synonyms.web.internal.display.cont
 SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.getAttribute(SynonymsPortletKeys.SYNONYMS_DISPLAY_CONTEXT);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= synonymsDisplayContext.getActionDropdownMultipleItems() %>"
 	componentId="synonymSetsEntriesManagementToolbar"
 	creationMenu="<%= synonymsDisplayContext.getCreationMenu() %>"
@@ -46,11 +46,11 @@ SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.
 	showSearch="<%= false %>"
 />
 
-<portlet:actionURL name="deleteSynonymSet" var="deleteSynonymSetActionURL">
+<portlet:actionURL name="/synonyms/delete_synonym_sets" var="deleteSynonymSetActionURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteSynonymSetActionURL %>" cssClass="container-fluid-1280" method="post" name="SynonymSetsEntriesFm">
+<aui:form action="<%= deleteSynonymSetActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="SynonymSetsEntriesFm">
 	<aui:input name="deletedSynonymSetsString" type="hidden" value="" />
 
 	<liferay-ui:search-container
@@ -73,8 +73,8 @@ SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.
 
 			<liferay-ui:search-container-column-text>
 				<clay:dropdown-actions
-					defaultEventHandler="SynonymSetsDropdownDefaultEventHandler"
 					dropdownItems="<%= synonymSetDisplayContext.getDropdownItems() %>"
+					propsTransformer="js/SynonymSetsDropdownDefaultPropsTransformer"
 				/>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
@@ -89,8 +89,3 @@ SynonymsDisplayContext synonymsDisplayContext = (SynonymsDisplayContext)request.
 <aui:script require='<%= npmResolvedPackageName + "/js/MultipleCheckboxAction.es as MultipleCheckboxAction" %>'>
 	new MultipleCheckboxAction.default('<portlet:namespace />');
 </aui:script>
-
-<liferay-frontend:component
-	componentId="SynonymSetsDropdownDefaultEventHandler"
-	module="js/SynonymSetsDropdownDefaultEventHandler.es"
-/>

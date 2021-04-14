@@ -84,7 +84,7 @@ definition {
 		AssertCssValue(
 			locator1 = "//ul[contains(@id,'controlMenu')]",
 			locator2 = "list-style",
-			value1 = "none outside none");
+			value1 = "outside none none");
 
 		takeScreenshot();
 
@@ -100,7 +100,7 @@ definition {
 		AssertCssValue(
 			locator1 = "//ul[contains(@id,'controlMenu')]",
 			locator2 = "list-style",
-			value1 = "none outside none");
+			value1 = "outside none none");
 
 		takeScreenshot();
 	}
@@ -127,7 +127,7 @@ definition {
 		AssertCssValue(
 			locator1 = "//ul[contains(@id,'controlMenu')]",
 			locator2 = "list-style",
-			value1 = "none outside none");
+			value1 = "outside none none");
 
 		takeScreenshot();
 	}
@@ -285,8 +285,9 @@ definition {
 	test ViewPortletBoundaries {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property environment.acceptance = "true";
-		property portal.acceptance = "true";
+		property environment.acceptance = "quarantine";
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",

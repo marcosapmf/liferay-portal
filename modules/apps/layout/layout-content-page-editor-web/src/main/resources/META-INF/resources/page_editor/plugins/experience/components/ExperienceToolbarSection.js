@@ -16,6 +16,7 @@ import React, {useEffect, useMemo} from 'react';
 
 import togglePermissions from '../../../app/actions/togglePermission';
 import {config} from '../../../app/config/index';
+import selectSegmentsExperienceId from '../../../app/selectors/selectSegmentsExperienceId';
 import {useDispatch, useSelector} from '../../../app/store/index';
 import ExperienceSelector from './ExperienceSelector';
 
@@ -26,23 +27,31 @@ export default function ExperienceToolbarSection({selectId}) {
 		(state) => state.availableSegmentsExperiences
 	);
 	const dispatch = useDispatch();
-
-	const segmentsExperienceId = useSelector(
-		(state) => state.segmentsExperienceId
-	);
+	const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
 
 	const experiences = useMemo(
 		() =>
 			Object.values(availableSegmentsExperiences)
 				.sort((a, b) => b.priority - a.priority)
-				.map((experience) => {
+				.map((experience, _, experiences) => {
 					const segmentsEntryName =
 						config.availableSegmentsEntries[
 							experience.segmentsEntryId
 						].name;
 
+					const firstExperience = experiences.find(
+						(exp) =>
+							exp.segmentsEntryId ===
+								experience.segmentsEntryId ||
+							exp.segmentsEntryId ===
+								config.defaultSegmentsEntryId
+					);
+
 					return {
 						...experience,
+						active:
+							firstExperience.segmentsExperienceId ===
+							experience.segmentsExperienceId,
 						segmentsEntryName,
 					};
 				}),
@@ -51,8 +60,6 @@ export default function ExperienceToolbarSection({selectId}) {
 	const segments = useMemo(
 		() => Object.values(config.availableSegmentsEntries),
 		[]
-	).filter(
-		(segment) => segment.segmentsEntryId !== config.defaultSegmentsEntryId
 	);
 
 	const selectedExperience =
@@ -68,7 +75,7 @@ export default function ExperienceToolbarSection({selectId}) {
 	}, [dispatch, selectedExperience.hasLockedSegmentsExperiment]);
 
 	return (
-		<div className="mr-2 page-editor__toolbar-experience">
+		<div className="page-editor__toolbar-experience">
 			<label className="d-lg-block d-none mr-2" htmlFor={selectId}>
 				{Liferay.Language.get('experience')}
 			</label>

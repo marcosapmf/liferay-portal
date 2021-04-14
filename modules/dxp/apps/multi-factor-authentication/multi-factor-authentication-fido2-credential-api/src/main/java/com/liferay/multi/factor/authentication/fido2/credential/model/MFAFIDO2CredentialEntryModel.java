@@ -203,6 +203,20 @@ public interface MFAFIDO2CredentialEntryModel
 	public void setCredentialKey(String credentialKey);
 
 	/**
+	 * Returns the credential key hash of this mfafido2 credential entry.
+	 *
+	 * @return the credential key hash of this mfafido2 credential entry
+	 */
+	public long getCredentialKeyHash();
+
+	/**
+	 * Sets the credential key hash of this mfafido2 credential entry.
+	 *
+	 * @param credentialKeyHash the credential key hash of this mfafido2 credential entry
+	 */
+	public void setCredentialKeyHash(long credentialKeyHash);
+
+	/**
 	 * Returns the credential type of this mfafido2 credential entry.
 	 *
 	 * @return the credential type of this mfafido2 credential entry

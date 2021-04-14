@@ -42,6 +42,8 @@ import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * Participates in every unauthenticated HTTP request to Liferay Portal.
@@ -187,11 +189,6 @@ public class CASAutoLogin extends BaseAutoLogin {
 	}
 
 	@Reference(unbind = "-")
-	protected void setUserImporter(UserImporter userImporter) {
-		_userImporter = userImporter;
-	}
-
-	@Reference(unbind = "-")
 	protected void setUserLocalService(UserLocalService userLocalService) {
 		_userLocalService = userLocalService;
 	}
@@ -203,7 +200,12 @@ public class CASAutoLogin extends BaseAutoLogin {
 	@Reference
 	private Portal _portal;
 
-	private UserImporter _userImporter;
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile UserImporter _userImporter;
+
 	private UserLocalService _userLocalService;
 
 }

@@ -19,6 +19,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xuggler.Xuggler;
 import com.liferay.portal.kernel.xuggler.XugglerInstallException;
 import com.liferay.portal.util.JarUtil;
@@ -31,6 +32,8 @@ import com.xuggle.xuggler.IContainer;
 import java.net.URL;
 
 import java.nio.file.Paths;
+
+import java.util.Map;
 
 /**
  * @author Alexander Chow
@@ -92,8 +95,13 @@ public class XugglerImpl implements Xuggler {
 			return _nativeLibraryInstalled;
 		}
 
-		String originalLevel = Log4JUtil.getOriginalLevel(
-			JNILibraryLoader.class.getName());
+		Map<String, String> priorities = Log4JUtil.getPriorities();
+
+		String priority = priorities.get(JNILibraryLoader.class.getName());
+
+		if (Validator.isNull(priority)) {
+			priority = "ALL";
+		}
 
 		try {
 			Log4JUtil.setLevel(JNILibraryLoader.class.getName(), "OFF", false);
@@ -110,7 +118,7 @@ public class XugglerImpl implements Xuggler {
 		}
 		finally {
 			Log4JUtil.setLevel(
-				JNILibraryLoader.class.getName(), originalLevel, false);
+				JNILibraryLoader.class.getName(), priority, false);
 		}
 
 		return _nativeLibraryInstalled;

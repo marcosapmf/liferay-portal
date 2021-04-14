@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT,
-		"mvc.command.name=viewExportConfigurations"
+		"mvc.command.name=/export_import/view_export_configurations"
 	},
 	service = MVCRenderCommand.class
 )
@@ -35,7 +35,7 @@ public class ViewExportConfigurationsMVCRenderCommand
 
 	@Override
 	protected String getPath() {
-		return "/export/export_templates/view.jsp";
+		return "/export/export_templates/view_export_configurations.jsp";
 	}
 
 }

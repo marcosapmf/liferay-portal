@@ -29,6 +29,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -44,6 +45,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -333,6 +335,112 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public Job.BuildProfile getBuildProfile() {
+		String buildProfile = getParameterValue("TEST_PORTAL_BUILD_PROFILE");
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(buildProfile)) {
+			if (buildProfile.equals("dxp")) {
+				return Job.BuildProfile.DXP;
+			}
+
+			return Job.BuildProfile.PORTAL;
+		}
+
+		String branchName = getBranchName();
+
+		if (!branchName.equals("master") && !branchName.startsWith("ee-")) {
+			return Job.BuildProfile.DXP;
+		}
+
+		return Job.BuildProfile.PORTAL;
+	}
+
+	@Override
+	public JSONObject getBuildResultsJSONObject(
+		String[] buildResults, String[] testStatuses, String[] dataTypes) {
+
+		JSONObject buildResultsJSONObject = new JSONObject();
+
+		if (buildResults != null) {
+			List<String> buildResultsList = Arrays.asList(buildResults);
+
+			if (!buildResultsList.contains(getResult())) {
+				return buildResultsJSONObject;
+			}
+		}
+
+		JSONArray testResultsJSONArray = new JSONArray();
+
+		List<TestResult> testResults = new ArrayList<>();
+
+		if (testStatuses == null) {
+			testResults = getTestResults(null);
+		}
+		else {
+			for (String testStatus : testStatuses) {
+				try {
+					testResults.addAll(getTestResults(testStatus));
+				}
+				catch (RuntimeException runtimeException) {
+					System.out.println(runtimeException.getMessage());
+				}
+			}
+		}
+
+		if (dataTypes == null) {
+			dataTypes = new String[] {"name", "status"};
+		}
+
+		List<String> dataTypesList = Arrays.asList(dataTypes);
+
+		for (TestResult testResult : testResults) {
+			JSONObject testResultJSONObject = new JSONObject();
+
+			if (dataTypesList.contains("buildURL")) {
+				testResultJSONObject.put("buildURL", getBuildURL());
+			}
+
+			if (dataTypesList.contains("duration")) {
+				testResultJSONObject.put("duration", testResult.getDuration());
+			}
+
+			if (dataTypesList.contains("errorDetails")) {
+				String errorDetails = testResult.getErrorDetails();
+
+				if (errorDetails != null) {
+					if (errorDetails.contains("\n")) {
+						int index = errorDetails.indexOf("\n");
+
+						errorDetails = errorDetails.substring(0, index);
+					}
+
+					if (errorDetails.length() > 200) {
+						errorDetails = errorDetails.substring(0, 200);
+					}
+				}
+
+				testResultJSONObject.put("errorDetails", errorDetails);
+			}
+
+			if (dataTypesList.contains("name")) {
+				testResultJSONObject.put("name", testResult.getDisplayName());
+			}
+
+			if (dataTypesList.contains("status")) {
+				testResultJSONObject.put("status", testResult.getStatus());
+			}
+
+			testResultsJSONArray.put(testResultJSONObject);
+		}
+
+		buildResultsJSONObject.put("jobVariant", getJobVariant());
+		buildResultsJSONObject.put("result", getResult());
+		buildResultsJSONObject.put("testResults", testResultsJSONArray);
+
+		return buildResultsJSONObject;
+	}
+
+	@Override
 	public String getBuildURL() {
 		String jobURL = getJobURL();
 
@@ -604,6 +712,29 @@ public abstract class BaseBuild implements Build {
 		return upstreamJobFailureMessageElement;
 	}
 
+	public Map<String, String> getInjectedEnvironmentVariablesMap()
+		throws IOException {
+
+		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
+			getBuildURL());
+
+		JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
+			localBuildURL + "/injectedEnvVars/api/json", false);
+
+		JSONObject envMapJSONObject = jsonObject.getJSONObject("envMap");
+
+		Set<String> envMapJSONObjectKeySet = envMapJSONObject.keySet();
+
+		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
+
+		for (String key : envMapJSONObjectKeySet) {
+			injectedEnvironmentVariablesMap.put(
+				key, envMapJSONObject.getString(key));
+		}
+
+		return injectedEnvironmentVariablesMap;
+	}
+
 	@Override
 	public String getInvocationURL() {
 		String jobURL = getJobURL();
@@ -688,7 +819,9 @@ public abstract class BaseBuild implements Build {
 			slaveName = "master";
 		}
 
-		return _jenkinsMaster.getJenkinsSlave(slaveName);
+		_jenkinsSlave = _jenkinsMaster.getJenkinsSlave(slaveName);
+
+		return _jenkinsSlave;
 	}
 
 	@Override
@@ -697,19 +830,7 @@ public abstract class BaseBuild implements Build {
 			return _job;
 		}
 
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-		String topLevelJobName = topLevelBuild.getJobName();
-
-		String repositoryName = null;
-
-		if (topLevelJobName.contains("subrepository")) {
-			repositoryName = topLevelBuild.getBaseGitRepositoryName();
-		}
-
-		_job = JobFactory.newJob(
-			topLevelJobName, topLevelBuild.getTestSuiteName(),
-			topLevelBuild.getBranchName(), repositoryName);
+		_job = JobFactory.newJob(this);
 
 		return _job;
 	}
@@ -1128,37 +1249,33 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
-	public List<TestClassResult> getTestClassResults() {
-		if (_testClassResults != null) {
-			return _testClassResults;
+	public TestClassResult getTestClassResult(String testClassName) {
+		if (!isCompleted()) {
+			return null;
 		}
 
-		List<TestResult> buildTestResults = getTestResults(null);
+		_initTestClassResults();
 
-		if (buildTestResults.isEmpty()) {
+		if (_testClassResults == null) {
+			return null;
+		}
+
+		return _testClassResults.get(testClassName);
+	}
+
+	@Override
+	public List<TestClassResult> getTestClassResults() {
+		if (!isCompleted()) {
 			return new ArrayList<>();
 		}
 
-		Map<String, List<TestResult>> testClassResultsMap = new HashMap<>();
+		_initTestClassResults();
 
-		for (TestResult testResult : buildTestResults) {
-			String testClassName = testResult.getClassName();
-
-			List<TestResult> testResults = testClassResultsMap.getOrDefault(
-				testClassName, new ArrayList());
-
-			testResults.add(testResult);
-
-			testClassResultsMap.put(testClassName, testResults);
+		if (_testClassResults == null) {
+			return new ArrayList<>();
 		}
 
-		_testClassResults = new ArrayList<>();
-
-		for (List<TestResult> testResults : testClassResultsMap.values()) {
-			_testClassResults.add(new DefaultTestClassResult(testResults));
-		}
-
-		return _testClassResults;
+		return new ArrayList<>(_testClassResults.values());
 	}
 
 	@Override
@@ -1173,6 +1290,21 @@ public abstract class BaseBuild implements Build {
 			throw new RuntimeException(
 				"Unable to get test report JSON object", ioException);
 		}
+	}
+
+	@Override
+	public List<TestResult> getTestResults() {
+		if (!isCompleted()) {
+			return new ArrayList<>();
+		}
+
+		List<TestResult> testResults = new ArrayList<>();
+
+		for (TestClassResult testClassResult : getTestClassResults()) {
+			testResults.addAll(testClassResult.getTestResults());
+		}
+
+		return testResults;
 	}
 
 	public List<TestResult> getTestResults(
@@ -1404,6 +1536,25 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public boolean isCompareToUpstream() {
+		TopLevelBuild topLevelBuild = getTopLevelBuild();
+
+		return topLevelBuild.isCompareToUpstream();
+	}
+
+	@Override
+	public boolean isCompleted() {
+		String result = getResult();
+		String status = getStatus();
+
+		if ((result == null) || (status == null)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	public boolean isFromArchive() {
 		return fromArchive;
 	}
@@ -1480,6 +1631,11 @@ public abstract class BaseBuild implements Build {
 		System.out.println(getReinvokedMessage());
 
 		reset();
+	}
+
+	@Override
+	public void removeDownstreamBuild(Build build) {
+		downstreamBuilds.remove(build);
 	}
 
 	@Override
@@ -2047,7 +2203,7 @@ public abstract class BaseBuild implements Build {
 			return JenkinsResultsParserUtil.combine(
 				getName(), " started at ",
 				JenkinsResultsParserUtil.toDateString(
-					new Date(getStartTimestamp()), "America/Los_Angeles"),
+					new Date(getStartTimestamp())),
 				" and ran for ",
 				JenkinsResultsParserUtil.toDurationString(getDuration()), ".");
 		}
@@ -2372,8 +2528,8 @@ public abstract class BaseBuild implements Build {
 
 		try {
 			content = JenkinsResultsParserUtil.toString(
-				JenkinsResultsParserUtil.getLocalURL(urlString), false, 0, 0,
-				0);
+				JenkinsResultsParserUtil.getLocalURL(urlString), false, 0, 0, 0,
+				true);
 		}
 		catch (IOException ioException) {
 			if (required) {
@@ -2472,26 +2628,7 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected JSONObject getBuildJSONObject(String tree) {
-		if (getBuildURL() == null) {
-			return null;
-		}
-
-		StringBuffer sb = new StringBuffer();
-
-		sb.append(JenkinsResultsParserUtil.getLocalURL(getBuildURL()));
-		sb.append("/api/json?pretty");
-
-		if (tree != null) {
-			sb.append("&tree=");
-			sb.append(tree);
-		}
-
-		try {
-			return JenkinsResultsParserUtil.toJSONObject(sb.toString(), false);
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException("Unable to get build JSON", ioException);
-		}
+		return JenkinsAPIUtil.getBuildJSONObject(getBuildURL(), tree);
 	}
 
 	protected String getBuildMessage() {
@@ -2684,29 +2821,6 @@ public abstract class BaseBuild implements Build {
 		boolean showCommonFailuresCount) {
 
 		return getGitHubMessageJobResultsElement();
-	}
-
-	protected Map<String, String> getInjectedEnvironmentVariablesMap()
-		throws IOException {
-
-		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
-			getBuildURL());
-
-		JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-			localBuildURL + "/injectedEnvVars/api/json", false);
-
-		JSONObject envMapJSONObject = jsonObject.getJSONObject("envMap");
-
-		Set<String> envMapJSONObjectKeySet = envMapJSONObject.keySet();
-
-		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
-
-		for (String key : envMapJSONObjectKeySet) {
-			injectedEnvironmentVariablesMap.put(
-				key, envMapJSONObject.getString(key));
-		}
-
-		return injectedEnvironmentVariablesMap;
 	}
 
 	protected String getJenkinsReportBuildInfoCellElementTagName() {
@@ -3185,7 +3299,8 @@ public abstract class BaseBuild implements Build {
 		Map<String, String> tempMap = new HashMap<>();
 
 		if (!fromArchive) {
-			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
+				this);
 
 			Properties properties = buildDatabase.getProperties(tempMapName);
 
@@ -3225,12 +3340,6 @@ public abstract class BaseBuild implements Build {
 		}
 
 		throw new IllegalArgumentException("Invalid status: " + status);
-	}
-
-	protected boolean isCompareToUpstream() {
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-		return topLevelBuild.isCompareToUpstream();
 	}
 
 	protected boolean isParentBuildRoot() {
@@ -3324,9 +3433,9 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected void reset() {
-		setResult(null);
-
 		badBuildNumbers.add(getBuildNumber());
+
+		setResult(null);
 
 		setBuildNumber(-1);
 
@@ -3335,6 +3444,8 @@ public abstract class BaseBuild implements Build {
 
 	protected void setBuildNumber(int buildNumber) {
 		if (_buildNumber != buildNumber) {
+			int previousBuildNumber = _buildNumber;
+
 			_buildNumber = buildNumber;
 
 			consoleReadCursor = 0;
@@ -3342,7 +3453,7 @@ public abstract class BaseBuild implements Build {
 			if (_buildNumber == -1) {
 				setStatus("starting");
 			}
-			else {
+			else if (!badBuildNumbers.contains(previousBuildNumber)) {
 				setStatus("running");
 			}
 		}
@@ -3496,7 +3607,9 @@ public abstract class BaseBuild implements Build {
 				_previousStatus,
 				statusModifiedTime - previousStatusModifiedTime);
 
-			if (isParentBuildRoot()) {
+			if (isParentBuildRoot() &&
+				!badBuildNumbers.contains(_buildNumber)) {
+
 				System.out.println(getBuildMessage());
 			}
 		}
@@ -3748,6 +3861,46 @@ public abstract class BaseBuild implements Build {
 		return jobParameters;
 	}
 
+	private synchronized void _initTestClassResults() {
+		if (!isCompleted()) {
+			return;
+		}
+
+		if (_testClassResults != null) {
+			return;
+		}
+
+		JSONObject testReportJSONObject = null;
+
+		try {
+			testReportJSONObject = getTestReportJSONObject(true);
+		}
+		catch (RuntimeException runtimeException) {
+			return;
+		}
+
+		_testClassResults = new ConcurrentHashMap<>();
+
+		if ((testReportJSONObject == null) ||
+			!testReportJSONObject.has("suites")) {
+
+			return;
+		}
+
+		JSONArray suitesJSONArray = testReportJSONObject.getJSONArray("suites");
+
+		for (int i = 0; i < suitesJSONArray.length(); i++) {
+			JSONObject suiteJSONObject = suitesJSONArray.getJSONObject(i);
+
+			TestClassResult testClassResult =
+				TestClassResultFactory.newTestClassResult(
+					this, suiteJSONObject);
+
+			_testClassResults.put(
+				testClassResult.getClassName(), testClassResult);
+		}
+	}
+
 	private boolean _isDifferent(String newValue, String oldValue) {
 		if (oldValue == null) {
 			if (newValue != null) {
@@ -3818,6 +3971,6 @@ public abstract class BaseBuild implements Build {
 	private String _previousStatus;
 	private String _result;
 	private String _status;
-	private List<TestClassResult> _testClassResults;
+	private Map<String, TestClassResult> _testClassResults;
 
 }

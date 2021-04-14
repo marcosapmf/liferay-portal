@@ -24,6 +24,7 @@ MBMessage message = messageDisplay.getMessage();
 long categoryId = message.getCategoryId();
 long threadId = message.getThreadId();
 long parentMessageId = message.getMessageId();
+
 String subject = ParamUtil.getString(request, "subject");
 double priority = message.getPriority();
 
@@ -187,7 +188,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 				/>
 			</liferay-expando:custom-attributes-available>
 
-			<aui:button-row>
+			<div class="sheet-footer">
 
 				<%
 				String publishButtonLabel = "publish";
@@ -204,7 +205,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 				%>
 
 				<aui:button onClick="<%= taglibCancelReply %>" type="cancel" />
-			</aui:button-row>
+			</div>
 		</aui:form>
 
 		<portlet:renderURL var="advancedReplyURL">
@@ -222,18 +223,25 @@ String redirect = ParamUtil.getString(request, "redirect");
 	</div>
 </div>
 
-<aui:script require='<%= npmResolvedPackageName + "/message_boards/js/MBPortlet.es as MBPortlet" %>'>
-	new MBPortlet.default({
-		constants: {
-			ACTION_PUBLISH: '<%= WorkflowConstants.ACTION_PUBLISH %>',
-			CMD: '<%= Constants.CMD %>',
-		},
-		currentAction: '<%= Constants.ADD %>',
-		namespace: '<portlet:namespace />',
-		replyToMessageId: '<%= parentMessageId %>',
-		rootNode: '#<portlet:namespace />addQuickReply<%= parentMessageId %>',
-	});
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"constants",
+			HashMapBuilder.<String, Object>put(
+				"ACTION_PUBLISH", WorkflowConstants.ACTION_PUBLISH
+			).put(
+				"CMD", Constants.CMD
+			).build()
+		).put(
+			"currentAction", Constants.ADD
+		).put(
+			"replyToMessageId", parentMessageId
+		).put(
+			"rootNodeId", liferayPortletResponse.getNamespace() + "addQuickReply" + parentMessageId
+		).build()
+	%>'
+	module="message_boards/js/MBPortlet.es"
+/>
 
 <aui:script>
 	window[

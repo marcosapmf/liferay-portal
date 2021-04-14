@@ -12,32 +12,32 @@
  * details.
  */
 
-import React from 'react';
+import React, {useContext} from 'react';
 
-import {useEvaluate} from '../../hooks/useEvaluate.es';
+import useCreateFieldChange from '../../hooks/useCreateFieldChange.es';
 import {useForm} from '../../hooks/useForm.es';
 import {usePage} from '../../hooks/usePage.es';
 import fieldBlur from '../../thunks/fieldBlur.es';
-import fieldChange from '../../thunks/fieldChange.es';
 import fieldFocus from '../../thunks/fieldFocus.es';
 import {getFormId, getFormNode} from '../../util/formId.es';
 import {Field} from '../Field/Field.es';
-import * as DefaultVariant from './DefaultVariant.es';
+import {VariantsContext} from './VariantsContext.es';
 
-export const Layout = ({
-	components: Components = DefaultVariant,
-	editable,
-	rows,
-}) => {
+export const Layout = ({components, editable, rows}) => {
 	const {
 		activePage,
 		allowNestedFields,
 		containerElement,
+		defaultLanguageId,
 		pageIndex,
 		spritemap,
 	} = usePage();
-	const createFieldChange = useEvaluate(fieldChange);
+	const createFieldChange = useCreateFieldChange();
 	const dispatch = useForm();
+
+	const defaultComponents = useContext(VariantsContext);
+
+	const Components = components ?? defaultComponents;
 
 	return (
 		<Components.Rows
@@ -63,6 +63,7 @@ export const Layout = ({
 								<Field
 									{...fieldProps}
 									activePage={activePage}
+									defaultLanguageId={defaultLanguageId}
 									editable={editable}
 									key={
 										fieldProps.field?.instanceId ??
@@ -83,11 +84,7 @@ export const Layout = ({
 										)
 									}
 									onChange={(event) =>
-										dispatch(
-											createFieldChange({
-												properties: event,
-											})
-										)
+										dispatch(createFieldChange(event))
 									}
 									onFocus={(event) =>
 										dispatch(

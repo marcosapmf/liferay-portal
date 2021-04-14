@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
@@ -39,14 +39,12 @@ import javax.servlet.http.HttpServletRequest;
 public abstract class BaseCommerceAccountAdminDisplayContext<T> {
 
 	public BaseCommerceAccountAdminDisplayContext(
-		ModelResourcePermission<CommerceAccount>
-			commerceAccountModelResourcePermission,
 		CommerceAccountService commerceAccountService,
+		ModelResourcePermission<CommerceAccount> modelResourcePermission,
 		RenderRequest renderRequest) {
 
-		this.commerceAccountModelResourcePermission =
-			commerceAccountModelResourcePermission;
 		this.commerceAccountService = commerceAccountService;
+		this.modelResourcePermission = modelResourcePermission;
 
 		commerceAccountAdminRequestHelper =
 			new CommerceAccountAdminRequestHelper(renderRequest);
@@ -158,14 +156,18 @@ public abstract class BaseCommerceAccountAdminDisplayContext<T> {
 	public boolean hasPermission(long commerceAccountId, String actionId)
 		throws PortalException {
 
-		return commerceAccountModelResourcePermission.contains(
+		return modelResourcePermission.contains(
 			commerceAccountAdminRequestHelper.getPermissionChecker(),
 			commerceAccountId, actionId);
 	}
 
 	public boolean hasPermission(String actionId) {
-		return PortalPermissionUtil.contains(
-			commerceAccountAdminRequestHelper.getPermissionChecker(), actionId);
+		PortletResourcePermission portletResourcePermission =
+			modelResourcePermission.getPortletResourcePermission();
+
+		return portletResourcePermission.contains(
+			commerceAccountAdminRequestHelper.getPermissionChecker(), null,
+			actionId);
 	}
 
 	protected String getKeywords() {
@@ -217,10 +219,10 @@ public abstract class BaseCommerceAccountAdminDisplayContext<T> {
 	protected CommerceAccount commerceAccount;
 	protected final CommerceAccountAdminRequestHelper
 		commerceAccountAdminRequestHelper;
-	protected final ModelResourcePermission<CommerceAccount>
-		commerceAccountModelResourcePermission;
 	protected final CommerceAccountService commerceAccountService;
 	protected String keywords;
+	protected final ModelResourcePermission<CommerceAccount>
+		modelResourcePermission;
 	protected final PortalPreferences portalPreferences;
 
 }

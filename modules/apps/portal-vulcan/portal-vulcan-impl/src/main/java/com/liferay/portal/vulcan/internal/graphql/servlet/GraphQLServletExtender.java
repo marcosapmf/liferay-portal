@@ -684,7 +684,9 @@ public class GraphQLServletExtender {
 
 		Stream<ServletData> stream = servletDatas.stream();
 
-		Map<String, Optional<Method>> methods = stream.flatMap(
+		Map<String, Optional<Method>> methods = stream.filter(
+			servletData -> servletData.getGraphQLNamespace() == null
+		).flatMap(
 			servletData -> Stream.of(
 				function.apply(servletData)
 			).filter(
@@ -821,23 +823,23 @@ public class GraphQLServletExtender {
 
 		Object[] arguments = new Object[parameters.length];
 
-		Object instance = null;
+		Class<?> declaringClass = method.getDeclaringClass();
+
+		Field field = _getThisField(declaringClass);
 
 		GraphQLFieldDefinition graphQLFieldDefinition =
 			dataFetchingEnvironment.getFieldDefinition();
+		Object instance = null;
 
 		if ((dataFetchingEnvironment.getRoot() ==
 				dataFetchingEnvironment.getSource()) ||
-			Objects.equals(graphQLFieldDefinition.getName(), "graphQLNode")) {
+			Objects.equals(graphQLFieldDefinition.getName(), "graphQLNode") ||
+			(field == null)) {
 
 			instance = _createQueryInstance(
 				method.getDeclaringClass(), dataFetchingEnvironment);
 		}
 		else {
-			Class<?> declaringClass = method.getDeclaringClass();
-
-			Field field = declaringClass.getDeclaredField("this$0");
-
 			Object queryInstance = _createQueryInstance(
 				field.getType(), dataFetchingEnvironment);
 
@@ -1230,17 +1232,24 @@ public class GraphQLServletExtender {
 			_collectObjectFields(
 				mutationBuilder, configurations, ServletData::getMutation,
 				processingElementsContainer, servletDatas);
-
 			_collectObjectFields(
 				graphQLObjectTypeBuilder, configurations, ServletData::getQuery,
 				processingElementsContainer, servletDatas);
 
-			graphQLSchemaBuilder.mutation(mutationBuilder.build());
-			graphQLSchemaBuilder.query(graphQLObjectTypeBuilder.build());
-
 			_registerInterfaces(
 				processingElementsContainer, graphQLObjectTypeBuilder,
 				graphQLSchemaBuilder);
+			_registerNamespace(
+				configurations, ServletData::getQuery, graphQLObjectTypeBuilder,
+				graphQLSchemaBuilder, false, processingElementsContainer,
+				servletDatas);
+			_registerNamespace(
+				configurations, ServletData::getMutation, mutationBuilder,
+				graphQLSchemaBuilder, true, processingElementsContainer,
+				servletDatas);
+
+			graphQLSchemaBuilder.mutation(mutationBuilder.build());
+			graphQLSchemaBuilder.query(graphQLObjectTypeBuilder.build());
 
 			GraphQLConfiguration.Builder graphQLConfigurationBuilder =
 				GraphQLConfiguration.with(graphQLSchemaBuilder.build());
@@ -1350,6 +1359,19 @@ public class GraphQLServletExtender {
 		}
 
 		return null;
+	}
+
+	private Field _getThisField(Class<?> clazz) {
+		try {
+			return clazz.getDeclaredField("this$0");
+		}
+		catch (NoSuchFieldException noSuchFieldException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFieldException, noSuchFieldException);
+			}
+
+			return null;
+		}
 	}
 
 	private Integer _getVersion(Method method) {
@@ -1466,6 +1488,85 @@ public class GraphQLServletExtender {
 		}
 		catch (Exception exception) {
 			throw new RuntimeException(exception);
+		}
+	}
+
+	private void _registerNamespace(
+		Map<String, Configuration> configurations,
+		Function<ServletData, Object> function,
+		GraphQLObjectType.Builder graphQLObjectTypeBuilder,
+		GraphQLSchema.Builder graphQLSchemaBuilder, boolean mutation,
+		ProcessingElementsContainer processingElementsContainer,
+		List<ServletData> servletDatas) {
+
+		for (ServletData servletData : servletDatas) {
+			String graphQLNamespace = servletData.getGraphQLNamespace();
+
+			if (graphQLNamespace == null) {
+				continue;
+			}
+
+			GraphQLObjectType.Builder builder = new GraphQLObjectType.Builder();
+
+			String prefix = "";
+
+			if (mutation) {
+				prefix = "Mutation";
+			}
+
+			builder.name(
+				prefix + StringUtil.upperCaseFirstLetter(graphQLNamespace));
+
+			GraphQLCodeRegistry.Builder graphQLCodeRegistryBuilder =
+				processingElementsContainer.getCodeRegistryBuilder();
+
+			Object query = function.apply(servletData);
+
+			Class<?> clazz = query.getClass();
+
+			Method[] methods = clazz.getMethods();
+
+			for (Method method : methods) {
+				if (!_isMethodEnabled(
+						configurations, method, servletData.getPath())) {
+
+					continue;
+				}
+
+				builder.field(
+					_graphQLFieldRetriever.getField(
+						clazz.getSimpleName(), method,
+						processingElementsContainer));
+
+				graphQLSchemaBuilder.codeRegistry(
+					graphQLCodeRegistryBuilder.dataFetcher(
+						FieldCoordinates.coordinates(
+							graphQLNamespace, method.getName()),
+						new LiferayMethodDataFetcher(method)
+					).build());
+			}
+
+			GraphQLFieldDefinition.Builder graphQLFieldDefinitionBuilder =
+				GraphQLFieldDefinition.newFieldDefinition();
+
+			graphQLObjectTypeBuilder.field(
+				graphQLFieldDefinitionBuilder.name(
+					graphQLNamespace
+				).type(
+					builder.build()
+				));
+
+			String parentField = "query";
+
+			if (mutation) {
+				parentField = "mutation";
+			}
+
+			graphQLSchemaBuilder.codeRegistry(
+				graphQLCodeRegistryBuilder.dataFetcher(
+					FieldCoordinates.coordinates(parentField, graphQLNamespace),
+					(DataFetcher<Object>)dataFetcher -> new Object()
+				).build());
 		}
 	}
 

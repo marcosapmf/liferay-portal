@@ -200,6 +200,15 @@ definition {
 				locator1 = "SitePagesImport#VALIDATION_ERROR_MESSAGE_HEADER",
 				value1 = "The file ${larFileName} cannot be imported.");
 		}
+		else if (isSet(importSchemaVersionMismatching)) {
+			AssertTextEquals(
+				locator1 = "SitePagesImport#VALIDATION_ERROR_MESSAGE_HEADER",
+				value1 = "The file ${larFileName} cannot be imported.");
+
+			AssertTextPresent(
+				locator1 = "SitePagesImport#VALIDATION_ERROR_MESSAGE",
+				value1 = "LAR schema version 1.0.0 does not match deployed export/import schema version 4.0.0.");
+		}
 		else if (isSet(importValidationMissingItem)) {
 			AssertTextEquals(
 				locator1 = "SitePagesImport#VALIDATION_ERROR_MESSAGE_HEADER",
@@ -207,7 +216,11 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "SitePagesImport#VALIDATION_ERROR_MESSAGE",
-				value1 = "An unexpected error occurred while uploading your file.");
+				value1 = "There are missing references that could not be found in the current environment. Please import the following elements first:");
+
+			AssertTextEquals.assertPartialText(
+				locator1 = "SitePagesImport#VALIDATION_ERROR_LIST_ITEM",
+				value1 = "${importValidationMissingItem}");
 		}
 		else if (isSet(import6210buildNumber)) {
 			AssertTextEquals(
@@ -240,8 +253,6 @@ definition {
 			}
 
 			if ("${importPermissions}" == "true") {
-				Click(locator1 = "ExportImport#PERMISSIONS_TITLE");
-
 				Check.checkToggleSwitch(locator1 = "Checkbox#PERMISSIONS");
 			}
 
@@ -300,7 +311,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "SitePagesImport#VALIDATION_ERROR_MESSAGE",
-				value1 = "There are missing references that could not be found in the current site. Please import the following elements first:");
+				value1 = "There are missing references that could not be found in the current environment. Please import the following elements first:");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "SitePagesImport#VALIDATION_ERROR_LIST_ITEM",
@@ -466,7 +477,7 @@ definition {
 			Click(locator1 = "Icon#TIMES");
 		}
 		else {
-			Click(locator1 = "Icon#CLOSE");
+			IFrame.closeFrame();
 		}
 	}
 
@@ -546,6 +557,8 @@ definition {
 			failureExpected = "${failureExpected}",
 			importDeletions = "${importDeletions}",
 			importPermissions = "${importPermissions}",
+			importSchemaVersionMismatching = "${importSchemaVersionMismatching}",
+			importValidationMissingItem = "${importValidationMissingItem}",
 			larFileName = "${larFileName}",
 			mirrorWithOverwriting = "${mirrorWithOverwriting}",
 			portletName = "${portletName}",

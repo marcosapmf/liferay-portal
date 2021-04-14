@@ -64,7 +64,7 @@ exports[`ListCustomObjects renders 1`] = `
         >
           <button
             class="nav-link nav-link-monospaced order-arrow-down-active btn btn-monospaced btn-unstyled"
-            data-title="reverse-sort-direction"
+            title="reverse-sort-direction"
             type="button"
           >
             <svg
@@ -158,22 +158,20 @@ exports[`ListCustomObjects renders 1`] = `
         <li
           class="nav-item"
         >
-          <div>
-            <button
-              class="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
-              data-title="new-custom-object"
-              type="button"
+          <button
+            class="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
+            title="new-custom-object"
+            type="button"
+          >
+            <svg
+              class="lexicon-icon lexicon-icon-plus"
+              role="presentation"
             >
-              <svg
-                class="lexicon-icon lexicon-icon-plus"
-                role="presentation"
-              >
-                <use
-                  xlink:href="#plus"
-                />
-              </svg>
-            </button>
-          </div>
+              <use
+                xlink:href="#plus"
+              />
+            </svg>
+          </button>
         </li>
       </ul>
     </div>
@@ -186,7 +184,7 @@ exports[`ListCustomObjects renders 1`] = `
         class="table-responsive"
       >
         <table
-          class="table table-autofit table-list"
+          class="table table-autofit table-list thead-valign-top"
         >
           <thead>
             <tr
@@ -200,7 +198,7 @@ exports[`ListCustomObjects renders 1`] = `
               <th
                 class="table-cell-expand-smaller text-left"
               >
-                create-date
+                created-date
               </th>
               <th
                 class="table-cell-expand-smaller text-left"
@@ -249,7 +247,7 @@ exports[`ListCustomObjects renders 1`] = `
                   class="dropdown dropdown-action"
                 >
                   <button
-                    class="dropdown-toggle page-link btn btn-unstyled"
+                    class="dropdown-toggle page-link btn btn-monospaced btn-unstyled"
                     type="button"
                   >
                     <svg

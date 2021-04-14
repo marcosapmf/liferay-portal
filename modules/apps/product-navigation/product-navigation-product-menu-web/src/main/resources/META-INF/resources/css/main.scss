@@ -116,6 +116,11 @@ $product-menu-pages-administration-link-height: 72px;
 	}
 
 	.tree-view {
+		.lfr-root-node.tree-node-content {
+			align-items: center;
+			display: flex;
+		}
+
 		.tree-container {
 			border-left: 1px solid $gray-800;
 			cursor: pointer;
@@ -168,9 +173,11 @@ $product-menu-pages-administration-link-height: 72px;
 				border: 1px solid $gray-800;
 				border-radius: 2px;
 				font-size: 6px;
+				height: 12px;
 				margin-right: 0;
 				padding: 2px 2px 1px;
 				text-align: center;
+				width: 12px;
 
 				& + span {
 					display: none;
@@ -199,11 +206,12 @@ $product-menu-pages-administration-link-height: 72px;
 				}
 
 				color: $gray-500 !important;
-				display: inline-block;
+				display: flex;
 				flex-grow: 1;
 				margin-left: 8px;
 				padding-right: 17px;
 				vertical-align: middle;
+				width: calc(100% - 20px);
 			}
 
 			.tree-node-selected {
@@ -304,11 +312,7 @@ $product-menu-pages-administration-link-height: 72px;
 		padding: 0;
 		position: absolute;
 		right: 0;
-		top: 55px;
-
-		@include media-breakpoint-up(sm) {
-			top: 64px;
-		}
+		top: 0;
 
 		@include media-breakpoint-down(xs) {
 			overflow: visible;
@@ -343,16 +347,6 @@ $product-menu-pages-administration-link-height: 72px;
 
 	small {
 		display: block;
-	}
-
-	.list-group {
-		> .collapse,
-		> .collapsing {
-			> .list-group-item > .tabular-list-group {
-				margin-bottom: -10px;
-				margin-top: -10px;
-			}
-		}
 	}
 
 	.list-group-heading {
@@ -396,11 +390,6 @@ $product-menu-pages-administration-link-height: 72px;
 		.selectable-site {
 			color: #333;
 			height: auto;
-		}
-
-		.list-group-item-content,
-		.list-group-item-field {
-			vertical-align: middle;
 		}
 
 		.site-link {

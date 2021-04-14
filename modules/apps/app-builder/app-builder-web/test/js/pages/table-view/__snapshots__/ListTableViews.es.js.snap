@@ -62,7 +62,7 @@ exports[`ListTableViews renders 1`] = `
         >
           <button
             class="nav-link nav-link-monospaced order-arrow-down-active btn btn-monospaced btn-unstyled"
-            data-title="reverse-sort-direction"
+            title="reverse-sort-direction"
             type="button"
           >
             <svg
@@ -161,7 +161,7 @@ exports[`ListTableViews renders 1`] = `
           >
             <button
               class="nav-btn nav-btn-monospaced btn btn-monospaced btn-primary"
-              data-title="new-table-view"
+              title="new-table-view"
               type="button"
             >
               <svg
@@ -186,7 +186,7 @@ exports[`ListTableViews renders 1`] = `
         class="table-responsive"
       >
         <table
-          class="table table-autofit table-list"
+          class="table table-autofit table-list thead-valign-top"
         >
           <thead>
             <tr
@@ -200,7 +200,7 @@ exports[`ListTableViews renders 1`] = `
               <th
                 class="table-cell-expand-smaller text-left"
               >
-                create-date
+                created-date
               </th>
               <th
                 class="table-cell-expand-smaller text-left"
@@ -249,7 +249,7 @@ exports[`ListTableViews renders 1`] = `
                   class="dropdown dropdown-action"
                 >
                   <button
-                    class="dropdown-toggle page-link btn btn-unstyled"
+                    class="dropdown-toggle page-link btn btn-monospaced btn-unstyled"
                     type="button"
                   >
                     <svg

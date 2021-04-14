@@ -1,4 +1,4 @@
-@component-name = "portal-forms-and-workflow-ee"
+@component-name = "portal-workflow-ee"
 definition {
 
 	property portal.release = "true";
@@ -75,7 +75,6 @@ definition {
 
 	@priority = "3"
 	test AddForkNodeEditNameAndDesciptionAndDeleteViaViewTab {
-
 		property test.name.skip.portal.instance = "Kaleodesigner#AddForkNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
 		ApplicationsMenu.gotoPortlet(
@@ -148,8 +147,8 @@ definition {
 
 	@priority = "5"
 	test AddJoinXORWorkflowDefinitionViaViewTab {
-		property portal.acceptance = "true";
-
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "Kaleodesigner#AddJoinXORNodeEditNameAndDesciptionAndDeleteViaViewTab";
 		property testray.component.names = "Training";
 
@@ -492,7 +491,6 @@ definition {
 			timerName = "Timer Name");
 
 		for (var iterator : list "1,2,3,4,5,6,7,8,9,10") {
-
 			KaleoDesigner.editSourceXML(
 				kdSourceXML = " ",
 				line = "12");
@@ -693,7 +691,6 @@ definition {
 		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition Title");
 
 		for (var iterator : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14") {
-
 			var isLessThan10 = MathUtil.isLessThanOrEqualTo("${iterator}", "10");
 
 			if ("${isLessThan10}" == "true") {
@@ -751,8 +748,8 @@ definition {
 
 	@priority = "3"
 	test PublishWorkflowDefinitionWithConnectorPointingToStartNodeAndViewErrorMessage {
-		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithConnectorPointingToStartNodeAndViewErrorMessage";
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithConnectorPointingToStartNodeAndViewErrorMessage";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -795,6 +792,7 @@ definition {
 
 	@priority = "3"
 	test PublishWorkflowDefinitionWithInvalidConditionNodeAndViewErrorMessage {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithInvalidConditionNodeAndViewErrorMessage";
 
 		ApplicationsMenu.gotoPortlet(
@@ -839,6 +837,7 @@ definition {
 
 	@priority = "3"
 	test PublishWorkflowDefinitionWithInvalidConditionNodeSettingsAndViewErrorMessage {
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithInvalidConditionNodeSettingsAndViewErrorMessage";
 
 		var nodeScript = '''
@@ -1075,8 +1074,8 @@ definition {
 
 	@priority = "4"
 	test PublishWorkflowDefinitionWithNoConnectorsAndViewErrorMessage {
-		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoConnectorsAndViewErrorMessage";
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoConnectorsAndViewErrorMessage";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -1092,8 +1091,8 @@ definition {
 
 	@priority = "4"
 	test PublishWorkflowDefinitionWithNoEndNodeAndViewErrorMessage {
-		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoEndNodeAndViewErrorMessage";
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoEndNodeAndViewErrorMessage";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -1111,8 +1110,8 @@ definition {
 
 	@priority = "4"
 	test PublishWorkflowDefinitionWithNoStartNodeAndViewErrorMessage {
-		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoStartNodeAndViewErrorMessage";
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoStartNodeAndViewErrorMessage";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
@@ -1344,14 +1343,6 @@ definition {
 			category = "Content &amp; Data",
 			portlet = "Kaleo Forms Admin");
 
-		KaleoFormsAdmin.addProcess();
-
-		KaleoFormsAdmin.addProcessDetails(
-			kfProcessDescription = "Kaleo Forms Process Description",
-			kfProcessName = "Kaleo Forms Process");
-
-		KaleoFormsAdmin.next();
-
 		KaleoFormsAdmin.addFieldSet(
 			kfFieldSetName = "Field Set Data Definition",
 			kfProcessName = "Kaleo Forms Process");
@@ -1362,6 +1353,14 @@ definition {
 			fieldName = "Text");
 
 		KaleoFormsAdmin.saveFieldSet();
+
+		KaleoFormsAdmin.addProcess();
+
+		KaleoFormsAdmin.addProcessDetails(
+			kfProcessDescription = "Kaleo Forms Process Description",
+			kfProcessName = "Kaleo Forms Process");
+
+		KaleoFormsAdmin.next();
 
 		KaleoFormsAdmin.chooseFieldSet(
 			kfFieldSetName = "Field Set Data Definition",

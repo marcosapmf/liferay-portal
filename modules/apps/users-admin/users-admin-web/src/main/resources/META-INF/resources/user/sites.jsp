@@ -91,7 +91,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 		rowIdProperty="friendlyURL"
 	>
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="name"
 		>
 			<liferay-staging:descriptive-name
@@ -110,7 +110,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 		%>
 
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="roles"
 			value="<%= HtmlUtil.escape(UsersAdminUtil.getUserColumnText(locale, userGroupRoles, UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR, userGroupRolesCount)) %>"
 		/>
@@ -145,7 +145,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		var handleOnSelect = A.one('#<portlet:namespace />selectSiteLink').on(
 			'click',
-			function (event) {
+			(event) => {
 				var searchContainerData = searchContainer.getData();
 
 				if (!searchContainerData.length) {
@@ -183,7 +183,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 						uri: '<%= groupSelectorURL.toString() %>',
 					},
-					function (event) {
+					(event) => {
 						var entityId = event.entityid;
 
 						var rowColumns = [];
@@ -217,7 +217,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		var handleOnModifyLink = searchContainerContentBox.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				var link = event.currentTarget;
 
 				var rowId = link.attr('data-rowId');
@@ -251,8 +251,8 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 		var handleEnableRemoveSite = Liferay.on(
 			'<portlet:namespace />enableRemovedSites',
-			function (event) {
-				event.selectors.each(function (item, index, collection) {
+			(event) => {
+				event.selectors.each((item, index, collection) => {
 					var groupId = item.attr('data-entityid');
 
 					if (deleteGroupIds.indexOf(groupId) != -1) {
@@ -298,7 +298,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			rowIdProperty="friendlyURL"
 		>
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="name"
 				value="<%= HtmlUtil.escape(inheritedSite.getDescriptiveName(locale)) %>"
 			/>
@@ -314,7 +314,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			%>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="roles"
 				value="<%= HtmlUtil.escape(UsersAdminUtil.getUserColumnText(locale, inheritedRoles, UsersAdmin.USER_GROUP_ROLE_TITLE_ACCESSOR, inheritedRolesCount)) %>"
 			/>

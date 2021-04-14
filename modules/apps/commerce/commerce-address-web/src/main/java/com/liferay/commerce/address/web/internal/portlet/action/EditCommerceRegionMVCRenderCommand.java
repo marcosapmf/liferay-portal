@@ -15,11 +15,13 @@
 package com.liferay.commerce.address.web.internal.portlet.action;
 
 import com.liferay.commerce.address.web.internal.display.context.CommerceRegionsDisplayContext;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.exception.NoSuchRegionException;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -37,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_COUNTRY,
-		"mvc.command.name=editCommerceRegion"
+		"mvc.command.name=/commerce_country/edit_commerce_region"
 	},
 	service = MVCRenderCommand.class
 )
@@ -51,8 +53,8 @@ public class EditCommerceRegionMVCRenderCommand implements MVCRenderCommand {
 		try {
 			CommerceRegionsDisplayContext commerceRegionsDisplayContext =
 				new CommerceRegionsDisplayContext(
-					_actionHelper, _commerceRegionService, renderRequest,
-					renderResponse);
+					_actionHelper, _portletResourcePermission, _regionService,
+					renderRequest, renderResponse);
 
 			renderRequest.setAttribute(
 				WebKeys.PORTLET_DISPLAY_CONTEXT, commerceRegionsDisplayContext);
@@ -67,13 +69,18 @@ public class EditCommerceRegionMVCRenderCommand implements MVCRenderCommand {
 			}
 		}
 
-		return "/edit_region.jsp";
+		return "/edit_commerce_region.jsp";
 	}
 
 	@Reference
 	private ActionHelper _actionHelper;
 
+	@Reference(
+		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_ADDRESS + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
+
 	@Reference
-	private CommerceRegionService _commerceRegionService;
+	private RegionService _regionService;
 
 }

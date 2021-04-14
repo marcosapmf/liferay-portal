@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
 import com.liferay.portal.search.elasticsearch.cross.cluster.replication.internal.configuration.CrossClusterReplicationConfiguration;
+import com.liferay.portal.search.elasticsearch.cross.cluster.replication.internal.helper.CrossClusterReplicationHelperImpl;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.engine.adapter.index.GetIndexIndexRequest;
 import com.liferay.portal.search.engine.adapter.index.GetIndexIndexResponse;
@@ -54,18 +55,24 @@ public class CrossClusterReplicationConfigurationModelListener
 	public void onAfterSave(String pid, Dictionary<String, Object> properties)
 		throws ConfigurationModelListenerException {
 
-		String remoteClusterAlias = (String)properties.get(
-			"remoteClusterAlias");
+		if (GetterUtil.getBoolean(properties.get("ccrEnabled"))) {
+			if (GetterUtil.getBoolean(
+					properties.get("automaticReplicationEnabled"))) {
 
-		if ((Boolean)properties.get("ccrEnabled")) {
-			String[] ccrLocalClusterConnectionConfigurations =
-				GetterUtil.getStringValues(
-					properties.get("ccrLocalClusterConnectionConfigurations"));
+				String remoteClusterAlias = (String)properties.get(
+					"remoteClusterAlias");
 
-			_validateCCRLocalClusterConnectionConfigurations(
-				ccrLocalClusterConnectionConfigurations, properties);
+				addRemoteAndFollowIndexes(remoteClusterAlias, properties);
+			}
 
-			addRemoteAndFollowIndexes(remoteClusterAlias, properties);
+			if (_log.isInfoEnabled()) {
+				_log.info("Read operations from local clusters are enabled");
+			}
+		}
+		else {
+			if (_log.isInfoEnabled()) {
+				_log.info("Read operations from local clusters are disabled");
+			}
 		}
 	}
 
@@ -73,14 +80,11 @@ public class CrossClusterReplicationConfigurationModelListener
 	public void onBeforeSave(String pid, Dictionary<String, Object> properties)
 		throws ConfigurationModelListenerException {
 
-		String[] excludedIndexes = GetterUtil.getStringValues(
-			properties.get("excludedIndexes"));
-		boolean ccrEnabled = (Boolean)properties.get("ccrEnabled");
+		boolean ccrEnabled = GetterUtil.getBoolean(
+			properties.get("ccrEnabled"));
 		String[] ccrLocalClusterConnectionConfigurations =
 			GetterUtil.getStringValues(
 				properties.get("ccrLocalClusterConnectionConfigurations"));
-		String remoteClusterAlias = (String)properties.get(
-			"remoteClusterAlias");
 
 		if (ccrEnabled) {
 			_validateCCRLocalClusterConnectionConfigurations(
@@ -111,25 +115,39 @@ public class CrossClusterReplicationConfigurationModelListener
 		Dictionary<String, Object> previousProperties =
 			configuration.getProperties();
 
+		boolean automaticReplicationEnabled = GetterUtil.getBoolean(
+			properties.get("automaticReplicationEnabled"));
+		String[] excludedIndexes = GetterUtil.getStringValues(
+			properties.get("excludedIndexes"));
+		boolean previousAutomaticReplicationEnabled = GetterUtil.getBoolean(
+			previousProperties.get("automaticReplicationEnabled"), true);
 		String[] previousExcludedIndexes = GetterUtil.getStringValues(
 			previousProperties.get("excludedIndexes"));
-		boolean previousCcrEnabled = (Boolean)previousProperties.get(
-			"ccrEnabled");
+		boolean previousCcrEnabled = GetterUtil.getBoolean(
+			previousProperties.get("ccrEnabled"));
 		String[] previousCcrLocalClusterConnectionConfigurations =
 			GetterUtil.getStringValues(
 				previousProperties.get(
 					"ccrLocalClusterConnectionConfigurations"));
 		String previousRemoteClusterAlias = (String)previousProperties.get(
 			"remoteClusterAlias");
+		String previousRemoteClusterSeedNodeTransportAddress =
+			(String)previousProperties.get(
+				"remoteClusterSeedNodeTransportAddress");
+		String remoteClusterAlias = (String)properties.get(
+			"remoteClusterAlias");
+		String remoteClusterSeedNodeTransportAddress = (String)properties.get(
+			"remoteClusterSeedNodeTransportAddress");
 
-		if (previousCcrEnabled &&
-			(!ccrEnabled ||
-			 (ccrEnabled &&
-			  (!equals(
-				  previousCcrLocalClusterConnectionConfigurations,
-				  ccrLocalClusterConnectionConfigurations) ||
-			   !previousRemoteClusterAlias.equals(remoteClusterAlias) ||
-			   !equals(previousExcludedIndexes, excludedIndexes))))) {
+		if (previousCcrEnabled && previousAutomaticReplicationEnabled &&
+			(!ccrEnabled || !automaticReplicationEnabled ||
+			 !equals(
+				 previousCcrLocalClusterConnectionConfigurations,
+				 ccrLocalClusterConnectionConfigurations) ||
+			 !previousRemoteClusterAlias.equals(remoteClusterAlias) ||
+			 !previousRemoteClusterSeedNodeTransportAddress.equals(
+				 remoteClusterSeedNodeTransportAddress) ||
+			 !equals(previousExcludedIndexes, excludedIndexes))) {
 
 			unfollowIndexesAndDeleteRemoteCluster(
 				previousCcrLocalClusterConnectionConfigurations,
@@ -139,6 +157,21 @@ public class CrossClusterReplicationConfigurationModelListener
 
 	protected void addRemoteAndFollowIndexes(
 		String remoteClusterAlias, Dictionary<String, Object> properties) {
+
+		if (_log.isInfoEnabled()) {
+			_log.info("Creating follower indexes");
+		}
+
+		Log log = LogFactoryUtil.getLog(
+			CrossClusterReplicationHelperImpl.class);
+
+		if (!log.isInfoEnabled()) {
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					"For more information, enable INFO logs on " +
+						CrossClusterReplicationHelperImpl.class);
+			}
+		}
 
 		String[] excludedIndexes = GetterUtil.getStringValues(
 			properties.get("excludedIndexes"));
@@ -215,6 +248,10 @@ public class CrossClusterReplicationConfigurationModelListener
 		String[] ccrLocalClusterConnectionConfigurations,
 		String remoteClusterAlias, String[] excludedIndexes) {
 
+		if (_log.isInfoEnabled()) {
+			_log.info("Deleting follower indexes");
+		}
+
 		for (String ccrLocalClusterConnectionConfiguration :
 				ccrLocalClusterConnectionConfigurations) {
 
@@ -264,11 +301,14 @@ public class CrossClusterReplicationConfigurationModelListener
 
 	private String _getMessage(String key, Object... arguments) {
 		try {
-			ResourceBundle resourceBundle = _getResourceBundle();
-
-			return ResourceBundleUtil.getString(resourceBundle, key, arguments);
+			return ResourceBundleUtil.getString(
+				_getResourceBundle(), key, arguments);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return null;
 		}
 	}

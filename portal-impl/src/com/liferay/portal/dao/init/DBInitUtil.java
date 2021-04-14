@@ -65,50 +65,9 @@ public class DBInitUtil {
 		dbManager.setDB(db);
 
 		try (Connection connection = _dataSource.getConnection()) {
-			if (_checkDefaultRelease(connection)) {
-				_setSupportsStringCaseSensitiveQuery(db, connection);
+			_init(db, connection);
 
-				return;
-			}
-
-			try {
-				db.runSQL(
-					connection,
-					"alter table Release_ add mvccVersion LONG default 0 not " +
-						"null");
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception.getMessage());
-				}
-			}
-
-			try {
-				db.runSQL(
-					connection,
-					"alter table Release_ add schemaVersion VARCHAR(75) null");
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception.getMessage());
-				}
-			}
-
-			if (_checkDefaultRelease(connection)) {
-				_setSupportsStringCaseSensitiveQuery(db, connection);
-
-				return;
-			}
-
-			// Create tables and populate with default data
-
-			if (GetterUtil.getBoolean(
-					PropsUtil.get(PropsKeys.SCHEMA_RUN_ENABLED))) {
-
-				_createTablesAndPopulate(db, connection);
-
-				_setSupportsStringCaseSensitiveQuery(db, connection);
-			}
+			DBPartitionUtil.setDefaultCompanyId(connection);
 		}
 	}
 
@@ -205,6 +164,52 @@ public class DBInitUtil {
 		}
 
 		return false;
+	}
+
+	private static void _init(DB db, Connection connection) throws Exception {
+		if (_checkDefaultRelease(connection)) {
+			_setSupportsStringCaseSensitiveQuery(db, connection);
+
+			return;
+		}
+
+		try {
+			db.runSQL(
+				connection,
+				"alter table Release_ add mvccVersion LONG default 0 not null");
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception.getMessage());
+			}
+		}
+
+		try {
+			db.runSQL(
+				connection,
+				"alter table Release_ add schemaVersion VARCHAR(75) null");
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception.getMessage());
+			}
+		}
+
+		if (_checkDefaultRelease(connection)) {
+			_setSupportsStringCaseSensitiveQuery(db, connection);
+
+			return;
+		}
+
+		// Create tables and populate with default data
+
+		if (GetterUtil.getBoolean(
+				PropsUtil.get(PropsKeys.SCHEMA_RUN_ENABLED))) {
+
+			_createTablesAndPopulate(db, connection);
+
+			_setSupportsStringCaseSensitiveQuery(db, connection);
+		}
 	}
 
 	private static void _runSQLTemplate(

@@ -21,17 +21,17 @@ import com.liferay.commerce.inventory.exception.CommerceInventoryWarehouseNameEx
 import com.liferay.commerce.inventory.exception.MVCCException;
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
-import com.liferay.commerce.model.CommerceCountry;
 import com.liferay.commerce.model.CommerceGeocoder;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
-import com.liferay.commerce.service.CommerceCountryLocalService;
-import com.liferay.commerce.service.CommerceRegionLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.CountryLocalService;
+import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -60,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.COMMERCE_INVENTORY_WAREHOUSE,
-		"mvc.command.name=editCommerceInventoryWarehouse"
+		"mvc.command.name=/commerce_inventory_warehouse/edit_commerce_inventory_warehouse"
 	},
 	service = MVCActionCommand.class
 )
@@ -150,7 +150,9 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 				SessionErrors.add(actionRequest, throwable.getClass());
 
 				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "editCommerceInventoryWarehouse");
+					"mvcRenderCommandName",
+					"/commerce_inventory_warehouse" +
+						"/edit_commerce_inventory_warehouse");
 			}
 		}
 	}
@@ -166,19 +168,18 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 			_commerceInventoryWarehouseService.getCommerceInventoryWarehouse(
 				commerceInventoryWarehouseId);
 
-		CommerceCountry commerceCountry = _getCommerceCountry(
-			_portal.getScopeGroupId(actionRequest),
+		Country country = _getCountry(
+			_portal.getCompanyId(actionRequest),
 			commerceInventoryWarehouse.getCountryTwoLettersISOCode());
 
-		CommerceRegion commerceRegion = _getCommerceRegion(
-			commerceCountry.getCommerceCountryId(),
+		Region region = _getRegion(
+			country.getCountryId(),
 			commerceInventoryWarehouse.getCommerceRegionCode());
 
 		double[] coordinates = _commerceGeocoder.getCoordinates(
 			commerceInventoryWarehouse.getStreet1(),
 			commerceInventoryWarehouse.getCity(),
-			commerceInventoryWarehouse.getZip(), commerceRegion,
-			commerceCountry);
+			commerceInventoryWarehouse.getZip(), region, country);
 
 		_commerceInventoryWarehouseService.geolocateCommerceInventoryWarehouse(
 			commerceInventoryWarehouseId, coordinates[0], coordinates[1]);
@@ -257,9 +258,10 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 			commerceInventoryWarehouse =
 				_commerceInventoryWarehouseService.
 					addCommerceInventoryWarehouse(
-						name, description, active, street1, street2, street3,
-						city, zip, commerceRegionCode, commerceCountryCode,
-						latitude, longitude, null, serviceContext);
+						null, name, description, active, street1, street2,
+						street3, city, zip, commerceRegionCode,
+						commerceCountryCode, latitude, longitude,
+						serviceContext);
 
 			actionRequest.setAttribute(
 				"commerceInventoryWarehouseId",
@@ -278,20 +280,16 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 		return commerceInventoryWarehouse;
 	}
 
-	private CommerceCountry _getCommerceCountry(
-			long groupId, String countryCode)
+	private Country _getCountry(long companyId, String countryCode)
 		throws PortalException {
 
-		return _commerceCountryLocalService.getCommerceCountry(
-			groupId, countryCode);
+		return _countryLocalService.getCountryByA2(companyId, countryCode);
 	}
 
-	private CommerceRegion _getCommerceRegion(
-			long commerceCountryId, String regionCode)
+	private Region _getRegion(long commerceCountryId, String regionCode)
 		throws PortalException {
 
-		return _commerceRegionLocalService.getCommerceRegion(
-			commerceCountryId, regionCode);
+		return _regionLocalService.getRegion(commerceCountryId, regionCode);
 	}
 
 	private static final TransactionConfig _transactionConfig =
@@ -302,9 +300,6 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 	private CommerceChannelRelService _commerceChannelRelService;
 
 	@Reference
-	private CommerceCountryLocalService _commerceCountryLocalService;
-
-	@Reference
 	private CommerceGeocoder _commerceGeocoder;
 
 	@Reference
@@ -312,10 +307,13 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 		_commerceInventoryWarehouseService;
 
 	@Reference
-	private CommerceRegionLocalService _commerceRegionLocalService;
+	private CountryLocalService _countryLocalService;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RegionLocalService _regionLocalService;
 
 	private class CommerceInventoryWarehouseCallable
 		implements Callable<Object> {

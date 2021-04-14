@@ -16,6 +16,10 @@
 
 <%@ include file="/init.jsp" %>
 
+<%
+Map<String, Object> componentContext = journalDisplayContext.getComponentContext();
+%>
+
 <liferay-ui:search-container
 	emptyResultsMessage="no-web-content-was-found"
 	searchContainer="<%= journalDisplayContext.getSearchContainer() %>"
@@ -62,17 +66,17 @@
 
 				<liferay-ui:search-container-column-text>
 					<clay:dropdown-actions
-						defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+						additionalProps='<%=
+							HashMapBuilder.<String, Object>put(
+								"trashEnabled", componentContext.get("trashEnabled")
+							).build()
+						%>'
 						dropdownItems="<%= journalDisplayContext.getArticleVersionActionDropdownItems(articleVersion) %>"
+						propsTransformer="js/ElementsDefaultPropsTransformer"
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:when>
 			<c:when test='<%= Objects.equals(journalDisplayContext.getDisplayStyle(), "icon") %>'>
-
-				<%
-				row.setCssClass("entry-card lfr-asset-item");
-				%>
-
 				<liferay-ui:search-container-column-text>
 					<clay:vertical-card
 						verticalCard="<%= new JournalArticleVersionVerticalCard(articleVersion, renderRequest, renderResponse, searchContainer.getRowChecker(), assetDisplayPageFriendlyURLProvider, trashHelper) %>"
@@ -86,7 +90,7 @@
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 					value="<%= HtmlUtil.escape(articleVersion.getTitle(locale)) %>"
 				/>
@@ -121,8 +125,13 @@
 
 				<liferay-ui:search-container-column-text>
 					<clay:dropdown-actions
-						defaultEventHandler="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
+						additionalProps='<%=
+							HashMapBuilder.<String, Object>put(
+								"trashEnabled", componentContext.get("trashEnabled")
+							).build()
+						%>'
 						dropdownItems="<%= journalDisplayContext.getArticleVersionActionDropdownItems(articleVersion) %>"
+						propsTransformer="js/ElementsDefaultPropsTransformer"
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:when>
@@ -135,9 +144,3 @@
 		searchContainer="<%= searchContainer %>"
 	/>
 </liferay-ui:search-container>
-
-<liferay-frontend:component
-	componentId="<%= JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER %>"
-	context="<%= journalDisplayContext.getComponentContext() %>"
-	module="js/ElementsDefaultEventHandler.es"
-/>

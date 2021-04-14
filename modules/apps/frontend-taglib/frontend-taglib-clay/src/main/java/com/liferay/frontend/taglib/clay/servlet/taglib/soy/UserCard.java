@@ -19,6 +19,10 @@ package com.liferay.frontend.taglib.clay.servlet.taglib.soy;
  */
 public interface UserCard extends BaseClayCard {
 
+	public default String getIcon() {
+		return null;
+	}
+
 	public default String getImageAlt() {
 		return null;
 	}

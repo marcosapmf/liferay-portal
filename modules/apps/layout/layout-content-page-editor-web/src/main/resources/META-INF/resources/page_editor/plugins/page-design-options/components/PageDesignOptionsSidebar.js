@@ -12,6 +12,7 @@
  * details.
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayCard from '@clayui/card';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
@@ -39,6 +40,11 @@ export default function PageDesignOptionsSidebar() {
 	const selectedStyleBook = useStyleBook();
 	const setSelectedStyleBook = useSetStyleBook();
 
+	const [defaultStyleBook, setDefaultStyleBook] = useState({
+		imagePreviewURL: config.defaultStyleBookEntryImagePreviewURL,
+		name: config.defaultStyleBookEntryName,
+	});
+
 	const masterLayoutPlid = useSelector(
 		(state) => state.masterLayout?.masterLayoutPlid
 	);
@@ -50,8 +56,24 @@ export default function PageDesignOptionsSidebar() {
 					masterLayoutPlid: masterLayout.masterLayoutPlid,
 				})
 			).then(({styleBook}) => {
-				if (styleBook) {
-					setSelectedStyleBook(styleBook);
+				const {
+					defaultStyleBookEntryImagePreviewURL,
+					defaultStyleBookEntryName,
+					styleBookEntryId,
+					tokenValues,
+				} = styleBook;
+
+				setDefaultStyleBook({
+					imagePreviewURL: defaultStyleBookEntryImagePreviewURL,
+					name: defaultStyleBookEntryName,
+				});
+
+				// Changing the master layout should only affect the selected stylebook
+				// only if styleBookEntryId is equal to 0 which means that the stylebook is
+				// inherited
+
+				if (styleBookEntryId === '0') {
+					setSelectedStyleBook({styleBookEntryId, tokenValues});
 				}
 			});
 		},
@@ -59,17 +81,12 @@ export default function PageDesignOptionsSidebar() {
 	);
 
 	const onSelectStyleBook = useCallback(
-		(styleBook) => {
+		(styleBookEntryId) => {
 			LayoutService.changeStyleBookEntry({
 				onNetworkStatus: () => {},
-				styleBookEntryId: styleBook.styleBookEntryId,
-			}).then((styleBookWithTokens) => {
-				setSelectedStyleBook((selectedStyleBook) => ({
-					defaultStyleBookEntryName:
-						selectedStyleBook.defaultStyleBookEntryName,
-					styleBookEntryId: styleBook.styleBookEntryId,
-					tokenValues: styleBookWithTokens.tokenValues,
-				}));
+				styleBookEntryId,
+			}).then(({tokenValues}) => {
+				setSelectedStyleBook({styleBookEntryId, tokenValues});
 			});
 		},
 		[setSelectedStyleBook]
@@ -93,10 +110,12 @@ export default function PageDesignOptionsSidebar() {
 			getTabs(
 				masterLayoutPlid,
 				selectedStyleBook,
+				defaultStyleBook,
 				onSelectMasterLayout,
 				onSelectStyleBook
 			),
 		[
+			defaultStyleBook,
 			masterLayoutPlid,
 			onSelectMasterLayout,
 			onSelectStyleBook,
@@ -163,102 +182,104 @@ export default function PageDesignOptionsSidebar() {
 	);
 }
 
-const OptionList = ({options = [], icon}) => (
-	<ul className="list-unstyled mt-3">
-		{options.map(
-			({imagePreviewURL, isActive, name, onClick, subtitle}, index) => (
-				<li key={index}>
-					<ClayCard
-						aria-label={name}
-						className={classNames({
-							'page-editor__sidebar__design-options__tab-card--active': isActive,
-						})}
-						displayType="file"
-						onClick={() => {
-							if (!isActive) {
-								onClick();
-							}
-						}}
-						selectable
-					>
-						<ClayCard.AspectRatio
-							className="card-item-first"
-							containerAspectRatio="16/9"
+const OptionList = ({options = [], icon, type}) => {
+	if (type === OPTIONS_TYPES.styleBook && !config.styleBookEnabled) {
+		return (
+			<ClayAlert className="mt-3" displayType="info">
+				{Liferay.Language.get(
+					'this-page-is-using-a-different-theme-than-the-one-set-for-public-pages'
+				)}
+			</ClayAlert>
+		);
+	}
+
+	return (
+		<ul className="list-unstyled mt-3">
+			{options.map(
+				(
+					{imagePreviewURL, isActive, name, onClick, subtitle},
+					index
+				) => (
+					<li key={index}>
+						<ClayCard
+							aria-label={name}
+							className={classNames({
+								'page-editor__sidebar__design-options__tab-card--active': isActive,
+							})}
+							displayType="file"
+							onClick={() => {
+								if (!isActive) {
+									onClick();
+								}
+							}}
+							selectable
 						>
-							{imagePreviewURL ? (
-								<img
-									alt="thumbnail"
-									className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid"
-									src={imagePreviewURL}
-								/>
-							) : (
-								<div className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
-									<ClayIcon symbol={icon} />
-								</div>
-							)}
-						</ClayCard.AspectRatio>
-						<ClayCard.Body>
-							<ClayCard.Row>
-								<div className="autofit-col autofit-col-expand">
-									<section className="autofit-section">
-										<ClayCard.Description displayType="title">
-											{name}
-										</ClayCard.Description>
-										{subtitle && (
-											<ClayCard.Description displayType="subtitle">
-												{subtitle}
+							<ClayCard.AspectRatio
+								className="card-item-first"
+								containerAspectRatio="16/9"
+							>
+								{imagePreviewURL ? (
+									<img
+										alt="thumbnail"
+										className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid"
+										src={imagePreviewURL}
+									/>
+								) : (
+									<div className="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
+										<ClayIcon symbol={icon} />
+									</div>
+								)}
+							</ClayCard.AspectRatio>
+							<ClayCard.Body>
+								<ClayCard.Row>
+									<div className="autofit-col autofit-col-expand">
+										<section className="autofit-section">
+											<ClayCard.Description displayType="title">
+												{name}
 											</ClayCard.Description>
-										)}
-									</section>
-								</div>
-							</ClayCard.Row>
-						</ClayCard.Body>
-					</ClayCard>
-				</li>
-			)
-		)}
-	</ul>
-);
+											{subtitle && (
+												<ClayCard.Description displayType="subtitle">
+													{subtitle}
+												</ClayCard.Description>
+											)}
+										</section>
+									</div>
+								</ClayCard.Row>
+							</ClayCard.Body>
+						</ClayCard>
+					</li>
+				)
+			)}
+		</ul>
+	);
+};
 
 function getTabs(
 	masterLayoutPlid,
 	selectedStyleBook,
+	defaultStyleBook,
 	onSelectMasterLayout,
 	onSelectStyleBook
 ) {
 	const styleBooks = [
 		{
-			imagePreviewURL: selectedStyleBook.imagePreviewURL,
+			imagePreviewURL: defaultStyleBook.imagePreviewURL,
 			name:
 				config.layoutType === LAYOUT_TYPES.master
 					? Liferay.Language.get('default-style-book')
 					: Liferay.Language.get('inherited-from-master'),
 			styleBookEntryId: '0',
 			subtitle:
-				selectedStyleBook.defaultStyleBookEntryName ||
+				defaultStyleBook.name ||
 				Liferay.Language.get('provided-by-theme'),
 		},
 		...config.styleBooks,
 	];
 
-	const tabs = [
-		{
-			icon: 'magic',
-			label: Liferay.Language.get('style-book'),
-			options: styleBooks.map((styleBook) => ({
-				...styleBook,
-				isActive:
-					selectedStyleBook.styleBookEntryId ===
-					styleBook.styleBookEntryId,
-				onClick: () => onSelectStyleBook(styleBook),
-			})),
-			type: OPTIONS_TYPES.styleBook,
-		},
-	];
+	const tabs = [];
 
 	if (config.layoutType !== LAYOUT_TYPES.master) {
-		tabs.splice(0, 0, {
-			disabled: config.layoutType === LAYOUT_TYPES.master,
+		tabs.push({
 			icon: 'page',
 			label: Liferay.Language.get('master'),
 			options: config.masterLayouts.map((masterLayout) => ({
@@ -269,6 +290,19 @@ function getTabs(
 			type: OPTIONS_TYPES.master,
 		});
 	}
+
+	tabs.push({
+		icon: 'magic',
+		label: Liferay.Language.get('style-book'),
+		options: styleBooks.map((styleBook) => ({
+			...styleBook,
+			isActive:
+				selectedStyleBook.styleBookEntryId ===
+				styleBook.styleBookEntryId,
+			onClick: () => onSelectStyleBook(styleBook.styleBookEntryId),
+		})),
+		type: OPTIONS_TYPES.styleBook,
+	});
 
 	return tabs;
 }

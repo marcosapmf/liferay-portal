@@ -129,6 +129,10 @@ components:
                 dataDefinitionId:
                     format: int64
                     type: integer
+                dataLayoutFields:
+                    additionalProperties:
+                        type: object
+                    type: object
                 dataLayoutKey:
                     type: string
                 dataLayoutPages:
@@ -207,6 +211,12 @@ components:
                     type: string
                 readOnly:
                     type: boolean
+                scopeGroupId:
+                    format: int64
+                    type: integer
+                siteGroupId:
+                    format: int64
+                    type: integer
             type: object
         DataLayoutRow:
             properties:
@@ -266,6 +276,9 @@ components:
                 id:
                     format: int64
                     type: integer
+                status:
+                    readOnly: true
+                    type: integer
         DataRecordCollection:
             description:
                 https://www.schema.org/DataRecordCollection
@@ -316,7 +329,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.data.engine.rest.client', and version '2.0.20'."
+        'com.liferay.data.engine.rest.client', and version '3.0.0'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"

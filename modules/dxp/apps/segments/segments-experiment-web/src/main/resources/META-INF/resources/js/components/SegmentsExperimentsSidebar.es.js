@@ -54,7 +54,6 @@ function SegmentsExperimentsSidebar({
 	initialSegmentsExperiment,
 	initialSegmentsVariants,
 	initialSelectedSegmentsExperienceId = '0',
-	viewSegmentsExperimentDetailsURL,
 	winnerSegmentsVariantId,
 }) {
 	const {APIService, page} = useContext(SegmentsExperimentsContext);
@@ -65,7 +64,6 @@ function SegmentsExperimentsSidebar({
 			initialSegmentsExperiment,
 			initialSegmentsVariants,
 			initialSelectedSegmentsExperienceId,
-			viewSegmentsExperimentDetailsURL,
 			winnerSegmentsVariantId,
 		},
 		getInitialState
@@ -207,6 +205,7 @@ function SegmentsExperimentsSidebar({
 				const {
 					confidenceLevel,
 					description,
+					detailsURL,
 					editable,
 					goal,
 					name,
@@ -226,6 +225,7 @@ function SegmentsExperimentsSidebar({
 					addSegmentsExperiment({
 						confidenceLevel,
 						description,
+						detailsURL,
 						editable,
 						goal,
 						name,
@@ -364,7 +364,7 @@ function SegmentsExperimentsSidebar({
 		const body = {
 			description: experiment.description,
 			goal: experiment.goal.value,
-			goalTarget: selector,
+			goalTarget: selector && `#${selector}`,
 			name: experiment.name,
 			segmentsExperimentId: experiment.segmentsExperimentId,
 		};

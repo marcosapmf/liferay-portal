@@ -17,7 +17,6 @@ package com.liferay.poshi.core;
 import com.liferay.poshi.core.elements.PoshiElement;
 import com.liferay.poshi.core.util.OSDetector;
 import com.liferay.poshi.core.util.PropsUtil;
-import com.liferay.poshi.core.util.PropsValues;
 import com.liferay.poshi.core.util.StringUtil;
 import com.liferay.poshi.core.util.Validator;
 
@@ -58,7 +57,7 @@ public class PoshiValidation {
 	}
 
 	public static void validate() throws Exception {
-		System.out.print("Running Poshi validation...");
+		System.out.println("Start poshi validation.");
 
 		long start = System.currentTimeMillis();
 
@@ -103,8 +102,9 @@ public class PoshiValidation {
 			_throwExceptions();
 		}
 
-		System.out.println(
-			" Completed in " + (System.currentTimeMillis() - start) + "ms.");
+		long duration = System.currentTimeMillis() - start;
+
+		System.out.println("Completed poshi validation in " + duration + "ms.");
 	}
 
 	public static void validate(String testName) throws Exception {
@@ -838,7 +838,7 @@ public class PoshiValidation {
 		Element element, String filePath) {
 
 		List<String> requiredPropertyNames = new ArrayList<>(
-			PoshiProperties.getRequiredPoshiPropertiesNames());
+			PoshiContext.getRequiredPoshiPropertyNames());
 
 		List<Element> propertyElements = element.elements("property");
 
@@ -1590,7 +1590,7 @@ public class PoshiValidation {
 			Element element, String filePath, String className)
 		throws Exception {
 
-		if (PropsValues.IGNORE_ERRORS_UTIL_CLASSES) {
+		if (PoshiContext.ignoreUtilClassesErrors()) {
 			return;
 		}
 

@@ -45,9 +45,7 @@ public class DnCorrectingStoreName<E extends LiferayLdapMessageContainer>
 
 		String dnString = Strings.utf8ToString(dnBytes);
 
-		Dn dn = _getDn(dnString);
-
-		bindRequest.setDn(dn);
+		bindRequest.setDn(_getDn(dnString));
 	}
 
 	private Dn _getDn(String dnString) {
@@ -70,7 +68,9 @@ public class DnCorrectingStoreName<E extends LiferayLdapMessageContainer>
 			return new Dn(fixedDnString);
 		}
 		catch (LdapInvalidDnException ldapInvalidDnException) {
-			_log.error("Unable to convert " + dnString + " to a valid DN");
+			_log.error(
+				"Unable to convert " + dnString + " to a valid DN",
+				ldapInvalidDnException);
 
 			return Dn.EMPTY_DN;
 		}

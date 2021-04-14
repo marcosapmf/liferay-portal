@@ -15,8 +15,10 @@
 package com.liferay.commerce.subscription.web.internal.frontend;
 
 import com.liferay.commerce.constants.CommerceActionKeys;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.model.CommerceSubscriptionEntry;
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.subscription.web.internal.frontend.constants.CommerceSubscriptionDataSetConstants;
 import com.liferay.commerce.subscription.web.internal.model.SubscriptionEntry;
 import com.liferay.frontend.taglib.clay.data.set.ClayDataSetActionProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -26,7 +28,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -61,8 +63,8 @@ public class CommerceSubscriptionEntryClayDataSetActionProvider
 		SubscriptionEntry subscriptionEntry = (SubscriptionEntry)model;
 
 		return DropdownItemListBuilder.add(
-			() -> PortalPermissionUtil.contains(
-				PermissionThreadLocal.getPermissionChecker(),
+			() -> _portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
 				CommerceActionKeys.MANAGE_COMMERCE_SUBSCRIPTIONS),
 			dropdownItem -> {
 				dropdownItem.setHref(
@@ -73,8 +75,8 @@ public class CommerceSubscriptionEntryClayDataSetActionProvider
 					LanguageUtil.get(httpServletRequest, "edit"));
 			}
 		).add(
-			() -> PortalPermissionUtil.contains(
-				PermissionThreadLocal.getPermissionChecker(),
+			() -> _portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
 				CommerceActionKeys.MANAGE_COMMERCE_SUBSCRIPTIONS),
 			dropdownItem -> {
 				dropdownItem.setHref(
@@ -98,7 +100,8 @@ public class CommerceSubscriptionEntryClayDataSetActionProvider
 		portletURL.setParameter("redirect", portletURL.toString());
 
 		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "editCommerceSubscriptionEntry");
+			ActionRequest.ACTION_NAME,
+			"/commerce_subscription_entry/edit_commerce_subscription_entry");
 		portletURL.setParameter(Constants.CMD, Constants.DELETE);
 		portletURL.setParameter(
 			"commerceSubscriptionEntryId",
@@ -117,7 +120,8 @@ public class CommerceSubscriptionEntryClayDataSetActionProvider
 			PortletProvider.Action.MANAGE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceSubscriptionEntry");
+			"mvcRenderCommandName",
+			"/commerce_subscription_entry/edit_commerce_subscription_entry");
 		portletURL.setParameter(
 			"redirect", _portal.getCurrentURL(httpServletRequest));
 		portletURL.setParameter(
@@ -129,5 +133,10 @@ public class CommerceSubscriptionEntryClayDataSetActionProvider
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_SUBSCRIPTION + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

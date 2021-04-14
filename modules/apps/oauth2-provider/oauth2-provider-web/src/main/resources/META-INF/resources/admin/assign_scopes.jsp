@@ -47,8 +47,8 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 		<clay:col
 			lg="12"
 		>
-			<portlet:actionURL name="/admin/assign_scopes" var="assignScopesURL">
-				<portlet:param name="mvcRenderCommandName" value="/admin/assign_scopes" />
+			<portlet:actionURL name="/oauth2_provider/assign_scopes" var="assignScopesURL">
+				<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/assign_scopes" />
 				<portlet:param name="navigation" value="assign_scopes" />
 				<portlet:param name="backURL" value="<%= redirect %>" />
 				<portlet:param name="oAuth2ApplicationId" value="<%= String.valueOf(oAuth2Application.getOAuth2ApplicationId()) %>" />
@@ -92,8 +92,8 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 	</clay:row>
 </clay:container-fluid>
 
-<aui:script require="metal-dom/src/dom as dom">
-	AUI().use('node', 'aui-modal', function (A) {
+<aui:script sandbox="<%= true %>">
+	AUI().use('node', 'aui-modal', (A) => {
 		if (A.all('#<portlet:namespace />navGlobalScopes .panel').size() > 0) {
 			A.one('#<portlet:namespace />navScopeTypes').toggleClass(
 				'hidden',
@@ -112,7 +112,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 
 		appsAccordion.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				event.stopPropagation();
 
 				if (handle) {
@@ -138,7 +138,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 						'<%= UnicodeLanguageUtil.get(request, "choose-one-of-the-following-global-scopes-that-include-this-resource-scope") %>',
 				}).render();
 
-				modal.on('visibleChange', function (event) {
+				modal.on('visibleChange', (event) => {
 					if (event.newVal) {
 						return;
 					}
@@ -147,7 +147,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 						.querySelectorAll(
 							'#<portlet:namespace />globalAccordion .panel'
 						)
-						.forEach(function (globalAccordionPanel) {
+						.forEach((globalAccordionPanel) => {
 							globalAccordionPanel.classList.remove('hide');
 						});
 
@@ -159,7 +159,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 					);
 
 					if (navGlobalScopes && globalAccordion) {
-						dom.append(navGlobalScopes, globalAccordion);
+						navGlobalScopes.append(globalAccordion);
 					}
 				});
 
@@ -181,7 +181,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 					.querySelectorAll(
 						'#<portlet:namespace />globalAccordion .panel'
 					)
-					.forEach(function (globalAccordionPanel) {
+					.forEach((globalAccordionPanel) => {
 						globalAccordionPanel.classList.add('hide');
 					});
 
@@ -190,7 +190,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 						.querySelectorAll(
 							'#<portlet:namespace />globalAccordion .panel[data-master]'
 						)
-						.forEach(function (globalAccordionPanel) {
+						.forEach((globalAccordionPanel) => {
 							var masterScopeAliases = globalAccordionPanel.getAttribute(
 								'data-master'
 							);
@@ -211,7 +211,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 				);
 
 				if (globalAccordion && modalBody) {
-					dom.append(modalBody, globalAccordion);
+					modalBody.append(globalAccordion);
 				}
 
 				event.preventDefault();
@@ -340,7 +340,7 @@ AssignScopesDisplayContext assignScopesDisplayContext = (AssignScopesDisplayCont
 
 		<portlet:namespace />recalculateAll();
 
-		A.one('#<portlet:namespace />save').on('click', function (event) {
+		A.one('#<portlet:namespace />save').on('click', (event) => {
 			event.preventDefault();
 
 			var scopeAliases = [];

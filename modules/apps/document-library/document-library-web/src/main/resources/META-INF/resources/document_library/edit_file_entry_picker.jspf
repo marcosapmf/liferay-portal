@@ -15,12 +15,12 @@
 --%>
 
 <%
-DLFilePicker dlFilePicker = dlEditFileEntryDisplayContext.getDLFilePicker("onFilePick");
+DLFilePicker dlFilePicker = dlEditFileEntryDisplayContext.getDLFilePicker(liferayPortletResponse.getNamespace() + "onFilePick");
 %>
 
 <c:choose>
 	<c:when test="<%= dlFilePicker == null %>">
-		<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" name="file" onChange='<%= liferayPortletResponse.getNamespace() + "updateTitle();" %>' type="file">
+		<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) || windowState.equals(LiferayWindowState.POP_UP) %>" name="file" onChange='<%= liferayPortletResponse.getNamespace() + "updateFileNameAndTitle();" %>' type="file">
 			<aui:validator name="acceptFiles">
 				'<%= StringUtil.merge(dlConfiguration.fileExtensions()) %>'
 			</aui:validator>
@@ -29,16 +29,22 @@ DLFilePicker dlFilePicker = dlEditFileEntryDisplayContext.getDLFilePicker("onFil
 		</aui:input>
 	</c:when>
 	<c:otherwise>
-		<aui:field-wrapper label="file">
-			<aui:button cssClass="customized-file-button disabled" disabled="<%= true %>" name="file" value="select-file" />
+		<c:if test="<%= dlFilePicker.isCustomizedFileButtonVisible() %>">
+			<aui:field-wrapper label="file">
+				<aui:button cssClass="customized-file-button disabled" disabled="<%= true %>" name="file" value="select-file" />
 
-			<img id="<portlet:namespace />pickButtonIcon" />
+				<img class="pick-button-icon" id="<portlet:namespace />pickButtonIcon" src="<%= GetterUtil.getString(dlFilePicker.getCurrentIconURL()) %>" />
 
-			<span id="<portlet:namespace />pickButtonTitle"></span>
-		</aui:field-wrapper>
+				<span id="<portlet:namespace />pickButtonTitle"><%= GetterUtil.getString(dlFilePicker.getCurrentTitle()) %></span>
+			</aui:field-wrapper>
+		</c:if>
+
+		<%
+		PortalIncludeUtil.include(pageContext, dlFilePicker::renderFilePicker);
+		%>
 
 		<aui:script sandbox="<%= true %>">
-			var onFilePick = function (fields) {
+			window.<portlet:namespace />onFilePick = function (fields) {
 				var documentIconURL = fields['<%= dlFilePicker.getIconFieldName() %>'];
 
 				var pickButtonIcon = document.getElementById(
@@ -49,39 +55,49 @@ DLFilePicker dlFilePicker = dlEditFileEntryDisplayContext.getDLFilePicker("onFil
 					pickButtonIcon.setAttribute('src', documentIconURL);
 				}
 
-				var documentTitle = fields['<%= dlFilePicker.getTitleFieldName() %>'];
+				var title = fields['<%= dlFilePicker.getTitleFieldName() %>'];
 
 				var pickButtonTitleElement = document.getElementById(
 					'<portlet:namespace />pickButtonTitle'
 				);
 
 				if (pickButtonTitleElement) {
-					pickButtonTitleElement.innerHTML = documentTitle;
+					pickButtonTitleElement.innerHTML = title || fields['URL'];
 				}
 
 				var titleElement = document.getElementById('<portlet:namespace />title');
 
-				if (titleElement) {
-					titleElement.value = documentTitle;
+				if (titleElement && !titleElement.value) {
+					titleElement.value = title;
+				}
+
+				var fileNameElement = document.getElementById(
+					'<portlet:namespace />fileName'
+				);
+
+				var fileName = fields['<%= dlFilePicker.getFileNameFieldName() %>'];
+
+				if (fileNameElement) {
+					fileNameElement.value = fileName || '';
 				}
 
 				var documentDescription =
 					fields['<%= dlFilePicker.getDescriptionFieldName() %>'];
 
 				var documentDescriptionElement = document.getElementById(
-					'<portlet:namespace />documentDescription'
+					'<portlet:namespace />description'
 				);
 
-				if (documentDescriptionElement) {
+				if (documentDescriptionElement && !documentDescriptionElement.value) {
 					documentDescriptionElement.value = documentDescription;
 				}
 
 				var ddmFieldWrappers = document.querySelectorAll(
-					'#<portlet:namespace />fm .lfr-ddm-container .field-wrapper'
+					'#<portlet:namespace />fm .lfr-ddm-form-container .ddm-field'
 				);
 
-				Array.prototype.forEach.call(ddmFieldWrappers, function (ddmFieldWrapper) {
-					var fieldName = ddmFieldWrapper.dataset.fieldname;
+				Array.prototype.forEach.call(ddmFieldWrappers, (ddmFieldWrapper) => {
+					var fieldName = ddmFieldWrapper.dataset.fieldName;
 
 					var input = ddmFieldWrapper.querySelector('input');
 
@@ -96,11 +112,9 @@ DLFilePicker dlFilePicker = dlEditFileEntryDisplayContext.getDLFilePicker("onFil
 			var customizedFileButton = document.getElementById('<portlet:namespace />file');
 
 			if (customizedFileButton) {
-				var filePicker = new <%= dlFilePicker.getJavaScriptModuleName() %>(
-					function () {
-						Liferay.Util.toggleDisabled(customizedFileButton, false);
-					}
-				);
+				var filePicker = new <%= dlFilePicker.getJavaScriptModuleName() %>(() => {
+					Liferay.Util.toggleDisabled(customizedFileButton, false);
+				});
 
 				customizedFileButton.addEventListener(
 					'click',

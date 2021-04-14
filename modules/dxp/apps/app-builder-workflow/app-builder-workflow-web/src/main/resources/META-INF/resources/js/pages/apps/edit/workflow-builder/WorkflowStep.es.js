@@ -14,31 +14,26 @@ import {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {ClayTooltipProvider} from '@clayui/tooltip';
+import EditAppContext from 'app-builder-web/js/pages/apps/edit/EditAppContext.es';
 import classNames from 'classnames';
-import React, {useState} from 'react';
+import {sub} from 'data-engine-js-components-web/js/utils/lang.es';
+import React, {useContext, useState} from 'react';
 
 import ButtonInfo from '../../../../components/button-info/ButtonInfo.es';
+import MissingRequiredFieldsPopover from '../MissingRequiredFieldsPopover.es';
 
 const Arrow = ({addStep, selected}) => {
-	const isIE = /Trident/.test(navigator.userAgent);
-
 	return (
 		<div className={classNames('arrow ', selected && 'selected')}>
 			<ClayIcon
-				className={classNames(
-					'arrow-point icon',
-					isIE && 'arrow-point-ie'
-				)}
+				className={classNames('arrow-point icon')}
 				symbol="live"
 			/>
 
 			{selected && (
 				<ClayTooltipProvider>
 					<div
-						className={classNames(
-							'arrow-plus-button',
-							isIE && 'arrow-plus-button-ie'
-						)}
+						className={classNames('arrow-plus-button')}
 						data-tooltip-align="left"
 						data-tooltip-delay="0"
 						onClick={addStep}
@@ -53,10 +48,7 @@ const Arrow = ({addStep, selected}) => {
 				<div className="arrow-tail" />
 
 				<ClayIcon
-					className={classNames(
-						'arrow-head icon',
-						isIE && 'arrow-head-ie'
-					)}
+					className={classNames('arrow-head icon')}
 					symbol="caret-bottom"
 				/>
 			</div>
@@ -67,15 +59,25 @@ const Arrow = ({addStep, selected}) => {
 const Card = ({
 	actions,
 	errors,
+	initial,
 	isInitialOrFinalSteps,
 	name,
 	onClick,
 	selected,
 	stepInfo,
 }) => {
+	const {
+		appId,
+		config: {dataObject, formView},
+		openFormViewModal,
+		state: {app},
+		updateFormView,
+	} = useContext(EditAppContext);
 	const [active, setActive] = useState(false);
+	const [showPopover, setShowPopover] = useState(false);
 
 	const duplicatedFields = errors?.formViews?.duplicatedFields || [];
+	const {missingRequiredFields: {customField, nativeField} = {}} = formView;
 
 	const handleOnClick = (event, onClick) => {
 		event.preventDefault();
@@ -97,7 +99,7 @@ const Card = ({
 			{duplicatedFields.length > 0 && (
 				<ClayTooltipProvider>
 					<ClayIcon
-						className="tooltip-icon-error"
+						className="error tooltip-popover-icon"
 						data-tooltip-align="bottom"
 						data-tooltip-delay="0"
 						fontSize="26px"
@@ -109,6 +111,40 @@ const Card = ({
 						)}`}
 					/>
 				</ClayTooltipProvider>
+			)}
+
+			{!app.active && appId && initial && (customField || nativeField) && (
+				<MissingRequiredFieldsPopover
+					dataObjectName={dataObject.name}
+					message={{
+						custom: sub(
+							Liferay.Language.get(
+								'the-form-view-for-this-app-was-modified-and-does-not-contain-all-required-fields-for-the-x-object'
+							),
+							[dataObject.name]
+						),
+						native: sub(
+							Liferay.Language.get(
+								'the-form-view-for-this-app-was-modified-and-does-not-contain-all-native-required-fields-it-cannot-be-used-to-create-new-records-for-the-x-object'
+							),
+							[dataObject.name]
+						),
+					}}
+					nativeField={nativeField}
+					onClick={() => {
+						setShowPopover(false);
+
+						openFormViewModal(
+							dataObject.id,
+							dataObject.defaultLanguageId,
+							updateFormView,
+							formView.id
+						);
+					}}
+					setShowPopover={setShowPopover}
+					showPopover={showPopover}
+					triggerClassName="dropdown-button-asset help-cursor"
+				/>
 			)}
 
 			<div className="d-flex">
@@ -178,6 +214,7 @@ export default function WorkflowStep({
 					<Card
 						actions={actions}
 						errors={errors}
+						initial={initial}
 						isInitialOrFinalSteps={isInitialOrFinalSteps}
 						name={name}
 						onClick={onClick}

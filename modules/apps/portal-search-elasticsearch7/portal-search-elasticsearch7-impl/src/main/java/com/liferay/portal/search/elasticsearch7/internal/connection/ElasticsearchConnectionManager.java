@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.cluster.ClusterExecutor;
 import com.liferay.portal.kernel.cluster.ClusterNode;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.ccr.CrossClusterReplicationConfigurationHelper;
 import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationObserver;
@@ -114,11 +115,25 @@ public class ElasticsearchConnectionManager
 	public ElasticsearchConnection getElasticsearchConnection(
 		String connectionId) {
 
+		ElasticsearchConnection elasticsearchConnection =
+			_elasticsearchConnections.get(connectionId);
+
 		if (_log.isInfoEnabled()) {
-			_log.info("Getting connection with ID: " + connectionId);
+			if (elasticsearchConnection != null) {
+				_log.info("Returning connection with ID: " + connectionId);
+			}
+			else {
+				_log.info(
+					"Connection not found. Returning null for ID: " +
+						connectionId);
+			}
 		}
 
-		return _elasticsearchConnections.get(connectionId);
+		return elasticsearchConnection;
+	}
+
+	public Collection<ElasticsearchConnection> getElasticsearchConnections() {
+		return _elasticsearchConnections.values();
 	}
 
 	public String getLocalClusterConnectionId() {
@@ -250,6 +265,22 @@ public class ElasticsearchConnectionManager
 		}
 	}
 
+	protected ProxyConfig createProxyConfig() {
+		ProxyConfig.Builder proxyConfigBuilder = ProxyConfig.builder(http);
+
+		return proxyConfigBuilder.networkAddresses(
+			elasticsearchConfigurationWrapper.networkHostAddresses()
+		).host(
+			elasticsearchConfigurationWrapper.proxyHost()
+		).password(
+			elasticsearchConfigurationWrapper.proxyPassword()
+		).port(
+			elasticsearchConfigurationWrapper.proxyPort()
+		).userName(
+			elasticsearchConfigurationWrapper.proxyHost()
+		).build();
+	}
+
 	@Deactivate
 	protected void deactivate() {
 		elasticsearchConfigurationWrapper.unregister(this);
@@ -267,12 +298,16 @@ public class ElasticsearchConnectionManager
 	protected ElasticsearchConnection getElasticsearchConnection(
 		String connectionId, boolean preferLocalCluster) {
 
+		if (_log.isInfoEnabled()) {
+			_log.info("Connection requested for ID: " + connectionId);
+		}
+
 		if (!Validator.isBlank(connectionId)) {
 			if (_log.isInfoEnabled()) {
 				_log.info("Getting connection with ID: " + connectionId);
 			}
 
-			return _elasticsearchConnections.get(connectionId);
+			return getElasticsearchConnection(connectionId);
 		}
 
 		if (operationModeResolver.isDevelopmentModeEnabled()) {
@@ -282,7 +317,7 @@ public class ElasticsearchConnectionManager
 						" connection");
 			}
 
-			return _elasticsearchConnections.get(
+			return getElasticsearchConnection(
 				ConnectionConstants.SIDECAR_CONNECTION_ID);
 		}
 
@@ -296,7 +331,7 @@ public class ElasticsearchConnectionManager
 							localClusterConnectionId);
 				}
 
-				return _elasticsearchConnections.get(localClusterConnectionId);
+				return getElasticsearchConnection(localClusterConnectionId);
 			}
 		}
 
@@ -314,7 +349,7 @@ public class ElasticsearchConnectionManager
 					remoteClusterConnectionId);
 		}
 
-		return _elasticsearchConnections.get(remoteClusterConnectionId);
+		return getElasticsearchConnection(remoteClusterConnectionId);
 	}
 
 	@Reference(unbind = "-")
@@ -332,6 +367,9 @@ public class ElasticsearchConnectionManager
 	@Reference
 	protected volatile ElasticsearchConfigurationWrapper
 		elasticsearchConfigurationWrapper;
+
+	@Reference
+	protected Http http;
 
 	@Reference
 	protected OperationModeResolver operationModeResolver;
@@ -352,6 +390,8 @@ public class ElasticsearchConnectionManager
 			elasticsearchConfigurationWrapper.networkHostAddresses()
 		).password(
 			elasticsearchConfigurationWrapper.password()
+		).proxyConfig(
+			createProxyConfig()
 		).truststorePassword(
 			elasticsearchConfigurationWrapper.truststorePassword()
 		).truststorePath(

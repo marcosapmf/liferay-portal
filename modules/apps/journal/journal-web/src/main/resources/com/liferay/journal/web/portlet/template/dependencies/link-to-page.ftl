@@ -2,6 +2,6 @@
 
 <#assign variableName = name + ".getFriendlyUrl()" />
 
-<a href="${getVariableReferenceCode(variableName)}">
+<a data-senna-off="true" href="${getVariableReferenceCode(variableName)}">
 	${label}
 </a>

@@ -14,8 +14,8 @@
 
 package com.liferay.headless.commerce.machine.learning.internal.resource.v1_0;
 
-import com.liferay.commerce.machine.learning.forecast.model.AssetCategoryCommerceMLForecast;
-import com.liferay.commerce.machine.learning.forecast.service.AssetCategoryCommerceMLForecastService;
+import com.liferay.commerce.machine.learning.forecast.AssetCategoryCommerceMLForecast;
+import com.liferay.commerce.machine.learning.forecast.AssetCategoryCommerceMLForecastManager;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.AccountCategoryForecast;
 import com.liferay.headless.commerce.machine.learning.internal.constants.CommerceMLForecastConstants;
 import com.liferay.headless.commerce.machine.learning.internal.dto.v1_0.converter.AccountCategoryForecastDTOConverter;
@@ -27,11 +27,15 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -48,6 +52,19 @@ import org.osgi.service.component.annotations.ServiceScope;
 )
 public class AccountCategoryForecastResourceImpl
 	extends BaseAccountCategoryForecastResourceImpl {
+
+	@Override
+	public void create(
+			Collection<AccountCategoryForecast> accountCategoryForecasts,
+			Map<String, Serializable> parameters)
+		throws Exception {
+
+		for (AccountCategoryForecast accountCategoryForecast :
+				accountCategoryForecasts) {
+
+			_createItem(accountCategoryForecast);
+		}
+	}
 
 	@Override
 	public Page<AccountCategoryForecast>
@@ -83,7 +100,7 @@ public class AccountCategoryForecastResourceImpl
 		long[] assetCategoryIds = ArrayUtil.toArray(categoryIds);
 
 		List<AssetCategoryCommerceMLForecast> assetCategoryCommerceMLForecasts =
-			_assetCategoryCommerceMLForecastService.
+			_assetCategoryCommerceMLForecastManager.
 				getMonthlyRevenueAssetCategoryCommerceMLForecasts(
 					contextCompany.getCompanyId(), assetCategoryIds,
 					ArrayUtil.toLongArray(commerceAccountIds), startDate,
@@ -91,7 +108,7 @@ public class AccountCategoryForecastResourceImpl
 					pagination.getStartPosition(), pagination.getEndPosition());
 
 		long totalItems =
-			_assetCategoryCommerceMLForecastService.
+			_assetCategoryCommerceMLForecastManager.
 				getMonthlyRevenueAssetCategoryCommerceMLForecastsCount(
 					contextCompany.getCompanyId(), assetCategoryIds,
 					ArrayUtil.toLongArray(commerceAccountIds), startDate,
@@ -100,6 +117,39 @@ public class AccountCategoryForecastResourceImpl
 		return Page.of(
 			_toAccountCategoryForecasts(assetCategoryCommerceMLForecasts),
 			pagination, totalItems);
+	}
+
+	private void _createItem(AccountCategoryForecast accountCategoryForecast)
+		throws Exception {
+
+		AssetCategoryCommerceMLForecast assetCategoryCommerceMLForecast =
+			_assetCategoryCommerceMLForecastManager.create();
+
+		if (accountCategoryForecast.getActual() != null) {
+			assetCategoryCommerceMLForecast.setActual(
+				accountCategoryForecast.getActual());
+		}
+
+		assetCategoryCommerceMLForecast.setAssetCategoryId(
+			accountCategoryForecast.getCategory());
+		assetCategoryCommerceMLForecast.setCommerceAccountId(
+			accountCategoryForecast.getAccount());
+		assetCategoryCommerceMLForecast.setCompanyId(
+			contextCompany.getCompanyId());
+		assetCategoryCommerceMLForecast.setForecast(
+			accountCategoryForecast.getForecast());
+		assetCategoryCommerceMLForecast.setForecastLowerBound(
+			accountCategoryForecast.getForecastLowerBound());
+		assetCategoryCommerceMLForecast.setForecastUpperBound(
+			accountCategoryForecast.getForecastUpperBound());
+		assetCategoryCommerceMLForecast.setPeriod("month");
+		assetCategoryCommerceMLForecast.setScope("asset-category");
+		assetCategoryCommerceMLForecast.setTarget("revenue");
+		assetCategoryCommerceMLForecast.setTimestamp(
+			accountCategoryForecast.getTimestamp());
+
+		_assetCategoryCommerceMLForecastManager.
+			addAssetCategoryCommerceMLForecast(assetCategoryCommerceMLForecast);
 	}
 
 	private List<AccountCategoryForecast> _toAccountCategoryForecasts(
@@ -133,8 +183,8 @@ public class AccountCategoryForecastResourceImpl
 		_accountCategoryForecastDTOConverter;
 
 	@Reference
-	private AssetCategoryCommerceMLForecastService
-		_assetCategoryCommerceMLForecastService;
+	private AssetCategoryCommerceMLForecastManager
+		_assetCategoryCommerceMLForecastManager;
 
 	@Reference
 	private CommerceAccountPermissionHelper _commerceAccountPermissionHelper;

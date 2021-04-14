@@ -385,6 +385,14 @@ public class DLFileEntryTypeLocalServiceWrapper
 	}
 
 	@Override
+	public DLFileEntryType fetchDataDefinitionFileEntryType(
+		long groupId, long dataDefinitionId) {
+
+		return _dlFileEntryTypeLocalService.fetchDataDefinitionFileEntryType(
+			groupId, dataDefinitionId);
+	}
+
+	@Override
 	public DLFileEntryType fetchDLFileEntryType(long fileEntryTypeId) {
 		return _dlFileEntryTypeLocalService.fetchDLFileEntryType(
 			fileEntryTypeId);
@@ -606,6 +614,10 @@ public class DLFileEntryTypeLocalServiceWrapper
 			groupId, fileEntryTypeKey);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
 	@Override
 	public java.util.List<DLFileEntryType> getFileEntryTypes(
 			long ddmStructureId)

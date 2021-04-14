@@ -1018,6 +1018,7 @@ public abstract class BaseDocumentResourceTestCase {
 
 		Map<String, File> multipartFiles = getMultipartFiles();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Document patchDocument = documentResource.patchDocument(
 			postDocument.getId(), randomPatchDocument, multipartFiles);
 
@@ -1091,6 +1092,13 @@ public abstract class BaseDocumentResourceTestCase {
 
 		return documentResource.postSiteDocument(
 			testGroup.getGroupId(), randomDocument(), getMultipartFiles());
+	}
+
+	@Test
+	public void testGetDocumentRenderedContentByDisplayPageDisplayPageKey()
+		throws Exception {
+
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -1793,6 +1801,14 @@ public abstract class BaseDocumentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("renderedContents", additionalAssertFieldName)) {
+				if (document.getRenderedContents() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("sizeInBytes", additionalAssertFieldName)) {
 				if (document.getSizeInBytes() == null) {
 					valid = false;
@@ -2198,6 +2214,17 @@ public abstract class BaseDocumentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("renderedContents", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						document1.getRenderedContents(),
+						document2.getRenderedContents())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("sizeInBytes", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						document1.getSizeInBytes(),
@@ -2594,6 +2621,11 @@ public abstract class BaseDocumentResourceTestCase {
 		}
 
 		if (entityFieldName.equals("relatedContents")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("renderedContents")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

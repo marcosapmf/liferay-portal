@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletApp;
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -185,6 +184,10 @@ public class LiferayPortlet extends GenericPortlet {
 			return true;
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchMethodException, noSuchMethodException);
+			}
+
 			try {
 				super.processAction(actionRequest, actionResponse);
 
@@ -230,6 +233,10 @@ public class LiferayPortlet extends GenericPortlet {
 			return true;
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchMethodException, noSuchMethodException);
+			}
+
 			try {
 				super.serveResource(resourceRequest, resourceResponse);
 
@@ -370,16 +377,6 @@ public class LiferayPortlet extends GenericPortlet {
 		return method;
 	}
 
-	protected String getJSONContentType(PortletRequest portletRequest) {
-		if (BrowserSnifferUtil.isIe(
-				PortalUtil.getHttpServletRequest(portletRequest))) {
-
-			return ContentTypes.TEXT_HTML;
-		}
-
-		return ContentTypes.APPLICATION_JSON;
-	}
-
 	/**
 	 * @deprecated As of Mueller (7.2.x), with no direct replacement
 	 */
@@ -465,6 +462,10 @@ public class LiferayPortlet extends GenericPortlet {
 			return PortalUtil.getPortletTitle(renderRequest);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return super.getTitle(renderRequest);
 		}
 	}
@@ -635,7 +636,7 @@ public class LiferayPortlet extends GenericPortlet {
 		HttpServletResponse httpServletResponse =
 			PortalUtil.getHttpServletResponse(actionResponse);
 
-		httpServletResponse.setContentType(getJSONContentType(portletRequest));
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
 		ServletResponseUtil.write(
 			httpServletResponse, _toXSSSafeJSON(object.toString()));
@@ -648,7 +649,7 @@ public class LiferayPortlet extends GenericPortlet {
 			Object object)
 		throws IOException {
 
-		mimeResponse.setContentType(getJSONContentType(portletRequest));
+		mimeResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
 		PortletResponseUtil.write(
 			mimeResponse, _toXSSSafeJSON(object.toString()));

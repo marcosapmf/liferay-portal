@@ -16,6 +16,7 @@ import classNames from 'classnames';
 import React from 'react';
 
 import CollapsablePanel from '../collapsable-panel/CollapsablePanel.es';
+import EmptyState from '../empty-state/EmptyState.es';
 import FieldType from './FieldType.es';
 
 const FieldTypeWrapper = ({expanded, fieldType, showArrows, ...otherProps}) => {
@@ -30,19 +31,20 @@ const FieldTypeWrapper = ({expanded, fieldType, showArrows, ...otherProps}) => {
 	return <FieldType {...otherProps} {...fieldType} icon={getIcon()} />;
 };
 
-export default ({
+const FieldTypeList = ({
+	dataDefinition,
 	deleteLabel,
+	emptyState,
 	fieldTypes,
 	keywords,
 	onClick,
 	onDelete,
 	onDoubleClick,
+	showEmptyState = true,
 }) => {
-	const regex = new RegExp(
-		keywords.replace(new RegExp(/[^\w+ ]/g), ''),
-		'ig'
-	);
-	const fieldTypeList = fieldTypes
+	const regex = new RegExp(keywords, 'i');
+
+	const filteredFieldTypes = fieldTypes
 		.filter(({system}) => !system)
 		.filter(({description, label}) => {
 			if (!keywords) {
@@ -52,7 +54,11 @@ export default ({
 			return regex.test(description) || regex.test(label);
 		});
 
-	return fieldTypeList.map((fieldType, index) => {
+	if (showEmptyState && !filteredFieldTypes.length) {
+		return <EmptyState emptyState={emptyState} keywords={keywords} small />;
+	}
+
+	return filteredFieldTypes.map((fieldType, index) => {
 		const {isFieldSet, nestedDataDefinitionFields = []} = fieldType;
 
 		const handleOnClick = (props) => {
@@ -66,6 +72,7 @@ export default ({
 		if (nestedDataDefinitionFields.length) {
 			const Header = ({expanded, setExpanded}) => (
 				<FieldTypeWrapper
+					dataDefinition={dataDefinition}
 					deleteLabel={deleteLabel}
 					expanded={expanded}
 					fieldType={{
@@ -97,6 +104,7 @@ export default ({
 							{nestedDataDefinitionFields.map(
 								(nestedFieldType) => (
 									<FieldTypeWrapper
+										dataDefinition={dataDefinition}
 										draggable={false}
 										fieldType={{
 											...nestedFieldType,
@@ -114,6 +122,7 @@ export default ({
 
 		return (
 			<FieldTypeWrapper
+				dataDefinition={dataDefinition}
 				deleteLabel={deleteLabel}
 				fieldType={fieldType}
 				key={index}
@@ -124,3 +133,6 @@ export default ({
 		);
 	});
 };
+
+FieldTypeList.displayName = 'FieldTypeList';
+export default FieldTypeList;

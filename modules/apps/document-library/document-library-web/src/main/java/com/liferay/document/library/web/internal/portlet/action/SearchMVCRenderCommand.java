@@ -16,9 +16,13 @@ package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
+import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContext;
+import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContextProvider;
+import com.liferay.document.library.web.internal.display.context.DLAdminManagementToolbarDisplayContext;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
 import com.liferay.document.library.web.internal.portlet.toolbar.contributor.DLPortletToolbarContributorRegistry;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -43,6 +47,22 @@ public class SearchMVCRenderCommand implements MVCRenderCommand {
 	public String render(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
+		DLAdminDisplayContext dlAdminDisplayContext =
+			_dlAdminDisplayContextProvider.getDLAdminDisplayContext(
+				_portal.getHttpServletRequest(renderRequest),
+				_portal.getHttpServletResponse(renderResponse));
+
+		renderRequest.setAttribute(
+			DLAdminDisplayContext.class.getName(), dlAdminDisplayContext);
+
+		renderRequest.setAttribute(
+			DLAdminManagementToolbarDisplayContext.class.getName(),
+			_dlAdminDisplayContextProvider.
+				getDLAdminManagementToolbarDisplayContext(
+					_portal.getHttpServletRequest(renderRequest),
+					_portal.getHttpServletResponse(renderResponse),
+					dlAdminDisplayContext));
+
 		renderRequest.setAttribute(
 			DLWebKeys.DOCUMENT_LIBRARY_PORTLET_TOOLBAR_CONTRIBUTOR,
 			_dlPortletToolbarContributorRegistry.
@@ -54,10 +74,16 @@ public class SearchMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	@Reference
+	private DLAdminDisplayContextProvider _dlAdminDisplayContextProvider;
+
+	@Reference
 	private DLPortletToolbarContributorRegistry
 		_dlPortletToolbarContributorRegistry;
 
 	@Reference
 	private DLTrashHelper _dlTrashHelper;
+
+	@Reference
+	private Portal _portal;
 
 }

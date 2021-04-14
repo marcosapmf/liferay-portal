@@ -34,14 +34,18 @@ import com.liferay.portal.kernel.util.MethodHandler;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.util.PropsImpl;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -50,6 +54,11 @@ import org.junit.Test;
  */
 @NewEnv(type = NewEnv.Type.CLASSLOADER)
 public class ClusterExecutorImplTest extends BaseClusterTestCase {
+
+	@BeforeClass
+	public static void setUpClass() {
+		PropsUtil.setProps(new PropsImpl());
+	}
 
 	@Test
 	public void testClusterEventListener() {
@@ -381,6 +390,8 @@ public class ClusterExecutorImplTest extends BaseClusterTestCase {
 				).put(
 					PropsKeys.CLUSTER_LINK_CHANNEL_PROPERTIES_CONTROL,
 					"test-channel-properties-control"
+				).put(
+					"configuration.override.", new Properties()
 				).build()));
 
 		clusterExecutorImpl.setClusterChannelFactory(

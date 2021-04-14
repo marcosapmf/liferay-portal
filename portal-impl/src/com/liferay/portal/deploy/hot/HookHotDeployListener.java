@@ -14,9 +14,6 @@
 
 package com.liferay.portal.deploy.hot;
 
-import com.liferay.document.library.kernel.antivirus.AntivirusScanner;
-import com.liferay.document.library.kernel.antivirus.AntivirusScannerUtil;
-import com.liferay.document.library.kernel.antivirus.AntivirusScannerWrapper;
 import com.liferay.document.library.kernel.util.DLProcessor;
 import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
 import com.liferay.mail.kernel.util.Hook;
@@ -375,14 +372,6 @@ public class HookHotDeployListener
 			dlRepositoryContainer.unregisterRepositoryFactories();
 		}
 
-		if (portalProperties.containsKey(PropsKeys.DL_STORE_ANTIVIRUS_IMPL)) {
-			AntivirusScannerWrapper antivirusScannerWrapper =
-				(AntivirusScannerWrapper)
-					AntivirusScannerUtil.getAntivirusScanner();
-
-			antivirusScannerWrapper.setAntivirusScanner(null);
-		}
-
 		if (portalProperties.containsKey(PropsKeys.DL_STORE_IMPL)) {
 			PropsValues.DL_STORE_IMPL = PropsUtil.get(PropsKeys.DL_STORE_IMPL);
 		}
@@ -593,6 +582,10 @@ public class HookHotDeployListener
 			return (BasePersistence<?>)PortalBeanLocatorUtil.locate(beanName);
 		}
 		catch (BeanLocatorException beanLocatorException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(beanLocatorException, beanLocatorException);
+			}
+
 			return (BasePersistence<?>)PortletBeanLocatorUtil.locate(
 				servletContextName, beanName);
 		}
@@ -1390,21 +1383,6 @@ public class HookHotDeployListener
 			}
 		}
 
-		if (portalProperties.containsKey(PropsKeys.DL_STORE_ANTIVIRUS_IMPL)) {
-			String antivirusScannerClassName = portalProperties.getProperty(
-				PropsKeys.DL_STORE_ANTIVIRUS_IMPL);
-
-			AntivirusScanner antivirusScanner = (AntivirusScanner)newInstance(
-				portletClassLoader, AntivirusScanner.class,
-				antivirusScannerClassName);
-
-			AntivirusScannerWrapper antivirusScannerWrapper =
-				(AntivirusScannerWrapper)
-					AntivirusScannerUtil.getAntivirusScanner();
-
-			antivirusScannerWrapper.setAntivirusScanner(antivirusScanner);
-		}
-
 		if (portalProperties.containsKey(PropsKeys.DL_STORE_IMPL)) {
 			PropsValues.DL_STORE_IMPL = portalProperties.getProperty(
 				PropsKeys.DL_STORE_IMPL);
@@ -1738,6 +1716,10 @@ public class HookHotDeployListener
 					servletContextName, serviceImplConstructor, serviceProxy);
 			}
 			catch (BeanLocatorException beanLocatorException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(beanLocatorException, beanLocatorException);
+				}
+
 				Registry registry = RegistryUtil.getRegistry();
 
 				registry.callService(

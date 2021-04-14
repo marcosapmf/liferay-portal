@@ -78,7 +78,7 @@ public class MFAFIDO2CredentialEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(27);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -96,6 +96,8 @@ public class MFAFIDO2CredentialEntryCacheModel
 		sb.append(modifiedDate);
 		sb.append(", credentialKey=");
 		sb.append(credentialKey);
+		sb.append(", credentialKeyHash=");
+		sb.append(credentialKeyHash);
 		sb.append(", credentialType=");
 		sb.append(credentialType);
 		sb.append(", failedAttempts=");
@@ -148,6 +150,7 @@ public class MFAFIDO2CredentialEntryCacheModel
 			mfaFIDO2CredentialEntryImpl.setCredentialKey(credentialKey);
 		}
 
+		mfaFIDO2CredentialEntryImpl.setCredentialKeyHash(credentialKeyHash);
 		mfaFIDO2CredentialEntryImpl.setCredentialType(credentialType);
 		mfaFIDO2CredentialEntryImpl.setFailedAttempts(failedAttempts);
 
@@ -166,7 +169,9 @@ public class MFAFIDO2CredentialEntryCacheModel
 	}
 
 	@Override
-	public void readExternal(ObjectInput objectInput) throws IOException {
+	public void readExternal(ObjectInput objectInput)
+		throws ClassNotFoundException, IOException {
+
 		mvccVersion = objectInput.readLong();
 
 		mfaFIDO2CredentialEntryId = objectInput.readLong();
@@ -177,7 +182,9 @@ public class MFAFIDO2CredentialEntryCacheModel
 		userName = objectInput.readUTF();
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
-		credentialKey = objectInput.readUTF();
+		credentialKey = (String)objectInput.readObject();
+
+		credentialKeyHash = objectInput.readLong();
 
 		credentialType = objectInput.readInt();
 
@@ -208,11 +215,13 @@ public class MFAFIDO2CredentialEntryCacheModel
 		objectOutput.writeLong(modifiedDate);
 
 		if (credentialKey == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(credentialKey);
+			objectOutput.writeObject(credentialKey);
 		}
+
+		objectOutput.writeLong(credentialKeyHash);
 
 		objectOutput.writeInt(credentialType);
 
@@ -236,6 +245,7 @@ public class MFAFIDO2CredentialEntryCacheModel
 	public long createDate;
 	public long modifiedDate;
 	public String credentialKey;
+	public long credentialKeyHash;
 	public int credentialType;
 	public int failedAttempts;
 	public String publicKeyCOSE;

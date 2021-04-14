@@ -142,7 +142,7 @@ public class AddItemMVCActionCommandTest {
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			_getMockLiferayPortletActionRequest();
 
-		_layoutStructure.addContainerLayoutStructureItem(
+		_layoutStructure.addContainerStyledLayoutStructureItem(
 			_layoutStructure.getMainItemId(), 0);
 
 		_layoutPageTemplateStructureLocalService.
@@ -256,7 +256,7 @@ public class AddItemMVCActionCommandTest {
 
 	private LayoutStructure _layoutStructure;
 
-	@Inject(filter = "mvc.command.name=/content_layout/add_item")
+	@Inject(filter = "mvc.command.name=/layout_content_page_editor/add_item")
 	private MVCActionCommand _mvcActionCommand;
 
 }

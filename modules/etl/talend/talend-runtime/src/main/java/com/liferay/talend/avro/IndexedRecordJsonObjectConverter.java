@@ -15,6 +15,7 @@
 package com.liferay.talend.avro;
 
 import com.liferay.talend.avro.exception.ConverterException;
+import com.liferay.talend.common.oas.OASExtensions;
 import com.liferay.talend.common.schema.SchemaUtils;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,13 +36,17 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 import javax.json.Json;
-import javax.json.JsonObject;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+import javax.json.JsonValue;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.talend.components.api.component.runtime.Result;
 import org.talend.daikon.avro.AvroUtils;
@@ -58,10 +64,10 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 		_schema = schema;
 	}
 
-	public JsonObject toJsonObject(IndexedRecord indexedRecord)
+	public JsonValue toJsonValue(IndexedRecord indexedRecord)
 		throws IOException {
 
-		JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+		JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
 
 		Map<String, JsonObjectBuilder> nestedJsonObjectBuilders =
 			new HashMap<>();
@@ -85,12 +91,20 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 				continue;
 			}
 
-			Schema fieldSchema = AvroUtils.unwrapIfNullable(field.schema());
-
-			JsonObjectBuilder currentJsonObjectBuilder = objectBuilder;
+			JsonObjectBuilder currentJsonObjectBuilder = jsonObjectBuilder;
 
 			if (_isNestedFieldName(fieldName)) {
-				String[] nameParts = fieldName.split("_");
+				String[] nameParts = _getNameParts(fieldName);
+
+				if (nameParts.length > 2) {
+					if (_logger.isWarnEnabled()) {
+						_logger.warn(
+							"Unable to map more than one child object {}",
+							fieldName);
+					}
+
+					continue;
+				}
 
 				if (!nestedJsonObjectBuilders.containsKey(nameParts[0])) {
 					nestedJsonObjectBuilders.put(
@@ -102,6 +116,8 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 
 				fieldName = nameParts[1];
 			}
+
+			Schema fieldSchema = AvroUtils.unwrapIfNullable(field.schema());
 
 			int fieldPos = dataField.pos();
 
@@ -184,18 +200,60 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 		for (Map.Entry<String, JsonObjectBuilder> nestedJsonObjectBuilder :
 				nestedJsonObjectBuilders.entrySet()) {
 
-			objectBuilder.add(
+			jsonObjectBuilder.add(
 				nestedJsonObjectBuilder.getKey(),
 				nestedJsonObjectBuilder.getValue());
 		}
 
-		return objectBuilder.build();
+		if (!_isIterable()) {
+			return jsonObjectBuilder.build();
+		}
+
+		JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
+
+		jsonArrayBuilder.add(jsonObjectBuilder);
+
+		return jsonArrayBuilder.build();
 	}
 
 	private String _asISO8601String(long timeMills) {
 		DateFormat dateFormat = ISO8601DateFormat._dateFormat;
 
 		return dateFormat.format(new Date(timeMills));
+	}
+
+	private String[] _getNameParts(String fieldName) {
+		String parentNamePart = fieldName;
+		String i18nFieldName = null;
+
+		if (_oasExtensions.isI18nFieldNameNested(fieldName)) {
+			i18nFieldName = _oasExtensions.getI18nFieldName(fieldName);
+
+			parentNamePart = fieldName.substring(
+				0, fieldName.indexOf(i18nFieldName));
+		}
+
+		String[] nameParts = parentNamePart.split("_");
+
+		if (i18nFieldName == null) {
+			return nameParts;
+		}
+
+		nameParts = Arrays.copyOf(nameParts, nameParts.length + 1);
+
+		nameParts[nameParts.length - 1] = i18nFieldName;
+
+		return nameParts;
+	}
+
+	private boolean _isIterable() {
+		Object iterablePropObject = _schema.getObjectProp("iterable");
+
+		if (iterablePropObject == null) {
+			return false;
+		}
+
+		return (Boolean)iterablePropObject;
 	}
 
 	private boolean _isJsonArrayFormattedString(String value) {
@@ -215,12 +273,20 @@ public class IndexedRecordJsonObjectConverter extends RejectHandler {
 	}
 
 	private boolean _isNestedFieldName(String fieldName) {
-		if (fieldName.contains("_")) {
-			return true;
+		if ((!_oasExtensions.isI18nFieldNameNested(fieldName) &&
+			 _oasExtensions.isI18nFieldName(fieldName)) ||
+			!fieldName.contains("_")) {
+
+			return false;
 		}
 
-		return false;
+		return true;
 	}
+
+	private static final Logger _logger = LoggerFactory.getLogger(
+		IndexedRecordJsonObjectConverter.class);
+
+	private static final OASExtensions _oasExtensions = new OASExtensions();
 
 	private final Schema _schema;
 

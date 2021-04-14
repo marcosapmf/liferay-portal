@@ -28,11 +28,12 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.DiscountChannel
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -51,10 +52,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/discount-channel.properties",
-	scope = ServiceScope.PROTOTYPE, service = DiscountChannelResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {DiscountChannelResource.class, NestedFieldSupport.class}
 )
 public class DiscountChannelResourceImpl
-	extends BaseDiscountChannelResourceImpl {
+	extends BaseDiscountChannelResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public void deleteDiscountChannel(Long id) throws Exception {
@@ -69,7 +71,7 @@ public class DiscountChannelResourceImpl
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -124,7 +126,7 @@ public class DiscountChannelResourceImpl
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.fetchByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -159,22 +161,12 @@ public class DiscountChannelResourceImpl
 			CommerceChannelRel commerceChannelRel)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			_serviceContextHelper.getServiceContext();
-
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
-			() -> {
-				CommerceDiscount commerceDiscount =
-					_commerceDiscountService.getCommerceDiscount(
-						commerceChannelRel.getClassPK());
-
-				return addAction(
-					"UPDATE", commerceDiscount.getCommerceDiscountId(),
-					"deleteDiscountChannel", commerceChannelRel.getUserId(),
-					"com.liferay.commerce.discount.model.CommerceDiscount",
-					serviceContext.getScopeGroupId());
-			}
+			addAction(
+				"UPDATE", commerceChannelRel.getCommerceChannelRelId(),
+				"deleteDiscountChannel",
+				_commerceChannelRelModelResourcePermission)
 		).build();
 	}
 
@@ -208,6 +200,12 @@ public class DiscountChannelResourceImpl
 
 		return discountChannels;
 	}
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannelRel)"
+	)
+	private ModelResourcePermission<CommerceChannelRel>
+		_commerceChannelRelModelResourcePermission;
 
 	@Reference
 	private CommerceChannelRelService _commerceChannelRelService;

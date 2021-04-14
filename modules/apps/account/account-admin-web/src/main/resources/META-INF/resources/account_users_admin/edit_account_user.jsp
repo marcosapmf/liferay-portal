@@ -29,7 +29,6 @@ portletURL.setParameter("mvcPath", "/account_users_admin/edit_account_user.jsp")
 	containerCssClass="col-lg-8"
 	containerWrapperCssClass="container-fluid container-fluid-max-xl container-form-lg"
 	context="<%= selUser %>"
-	headerContainerCssClass=""
 	key="<%= AccountScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_ACCOUNT_USER %>"
 	menubarCssClass="menubar menubar-transparent menubar-vertical-expand-lg"
 	navCssClass="col-lg-3"
@@ -38,6 +37,7 @@ portletURL.setParameter("mvcPath", "/account_users_admin/edit_account_user.jsp")
 
 <%
 String screenNavigationCategoryKey = ParamUtil.getString(request, "screenNavigationCategoryKey", AccountScreenNavigationEntryConstants.CATEGORY_KEY_GENERAL);
+
 String screenNavigationEntryKey = ParamUtil.getString(request, "screenNavigationEntryKey");
 
 if (Validator.isNull(screenNavigationEntryKey)) {

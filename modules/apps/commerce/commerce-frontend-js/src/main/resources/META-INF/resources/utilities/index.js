@@ -16,11 +16,40 @@ import {fetch} from 'frontend-js-web';
 
 import createOdataFilter from './odata';
 
-export function getData(apiUrl, query) {
-	let url = apiUrl;
+export function getAcceptLanguageHeaderParam() {
+	const browserLang = navigator.language || navigator.userLanguage;
+	const themeLang = Liferay.ThemeDisplay.getLanguageId().replace('_', '-');
+
+	if (browserLang === themeLang) {
+		return browserLang;
+	}
+
+	return `${browserLang}, ${themeLang};q=0.8`;
+}
+
+export const fetchHeaders = new Headers({
+	Accept: 'application/json',
+	'Accept-Language': getAcceptLanguageHeaderParam(),
+	'Content-Type': 'application/json',
+});
+
+export const fetchParams = {
+	headers: fetchHeaders,
+};
+
+export function getData(apiUrl, query, page, pageSize) {
+	const url = new URL(apiUrl, Liferay.ThemeDisplay.getPortalURL());
 
 	if (query) {
-		url += (url.includes('?') ? '&' : '?') + `search=${query}`;
+		url.searchParams.append('search', query);
+	}
+
+	if (page) {
+		url.searchParams.append('page', page);
+	}
+
+	if (pageSize) {
+		url.searchParams.append('pageSize', pageSize);
 	}
 
 	return fetch(url, {
@@ -56,6 +85,21 @@ export function getValueFromItem(item, fieldName) {
 	}
 
 	return item[fieldName];
+}
+
+export function gHash(string) {
+	let hash = 0;
+
+	if (string.length === 0) {
+		return hash;
+	}
+
+	[...string].forEach((char) => {
+		hash = (hash << 7) - hash + char.charCodeAt();
+		hash = hash & hash;
+	});
+
+	return hash;
 }
 
 export function excludeFromList(matchingList, againstList) {
@@ -99,27 +143,6 @@ export function formatActionUrl(url, item) {
 export function getRandomId() {
 	return Math.random().toString(36).substr(2, 9);
 }
-
-export function getAcceptLanguageHeaderParam() {
-	const browserLang = navigator.language || navigator.userLanguage;
-	const themeLang = Liferay.ThemeDisplay.getLanguageId().replace('_', '-');
-
-	if (browserLang === themeLang) {
-		return browserLang;
-	}
-
-	return `${browserLang}, ${themeLang};q=0.8`;
-}
-
-export const fetchHeaders = new Headers({
-	Accept: 'application/json',
-	'Accept-Language': getAcceptLanguageHeaderParam(),
-	'Content-Type': 'application/json',
-});
-
-export const fetchParams = {
-	headers: Liferay.staticEnvHeaders || fetchHeaders,
-};
 
 export function createSortingString(values) {
 	if (!values.length) {

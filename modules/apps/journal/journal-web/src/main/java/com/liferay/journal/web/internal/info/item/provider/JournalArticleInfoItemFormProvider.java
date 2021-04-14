@@ -147,7 +147,7 @@ public class JournalArticleInfoItemFormProvider
 	private InfoFieldSet _getDisplayPageInfoFieldSet() {
 		return InfoFieldSet.builder(
 		).infoFieldSetEntry(
-			JournalArticleInfoItemFields.displayPageUrlInfoField
+			JournalArticleInfoItemFields.displayPageURLInfoField
 		).labelInfoLocalizedValue(
 			InfoLocalizedValue.localize(getClass(), "display-page")
 		).name(

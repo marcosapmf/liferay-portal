@@ -26,11 +26,12 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 
 <clay:management-toolbar
 	actionDropdownItems="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	additionalProps="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getAdditionalProps() %>"
 	creationMenu="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getCreationMenu() %>"
 	disabled="<%= oAuth2ApplicationsCount == 0 %>"
 	filterDropdownItems="<%= oAuth2ApplicationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= oAuth2ApplicationsCount %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
+	propsTransformer="admin/js/OAuth2ApplicationsManagementToolbarPropsTransformer"
 	searchContainerId="oAuth2ApplicationsSearchContainer"
 	selectable="<%= true %>"
 	showCreationMenu="<%= oAuth2AdminPortletDisplayContext.hasAddApplicationPermission() %>"
@@ -65,7 +66,7 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 				modelVar="oAuth2Application"
 			>
 				<portlet:renderURL var="editURL">
-					<portlet:param name="mvcRenderCommandName" value="/admin/update_oauth2_application" />
+					<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/update_oauth2_application" />
 					<portlet:param name="oAuth2ApplicationId" value="<%= String.valueOf(oAuth2Application.getOAuth2ApplicationId()) %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 				</portlet:renderURL>
@@ -147,26 +148,3 @@ String displayStyle = oAuth2ApplicationsManagementToolbarDisplayContext.getDispl
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<script>
-	function <portlet:namespace />deleteOAuth2Applications() {
-		if (
-			confirm(
-				'<%= HtmlUtil.escapeJS(LanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries-this-action-revokes-all-authorizations-and-associated-tokens")) %>'
-			)
-		) {
-			var form = document.<portlet:namespace />fm;
-
-			Liferay.Util.postForm(form, {
-				data: {
-					oAuth2ApplicationIds: Liferay.Util.listCheckedExcept(
-						form,
-						'<portlet:namespace />allRowIds'
-					),
-				},
-				url:
-					'<portlet:actionURL name="/admin/delete_oauth2_applications" />',
-			});
-		}
-	}
-</script>

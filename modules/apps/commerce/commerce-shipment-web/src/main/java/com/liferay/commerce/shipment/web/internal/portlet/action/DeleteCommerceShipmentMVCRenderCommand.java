@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_SHIPMENT,
-		"mvc.command.name=deleteCommerceShipment"
+		"mvc.command.name=/commerce_shipment/delete_commerce_shipment"
 	},
 	service = MVCRenderCommand.class
 )
@@ -42,7 +42,7 @@ public class DeleteCommerceShipmentMVCRenderCommand
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/delete.jsp";
+		return "/delete_commerce_shipment.jsp";
 	}
 
 }

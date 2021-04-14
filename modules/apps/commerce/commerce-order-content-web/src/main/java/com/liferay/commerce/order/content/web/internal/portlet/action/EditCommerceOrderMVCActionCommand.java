@@ -21,6 +21,7 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.exception.CommerceOrderAccountLimitException;
 import com.liferay.commerce.exception.CommerceOrderValidatorException;
 import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.model.CommerceOrder;
@@ -65,7 +66,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_CART_CONTENT_MINI,
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT,
 		"javax.portlet.name=" + CommercePortletKeys.COMMERCE_ORDER_CONTENT,
-		"mvc.command.name=editCommerceOrder"
+		"mvc.command.name=/commerce_open_order_content/edit_commerce_order"
 	},
 	service = MVCActionCommand.class
 )
@@ -100,9 +101,22 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 			_commerceChannelLocalService.getCommerceChannelGroupIdBySiteGroupId(
 				themeDisplay.getScopeGroupId());
 
-		return _commerceOrderService.addCommerceOrder(
-			commerceChannelGroupId, commerceAccount.getCommerceAccountId(),
-			commerceCurrencyId, 0, StringPool.BLANK);
+		try {
+			return _commerceOrderService.addCommerceOrder(
+				commerceChannelGroupId, commerceAccount.getCommerceAccountId(),
+				commerceCurrencyId, 0, StringPool.BLANK);
+		}
+		catch (Exception exception) {
+			if (exception instanceof CommerceOrderAccountLimitException) {
+				hideDefaultErrorMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				return null;
+			}
+
+			throw exception;
+		}
 	}
 
 	protected void checkoutCommerceOrder(
@@ -229,7 +243,8 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 					redirect);
 
 				openOrdersPortletURL.setParameter(
-					"mvcRenderCommandName", "editCommerceOrder");
+					"mvcRenderCommandName",
+					"/commerce_open_order_content/edit_commerce_order");
 				openOrdersPortletURL.setParameter(
 					"commerceOrderId", String.valueOf(commerceOrderId));
 
@@ -392,7 +407,8 @@ public class EditCommerceOrderMVCActionCommand extends BaseMVCActionCommand {
 
 		if (commerceOrder != null) {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "editCommerceOrder");
+				"mvcRenderCommandName",
+				"/commerce_open_order_content/edit_commerce_order");
 			portletURL.setParameter(
 				"commerceOrderId",
 				String.valueOf(commerceOrder.getCommerceOrderId()));

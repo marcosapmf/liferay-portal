@@ -33,24 +33,22 @@ if (ArrayUtil.isNotEmpty(availableLanguageIds) && !ArrayUtil.contains(availableL
 	languageId = assetRenderer.getDefaultLanguageId();
 }
 
-String title = assetRenderer.getTitle(workflowTaskDisplayContext.getTaskContentLocale());
-
 request.setAttribute(WebKeys.WORKFLOW_ASSET_PREVIEW, Boolean.TRUE);
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
 
-renderResponse.setTitle(title);
+renderResponse.setTitle(assetRenderer.getTitle(workflowTaskDisplayContext.getTaskContentLocale()));
 %>
 
 <clay:container-fluid
-	cssClass="main-content-body"
+	cssClass="container-view"
 >
 	<clay:col
 		cssClass="lfr-asset-column lfr-asset-column-details"
 		md="12"
 	>
-		<div class="card-horizontal main-content-card">
+		<div class="card">
 			<div class="panel-body">
 				<c:if test="<%= assetEntry != null %>">
 					<c:if test="<%= assetRenderer.isLocalizable() %>">

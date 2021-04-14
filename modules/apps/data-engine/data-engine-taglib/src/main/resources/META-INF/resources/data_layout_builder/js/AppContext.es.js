@@ -23,11 +23,14 @@ import {
 	DELETE_DATA_LAYOUT_FIELD,
 	DELETE_DATA_LAYOUT_RULE,
 	EDIT_CUSTOM_OBJECT_FIELD,
+	SET_FORM_RENDERER_CUSTOM_FIELDS,
 	SWITCH_SIDEBAR_PANEL,
 	UPDATE_APP_PROPS,
 	UPDATE_CONFIG,
 	UPDATE_DATA_DEFINITION,
+	UPDATE_DATA_DEFINITION_FIELDS,
 	UPDATE_DATA_LAYOUT,
+	UPDATE_DATA_LAYOUT_FIELDS,
 	UPDATE_DATA_LAYOUT_NAME,
 	UPDATE_DATA_LAYOUT_RULE,
 	UPDATE_EDITING_DATA_DEFINITION_ID,
@@ -40,8 +43,10 @@ import {
 	UPDATE_IDS,
 	UPDATE_PAGES,
 } from './actions.es';
+import {getDataDefinitionField as convertFieldToDataDefinition} from './utils/dataConverter.es';
 import {getDataDefinitionField} from './utils/dataDefinition.es';
 import * as DataLayoutVisitor from './utils/dataLayoutVisitor.es';
+import {normalizeRule} from './utils/normalizers.es';
 
 const AppContext = createContext();
 
@@ -60,10 +65,12 @@ const initialState = {
 	dataDefinition: {
 		availableLanguageIds: [],
 		dataDefinitionFields: [],
+		defaultLanguageId: themeDisplay.getDefaultLanguageId(),
 		name: {},
 	},
 	dataDefinitionId: 0,
 	dataLayout: {
+		dataLayoutFields: {},
 		dataLayoutPages: [],
 		dataRules: [],
 		name: {},
@@ -71,7 +78,7 @@ const initialState = {
 	},
 	dataLayoutId: 0,
 	editingDataDefinitionId: 0,
-	editingLanguageId: themeDisplay.getLanguageId(),
+	editingLanguageId: themeDisplay.getDefaultLanguageId(),
 	fieldSets: [],
 	fieldTypes: [],
 	focusedCustomObjectField: {},
@@ -83,15 +90,9 @@ const initialState = {
 	spritemap: `${Liferay.ThemeDisplay.getPathThemeImages()}/clay/icons.svg`,
 };
 
-const addCustomObjectField = ({
-	dataLayoutBuilder,
-	fieldTypeName,
-	fieldTypes,
-}) => {
+const addCustomObjectField = ({fieldTypeName, fieldTypes}) => {
 	const fieldType = fieldTypes.find(({name}) => name === fieldTypeName);
-	const dataDefinitionField = dataLayoutBuilder.getDataDefinitionField(
-		fieldType
-	);
+	const dataDefinitionField = convertFieldToDataDefinition(fieldType);
 
 	return {
 		...dataDefinitionField,
@@ -114,6 +115,13 @@ const deleteDataDefinitionField = (dataDefinition, fieldName) => {
 const deleteDataLayoutField = (dataLayout, fieldName) => {
 	return {
 		...dataLayout,
+		dataLayoutFields: {
+			...dataLayout.dataLayoutFields,
+			[fieldName]: {
+				...dataLayout.dataLayoutFields[fieldName],
+				required: false,
+			},
+		},
 		dataLayoutPages: DataLayoutVisitor.deleteField(
 			dataLayout.dataLayoutPages,
 			fieldName
@@ -121,28 +129,34 @@ const deleteDataLayoutField = (dataLayout, fieldName) => {
 	};
 };
 
-const editFocusedCustomObjectField = ({
-	focusedCustomObjectField,
-	propertyName,
-	propertyValue,
-}) => {
-	let localizableProperty = false;
-	const {settingsContext} = focusedCustomObjectField;
-	const visitor = new PagesVisitor(settingsContext.pages);
-	const newSettingsContext = {
-		...settingsContext,
+const editFocusedCustomObjectField = (
+	{propertyName, propertyValue},
+	{
+		dataDefinition: {defaultLanguageId},
+		editingLanguageId,
+		focusedCustomObjectField,
+	}
+) => {
+	let localizedValue;
+	const {
+		nestedFields,
+		settingsContext: oldSettingsContext,
+	} = focusedCustomObjectField;
+	const visitor = new PagesVisitor(oldSettingsContext.pages);
+	const settingsContext = {
+		...oldSettingsContext,
 		pages: visitor.mapFields((field) => {
-			const {fieldName, localizable} = field;
+			const {fieldName} = field;
 
 			if (fieldName === propertyName) {
-				localizableProperty = localizable;
+				localizedValue = {
+					...field.localizedValue,
+					[editingLanguageId || defaultLanguageId]: propertyValue,
+				};
 
 				return {
 					...field,
-					localizedValue: {
-						...field.localizedValue,
-						[themeDisplay.getLanguageId()]: propertyValue,
-					},
+					localizedValue,
 					value: propertyValue,
 				};
 			}
@@ -151,17 +165,24 @@ const editFocusedCustomObjectField = ({
 		}),
 	};
 
-	if (localizableProperty) {
-		propertyValue = {
-			[themeDisplay.getLanguageId()]: propertyValue,
-		};
-	}
+	const dataDefinition = convertFieldToDataDefinition({
+		nestedFields,
+		settingsContext,
+	});
 
 	return {
-		...focusedCustomObjectField,
-		[propertyName]: propertyValue,
-		settingsContext: newSettingsContext,
+		...dataDefinition,
+		settingsContext,
 	};
+};
+
+/**
+ * Get unformatted definition field
+ * @param {object} dataDefinition
+ * @param {object} field
+ */
+const getUnformattedDefinitionField = (dataDefinition, {fieldName}) => {
+	return getDataDefinitionField(dataDefinition, fieldName);
 };
 
 const setDataDefinitionFields = (
@@ -178,9 +199,18 @@ const setDataDefinitionFields = (
 	const newFields = [];
 
 	visitor.mapFields((field) => {
-		const definitionField = dataLayoutBuilder.getDataDefinitionField(field);
+		const formattedDefinitionField = convertFieldToDataDefinition(field);
 
-		newFields.push(definitionField);
+		if (dataLayoutBuilder.props.contentType === 'app-builder') {
+			newFields.push({
+				...formattedDefinitionField,
+				required: !!getUnformattedDefinitionField(dataDefinition, field)
+					?.required,
+			});
+		}
+		else {
+			newFields.push(formattedDefinitionField);
+		}
 	});
 
 	return newFields.concat(
@@ -193,12 +223,38 @@ const setDataDefinitionFields = (
 };
 
 const setDataLayout = (dataLayout, dataLayoutBuilder) => {
-	const {dataRules} = dataLayout;
+	const {dataLayoutFields, dataRules} = dataLayout;
 	const {pages} = dataLayoutBuilder.getStore();
 	const {layout} = dataLayoutBuilder.getDataDefinitionAndDataLayout(
 		pages,
 		dataRules || []
 	);
+
+	if (dataLayoutBuilder.props.contentType === 'app-builder') {
+		const visitor = new PagesVisitor(pages);
+		const fields = [];
+
+		visitor.mapFields((field) => {
+			const formattedDefinitionField = convertFieldToDataDefinition(
+				field
+			);
+
+			fields.push(formattedDefinitionField);
+		});
+
+		return {
+			...layout,
+			dataLayoutFields: fields.reduce((allFields, field) => {
+				return {
+					...allFields,
+					[field.name]: {
+						...dataLayoutFields[field.name],
+						required: !!field?.required,
+					},
+				};
+			}, {}),
+		};
+	}
 
 	return layout;
 };
@@ -211,7 +267,6 @@ const createReducer = (dataLayoutBuilder) => {
 				const {dataDefinition, fieldSets, fieldTypes} = state;
 				const newCustomObjectField = addCustomObjectField({
 					dataDefinition,
-					dataLayoutBuilder,
 					fieldSets,
 					fieldTypeName,
 					fieldTypes,
@@ -240,7 +295,7 @@ const createReducer = (dataLayoutBuilder) => {
 					dataLayout: {dataRules},
 				} = state;
 
-				dataRule = DataLayoutVisitor.normalizeRule(dataRule);
+				dataRule = normalizeRule(dataRule);
 
 				return {
 					...state,
@@ -294,16 +349,11 @@ const createReducer = (dataLayoutBuilder) => {
 			}
 			case EDIT_CUSTOM_OBJECT_FIELD: {
 				const {dataDefinition, focusedCustomObjectField} = state;
-				const editedFocusedCustomObjectField = editFocusedCustomObjectField(
-					{
-						...action.payload,
-						focusedCustomObjectField,
-					}
+
+				const focusedDataDefinitionField = editFocusedCustomObjectField(
+					action.payload,
+					state
 				);
-				const {
-					nestedDataDefinitionFields,
-					settingsContext,
-				} = editedFocusedCustomObjectField;
 
 				return {
 					...state,
@@ -315,22 +365,20 @@ const createReducer = (dataLayoutBuilder) => {
 									dataDefinitionField.name ===
 									focusedCustomObjectField.name
 								) {
-									return {
-										...dataLayoutBuilder.getDataDefinitionField(
-											editedFocusedCustomObjectField
-										),
-										nestedDataDefinitionFields,
-									};
+									return focusedDataDefinitionField;
 								}
 
 								return dataDefinitionField;
 							}
 						),
 					},
-					focusedCustomObjectField: {
-						...editedFocusedCustomObjectField,
-						settingsContext,
-					},
+					focusedCustomObjectField: focusedDataDefinitionField,
+				};
+			}
+			case SET_FORM_RENDERER_CUSTOM_FIELDS: {
+				return {
+					...state,
+					customFields: action.payload,
 				};
 			}
 			case SWITCH_SIDEBAR_PANEL: {
@@ -361,6 +409,17 @@ const createReducer = (dataLayoutBuilder) => {
 						dataDefinition.availableLanguageIds,
 				};
 			}
+			case UPDATE_DATA_DEFINITION_FIELDS: {
+				const {dataDefinitionFields} = action.payload;
+
+				return {
+					...state,
+					dataDefinition: {
+						...state.dataDefinition,
+						dataDefinitionFields,
+					},
+				};
+			}
 			case UPDATE_DATA_LAYOUT: {
 				const {dataLayout} = action.payload;
 
@@ -372,6 +431,17 @@ const createReducer = (dataLayoutBuilder) => {
 						dataRules: dataLayoutBuilder
 							.getLayoutProvider()
 							.getRules(),
+					},
+				};
+			}
+			case UPDATE_DATA_LAYOUT_FIELDS: {
+				const {dataLayoutFields} = action.payload;
+
+				return {
+					...state,
+					dataLayout: {
+						...state.dataLayout,
+						dataLayoutFields,
 					},
 				};
 			}
@@ -387,20 +457,18 @@ const createReducer = (dataLayoutBuilder) => {
 				};
 			}
 			case UPDATE_DATA_LAYOUT_RULE: {
-				let {dataRule} = action.payload;
+				const {dataRule, loc} = action.payload;
 				const {
 					dataLayout: {dataRules},
 				} = state;
-
-				dataRule = DataLayoutVisitor.normalizeRule(dataRule);
 
 				return {
 					...state,
 					dataLayout: {
 						...state.dataLayout,
 						dataRules: dataRules.map((rule, index) => {
-							if (index === dataRule.ruleEditedIndex) {
-								return dataRule;
+							if (index === loc) {
+								return normalizeRule(dataRule);
 							}
 
 							return rule;

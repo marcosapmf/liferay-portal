@@ -24,26 +24,27 @@ TrashContainerModelDisplayContext trashContainerModelDisplayContext = new TrashC
 	<liferay-ui:message arguments="<%= trashContainerModelDisplayContext.getMissingContainerMessageArguments() %>" key="the-original-x-does-not-exist-anymore" translateArguments="<%= false %>" />
 </div>
 
-<aui:form cssClass="container-fluid-1280" method="post" name="selectContainerFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="selectContainerFm">
 	<liferay-site-navigation:breadcrumb
 		breadcrumbEntries="<%= trashDisplayContext.getContainerModelBreadcrumbEntries(trashContainerModelDisplayContext.getContainerModelClassName(), trashContainerModelDisplayContext.getContainerModelId(), trashContainerModelDisplayContext.getContainerURL()) %>"
 	/>
 
 	<aui:button-row>
-
-		<%
-		Map<String, Object> data = HashMapBuilder.<String, Object>put(
-			"classname", trashContainerModelDisplayContext.getClassName()
-		).put(
-			"classpk", trashContainerModelDisplayContext.getClassPK()
-		).put(
-			"containermodelid", trashContainerModelDisplayContext.getContainerModelId()
-		).put(
-			"redirect", trashContainerModelDisplayContext.getRedirect()
-		).build();
-		%>
-
-		<aui:button cssClass="selector-button" data="<%= data %>" value='<%= LanguageUtil.format(request, "choose-this-x", trashContainerModelDisplayContext.getContainerModelName()) %>' />
+		<aui:button
+			cssClass="selector-button"
+			data='<%=
+				HashMapBuilder.<String, Object>put(
+					"classname", trashContainerModelDisplayContext.getClassName()
+				).put(
+					"classpk", trashContainerModelDisplayContext.getClassPK()
+				).put(
+					"containermodelid", trashContainerModelDisplayContext.getContainerModelId()
+				).put(
+					"redirect", trashContainerModelDisplayContext.getRedirect()
+				).build()
+			%>'
+			value='<%= LanguageUtil.format(request, "choose-this-x", trashContainerModelDisplayContext.getContainerModelName()) %>'
+		/>
 	</aui:button-row>
 
 	<liferay-ui:search-container
@@ -94,20 +95,21 @@ TrashContainerModelDisplayContext trashContainerModelDisplayContext = new TrashC
 			/>
 
 			<liferay-ui:search-container-column-text>
-
-				<%
-				Map<String, Object> data = HashMapBuilder.<String, Object>put(
-					"classname", trashContainerModelDisplayContext.getClassName()
-				).put(
-					"classpk", trashContainerModelDisplayContext.getClassPK()
-				).put(
-					"containermodelid", curContainerModelId
-				).put(
-					"redirect", trashContainerModelDisplayContext.getRedirect()
-				).build();
-				%>
-
-				<aui:button cssClass="selector-button" data="<%= data %>" value="choose" />
+				<aui:button
+					cssClass="selector-button"
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"classname", trashContainerModelDisplayContext.getClassName()
+						).put(
+							"classpk", trashContainerModelDisplayContext.getClassPK()
+						).put(
+							"containermodelid", curContainerModelId
+						).put(
+							"redirect", trashContainerModelDisplayContext.getRedirect()
+						).build()
+					%>'
+					value="choose"
+				/>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
 

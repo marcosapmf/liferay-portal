@@ -875,6 +875,9 @@ public class LayoutConverterTest {
 
 		typeSettingsUnicodeProperties.setProperty(
 			LayoutTypePortletConstants.LAYOUT_TEMPLATE_ID, layoutTemplateId);
+		typeSettingsUnicodeProperties.setProperty(
+			"lfr-theme:regular:wrap-widget-page-content",
+			Boolean.FALSE.toString());
 
 		Layout layout = LayoutTestUtil.addLayout(
 			_group.getGroupId(), typeSettingsUnicodeProperties.toString());

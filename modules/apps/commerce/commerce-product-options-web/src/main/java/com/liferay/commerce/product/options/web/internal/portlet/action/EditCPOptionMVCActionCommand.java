@@ -19,32 +19,22 @@ import com.liferay.commerce.product.exception.CPOptionKeyException;
 import com.liferay.commerce.product.exception.CPOptionSKUContributorException;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.service.CPOptionService;
-import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
-import com.liferay.portal.kernel.servlet.ServletResponseUtil;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.StringUtil;
-
-import java.io.IOException;
 
 import java.util.Locale;
 import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,29 +46,11 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_OPTIONS,
-		"mvc.command.name=editProductOption"
+		"mvc.command.name=/cp_options/edit_cp_option"
 	},
 	service = MVCActionCommand.class
 )
 public class EditCPOptionMVCActionCommand extends BaseMVCActionCommand {
-
-	protected void deleteCPOptions(long cpOptionId, ActionRequest actionRequest)
-		throws Exception {
-
-		long[] deleteCPOptionIds = null;
-
-		if (cpOptionId > 0) {
-			deleteCPOptionIds = new long[] {cpOptionId};
-		}
-		else {
-			deleteCPOptionIds = StringUtil.split(
-				ParamUtil.getString(actionRequest, "deleteCPOptionIds"), 0L);
-		}
-
-		for (long deleteCPOptionId : deleteCPOptionIds) {
-			_cpOptionService.deleteCPOption(deleteCPOptionId);
-		}
-	}
 
 	@Override
 	protected void doProcessAction(
@@ -89,52 +61,23 @@ public class EditCPOptionMVCActionCommand extends BaseMVCActionCommand {
 
 		long cpOptionId = ParamUtil.getLong(actionRequest, "cpOptionId");
 
-		HttpServletResponse httpServletResponse =
-			_portal.getHttpServletResponse(actionResponse);
-
-		JSONObject jsonObject = _jsonFactory.createJSONObject();
-
 		try {
-			if (cmd.equals(Constants.DELETE)) {
-				deleteCPOptions(cpOptionId, actionRequest);
+			if (cmd.equals(Constants.UPDATE)) {
+				updateCPOption(cpOptionId, actionRequest);
 			}
-			else if (cmd.equals(Constants.ADD) ||
-					 cmd.equals(Constants.UPDATE)) {
-
-				CPOption cpOption = updateCPOption(cpOptionId, actionRequest);
-
-				jsonObject.put("cpOptionId", cpOption.getCPOptionId());
-			}
-
-			jsonObject.put("success", true);
 		}
 		catch (Exception exception) {
-			String key = "your-request-failed-to-complete";
+			if (exception instanceof CPOptionKeyException ||
+				exception instanceof CPOptionSKUContributorException) {
 
-			if (exception instanceof CPOptionKeyException) {
-				key = "that-key-is-already-being-used";
-			}
-			else if (exception instanceof CPOptionSKUContributorException) {
-				key =
-					"sku-contributor-cannot-be-set-as-true-for-the-selected-" +
-						"field-type";
+				SessionErrors.add(actionRequest, exception.getClass());
 			}
 			else {
 				_log.error(exception, exception);
+
+				throw new Exception(exception);
 			}
-
-			jsonObject.put(
-				"message", LanguageUtil.get(actionRequest.getLocale(), key)
-			).put(
-				"success", false
-			);
 		}
-
-		hideDefaultSuccessMessage(actionRequest);
-
-		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
-
-		writeJSON(actionResponse, jsonObject);
 	}
 
 	protected CPOption updateCPOption(
@@ -156,39 +99,9 @@ public class EditCPOptionMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CPOption.class.getName(), actionRequest);
 
-		CPOption cpOption = null;
-
-		if (cpOptionId <= 0) {
-
-			// Add commerce product option
-
-			cpOption = _cpOptionService.addCPOption(
-				nameMap, descriptionMap, ddmFormFieldTypeName, facetable,
-				required, skuContributor, key, serviceContext);
-		}
-		else {
-
-			// Update commerce product option
-
-			cpOption = _cpOptionService.updateCPOption(
-				cpOptionId, nameMap, descriptionMap, ddmFormFieldTypeName,
-				facetable, required, skuContributor, key, serviceContext);
-		}
-
-		return cpOption;
-	}
-
-	protected void writeJSON(ActionResponse actionResponse, Object object)
-		throws IOException {
-
-		HttpServletResponse httpServletResponse =
-			_portal.getHttpServletResponse(actionResponse);
-
-		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
-
-		ServletResponseUtil.write(httpServletResponse, object.toString());
-
-		httpServletResponse.flushBuffer();
+		return _cpOptionService.updateCPOption(
+			cpOptionId, nameMap, descriptionMap, ddmFormFieldTypeName,
+			facetable, required, skuContributor, key, serviceContext);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -196,11 +109,5 @@ public class EditCPOptionMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private CPOptionService _cpOptionService;
-
-	@Reference
-	private JSONFactory _jsonFactory;
-
-	@Reference
-	private Portal _portal;
 
 }

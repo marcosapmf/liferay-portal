@@ -15,11 +15,13 @@
 package com.liferay.layout.util.template;
 
 import com.liferay.layout.util.structure.ColumnLayoutStructureItem;
+import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,18 +44,26 @@ public class LayoutData {
 		LayoutStructureItem rootLayoutStructureItem =
 			layoutStructure.addRootLayoutStructureItem();
 
+		ContainerStyledLayoutStructureItem containerStyledLayoutStructureItem =
+			(ContainerStyledLayoutStructureItem)
+				layoutStructure.addContainerLayoutStructureItem(
+					rootLayoutStructureItem.getItemId(), 0);
+
+		boolean wrapWidgetPageContent = GetterUtil.getBoolean(
+			_layout.getThemeSetting("wrap-widget-page-content", "regular"));
+
+		if (wrapWidgetPageContent) {
+			containerStyledLayoutStructureItem.setWidthType("fixed");
+		}
+
 		int i = 0;
 
 		for (LayoutRow layoutRow : _layoutRows) {
-			LayoutStructureItem containerLayoutStructureItem =
-				layoutStructure.addContainerLayoutStructureItem(
-					rootLayoutStructureItem.getItemId(), i++);
-
 			List<LayoutColumn> layoutColumns = layoutRow.getLayoutColumns();
 
-			LayoutStructureItem rowLayoutStructureItem =
-				layoutStructure.addRowLayoutStructureItem(
-					containerLayoutStructureItem.getItemId(), 0,
+			LayoutStructureItem rowStyledLayoutStructureItem =
+				layoutStructure.addRowStyledLayoutStructureItem(
+					containerStyledLayoutStructureItem.getItemId(), i++,
 					layoutColumns.size());
 
 			int j = 0;
@@ -62,7 +72,7 @@ public class LayoutData {
 				ColumnLayoutStructureItem columnLayoutStructureItem =
 					(ColumnLayoutStructureItem)
 						layoutStructure.addColumnLayoutStructureItem(
-							rowLayoutStructureItem.getItemId(), j++);
+							rowStyledLayoutStructureItem.getItemId(), j++);
 
 				columnLayoutStructureItem.setSize(layoutColumn.getSize());
 
@@ -71,7 +81,7 @@ public class LayoutData {
 				for (long fragmentEntryLinkId :
 						layoutColumn.getFragmentEntryLinkIds()) {
 
-					layoutStructure.addFragmentLayoutStructureItem(
+					layoutStructure.addFragmentStyledLayoutStructureItem(
 						fragmentEntryLinkId,
 						columnLayoutStructureItem.getItemId(), k++);
 				}
@@ -85,6 +95,8 @@ public class LayoutData {
 		Layout layout,
 		UnsafeConsumer<LayoutRow, Exception>... unsafeConsumers) {
 
+		_layout = layout;
+
 		for (UnsafeConsumer<LayoutRow, Exception> unsafeConsumer :
 				unsafeConsumers) {
 
@@ -92,6 +104,7 @@ public class LayoutData {
 		}
 	}
 
+	private final Layout _layout;
 	private final List<LayoutRow> _layoutRows = new ArrayList<>();
 
 }

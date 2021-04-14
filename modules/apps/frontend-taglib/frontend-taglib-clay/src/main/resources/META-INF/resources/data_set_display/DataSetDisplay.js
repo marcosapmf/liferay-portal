@@ -14,7 +14,7 @@
 
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import {useIsMounted} from 'frontend-js-react-web';
-import {openToast} from 'frontend-js-web';
+import {fetch, openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {
 	useCallback,
@@ -28,7 +28,7 @@ import {AppContext} from './AppContext';
 import DataSetDisplayContext from './DataSetDisplayContext';
 import EmptyResultMessage from './EmptyResultMessage';
 import {updateViewComponent} from './actions/updateViewComponent';
-import ManagementBar from './management_bar/index';
+import ManagementBar from './management_bar/ManagementBar';
 import Modal from './modal/Modal';
 import SidePanel from './side_panel/SidePanel';
 import {
@@ -38,15 +38,17 @@ import {
 	OPEN_SIDE_PANEL,
 	SIDE_PANEL_CLOSED,
 	UPDATE_DATASET_DISPLAY,
-} from './utilities/eventsDefinitions';
+} from './utils/eventsDefinitions';
 import {
 	delay,
 	executeAsyncAction,
+	formatItemChanges,
+	getCurrentItemUpdates,
 	getRandomId,
 	loadData,
-} from './utilities/index';
-import {logError} from './utilities/logError';
-import getJsModule from './utilities/modules';
+} from './utils/index';
+import {logError} from './utils/logError';
+import getJsModule from './utils/modules';
 import ViewsContext from './views/ViewsContext';
 import {getViewContentRenderer} from './views/index';
 
@@ -58,6 +60,8 @@ function DataSetDisplay({
 	filters: filtersProp,
 	formId,
 	id,
+	inlineAddingSettings,
+	inlineEditingSettings,
 	items: itemsProp,
 	itemsActions,
 	namespace,
@@ -75,30 +79,34 @@ function DataSetDisplay({
 	sorting: sortingProp,
 	style,
 }) {
+	const {apiURL} = useContext(AppContext);
+
 	const wrapperRef = useRef(null);
-	const [loading, setLoading] = useState(false);
-	const [dataSetDisplaySupportSidePanelId] = useState(
-		sidePanelId || 'support-side-panel-' + getRandomId()
-	);
-
+	const [componentLoading, setComponentLoading] = useState(false);
+	const [dataLoading, setDataLoading] = useState(!!apiURL);
 	const [dataSetDisplaySupportModalId] = useState(
-		'support-modal-' + getRandomId()
+		`support-modal-${getRandomId()}`
 	);
-
+	const [dataSetDisplaySupportSidePanelId] = useState(
+		sidePanelId || `support-side-panel-${getRandomId()}`
+	);
+	const [delta, setDelta] = useState(
+		showPagination &&
+			(pagination.initialDelta || pagination.deltas[0].label)
+	);
+	const [filters, updateFilters] = useState(filtersProp);
+	const [highlightedItemsValue, setHighlightedItemsValue] = useState([]);
+	const [items, updateItems] = useState(itemsProp);
+	const [itemsChanges, updateItemsChanges] = useState({});
+	const [pageNumber, setPageNumber] = useState(1);
+	const [searchParam, updateSearchParam] = useState('');
 	const [selectedItemsValue, setSelectedItemsValue] = useState(
 		selectedItems || []
 	);
-	const [highlightedItemsValue, setHighlightedItemsValue] = useState([]);
-	const [filters, updateFilters] = useState(filtersProp);
-	const [searchParam, updateSearchParam] = useState('');
 	const [sorting, updateSorting] = useState(sortingProp);
-	const [items, updateItems] = useState(itemsProp);
-	const [pageNumber, setPageNumber] = useState(1);
-	const [delta, setDelta] = useState(
-		pagination.initialDelta || pagination.deltas[0].label
-	);
 	const [total, setTotal] = useState(0);
-	const [{activeView, views}, dispatch] = useContext(ViewsContext);
+	const [{activeView}, dispatch] = useContext(ViewsContext);
+
 	const {
 		component: CurrentViewComponent,
 		contentRenderer,
@@ -108,8 +116,6 @@ function DataSetDisplay({
 	} = activeView;
 
 	const selectable = !!(bulkActions?.length && selectedItemsKey);
-
-	const {apiURL} = useContext(AppContext);
 
 	const requestData = useCallback(() => {
 		const activeFiltersOdataStrings = filters.reduce(
@@ -171,41 +177,6 @@ function DataSetDisplay({
 		updateItems(dataSetData.items);
 	}
 
-	const pendingPromise = useRef(null);
-
-	useEffect(() => {
-		const promise = Promise.race([
-			delay(200).then(() => {
-				if (isMounted() && pendingPromise.current === promise) {
-					setLoading(true);
-				}
-			}),
-			Promise.all([requestComponent(), requestData()]).then(
-				([component, data]) => {
-					if (isMounted() && pendingPromise.current === promise) {
-						pendingPromise.current = null;
-
-						dispatch(
-							updateViewComponent(activeViewName, component)
-						);
-
-						setLoading(false);
-						updateDataSetItems(data);
-					}
-				}
-			),
-		]);
-
-		pendingPromise.current = promise;
-	}, [
-		activeViewName,
-		dispatch,
-		isMounted,
-		requestComponent,
-		requestData,
-		setLoading,
-	]);
-
 	useEffect(() => {
 		const itemsAreInjected = !apiURL && itemsProp?.length !== items.length;
 
@@ -258,7 +229,7 @@ function DataSetDisplay({
 	}, [wrapperRef]);
 
 	function refreshData(successNotification) {
-		setLoading(true);
+		setDataLoading(true);
 
 		return requestData()
 			.then((data) => {
@@ -272,8 +243,9 @@ function DataSetDisplay({
 				}
 
 				if (isMounted()) {
-					setLoading(false);
 					updateDataSetItems(data);
+
+					setDataLoading(false);
 
 					Liferay.fire(DATASET_DISPLAY_UPDATED, {id});
 				}
@@ -282,11 +254,40 @@ function DataSetDisplay({
 			})
 			.catch((error) => {
 				logError(error);
-				setLoading(false);
+				setDataLoading(false);
 
 				throw error;
 			});
 	}
+
+	useEffect(() => {
+		setComponentLoading(true);
+
+		requestComponent().then((component) => {
+			if (isMounted()) {
+				setComponentLoading(false);
+				dispatch(updateViewComponent(activeViewName, component));
+			}
+		});
+	}, [
+		activeViewName,
+		dispatch,
+		isMounted,
+		requestComponent,
+		setComponentLoading,
+	]);
+
+	useEffect(() => {
+		setDataLoading(true);
+
+		requestData().then((data) => {
+			if (isMounted()) {
+				updateDataSetItems(data);
+
+				setDataLoading(false);
+			}
+		});
+	}, [isMounted, requestData, setDataLoading]);
 
 	useEffect(() => {
 		function handleRefreshFromTheOutside(event) {
@@ -336,13 +337,12 @@ function DataSetDisplay({
 				showSearch={showSearch}
 				sidePanelId={dataSetDisplaySupportSidePanelId}
 				total={items?.length ?? 0}
-				views={views}
 			/>
 		</div>
 	) : null;
 
 	const view =
-		!loading && CurrentViewComponent ? (
+		!dataLoading && !componentLoading ? (
 			<div className="data-set-display-content-wrapper">
 				<input
 					hidden
@@ -352,7 +352,9 @@ function DataSetDisplay({
 					readOnly
 					value={selectedItemsValue.join(',')}
 				/>
-				{(items?.length ?? 0) || overrideEmptyResultView ? (
+				{items.length ||
+				overrideEmptyResultView ||
+				inlineAddingSettings ? (
 					<CurrentViewComponent
 						dataSetDisplayContext={DataSetDisplayContext}
 						items={items}
@@ -428,17 +430,153 @@ function DataSetDisplay({
 		});
 	}
 
+	function updateItem(itemKey, property, valuePath, value = null) {
+		const itemChanges = getCurrentItemUpdates(
+			items,
+			itemsChanges,
+			selectedItemsKey,
+			itemKey,
+			property,
+			value,
+			valuePath
+		);
+
+		updateItemsChanges({
+			...itemsChanges,
+			[itemKey]: itemChanges,
+		});
+	}
+
+	function toggleItemInlineEdit(itemKey) {
+		updateItemsChanges(({[itemKey]: foundItem, ...itemsChanges}) => {
+			return foundItem
+				? itemsChanges
+				: {
+						...itemsChanges,
+						[itemKey]: {},
+				  };
+		});
+	}
+
+	function createInlineItem() {
+		const defaultBodyContent =
+			inlineAddingSettings.defaultBodyContent || {};
+		const newItemBodyContent = formatItemChanges(itemsChanges[0]);
+
+		return fetch(inlineAddingSettings.apiURL, {
+			body: JSON.stringify({
+				...defaultBodyContent,
+				...newItemBodyContent,
+			}),
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+			},
+			method: inlineAddingSettings.method || 'POST',
+		})
+			.then((response) => {
+				if (!isMounted()) {
+					return;
+				}
+
+				if (!response.ok) {
+					return response
+						.json()
+						.then((jsonResponse) =>
+							Promise.reject(new Error(jsonResponse.title))
+						);
+				}
+
+				updateItemsChanges((itemsChanges) => ({
+					...itemsChanges,
+					[0]: {},
+				}));
+
+				return refreshData({
+					message: Liferay.Language.get(
+						'item-was-successfully-created'
+					),
+					showSuccessNotification: true,
+				});
+			})
+			.catch((error) => {
+				logError(error);
+				openToast({
+					message: error.message,
+					type: 'danger',
+				});
+
+				throw error;
+			});
+	}
+
+	function applyItemInlineUpdates(itemKey) {
+		const itemToBeUpdated = items.find(
+			(item) => item[selectedItemsKey] === itemKey
+		);
+
+		const defaultBody = inlineEditingSettings.defaultBodyContent || {};
+
+		return fetch(itemToBeUpdated.actions.update.href, {
+			body: JSON.stringify({
+				...defaultBody,
+				...formatItemChanges(itemsChanges[itemKey]),
+			}),
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json',
+			},
+			method: itemToBeUpdated.actions.update.method,
+		})
+			.then((response) => {
+				if (!isMounted()) {
+					return;
+				}
+
+				if (!response.ok) {
+					return response
+						.json()
+						.then((jsonResponse) =>
+							Promise.reject(new Error(jsonResponse.title))
+						);
+				}
+
+				toggleItemInlineEdit(itemKey);
+
+				return refreshData({
+					message: Liferay.Language.get(
+						'item-was-successfully-updated'
+					),
+					showSuccessNotification: true,
+				});
+			})
+			.catch((error) => {
+				logError(error);
+				openToast({
+					message: error.message,
+					type: 'danger',
+				});
+
+				throw error;
+			});
+	}
+
 	return (
 		<DataSetDisplayContext.Provider
 			value={{
 				actionParameterName,
+				applyItemInlineUpdates,
+				createInlineItem,
 				executeAsyncItemAction,
 				formId,
 				formRef,
 				highlightItems,
 				highlightedItemsValue,
 				id,
+				inlineAddingSettings,
+				inlineEditingSettings,
 				itemsActions,
+				itemsChanges,
 				loadData: refreshData,
 				modalId: dataSetDisplaySupportModalId,
 				namespace,
@@ -455,7 +593,9 @@ function DataSetDisplay({
 				sidePanelId: dataSetDisplaySupportSidePanelId,
 				sorting,
 				style,
+				toggleItemInlineEdit,
 				updateDataSetItems,
+				updateItem,
 				updateSearchParam,
 				updateSorting,
 			}}
@@ -499,16 +639,30 @@ function DataSetDisplay({
 }
 
 DataSetDisplay.propTypes = {
-	apURL: PropTypes.string,
+	apiURL: PropTypes.string,
 	bulkActions: PropTypes.array,
 	creationMenu: PropTypes.shape({
 		primaryItems: PropTypes.array,
 		secondaryItems: PropTypes.array,
 	}),
 	currentURL: PropTypes.string,
+	enableInlineAddModeSetting: PropTypes.shape({
+		defaultBodyContent: PropTypes.object,
+	}),
 	filters: PropTypes.array,
 	formId: PropTypes.string,
 	id: PropTypes.string.isRequired,
+	inlineAddingSettings: PropTypes.shape({
+		apiURL: PropTypes.string.isRequired,
+		defaultBodyContent: PropTypes.object,
+	}),
+	inlineEditingSettings: PropTypes.oneOfType([
+		PropTypes.bool,
+		PropTypes.shape({
+			alwaysOn: PropTypes.bool,
+			defaultBodyContent: PropTypes.object,
+		}),
+	]),
 	items: PropTypes.array,
 	itemsActions: PropTypes.array,
 	namespace: PropTypes.string,
@@ -538,21 +692,12 @@ DataSetDisplay.propTypes = {
 		})
 	),
 	style: PropTypes.oneOf(['default', 'fluid', 'stacked']),
-	views: PropTypes.arrayOf(
-		PropTypes.shape({
-			component: PropTypes.any,
-			contentRenderer: PropTypes.string,
-			contentRendererModuleURL: PropTypes.string,
-			label: PropTypes.string,
-			schema: PropTypes.object,
-			thumbnail: PropTypes.string,
-		})
-	).isRequired,
 };
 
 DataSetDisplay.defaultProps = {
 	bulkActions: [],
 	filters: [],
+	inlineEditingSettings: null,
 	items: null,
 	itemsActions: null,
 	pagination: {

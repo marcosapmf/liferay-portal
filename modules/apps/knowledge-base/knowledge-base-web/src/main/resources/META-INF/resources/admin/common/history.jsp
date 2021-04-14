@@ -45,7 +45,7 @@ if (portletTitleBasedNavigation) {
 	/>
 </c:if>
 
-<aui:fieldset cssClass='<%= portletTitleBasedNavigation ? "container-fluid-1280 main-content-card panel" : StringPool.BLANK %>' markupView="lexicon">
+<aui:fieldset cssClass='<%= portletTitleBasedNavigation ? "container-fluid container-fluid-max-xl panel" : StringPool.BLANK %>' markupView="lexicon">
 
 	<%
 	RowChecker rowChecker = new RowChecker(renderResponse);
@@ -183,13 +183,13 @@ if (portletTitleBasedNavigation) {
 	</liferay-ui:search-container>
 </aui:fieldset>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var compareVersionsButton = document.getElementById(
 		'<portlet:namespace />compare'
 	);
 
 	if (compareVersionsButton) {
-		compareVersionsButton.addEventListener('click', function (event) {
+		compareVersionsButton.addEventListener('click', (event) => {
 			var rowIds = document.querySelectorAll(
 				'input[name="<portlet:namespace />rowIds"]:checked'
 			);
@@ -222,7 +222,7 @@ if (portletTitleBasedNavigation) {
 	function <portlet:namespace />initRowsChecked() {
 		Array.from(
 			document.querySelectorAll('input[name=<portlet:namespace />rowIds]')
-		).forEach(function (item, index, collection) {
+		).forEach((item, index, collection) => {
 			if (index >= 2) {
 				item.checked = false;
 			}
@@ -249,11 +249,13 @@ if (portletTitleBasedNavigation) {
 
 	<portlet:namespace />initRowsChecked();
 
-	dom.delegate(
+	var delegate = delegateModule.default;
+
+	delegate(
 		document.body,
 		'click',
 		'input[name=<portlet:namespace />rowIds]',
-		function (event) {
+		(event) => {
 			<portlet:namespace />updateRowsChecked(event.delegateTarget);
 		}
 	);

@@ -9,7 +9,7 @@
 </thead>
 <tbody>
 <tr>
-	<td>ACCOUNT_DOMAIN_ADD_Link</td>
+	<td>ACCOUNT_DOMAIN_ADD_LINK</td>
 	<td>//a[contains(@id,'addDomains')]/span</td>
 	<td></td>
 </tr>
@@ -25,7 +25,7 @@
 </tr>
 <tr>
 	<td>CHOOSE_ACCOUNT_USER</td>
-	<td>//tr[contains(.,'${key_accountUserName}')]/td[4]//button[contains(.,'Choose')]</td>
+	<td>//tr[contains(.,'${key_accountUserName}')]//button[contains(.,'Choose')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -51,6 +51,51 @@
 <tr>
 	<td>DOMAIN_TABLE_NAME</td>
 	<td>//tr[contains(.,'${key_domainName}')]/td[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENTRY_CONTENT_ENTRY_ACCOUNTS</td>
+	<td>//*[@data-qa-id='row'][contains(.,'${key_rowEntry}')]//td[contains(.,'${key_rowEntryAccount}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DEFAULT_ACCOUNT_ADDRESSES_SECTION</td>
+	<td>//div[contains(@class,'section')]//span[normalize-space(text())='Default Account Addresses']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACCOUNT_ADDRESSES</td>
+	<td>//a[@data-type='${key_addressDataType}']/../../preceding-sibling::address</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACCOUNT_ADDRESS_BILLING</td>
+	<td>//a[@data-type='billing']/../../preceding-sibling::div[normalize-space(text())='Billing']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACCOUNT_ADDRESS_SHIPPING</td>
+	<td>//a[@data-type='shipping']/../../preceding-sibling::div[normalize-space(text())='Shipping']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>REMOVE_ACCOUNT_DEFAULT_ADDRESS</td>
+	<td>//a[@data-type='${key_addressDataType}']/..//following-sibling::span//span[normalize-space(text())='Remove']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SET_ACCOUNT_DEFAULT_ADDRESS</td>
+	<td>//a[@data-type='${key_addressDataType}']//span[normalize-space(text())='${key_text}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_ADDRESS_RADIO</td>
+	<td>//input[contains(@name,'selectAddress')]//following-sibling::span[normalize-space()='${key_addressName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SAVE_BUTTON</td>
+	<td>//button[contains(@class,'btn')][normalize-space(text())='Save']</td>
 	<td></td>
 </tr>
 </tbody>

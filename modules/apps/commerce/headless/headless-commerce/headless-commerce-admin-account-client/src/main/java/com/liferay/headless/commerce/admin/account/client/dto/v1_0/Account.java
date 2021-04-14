@@ -17,6 +17,9 @@ package com.liferay.headless.commerce.admin.account.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.account.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.account.client.serdes.v1_0.AccountSerDes;
 
+import java.io.Serializable;
+
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +30,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Account implements Cloneable {
+public class Account implements Cloneable, Serializable {
 
 	public static Account toDTO(String json) {
 		return AccountSerDes.toDTO(json);
@@ -122,6 +125,48 @@ public class Account implements Cloneable {
 
 	protected Map<String, ?> customFields;
 
+	public Date getDateCreated() {
+		return dateCreated;
+	}
+
+	public void setDateCreated(Date dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+
+	public void setDateCreated(
+		UnsafeSupplier<Date, Exception> dateCreatedUnsafeSupplier) {
+
+		try {
+			dateCreated = dateCreatedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateCreated;
+
+	public Date getDateModified() {
+		return dateModified;
+	}
+
+	public void setDateModified(Date dateModified) {
+		this.dateModified = dateModified;
+	}
+
+	public void setDateModified(
+		UnsafeSupplier<Date, Exception> dateModifiedUnsafeSupplier) {
+
+		try {
+			dateModified = dateModifiedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateModified;
+
 	public String[] getEmailAddresses() {
 		return emailAddresses;
 	}
@@ -203,6 +248,27 @@ public class Account implements Cloneable {
 	}
 
 	protected Long logoId;
+
+	public String getLogoURL() {
+		return logoURL;
+	}
+
+	public void setLogoURL(String logoURL) {
+		this.logoURL = logoURL;
+	}
+
+	public void setLogoURL(
+		UnsafeSupplier<String, Exception> logoURLUnsafeSupplier) {
+
+		try {
+			logoURL = logoURLUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String logoURL;
 
 	public String getName() {
 		return name;

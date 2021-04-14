@@ -12,99 +12,45 @@
  * details.
  */
 
+import {ClayCheckbox, ClayRadio} from '@clayui/form';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext} from 'react';
 
 import DataSetDisplayContext from '../../DataSetDisplayContext';
 import ActionsDropdownRenderer from '../../data_renderers/ActionsDropdownRenderer';
-import CheckboxRenderer from '../../data_renderers/CheckboxRenderer';
-import CommentRenderer from '../../data_renderers/CommentRenderer';
-import RadioRenderer from '../../data_renderers/RadioRenderer';
-import {
-	getDataRendererById,
-	getDataRendererByURL,
-} from '../../data_renderers/index';
-import {getValueFromItem} from '../../utilities/index';
+import {getValueDetailsFromItem} from '../../utils/index';
 import ViewsContext from '../ViewsContext';
+import TableCell from './TableCell';
 import TableHeadRow from './TableHeadRow';
+import TableInlineAddingRow from './TableInlineAddingRow';
 
-function CustomTableCell({
-	actions,
-	comment,
-	itemData,
+function getItemFields(
+	item,
+	fields,
 	itemId,
-	options,
-	value,
-	view,
-}) {
-	const [currentView, updateCurrentView] = useState({
-		...view,
-		Component: view.contentRendererModuleURL
-			? null
-			: getDataRendererById(view.contentRenderer),
-	});
-	const [loading, setLoading] = useState(false);
-
-	useEffect(() => {
-		if (loading) {
-			return;
-		}
-		if (currentView.contentRendererModuleURL) {
-			setLoading(true);
-			getDataRendererByURL(currentView.contentRendererModuleURL).then(
-				(Component) => {
-					updateCurrentView({
-						...currentView,
-						Component,
-					});
-					setLoading(false);
-				}
-			);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentView]);
-
-	return (
-		<ClayTable.Cell>
-			{currentView.Component && !loading ? (
-				<currentView.Component
-					actions={actions}
-					itemData={itemData}
-					itemId={itemId}
-					options={options}
-					value={value}
-				/>
-			) : (
-				<span
-					aria-hidden="true"
-					className="loading-animation loading-animation-sm"
-				/>
-			)}
-			{comment && <CommentRenderer>{comment}</CommentRenderer>}
-		</ClayTable.Cell>
-	);
-}
-
-function getItemFields(item, fields, itemId, itemsActions) {
-	return fields.map((field, i) => {
-		const {actionDropdownItems, comments} = item;
-		const rawValue = getValueFromItem(item, field.fieldName);
-		const formattedValue = field.mapData
-			? field.mapData(rawValue)
-			: rawValue;
-		const comment = comments ? comments[field.fieldName] : null;
+	itemsActions,
+	itemInlineChanges = null
+) {
+	return fields.map((field) => {
+		const {actionDropdownItems} = item;
+		const {rootPropertyName, value, valuePath} = field.fieldName
+			? getValueDetailsFromItem(item, field.fieldName)
+			: {};
 
 		return (
-			<CustomTableCell
+			<TableCell
 				actions={itemsActions || actionDropdownItems}
-				comment={comment}
+				inlineEditSettings={field.inlineEditSettings}
 				itemData={item}
 				itemId={itemId}
-				key={field.fieldName || i}
+				itemInlineChanges={itemInlineChanges}
+				key={valuePath ? valuePath.join('_') : field.label}
 				options={field}
-				value={formattedValue}
+				rootPropertyName={rootPropertyName}
+				value={value}
+				valuePath={valuePath}
 				view={{
 					contentRenderer: field.contentRenderer,
 					contentRendererModuleURL: field.contentRendererModuleURL,
@@ -125,6 +71,8 @@ export const getVisibleFields = (fields, visibleFieldNames) => {
 function Table({items, itemsActions, schema, style}) {
 	const {
 		highlightedItemsValue,
+		inlineAddingSettings,
+		itemsChanges,
 		nestedItemsKey,
 		nestedItemsReferenceKey,
 		selectItems,
@@ -145,7 +93,7 @@ function Table({items, itemsActions, schema, style}) {
 	);
 
 	const SelectionComponent =
-		selectionType === 'multiple' ? CheckboxRenderer : RadioRenderer;
+		selectionType === 'multiple' ? ClayCheckbox : ClayRadio;
 
 	return (
 		<div className={`table-style-${style}`}>
@@ -163,8 +111,14 @@ function Table({items, itemsActions, schema, style}) {
 					visibleFields={visibleFields}
 				/>
 				<ClayTable.Body>
-					{items.map((item, i) => {
-						const itemId = item[selectedItemsKey] || i;
+					{inlineAddingSettings && (
+						<TableInlineAddingRow
+							fields={visibleFields}
+							selectable={selectable}
+						/>
+					)}
+					{items.map((item) => {
+						const itemId = item[selectedItemsKey];
 						const nestedItems =
 							nestedItemsReferenceKey &&
 							item[nestedItemsReferenceKey];
@@ -204,7 +158,8 @@ function Table({items, itemsActions, schema, style}) {
 										item,
 										visibleFields,
 										itemId,
-										itemsActions
+										itemsActions,
+										itemsChanges[itemId]
 									)}
 									<ClayTable.Cell className="data-set-item-actions-wrapper">
 										{(showActionItems || item.actions) && (

@@ -42,8 +42,8 @@ import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.payment.test.util.TestCommercePaymentMethod;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.model.CommerceChannelConstants;
 import com.liferay.commerce.product.service.CommerceChannelLocalServiceUtil;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemLocalService;
@@ -56,7 +56,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -114,10 +113,8 @@ public class CommerceOrderEngineTest {
 
 		PrincipalThreadLocal.setName(_user.getUserId());
 
-		PermissionChecker permissionChecker =
-			PermissionCheckerFactoryUtil.create(_user);
-
-		PermissionThreadLocal.setPermissionChecker(permissionChecker);
+		PermissionThreadLocal.setPermissionChecker(
+			PermissionCheckerFactoryUtil.create(_user));
 
 		_commerceCurrency = CommerceCurrencyTestUtil.addCommerceCurrency(
 			_group.getCompanyId());
@@ -132,8 +129,9 @@ public class CommerceOrderEngineTest {
 
 		_commerceAccount = CommerceAccountTestUtil.addBusinessCommerceAccount(
 			_user.getUserId(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			new long[] {_user.getUserId()}, null, _serviceContext);
+			RandomTestUtil.randomString() + "@liferay.com",
+			RandomTestUtil.randomString(), new long[] {_user.getUserId()}, null,
+			_serviceContext);
 
 		_commerceOrder = CommerceTestUtil.addB2BCommerceOrder(
 			_group.getGroupId(), _user.getUserId(),
@@ -433,10 +431,8 @@ public class CommerceOrderEngineTest {
 
 			PrincipalThreadLocal.setName(nonadminUser.getUserId());
 
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(nonadminUser);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(nonadminUser));
 
 			_commerceOrder = _commerceOrderEngine.checkoutCommerceOrder(
 				_commerceOrder, nonadminUser.getUserId());
@@ -494,7 +490,7 @@ public class CommerceOrderEngineTest {
 		).when(
 			"We try to checkout the order"
 		).then(
-			"The Order should be in the In progress status"
+			"The Order should be in the Pending status"
 		);
 
 		Assert.assertEquals(
@@ -538,7 +534,7 @@ public class CommerceOrderEngineTest {
 			_commerceOrder, _user.getUserId());
 
 		Assert.assertEquals(
-			InProgressCommerceOrderStatusImpl.KEY,
+			PendingCommerceOrderStatusImpl.KEY,
 			_commerceOrder.getOrderStatus());
 	}
 

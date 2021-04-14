@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Component;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.COMMERCE_CHANNELS,
-		"mvc.command.name=editCommerceChannel"
+		"mvc.command.name=/commerce_channels/edit_commerce_channel"
 	},
 	service = MVCRenderCommand.class
 )
@@ -41,7 +41,7 @@ public class EditCommerceChannelMVCRenderCommand implements MVCRenderCommand {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortletException {
 
-		return "/edit_channel.jsp";
+		return "/edit_commerce_channel.jsp";
 	}
 
 }

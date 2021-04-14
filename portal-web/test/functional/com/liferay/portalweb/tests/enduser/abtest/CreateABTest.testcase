@@ -3,10 +3,10 @@ definition {
 
 	// Ignore test until Analytics Cloud connection is fully automated
 
-	property portal.release = "true";
+	property analytics.cloud.enabled = "true";
+	property portal.release = "false";
 	property portal.upstream = "false";
 	property testray.main.component.name = "A/B Test";
-	property analytics.cloud.enabled = "true";
 
 	setUp {
 

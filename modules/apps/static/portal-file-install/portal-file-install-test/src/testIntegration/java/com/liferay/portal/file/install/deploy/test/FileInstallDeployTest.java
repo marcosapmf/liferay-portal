@@ -33,8 +33,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.Dictionary;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -56,6 +59,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.Version;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ManagedService;
@@ -161,8 +166,7 @@ public class FileInstallDeployTest {
 			_updateConfiguration(
 				() -> {
 					String content = StringBundler.concat(
-						_TEST_KEY, StringPool.EQUAL, "\"${",
-						systemTestPropertyKey, "}\"");
+						_TEST_KEY, "=\"${", systemTestPropertyKey, "}\"");
 
 					Files.write(path, content.getBytes());
 				});
@@ -230,7 +234,12 @@ public class FileInstallDeployTest {
 		Bundle bundle = null;
 
 		try {
-			_createJAR(path, _TEST_JAR_SYMBOLIC_NAME, baseVersion, null);
+			JarBuilder jarBuilder = new JarBuilder(
+				path, _TEST_JAR_SYMBOLIC_NAME);
+
+			jarBuilder.setVersion(
+				baseVersion
+			).build();
 
 			installCountDownLatch.await();
 
@@ -241,7 +250,11 @@ public class FileInstallDeployTest {
 			Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
 			Assert.assertEquals(baseVersion, bundle.getVersion());
 
-			_createJAR(path, _TEST_JAR_SYMBOLIC_NAME, updateVersion, null);
+			jarBuilder = new JarBuilder(path, _TEST_JAR_SYMBOLIC_NAME);
+
+			jarBuilder.setVersion(
+				updateVersion
+			).build();
 
 			updateCountDownLatch.await();
 
@@ -257,7 +270,7 @@ public class FileInstallDeployTest {
 		finally {
 			_bundleContext.removeBundleListener(bundleListener);
 
-			Files.deleteIfExists(path);
+			_uninstall(_TEST_JAR_SYMBOLIC_NAME, path);
 		}
 	}
 
@@ -316,10 +329,11 @@ public class FileInstallDeployTest {
 
 		_bundleContext.addBundleListener(bundleListener);
 
-		Version version = new Version(1, 0, 0);
-
 		try {
-			_createJAR(path, _TEST_JAR_SYMBOLIC_NAME, version, null);
+			JarBuilder jarBuilder = new JarBuilder(
+				path, _TEST_JAR_SYMBOLIC_NAME);
+
+			jarBuilder.build();
 
 			installCountDownLatch.await();
 
@@ -327,9 +341,11 @@ public class FileInstallDeployTest {
 
 			Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
 
-			_createJAR(
-				fragmentPath, testFragmentSymbolicName, version,
-				_TEST_JAR_SYMBOLIC_NAME);
+			jarBuilder = new JarBuilder(fragmentPath, testFragmentSymbolicName);
+
+			jarBuilder.setFragmentHost(
+				_TEST_JAR_SYMBOLIC_NAME
+			).build();
 
 			fragmentInstallCountDownLatch.await();
 
@@ -352,40 +368,125 @@ public class FileInstallDeployTest {
 		finally {
 			_bundleContext.removeBundleListener(bundleListener);
 
-			Files.deleteIfExists(path);
+			_uninstall(_TEST_JAR_SYMBOLIC_NAME, path);
 
-			Files.deleteIfExists(fragmentPath);
+			_uninstall(testFragmentSymbolicName, fragmentPath);
 		}
 	}
 
-	private void _createJAR(
-			Path path, String symbolicName, Version version,
-			String fragmentHost)
-		throws IOException {
+	@Test
+	public void testDeployOptionalDependency() throws Exception {
+		String testOptionalProviderSymbolicName =
+			_TEST_JAR_SYMBOLIC_NAME.concat(".optional.provider");
 
-		try (OutputStream outputStream = Files.newOutputStream(path);
-			JarOutputStream jarOutputStream = new JarOutputStream(
-				outputStream)) {
+		CountDownLatch installCountDownLatch = new CountDownLatch(1);
 
-			Manifest manifest = new Manifest();
+		CountDownLatch optionalProviderInstallCountDownLatch =
+			new CountDownLatch(1);
 
-			Attributes attributes = manifest.getMainAttributes();
+		AtomicBoolean bundleRefreshed = new AtomicBoolean();
 
-			attributes.putValue(Constants.BUNDLE_MANIFESTVERSION, "2");
-			attributes.putValue(Constants.BUNDLE_SYMBOLICNAME, symbolicName);
-			attributes.putValue(Constants.BUNDLE_VERSION, version.toString());
+		BundleListener bundleListener = new BundleListener() {
 
-			if (fragmentHost != null) {
-				attributes.putValue(Constants.FRAGMENT_HOST, fragmentHost);
+			@Override
+			public void bundleChanged(BundleEvent bundleEvent) {
+				Bundle bundle = bundleEvent.getBundle();
+
+				int type = bundleEvent.getType();
+
+				if (Objects.equals(
+						bundle.getSymbolicName(),
+						testOptionalProviderSymbolicName) &&
+					(type == BundleEvent.STARTED)) {
+
+					optionalProviderInstallCountDownLatch.countDown();
+				}
+
+				if (Objects.equals(
+						bundle.getSymbolicName(), _TEST_JAR_SYMBOLIC_NAME) &&
+					(type == BundleEvent.STARTED)) {
+
+					if (installCountDownLatch.getCount() == 0) {
+						bundleRefreshed.set(true);
+					}
+
+					installCountDownLatch.countDown();
+				}
 			}
 
-			attributes.putValue("Manifest-Version", "2");
+		};
 
-			jarOutputStream.putNextEntry(new ZipEntry(JarFile.MANIFEST_NAME));
+		_bundleContext.addBundleListener(bundleListener);
 
-			manifest.write(jarOutputStream);
+		Path path = Paths.get(
+			PropsValues.MODULE_FRAMEWORK_MODULES_DIR, _TEST_JAR_NAME);
 
-			jarOutputStream.closeEntry();
+		Path optionalProviderPath = Paths.get(
+			PropsValues.MODULE_FRAMEWORK_MODULES_DIR,
+			testOptionalProviderSymbolicName.concat(".jar"));
+
+		try {
+			String optionalPackage = "com.liferay.test.optional.package";
+
+			JarBuilder jarBuilder = new JarBuilder(
+				path, _TEST_JAR_SYMBOLIC_NAME);
+
+			jarBuilder.setImport(
+				optionalPackage + ";resolution:=optional"
+			).build();
+
+			installCountDownLatch.await();
+
+			Bundle bundle = _getBundle(_TEST_JAR_SYMBOLIC_NAME);
+
+			Assert.assertEquals(Bundle.ACTIVE, bundle.getState());
+
+			BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+
+			List<BundleRequirement> bundleRequirements =
+				bundleWiring.getRequirements(null);
+
+			Assert.assertTrue(
+				bundleRequirements.toString(), bundleRequirements.isEmpty());
+
+			jarBuilder = new JarBuilder(
+				optionalProviderPath, testOptionalProviderSymbolicName);
+
+			jarBuilder.setExport(
+				optionalPackage
+			).build();
+
+			optionalProviderInstallCountDownLatch.await();
+
+			Bundle optionalProviderBundle = _getBundle(
+				testOptionalProviderSymbolicName);
+
+			Assert.assertEquals(
+				Bundle.ACTIVE, optionalProviderBundle.getState());
+
+			bundleWiring = bundle.adapt(BundleWiring.class);
+
+			bundleRequirements = bundleWiring.getRequirements(null);
+
+			Assert.assertEquals(
+				bundleRequirements.toString(), 1, bundleRequirements.size());
+
+			BundleRequirement bundleRequirement = bundleRequirements.get(0);
+
+			Map<String, String> directives = bundleRequirement.getDirectives();
+
+			String filter = directives.get(Constants.FILTER_DIRECTIVE);
+
+			Assert.assertTrue(
+				filter + " does not contain " + optionalPackage,
+				filter.contains(optionalPackage));
+		}
+		finally {
+			_bundleContext.removeBundleListener(bundleListener);
+
+			_uninstall(_TEST_JAR_SYMBOLIC_NAME, path);
+
+			_uninstall(testOptionalProviderSymbolicName, optionalProviderPath);
 		}
 	}
 
@@ -397,6 +498,44 @@ public class FileInstallDeployTest {
 		}
 
 		return null;
+	}
+
+	private void _uninstall(String symbolicName, Path path) throws Exception {
+		if (!Files.exists(path)) {
+			return;
+		}
+
+		CountDownLatch countDownLatch = new CountDownLatch(1);
+
+		BundleListener bundleListener = new BundleListener() {
+
+			@Override
+			public void bundleChanged(BundleEvent bundleEvent) {
+				Bundle bundle = bundleEvent.getBundle();
+
+				if (!Objects.equals(bundle.getSymbolicName(), symbolicName)) {
+					return;
+				}
+
+				int type = bundleEvent.getType();
+
+				if (type == BundleEvent.UNINSTALLED) {
+					countDownLatch.countDown();
+				}
+			}
+
+		};
+
+		_bundleContext.addBundleListener(bundleListener);
+
+		try {
+			Files.deleteIfExists(path);
+
+			countDownLatch.await();
+		}
+		finally {
+			_bundleContext.removeBundleListener(bundleListener);
+		}
 	}
 
 	private void _updateConfiguration(UnsafeRunnable<Exception> runnable)
@@ -448,5 +587,83 @@ public class FileInstallDeployTest {
 	}
 
 	private BundleContext _bundleContext;
+
+	private class JarBuilder {
+
+		public void build() throws IOException {
+			try (OutputStream outputStream = Files.newOutputStream(_path);
+				JarOutputStream jarOutputStream = new JarOutputStream(
+					outputStream)) {
+
+				Manifest manifest = new Manifest();
+
+				Attributes attributes = manifest.getMainAttributes();
+
+				attributes.putValue(Constants.BUNDLE_MANIFESTVERSION, "2");
+				attributes.putValue(
+					Constants.BUNDLE_SYMBOLICNAME, _symbolicName);
+				attributes.putValue(
+					Constants.BUNDLE_VERSION, _version.toString());
+
+				if (_exports != null) {
+					attributes.putValue(Constants.EXPORT_PACKAGE, _exports);
+				}
+
+				if (_fragmentHost != null) {
+					attributes.putValue(Constants.FRAGMENT_HOST, _fragmentHost);
+				}
+
+				if (_imports != null) {
+					attributes.putValue(Constants.IMPORT_PACKAGE, _imports);
+				}
+
+				attributes.putValue("Manifest-Version", "2");
+
+				jarOutputStream.putNextEntry(
+					new ZipEntry(JarFile.MANIFEST_NAME));
+
+				manifest.write(jarOutputStream);
+
+				jarOutputStream.closeEntry();
+			}
+		}
+
+		public JarBuilder setExport(String exports) {
+			_exports = exports;
+
+			return this;
+		}
+
+		public JarBuilder setFragmentHost(String fragmentHost) {
+			_fragmentHost = fragmentHost;
+
+			return this;
+		}
+
+		public JarBuilder setImport(String imports) {
+			_imports = imports;
+
+			return this;
+		}
+
+		public JarBuilder setVersion(Version version) {
+			_version = version;
+
+			return this;
+		}
+
+		private JarBuilder(Path path, String symbolicName) {
+			_path = path;
+			_symbolicName = symbolicName;
+		}
+
+		private String _exports;
+		private String _fragmentHost;
+		private String _imports;
+		private final Path _path;
+		private final String _symbolicName;
+		private Version _version = new Version(1, 0, 0);
+
+	}
 
 }

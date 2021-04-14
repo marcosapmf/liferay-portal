@@ -60,13 +60,18 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 				if (!DDMTemplatePermission.contains(permissionChecker, curDDMTemplate.getTemplateId(), ActionKeys.VIEW) || !DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY.equals(curDDMTemplate.getType())) {
 					continue;
 				}
-
-				Map<String, Object> data = HashMapBuilder.<String, Object>put(
-					"displaystylegroupid", curDDMTemplate.getGroupId()
-				).build();
 			%>
 
-				<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(curDDMTemplate.getName(locale)) %>" selected="<%= (portletDisplayDDMTemplate != null) && (curDDMTemplate.getTemplateId() == portletDisplayDDMTemplate.getTemplateId()) %>" value="<%= PortletDisplayTemplate.DISPLAY_STYLE_PREFIX + HtmlUtil.escape(curDDMTemplate.getTemplateKey()) %>" />
+				<aui:option
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"displaystylegroupid", curDDMTemplate.getGroupId()
+						).build()
+					%>'
+					label="<%= HtmlUtil.escape(curDDMTemplate.getName(locale)) %>"
+					selected="<%= (portletDisplayDDMTemplate != null) && (curDDMTemplate.getTemplateId() == portletDisplayDDMTemplate.getTemplateId()) %>"
+					value="<%= PortletDisplayTemplate.DISPLAY_STYLE_PREFIX + HtmlUtil.escape(curDDMTemplate.getTemplateKey()) %>"
+				/>
 
 			<%
 			}
@@ -99,7 +104,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 	);
 
 	if (selectDDMTemplateLink) {
-		selectDDMTemplateLink.addEventListener('click', function (event) {
+		selectDDMTemplateLink.addEventListener('click', (event) => {
 			Liferay.Util.openDDMPortlet(
 				{
 					basePortletURL: '<%= basePortletURL %>',
@@ -116,7 +121,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 					title:
 						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>',
 				},
-				function (event) {
+				(event) => {
 					if (!event.newVal) {
 						submitForm(
 							document.<portlet:namespace />fm,
@@ -134,7 +139,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 	);
 
 	if (displayStyle && displayStyleGroupIdInput) {
-		displayStyle.addEventListener('change', function (event) {
+		displayStyle.addEventListener('change', (event) => {
 			var selectedDisplayStyle = displayStyle.querySelector('option:checked');
 
 			if (selectedDisplayStyle) {

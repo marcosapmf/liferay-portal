@@ -30,23 +30,52 @@ export default (state, action) => {
 				return {
 					...action.payload,
 					pages: visitor.mapFields(
-						({localizedValue}) => {
-							let value;
+						({
+							localizable,
+							localizedValue,
+							localizedValueEdited,
+							value,
+						}) => {
+							if (!localizable) {
+								return {value};
+							}
+
+							let _value;
+
+							const defaultValue =
+								localizedValue[defaultLanguageId];
 
 							if (localizedValue) {
-								if (
-									localizedValue[editingLanguageId] !==
-									undefined
-								) {
-									value = localizedValue[editingLanguageId];
+								if (localizedValue[editingLanguageId] != null) {
+									if (
+										Array.isArray(
+											localizedValue[editingLanguageId]
+										) &&
+										!localizedValue[editingLanguageId]
+											?.length &&
+										!localizedValueEdited?.[
+											editingLanguageId
+										]
+									) {
+										_value = defaultValue;
+									}
+									else {
+										_value =
+											localizedValue[editingLanguageId];
+									}
 								}
-								else if (localizedValue[defaultLanguageId]) {
-									value = localizedValue[defaultLanguageId];
+								else if (defaultValue) {
+									_value = defaultValue;
 								}
 							}
 
+							try {
+								_value = JSON.parse(_value);
+							}
+							catch (e) {}
+
 							return {
-								value,
+								value: _value,
 							};
 						},
 						true,
@@ -58,10 +87,6 @@ export default (state, action) => {
 
 			return action.payload;
 		}
-		case EVENT_TYPES.UPDATE_DATA_RECORD_VALUES:
-			return {
-				dataRecordValues: action.payload,
-			};
 		default:
 			return state;
 	}

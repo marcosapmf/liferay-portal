@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.delivery.cart.client.dto.v1_0;
 import com.liferay.headless.commerce.delivery.cart.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.delivery.cart.client.serdes.v1_0.SummarySerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Summary implements Cloneable {
+public class Summary implements Cloneable, Serializable {
 
 	public static Summary toDTO(String json) {
 		return SummarySerDes.toDTO(json);
@@ -187,6 +189,57 @@ public class Summary implements Cloneable {
 	}
 
 	protected String shippingValueFormatted;
+
+	public Double getShippingValueWithTaxAmount() {
+		return shippingValueWithTaxAmount;
+	}
+
+	public void setShippingValueWithTaxAmount(
+		Double shippingValueWithTaxAmount) {
+
+		this.shippingValueWithTaxAmount = shippingValueWithTaxAmount;
+	}
+
+	public void setShippingValueWithTaxAmount(
+		UnsafeSupplier<Double, Exception>
+			shippingValueWithTaxAmountUnsafeSupplier) {
+
+		try {
+			shippingValueWithTaxAmount =
+				shippingValueWithTaxAmountUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Double shippingValueWithTaxAmount;
+
+	public String getShippingValueWithTaxAmountFormatted() {
+		return shippingValueWithTaxAmountFormatted;
+	}
+
+	public void setShippingValueWithTaxAmountFormatted(
+		String shippingValueWithTaxAmountFormatted) {
+
+		this.shippingValueWithTaxAmountFormatted =
+			shippingValueWithTaxAmountFormatted;
+	}
+
+	public void setShippingValueWithTaxAmountFormatted(
+		UnsafeSupplier<String, Exception>
+			shippingValueWithTaxAmountFormattedUnsafeSupplier) {
+
+		try {
+			shippingValueWithTaxAmountFormatted =
+				shippingValueWithTaxAmountFormattedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String shippingValueWithTaxAmountFormatted;
 
 	public Double getSubtotal() {
 		return subtotal;

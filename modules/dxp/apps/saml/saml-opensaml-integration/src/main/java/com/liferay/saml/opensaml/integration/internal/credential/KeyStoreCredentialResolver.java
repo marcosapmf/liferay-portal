@@ -15,12 +15,14 @@
 package com.liferay.saml.opensaml.integration.internal.credential;
 
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
 import com.liferay.saml.runtime.SamlException;
 import com.liferay.saml.runtime.configuration.SamlProviderConfiguration;
 import com.liferay.saml.runtime.configuration.SamlProviderConfigurationHelper;
 import com.liferay.saml.runtime.credential.KeyStoreManager;
+import com.liferay.saml.runtime.exception.EntityIdException;
 import com.liferay.saml.runtime.metadata.LocalEntityManager;
 
 import java.security.KeyStore;
@@ -111,12 +113,19 @@ public class KeyStoreCredentialResolver
 			return null;
 		}
 
+		String entityId = getLocalEntityId();
+
+		if (Validator.isBlank(entityId)) {
+			throw new SamlException(
+				new EntityIdException("An Entity ID must be configured"));
+		}
+
 		UsageCriterion usageCriterion = new UsageCriterion(usageType);
 
 		try {
 			X509Credential x509Credential = (X509Credential)resolveSingle(
 				new CriteriaSet(
-					new EntityIdCriterion(getLocalEntityId()), usageCriterion));
+					new EntityIdCriterion(entityId), usageCriterion));
 
 			if (x509Credential == null) {
 				return null;

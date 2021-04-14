@@ -125,7 +125,8 @@ public class CommerceOrderImporter {
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
-					"Can not find an user Id mapping for: " + externalUserId);
+					"Can not find an user Id mapping for: " + externalUserId,
+					exception);
 			}
 		}
 
@@ -197,8 +198,8 @@ public class CommerceOrderImporter {
 		CPInstance cpInstance = cpInstances.get(0);
 
 		_commerceOrderItemLocalService.addCommerceOrderItem(
-			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(), 1,
-			1, StringPool.BLANK, commerceContext, serviceContext);
+			commerceOrder.getCommerceOrderId(), cpInstance.getCPInstanceId(),
+			StringPool.BLANK, 1, 1, commerceContext, serviceContext);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

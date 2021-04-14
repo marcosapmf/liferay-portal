@@ -15,6 +15,7 @@
 package com.liferay.layout.taglib.internal.servlet;
 
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
+import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.info.item.InfoItemServiceTracker;
@@ -41,10 +42,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 /**
  * @author Chema Balsas
  */
-@Component(
-	configurationPid = "com.liferay.layout.configuration.LayoutAdaptiveMediaConfiguration",
-	immediate = true, service = {}
-)
+@Component(immediate = true, service = {})
 public class ServletContextUtil {
 
 	public static final String getContextPath() {
@@ -55,6 +53,12 @@ public class ServletContextUtil {
 		getFragmentCollectionContributorTracker() {
 
 		return _fragmentCollectionContributorTracker;
+	}
+
+	public static FragmentEntryProcessorHelper
+		getFragmentEntryProcessorHelper() {
+
+		return _fragmentEntryProcessorHelper;
 	}
 
 	public static final FragmentRendererTracker getFragmentRendererTracker() {
@@ -153,6 +157,13 @@ public class ServletContextUtil {
 	}
 
 	@Reference(unbind = "-")
+	protected void setFragmentEntryProcessorHelper(
+		FragmentEntryProcessorHelper fragmentEntryProcessorHelper) {
+
+		_fragmentEntryProcessorHelper = fragmentEntryProcessorHelper;
+	}
+
+	@Reference(unbind = "-")
 	protected void setFragmentRendererTracker(
 		FragmentRendererTracker fragmentRendererTracker) {
 
@@ -218,6 +229,7 @@ public class ServletContextUtil {
 
 	private static FragmentCollectionContributorTracker
 		_fragmentCollectionContributorTracker;
+	private static FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
 	private static FragmentRendererTracker _fragmentRendererTracker;
 	private static FrontendTokenDefinitionRegistry
 		_frontendTokenDefinitionRegistry;

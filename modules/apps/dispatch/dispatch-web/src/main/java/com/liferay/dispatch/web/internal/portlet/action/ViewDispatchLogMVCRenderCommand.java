@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + DispatchPortletKeys.DISPATCH,
-		"mvc.command.name=viewDispatchLog"
+		"mvc.command.name=/dispatch/view_dispatch_log"
 	},
 	service = MVCRenderCommand.class
 )
@@ -51,7 +51,7 @@ public class ViewDispatchLogMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, dispatchLogDisplayContext);
 
-		return "/dispatch_log_details.jsp";
+		return "/view_dispatch_log.jsp";
 	}
 
 	@Reference

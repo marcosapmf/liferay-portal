@@ -46,14 +46,18 @@ public class StickerTag extends BaseContainerTag {
 		return _icon;
 	}
 
+	public String getImageAlt() {
+		return _imageAlt;
+	}
+
+	public String getImageSrc() {
+		return _imageSrc;
+	}
+
 	public boolean getInline() {
 		return _inline;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
 	public String getLabel() {
 		return _label;
 	}
@@ -74,23 +78,6 @@ public class StickerTag extends BaseContainerTag {
 		return _size;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getSpritemap() {
-		return _spritemap;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getDisplayType()}
-	 */
-	@Deprecated
-	public String getStyle() {
-		return getDisplayType();
-	}
-
 	public void setDisplayType(String displayType) {
 		_displayType = displayType;
 	}
@@ -99,14 +86,18 @@ public class StickerTag extends BaseContainerTag {
 		_icon = icon;
 	}
 
+	public void setImageAlt(String imageAlt) {
+		_imageAlt = imageAlt;
+	}
+
+	public void setImageSrc(String imageSrc) {
+		_imageSrc = imageSrc;
+	}
+
 	public void setInline(boolean inline) {
 		_inline = inline;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
 	public void setLabel(String label) {
 		_label = label;
 	}
@@ -127,36 +118,20 @@ public class StickerTag extends BaseContainerTag {
 		_size = size;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setSpritemap(String spritemap) {
-		_spritemap = spritemap;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setDisplayType(String)}
-	 */
-	@Deprecated
-	public void setStyle(String style) {
-		setDisplayType(style);
-	}
-
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
 
 		_displayType = null;
 		_icon = null;
+		_imageAlt = null;
+		_imageSrc = null;
 		_inline = false;
 		_label = null;
 		_outside = false;
 		_position = null;
 		_shape = "rounded";
 		_size = null;
-		_spritemap = null;
 	}
 
 	@Override
@@ -218,6 +193,20 @@ public class StickerTag extends BaseContainerTag {
 
 			return SKIP_BODY;
 		}
+		else if (Validator.isNotNull(_imageSrc)) {
+			jspWriter.write("<img alt=\"");
+			jspWriter.write(_imageAlt);
+			jspWriter.write("\" class=\"sticker-img\" src=\"");
+			jspWriter.write(_imageSrc);
+			jspWriter.write("\" />");
+
+			return SKIP_BODY;
+		}
+		else if (Validator.isNotNull(_label)) {
+			jspWriter.write(_label);
+
+			return SKIP_BODY;
+		}
 
 		return EVAL_BODY_INCLUDE;
 	}
@@ -226,12 +215,13 @@ public class StickerTag extends BaseContainerTag {
 
 	private String _displayType;
 	private String _icon;
+	private String _imageAlt;
+	private String _imageSrc;
 	private boolean _inline;
 	private String _label;
 	private boolean _outside;
 	private String _position;
 	private String _shape = "rounded";
 	private String _size;
-	private String _spritemap;
 
 }

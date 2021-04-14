@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.RenderedContentSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class RenderedContent implements Cloneable {
+public class RenderedContent implements Cloneable, Serializable {
 
 	public static RenderedContent toDTO(String json) {
 		return RenderedContentSerDes.toDTO(json);
@@ -99,6 +101,27 @@ public class RenderedContent implements Cloneable {
 	}
 
 	protected Map<String, String> contentTemplateName_i18n;
+
+	public Boolean getMarkedAsDefault() {
+		return markedAsDefault;
+	}
+
+	public void setMarkedAsDefault(Boolean markedAsDefault) {
+		this.markedAsDefault = markedAsDefault;
+	}
+
+	public void setMarkedAsDefault(
+		UnsafeSupplier<Boolean, Exception> markedAsDefaultUnsafeSupplier) {
+
+		try {
+			markedAsDefault = markedAsDefaultUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean markedAsDefault;
 
 	public String getRenderedContentURL() {
 		return renderedContentURL;

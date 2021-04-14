@@ -23,7 +23,7 @@ import {
 	formatDateObject,
 	formatDateRangeObject,
 	getDateFromDateString,
-} from '../../../utilities/dates';
+} from '../../../utils/dates';
 
 function getOdataString(value, key) {
 	if (value.from && value.to) {
@@ -40,18 +40,18 @@ function getOdataString(value, key) {
 	}
 }
 function DateRangeFilter({
-	actions,
 	id,
 	max,
 	min,
 	placeholder,
+	updateFilterState,
 	value: valueProp,
 }) {
 	const [fromValue, setFromValue] = useState(
-		valueProp && valueProp.from && formatDateObject(valueProp.from)
+		valueProp?.from && formatDateObject(valueProp.from)
 	);
 	const [toValue, setToValue] = useState(
-		valueProp && valueProp.to && formatDateObject(valueProp.to)
+		valueProp?.to && formatDateObject(valueProp.to)
 	);
 
 	let actionType = 'edit';
@@ -124,7 +124,7 @@ function DateRangeFilter({
 					disabled={submitDisabled}
 					onClick={() => {
 						if (actionType === 'delete') {
-							actions.updateFilterState(id);
+							updateFilterState(id);
 						}
 						else {
 							const newValue = {
@@ -135,7 +135,7 @@ function DateRangeFilter({
 									? getDateFromDateString(toValue)
 									: null,
 							};
-							actions.updateFilterState(
+							updateFilterState(
 								id,
 								newValue,
 								formatDateRangeObject(newValue),
@@ -163,13 +163,11 @@ const dateShape = PropTypes.shape({
 });
 
 DateRangeFilter.propTypes = {
-	actions: PropTypes.shape({
-		updateFilterState: PropTypes.func.isRequired,
-	}),
 	id: PropTypes.string.isRequired,
 	max: dateShape,
 	min: dateShape,
 	placeholder: PropTypes.string,
+	updateFilterState: PropTypes.func.isRequired,
 	value: PropTypes.shape({
 		from: dateShape,
 		to: dateShape,

@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=viewInstances"
+		"mvc.command.name=/cp_definitions/view_cp_instances"
 	},
 	service = MVCRenderCommand.class
 )
@@ -63,7 +63,7 @@ public class ViewCPInstancesMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpInstanceDisplayContext);
 
-		return "/view_instances.jsp";
+		return "/view_cp_instances.jsp";
 	}
 
 	@Reference

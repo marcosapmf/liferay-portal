@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=duplicateCPDefinition"
+		"mvc.command.name=/cp_definitions/duplicate_cp_definition"
 	},
 	service = MVCRenderCommand.class
 )
@@ -61,7 +61,7 @@ public class DuplicateCPDefinitionMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpDefinitionsDisplayContext);
 
-		return "/definition/duplicate_product.jsp";
+		return "/definition/duplicate_cp_definition.jsp";
 	}
 
 	@Reference

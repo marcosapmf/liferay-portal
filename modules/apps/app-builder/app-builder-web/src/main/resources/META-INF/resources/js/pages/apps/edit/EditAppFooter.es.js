@@ -12,14 +12,22 @@
  * details.
  */
 
+import ClayButton from '@clayui/button';
 import ClayLayout from '@clayui/layout';
+import {
+	addItem,
+	updateItem,
+} from 'data-engine-js-components-web/js/utils/client.es';
+import {
+	errorToast,
+	successToast,
+} from 'data-engine-js-components-web/js/utils/toast.es';
 import React, {useContext, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../../AppContext.es';
-import Button from '../../../components/button/Button.es';
-import {addItem, updateItem} from '../../../utils/client.es';
-import {errorToast, successToast} from '../../../utils/toast.es';
+import {normalizeNames} from '../../../utils/normalizers.es';
+import {isProductMenuValid} from '../utils.es';
 import EditAppContext from './EditAppContext.es';
 
 export default withRouter(
@@ -49,8 +57,6 @@ export default withRouter(
 			name,
 		} = app;
 
-		const appName = name[editingLanguageId];
-
 		const getStandaloneLink = (appId) => {
 			const isStandalone = appDeployments.some(
 				(deployment) => deployment.type === 'standalone'
@@ -75,23 +81,6 @@ export default withRouter(
 			setDeploying(false);
 		};
 
-		const normalizeAppName = (names) => {
-			const name = {};
-
-			if (!names[defaultLanguageId]) {
-				names[defaultLanguageId] = names[editingLanguageId];
-			}
-
-			Object.keys(names).forEach((key) => {
-				const value = names[key];
-				if (value) {
-					name[key] = value;
-				}
-			});
-
-			return name;
-		};
-
 		const onError = (error) => {
 			const {title = ''} = error;
 			errorToast(`${title}.`);
@@ -105,9 +94,17 @@ export default withRouter(
 		const onDeploy = () => {
 			setDeploying(true);
 
+			if (!name[defaultLanguageId]) {
+				name[defaultLanguageId] = name[editingLanguageId];
+			}
+
 			const data = {
 				...app,
-				name: normalizeAppName(app.name),
+				name: normalizeNames({
+					allowEmptyKeys: false,
+					defaultName: Liferay.Language.get('untitled-app'),
+					localizableValue: name,
+				}),
 			};
 
 			if (appId) {
@@ -134,13 +131,13 @@ export default withRouter(
 			<div className="bg-transparent card-footer">
 				<ClayLayout.ContentRow>
 					<ClayLayout.Col md="4">
-						<Button displayType="secondary" onClick={onCancel}>
+						<ClayButton displayType="secondary" onClick={onCancel}>
 							{Liferay.Language.get('cancel')}
-						</Button>
+						</ClayButton>
 					</ClayLayout.Col>
 					<ClayLayout.Col className="offset-md-4 text-right" md="4">
 						{currentStep > 0 && (
-							<Button
+							<ClayButton
 								className="mr-3"
 								displayType="secondary"
 								onClick={() =>
@@ -148,10 +145,10 @@ export default withRouter(
 								}
 							>
 								{Liferay.Language.get('previous')}
-							</Button>
+							</ClayButton>
 						)}
-						{currentStep < 2 && (
-							<Button
+						{currentStep < 3 && (
+							<ClayButton
 								disabled={
 									(currentStep === 0 && !dataLayoutId) ||
 									(currentStep === 1 && !dataListViewId)
@@ -162,14 +159,15 @@ export default withRouter(
 								}
 							>
 								{Liferay.Language.get('next')}
-							</Button>
+							</ClayButton>
 						)}
-						{currentStep === 2 && (
-							<Button
+						{currentStep === 3 && (
+							<ClayButton
 								disabled={
 									appDeployments.length === 0 ||
-									!appName ||
-									isDeploying
+									!name[editingLanguageId]?.trim() ||
+									isDeploying ||
+									!isProductMenuValid(app)
 								}
 								displayType="primary"
 								onClick={onDeploy}
@@ -177,7 +175,7 @@ export default withRouter(
 								{app.id
 									? Liferay.Language.get('save')
 									: Liferay.Language.get('deploy')}
-							</Button>
+							</ClayButton>
 						)}
 					</ClayLayout.Col>
 				</ClayLayout.ContentRow>

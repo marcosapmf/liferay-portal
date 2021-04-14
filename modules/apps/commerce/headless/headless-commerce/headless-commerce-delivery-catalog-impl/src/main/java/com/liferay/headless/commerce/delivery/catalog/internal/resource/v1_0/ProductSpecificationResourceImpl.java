@@ -26,13 +26,12 @@ import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductSpeci
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,17 +43,18 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v1_0/product-specification.properties",
-	scope = ServiceScope.PROTOTYPE, service = ProductSpecificationResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {NestedFieldSupport.class, ProductSpecificationResource.class}
 )
 public class ProductSpecificationResourceImpl
-	extends BaseProductSpecificationResourceImpl {
+	extends BaseProductSpecificationResourceImpl implements NestedFieldSupport {
 
 	@NestedField(parentClass = Product.class, value = "productSpecifications")
 	@Override
 	public Page<ProductSpecification>
 			getChannelProductProductSpecificationsPage(
-				@NotNull Long channelId,
-				@NestedFieldId(value = "productId") @NotNull Long productId,
+				Long channelId,
+				@NestedFieldId(value = "productId") Long productId,
 				Pagination pagination)
 		throws Exception {
 

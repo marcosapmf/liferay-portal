@@ -22,11 +22,8 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryService;
-import com.liferay.asset.util.AssetHelper;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.info.constants.InfoDisplayWebKeys;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.display.url.provider.InfoEditURLProviderTracker;
 import com.liferay.info.exception.NoSuchInfoItemException;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
@@ -154,12 +151,10 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			Map<String, Object> requestContext)
 		throws PortalException {
 
-		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
-			_getLayoutDisplayPageProvider(friendlyURL);
-
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
 			_getLayoutDisplayPageObjectProvider(
-				layoutDisplayPageProvider, groupId, friendlyURL);
+				_getLayoutDisplayPageProvider(friendlyURL), groupId,
+				friendlyURL);
 
 		if (layoutDisplayPageObjectProvider == null) {
 			throw new PortalException();
@@ -193,15 +188,6 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 	@Reference
 	protected AssetEntryService assetEntryLocalService;
-
-	@Reference
-	protected AssetHelper assetHelper;
-
-	@Reference
-	protected InfoDisplayContributorTracker infoDisplayContributorTracker;
-
-	@Reference
-	protected InfoEditURLProviderTracker infoEditURLProviderTracker;
 
 	@Reference
 	protected InfoItemServiceTracker infoItemServiceTracker;
@@ -273,15 +259,16 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			return layoutDisplayPageObjectProvider.getDisplayObject();
 		}
 
+		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
+			layoutDisplayPageObjectProvider.getClassPK());
+
 		InfoItemObjectProvider<Object> infoItemObjectProvider =
 			(InfoItemObjectProvider<Object>)
 				infoItemServiceTracker.getFirstInfoItemService(
 					InfoItemObjectProvider.class,
 					portal.getClassName(
-						layoutDisplayPageObjectProvider.getClassNameId()));
-
-		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
-			layoutDisplayPageObjectProvider.getClassPK());
+						layoutDisplayPageObjectProvider.getClassNameId()),
+					infoItemIdentifier.getInfoItemServiceFilter());
 
 		infoItemIdentifier.setVersion(InfoItemIdentifier.VERSION_LATEST);
 
@@ -306,15 +293,19 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 				layoutDisplayPageObjectProvider.getClassNameId(),
 				layoutDisplayPageObjectProvider.getClassPK());
 
-		if (assetDisplayPageEntry == null) {
-			return null;
-		}
+		if (assetDisplayPageEntry != null) {
+			if (assetDisplayPageEntry.getType() ==
+					AssetDisplayPageConstants.TYPE_NONE) {
 
-		if (assetDisplayPageEntry.getType() !=
-				AssetDisplayPageConstants.TYPE_DEFAULT) {
+				return null;
+			}
 
-			return layoutLocalService.fetchLayout(
-				assetDisplayPageEntry.getPlid());
+			if (assetDisplayPageEntry.getType() ==
+					AssetDisplayPageConstants.TYPE_SPECIFIC) {
+
+				return layoutLocalService.fetchLayout(
+					assetDisplayPageEntry.getPlid());
+			}
 		}
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =

@@ -77,7 +77,7 @@ public abstract class BaseVLDAPTestCase extends PowerMockito {
 		setUpConfiguration();
 		setUpCompany();
 		setUpORM();
-		setUpProps();
+		setUpPropsUtil();
 		setUpSearchBase();
 	}
 
@@ -321,7 +321,7 @@ public abstract class BaseVLDAPTestCase extends PowerMockito {
 		portalUtil.setPortal(portal);
 	}
 
-	protected void setUpProps() {
+	protected void setUpPropsUtil() {
 		props = mock(Props.class);
 
 		PropsUtil.setProps(props);

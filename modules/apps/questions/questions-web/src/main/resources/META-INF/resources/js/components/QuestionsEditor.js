@@ -72,14 +72,18 @@ const QuestionsEditor = ({
 
 	const [toolbarSet, setToolbarSet] = useState(initialToolbarSet);
 
-	const config = useMemo(
-		() => ({
+	const config = useMemo(() => {
+		const CKEditorConfig = getCKEditorConfig();
+		if (editorConfig.readOnly) {
+			CKEditorConfig.toolbar.pop('Source');
+		}
+
+		return {
 			toolbar: toolbarSet,
-			...getCKEditorConfig(),
+			...CKEditorConfig,
 			...editorConfig,
-		}),
-		[editorConfig, toolbarSet]
-	);
+		};
+	}, [editorConfig, toolbarSet]);
 
 	useEffect(() => {
 		setToolbarSet(getToolbarSet(initialToolbarSet));
@@ -140,12 +144,10 @@ const QuestionsEditor = ({
 						CKEDITOR.dtd.$removeEmpty.span = 0;
 
 						CKEDITOR.on('instanceCreated', ({editor}) => {
-							editor.name = name;
-
 							if (context.imageBrowseURL) {
 								editor.config.filebrowserImageBrowseUrl = context.imageBrowseURL.replace(
 									'EDITOR_NAME_',
-									name
+									editor.name
 								);
 							}
 

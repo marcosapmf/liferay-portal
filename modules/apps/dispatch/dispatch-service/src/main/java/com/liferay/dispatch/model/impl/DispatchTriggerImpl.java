@@ -18,40 +18,48 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 
 /**
  * @author Alessio Antonio Rendina
+ * @author Igor Beslic
  */
 public class DispatchTriggerImpl extends DispatchTriggerBaseImpl {
 
 	public DispatchTriggerImpl() {
 	}
 
-	public UnicodeProperties getTaskSettingsUnicodeProperties() {
-		if (_taskSettingsUnicodeProperties == null) {
-			_taskSettingsUnicodeProperties = new UnicodeProperties(true);
+	@Override
+	public UnicodeProperties getDispatchTaskSettingsUnicodeProperties() {
+		if (_dispatchTaskSettingsUnicodeProperties == null) {
+			_dispatchTaskSettingsUnicodeProperties = new UnicodeProperties(
+				true);
 
-			_taskSettingsUnicodeProperties.fastLoad(getTaskSettings());
+			_dispatchTaskSettingsUnicodeProperties.fastLoad(
+				getDispatchTaskSettings());
 		}
 
-		return _taskSettingsUnicodeProperties;
+		return _dispatchTaskSettingsUnicodeProperties;
 	}
 
-	public void setTaskSettings(String taskSettings) {
-		super.setTaskSettings(taskSettings);
+	@Override
+	public void setDispatchTaskSettings(String dispatchTaskSettings) {
+		super.setDispatchTaskSettings(dispatchTaskSettings);
 
-		_taskSettingsUnicodeProperties = null;
+		_dispatchTaskSettingsUnicodeProperties = null;
 	}
 
-	public void setTaskSettingsUnicodeProperties(
-		UnicodeProperties taskSettingsUnicodeProperties) {
+	@Override
+	public void setDispatchTaskSettingsUnicodeProperties(
+		UnicodeProperties dispatchTaskSettingsUnicodeProperties) {
 
-		_taskSettingsUnicodeProperties = taskSettingsUnicodeProperties;
+		_dispatchTaskSettingsUnicodeProperties =
+			dispatchTaskSettingsUnicodeProperties;
 
-		if (_taskSettingsUnicodeProperties == null) {
-			_taskSettingsUnicodeProperties = new UnicodeProperties();
+		if (_dispatchTaskSettingsUnicodeProperties == null) {
+			_dispatchTaskSettingsUnicodeProperties = new UnicodeProperties();
 		}
 
-		super.setTaskSettings(_taskSettingsUnicodeProperties.toString());
+		super.setDispatchTaskSettings(
+			_dispatchTaskSettingsUnicodeProperties.toString());
 	}
 
-	private transient UnicodeProperties _taskSettingsUnicodeProperties;
+	private transient UnicodeProperties _dispatchTaskSettingsUnicodeProperties;
 
 }

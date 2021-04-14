@@ -31,6 +31,7 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.internal.configuration.util.ConfigurationUtil;
+import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.CTContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.ContextContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.LogContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.NestedFieldsContainerRequestFilter;
@@ -54,7 +55,6 @@ import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.JsonMappingExce
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.JsonParseExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NoSuchModelExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.NotAcceptableExceptionMapper;
-import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.PortalExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.PrincipalExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.UnrecognizedPropertyExceptionMapper;
 import com.liferay.portal.vulcan.internal.jaxrs.exception.mapper.ValidationExceptionMapper;
@@ -104,18 +104,19 @@ public class VulcanFeature implements Feature {
 	@Override
 	public boolean configure(FeatureContext featureContext) {
 		featureContext.register(BeanValidationInterceptor.class);
+		featureContext.register(CTContainerRequestFilter.class);
+		featureContext.register(DateParamConverterProvider.class);
 		featureContext.register(EntityExtensionWriterInterceptor.class);
 		featureContext.register(ExceptionMapper.class);
-		featureContext.register(DateParamConverterProvider.class);
 		featureContext.register(FieldsQueryParamContextProvider.class);
+		featureContext.register(InvalidFilterExceptionMapper.class);
+		featureContext.register(InvalidFormatExceptionMapper.class);
+		featureContext.register(JSONMessageBodyReader.class);
+		featureContext.register(JSONMessageBodyWriter.class);
 		featureContext.register(JacksonJsonProvider.class);
 		featureContext.register(JacksonXMLProvider.class);
 		featureContext.register(JsonMappingExceptionMapper.class);
-		featureContext.register(JSONMessageBodyReader.class);
-		featureContext.register(JSONMessageBodyWriter.class);
 		featureContext.register(JsonParseExceptionMapper.class);
-		featureContext.register(InvalidFilterExceptionMapper.class);
-		featureContext.register(InvalidFormatExceptionMapper.class);
 		featureContext.register(LogContainerRequestFilter.class);
 		featureContext.register(NestedFieldsContainerRequestFilter.class);
 		featureContext.register(NoSuchModelExceptionMapper.class);
@@ -123,7 +124,6 @@ public class VulcanFeature implements Feature {
 		featureContext.register(ObjectMapperContextResolver.class);
 		featureContext.register(PageEntityExtensionWriterInterceptor.class);
 		featureContext.register(PaginationContextProvider.class);
-		featureContext.register(PortalExceptionMapper.class);
 		featureContext.register(PrincipalExceptionMapper.class);
 		featureContext.register(RestrictFieldsQueryParamContextProvider.class);
 		featureContext.register(StatusDynamicFeature.class);
@@ -131,9 +131,9 @@ public class VulcanFeature implements Feature {
 		featureContext.register(UnrecognizedPropertyExceptionMapper.class);
 		featureContext.register(ValidationExceptionMapper.class);
 		featureContext.register(WebApplicationExceptionMapper.class);
-		featureContext.register(XmlMapperContextResolver.class);
 		featureContext.register(XMLMessageBodyReader.class);
 		featureContext.register(XMLMessageBodyWriter.class);
+		featureContext.register(XmlMapperContextResolver.class);
 
 		featureContext.register(
 			new AcceptLanguageContextProvider(_language, _portal));
@@ -162,7 +162,6 @@ public class VulcanFeature implements Feature {
 		featureContext.register(
 			new SiteParamConverterProvider(
 				_depotEntryLocalService, _groupLocalService));
-
 		featureContext.register(
 			new SortContextProvider(_language, _portal, _sortParserProvider));
 		featureContext.register(new UserContextProvider(_portal));

@@ -24,6 +24,10 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			JSONDepot.deleteDepot(depotName = "Test Depot Name");
+
+			Site.tearDownCP();
+
 			User.logoutPG();
 		}
 	}
@@ -33,11 +37,11 @@ definition {
 	test ChangeWCDSelection {
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
-			layoutName = "Page Name");
+			layoutName = "Test New Page Name");
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
-			layoutName = "Page Name",
+			layoutName = "Test New Page Name",
 			widgetName = "Web Content Display");
 
 		JSONWebcontent.addWebContent(
@@ -67,7 +71,7 @@ definition {
 		}
 
 		Navigator.gotoSitePage(
-			pageName = "Page Name",
+			pageName = "Test New Page Name",
 			siteName = "Site Name");
 
 		WebContentDisplayPortlet.selectWebContent(
@@ -75,7 +79,7 @@ definition {
 			webContentTitle = "WC WebContent Title 1");
 
 		Navigator.gotoSitePage(
-			pageName = "Page Name",
+			pageName = "Test New Page Name",
 			siteName = "Site Name");
 
 		WebContentDisplayPortlet.changeWebContent(
@@ -83,7 +87,7 @@ definition {
 			webContentTitle = "WC WebContent Title 2");
 
 		Navigator.gotoSitePage(
-			pageName = "Page Name",
+			pageName = "Test New Page Name",
 			siteName = "Site Name");
 
 		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Depot 2");
@@ -100,8 +104,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -161,11 +164,15 @@ definition {
 	@description = "This test covers LPS-117063 and LPS-117068. It ensures that web content using a structure stored in AL can be selected without NPE throwing and removed from the disconnected site."
 	@priority = "4"
 	test RemoveCustomizedWCFromDisconnectedSite {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Remove Customized WC Depot Name");
+
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "Page Name");
 
-		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Remove Customized WC Depot Name");
 
 		NavItem.gotoStructures();
 
@@ -173,14 +180,13 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
 		WebContentStructures.saveCP(structureName = "WC Structure Name");
 
-		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Remove Customized WC Depot Name");
 
 		NavItem.gotoTemplates();
 
@@ -192,16 +198,16 @@ definition {
 
 		DepotNavigator.openDepotAdmin();
 
-		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+		DepotNavigator.gotoEdit(depotName = "Test Remove Customized WC Depot Name");
 
-		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+		DepotNavigator.gotoSites(depotName = "Test Remove Customized WC Depot Name");
 
 		Depot.connectSite(siteList = "Site Name");
 
 		DepotNavigator.openDepotAdmin();
 
 		Depot.configureDDMStructures(
-			depotName = "Test Depot Name",
+			depotName = "Test Remove Customized WC Depot Name",
 			siteName = "Site Name",
 			tableEntryText = "Yes");
 
@@ -220,16 +226,16 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		Depot.configureDDMStructures(
-			depotName = "Test Depot Name",
+			depotName = "Test Remove Customized WC Depot Name",
 			makeWCUnavailable = "true",
 			siteName = "Site Name",
 			tableEntryText = "No");
 
 		DepotNavigator.openDepotAdmin();
 
-		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+		DepotNavigator.gotoEdit(depotName = "Test Remove Customized WC Depot Name");
 
-		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+		DepotNavigator.gotoSites(depotName = "Test Remove Customized WC Depot Name");
 
 		Depot.disconnectSite(siteList = "Site Name");
 
@@ -336,10 +342,9 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Web Content",
+		DataEngine.addField(
 			fieldFieldLabel = "Web Content",
-			fieldName = "WebContent");
+			fieldName = "Web Content");
 
 		WebContentStructures.saveCP(structureName = "WC Structure Name");
 
@@ -355,11 +360,6 @@ definition {
 			templateFieldNames = "Web Content",
 			templateName = "WC Template Name");
 
-		var templateWebConetntScript = selenium.getAttribute("//span[contains(@class,'palette-item') and contains(.,'Web Content')]@data-content");
-		var templateScript = '''${templateWebConetntScript} <a>${webContentData.title}</a>''';
-
-		WebContentTemplates.inputScript(templateScript = "${templateScript}");
-
 		DDLDataDefinition.save();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
@@ -371,8 +371,8 @@ definition {
 			fieldName = "WebContent",
 			structureName = "WC Structure Name",
 			templateName = "WC Template Name",
-			webContentSelectWCFile = "WC Depot WebContent",
-			webContentTitle = "WC WebContent Title");
+			webContentTitle = "WC WebContent Title",
+			webContentWebContent = "WC Depot WebContent");
 
 		PortletEntry.publish();
 
@@ -394,17 +394,21 @@ definition {
 	@description = "This ensures that a depot web content can be selected through the fragment in a content page on a connected site."
 	@priority = "5"
 	test SelectFromFragmentInContentPage {
+		JSONDepot.addDepot(
+			depotDescription = "This is the description of a depot",
+			depotName = "Test Fragment Depot Name");
+
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Depot",
-			groupName = "Test Depot Name",
+			groupName = "Test Fragment Depot Name",
 			site = "false",
 			title = "WC WebContent Title");
 
 		DepotNavigator.openDepotAdmin();
 
-		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+		DepotNavigator.gotoEdit(depotName = "Test Fragment Depot Name");
 
-		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+		DepotNavigator.gotoSites(depotName = "Test Fragment Depot Name");
 
 		Depot.connectSite(siteList = "Site Name");
 
@@ -417,7 +421,7 @@ definition {
 			fragmentName = "Content Display");
 
 		PageEditor.editContentDisplay(
-			depotName = "Test Depot Name",
+			depotName = "Test Fragment Depot Name",
 			fragmentName = "Content Display",
 			webcontent = "true",
 			webContentContent = "WC WebContent Depot",
@@ -599,6 +603,48 @@ definition {
 		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Depot");
 	}
 
+	@description = "This ensures that a user can use a structure stored in AL to create a template on a connected site."
+	@priority = "5"
+	test SelectStructureInDepotViaTemplateOnSite {
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
+
+		DepotNavigator.gotoSites(depotName = "Test Depot Name");
+
+		Depot.connectSite(siteList = "Site Name");
+
+		DepotNavigator.openDepotAdmin();
+
+		Depot.configureDDMStructures(
+			depotName = "Test Depot Name",
+			siteName = "Site Name",
+			tableEntryText = "Yes");
+
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(
+			structureDescription = "WC Structure Description",
+			structureName = "WC Structure Name");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		WebContentStructures.saveCP(structureName = "WC Structure Name");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name");
+
+		NavItem.gotoTemplates();
+
+		WebContentTemplates.addCP(
+			structureName = "WC Structure Name",
+			templateDescription = "WC Template Description",
+			templateName = "WC Template Name");
+	}
+
 	@description = "This ensures that a user can use structures stored in AL to create articles and display them in AP on a connected site."
 	@priority = "5"
 	test ViewCustomizedWCInAP {
@@ -621,8 +667,7 @@ definition {
 				structureDescription = "WC Structure Description",
 				structureName = "WC Structure Name${count}");
 
-			DynamicDataMapping.addField(
-				field = "Text",
+			DataEngine.addField(
 				fieldFieldLabel = "Text",
 				fieldName = "Text");
 
@@ -704,8 +749,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -792,8 +836,7 @@ definition {
 				structureDescription = "WC Structure Description",
 				structureName = "WC Structure Name${i}");
 
-			DynamicDataMapping.addField(
-				field = "Text",
+			DataEngine.addField(
 				fieldFieldLabel = "Text",
 				fieldName = "Text");
 
@@ -838,8 +881,7 @@ definition {
 				structureDescription = "WC Structure Description",
 				structureName = "WC Structure Name${i}");
 
-			DynamicDataMapping.addField(
-				field = "Text",
+			DataEngine.addField(
 				fieldFieldLabel = "Text",
 				fieldName = "Text");
 

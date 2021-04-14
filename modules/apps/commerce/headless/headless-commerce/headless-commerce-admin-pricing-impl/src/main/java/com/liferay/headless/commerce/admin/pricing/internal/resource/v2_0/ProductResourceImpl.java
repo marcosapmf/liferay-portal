@@ -29,8 +29,7 @@ import com.liferay.headless.commerce.admin.pricing.internal.dto.v2_0.converter.P
 import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ProductResource;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
-
-import javax.validation.constraints.NotNull;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,15 +41,15 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v2_0/product.properties",
-	scope = ServiceScope.PROTOTYPE, service = ProductResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {NestedFieldSupport.class, ProductResource.class}
 )
-public class ProductResourceImpl extends BaseProductResourceImpl {
+public class ProductResourceImpl
+	extends BaseProductResourceImpl implements NestedFieldSupport {
 
 	@NestedField(parentClass = DiscountProduct.class, value = "product")
 	@Override
-	public Product getDiscountProductProduct(@NotNull Long id)
-		throws Exception {
-
+	public Product getDiscountProductProduct(Long id) throws Exception {
 		CommerceDiscountRel commerceDiscountRel =
 			_commerceDiscountRelService.getCommerceDiscountRel(id);
 
@@ -62,7 +61,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@NestedField(parentClass = PriceEntry.class, value = "product")
 	@Override
-	public Product getPriceEntryIdProduct(@NotNull Long id) throws Exception {
+	public Product getPriceEntryIdProduct(Long id) throws Exception {
 		CommercePriceEntry commercePriceEntry =
 			_commercePriceEntryService.getCommercePriceEntry(id);
 
@@ -76,9 +75,7 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@NestedField(parentClass = PriceModifierProduct.class, value = "product")
 	@Override
-	public Product getPriceModifierProductProduct(@NotNull Long id)
-		throws Exception {
-
+	public Product getPriceModifierProductProduct(Long id) throws Exception {
 		CommercePriceModifierRel commercePriceModifierRel =
 			_commercePriceModifierRelService.getCommercePriceModifierRel(id);
 

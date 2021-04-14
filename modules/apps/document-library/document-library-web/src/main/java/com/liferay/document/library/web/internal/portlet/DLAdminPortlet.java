@@ -17,6 +17,7 @@ package com.liferay.document.library.web.internal.portlet;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.util.Portal;
 
 import javax.portlet.Portlet;
 
@@ -41,7 +42,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.scopeable=true",
 		"com.liferay.portlet.struts-path=document_library",
 		"com.liferay.portlet.use-default-template=true",
-		"com.liferay.portlet.webdav-storage-token=document_library",
 		"javax.portlet.display-name=Documents and Media Admin",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.always-send-redirect=true",
@@ -62,5 +62,8 @@ public class DLAdminPortlet extends MVCPortlet {
 	)
 	protected void setRelease(Release release) {
 	}
+
+	@Reference
+	private Portal _portal;
 
 }

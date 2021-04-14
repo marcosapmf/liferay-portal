@@ -186,7 +186,7 @@
 		</exec>
 
 		<echo file="${lp.plugins.dir}/hooks/liferay-language-${locale.current}-hook/docroot/WEB-INF/liferay-hook.xml"><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE hook PUBLIC "-//Liferay//DTD Hook 6.1.0//EN" "http://www.liferay.com/dtd/liferay-hook_6_1_0.dtd">
+<!DOCTYPE hook PUBLIC "-//Liferay//DTD Hook 7.4.0//EN" "http://www.liferay.com/dtd/liferay-hook_7_4_0.dtd">
 
 <hook>
 	<language-properties>content/Language-ext_${locale.current}.properties</language-properties>
@@ -1135,6 +1135,12 @@ wrapper.java.additional.11="-Dfile.encoding=UTF-8"]]></replacevalue>
 			<replacetoken><![CDATA[common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"]]></replacetoken>
 			<replacevalue><![CDATA[common.loader="${catalina.home}/lib/ext","${catalina.home}/lib/ext/*.jar","${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"]]></replacevalue>
 		</replace>
+
+		<echo append="true" file="${app.server.tomcat.dir}/conf/catalina.properties">
+			<![CDATA[
+tomcat.util.scan.StandardJarScanFilter.jarsToSkip=*
+tomcat.util.scan.StandardJarScanFilter.jarsToScan=]]>
+		</echo>
 
 		<echo append="true" file="${app.server.tomcat.dir}/conf/logging.properties">
 			<![CDATA[
@@ -2118,7 +2124,7 @@ and put it in ${app.server.parent.dir}. Then rerun this task.
 			file="${app.server.websphere.instance.dir}/config/cells/liferay-cell/nodes/liferay-node/servers/server1/server.xml"
 		>
 			<replacetoken><![CDATA[genericJvmArguments="-Xquickstart"]]></replacetoken>
-			<replacevalue><![CDATA[genericJvmArguments="-Xquickstart ${app.server.websphere.jvm.args}"]]></replacevalue>
+			<replacevalue expandProperties="true"><![CDATA[genericJvmArguments="-Xquickstart ${app.server.websphere.jvm.args}"]]></replacevalue>
 		</replace>
 
 		<echo>Installing fix pack. This may take a few minutes.</echo>

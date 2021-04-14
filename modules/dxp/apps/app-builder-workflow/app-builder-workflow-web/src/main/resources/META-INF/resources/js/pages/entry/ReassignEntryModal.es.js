@@ -14,9 +14,12 @@ import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayModal, {useModal} from '@clayui/modal';
-import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
-import {addItem, getItem} from 'app-builder-web/js/utils/client.es';
-import {successToast} from 'app-builder-web/js/utils/toast.es';
+import Loading from 'data-engine-js-components-web/js/components/loading/Loading.es';
+import {
+	addItem,
+	getItem,
+} from 'data-engine-js-components-web/js/utils/client.es';
+import {successToast} from 'data-engine-js-components-web/js/utils/toast.es';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import SelectDropdown from '../../components/select-dropdown/SelectDropdown.es';
@@ -106,7 +109,7 @@ export function AssigneeInput({
 	);
 }
 
-export default function ReassignEntryModal({entry, onCloseModal}) {
+export default function ReassignEntryModal({entry, onCloseModal, refetch}) {
 	const [
 		{comment, error, isLoading, isReassigning, selectedAssignee, taskId},
 		setState,
@@ -162,10 +165,14 @@ export default function ReassignEntryModal({entry, onCloseModal}) {
 			{assigneeId, comment}
 		)
 			.then(() => {
-				onCloseModal(true);
+				onClose();
 				successToast(
 					Liferay.Language.get('this-entry-has-been-reassigned')
 				);
+				refetch({
+					entryInstanceId: entry.instanceId,
+					newAssignee: selectedAssignee,
+				});
 			})
 			.catch(() => {
 				setState((state) => ({

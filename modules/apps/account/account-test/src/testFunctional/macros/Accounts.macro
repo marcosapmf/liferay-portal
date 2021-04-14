@@ -1,5 +1,81 @@
 definition {
 
+	macro addAddress {
+		LexiconEntry.gotoAdd();
+
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER",
+			value1 = "Add Address");
+
+		PortletEntry.inputName(name = "${addressName}");
+
+		if (isSet(addressDescription)) {
+			PortletEntry.inputDescription(description = "${addressDescription}");
+		}
+
+		if (isSet(addressType)) {
+			SelectField.select(
+				selectFieldLabel = "Type",
+				selectFieldValue = "${addressType}");
+		}
+		else {
+			AssertTextEquals(
+				key_typeName = "Billing and Shipping",
+				locator1 = "Select#TYPE_SELECTED",
+				value1 = "Billing and Shipping");
+		}
+
+		Type(
+			locator1 = "TextInput#STREET_1",
+			value1 = "${addressStreet1}");
+
+		if (isSet(addressStreet2)) {
+			Type(
+				key_streetNumber = "2",
+				locator1 = "TextInput#STREET_N",
+				value1 = "${addressStreet2}");
+		}
+
+		if (isSet(addressStreet3)) {
+			Type(
+				key_streetNumber = "3",
+				locator1 = "TextInput#STREET_N",
+				value1 = "${addressStreet3}");
+		}
+
+		Select(
+			locator1 = "Select#COUNTRY",
+			value1 = "${addressCountry}");
+
+		Type(
+			locator1 = "TextInput#CITY",
+			value1 = "${addressCity}");
+
+		if (isSet(addressRegion)) {
+			Select(
+				locator1 = "Select#REGION",
+				value1 = "${addressRegion}");
+		}
+
+		Type(
+			locator1 = "TextInput#POSTAL_CODE",
+			value1 = "${addressPostalCode}");
+
+		if (isSet(phoneNumber)) {
+			Type(
+				locator1 = "TextInput#NUMBER",
+				value1 = "${phoneNumber}");
+		}
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
+
+		AssertElementPresent(
+			key_tab = "Addresses",
+			locator1 = "NavTab#ACTIVE_TAB_LINK");
+	}
+
 	macro addAssignee {
 		LexiconEntry.gotoAdd();
 
@@ -28,11 +104,18 @@ definition {
 				value1 = "Save");
 		}
 		else {
-			Search.searchCP(searchTerm = "${assigneeName}");
+			if (isSet(selectAll)) {
+				ManagementBar.setFilterAndOrder(filterBy = "All Users");
 
-			Check(
-				key_tableEntry = "${assigneeName}",
-				locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+				PortletEntry.selectAll();
+			}
+			else {
+				Search.searchCP(searchTerm = "${assigneeName}");
+
+				Check(
+					key_tableEntry = "${assigneeName}",
+					locator1 = "LexiconTable#TABLE_ENTRY_CHECKBOX");
+			}
 
 			SelectFrameTop();
 
@@ -40,13 +123,6 @@ definition {
 
 			Alert.viewSuccessMessage();
 		}
-
-		Refresh();
-
-		AssertTextEquals.assertPartialText(
-			key_tableEntry = "${assigneeName}",
-			locator1 = "LexiconTable#TABLE_ENTRY",
-			value1 = "${assigneeName}");
 	}
 
 	macro addCP {
@@ -90,8 +166,12 @@ definition {
 			Uncheck.uncheckToggleSwitch(locator1 = "ToggleSwitch#ACCOUNT_STATUS");
 		}
 
-		if (isSet(domainNames)) {
-			Accounts.addDomains(domainNames = "${domainNames}");
+		if (isSet(domainEnable)) {
+			AssertElementPresent(locator1 = "Account#DOMAIN_SECTION");
+
+			if (isSet(domainNames)) {
+				Accounts.addDomains(domainNames = "${domainNames}");
+			}
 		}
 		else {
 			AssertElementNotPresent(locator1 = "Account#DOMAIN_SECTION");
@@ -106,7 +186,7 @@ definition {
 		AssertElementPresent(locator1 = "Account#DOMAIN_SECTION");
 
 		AssertClick(
-			locator1 = "Account#ACCOUNT_DOMAIN_ADD_Link",
+			locator1 = "Account#ACCOUNT_DOMAIN_ADD_LINK",
 			value1 = "Add");
 
 		SelectFrame(locator1 = "IFrame#ADD_DOMAIN");
@@ -158,6 +238,82 @@ definition {
 		}
 
 		LexiconEntry.viewNoEntry(rowEntry = "${accountName}");
+	}
+
+	macro editAddress {
+		LexiconEntry.gotoEntry(rowEntry = "${addressName}");
+
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER",
+			value1 = "Edit Address");
+
+		if (isSet(addressName)) {
+			PortletEntry.inputName(name = "${addressName}");
+		}
+
+		if (isSet(addressDescription)) {
+			PortletEntry.inputDescription(description = "${addressDescription}");
+		}
+
+		if (isSet(addressType)) {
+			SelectField.select(
+				selectFieldLabel = "Type",
+				selectFieldValue = "${addressType}");
+		}
+
+		if (isSet(addressStreet1)) {
+			Type(
+				locator1 = "TextInput#STREET_1",
+				value1 = "${addressStreet1}");
+		}
+
+		if (isSet(addressStreet2)) {
+			Type(
+				key_streetNumber = "2",
+				locator1 = "TextInput#STREET_N",
+				value1 = "${addressStreet2}");
+		}
+
+		if (isSet(addressStreet3)) {
+			Type(
+				key_streetNumber = "3",
+				locator1 = "TextInput#STREET_N",
+				value1 = "${addressStreet3}");
+		}
+
+		if (isSet(addressCity)) {
+			Type(
+				locator1 = "TextInput#CITY",
+				value1 = "${addressCity}");
+		}
+
+		if (isSet(addressRegion)) {
+			Select(
+				locator1 = "Select#REGION",
+				value1 = "${addressRegion}");
+		}
+
+		if (isSet(addressPostalCode)) {
+			Type(
+				locator1 = "TextInput#POSTAL_CODE",
+				value1 = "${addressPostalCode}");
+		}
+
+		if (isSet(addressCountry)) {
+			Select(
+				locator1 = "Select#COUNTRY",
+				value1 = "${addressCountry}");
+		}
+
+		if (isSet(phoneNumber)) {
+			Type(
+				locator1 = "TextInput#NUMBER",
+				value1 = "${phoneNumber}");
+		}
+
+		Button.clickSave();
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro editCP {
@@ -246,6 +402,19 @@ definition {
 		LexiconEntry.viewNoEntry(rowEntry = "${accountName}");
 	}
 
+	macro removeAddress {
+		Click(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#REMOVE_ACCOUNT_DEFAULT_ADDRESS");
+
+		PortletEntry.save();
+
+		AssertTextEquals(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#ACCOUNT_ADDRESSES",
+			value1 = "Not Set");
+	}
+
 	macro removeDomain {
 		LexiconEntry.gotoEntry(rowEntry = "${accountName}");
 
@@ -273,12 +442,31 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#ASSIGN_USER");
 
-		Search.searchCP(searchTerm = "${accountUserName}");
+		if (isSet(newUser)) {
+			LexiconEntry.gotoAdd();
 
-		AssertClick(
-			key_accountUserName = "${accountUserName}",
-			locator1 = "Account#CHOOSE_ACCOUNT_USER",
-			value1 = "Choose");
+			AccountUsers.addUserInfos(
+				accountName = "${accountName}",
+				domainValidation = "${domainValidation}",
+				emailDomainName = "${emailDomainName}",
+				userEmailAddress = "${userEmailAddress}",
+				userFirstName = "${accountUserName}",
+				userLastName = "${userLastName}",
+				userScreenName = "${userScreenName}",
+				validDomainNames = "${validDomainNames}");
+
+			AssertClick(
+				locator1 = "Button#SAVE",
+				value1 = "Save");
+		}
+		else {
+			Search.searchCP(searchTerm = "${accountUserName}");
+
+			AssertClick(
+				key_accountUserName = "${accountUserName}",
+				locator1 = "Account#CHOOSE_ACCOUNT_USER",
+				value1 = "Choose");
+		}
 
 		SelectFrame(value1 = "relative=top");
 
@@ -293,6 +481,48 @@ definition {
 		AssertElementPresent(
 			key_userName = "${accountUserName}",
 			locator1 = "Account#USER_TABLE_NAME");
+	}
+
+	macro setAddress {
+		AssertElementPresent(locator1 = "Account#DEFAULT_ACCOUNT_ADDRESSES_SECTION");
+
+		if (IsElementPresent(key_addressDataType = "${addressDataType}",key_text = "Set Default Address", locator1 = "Account#SET_ACCOUNT_DEFAULT_ADDRESS")) {
+			AssertClick(
+				key_addressDataType = "${addressDataType}",
+				key_text = "Set Default Address",
+				locator1 = "Account#SET_ACCOUNT_DEFAULT_ADDRESS",
+				value1 = "Set Default Address");
+		}
+		else {
+			AssertClick(
+				key_addressDataType = "${addressDataType}",
+				key_text = "Change",
+				locator1 = "Account#SET_ACCOUNT_DEFAULT_ADDRESS",
+				value1 = "Change");
+		}
+
+		Pause(locator1 = "3000");
+
+		SelectFrame(
+			key_title = StringUtil.upperCaseFirstLetter("${addressDataType}"),
+			locator1 = "IFrame#MODAL_ANY");
+
+		AssertElementPresent(
+			key_addressDataType = StringUtil.upperCaseFirstLetter("${addressDataType}"),
+			key_filterScope = "Type: ${key_addressDataType}",
+			locator1 = "ManagementBar#FILTER_RESULTS_SCOPE");
+
+		Click(
+			key_addressName = "${addressName}",
+			locator1 = "Account#SELECT_ADDRESS_RADIO");
+
+		SelectFrameTop();
+
+		AssertClick(
+			locator1 = "Account#SAVE_BUTTON",
+			value1 = "Save");
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro tearDownCP {
@@ -373,6 +603,72 @@ definition {
 
 		if (isSet(parentAccount)) {
 			LexiconEntry.viewEntryName(rowEntry = "${parentAccount}");
+		}
+	}
+
+	macro viewAddress {
+		if ("${addressDataType}" == "billing") {
+			AssertElementPresent(
+				key_addressDataType = "${addressDataType}",
+				locator1 = "Account#ACCOUNT_ADDRESS_BILLING");
+		}
+		else {
+			AssertElementPresent(
+				key_addressDataType = "${addressDataType}",
+				locator1 = "Account#ACCOUNT_ADDRESS_SHIPPING");
+		}
+
+		AssertTextEquals.assertPartialText(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#ACCOUNT_ADDRESSES",
+			value1 = "${addressName}");
+
+		AssertTextEquals.assertPartialText(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#ACCOUNT_ADDRESSES",
+			value1 = "${addressStreet1}");
+
+		AssertTextEquals.assertPartialText(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#ACCOUNT_ADDRESSES",
+			value1 = "${addressCountry}");
+
+		AssertTextEquals.assertPartialText(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#ACCOUNT_ADDRESSES",
+			value1 = "${addressCity}");
+
+		AssertTextEquals.assertPartialText(
+			key_addressDataType = "${addressDataType}",
+			locator1 = "Account#ACCOUNT_ADDRESSES",
+			value1 = "${addressPostalCode}");
+
+		if (isSet(addressRegion)) {
+			AssertTextEquals.assertPartialText(
+				key_addressDataType = "${addressDataType}",
+				locator1 = "Account#ACCOUNT_ADDRESSES",
+				value1 = "${addressRegion}");
+		}
+
+		if (isSet(addressStreet2)) {
+			AssertTextEquals.assertPartialText(
+				key_addressDataType = "${addressDataType}",
+				locator1 = "Account#ACCOUNT_ADDRESSES",
+				value1 = "${addressStreet2}");
+		}
+
+		if (isSet(addressStreet3)) {
+			AssertTextEquals.assertPartialText(
+				key_addressDataType = "${addressDataType}",
+				locator1 = "Account#ACCOUNT_ADDRESSES",
+				value1 = "${addressStreet3}");
+		}
+
+		if (isSet(phoneNumber)) {
+			AssertTextEquals.assertPartialText(
+				key_addressDataType = "${addressDataType}",
+				locator1 = "Account#ACCOUNT_ADDRESSES",
+				value1 = "${phoneNumber}");
 		}
 	}
 

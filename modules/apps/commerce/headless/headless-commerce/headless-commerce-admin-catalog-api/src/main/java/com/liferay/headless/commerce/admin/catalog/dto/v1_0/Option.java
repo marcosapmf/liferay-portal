@@ -28,6 +28,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -51,11 +53,41 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonFilter("Liferay.Vulcan")
 @Schema(requiredProperties = {"fieldType", "key", "name"})
 @XmlRootElement(name = "Option")
-public class Option {
+public class Option implements Serializable {
 
 	public static Option toDTO(String json) {
 		return ObjectMapperUtil.readValue(Option.class, json);
 	}
+
+	@Schema
+	@Valid
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	@JsonIgnore
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Map<String, Map<String, String>> actions;
 
 	@Schema
 	public Long getCatalogId() {
@@ -434,6 +466,16 @@ public class Option {
 
 		sb.append("{");
 
+		if (actions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"actions\": ");
+
+			sb.append(_toJSON(actions));
+		}
+
 		if (catalogId != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -591,7 +633,8 @@ public class Option {
 	public static enum FieldType {
 
 		CHECKBOX("checkbox"), CHECKBOX_MULTIPLE("checkbox_multiple"),
-		DATE("date"), NUMERIC("numeric"), RADIO("radio"), SELECT("select");
+		DATE("date"), NUMERIC("numeric"), RADIO("radio"), SELECT("select"),
+		TEXT("text");
 
 		@JsonCreator
 		public static FieldType create(String value) {

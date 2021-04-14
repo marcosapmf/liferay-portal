@@ -34,22 +34,21 @@ import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.search.engine.ConnectionInformation;
-import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -88,6 +87,9 @@ public class DDMIndexerImplTest {
 		ddmFixture.setUp();
 		documentFixture.setUp();
 		setUpPortalUtil();
+		setUpPropsUtil();
+
+		ddmIndexer = createDDMIndexer();
 	}
 
 	@After
@@ -280,28 +282,6 @@ public class DDMIndexerImplTest {
 				ReflectionTestUtil.setFieldValue(
 					this, "_ddmIndexerConfiguration", ddmIndexerConfiguration);
 
-				searchEngineInformation = new SearchEngineInformation() {
-
-					public String getClientVersionString() {
-						return null;
-					}
-
-					public List<ConnectionInformation>
-						getConnectionInformationList() {
-
-						return null;
-					}
-
-					public String getNodesString() {
-						return null;
-					}
-
-					public String getVendorString() {
-						return null;
-					}
-
-				};
-
 				setDDMFormValuesToFieldsConverter(
 					new DDMFormValuesToFieldsConverterImpl());
 			}
@@ -355,10 +335,15 @@ public class DDMIndexerImplTest {
 		portalUtil.setPortal(portal);
 	}
 
+	protected void setUpPropsUtil() {
+		PropsTestUtil.setProps(
+			PropsKeys.INDEX_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH, "255");
+	}
+
 	protected final DDMFixture ddmFixture = new DDMFixture();
 	protected final DDMFormJSONSerializer ddmFormJSONSerializer =
 		createDDMFormJSONSerializer();
-	protected final DDMIndexer ddmIndexer = createDDMIndexer();
+	protected DDMIndexer ddmIndexer;
 	protected final DocumentFixture documentFixture = new DocumentFixture();
 
 	private Map<String, String> _withSortableValues(Map<String, String> map) {

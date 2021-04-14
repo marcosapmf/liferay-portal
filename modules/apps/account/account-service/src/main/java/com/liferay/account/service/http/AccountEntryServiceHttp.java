@@ -140,8 +140,8 @@ public class AccountEntryServiceHttp {
 
 	public static com.liferay.account.model.AccountEntry addAccountEntry(
 			HttpPrincipal httpPrincipal, long userId, long parentAccountEntryId,
-			String name, String description, String[] domains, byte[] logoBytes,
-			String taxIdNumber, String type, int status,
+			String name, String description, String[] domains, String email,
+			byte[] logoBytes, String taxIdNumber, String type, int status,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -152,7 +152,8 @@ public class AccountEntryServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, userId, parentAccountEntryId, name, description,
-				domains, logoBytes, taxIdNumber, type, status, serviceContext);
+				domains, email, logoBytes, taxIdNumber, type, status,
+				serviceContext);
 
 			Object returnObj = null;
 
@@ -228,15 +229,15 @@ public class AccountEntryServiceHttp {
 	}
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.account.model.AccountEntry> search(
+		<com.liferay.account.model.AccountEntry> searchAccountEntries(
 			HttpPrincipal httpPrincipal, String keywords,
 			java.util.LinkedHashMap<String, Object> params, int cur, int delta,
 			String orderByField, boolean reverse) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
-				AccountEntryServiceUtil.class, "search",
-				_searchParameterTypes4);
+				AccountEntryServiceUtil.class, "searchAccountEntries",
+				_searchAccountEntriesParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, keywords, params, cur, delta, orderByField, reverse);
@@ -280,7 +281,7 @@ public class AccountEntryServiceHttp {
 	private static final Class<?>[] _addAccountEntryParameterTypes2 =
 		new Class[] {
 			long.class, long.class, String.class, String.class, String[].class,
-			byte[].class, String.class, String.class, int.class,
+			String.class, byte[].class, String.class, String.class, int.class,
 			com.liferay.portal.kernel.service.ServiceContext.class
 		};
 	private static final Class<?>[] _getAccountEntriesParameterTypes3 =
@@ -288,9 +289,10 @@ public class AccountEntryServiceHttp {
 			long.class, int.class, int.class, int.class,
 			com.liferay.portal.kernel.util.OrderByComparator.class
 		};
-	private static final Class<?>[] _searchParameterTypes4 = new Class[] {
-		String.class, java.util.LinkedHashMap.class, int.class, int.class,
-		String.class, boolean.class
-	};
+	private static final Class<?>[] _searchAccountEntriesParameterTypes4 =
+		new Class[] {
+			String.class, java.util.LinkedHashMap.class, int.class, int.class,
+			String.class, boolean.class
+		};
 
 }

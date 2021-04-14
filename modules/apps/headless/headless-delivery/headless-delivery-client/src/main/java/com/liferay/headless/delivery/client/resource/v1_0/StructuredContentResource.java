@@ -275,6 +275,16 @@ public interface StructuredContentResource {
 			Long structuredContentId, Permission[] permissions)
 		throws Exception;
 
+	public String
+			getStructuredContentRenderedContentByDisplayPageDisplayPageKey(
+				Long structuredContentId, String displayPageKey)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			getStructuredContentRenderedContentByDisplayPageDisplayPageKeyHttpResponse(
+				Long structuredContentId, String displayPageKey)
+		throws Exception;
+
 	public String getStructuredContentRenderedContentTemplate(
 			Long structuredContentId, String contentTemplateId)
 		throws Exception;
@@ -439,8 +449,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-contents",
-				assetLibraryId);
+						"/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-contents");
+
+			httpInvoker.path("assetLibraryId", assetLibraryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -507,8 +518,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-contents",
-				assetLibraryId);
+						"/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-contents");
+
+			httpInvoker.path("assetLibraryId", assetLibraryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -569,8 +581,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-contents/batch",
-				assetLibraryId);
+						"/o/headless-delivery/v1.0/asset-libraries/{assetLibraryId}/structured-contents/batch");
+
+			httpInvoker.path("assetLibraryId", assetLibraryId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -660,8 +673,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/content-structures/{contentStructureId}/structured-contents",
-				contentStructureId);
+						"/o/headless-delivery/v1.0/content-structures/{contentStructureId}/structured-contents");
+
+			httpInvoker.path("contentStructureId", contentStructureId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -754,8 +768,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents",
-				siteId);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents");
+
+			httpInvoker.path("siteId", siteId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -821,8 +836,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents",
-				siteId);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents");
+
+			httpInvoker.path("siteId", siteId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -883,8 +899,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/batch",
-				siteId);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/batch");
+
+			httpInvoker.path("siteId", siteId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -948,8 +965,10 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/by-key/{key}",
-				siteId, key);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/by-key/{key}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("key", key);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1013,8 +1032,10 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/by-uuid/{uuid}",
-				siteId, uuid);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/by-uuid/{uuid}");
+
+			httpInvoker.path("siteId", siteId);
+			httpInvoker.path("uuid", uuid);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1083,8 +1104,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/permissions",
-				siteId);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/permissions");
+
+			httpInvoker.path("siteId", siteId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1159,8 +1181,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/permissions",
-				siteId);
+						"/o/headless-delivery/v1.0/sites/{siteId}/structured-contents/permissions");
+
+			httpInvoker.path("siteId", siteId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1256,8 +1279,10 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}/structured-contents",
-				structuredContentFolderId);
+						"/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}/structured-contents");
+
+			httpInvoker.path(
+				"structuredContentFolderId", structuredContentFolderId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1326,8 +1351,10 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}/structured-contents",
-				structuredContentFolderId);
+						"/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}/structured-contents");
+
+			httpInvoker.path(
+				"structuredContentFolderId", structuredContentFolderId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1390,8 +1417,10 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}/structured-contents/batch",
-				structuredContentFolderId);
+						"/o/headless-delivery/v1.0/structured-content-folders/{structuredContentFolderId}/structured-contents/batch");
+
+			httpInvoker.path(
+				"structuredContentFolderId", structuredContentFolderId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1453,8 +1482,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1574,8 +1604,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1641,8 +1672,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1708,8 +1740,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1831,8 +1864,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1896,8 +1930,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1965,8 +2000,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -2034,8 +2070,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/my-rating");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -2104,8 +2141,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/permissions",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/permissions");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -2180,8 +2218,78 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/permissions",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/permissions");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public String
+				getStructuredContentRenderedContentByDisplayPageDisplayPageKey(
+					Long structuredContentId, String displayPageKey)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				getStructuredContentRenderedContentByDisplayPageDisplayPageKeyHttpResponse(
+					structuredContentId, displayPageKey);
+
+			String content = httpResponse.getContent();
+
+			_logger.fine("HTTP response content: " + content);
+
+			_logger.fine("HTTP response message: " + httpResponse.getMessage());
+			_logger.fine(
+				"HTTP response status code: " + httpResponse.getStatusCode());
+
+			try {
+				return content;
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				getStructuredContentRenderedContentByDisplayPageDisplayPageKeyHttpResponse(
+					Long structuredContentId, String displayPageKey)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port +
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/rendered-content-by-display-page/{displayPageKey}");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
+			httpInvoker.path("displayPageKey", displayPageKey);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -2246,8 +2354,10 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/rendered-content/{contentTemplateId}",
-				structuredContentId, contentTemplateId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/rendered-content/{contentTemplateId}");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
+			httpInvoker.path("contentTemplateId", contentTemplateId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -2313,8 +2423,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/subscribe",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/subscribe");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -2381,8 +2492,9 @@ public interface StructuredContentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/unsubscribe",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/unsubscribe");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

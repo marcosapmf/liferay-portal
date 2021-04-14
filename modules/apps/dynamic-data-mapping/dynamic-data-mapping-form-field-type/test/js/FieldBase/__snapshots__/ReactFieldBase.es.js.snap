@@ -1,5 +1,44 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ReactFieldBase does not render the add button when repeatable is true and the maximum limit of repetions is reached 1`] = `
+<div>
+  <div
+    class="form-group hide"
+  >
+    <div
+      class="lfr-ddm-form-field-repeatable-toolbar"
+    >
+      <button
+        class="ddm-form-field-repeatable-add-button p-0 hide btn btn-sm btn-primary"
+        title="duplicate"
+        type="button"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-plus"
+          role="presentation"
+        >
+          <use
+            xlink:href="#plus"
+          />
+        </svg>
+      </button>
+    </div>
+    <label
+      aria-describedby="undefined_fieldDetails"
+      class="ddm-empty"
+      tabindex="0"
+    />
+    <span
+      class="sr-only"
+      id="undefined_fieldDetails"
+    >
+      Text
+      <br />
+    </span>
+  </div>
+</div>
+`;
+
 exports[`ReactFieldBase does not render the label if showLabel is false 1`] = `
 <div>
   <div
@@ -43,8 +82,7 @@ exports[`ReactFieldBase renders the FieldBase with help text 1`] = `
       Type something!
     </span>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       Type something!
@@ -72,15 +110,14 @@ exports[`ReactFieldBase renders the FieldBase with label 1`] = `
     class="form-group hide"
   >
     <label
-      aria-labelledby="undefined_fieldDetails"
+      aria-describedby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
       Text
     </label>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       Text
@@ -96,12 +133,12 @@ exports[`ReactFieldBase renders the FieldBase with required 1`] = `
     class="form-group hide"
   >
     <label
-      aria-labelledby="undefined_fieldDetails"
+      aria-describedby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
       <span
-        class="reference-mark"
+        class="ddm-label-required reference-mark"
       >
         <svg
           class="lexicon-icon lexicon-icon-asterisk"
@@ -114,13 +151,51 @@ exports[`ReactFieldBase renders the FieldBase with required 1`] = `
       </span>
     </label>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       undefined
       <br />
       required
+    </span>
+  </div>
+</div>
+`;
+
+exports[`ReactFieldBase renders the add button when repeatable is true 1`] = `
+<div>
+  <div
+    class="form-group hide"
+  >
+    <div
+      class="lfr-ddm-form-field-repeatable-toolbar"
+    >
+      <button
+        class="ddm-form-field-repeatable-add-button p-0 btn btn-sm btn-primary"
+        title="duplicate"
+        type="button"
+      >
+        <svg
+          class="lexicon-icon lexicon-icon-plus"
+          role="presentation"
+        >
+          <use
+            xlink:href="#plus"
+          />
+        </svg>
+      </button>
+    </div>
+    <label
+      aria-describedby="undefined_fieldDetails"
+      class="ddm-empty"
+      tabindex="0"
+    />
+    <span
+      class="sr-only"
+      id="undefined_fieldDetails"
+    >
+      Text
+      <br />
     </span>
   </div>
 </div>

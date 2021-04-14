@@ -47,7 +47,7 @@ if (commerceChannel != null) {
 	/>
 </liferay-util:buffer>
 
-<portlet:actionURL name="editCommerceChannel" var="editCommerceChannelActionURL" />
+<portlet:actionURL name="/commerce_channels/edit_commerce_channel" var="editCommerceChannelActionURL" />
 
 <aui:form action="<%= editCommerceChannelActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="selectSite" />
@@ -86,7 +86,7 @@ if (commerceChannel != null) {
 						modelVar="group"
 					>
 						<liferay-ui:search-container-column-text
-							cssClass="table-cell-content"
+							cssClass="table-cell-expand"
 							value="<%= HtmlUtil.escape(group.getName(locale)) %>"
 						/>
 
@@ -116,7 +116,7 @@ if (commerceChannel != null) {
 	);
 
 	if (selectSiteButton) {
-		selectSiteButton.addEventListener('click', function (event) {
+		selectSiteButton.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			Liferay.Util.selectEntity({
@@ -142,7 +142,7 @@ if (commerceChannel != null) {
 
 	searchContainerContentBox.delegate(
 		'click',
-		function (event) {
+		(event) => {
 			var link = event.currentTarget;
 
 			var rowId = link.attr('data-rowId');
@@ -156,7 +156,7 @@ if (commerceChannel != null) {
 		'.modify-link'
 	);
 
-	var sitesSelectItemHandle = Liferay.on('sitesSelectItem', function (event) {
+	var sitesSelectItemHandle = Liferay.on('sitesSelectItem', (event) => {
 		var item = event.data;
 
 		if (item) {
@@ -191,7 +191,7 @@ if (commerceChannel != null) {
 		}
 	});
 
-	Liferay.on('beforeNavigate', function (event) {
+	Liferay.on('beforeNavigate', (event) => {
 		sitesSelectItemHandle.detach();
 	});
 </aui:script>

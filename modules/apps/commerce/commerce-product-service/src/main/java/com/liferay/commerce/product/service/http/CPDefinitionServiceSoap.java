@@ -404,6 +404,26 @@ public class CPDefinitionServiceSoap {
 	}
 
 	public static com.liferay.commerce.product.model.CPDefinitionSoap
+			updateExternalReferenceCode(
+				long cpDefinitionId, String externalReferenceCode)
+		throws RemoteException {
+
+		try {
+			com.liferay.commerce.product.model.CPDefinition returnValue =
+				CPDefinitionServiceUtil.updateExternalReferenceCode(
+					cpDefinitionId, externalReferenceCode);
+
+			return com.liferay.commerce.product.model.CPDefinitionSoap.
+				toSoapModel(returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.commerce.product.model.CPDefinitionSoap
 			updateShippingInfo(
 				long cpDefinitionId, boolean shippable, boolean freeShipping,
 				boolean shipSeparately, double shippingExtraPrice, double width,

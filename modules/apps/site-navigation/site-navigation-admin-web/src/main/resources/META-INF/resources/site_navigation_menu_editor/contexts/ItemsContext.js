@@ -15,25 +15,19 @@
 import PropTypes from 'prop-types';
 import React, {useContext, useState} from 'react';
 
-const getItemsMap = (items) => {
-	const map = new Map();
+const getFlatItems = (items) =>
+	items.reduce((acc, item) => {
+		return [...acc, item, ...getFlatItems(item.children)];
+	}, []);
 
-	items.forEach((item) => {
-		map.set(item.siteNavigationMenuItemId, item);
-	});
-
-	return map;
-};
-
-export const ItemsContext = React.createContext({});
-export const SetItemsContext = React.createContext({});
+export const ItemsContext = React.createContext([]);
+export const SetItemsContext = React.createContext(() => {});
 
 export const useItems = () => useContext(ItemsContext);
-export const useItemsMap = () => getItemsMap(useContext(ItemsContext));
 export const useSetItems = () => useContext(SetItemsContext);
 
 export const ItemsProvider = ({children, initialItems}) => {
-	const [items, setItems] = useState(initialItems);
+	const [items, setItems] = useState(getFlatItems(initialItems));
 
 	return (
 		<SetItemsContext.Provider value={setItems}>

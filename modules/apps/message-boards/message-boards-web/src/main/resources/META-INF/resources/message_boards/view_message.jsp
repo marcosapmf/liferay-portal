@@ -38,7 +38,7 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 	editorName="<%= MBUtil.getEditorName(messageFormat) %>"
 />
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl\"" : StringPool.BLANK %>>
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 
 		<%
@@ -62,7 +62,7 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 	</div>
 </div>
 
-<aui:script require="metal-dom/src/all/dom as domAll">
+<aui:script require="frontend-js-web/liferay/util/run_scripts_in_element.es as runScriptsInElement">
 	window['<portlet:namespace />addReplyToMessage'] = function (messageId, quote) {
 		var addQuickReplyContainer = document.querySelector(
 			'#<portlet:namespace />addReplyToMessage' + messageId + ' .panel'
@@ -95,13 +95,13 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 			addQuickReplyLoadingMask.classList.remove('hide');
 
 			Liferay.Util.fetch(editMessageQuickURL)
-				.then(function (response) {
+				.then((response) => {
 					return response.text();
 				})
-				.then(function (response) {
+				.then((response) => {
 					addQuickReplyContainer.innerHTML = response;
 
-					domAll.globalEval.runScriptsInElement(addQuickReplyContainer);
+					runScriptsInElement.default(addQuickReplyContainer);
 
 					addQuickReplyContainer.classList.remove('hide');
 					addQuickReplyLoadingMask.classList.add('hide');
@@ -117,7 +117,7 @@ MBBreadcrumbUtil.addPortletBreadcrumbEntries(message, request, renderResponse);
 					var editorName =
 						'<portlet:namespace />replyMessageBody' + messageId;
 
-					Liferay.componentReady(editorName).then(function (editor) {
+					Liferay.componentReady(editorName).then((editor) => {
 						editor.focus();
 					});
 

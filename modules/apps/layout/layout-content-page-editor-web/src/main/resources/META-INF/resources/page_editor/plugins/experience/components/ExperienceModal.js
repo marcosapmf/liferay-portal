@@ -14,8 +14,10 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
-import ClayForm, {ClayInput, ClaySelect} from '@clayui/form';
+import ClayForm, {ClayCheckbox, ClayInput, ClaySelect} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import ClayLabel from '@clayui/label';
+import ClayLayout from '@clayui/layout';
 import ClayModal from '@clayui/modal';
 import classNames from 'classnames';
 import {useIsMounted} from 'frontend-js-react-web';
@@ -30,6 +32,7 @@ const ExperienceModal = ({
 	experienceId,
 	canUpdateSegments,
 	initialName = '',
+	languageIds = [],
 	observer,
 	onErrorDismiss,
 	onClose,
@@ -48,27 +51,45 @@ const ExperienceModal = ({
 
 	const [name, setName] = useState(initialName);
 	const [requiredNameError, setRequiredNameError] = useState(false);
-	const [requiredSegmentError, setRequiredSegmentError] = useState(false);
 	const [loading, setLoading] = useState(false);
+
+	const [selectedLanguagesIds, setSelectedLanguagesIds] = useState(
+		Object.values(config.availableLanguages)
+			.filter(
+				({default: isDefault, languageId}) =>
+					isDefault || languageIds.includes(languageId)
+			)
+			.map(({languageId}) => languageId)
+	);
+
+	const onChangeLanguage = (isChecked, selectedLenguageId) => {
+		if (!isChecked) {
+			setSelectedLanguagesIds(
+				selectedLanguagesIds.concat(selectedLenguageId)
+			);
+		}
+		else {
+			setSelectedLanguagesIds(
+				selectedLanguagesIds.filter(
+					(languageId) => languageId != selectedLenguageId
+				)
+			);
+		}
+	};
 
 	const handleFormSubmit = (event) => {
 		event.preventDefault();
 
 		const validName = _getValidValue(name);
-		const validSegmentId = _getValidValue(selectedSegmentId);
 
-		if (!validName || !validSegmentId) {
-			if (!validName) {
-				setRequiredNameError(true);
-			}
-			if (!validSegmentId) {
-				setRequiredSegmentError(true);
-			}
+		if (!validName) {
+			setRequiredNameError(true);
 		}
 		else {
 			setLoading(true);
 
 			onSubmit({
+				languageIds: selectedLanguagesIds,
 				name,
 				segmentsEntryId: selectedSegmentId,
 				segmentsExperienceId: experienceId,
@@ -92,15 +113,6 @@ const ExperienceModal = ({
 		setName(value);
 	};
 	const handleSegmentChange = (event) => {
-		const {value} = event.target;
-
-		if (!_getValidValue(value)) {
-			setRequiredSegmentError(true);
-		}
-		else {
-			setRequiredSegmentError(false);
-		}
-
 		setSelectedSegmentId(event.target.value);
 	};
 	const handleNewSegmentClick = (event) => {
@@ -115,12 +127,10 @@ const ExperienceModal = ({
 
 	const nameInputId = `${config.portletNamespace}segmentsExperienceName`;
 	const segmentSelectId = `${config.portletNamespace}segmentsExperienceSegment`;
+	const languagesCheckboxesId = `${config.portletNamespace}segmentsExperienceLanguages`;
 
-	const nameGroupClassName = classNames('my-2', {
+	const nameGroupClassName = classNames('c-mb-4', {
 		'has-error': requiredNameError,
-	});
-	const segmentGroupClassName = classNames('my-2', {
-		'has-error': requiredSegmentError,
 	});
 
 	const modalTitle = experienceId
@@ -134,7 +144,6 @@ const ExperienceModal = ({
 			<ClayModal.Body>
 				<ClayForm
 					autoComplete="off"
-					className="mb-3"
 					noValidate
 					onSubmit={handleFormSubmit}
 				>
@@ -182,7 +191,7 @@ const ExperienceModal = ({
 						)}
 					</ClayForm.Group>
 
-					<ClayForm.Group className={segmentGroupClassName}>
+					<ClayForm.Group className="c-mb-4">
 						<label htmlFor={segmentSelectId}>
 							{Liferay.Language.get('audience')}
 
@@ -232,16 +241,67 @@ const ExperienceModal = ({
 								</Button>
 							)}
 						</div>
+					</ClayForm.Group>
 
-						{requiredSegmentError && (
-							<ClayForm.FeedbackItem>
-								<ClayForm.FeedbackIndicator symbol="exclamation" />
+					<ClayForm.Group>
+						<label htmlFor={languagesCheckboxesId}>
+							{Liferay.Language.get('languages')}
 
-								{Liferay.Language.get(
-									'an-audience-is-required'
-								)}
-							</ClayForm.FeedbackItem>
-						)}
+							<ClayIcon
+								className="c-ml-1 reference-mark"
+								focusable="false"
+								role="presentation"
+								symbol="asterisk"
+							/>
+						</label>
+						<ClayLayout.Row id={languagesCheckboxesId}>
+							{Object.values(config.availableLanguages).map(
+								(language) => {
+									const {
+										default: isDefault,
+										displayName,
+										languageId,
+									} = language;
+
+									const isChecked =
+										selectedLanguagesIds.indexOf(
+											languageId
+										) !== -1;
+
+									return (
+										<ClayLayout.Col
+											className="c-mt-3"
+											key={languageId}
+											md="6"
+										>
+											<ClayCheckbox
+												aria-label={displayName}
+												checked={isChecked}
+												disabled={isDefault}
+												label={displayName}
+												onChange={() => {
+													onChangeLanguage(
+														isChecked,
+														languageId
+													);
+												}}
+											>
+												{isDefault && (
+													<ClayLabel
+														className="c-ml-3"
+														displayType="info"
+													>
+														{Liferay.Language.get(
+															'default'
+														)}
+													</ClayLabel>
+												)}
+											</ClayCheckbox>
+										</ClayLayout.Col>
+									);
+								}
+							)}
+						</ClayLayout.Row>
 					</ClayForm.Group>
 				</ClayForm>
 			</ClayModal.Body>
@@ -276,6 +336,7 @@ ExperienceModal.propTypes = {
 	errorMessage: PropTypes.string,
 	experienceId: PropTypes.string,
 	initialName: PropTypes.string,
+	languageIds: PropTypes.array,
 	observer: PropTypes.object.isRequired,
 	onClose: PropTypes.func.isRequired,
 	onErrorDismiss: PropTypes.func.isRequired,

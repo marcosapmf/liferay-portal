@@ -12,8 +12,6 @@
  * details.
  */
 
-import {isFunction} from 'metal';
-
 const componentConfigs = {};
 let componentPromiseWrappers = {};
 const components = {};
@@ -113,6 +111,11 @@ const _onStartNavigate = function (event) {
 
 		componentIds = componentIds.filter((componentId) => {
 			const component = components[componentId];
+
+			if (!component) {
+				return false;
+			}
+
 			const componentConfig = componentConfigs[componentId];
 
 			const cacheablePortletUri = DEFAULT_CACHE_VALIDATION_PORTLET_PARAMS.every(
@@ -131,9 +134,10 @@ const _onStartNavigate = function (event) {
 				}
 			);
 
-			const cacheableComponent = isFunction(component.isCacheable)
-				? component.isCacheable(uri)
-				: false;
+			const cacheableComponent =
+				typeof component.isCacheable === 'function'
+					? component.isCacheable(uri)
+					: false;
 
 			return (
 				cacheableComponent &&
@@ -202,7 +206,7 @@ const component = function (id, value, componentConfig) {
 	if (arguments.length === 1) {
 		let component = components[id];
 
-		if (component && isFunction(component)) {
+		if (component && typeof component === 'function') {
 			componentsFn[id] = component;
 
 			component = component();

@@ -35,8 +35,6 @@ boolean showSearch = GetterUtil.getBoolean(request.getAttribute("liferay-item-se
 String tabName = GetterUtil.getString(request.getAttribute("liferay-item-selector:repository-entry-browser:tabName"));
 PortletURL uploadURL = (PortletURL)request.getAttribute("liferay-item-selector:repository-entry-browser:uploadURL");
 
-SearchContainer<?> searchContainer = new SearchContainer(renderRequest, PortletURLUtil.clone(portletURL, liferayPortletResponse), null, emptyResultsMessage);
-
 String keywords = ParamUtil.getString(request, "keywords");
 
 boolean showSearchInfo = false;
@@ -54,10 +52,13 @@ if (Validator.isNotNull(keywords)) {
 RepositoryEntryBrowserDisplayContext repositoryEntryBrowserDisplayContext = new RepositoryEntryBrowserDisplayContext(request);
 
 ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositoryEntryManagementToolbarDisplayContext = new ItemSelectorRepositoryEntryManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, repositoryEntryBrowserDisplayContext);
+
+SearchContainer<?> searchContainer = new SearchContainer(renderRequest, itemSelectorRepositoryEntryManagementToolbarDisplayContext.getCurrentSortingURL(), null, emptyResultsMessage);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	clearResultsURL="<%= String.valueOf(itemSelectorRepositoryEntryManagementToolbarDisplayContext.getClearResultsURL()) %>"
+	creationMenu="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getCreationMenu() %>"
 	disabled="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.isDisabled() %>"
 	filterDropdownItems="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	filterLabelItems="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getFilterLabelItems() %>"
@@ -66,6 +67,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 	searchFormMethod="POST"
 	searchFormName="searchFm"
 	selectable="<%= false %>"
+	showCreationMenu="<%= true %>"
 	showInfoButton="<%= false %>"
 	showSearch="<%= showSearch %>"
 	sortingOrder="<%= itemSelectorRepositoryEntryManagementToolbarDisplayContext.getOrderByType() %>"
@@ -85,10 +87,13 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 
 	<%
 	long folderId = ParamUtil.getLong(request, "folderId");
-
-	if (showBreadcrumb && !showSearchInfo) {
-		ItemSelectorRepositoryEntryBrowserUtil.addPortletBreadcrumbEntries(folderId, displayStyle, request, liferayPortletRequest, liferayPortletResponse, PortletURLUtil.clone(portletURL, liferayPortletResponse));
 	%>
+
+	<c:if test="<%= showBreadcrumb && !showSearchInfo %>">
+
+		<%
+		ItemSelectorRepositoryEntryBrowserUtil.addPortletBreadcrumbEntries(folderId, displayStyle, request, liferayPortletRequest, liferayPortletResponse, PortletURLUtil.clone(portletURL, liferayPortletResponse));
+		%>
 
 		<liferay-ui:breadcrumb
 			showCurrentGroup="<%= false %>"
@@ -96,10 +101,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 			showLayout="<%= false %>"
 			showParentGroups="<%= false %>"
 		/>
-
-	<%
-	}
-	%>
+	</c:if>
 
 	<c:if test="<%= showDragAndDropZone && !showSearchInfo && DLFolderPermission.contains(permissionChecker, scopeGroupId, folderId, ActionKeys.ADD_DOCUMENT) %>">
 		<liferay-util:buffer
@@ -156,8 +158,11 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 						else {
 							folder = (Folder)repositoryEntry;
 						}
+						%>
 
-						if (fileEntry != null) {
+						<c:if test="<%= fileEntry != null %>">
+
+							<%
 							FileVersion latestFileVersion = fileEntry.getLatestFileVersion();
 
 							String title = fileEntry.getTitle();
@@ -165,7 +170,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 							JSONObject itemMedatadaJSONObject = ItemSelectorRepositoryEntryBrowserUtil.getItemMetadataJSONObject(fileEntry, locale);
 
 							String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay);
-						%>
+							%>
 
 							<liferay-ui:search-container-column-text
 								name="title"
@@ -227,13 +232,13 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 									icon="view"
 								/>
 							</liferay-ui:search-container-column-text>
+						</c:if>
 
-						<%
-						}
+						<c:if test="<%= folder != null %>">
 
-						if (folder != null) {
+							<%
 							PortletURL viewFolderURL = EntryURLUtil.getFolderPortletURL(folder, liferayPortletRequest, liferayPortletResponse, portletURL);
-						%>
+							%>
 
 							<liferay-ui:search-container-column-text
 								name="title"
@@ -283,11 +288,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 							<liferay-ui:search-container-column-text
 								value="--"
 							/>
-
-						<%
-						}
-						%>
-
+						</c:if>
 					</c:when>
 					<c:otherwise>
 
@@ -312,11 +313,14 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 							<c:when test='<%= displayStyle.equals("icon") %>'>
 
 								<%
-								row.setCssClass("entry-card lfr-asset-folder");
-
-								if (folder != null) {
-									PortletURL viewFolderURL = EntryURLUtil.getFolderPortletURL(folder, liferayPortletRequest, liferayPortletResponse, portletURL);
+								row.setCssClass("card-page-item card-page-item-directory");
 								%>
+
+								<c:if test="<%= folder != null %>">
+
+									<%
+									PortletURL viewFolderURL = EntryURLUtil.getFolderPortletURL(folder, liferayPortletRequest, liferayPortletResponse, portletURL);
+									%>
 
 									<liferay-ui:search-container-column-text
 										colspan="<%= 3 %>"
@@ -353,11 +357,11 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 											</div>
 										</div>
 									</liferay-ui:search-container-column-text>
+								</c:if>
 
-								<%
-								}
+								<c:if test="<%= fileEntry != null %>">
 
-								if (fileEntry != null) {
+									<%
 									FileVersion latestFileVersion = fileEntry.getLatestFileVersion();
 
 									String title = fileEntry.getTitle();
@@ -384,7 +388,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 									data.put("title", title);
 									data.put("url", DLURLHelperUtil.getPreviewURL(fileEntry, latestFileVersion, themeDisplay, StringPool.BLANK));
 									data.put("value", ItemSelectorRepositoryEntryBrowserUtil.getValue(itemSelectorReturnTypeResolver, existingFileEntryReturnType, fileEntry, themeDisplay));
-								%>
+									%>
 
 									<liferay-ui:search-container-column-text>
 										<c:choose>
@@ -450,18 +454,14 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 											</c:otherwise>
 										</c:choose>
 									</liferay-ui:search-container-column-text>
-
-								<%
-								}
-								%>
-
+								</c:if>
 							</c:when>
 							<c:otherwise>
+								<c:if test="<%= folder != null %>">
 
-								<%
-								if (folder != null) {
+									<%
 									PortletURL viewFolderURL = EntryURLUtil.getFolderPortletURL(folder, liferayPortletRequest, liferayPortletResponse, portletURL);
-								%>
+									%>
 
 									<liferay-ui:search-container-column-icon
 										icon="folder"
@@ -495,11 +495,11 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 											<liferay-ui:message arguments="<%= new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - folder.getCreateDate().getTime(), true), HtmlUtil.escape(folder.getUserName())} %>" key="x-ago-by-x" translateArguments="<%= false %>" />
 										</h6>
 									</liferay-ui:search-container-column-text>
+								</c:if>
 
-								<%
-								}
+								<c:if test="<%= fileEntry != null %>">
 
-								if (fileEntry != null) {
+									<%
 									row.setCssClass("item-selector-list-row " + row.getCssClass());
 
 									FileVersion latestFileVersion = fileEntry.getLatestFileVersion();
@@ -509,7 +509,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 									JSONObject itemMedatadaJSONObject = ItemSelectorRepositoryEntryBrowserUtil.getItemMetadataJSONObject(fileEntry, locale);
 
 									String thumbnailSrc = DLURLHelperUtil.getThumbnailSrc(fileEntry, themeDisplay);
-								%>
+									%>
 
 									<c:choose>
 										<c:when test="<%= Validator.isNotNull(thumbnailSrc) %>">
@@ -569,13 +569,8 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 											icon="view"
 										/>
 									</liferay-ui:search-container-column-text>
-
-								<%
-								}
-								%>
-
-							</c:otherwise>
-						</c:choose>
+								</c:if>
+							</c:otherwise> </c:choose>
 					</c:otherwise>
 				</c:choose>
 			</liferay-ui:search-container-row>
@@ -602,21 +597,6 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 	var itemSelector = new ItemSelectorRepositoryEntryBrowser.default({
 		closeCaption: '<%= UnicodeLanguageUtil.get(request, tabName) %>',
 
-		<c:if test="<%= uploadURL != null %>">
-
-			<%
-			String imageEditorPortletId = PortletProviderUtil.getPortletId(Image.class.getName(), PortletProvider.Action.EDIT);
-			%>
-
-			<c:if test="<%= Validator.isNotNull(imageEditorPortletId) %>">
-				<liferay-portlet:renderURL portletName="<%= imageEditorPortletId %>" var="viewImageEditorURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-					<liferay-portlet:param name="mvcRenderCommandName" value="/image_editor/view" />
-				</liferay-portlet:renderURL>
-
-				editItemURL: '<%= viewImageEditorURL.toString() %>',
-			</c:if>
-		</c:if>
-
 		maxFileSize: '<%= maxFileSize %>',
 
 		rootNode: '#<%= randomNamespace %>ItemSelectorContainer',
@@ -637,7 +617,7 @@ ItemSelectorRepositoryEntryManagementToolbarDisplayContext itemSelectorRepositor
 		</c:if>
 	});
 
-	itemSelector.on('selectedItem', function (event) {
+	itemSelector.on('selectedItem', (event) => {
 		Liferay.Util.getOpener().Liferay.fire(
 			'<%= itemSelectedEventName %>',
 			event

@@ -63,6 +63,15 @@ const AutocompleteMultiSelect = ({
 		setHighlighted(true);
 	};
 
+	const handleSelect = useCallback(
+		(item) => {
+			const newSelectedItems = [...selectedItems, item];
+
+			handleChange(newSelectedItems);
+		},
+		[handleChange, selectedItems]
+	);
+
 	const handleKeyDown = useCallback(
 		({keyCode}) => {
 			const keyArrowDown = 40;
@@ -101,15 +110,6 @@ const AutocompleteMultiSelect = ({
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[fieldId, selectedItems]
-	);
-
-	const handleSelect = useCallback(
-		(item) => {
-			const newSelectedItems = [...selectedItems, item];
-
-			handleChange(newSelectedItems);
-		},
-		[handleChange, selectedItems]
 	);
 
 	useEffect(() => {
@@ -164,7 +164,6 @@ const AutocompleteMultiSelect = ({
 
 					<input
 						className="form-control-inset"
-						data-testid="multiSelectInput"
 						onChange={({target}) => setSearch(target.value)}
 						onFocus={handleFocus}
 						onKeyDown={handleKeyDown}
@@ -199,20 +198,15 @@ const AutocompleteMultiSelect = ({
 	);
 };
 
-const Item = ({key, name, onRemove}) => {
+const Item = ({name, onRemove}) => {
 	return (
-		<span
-			className="label label-dismissible label-secondary"
-			data-testid="multiSelectItem"
-			key={key}
-		>
+		<span className="label label-dismissible label-secondary">
 			<span className="label-item label-item-expand">{name}</span>
 
 			<span className="label-item label-item-after">
 				<button
 					aria-label="Close"
 					className="close"
-					data-testid="multiSelectItemRemove"
 					onClick={onRemove}
 					type="button"
 				>

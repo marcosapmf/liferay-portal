@@ -24,6 +24,7 @@ JournalFeed feed = ActionUtil.getFeed(request);
 long groupId = BeanParamUtil.getLong(feed, request, "groupId", scopeGroupId);
 
 String feedId = BeanParamUtil.getString(feed, request, "feedId");
+
 String newFeedId = ParamUtil.getString(request, "newFeedId");
 
 String ddmStructureKey = ParamUtil.getString(request, "ddmStructureKey");
@@ -98,7 +99,7 @@ if (feed != null) {
 	feedURL.setCacheability(ResourceURL.FULL);
 	feedURL.setParameter("groupId", String.valueOf(groupId));
 	feedURL.setParameter("feedId", String.valueOf(feedId));
-	feedURL.setResourceID("rss");
+	feedURL.setResourceID("/journal/rss");
 }
 
 portletDisplay.setShowBackIcon(true);
@@ -423,7 +424,7 @@ renderResponse.setTitle((feed == null) ? LanguageUtil.get(request, "new-feed") :
 	);
 
 	if (contentFieldSelector) {
-		contentFieldSelector.addEventListener('change', function () {
+		contentFieldSelector.addEventListener('change', () => {
 			var contentFieldValue = '';
 			var ddmRendererTemplateKeyValue = '';
 

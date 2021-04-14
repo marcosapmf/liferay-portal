@@ -122,13 +122,13 @@ int nextStatus = KBUtil.getNextStatus(kbComment.getStatus());
 	</aui:button-row>
 </c:if>
 
-<aui:script sandbox="<%= true %>">
+<script>
 	var deleteButtonElement = document.getElementById(
 		'<portlet:namespace />deleteButton'
 	);
 
 	if (deleteButtonElement) {
-		deleteButtonElement.addEventListener('click', function (event) {
+		deleteButtonElement.addEventListener('click', (event) => {
 			if (
 				!confirm(
 					'<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />'
@@ -138,4 +138,4 @@ int nextStatus = KBUtil.getNextStatus(kbComment.getStatus());
 			}
 		});
 	}
-</aui:script>
+</script>

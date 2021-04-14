@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.test.util;
 
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
@@ -47,8 +48,9 @@ public class DDMFormTestUtil {
 		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
 
 		DDMFormField ddmFormField = createDDMFormField(
-			fieldName, RandomTestUtil.randomString(), "ddm-documentlibrary",
-			"document-library", true, false, true);
+			fieldName, RandomTestUtil.randomString(),
+			DDMFormFieldTypeConstants.DOCUMENT_LIBRARY, "document-library",
+			true, false, true);
 
 		ddmFormField.setDDMForm(ddmForm);
 		ddmFormField.setLocalizable(true);
@@ -123,6 +125,7 @@ public class DDMFormTestUtil {
 		DDMFormField ddmFormField = new DDMFormField(name, type);
 
 		ddmFormField.setDataType(dataType);
+		ddmFormField.setFieldReference(name);
 		ddmFormField.setLocalizable(localizable);
 		ddmFormField.setRepeatable(repeatable);
 		ddmFormField.setRequired(required);

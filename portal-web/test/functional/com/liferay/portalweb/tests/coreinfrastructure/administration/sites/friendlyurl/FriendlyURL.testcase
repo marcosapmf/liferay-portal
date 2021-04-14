@@ -65,7 +65,8 @@ definition {
 
 	@priority = "5"
 	test ViewCanonicalURLWithLocalizedFriendlyURL {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -77,11 +78,11 @@ definition {
 
 		Navigator.openSpecificURL(url = "${portalURL}/web/test-site-name");
 
-		Page.assertCanonicalURL(portalURL = "${portalURL}/web/test-site-name");
+		Page.assertCanonicalURL(customCanonicalURL = "${portalURL}/web/test-site-name");
 
 		Navigator.openSpecificURL(url = "${portalURL}/es/web/test-site-name");
 
-		Page.assertCanonicalURL(portalURL = "${portalURL}/web/test-site-name");
+		Page.assertCanonicalURL(customCanonicalURL = "${portalURL}/web/test-site-name");
 	}
 
 	@priority = "4"

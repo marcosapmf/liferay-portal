@@ -1,10 +1,11 @@
 definition {
 
 	macro add {
-
 		App.selectFormView(formViewName = "${formViewName}");
 
 		App.selectTableView(tableViewName = "${tableViewName}");
+
+		Button.clickNext();
 
 		AppBuilderAdmin.setName(title = "${appTitle}");
 
@@ -26,8 +27,11 @@ definition {
 	}
 
 	macro clickBackButton {
-
 		Click(locator1 = "AppBuilderStandardApp#BACK_BUTTON");
+	}
+
+	macro clickOnManageWorkflows {
+		Button.click(button = "Manage Workflows");
 	}
 
 }

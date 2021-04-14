@@ -30,14 +30,14 @@ PortletURL portletURL = currentURLObj;
 					navigationItem -> {
 						navigationItem.setActive(!privateLayout);
 						navigationItem.setHref(portletURL, "privateLayout", false);
-						navigationItem.setLabel(LanguageUtil.get(request, "public-pages"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "public-pages"));
 					});
 
 				add(
 					navigationItem -> {
 						navigationItem.setActive(privateLayout);
 						navigationItem.setHref(portletURL, "privateLayout", true);
-						navigationItem.setLabel(LanguageUtil.get(request, "private-pages"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "private-pages"));
 					});
 			}
 		}
@@ -55,7 +55,6 @@ PortletURL portletURL = currentURLObj;
 	itemSelectorSaveEvent='<%= liferayPortletResponse.getNamespace() + "selectLayout" %>'
 	multiSelection="<%= true %>"
 	namespace="<%= liferayPortletResponse.getNamespace() %>"
-	pathThemeImages="<%= themeDisplay.getPathThemeImages() %>"
 	privateLayout="<%= privateLayout %>"
 	showHiddenLayouts="<%= true %>"
 />
@@ -64,17 +63,16 @@ PortletURL portletURL = currentURLObj;
 	var layoutUuid = document.getElementById('<portlet:namespace />layoutUuid');
 
 	if (layoutUuid) {
-		Liferay.on('<portlet:namespace />selectLayout', function (event) {
+		Liferay.on('<portlet:namespace />selectLayout', (event) => {
 			var selectedItems = event.data;
 
 			if (selectedItems) {
-				var layoutUuids = selectedItems.reduce(function (
-					previousValue,
-					currentValue
-				) {
-					return previousValue.concat([currentValue.id]);
-				},
-				[]);
+				var layoutUuids = selectedItems.reduce(
+					(previousValue, currentValue) => {
+						return previousValue.concat([currentValue.id]);
+					},
+					[]
+				);
 
 				layoutUuid.value = layoutUuids.join();
 			}

@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.entry.processor.portlet;
 
+import com.liferay.fragment.constants.FragmentWebKeys;
 import com.liferay.fragment.exception.FragmentEntryContentException;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
@@ -31,11 +32,14 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ModelHintsConstants;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -54,6 +58,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -103,6 +109,9 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 						element.attr("id")));
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
 			}
 		}
 	}
@@ -148,7 +157,8 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 
 		if (Validator.isNotNull(jsonObject.getString("portletId"))) {
 			return _renderWidgetHTML(
-				editableValues, fragmentEntryProcessorContext);
+				editableValues, fragmentEntryLink,
+				fragmentEntryProcessorContext);
 		}
 
 		FragmentEntryLink originalFragmentEntryLink = null;
@@ -239,9 +249,7 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 	public void validateFragmentEntryHTML(String html, String configuration)
 		throws PortalException {
 
-		Document document = _getDocument(html);
-
-		_validateFragmentEntryHTMLDocument(document);
+		_validateFragmentEntryHTMLDocument(_getDocument(html));
 	}
 
 	private boolean _checkNoninstanceablePortletUsed(
@@ -305,11 +313,10 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 	private String _getPortletId(
 		String portletName, String namespace, String id) {
 
-		String instanceId = _getInstanceId(namespace, id);
-
 		return PortletIdCodec.encode(
 			PortletIdCodec.decodePortletName(portletName),
-			PortletIdCodec.decodeUserId(portletName), instanceId);
+			PortletIdCodec.decodeUserId(portletName),
+			_getInstanceId(namespace, id));
 	}
 
 	private String _getPortletName(String tagName) {
@@ -370,7 +377,7 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 	}
 
 	private String _renderWidgetHTML(
-			String editableValues,
+			String editableValues, FragmentEntryLink fragmentEntryLink,
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
 		throws PortalException {
 
@@ -383,6 +390,12 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 			return StringPool.BLANK;
 		}
 
+		HttpServletRequest httpServletRequest =
+			fragmentEntryProcessorContext.getHttpServletRequest();
+
+		httpServletRequest.setAttribute(
+			FragmentWebKeys.FRAGMENT_ENTRY_LINK, fragmentEntryLink);
+
 		String instanceId = jsonObject.getString("instanceId");
 
 		PortletPreferences portletPreferences =
@@ -391,7 +404,7 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 				PortletIdCodec.encode(portletId, instanceId));
 
 		return _fragmentPortletRenderer.renderPortlet(
-			fragmentEntryProcessorContext.getHttpServletRequest(),
+			httpServletRequest,
 			fragmentEntryProcessorContext.getHttpServletResponse(), portletId,
 			instanceId,
 			PortletPreferencesFactoryUtil.toXML(portletPreferences));
@@ -402,9 +415,6 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 			portletPreferencesList,
 		PortletPreferences jxPortletPreferences) {
 
-		String portletPreferencesXml = PortletPreferencesFactoryUtil.toXML(
-			jxPortletPreferences);
-
 		long plid = 0L;
 
 		if (jxPortletPreferences instanceof PortletPreferencesImpl) {
@@ -414,21 +424,30 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 			plid = portletPreferencesImpl.getPlid();
 		}
 
+		String portletPreferencesXML = PortletPreferencesFactoryUtil.toXML(
+			jxPortletPreferences);
+
 		for (com.liferay.portal.kernel.model.PortletPreferences
 				portletPreferencesImpl : portletPreferencesList) {
 
+			PortletPreferences currentPortletPreferences =
+				_portletPreferenceValueLocalService.getPreferences(
+					portletPreferencesImpl);
+
 			if ((plid != portletPreferencesImpl.getPlid()) ||
 				Objects.equals(
-					portletPreferencesImpl.getPreferences(),
-					portletPreferencesXml)) {
+					PortletPreferencesFactoryUtil.toXML(
+						currentPortletPreferences),
+					portletPreferencesXML)) {
 
 				continue;
 			}
 
-			portletPreferencesImpl.setPreferences(portletPreferencesXml);
-
-			_portletPreferencesLocalService.updatePortletPreferences(
-				portletPreferencesImpl);
+			_portletPreferencesLocalService.updatePreferences(
+				portletPreferencesImpl.getOwnerId(),
+				portletPreferencesImpl.getOwnerType(),
+				portletPreferencesImpl.getPlid(),
+				portletPreferencesImpl.getPortletId(), jxPortletPreferences);
 		}
 	}
 
@@ -507,6 +526,9 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		PortletFragmentEntryProcessor.class);
+
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
@@ -522,6 +544,10 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 	@Reference
 	private PortletRegistry _portletRegistry;

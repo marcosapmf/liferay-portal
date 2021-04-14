@@ -14,6 +14,7 @@
 
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import * as toast from 'data-engine-js-components-web/js/utils/toast.es';
 import {createMemoryHistory} from 'history';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
@@ -21,7 +22,6 @@ import {HTML5Backend} from 'react-dnd-html5-backend';
 import {Route, Router} from 'react-router-dom';
 
 import EditTableView from '../../../../src/main/resources/META-INF/resources/js/pages/table-view/EditTableView.es';
-import * as toast from '../../../../src/main/resources/META-INF/resources/js/utils/toast.es';
 import AppContextProvider from '../../AppContextProviderWrapper.es';
 import {DATA_DEFINITION_RESPONSES} from '../../constants.es';
 
@@ -75,13 +75,6 @@ const fieldTypes = [
 		name: 'document_library',
 	},
 ];
-
-const AppContextProviderWrapper = (props) => (
-	<AppContextProvider
-		appContext={{showTranslationManager: true}}
-		{...props}
-	/>
-);
 
 const fieldTypeResponse = fieldTypes.map((fieldType, index) => ({
 	...fieldType,
@@ -141,7 +134,7 @@ describe('EditTableView', () => {
 				<EditTableView />
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 
@@ -165,7 +158,7 @@ describe('EditTableView', () => {
 				<EditTableView />
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 
@@ -235,7 +228,7 @@ describe('EditTableView', () => {
 				<EditTableView />
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 
@@ -281,7 +274,7 @@ describe('EditTableView', () => {
 				<EditTableView />
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 
@@ -347,7 +340,7 @@ describe('EditTableView', () => {
 				</Router>
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 
@@ -385,7 +378,7 @@ describe('EditTableView', () => {
 				<EditTableView />
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 
@@ -436,7 +429,7 @@ describe('EditTableView', () => {
 				<EditTableView />
 			</DndProvider>,
 			{
-				wrapper: AppContextProviderWrapper,
+				wrapper: AppContextProvider,
 			}
 		);
 

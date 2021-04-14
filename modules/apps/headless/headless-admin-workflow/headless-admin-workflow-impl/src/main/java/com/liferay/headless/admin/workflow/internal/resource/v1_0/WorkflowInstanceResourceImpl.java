@@ -19,7 +19,14 @@ import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstance;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowInstanceSubmit;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.ObjectReviewedUtil;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowInstanceResource;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -57,28 +64,42 @@ public class WorkflowInstanceResourceImpl
 	public WorkflowInstance getWorkflowInstance(Long workflowInstanceId)
 		throws Exception {
 
-		return _toWorkflowInstance(
-			_workflowInstanceManager.getWorkflowInstance(
-				contextCompany.getCompanyId(), workflowInstanceId));
+		try {
+			return _toWorkflowInstance(
+				_workflowInstanceManager.getWorkflowInstance(
+					contextCompany.getCompanyId(), workflowInstanceId));
+		}
+		catch (WorkflowException workflowException) {
+			Throwable throwable = workflowException.getCause();
+
+			if (throwable instanceof NoSuchModelException) {
+				throw (NoSuchModelException)throwable;
+			}
+
+			throw workflowException;
+		}
 	}
 
 	@Override
 	public Page<WorkflowInstance> getWorkflowInstancesPage(
-			String[] assetClassNames, Long[] assetPrimaryKeys,
-			Boolean completed, Pagination pagination)
+			String assetClassName, Long assetPrimaryKey, Boolean completed,
+			Pagination pagination)
 		throws Exception {
 
 		return Page.of(
 			transform(
 				_workflowInstanceManager.getWorkflowInstances(
 					contextCompany.getCompanyId(), contextUser.getUserId(),
-					assetClassNames, completed, pagination.getStartPosition(),
-					pagination.getEndPosition(), null),
+					assetClassName, assetPrimaryKey,
+					GetterUtil.getBoolean(completed),
+					pagination.getStartPosition(), pagination.getEndPosition(),
+					null),
 				this::_toWorkflowInstance),
 			pagination,
 			_workflowInstanceManager.getWorkflowInstanceCount(
 				contextCompany.getCompanyId(), contextUser.getUserId(),
-				assetClassNames, completed));
+				assetClassName, assetPrimaryKey,
+				GetterUtil.getBoolean(completed)));
 	}
 
 	@Override
@@ -106,13 +127,16 @@ public class WorkflowInstanceResourceImpl
 				GetterUtil.getInteger(
 					workflowInstanceSubmit.getWorkflowDefinitionVersion()),
 				workflowInstanceSubmit.getTransitionName(),
-				_toWorkflowContext(workflowInstanceSubmit.getContext())));
+				_toWorkflowContext(
+					workflowInstanceSubmit.getContext(),
+					workflowInstanceSubmit.getSiteId())));
 	}
 
 	private Map<String, Serializable> _toWorkflowContext(
-		Map<String, ?> context) {
+			Map<String, ?> context, long siteId)
+		throws Exception {
 
-		return Stream.of(
+		Map<String, Serializable> workflowContext = Stream.of(
 			context.entrySet()
 		).flatMap(
 			Collection::parallelStream
@@ -122,6 +146,16 @@ public class WorkflowInstanceResourceImpl
 			Collectors.toMap(
 				Map.Entry::getKey, entry -> (Serializable)entry.getValue())
 		);
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			contextHttpServletRequest);
+
+		serviceContext.setScopeGroupId(siteId);
+
+		workflowContext.put(
+			WorkflowConstants.CONTEXT_SERVICE_CONTEXT, serviceContext);
+
+		return workflowContext;
 	}
 
 	private WorkflowInstance _toWorkflowInstance(
@@ -138,6 +172,11 @@ public class WorkflowInstanceResourceImpl
 				objectReviewed = ObjectReviewedUtil.toObjectReviewed(
 					contextAcceptLanguage.getPreferredLocale(),
 					workflowInstance.getWorkflowContext());
+				state = _language.get(
+					ResourceBundleUtil.getModuleAndPortalResourceBundle(
+						contextAcceptLanguage.getPreferredLocale(),
+						WorkflowInstanceResourceImpl.class),
+					workflowInstance.getState());
 				workflowDefinitionName =
 					workflowInstance.getWorkflowDefinitionName();
 				workflowDefinitionVersion = String.valueOf(
@@ -145,6 +184,9 @@ public class WorkflowInstanceResourceImpl
 			}
 		};
 	}
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private WorkflowInstanceManager _workflowInstanceManager;

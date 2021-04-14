@@ -16,12 +16,30 @@ package com.liferay.document.library.display.context;
 
 import com.liferay.portal.kernel.exception.PortalException;
 
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author Iván Zaera
  */
 public interface DLFilePicker {
 
+	public default String getCurrentIconURL() {
+		return null;
+	}
+
+	public default String getCurrentTitle() {
+		return null;
+	}
+
 	public String getDescriptionFieldName();
+
+	public default String getFileNameFieldName() {
+		return null;
+	}
 
 	public String getIconFieldName();
 
@@ -32,5 +50,15 @@ public interface DLFilePicker {
 	public String getOnClickCallback();
 
 	public String getTitleFieldName();
+
+	public default boolean isCustomizedFileButtonVisible() {
+		return true;
+	}
+
+	public default void renderFilePicker(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws IOException, ServletException {
+	}
 
 }

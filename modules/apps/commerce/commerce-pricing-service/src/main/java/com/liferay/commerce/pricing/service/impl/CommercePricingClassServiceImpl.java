@@ -21,16 +21,19 @@ import com.liferay.commerce.pricing.service.base.CommercePricingClassServiceBase
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.CompanyService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.util.List;
 import java.util.Locale;
@@ -49,9 +52,8 @@ public class CommercePricingClassServiceImpl
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(),
-			CommercePricingClassActionKeys.ADD_COMMERCE_PRICING_CLASS);
+		_checkPortletResourcePermission(
+			null, CommercePricingClassActionKeys.ADD_COMMERCE_PRICING_CLASS);
 
 		return commercePricingClassLocalService.addCommercePricingClass(
 			userId, titleMap, descriptionMap, null, serviceContext);
@@ -64,9 +66,8 @@ public class CommercePricingClassServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(),
-			CommercePricingClassActionKeys.ADD_COMMERCE_PRICING_CLASS);
+		_checkPortletResourcePermission(
+			null, CommercePricingClassActionKeys.ADD_COMMERCE_PRICING_CLASS);
 
 		return commercePricingClassLocalService.addCommercePricingClass(
 			userId, titleMap, descriptionMap, externalReferenceCode,
@@ -231,7 +232,8 @@ public class CommercePricingClassServiceImpl
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Unable to find pricing class with ID: " +
-							commercePricingClassId);
+							commercePricingClassId,
+						noSuchPricingClassException);
 				}
 			}
 		}
@@ -254,6 +256,17 @@ public class CommercePricingClassServiceImpl
 			serviceContext);
 	}
 
+	private void _checkPortletResourcePermission(Group group, String actionId)
+		throws PrincipalException {
+
+		PortletResourcePermission portletResourcePermission =
+			_commercePricingClassResourcePermission.
+				getPortletResourcePermission();
+
+		portletResourcePermission.check(
+			getPermissionChecker(), group, actionId);
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommercePricingClassServiceImpl.class);
 
@@ -263,5 +276,8 @@ public class CommercePricingClassServiceImpl
 				CommercePricingClassServiceImpl.class,
 				"_commercePricingClassResourcePermission",
 				CommercePricingClass.class);
+
+	@ServiceReference(type = CompanyService.class)
+	private CompanyService _companyService;
 
 }

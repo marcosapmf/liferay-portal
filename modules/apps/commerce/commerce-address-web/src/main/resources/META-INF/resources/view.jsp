@@ -54,7 +54,7 @@ CommerceCountriesDisplayContext commerceCountriesDisplayContext = (CommerceCount
 			/>
 
 			<portlet:renderURL var="addCommerceCountryURL">
-				<portlet:param name="mvcRenderCommandName" value="editCommerceCountry" />
+				<portlet:param name="mvcRenderCommandName" value="/commerce_country/edit_commerce_country" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
 			</portlet:renderURL>
 
@@ -77,8 +77,8 @@ CommerceCountriesDisplayContext commerceCountriesDisplayContext = (CommerceCount
 		</liferay-frontend:management-bar-action-buttons>
 	</liferay-frontend:management-bar>
 
-	<div class="container-fluid-1280">
-		<portlet:actionURL name="editCommerceCountry" var="editCommerceCountryActionURL" />
+	<div class="container-fluid container-fluid-max-xl">
+		<portlet:actionURL name="/commerce_country/edit_commerce_country" var="editCommerceCountryActionURL" />
 
 		<aui:form action="<%= editCommerceCountryActionURL %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
@@ -90,32 +90,32 @@ CommerceCountriesDisplayContext commerceCountriesDisplayContext = (CommerceCount
 				searchContainer="<%= commerceCountriesDisplayContext.getSearchContainer() %>"
 			>
 				<liferay-ui:search-container-row
-					className="com.liferay.commerce.model.CommerceCountry"
-					keyProperty="commerceCountryId"
-					modelVar="commerceCountry"
+					className="com.liferay.portal.kernel.model.Country"
+					keyProperty="countryId"
+					modelVar="country"
 				>
 
 					<%
 					PortletURL rowURL = renderResponse.createRenderURL();
 
-					rowURL.setParameter("mvcRenderCommandName", "editCommerceCountry");
+					rowURL.setParameter("mvcRenderCommandName", "/commerce_country/edit_commerce_country");
 					rowURL.setParameter("redirect", currentURL);
-					rowURL.setParameter("commerceCountryId", String.valueOf(commerceCountry.getCommerceCountryId()));
+					rowURL.setParameter("commerceCountryId", String.valueOf(country.getCountryId()));
 					%>
 
 					<liferay-ui:search-container-column-text
-						cssClass="important table-cell-content"
+						cssClass="important table-cell-expand"
 						href="<%= rowURL %>"
 						name="name"
-						value="<%= HtmlUtil.escape(commerceCountry.getName(locale)) %>"
+						value="<%= HtmlUtil.escape(country.getTitle(locale)) %>"
 					/>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="billing-allowed"
 					>
 						<c:choose>
-							<c:when test="<%= commerceCountry.isBillingAllowed() %>">
+							<c:when test="<%= country.isBillingAllowed() %>">
 								<liferay-ui:icon
 									cssClass="commerce-admin-icon-check"
 									icon="check"
@@ -133,11 +133,11 @@ CommerceCountriesDisplayContext commerceCountriesDisplayContext = (CommerceCount
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="shipping-allowed"
 					>
 						<c:choose>
-							<c:when test="<%= commerceCountry.isShippingAllowed() %>">
+							<c:when test="<%= country.isShippingAllowed() %>">
 								<liferay-ui:icon
 									cssClass="commerce-admin-icon-check"
 									icon="check"
@@ -155,16 +155,16 @@ CommerceCountriesDisplayContext commerceCountriesDisplayContext = (CommerceCount
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="two-letter-iso-code"
-						property="twoLettersISOCode"
+						property="a2"
 					/>
 
 					<liferay-ui:search-container-column-text
 						name="active"
 					>
 						<c:choose>
-							<c:when test="<%= commerceCountry.isActive() %>">
+							<c:when test="<%= country.isActive() %>">
 								<liferay-ui:icon
 									cssClass="commerce-admin-icon-check"
 									icon="check"
@@ -182,12 +182,13 @@ CommerceCountriesDisplayContext commerceCountriesDisplayContext = (CommerceCount
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
-						property="priority"
+						name="priority"
+						property="position"
 					/>
 
 					<liferay-ui:search-container-column-jsp
 						cssClass="entry-action-column"
-						path="/country_action.jsp"
+						path="/commerce_country_action.jsp"
 					/>
 				</liferay-ui:search-container-row>
 

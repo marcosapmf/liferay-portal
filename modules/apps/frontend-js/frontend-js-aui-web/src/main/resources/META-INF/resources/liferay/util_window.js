@@ -57,6 +57,13 @@ AUI.add(
 					value: 0.95,
 				},
 
+				toolbarCssClass: {
+					value: {
+						footer: 'ml-auto',
+						header: 'order-1',
+					},
+				},
+
 				toolbars: {
 					valueFn() {
 						var instance = this;
@@ -352,7 +359,7 @@ AUI.add(
 				}
 
 				if (!Lang.isValue(config.title)) {
-					config.title = '&nbsp;';
+					config.title = '';
 				}
 
 				modal.titleNode.html(Lang.String.escapeHTML(config.title));

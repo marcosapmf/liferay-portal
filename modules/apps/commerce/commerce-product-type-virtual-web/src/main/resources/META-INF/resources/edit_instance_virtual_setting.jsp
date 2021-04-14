@@ -26,7 +26,7 @@ long cpInstanceId = cpDefinitionVirtualSettingDisplayContext.getCPInstanceId();
 boolean override = BeanParamUtil.getBoolean(cpDefinitionVirtualSetting, request, "override", false);
 %>
 
-<portlet:actionURL name="editProductDefinitionVirtualSetting" var="editProductDefinitionVirtualSettingActionURL" />
+<portlet:actionURL name="/cp_definitions/edit_cp_definition_virtual_setting" var="editProductDefinitionVirtualSettingActionURL" />
 
 <aui:form action="<%= editProductDefinitionVirtualSettingActionURL %>" method="post" name="fm1">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (cpDefinitionVirtualSetting == null) ? Constants.ADD : Constants.UPDATE %>" />
@@ -40,7 +40,7 @@ boolean override = BeanParamUtil.getBoolean(cpDefinitionVirtualSetting, request,
 
 	<aui:fieldset-group markupView="lexicon">
 		<aui:fieldset>
-			<aui:input checked="<%= override %>" name="override" type="toggle-switch" value="<%= override %>" />
+			<aui:input checked="<%= override %>" inlineLabel="right" labelCssClass="simple-toggle-switch" name="override" type="toggle-switch" value="<%= override %>" />
 		</aui:fieldset>
 
 		<div id="<portlet:namespace />cpDefinitionVirtualSettingContainer">

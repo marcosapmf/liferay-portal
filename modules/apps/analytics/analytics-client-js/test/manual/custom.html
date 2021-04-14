@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 	<head>
 		<title>com-liferay-analytics JS Client Sandbox</title>
@@ -100,7 +101,8 @@
 				Analytics.create({
 					channelId: '4321',
 					dataSourceId: '1234',
-					endpointUrl: 'https://osbasahcerebropublisher-asahlfr.lfr.io'
+					endpointUrl: 'http://127.0.0.1:8084',
+					projectId: 'osbasah'
 				});
 				Analytics.setIdentity({ email: 'foo@bar.com', name: 'Foo' });
 			});

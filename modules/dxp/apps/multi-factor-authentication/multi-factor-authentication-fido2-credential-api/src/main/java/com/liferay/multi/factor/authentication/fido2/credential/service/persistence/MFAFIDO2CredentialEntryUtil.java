@@ -301,251 +301,252 @@ public class MFAFIDO2CredentialEntryUtil {
 	}
 
 	/**
-	 * Returns all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the matching mfafido2 credential entries
 	 */
-	public static List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey) {
+	public static List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash) {
 
-		return getPersistence().findByCredentialKey(credentialKey);
+		return getPersistence().findByCredentialKeyHash(credentialKeyHash);
 	}
 
 	/**
-	 * Returns a range of all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns a range of all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MFAFIDO2CredentialEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param start the lower bound of the range of mfafido2 credential entries
 	 * @param end the upper bound of the range of mfafido2 credential entries (not inclusive)
 	 * @return the range of matching mfafido2 credential entries
 	 */
-	public static List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey, int start, int end) {
+	public static List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash, int start, int end) {
 
-		return getPersistence().findByCredentialKey(credentialKey, start, end);
+		return getPersistence().findByCredentialKeyHash(
+			credentialKeyHash, start, end);
 	}
 
 	/**
-	 * Returns an ordered range of all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns an ordered range of all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MFAFIDO2CredentialEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param start the lower bound of the range of mfafido2 credential entries
 	 * @param end the upper bound of the range of mfafido2 credential entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching mfafido2 credential entries
 	 */
-	public static List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey, int start, int end,
+	public static List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash, int start, int end,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator) {
 
-		return getPersistence().findByCredentialKey(
-			credentialKey, start, end, orderByComparator);
+		return getPersistence().findByCredentialKeyHash(
+			credentialKeyHash, start, end, orderByComparator);
 	}
 
 	/**
-	 * Returns an ordered range of all the mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns an ordered range of all the mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
 	 * <p>
 	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>MFAFIDO2CredentialEntryModelImpl</code>.
 	 * </p>
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param start the lower bound of the range of mfafido2 credential entries
 	 * @param end the upper bound of the range of mfafido2 credential entries (not inclusive)
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the ordered range of matching mfafido2 credential entries
 	 */
-	public static List<MFAFIDO2CredentialEntry> findByCredentialKey(
-		String credentialKey, int start, int end,
+	public static List<MFAFIDO2CredentialEntry> findByCredentialKeyHash(
+		long credentialKeyHash, int start, int end,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator,
 		boolean useFinderCache) {
 
-		return getPersistence().findByCredentialKey(
-			credentialKey, start, end, orderByComparator, useFinderCache);
+		return getPersistence().findByCredentialKeyHash(
+			credentialKeyHash, start, end, orderByComparator, useFinderCache);
 	}
 
 	/**
-	 * Returns the first mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the first mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a matching mfafido2 credential entry could not be found
 	 */
-	public static MFAFIDO2CredentialEntry findByCredentialKey_First(
-			String credentialKey,
+	public static MFAFIDO2CredentialEntry findByCredentialKeyHash_First(
+			long credentialKeyHash,
 			OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator)
 		throws com.liferay.multi.factor.authentication.fido2.credential.
 			exception.NoSuchMFAFIDO2CredentialEntryException {
 
-		return getPersistence().findByCredentialKey_First(
-			credentialKey, orderByComparator);
+		return getPersistence().findByCredentialKeyHash_First(
+			credentialKeyHash, orderByComparator);
 	}
 
 	/**
-	 * Returns the first mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the first mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the first matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
-	public static MFAFIDO2CredentialEntry fetchByCredentialKey_First(
-		String credentialKey,
+	public static MFAFIDO2CredentialEntry fetchByCredentialKeyHash_First(
+		long credentialKeyHash,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator) {
 
-		return getPersistence().fetchByCredentialKey_First(
-			credentialKey, orderByComparator);
+		return getPersistence().fetchByCredentialKeyHash_First(
+			credentialKeyHash, orderByComparator);
 	}
 
 	/**
-	 * Returns the last mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the last mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a matching mfafido2 credential entry could not be found
 	 */
-	public static MFAFIDO2CredentialEntry findByCredentialKey_Last(
-			String credentialKey,
+	public static MFAFIDO2CredentialEntry findByCredentialKeyHash_Last(
+			long credentialKeyHash,
 			OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator)
 		throws com.liferay.multi.factor.authentication.fido2.credential.
 			exception.NoSuchMFAFIDO2CredentialEntryException {
 
-		return getPersistence().findByCredentialKey_Last(
-			credentialKey, orderByComparator);
+		return getPersistence().findByCredentialKeyHash_Last(
+			credentialKeyHash, orderByComparator);
 	}
 
 	/**
-	 * Returns the last mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the last mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the last matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
-	public static MFAFIDO2CredentialEntry fetchByCredentialKey_Last(
-		String credentialKey,
+	public static MFAFIDO2CredentialEntry fetchByCredentialKeyHash_Last(
+		long credentialKeyHash,
 		OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator) {
 
-		return getPersistence().fetchByCredentialKey_Last(
-			credentialKey, orderByComparator);
+		return getPersistence().fetchByCredentialKeyHash_Last(
+			credentialKeyHash, orderByComparator);
 	}
 
 	/**
-	 * Returns the mfafido2 credential entries before and after the current mfafido2 credential entry in the ordered set where credentialKey = &#63;.
+	 * Returns the mfafido2 credential entries before and after the current mfafido2 credential entry in the ordered set where credentialKeyHash = &#63;.
 	 *
 	 * @param mfaFIDO2CredentialEntryId the primary key of the current mfafido2 credential entry
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
 	 * @return the previous, current, and next mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a mfafido2 credential entry with the primary key could not be found
 	 */
-	public static MFAFIDO2CredentialEntry[] findByCredentialKey_PrevAndNext(
-			long mfaFIDO2CredentialEntryId, String credentialKey,
+	public static MFAFIDO2CredentialEntry[] findByCredentialKeyHash_PrevAndNext(
+			long mfaFIDO2CredentialEntryId, long credentialKeyHash,
 			OrderByComparator<MFAFIDO2CredentialEntry> orderByComparator)
 		throws com.liferay.multi.factor.authentication.fido2.credential.
 			exception.NoSuchMFAFIDO2CredentialEntryException {
 
-		return getPersistence().findByCredentialKey_PrevAndNext(
-			mfaFIDO2CredentialEntryId, credentialKey, orderByComparator);
+		return getPersistence().findByCredentialKeyHash_PrevAndNext(
+			mfaFIDO2CredentialEntryId, credentialKeyHash, orderByComparator);
 	}
 
 	/**
-	 * Removes all the mfafido2 credential entries where credentialKey = &#63; from the database.
+	 * Removes all the mfafido2 credential entries where credentialKeyHash = &#63; from the database.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 */
-	public static void removeByCredentialKey(String credentialKey) {
-		getPersistence().removeByCredentialKey(credentialKey);
+	public static void removeByCredentialKeyHash(long credentialKeyHash) {
+		getPersistence().removeByCredentialKeyHash(credentialKeyHash);
 	}
 
 	/**
-	 * Returns the number of mfafido2 credential entries where credentialKey = &#63;.
+	 * Returns the number of mfafido2 credential entries where credentialKeyHash = &#63;.
 	 *
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the number of matching mfafido2 credential entries
 	 */
-	public static int countByCredentialKey(String credentialKey) {
-		return getPersistence().countByCredentialKey(credentialKey);
+	public static int countByCredentialKeyHash(long credentialKeyHash) {
+		return getPersistence().countByCredentialKeyHash(credentialKeyHash);
 	}
 
 	/**
-	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; or throws a <code>NoSuchMFAFIDO2CredentialEntryException</code> if it could not be found.
+	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; or throws a <code>NoSuchMFAFIDO2CredentialEntryException</code> if it could not be found.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the matching mfafido2 credential entry
 	 * @throws NoSuchMFAFIDO2CredentialEntryException if a matching mfafido2 credential entry could not be found
 	 */
 	public static MFAFIDO2CredentialEntry findByU_C(
-			long userId, String credentialKey)
+			long userId, long credentialKeyHash)
 		throws com.liferay.multi.factor.authentication.fido2.credential.
 			exception.NoSuchMFAFIDO2CredentialEntryException {
 
-		return getPersistence().findByU_C(userId, credentialKey);
+		return getPersistence().findByU_C(userId, credentialKeyHash);
 	}
 
 	/**
-	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
 	public static MFAFIDO2CredentialEntry fetchByU_C(
-		long userId, String credentialKey) {
+		long userId, long credentialKeyHash) {
 
-		return getPersistence().fetchByU_C(userId, credentialKey);
+		return getPersistence().fetchByU_C(userId, credentialKeyHash);
 	}
 
 	/**
-	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 * Returns the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @param useFinderCache whether to use the finder cache
 	 * @return the matching mfafido2 credential entry, or <code>null</code> if a matching mfafido2 credential entry could not be found
 	 */
 	public static MFAFIDO2CredentialEntry fetchByU_C(
-		long userId, String credentialKey, boolean useFinderCache) {
+		long userId, long credentialKeyHash, boolean useFinderCache) {
 
 		return getPersistence().fetchByU_C(
-			userId, credentialKey, useFinderCache);
+			userId, credentialKeyHash, useFinderCache);
 	}
 
 	/**
-	 * Removes the mfafido2 credential entry where userId = &#63; and credentialKey = &#63; from the database.
+	 * Removes the mfafido2 credential entry where userId = &#63; and credentialKeyHash = &#63; from the database.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the mfafido2 credential entry that was removed
 	 */
 	public static MFAFIDO2CredentialEntry removeByU_C(
-			long userId, String credentialKey)
+			long userId, long credentialKeyHash)
 		throws com.liferay.multi.factor.authentication.fido2.credential.
 			exception.NoSuchMFAFIDO2CredentialEntryException {
 
-		return getPersistence().removeByU_C(userId, credentialKey);
+		return getPersistence().removeByU_C(userId, credentialKeyHash);
 	}
 
 	/**
-	 * Returns the number of mfafido2 credential entries where userId = &#63; and credentialKey = &#63;.
+	 * Returns the number of mfafido2 credential entries where userId = &#63; and credentialKeyHash = &#63;.
 	 *
 	 * @param userId the user ID
-	 * @param credentialKey the credential key
+	 * @param credentialKeyHash the credential key hash
 	 * @return the number of matching mfafido2 credential entries
 	 */
-	public static int countByU_C(long userId, String credentialKey) {
-		return getPersistence().countByU_C(userId, credentialKey);
+	public static int countByU_C(long userId, long credentialKeyHash) {
+		return getPersistence().countByU_C(userId, credentialKeyHash);
 	}
 
 	/**

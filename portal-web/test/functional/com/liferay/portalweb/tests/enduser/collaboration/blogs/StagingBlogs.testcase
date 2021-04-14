@@ -118,12 +118,14 @@ definition {
 			publicationType = "Local");
 	}
 
-	@description = "This is a use case for LPS-78833."
+	@description = "This is a use case for LPS-78833 and LPS-122140."
 	@priority = "5"
 	test PublishEntryWithDeletedSmallImage {
 		Navigator.gotoStagedSitePage(
 			pageName = "Staging Blogs Page",
 			siteName = "Site Name");
+
+		Portlet.addPG(portletName = "Blogs");
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
@@ -143,15 +145,21 @@ definition {
 
 		PortletEntry.publish();
 
-		Navigator.gotoStagedSitePage(
-			pageName = "Staging Blogs Page",
-			siteName = "Site Name");
+		Navigator.openSiteURL(siteName = "Site Name");
 
 		Navigator.gotoStagedView();
 
 		Staging.gotoPublishToLive();
 
 		Staging.publishToLive();
+
+		Navigator.gotoSitePage(
+			pageName = "Staging Blogs Page",
+			siteName = "Site Name");
+
+		AssertVisible(
+			key_imageFileName = "Document_3.jpg",
+			locator1 = "BlogsEntry#CONTENT_SMALL_IMAGE");
 
 		ProductMenu.gotoLiveSite(site = "Site Name");
 
@@ -652,6 +660,8 @@ definition {
 	test ViewBlogsAsAGuestAndSiteMember {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 
+		var portalURL = PropsUtil.get("portal.url");
+
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
@@ -764,6 +774,8 @@ definition {
 			entryExternalURL = "https://www.liferay.com",
 			entryTitle = "Blogs Entry Title 3");
 
+		Open(locator1 = "${portalURL}/web/site-name-staging/staging-blogs-page");
+
 		User.logoutPG();
 
 		Navigator.gotoSitePage(
@@ -804,6 +816,8 @@ definition {
 			entryContent = "Blogs Entry Content 3",
 			entryExternalURL = "https://www.liferay.com",
 			entryTitle = "Blogs Entry Title 3");
+
+		Open(locator1 = "${portalURL}/web/site-name-staging/staging-blogs-page");
 	}
 
 }

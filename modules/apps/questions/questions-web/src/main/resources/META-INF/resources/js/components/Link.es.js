@@ -12,11 +12,42 @@
  * details.
  */
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 
-import {stringToSlug} from '../utils/utils.es';
+import {isWebCrawler, stringToSlug} from '../utils/utils.es';
 
 export default (props) => {
-	return <Link {...props} to={stringToSlug(props.to)} />;
+	const [isCrawler, setIsCrawler] = useState(false);
+	const [pathname, setPathname] = useState('');
+
+	useEffect(() => {
+		const pathname = window.location.pathname;
+		setPathname(pathname.endsWith('/') ? pathname.slice(0, -1) : pathname);
+	}, []);
+
+	const onClick = (event) => {
+		event.preventDefault();
+		window.location.href = pathname + '/-' + props.to;
+	};
+
+	useEffect(() => {
+		setIsCrawler(isWebCrawler());
+	}, []);
+
+	return (
+		<>
+			{isCrawler ? (
+				<a
+					className={props.className}
+					href={stringToSlug(pathname + '/-' + props.to)}
+					onClick={onClick}
+				>
+					{props.children}
+				</a>
+			) : (
+				<Link {...props} to={stringToSlug(props.to)} />
+			)}
+		</>
+	);
 };

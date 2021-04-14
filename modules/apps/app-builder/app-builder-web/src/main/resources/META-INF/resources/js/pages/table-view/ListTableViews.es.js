@@ -12,14 +12,14 @@
  * details.
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ListView from 'data-engine-js-components-web/js/components/list-view/ListView.es';
+import {confirmDelete} from 'data-engine-js-components-web/js/utils/client.es';
+import {getLocalizedValue} from 'data-engine-js-components-web/js/utils/lang.es';
 import React from 'react';
 import {Link} from 'react-router-dom';
 
-import Button from '../../components/button/Button.es';
-import ListView from '../../components/list-view/ListView.es';
 import useDataDefinition from '../../hooks/useDataDefinition.es';
-import {confirmDelete} from '../../utils/client.es';
-import {getLocalizedValue} from '../../utils/lang.es';
 import {fromNow} from '../../utils/time.es';
 
 const COLUMNS = [
@@ -31,7 +31,7 @@ const COLUMNS = [
 	{
 		key: 'dateCreated',
 		sortable: true,
-		value: Liferay.Language.get('create-date'),
+		value: Liferay.Language.get('created-date'),
 	},
 	{
 		asc: false,
@@ -66,19 +66,22 @@ export default ({
 				},
 			]}
 			addButton={() => (
-				<Button
-					className="nav-btn nav-btn-monospaced"
-					href={`${url}/add`}
-					symbol="plus"
-					tooltip={Liferay.Language.get('new-table-view')}
-				/>
+				<Link to={`${url}/add`}>
+					<ClayButtonWithIcon
+						className="nav-btn nav-btn-monospaced"
+						symbol="plus"
+						title={Liferay.Language.get('new-table-view')}
+					/>
+				</Link>
 			)}
 			columns={COLUMNS}
 			emptyState={{
 				button: () => (
-					<Button displayType="secondary" href={`${url}/add`}>
-						{Liferay.Language.get('new-table-view')}
-					</Button>
+					<Link to={`${url}/add`}>
+						<ClayButton displayType="secondary">
+							{Liferay.Language.get('new-table-view')}
+						</ClayButton>
+					</Link>
 				),
 				description: Liferay.Language.get(
 					'create-one-or-more-tables-to-display-the-data-held-in-your-data-object'
@@ -86,6 +89,7 @@ export default ({
 				title: Liferay.Language.get('there-are-no-table-views-yet'),
 			}}
 			endpoint={`/o/data-engine/v2.0/data-definitions/${dataDefinitionId}/data-list-views`}
+			history={history}
 		>
 			{(item) => {
 				const {dateCreated, dateModified, id, name} = item;

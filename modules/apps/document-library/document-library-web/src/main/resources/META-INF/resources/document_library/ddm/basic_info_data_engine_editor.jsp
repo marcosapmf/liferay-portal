@@ -31,13 +31,13 @@ com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure = dlEditDDMStru
 <clay:row
 	cssClass="lfr-ddm-types-form-column"
 >
-	<aui:input name="storageType" type="hidden" value="<%= StorageType.JSON.getValue() %>" />
+	<aui:input name="storageType" type="hidden" value="<%= StorageType.DEFAULT.getValue() %>" />
 </clay:row>
 
 <aui:input name="description" />
 
 <c:if test="<%= ddmStructure != null %>">
-	<portlet:resourceURL id="getStructure" var="getStructureURL">
+	<portlet:resourceURL id="/dynamic_data_mapping/get_structure" var="getStructureURL">
 		<portlet:param name="structureId" value="<%= String.valueOf(ddmStructure.getStructureId()) %>" />
 	</portlet:resourceURL>
 

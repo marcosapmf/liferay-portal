@@ -59,7 +59,7 @@ public class NPMTestBatchTestClassGroup extends BatchTestClassGroup {
 			return axisTestClassGroups.get(axisId);
 		}
 
-		return new AxisTestClassGroup(this, axisId);
+		return TestClassGroupFactory.newAxisTestClassGroup(this);
 	}
 
 	public Map<File, NPMTestBatchTestClass> getNPMTestBatchTestClasses() {
@@ -240,10 +240,9 @@ public class NPMTestBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	protected NPMTestBatchTestClassGroup(
-		String batchName, BuildProfile buildProfile,
-		PortalTestClassJob portalTestClassJob) {
+		String batchName, PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, buildProfile, portalTestClassJob);
+		super(batchName, portalTestClassJob);
 
 		List<File> moduleDirs;
 
@@ -268,7 +267,8 @@ public class NPMTestBatchTestClassGroup extends BatchTestClassGroup {
 			return;
 		}
 
-		AxisTestClassGroup axisTestClassGroup = new AxisTestClassGroup(this, 0);
+		AxisTestClassGroup axisTestClassGroup =
+			TestClassGroupFactory.newAxisTestClassGroup(this);
 
 		for (File moduleDir : moduleDirs) {
 			NPMTestBatchTestClass npmTestBatchTestClass =
@@ -282,7 +282,7 @@ public class NPMTestBatchTestClassGroup extends BatchTestClassGroup {
 			axisTestClassGroup.addTestClass(npmTestBatchTestClass);
 		}
 
-		axisTestClassGroups.put(0, axisTestClassGroup);
+		axisTestClassGroups.add(0, axisTestClassGroup);
 	}
 
 	private static final String _TOKEN_CLASS_METHOD_SEPARATOR = "::";

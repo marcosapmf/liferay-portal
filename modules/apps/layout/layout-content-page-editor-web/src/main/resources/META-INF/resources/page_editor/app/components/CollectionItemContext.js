@@ -17,7 +17,10 @@ import React, {useCallback, useContext, useEffect} from 'react';
 import {updateFragmentEntryLinkContent} from '../actions/index';
 import FragmentService from '../services/FragmentService';
 import InfoItemService from '../services/InfoItemService';
+import LayoutService from '../services/LayoutService';
 import {useDispatch} from '../store/index';
+import isMappedToInfoItem from '../utils/editable-value/isMappedToInfoItem';
+import isMappedToLayout from '../utils/editable-value/isMappedToLayout';
 
 const defaultFromControlsId = (itemId) => itemId;
 const defaultToControlsId = (controlId) => controlId;
@@ -59,18 +62,26 @@ const useCollectionConfig = () => {
 	return context.collectionConfig;
 };
 
-const useGetContent = (fragmentEntryLink, segmentsExperienceId) => {
+const useGetContent = (fragmentEntryLink, languageId, segmentsExperienceId) => {
 	const context = useContext(CollectionItemContext);
 	const dispatch = useDispatch();
 
 	const {className, classPK} = context.collectionItem || {};
 
+	const fieldSets = fragmentEntryLink.configuration?.fieldSets;
+
 	useEffect(() => {
-		if (context.collectionItemIndex != null) {
+		const hasLocalizable =
+			fieldSets?.some((fieldSet) =>
+				fieldSet.fields.some((field) => field.localizable)
+			) ?? false;
+
+		if (context.collectionItemIndex != null || hasLocalizable) {
 			FragmentService.renderFragmentEntryLinkContent({
 				collectionItemClassName: className,
 				collectionItemClassPK: classPK,
 				fragmentEntryLinkId: fragmentEntryLink.fragmentEntryLinkId,
+				languageId,
 				onNetworkStatus: dispatch,
 				segmentsExperienceId,
 			}).then(({content}) => {
@@ -89,9 +100,11 @@ const useGetContent = (fragmentEntryLink, segmentsExperienceId) => {
 		classPK,
 		context.collectionItemIndex,
 		dispatch,
-		fragmentEntryLink.fragmentEntryLinkId,
-		segmentsExperienceId,
+		fieldSets,
 		fragmentEntryLink.editableValues,
+		fragmentEntryLink.fragmentEntryLinkId,
+		languageId,
+		segmentsExperienceId,
 	]);
 
 	if (context.collectionItemIndex != null) {
@@ -109,21 +122,30 @@ const useGetContent = (fragmentEntryLink, segmentsExperienceId) => {
 const useGetFieldValue = () => {
 	const {collectionItem} = useContext(CollectionItemContext);
 
-	const getFromServer = useCallback(
-		({classNameId, classPK, fieldId, languageId}) =>
-			InfoItemService.getInfoItemFieldValue({
-				classNameId,
-				classPK,
-				fieldId,
-				languageId,
+	const getFromServer = useCallback((editable) => {
+		if (isMappedToInfoItem(editable)) {
+			return InfoItemService.getInfoItemFieldValue({
+				...editable,
 				onNetworkStatus: () => {},
 			}).then((response) => {
+				if (!response || !Object.keys(response).length) {
+					throw new Error('Field value does not exist');
+				}
+
 				const {fieldValue = ''} = response;
 
 				return fieldValue;
-			}),
-		[]
-	);
+			});
+		}
+
+		if (isMappedToLayout(editable)) {
+			return LayoutService.getLayoutFriendlyURL(editable.layout).then(
+				(response) => response.friendlyURL || ''
+			);
+		}
+
+		return Promise.resolve(editable?.defaultValue || editable);
+	}, []);
 
 	const getFromCollectionItem = useCallback(
 		({collectionFieldId}) =>

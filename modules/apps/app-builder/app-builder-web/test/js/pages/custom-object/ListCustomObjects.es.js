@@ -14,18 +14,33 @@
 
 import {waitForElementToBeRemoved} from '@testing-library/dom';
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import * as toast from 'data-engine-js-components-web/js/utils/toast.es';
 import {createMemoryHistory} from 'history';
 import React from 'react';
 
 import ListCustomObjects from '../../../../src/main/resources/META-INF/resources/js/pages/custom-object/ListCustomObjects.es';
 import * as time from '../../../../src/main/resources/META-INF/resources/js/utils/time.es';
-import * as toast from '../../../../src/main/resources/META-INF/resources/js/utils/toast.es';
 import AppContextProviderWrapper from '../../AppContextProviderWrapper.es';
 import {RESPONSES} from '../../constants.es';
 
 const mockFetch = fetch;
 
 jest.mock('frontend-js-web', () => ({
+	ALIGN_POSITIONS: {
+		Bottom: 4,
+		BottomCenter: 4,
+		BottomLeft: 5,
+		BottomRight: 3,
+		Left: 6,
+		LeftCenter: 6,
+		Right: 2,
+		RightCenter: 2,
+		Top: 0,
+		TopCenter: 0,
+		TopLeft: 7,
+		TopRight: 1,
+	},
+	align: () => jest.fn(),
 	createResourceURL: jest.fn(() => 'http://resource_url?'),
 	debounce: jest.fn().mockResolvedValue(),
 	fetch: (...args) => mockFetch(...args),

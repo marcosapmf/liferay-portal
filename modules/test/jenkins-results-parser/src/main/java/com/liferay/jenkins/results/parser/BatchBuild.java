@@ -14,6 +14,9 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.liferay.jenkins.results.parser.failure.message.generator.ClosedChannelExceptionFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.FailureMessageGenerator;
+
 import java.io.IOException;
 
 import java.net.MalformedURLException;
@@ -36,7 +39,6 @@ import java.util.regex.Pattern;
 
 import org.dom4j.Element;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -124,6 +126,12 @@ public class BatchBuild extends BaseBuild {
 
 		Map<Build, Element> downstreamBuildFailureMessages =
 			getDownstreamBuildMessages(getFailedDownstreamBuilds());
+
+		if (result.equals("FAILURE") &&
+			downstreamBuildFailureMessages.isEmpty()) {
+
+			return messageElement;
+		}
 
 		List<Element> failureElements = new ArrayList<>();
 		List<Element> upstreamJobFailureElements = new ArrayList<>();
@@ -275,96 +283,22 @@ public class BatchBuild extends BaseBuild {
 	}
 
 	@Override
-	public List<TestResult> getTestResults(String testStatus) {
-		String status = getStatus();
+	public synchronized List<TestClassResult> getTestClassResults() {
+		List<TestClassResult> testClassResults = new ArrayList<>();
 
-		if (!status.equals("completed")) {
-			return Collections.emptyList();
+		for (AxisBuild axisBuild : getDownstreamAxisBuilds()) {
+			testClassResults.addAll(axisBuild.getTestClassResults());
 		}
 
-		JSONObject testReportJSONObject = getTestReportJSONObject(false);
+		return testClassResults;
+	}
 
-		JSONArray childReportsJSONArray = testReportJSONObject.optJSONArray(
-			"childReports");
-
-		if (childReportsJSONArray == null) {
-			return Collections.emptyList();
-		}
-
+	@Override
+	public synchronized List<TestResult> getTestResults() {
 		List<TestResult> testResults = new ArrayList<>();
 
-		for (int i = 0; i < childReportsJSONArray.length(); i++) {
-			JSONObject childReportJSONObject =
-				childReportsJSONArray.optJSONObject(i);
-
-			if (childReportJSONObject == null) {
-				continue;
-			}
-
-			JSONObject childJSONObject = childReportJSONObject.optJSONObject(
-				"child");
-
-			if (childJSONObject == null) {
-				continue;
-			}
-
-			String axisBuildURL = childJSONObject.optString("url");
-
-			if (axisBuildURL == null) {
-				continue;
-			}
-
-			JSONObject resultJSONObject = childReportJSONObject.optJSONObject(
-				"result");
-
-			if (resultJSONObject == null) {
-				continue;
-			}
-
-			JSONArray suitesJSONArray = resultJSONObject.getJSONArray("suites");
-
-			if (suitesJSONArray == null) {
-				continue;
-			}
-
-			Matcher axisBuildURLMatcher;
-
-			if (fromArchive) {
-				Pattern archiveBuildURLPattern =
-					AxisBuild.archiveBuildURLPattern;
-
-				axisBuildURLMatcher = archiveBuildURLPattern.matcher(
-					axisBuildURL);
-
-				if (!axisBuildURLMatcher.find()) {
-					throw new RuntimeException(
-						JenkinsResultsParserUtil.combine(
-							"Unable to match archived axis build URL ",
-							axisBuildURL, " with archived build URL pattern.",
-							archiveBuildURLPattern.pattern()));
-				}
-			}
-			else {
-				MultiPattern buildURLMultiPattern =
-					AxisBuild.buildURLMultiPattern;
-
-				axisBuildURLMatcher = buildURLMultiPattern.find(axisBuildURL);
-
-				if (axisBuildURLMatcher == null) {
-					continue;
-				}
-			}
-
-			String axisVariable = axisBuildURLMatcher.group("axisVariable");
-
-			AxisBuild axisBuild = getAxisBuild(axisVariable);
-
-			if (axisBuild == null) {
-				continue;
-			}
-
-			testResults.addAll(
-				getTestResults(axisBuild, suitesJSONArray, testStatus));
+		for (AxisBuild axisBuild : getDownstreamAxisBuilds()) {
+			testResults.addAll(axisBuild.getTestResults());
 		}
 
 		return testResults;
@@ -408,21 +342,25 @@ public class BatchBuild extends BaseBuild {
 
 		boolean reinvoked = false;
 
-		for (Build downstreamBuild : getDownstreamBuilds("completed")) {
+		List<Build> builds = new ArrayList<>();
+
+		builds.add(this);
+
+		builds.addAll(getDownstreamBuilds("completed"));
+
+		for (Build build : builds) {
 			if (reinvoked) {
 				break;
 			}
 
 			for (ReinvokeRule reinvokeRule : reinvokeRules) {
-				String downstreamBuildResult = downstreamBuild.getResult();
+				String buildResult = build.getResult();
 
-				if ((downstreamBuildResult == null) ||
-					downstreamBuildResult.equals("SUCCESS")) {
-
+				if ((buildResult == null) || buildResult.equals("SUCCESS")) {
 					continue;
 				}
 
-				if (!reinvokeRule.matches(downstreamBuild)) {
+				if (!reinvokeRule.matches(build)) {
 					continue;
 				}
 
@@ -480,7 +418,23 @@ public class BatchBuild extends BaseBuild {
 
 	@Override
 	protected Element getFailureMessageElement() {
+		for (FailureMessageGenerator failureMessageGenerator :
+				getFailureMessageGenerators()) {
+
+			Element failureMessage = failureMessageGenerator.getMessageElement(
+				this);
+
+			if (failureMessage != null) {
+				return failureMessage;
+			}
+		}
+
 		return null;
+	}
+
+	@Override
+	protected FailureMessageGenerator[] getFailureMessageGenerators() {
+		return _FAILURE_MESSAGE_GENERATORS;
 	}
 
 	@Override
@@ -526,7 +480,7 @@ public class BatchBuild extends BaseBuild {
 				String.valueOf(failCount),
 				JenkinsResultsParserUtil.getNounForm(
 					failCount, " Tests", " Test"),
-				" Failed.", getFailureMessageElement()));
+				" Failed."));
 	}
 
 	@Override
@@ -629,7 +583,10 @@ public class BatchBuild extends BaseBuild {
 		return targetPropertyName;
 	}
 
-	private static ExecutorService _executorService =
+	private static final FailureMessageGenerator[] _FAILURE_MESSAGE_GENERATORS =
+		{new ClosedChannelExceptionFailureMessageGenerator()};
+
+	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(10, true);
 	private static final Pattern _jobVariantPattern = Pattern.compile(
 		"(?<batchName>[^/]+)(/.*)?");

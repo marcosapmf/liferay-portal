@@ -86,7 +86,7 @@ catch (Exception exception) {
 	);
 
 	if (selectRootTopicButton) {
-		selectRootTopicButton.addEventListener('click', function (event) {
+		selectRootTopicButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (event) {
 					var form = document.<portlet:namespace />fm;
@@ -122,5 +122,5 @@ catch (Exception exception) {
 </script>
 
 <%!
-	private static Log _log = LogFactoryUtil.getLog("com_liferay_questions_web.configuarion_jsp");
+private static Log _log = LogFactoryUtil.getLog("com_liferay_questions_web.configuarion_jsp");
 %>

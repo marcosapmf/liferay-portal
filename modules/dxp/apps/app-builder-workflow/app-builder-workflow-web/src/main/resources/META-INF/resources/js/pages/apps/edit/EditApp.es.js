@@ -11,21 +11,30 @@
 
 import {AppContext} from 'app-builder-web/js/AppContext.es';
 import ControlMenu from 'app-builder-web/js/components/control-menu/ControlMenu.es';
-import {Loading} from 'app-builder-web/js/components/loading/Loading.es';
-import {getDataObjects} from 'app-builder-web/js/pages/apps/SelectObjectsDropDown.es';
+import {getDataObjects} from 'app-builder-web/js/components/select-objects/SelectObjects.es';
 import EditAppContext, {
 	UPDATE_APP,
+	UPDATE_DATA_LAYOUT_ID,
 	reducer,
 } from 'app-builder-web/js/pages/apps/edit/EditAppContext.es';
-import {getItem, parseResponse} from 'app-builder-web/js/utils/client.es';
-import {errorToast, successToast} from 'app-builder-web/js/utils/toast.es';
-import {createResourceURL, fetch} from 'frontend-js-web';
+import {getLocalizedValue} from 'app-builder-web/js/utils/lang.es';
+import Loading from 'data-engine-js-components-web/js/components/loading/Loading.es';
+import {
+	getItem,
+	parseResponse,
+} from 'data-engine-js-components-web/js/utils/client.es';
+import {
+	errorToast,
+	successToast,
+} from 'data-engine-js-components-web/js/utils/toast.es';
+import {createResourceURL, fetch, openModal} from 'frontend-js-web';
 import React, {useContext, useEffect, useReducer, useState} from 'react';
 
 import '../../../../css/EditApp.scss';
 import ApplyAppChangesModal from './ApplyAppChangesModal.es';
 import DeployAppModal from './DeployAppModal.es';
 import EditAppToolbar from './EditAppToolbar.es';
+import MissingFieldsModal from './MissingFieldsModal.es';
 import {
 	getAssigneeRoles,
 	getDataDefinition,
@@ -35,10 +44,12 @@ import {
 } from './actions.es';
 import configReducer, {
 	UPDATE_CONFIG,
+	UPDATE_FORM_VIEW,
 	UPDATE_LIST_ITEMS,
 	getInitialConfig,
 } from './configReducer.es';
 import EditAppSidebar from './sidebar/EditAppSidebar.es';
+import {checkRequiredFields} from './utils.es';
 import WorkflowBuilder from './workflow-builder/WorkflowBuilder.es';
 
 export default ({
@@ -48,9 +59,12 @@ export default ({
 	},
 	scope,
 }) => {
-	const {baseResourceURL, getStandaloneURL, namespace} = useContext(
-		AppContext
-	);
+	const {
+		baseResourceURL,
+		getStandaloneURL,
+		namespace,
+		objectsPortletURL,
+	} = useContext(AppContext);
 
 	const [config, dispatchConfig] = useReducer(
 		configReducer,
@@ -76,8 +90,87 @@ export default ({
 		false
 	);
 	const [isDeployModalVisible, setDeployModalVisible] = useState(false);
+	const [missingFieldsModalVisible, setMissingFieldsModalVisible] = useState(
+		false
+	);
 	const [isLoading, setLoading] = useState(false);
 	const [isSaving, setSaving] = useState(false);
+
+	const openFormViewModal = (
+		dataDefinitionId,
+		defaultLanguageId,
+		selectFormView,
+		dataLayoutId
+	) => {
+		const event = window.top?.Liferay.once(
+			'newFormViewCreated',
+			({dataDefinition, newFormView}) => {
+				successToast(
+					Liferay.Language.get('the-form-view-was-saved-successfully')
+				);
+				getFormViews(dataDefinitionId, defaultLanguageId).then(
+					(formViews) => {
+						const checkedFormViews = checkRequiredFields(
+							formViews,
+							dataDefinition
+						);
+
+						dispatchConfig({
+							listItems: {
+								fetching: false,
+								formViews: checkedFormViews,
+							},
+							type: UPDATE_LIST_ITEMS,
+						});
+
+						const currentFormView = checkedFormViews.find(
+							({id}) => id === newFormView.id
+						);
+
+						if (
+							!currentFormView.missingRequiredFields?.nativeField
+						) {
+							selectFormView({
+								...currentFormView,
+								name: getLocalizedValue(
+									defaultLanguageId,
+									newFormView.name
+								),
+							});
+						}
+						else if (newFormView.id === app.dataLayoutId) {
+							selectFormView({});
+						}
+					}
+				);
+			}
+		);
+		openModal({
+			onClose: () => event?.detach(),
+			title: dataLayoutId
+				? Liferay.Language.get('edit-form-view')
+				: Liferay.Language.get('new-form-view'),
+			url: `${Liferay.Util.PortletURL.createRenderURL(objectsPortletURL, {
+				dataDefinitionId,
+				dataLayoutId,
+				mvcRenderCommandName: '/app_builder/edit_form_view',
+				newCustomObject: true,
+				p_p_state: 'pop_up',
+			})}`,
+		});
+	};
+
+	const updateFormView = (formView) => {
+		dispatchConfig({
+			formView,
+			type: UPDATE_FORM_VIEW,
+		});
+
+		dispatch({
+			...formView,
+			type: UPDATE_DATA_LAYOUT_ID,
+		});
+	};
 
 	const editState = {
 		appId,
@@ -86,9 +179,12 @@ export default ({
 		dispatchConfig,
 		isAppChangesModalVisible,
 		isDeployModalVisible,
+		openFormViewModal,
 		setAppChangesModalVisible,
 		setDeployModalVisible,
+		setMissingFieldsModalVisible,
 		state: {app},
+		updateFormView,
 	};
 
 	useEffect(() => {
@@ -106,7 +202,10 @@ export default ({
 					dispatchConfig({
 						listItems: {
 							fetching: false,
-							formViews,
+							formViews: checkRequiredFields(
+								formViews,
+								config.dataObject
+							),
 							tableViews,
 						},
 						type: UPDATE_LIST_ITEMS,
@@ -119,6 +218,7 @@ export default ({
 					});
 				});
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [app.dataDefinitionId, defaultLanguageId]);
 
 	useEffect(() => {
@@ -205,6 +305,21 @@ export default ({
 		}
 	}, [appId]);
 
+	useEffect(() => {
+		if (!app.active && config.dataObject.id) {
+			dispatchConfig({
+				config: {
+					formView: checkRequiredFields(
+						[config.formView],
+						config.dataObject
+					)[0],
+				},
+				type: UPDATE_CONFIG,
+			});
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [app.active]);
+
 	let title = Liferay.Language.get('new-workflow-powered-app');
 
 	if (appId) {
@@ -264,7 +379,7 @@ export default ({
 
 		fetch(
 			createResourceURL(baseResourceURL, {
-				p_p_resource_id: `/app_builder/${resource}_workflow_app`,
+				p_p_resource_id: `/app_builder_workflow/${resource}_app_builder_app`,
 			}),
 			{
 				body: new URLSearchParams(Liferay.Util.ns(namespace, params)),
@@ -311,6 +426,19 @@ export default ({
 					<ApplyAppChangesModal onSave={onSave} />
 
 					<DeployAppModal onSave={onSave} />
+
+					<MissingFieldsModal
+						dataObjectName={config.dataObject.name}
+						missingFieldsModalVisible={missingFieldsModalVisible}
+						onDeploy={() => {
+							setDeployModalVisible(true);
+
+							setMissingFieldsModalVisible(false);
+						}}
+						setMissingFieldsModalVisible={
+							setMissingFieldsModalVisible
+						}
+					/>
 				</EditAppContext.Provider>
 			</Loading>
 		</div>

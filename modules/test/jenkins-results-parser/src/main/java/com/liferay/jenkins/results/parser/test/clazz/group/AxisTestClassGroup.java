@@ -14,10 +14,37 @@
 
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
+import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
+import com.liferay.jenkins.results.parser.Job;
+
+import java.util.List;
+
 /**
  * @author Michael Hashimoto
  */
 public class AxisTestClassGroup extends BaseTestClassGroup {
+
+	public String getAxisName() {
+		if (_segmentTestClassGroup != null) {
+			List<AxisTestClassGroup> axisTestClassGroups =
+				_segmentTestClassGroup.getAxisTestClassGroups();
+
+			return JenkinsResultsParserUtil.combine(
+				_segmentTestClassGroup.getSegmentName(), "/",
+				String.valueOf(axisTestClassGroups.indexOf(this)));
+		}
+
+		List<AxisTestClassGroup> axisTestClassGroups =
+			_batchTestClassGroup.getAxisTestClassGroups();
+
+		return JenkinsResultsParserUtil.combine(
+			_batchTestClassGroup.getBatchName(), "/",
+			String.valueOf(axisTestClassGroups.indexOf(this)));
+	}
+
+	public String getBatchJobName() {
+		return _batchTestClassGroup.getBatchJobName();
+	}
 
 	public String getBatchName() {
 		return _batchTestClassGroup.getBatchName();
@@ -27,18 +54,48 @@ public class AxisTestClassGroup extends BaseTestClassGroup {
 		return _batchTestClassGroup;
 	}
 
-	public int getId() {
-		return _id;
+	@Override
+	public Job getJob() {
+		return _batchTestClassGroup.getJob();
 	}
 
-	protected AxisTestClassGroup(
-		BatchTestClassGroup batchTestClassGroup, int id) {
+	public Integer getMinimumSlaveRAM() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getMinimumSlaveRAM();
+		}
+
+		return _batchTestClassGroup.getMinimumSlaveRAM();
+	}
+
+	public String getSegmentName() {
+		if (_segmentTestClassGroup != null) {
+			return _segmentTestClassGroup.getSegmentName();
+		}
+
+		return null;
+	}
+
+	public SegmentTestClassGroup getSegmentTestClassGroup() {
+		return _segmentTestClassGroup;
+	}
+
+	protected AxisTestClassGroup(BatchTestClassGroup batchTestClassGroup) {
+		setBatchTestClassGroup(batchTestClassGroup);
+	}
+
+	protected void setBatchTestClassGroup(
+		BatchTestClassGroup batchTestClassGroup) {
 
 		_batchTestClassGroup = batchTestClassGroup;
-		_id = id;
 	}
 
-	private final BatchTestClassGroup _batchTestClassGroup;
-	private final int _id;
+	protected void setSegmentTestClassGroup(
+		SegmentTestClassGroup segmentTestClassGroup) {
+
+		_segmentTestClassGroup = segmentTestClassGroup;
+	}
+
+	private BatchTestClassGroup _batchTestClassGroup;
+	private SegmentTestClassGroup _segmentTestClassGroup;
 
 }

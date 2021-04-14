@@ -5,6 +5,7 @@ definition {
 	property portal.upstream = "true";
 	property testray.component.names = "Site Templates";
 	property testray.main.component.name = "Site Templates";
+
 	var siteTemplateName = "Site Template Name";
 
 	setUp {
@@ -151,6 +152,8 @@ definition {
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
+		Refresh();
+
 		Page.viewNoPG(pageName = "Site Page Name");
 
 		Page.viewNoPG(pageName = "Site Child Page Name");
@@ -214,7 +217,7 @@ definition {
 			portlet = "Site Templates");
 
 		LAR.importPortlet(
-			failureExpected = "true",
+			importSchemaVersionMismatching = "true",
 			larFileName = "class-site-template-7.0.lar",
 			uploadFrom = "dependencies");
 	}
@@ -484,7 +487,7 @@ definition {
 	@description = "This is a use case for LPS-86487."
 	@priority = "4"
 	test SiteTemplatePageLinkInWebContentRedirectCorrectly {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "SitetemplatesUsecase#SiteTemplatePageLinkInWebContentRedirectCorrectly";
 
 		var portalURL = PropsUtil.get("portal.url");
@@ -525,7 +528,7 @@ definition {
 
 		PortletEntry.publish();
 
-		Close.closeAndSelectWindow(locator1 = "Site Templates - Control Panel - ${siteName}");
+		Close.closeAndSelectWindow(locator1 = "Site Templates - ${siteName}");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Sites",

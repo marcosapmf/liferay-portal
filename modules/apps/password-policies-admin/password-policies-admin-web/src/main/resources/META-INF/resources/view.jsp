@@ -43,9 +43,15 @@ PortletURL portletURL = viewPasswordPoliciesManagementToolbarDisplayContext.getP
 
 <clay:management-toolbar
 	actionDropdownItems="<%= viewPasswordPoliciesManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"basePortletURL", portletURL.toString()
+		).build()
+	%>'
 	clearResultsURL="<%= viewPasswordPoliciesManagementToolbarDisplayContext.getClearResultsURL() %>"
 	creationMenu="<%= viewPasswordPoliciesManagementToolbarDisplayContext.getCreationMenu() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
+	propsTransformer="js/ManagementToolbarDefaultPropsTransformer"
 	searchActionURL="<%= viewPasswordPoliciesManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="passwordPolicies"
 	searchFormName="searchFm"
@@ -57,7 +63,7 @@ PortletURL portletURL = viewPasswordPoliciesManagementToolbarDisplayContext.getP
 	viewTypeItems="<%= viewPasswordPoliciesManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="get" name="fm">
+<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl" method="get" name="fm">
 	<aui:input name="passwordPolicyIds" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 
@@ -118,44 +124,3 @@ PortletURL portletURL = viewPasswordPoliciesManagementToolbarDisplayContext.getP
 		</liferay-ui:search-container>
 	</c:if>
 </aui:form>
-
-<aui:script>
-	function <portlet:namespace />deletePasswordPolicies() {
-		if (
-			confirm(
-				'<liferay-ui:message key="are-you-sure-you-want-to-delete-this" />'
-			)
-		) {
-			var form = document.getElementById('<portlet:namespace />fm');
-
-			if (form) {
-				form.setAttribute('method', 'post');
-
-				var passwordPolicyIdsInput = form.querySelector(
-					'#<portlet:namespace />passwordPolicyIds'
-				);
-
-				if (passwordPolicyIdsInput) {
-					passwordPolicyIdsInput.setAttribute(
-						'value',
-						Liferay.Util.listCheckedExcept(
-							form,
-							'<portlet:namespace />allRowIds'
-						)
-					);
-				}
-
-				var lifecycleInput = form.querySelector('#p_p_lifecycle');
-
-				if (lifecycleInput) {
-					lifecycleInput.setAttribute('value', '1');
-				}
-
-				submitForm(
-					form,
-					'<portlet:actionURL name="deletePasswordPolicies" />'
-				);
-			}
-		}
-	}
-</aui:script>

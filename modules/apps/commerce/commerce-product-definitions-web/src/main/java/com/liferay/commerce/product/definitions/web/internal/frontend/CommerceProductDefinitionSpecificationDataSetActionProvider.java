@@ -15,6 +15,7 @@
 package com.liferay.commerce.product.definitions.web.internal.frontend;
 
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.definitions.web.internal.frontend.constants.CommerceProductDataSetConstants;
 import com.liferay.commerce.product.definitions.web.internal.model.ProductSpecification;
 import com.liferay.commerce.product.definitions.web.internal.security.permission.resource.CommerceCatalogPermission;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -123,7 +124,7 @@ public class CommerceProductDefinitionSpecificationDataSetActionProvider
 
 		portletURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"editProductDefinitionSpecificationOptionValue");
+			"/cp_definitions/edit_cp_definition_specification_option_value");
 		portletURL.setParameter(Constants.CMD, Constants.DELETE);
 		portletURL.setParameter("redirect", redirect);
 		portletURL.setParameter(
@@ -145,7 +146,7 @@ public class CommerceProductDefinitionSpecificationDataSetActionProvider
 
 		portletURL.setParameter(
 			"mvcRenderCommandName",
-			"editProductDefinitionSpecificationOptionValue");
+			"/cp_definitions/edit_cp_definition_specification_option_value");
 		portletURL.setParameter(
 			"cpDefinitionId",
 			String.valueOf(

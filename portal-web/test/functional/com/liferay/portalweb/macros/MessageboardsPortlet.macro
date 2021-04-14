@@ -138,6 +138,8 @@ definition {
 
 		MenuItem.click(menuItem = "Permissions");
 
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 	}
 

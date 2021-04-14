@@ -83,8 +83,6 @@ definition {
 			imageFileName = "Document_2.jpeg",
 			titleField = "Title AddQuestionWithTheALImage");
 
-		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
-
 		Questions.gotoDetails(
 			questionTabField = "Questions",
 			questionTitle = "Title AddQuestionWithTheALImage");
@@ -118,8 +116,6 @@ definition {
 			imageFileName = "Document_1.svg",
 			titleField = "Title AddQuestionWithTheImage");
 
-		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
-
 		Questions.gotoDetails(
 			questionTabField = "Questions",
 			questionTitle = "Title AddQuestionWithTheImage");
@@ -127,6 +123,10 @@ definition {
 		AssertVisible(
 			key_imageFileName = "Document_1.svg",
 			locator1 = "Questions#QUESTIONS_IMAGE_NAME");
+
+		AssertTextEquals(
+			locator1 = "Questions#RELATED_QUESTIONS_EMPTY_TEXT",
+			value1 = "No related questions were found.");
 	}
 
 	@description = "Validate if the user can not create a question with the maximum of 6 tags with unexisting tag"
@@ -143,14 +143,8 @@ definition {
 
 		Questions.askQuestionFillingTheMandatoryFields(
 			contentField = "Body AddQuestionWithMoreThanTheMaximumTagsIsNotPossible",
+			tagLocatorList = "Tag1,Tag2,Tag3,Tag4,Tag5,Tag6",
 			titleField = "Title AddQuestionWithMoreThanTheMaximumTagsIsNotPossible");
-
-		Questions.addTags(tagLocator = "Tag1");
-		Questions.addTags(tagLocator = "Tag2");
-		Questions.addTags(tagLocator = "Tag3");
-		Questions.addTags(tagLocator = "Tag4");
-		Questions.addTags(tagLocator = "Tag5");
-		Questions.addTags(tagLocator = "Tag6");
 
 		AssertElementPresent(
 			key_errorMessage = "This is an invalid tag.",
@@ -179,15 +173,8 @@ definition {
 
 		Questions.askQuestionFillingTheMandatoryFields(
 			contentField = "Body AddQuestionWithTheMaximumTags",
+			tagLocatorList = "Tag1,Tag2,Tag3,Tag4,Tag5",
 			titleField = "Title AddQuestionWithTheMaximumTags");
-
-		Questions.addTags(tagLocator = "Tag1");
-		Questions.addTags(tagLocator = "Tag2");
-		Questions.addTags(tagLocator = "Tag3");
-		Questions.addTags(tagLocator = "Tag4");
-		Questions.addTags(tagLocator = "Tag5");
-
-		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
 
 		AssertElementPresent(locator1 = "Questions#SEARCH_QUESTION_FIELD");
 
@@ -369,8 +356,6 @@ definition {
 			titleField = "Title Anonymous User Ask questions",
 			userEmailAddress = "test@liferay.com");
 
-		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
-
 		AssertTextEquals(
 			key_questionTitle = "Title Anonymous User Ask questions",
 			locator1 = "Questions#QUESTIONS_TITLE",
@@ -530,8 +515,6 @@ definition {
 			contentField = "Body AddQuestion",
 			titleField = "Title AddQuestion");
 
-		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
-
 		Questions.configureLandingPageTopicNavigation(toggleValue = "enable");
 
 		Navigator.gotoPage(pageName = "Test Questions Page");
@@ -625,6 +608,73 @@ definition {
 		Questions.changeTopic(
 			parentTopicName = "Questions Test SubCategory",
 			subTopicName = "New Questions Test SubCategory");
+	}
+
+	@description = "Validate if the user can lock and unlock a question through the MB."
+	@priority = "4"
+	test LockAndUnlockThroughMB {
+		JSONMBMessage.addCategory(
+			categoryDescription = "Description",
+			categoryName = "Questions Test Category",
+			userEmailAddress = "test@liferay.com");
+
+		Questions.addQuestionByAPI(
+			bodyField = "Content1",
+			categoryName = "Questions Test Category",
+			tagField = "new",
+			titleField = "Question1");
+
+		Navigator.gotoPage(pageName = "Questions Page");
+
+		Questions.gotoCategory(categoryName = "Questions Test Category");
+
+		Questions.gotoDetails(
+			questionTabField = "Questions",
+			questionTitle = "Question1");
+
+		Questions.answerQuestion(contentField = "This is my answer");
+
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
+
+		MessageboardsCategory.gotoCP(categoryName = "Questions Test Category");
+
+		LexiconEntry.openEntryMenu(rowEntry = "Question1");
+
+		MenuItem.click(menuItem = "Lock");
+
+		Navigator.gotoPage(pageName = "Questions Page");
+
+		Questions.gotoCategory(categoryName = "Questions Test Category");
+
+		Questions.gotoDetails(
+			questionTabField = "Questions",
+			questionTitle = "Question1");
+
+		AssertVisible(
+			key_answerBodyContent = "This is my answer",
+			locator1 = "Questions#ANSWER_BODY");
+
+		Questions.viewLockedQuestion(questionTitle = "Question1");
+
+		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
+
+		MessageboardsCategory.gotoCP(categoryName = "Questions Test Category");
+
+		LexiconEntry.openEntryMenu(rowEntry = "Question1");
+
+		MenuItem.click(menuItem = "Unlock");
+
+		Navigator.gotoPage(pageName = "Questions Page");
+
+		Questions.gotoCategory(categoryName = "Questions Test Category");
+
+		Questions.gotoDetails(
+			questionTabField = "Questions",
+			questionTitle = "Question1");
+
+		Questions.viewUnlockedQuestion(questionTitle = "Question1");
+
+		Questions.answerQuestion(contentField = "This is my answer2");
 	}
 
 	@description = "Validate if the user can search for the questions."
@@ -851,8 +901,6 @@ definition {
 			contentField = "Content AddQuestion",
 			titleField = "Title AddQuestion");
 
-		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
-
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
@@ -908,6 +956,10 @@ definition {
 			categoryName = "Questions Test Category",
 			userEmailAddress = "test@liferay.com");
 
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Questions Page");
+
 		for (var num : list "1,2,3") {
 			Questions.addQuestionByAPI(
 				bodyField = "Question Body ${num}",
@@ -916,7 +968,9 @@ definition {
 				titleField = "Question ${num}");
 		}
 
-		Navigator.gotoPage(pageName = "Questions Page");
+		Navigator.gotoPage(pageName = "Test Questions Page");
+
+		Portlet.addPG(portletName = "Questions");
 
 		Questions.gotoCategory(categoryName = "Questions Test Category");
 
@@ -944,7 +998,7 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		Navigator.gotoPage(pageName = "Questions Page");
+		Navigator.gotoPage(pageName = "Test Questions Page");
 
 		Questions.gotoCategory(categoryName = "Questions Test Category");
 
@@ -1083,11 +1137,11 @@ definition {
 
 		Questions.viewPaginationResults(results = "Showing 1 to 4 of 10");
 
-		Click(locator1 = "Pagination#NEXT_LINK");
+		Click(locator1 = "Questions#PAGINATION_NEXT_LINK");
 
 		Questions.viewPaginationResults(results = "Showing 5 to 8 of 10");
 
-		Click(locator1 = "Pagination#NEXT_LINK");
+		Click(locator1 = "Questions#PAGINATION_NEXT_LINK");
 
 		Questions.viewPaginationResults(results = "Showing 9 to 10 of 10");
 	}
@@ -1159,6 +1213,35 @@ definition {
 		Questions.viewFilterResults(
 			lastQuestionTitle = "Question 1 Edit",
 			questionTitle = "Question 2");
+	}
+
+	@description = "Validate if the user can view the related question."
+	@priority = "4"
+	test ViewRelatedQuestion {
+		JSONMBMessage.addCategory(
+			categoryDescription = "Description",
+			categoryName = "Questions Test Category",
+			userEmailAddress = "test@liferay.com");
+
+		for (var titleField : list "What is your name,How about your experience") {
+			Navigator.gotoPage(pageName = "Questions Page");
+
+			Questions.gotoCategory(categoryName = "Questions Test Category");
+
+			Questions.askQuestionFillingTheMandatoryFields(
+				contentField = "Body AddQuestionForTestRelatedQuestion",
+				titleField = "${titleField}");
+		}
+
+		Questions.gotoDetails(
+			questionTabField = "Questions",
+			questionTitle = "How about your experience");
+
+		AssertElementPresent(
+			key_questionTitle = "What is your name",
+			locator1 = "Questions#RELATED_QUESTIONS_QUESTIONS_TITLE");
+
+		AssertElementNotPresent(locator1 = "Questions#RELATED_QUESTIONS_EMPTY_TEXT");
 	}
 
 }

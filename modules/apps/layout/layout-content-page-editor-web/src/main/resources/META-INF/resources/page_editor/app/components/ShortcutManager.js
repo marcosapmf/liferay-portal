@@ -12,7 +12,6 @@
  * details.
  */
 
-import {closest} from 'metal-dom';
 import React, {useEffect, useRef, useState} from 'react';
 
 import {
@@ -41,13 +40,16 @@ const ctrlOrMeta = (event) =>
 	(event.ctrlKey && !event.metaKey) || (!event.ctrlKey && event.metaKey);
 
 const isEditableField = (element) =>
-	!!closest(element, '.page-editor__editable');
+	!!element.closest('.page-editor__editable');
+
+const isEditingEditableField = () =>
+	!!document.activeElement.getAttribute('contenteditable');
 
 const isInteractiveElement = (element) => {
 	return (
 		['INPUT', 'OPTION', 'SELECT', 'TEXTAREA'].includes(element.tagName) ||
-		!!closest(element, '.cke_editable') ||
-		!!closest(element, '.alloy-editor-container')
+		!!element.closest('.cke_editable') ||
+		!!element.closest('.alloy-editor-container')
 	);
 };
 
@@ -201,7 +203,8 @@ export default function ShortcutManager() {
 			canBeExecuted: (event) =>
 				(isEditableField(event.target) ||
 					!isInteractiveElement(event.target)) &&
-				!isWithinIframe(),
+				!isWithinIframe() &&
+				!isEditingEditableField(),
 			isKeyCombination: (event) =>
 				ctrlOrMeta(event) &&
 				event.keyCode === Z_KEYCODE &&

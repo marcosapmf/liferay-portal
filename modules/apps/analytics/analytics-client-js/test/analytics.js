@@ -21,7 +21,7 @@ import {
 	STORAGE_KEY_USER_ID,
 } from '../src/utils/constants';
 import {getItem} from '../src/utils/storage';
-import {sendDummyEvents, wait} from './helpers';
+import {sendDummyEvents, trackDummyEvents, wait} from './helpers';
 
 const ANALYTICS_IDENTITY = {email: 'foo@bar.com'};
 const ENDPOINT_URL = 'https://ac-server.io';
@@ -221,7 +221,7 @@ describe('Analytics', () => {
 	});
 
 	describe('send()', () => {
-		it('is exposed as an Analytics static method', () => {
+		it('is exposed as an Analytics method', () => {
 			expect(typeof Analytics.send).toBe('function');
 		});
 
@@ -247,6 +247,74 @@ describe('Analytics', () => {
 			const eventsNumber = 5;
 
 			sendDummyEvents(Analytics, eventsNumber);
+
+			const events = Analytics.getEvents();
+
+			expect(events.length).toBeGreaterThanOrEqual(eventsNumber);
+		});
+	});
+
+	describe('track()', () => {
+		it('is exposed as an Analytics method', () => {
+			expect(typeof Analytics.track).toBe('function');
+		});
+
+		it('adds the given event to the event queue', () => {
+			const eventId = 'customEventId';
+			const properties = {a: 1, b: 2, c: 3};
+
+			Analytics.track(eventId, properties);
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: 'CustomEvent',
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('uses CustomEvent as default applicationId', () => {
+			const eventId = 'customEventId';
+			const properties = {a: 1, b: 2, c: 3};
+
+			Analytics.track(eventId, properties);
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: 'CustomEvent',
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('uses applicationId from options', () => {
+			const eventId = 'BlogView';
+			const properties = {a: 1, b: 2, c: 3};
+			const options = {applicationId: 'Blog'};
+
+			Analytics.track(eventId, properties, options);
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: 'Blog',
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('persists the given events to the LocalStorage', () => {
+			const eventsNumber = 5;
+
+			trackDummyEvents(Analytics, eventsNumber);
 
 			const events = Analytics.getEvents();
 

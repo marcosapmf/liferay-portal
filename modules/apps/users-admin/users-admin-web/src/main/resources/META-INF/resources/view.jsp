@@ -154,66 +154,69 @@ else {
 	) {
 		var status = <%= WorkflowConstants.STATUS_INACTIVE %>;
 
-		<portlet:namespace />getUsersCount(className, ids, status, function (
-			responseData
-		) {
-			var count = parseInt(responseData, 10);
+		<portlet:namespace />getUsersCount(
+			className,
+			ids,
+			status,
+			(responseData) => {
+				var count = parseInt(responseData, 10);
 
-			if (count > 0) {
-				status = <%= WorkflowConstants.STATUS_APPROVED %>;
+				if (count > 0) {
+					status = <%= WorkflowConstants.STATUS_APPROVED %>;
 
-				<portlet:namespace />getUsersCount(
-					className,
-					ids,
-					status,
-					function (responseData) {
-						count = parseInt(responseData, 10);
+					<portlet:namespace />getUsersCount(
+						className,
+						ids,
+						status,
+						(responseData) => {
+							count = parseInt(responseData, 10);
 
-						if (count > 0) {
-							if (
-								confirm(
-									'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-								)
-							) {
-								<portlet:namespace />doDeleteOrganizations(
-									ids,
-									organizationsRedirect
-								);
-							}
-						}
-						else {
-							var message;
-
-							if (ids && ids.toString().split(',').length > 1) {
-								message =
-									'<%= UnicodeLanguageUtil.get(request, "one-or-more-organizations-are-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-organizations-by-automatically-unassociating-the-deactivated-users") %>';
+							if (count > 0) {
+								if (
+									confirm(
+										'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
+									)
+								) {
+									<portlet:namespace />doDeleteOrganizations(
+										ids,
+										organizationsRedirect
+									);
+								}
 							}
 							else {
-								message =
-									'<%= UnicodeLanguageUtil.get(request, "the-selected-organization-is-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-organization-by-automatically-unassociating-the-deactivated-users") %>';
-							}
+								var message;
 
-							if (confirm(message)) {
-								<portlet:namespace />doDeleteOrganizations(
-									ids,
-									organizationsRedirect
-								);
+								if (ids && ids.toString().split(',').length > 1) {
+									message =
+										'<%= UnicodeLanguageUtil.get(request, "one-or-more-organizations-are-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-organizations-by-automatically-unassociating-the-deactivated-users") %>';
+								}
+								else {
+									message =
+										'<%= UnicodeLanguageUtil.get(request, "the-selected-organization-is-associated-with-deactivated-users.-do-you-want-to-proceed-with-deleting-the-selected-organization-by-automatically-unassociating-the-deactivated-users") %>';
+								}
+
+								if (confirm(message)) {
+									<portlet:namespace />doDeleteOrganizations(
+										ids,
+										organizationsRedirect
+									);
+								}
 							}
 						}
-					}
-				);
+					);
+				}
+				else if (
+					confirm(
+						'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
+					)
+				) {
+					<portlet:namespace />doDeleteOrganizations(
+						ids,
+						organizationsRedirect
+					);
+				}
 			}
-			else if (
-				confirm(
-					'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-				)
-			) {
-				<portlet:namespace />doDeleteOrganizations(
-					ids,
-					organizationsRedirect
-				);
-			}
-		});
+		);
 	}
 
 	function <portlet:namespace />doDeleteOrganizations(
@@ -251,13 +254,13 @@ else {
 				method: 'POST',
 			}
 		)
-			.then(function (response) {
+			.then((response) => {
 				return response.text();
 			})
-			.then(function (response) {
+			.then((response) => {
 				callback(response);
 			})
-			.catch(function (error) {
+			.catch((error) => {
 				Liferay.Util.openToast({
 					message: Liferay.Language.get(
 						'an-unexpected-system-error-occurred'
@@ -292,59 +295,17 @@ else {
 			'<%= HtmlUtil.escapeJS(showUsersURL.toString()) %>'
 		);
 	}
+</aui:script>
 
+<aui:script require="users-admin-web/js/actions.es as actions">
 	window['<portlet:namespace />openSelectUsersDialog'] = function (
 		organizationId
 	) {
-		<portlet:renderURL var="selectUsersURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-			<portlet:param name="mvcPath" value="/select_organization_users.jsp" />
-		</portlet:renderURL>
-
-		var selectUsersURL = Liferay.Util.PortletURL.createPortletURL(
-			'<%= selectUsersURL.toString() %>',
-			{
-				organizationId: organizationId,
-			}
-		);
-
-		Liferay.Util.openSelectionModal({
-			buttonAddLabel: '<liferay-ui:message key="done" />',
-			multiple: true,
-			onSelect: function (data) {
-				if (data) {
-					<portlet:renderURL var="assignmentsURL">
-						<portlet:param name="mvcRenderCommandName" value="/users_admin/view" />
-						<portlet:param name="toolbarItem" value="view-all-organizations" />
-						<portlet:param name="usersListView" value="<%= UserConstants.LIST_VIEW_TREE %>" />
-					</portlet:renderURL>
-
-					var assignmentsRedirectURL = Liferay.Util.PortletURL.createPortletURL(
-						'<%= assignmentsURL.toString() %>',
-						{
-							organizationId: organizationId,
-						}
-					);
-
-					var editAssignmentParameters = {
-						addUserIds: data.value,
-						assignmentsRedirect: assignmentsRedirectURL.toString(),
-						organizationId: organizationId,
-					};
-
-					var editAssignmentURL = Liferay.Util.PortletURL.createPortletURL(
-						'<portlet:actionURL name="/users_admin/edit_organization_assignments" />',
-						editAssignmentParameters
-					);
-
-					submitForm(
-						document.<portlet:namespace />fm,
-						editAssignmentURL.toString()
-					);
-				}
-			},
-			selectEventName: '<portlet:namespace />selectUsers',
-			title: '<liferay-ui:message key="assign-users" />',
-			url: selectUsersURL.toString(),
+		actions.ACTIONS.selectUsers({
+			basePortletURL:
+				'<%= String.valueOf(renderResponse.createRenderURL()) %>',
+			organizationId,
+			portletNamespace: '<portlet:namespace />',
 		});
 	};
 </aui:script>

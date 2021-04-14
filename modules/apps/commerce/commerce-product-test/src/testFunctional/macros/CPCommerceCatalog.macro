@@ -21,7 +21,7 @@ definition {
 	}
 
 	macro newOptionsEntry {
-		if (IsElementPresent(locator1 = "Button#DELETE")) {
+		if (IsElementPresent(locator1 = "Button#ANY", key_text = "Delete")) {
 			Click(locator1 = "CommerceEntry#ADD_BUTTON");
 		}
 
@@ -50,6 +50,7 @@ definition {
 
 	macro newProductsEntry {
 		CommerceProducts.addEntry(
+			productCatalog = "${productCatalog}",
 			productFullDescription = "${productName} Full Description",
 			productName = "${productName}",
 			productShortDescription = "${productName} Short Description",

@@ -28,6 +28,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -47,13 +49,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("FragmentLink")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentLink")
-public class FragmentLink {
+public class FragmentLink implements Serializable {
 
 	public static FragmentLink toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentLink.class, json);
 	}
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public Object getHref() {
 		return href;
@@ -76,11 +78,12 @@ public class FragmentLink {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object href;
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public Target getTarget() {
 		return target;
@@ -114,9 +117,69 @@ public class FragmentLink {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Target target;
+
+	@Schema
+	@Valid
+	public FragmentLinkValue getValue() {
+		return value;
+	}
+
+	public void setValue(FragmentLinkValue value) {
+		this.value = value;
+	}
+
+	@JsonIgnore
+	public void setValue(
+		UnsafeSupplier<FragmentLinkValue, Exception> valueUnsafeSupplier) {
+
+		try {
+			value = valueUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentLinkValue value;
+
+	@Schema
+	@Valid
+	public Map<String, FragmentLinkValue> getValue_i18n() {
+		return value_i18n;
+	}
+
+	public void setValue_i18n(Map<String, FragmentLinkValue> value_i18n) {
+		this.value_i18n = value_i18n;
+	}
+
+	@JsonIgnore
+	public void setValue_i18n(
+		UnsafeSupplier<Map<String, FragmentLinkValue>, Exception>
+			value_i18nUnsafeSupplier) {
+
+		try {
+			value_i18n = value_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, FragmentLinkValue> value_i18n;
 
 	@Override
 	public boolean equals(Object object) {
@@ -167,6 +230,26 @@ public class FragmentLink {
 			sb.append(target);
 
 			sb.append("\"");
+		}
+
+		if (value != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"value\": ");
+
+			sb.append(String.valueOf(value));
+		}
+
+		if (value_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"value_i18n\": ");
+
+			sb.append(_toJSON(value_i18n));
 		}
 
 		sb.append("}");

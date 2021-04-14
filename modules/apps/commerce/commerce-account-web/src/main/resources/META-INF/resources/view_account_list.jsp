@@ -41,7 +41,7 @@ request.setAttribute("view.jsp-filterPerAccount", false);
 		<aui:button cssClass="btn-lg js-invite-user" onClick='<%= liferayPortletResponse.getNamespace() + "openAddAccountModal();" %>' primary="<%= true %>" value="add-account" />
 	</div>
 
-	<portlet:actionURL name="editCommerceAccount" var="editCommerceAccountActionURL" />
+	<portlet:actionURL name="/commerce_account/edit_commerce_account" var="editCommerceAccountActionURL" />
 
 	<aui:form action="<%= editCommerceAccountActionURL %>" method="post" name="commerceAccountFm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.ADD %>" />
@@ -57,15 +57,13 @@ request.setAttribute("view.jsp-filterPerAccount", false);
 	/>
 
 	<aui:script>
-		Liferay.provide(window, '<portlet:namespace />openAddAccountModal', function (
-			evt
-		) {
+		Liferay.provide(window, '<portlet:namespace />openAddAccountModal', (evt) => {
 			var addAccountModal = Liferay.component('addAccountModal');
 
 			addAccountModal.open();
 		});
 
-		Liferay.provide(window, 'setCurrentAccount', function (id) {
+		Liferay.provide(window, 'setCurrentAccount', (id) => {
 			document.querySelector('#<portlet:namespace /><%= Constants.CMD %>').value =
 				'setCurrentAccount';
 			document.querySelector(
@@ -75,7 +73,7 @@ request.setAttribute("view.jsp-filterPerAccount", false);
 			submitForm(document.<portlet:namespace />commerceAccountFm);
 		});
 
-		Liferay.provide(window, 'toggleActiveCommerceAccount', function (id) {
+		Liferay.provide(window, 'toggleActiveCommerceAccount', (id) => {
 			document.querySelector('#<portlet:namespace /><%= Constants.CMD %>').value =
 				'setActive';
 			document.querySelector(
@@ -85,22 +83,22 @@ request.setAttribute("view.jsp-filterPerAccount", false);
 			submitForm(document.<portlet:namespace />commerceAccountFm);
 		});
 
-		Liferay.componentReady('addAccountModal').then(function (addAccountModal) {
-			addAccountModal.on('AddAccountModalSave', function (event) {
+		Liferay.componentReady('addAccountModal').then((addAccountModal) => {
+			addAccountModal.on('AddAccountModalSave', (event) => {
 				var existingUserIds = event.administratorsEmail
-					.filter(function (el) {
+					.filter((el) => {
 						return el.userId;
 					})
-					.map(function (usr) {
+					.map((usr) => {
 						return usr.userId;
 					})
 					.join(',');
 
 				var newUserEmails = event.administratorsEmail
-					.filter(function (el) {
+					.filter((el) => {
 						return !el.userId;
 					})
-					.map(function (usr) {
+					.map((usr) => {
 						return usr.email;
 					})
 					.join(',');

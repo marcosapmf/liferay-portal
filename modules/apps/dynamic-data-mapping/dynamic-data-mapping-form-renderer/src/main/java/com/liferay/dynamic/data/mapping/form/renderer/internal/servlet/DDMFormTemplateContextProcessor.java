@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -102,16 +103,12 @@ public class DDMFormTemplateContextProcessor {
 
 		DDMFormField ddmFormField = new DDMFormField(name, type);
 
-		setDDMFormFieldCollapsible(
-			jsonObject.getBoolean("collapsible"), ddmFormField);
-		setDDMFormFieldDataProviderSettings(
-			jsonObject.getLong("ddmDataProviderInstanceId"),
-			jsonObject.getString("ddmDataProviderInstanceOutput"),
-			ddmFormField);
+		setDDMFormFieldCustomProperties(jsonObject, ddmFormField);
 		setDDMFormFieldDataType(jsonObject.getString("dataType"), ddmFormField);
 		setDDMFormFieldFieldName(
 			jsonObject.getString("fieldName"), ddmFormField);
-		setDDMFormFieldInline(jsonObject.getBoolean("inline"), ddmFormField);
+		setDDMFormFieldFieldReference(
+			jsonObject.getString("fieldReference"), ddmFormField);
 		setDDMFormFieldLabel(jsonObject.getString("label"), ddmFormField);
 		setDDMFormFieldLocalizable(
 			jsonObject.getBoolean("localizable", false), ddmFormField);
@@ -132,9 +129,7 @@ public class DDMFormTemplateContextProcessor {
 			jsonObject.getBoolean("repeatable", false), ddmFormField);
 		setDDMFormFieldRequired(
 			jsonObject.getBoolean("required", false), ddmFormField);
-		setDDMFormFieldShowAsSwitcher(
-			jsonObject.getBoolean("showAsSwitcher"), ddmFormField);
-		setDDMFormFieldText(jsonObject.getJSONObject("text"), ddmFormField);
+		setDDMFormFieldText(jsonObject.getString("text"), ddmFormField);
 		setDDMFormFieldTooltip(jsonObject.getString("tooltip"), ddmFormField);
 		setDDMFormFieldValid(
 			jsonObject.getBoolean("valid", true), ddmFormField);
@@ -156,9 +151,11 @@ public class DDMFormTemplateContextProcessor {
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
 
 			String value = jsonObject.getString("value");
-			String label = jsonObject.getString("label");
 
-			ddmFormFieldOptions.addOptionLabel(value, _locale, label);
+			ddmFormFieldOptions.addOptionLabel(
+				value, _locale, jsonObject.getString("label"));
+			ddmFormFieldOptions.addOptionReference(
+				value, jsonObject.getString("reference"));
 		}
 
 		return ddmFormFieldOptions;
@@ -167,6 +164,8 @@ public class DDMFormTemplateContextProcessor {
 	protected DDMFormFieldValue getDDMFormFieldValue(JSONObject jsonObject) {
 		DDMFormFieldValue ddmFormFieldValue = new DDMFormFieldValue();
 
+		ddmFormFieldValue.setFieldReference(
+			jsonObject.getString("fieldReference"));
 		ddmFormFieldValue.setName(jsonObject.getString("fieldName"));
 		ddmFormFieldValue.setInstanceId(jsonObject.getString("instanceId"));
 
@@ -236,20 +235,20 @@ public class DDMFormTemplateContextProcessor {
 		_ddmForm.setDefaultLocale(_locale);
 	}
 
-	protected void setDDMFormFieldCollapsible(
-		boolean collapsible, DDMFormField ddmFormField) {
+	protected void setDDMFormFieldCustomProperties(
+		JSONObject jsonObject, DDMFormField ddmFormField) {
 
-		ddmFormField.setProperty("collapsible", collapsible);
-	}
+		Iterator<String> iterator = jsonObject.keys();
 
-	protected void setDDMFormFieldDataProviderSettings(
-		long ddmDataProviderInstanceId, String ddmDataProviderInstanceOutput,
-		DDMFormField ddmFormField) {
+		Map<String, Object> properties = ddmFormField.getProperties();
 
-		ddmFormField.setProperty(
-			"ddmDataProviderInstanceId", ddmDataProviderInstanceId);
-		ddmFormField.setProperty(
-			"ddmDataProviderInstanceOutput", ddmDataProviderInstanceOutput);
+		while (iterator.hasNext()) {
+			String key = iterator.next();
+
+			if (!properties.containsKey(key) && !key.equals("dataSourceType")) {
+				ddmFormField.setProperty(key, jsonObject.get(key));
+			}
+		}
 	}
 
 	protected void setDDMFormFieldDataType(
@@ -264,10 +263,10 @@ public class DDMFormTemplateContextProcessor {
 		ddmFormField.setName(GetterUtil.getString(fieldName));
 	}
 
-	protected void setDDMFormFieldInline(
-		boolean inline, DDMFormField ddmFormField) {
+	protected void setDDMFormFieldFieldReference(
+		String fieldReference, DDMFormField ddmFormField) {
 
-		ddmFormField.setProperty("inline", inline);
+		ddmFormField.setFieldReference(GetterUtil.getString(fieldReference));
 	}
 
 	protected void setDDMFormFieldLabel(
@@ -409,21 +408,9 @@ public class DDMFormTemplateContextProcessor {
 		ddmFormField.setRequired(required);
 	}
 
-	protected void setDDMFormFieldShowAsSwitcher(
-		boolean showAsSwitcher, DDMFormField ddmFormField) {
-
-		ddmFormField.setProperty("showAsSwitcher", showAsSwitcher);
-	}
-
-	protected void setDDMFormFieldText(
-		JSONObject jsonObject, DDMFormField ddmFormField) {
-
-		if (jsonObject == null) {
-			return;
-		}
-
+	protected void setDDMFormFieldText(String text, DDMFormField ddmFormField) {
 		ddmFormField.setProperty(
-			"text", getLocalizedValue(jsonObject.getString("content")));
+			"text", getLocalizedValue(GetterUtil.getString(text)));
 	}
 
 	protected void setDDMFormFieldTooltip(

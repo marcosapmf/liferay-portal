@@ -40,18 +40,17 @@ import com.liferay.commerce.media.CommerceCatalogDefaultImage;
 import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.price.list.constants.CommercePriceListConstants;
+import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.importer.CPFileImporter;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
-import com.liferay.commerce.product.model.CommerceChannelConstants;
 import com.liferay.commerce.product.service.CPDefinitionLinkLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.shipping.engine.fixed.service.CommerceShippingFixedOptionLocalService;
 import com.liferay.commerce.theme.minium.SiteInitializerDependencyResolver;
@@ -304,7 +303,6 @@ public class MiniumSiteInitializer implements SiteInitializer {
 
 		_groupLocalService.updateGroup(group);
 
-		_commerceCountryLocalService.importDefaultCountries(serviceContext);
 		_commerceCurrencyLocalService.importDefaultValues(serviceContext);
 		_cpMeasurementUnitLocalService.importDefaultValues(serviceContext);
 
@@ -357,9 +355,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			ServiceContext serviceContext, long commerceChannelId)
 		throws Exception {
 
-		JSONArray jsonArray = _getJSONArray("roles.json");
-
-		_cpFileImporter.createRoles(jsonArray, serviceContext);
+		_cpFileImporter.createRoles(
+			_getJSONArray("roles.json"), serviceContext);
 
 		updateUserRole(serviceContext);
 		updateOperationManagerRole(serviceContext, commerceChannelId);
@@ -588,10 +585,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 		Company company = _companyLocalService.getCompany(
 			serviceContext.getCompanyId());
 
-		JSONArray jsonArray = _getJSONArray("categories.json");
-
 		_assetCategoriesImporter.importAssetCategories(
-			jsonArray, group.getName(serviceContext.getLocale()),
+			_getJSONArray("categories.json"),
+			group.getName(serviceContext.getLocale()),
 			_siteInitializerDependencyResolver.getImageClassLoader(),
 			_siteInitializerDependencyResolver.getImageDependencyPath(),
 			company.getGroupId(), serviceContext.getUserId());
@@ -628,10 +624,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing Blogs Entries...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("blogs.json");
-
 		_blogsImporter.importBlogsEntries(
-			jsonArray, _siteInitializerDependencyResolver.getImageClassLoader(),
+			_getJSONArray("blogs.json"),
+			_siteInitializerDependencyResolver.getImageClassLoader(),
 			_siteInitializerDependencyResolver.getImageDependencyPath(),
 			serviceContext.getScopeGroupId(), serviceContext.getUserId());
 
@@ -647,10 +642,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing Commerce Accounts...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("accounts.json");
-
 		_commerceAccountsImporter.importCommerceAccounts(
-			jsonArray, _siteInitializerDependencyResolver.getImageClassLoader(),
+			_getJSONArray("accounts.json"),
+			_siteInitializerDependencyResolver.getImageClassLoader(),
 			_siteInitializerDependencyResolver.getDependenciesPath(),
 			serviceContext.getScopeGroupId(), serviceContext.getUserId());
 
@@ -666,10 +660,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing Commerce Discounts...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("discounts.json");
-
 		_commerceDiscountsImporter.importCommerceDiscounts(
-			jsonArray, serviceContext.getScopeGroupId(),
+			_getJSONArray("discounts.json"), serviceContext.getScopeGroupId(),
 			serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
@@ -681,12 +673,10 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			ServiceContext serviceContext)
 		throws Exception {
 
-		JSONArray jsonArray = _getJSONArray("warehouses.json");
-
 		return _commerceInventoryWarehousesImporter.
 			importCommerceInventoryWarehouses(
-				jsonArray, serviceContext.getScopeGroupId(),
-				serviceContext.getUserId());
+				_getJSONArray("warehouses.json"),
+				serviceContext.getScopeGroupId(), serviceContext.getUserId());
 	}
 
 	private void _importCommerceOrganizations(ServiceContext serviceContext)
@@ -696,11 +686,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing organizations...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("organizations.json");
-
 		_organizationImporter.importOrganizations(
-			jsonArray, serviceContext.getScopeGroupId(),
-			serviceContext.getUserId());
+			_getJSONArray("organizations.json"),
+			serviceContext.getScopeGroupId(), serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Organizations successfully imported");
@@ -715,10 +703,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing commerce price entries...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("price-entries.json");
-
 		_commercePriceEntriesImporter.importCommercePriceEntries(
-			jsonArray, catalogGroupId, serviceContext.getUserId());
+			_getJSONArray("price-entries.json"), catalogGroupId,
+			serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce price entries successfully imported");
@@ -733,11 +720,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing commerce price lists...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("price-lists.json");
-
 		_commercePriceListsImporter.importCommercePriceLists(
-			catalogGroupId, jsonArray, serviceContext.getScopeGroupId(),
-			serviceContext.getUserId());
+			catalogGroupId, _getJSONArray("price-lists.json"),
+			serviceContext.getScopeGroupId(), serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce price lists successfully imported");
@@ -751,10 +736,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing Commerce Users...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("users.json");
-
 		_commerceUsersImporter.importCommerceUsers(
-			jsonArray, _siteInitializerDependencyResolver.getImageClassLoader(),
+			_getJSONArray("users.json"),
+			_siteInitializerDependencyResolver.getImageClassLoader(),
 			_siteInitializerDependencyResolver.getImageDependencyPath(),
 			serviceContext.getScopeGroupId(), serviceContext.getUserId());
 
@@ -794,10 +778,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing commerce product option categories...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("option-categories.json");
-
 		_cpOptionCategoriesImporter.importCPOptionCategories(
-			jsonArray, catalogGroupId, serviceContext.getUserId());
+			_getJSONArray("option-categories.json"), catalogGroupId,
+			serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -809,10 +792,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			long catalogGroupId, ServiceContext serviceContext)
 		throws Exception {
 
-		JSONArray jsonArray = _getJSONArray("options.json");
-
 		return _cpOptionsImporter.importCPOptions(
-			jsonArray, catalogGroupId, serviceContext.getUserId());
+			_getJSONArray("options.json"), catalogGroupId,
+			serviceContext.getUserId());
 	}
 
 	private void _importCPSpecificationOptions(
@@ -823,10 +805,9 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing commerce product specification options...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("specification-options.json");
-
 		_cpSpecificationOptionsImporter.importCPSpecificationOptions(
-			jsonArray, catalogGroupId, serviceContext.getUserId());
+			_getJSONArray("specification-options.json"), catalogGroupId,
+			serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -841,10 +822,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing DDM Forms...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("forms.json");
-
 		_ddmFormImporter.importDDMForms(
-			jsonArray, serviceContext.getScopeGroupId(),
+			_getJSONArray("forms.json"), serviceContext.getScopeGroupId(),
 			serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
@@ -859,10 +838,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing DL File Entries...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("dl-file-entries.json");
-
 		_dlImporter.importDocuments(
-			jsonArray,
+			_getJSONArray("dl-file-entries.json"),
 			_siteInitializerDependencyResolver.getDocumentsClassLoader(),
 			_siteInitializerDependencyResolver.getDocumentsDependencyPath(),
 			serviceContext.getScopeGroupId(), serviceContext.getUserId());
@@ -879,10 +856,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing Journal Articles...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("journal-articles.json");
-
 		_cpFileImporter.createJournalArticles(
-			jsonArray,
+			_getJSONArray("journal-articles.json"),
 			_siteInitializerDependencyResolver.getDocumentsClassLoader(),
 			_siteInitializerDependencyResolver.getDependenciesPath() +
 				"journal_articles/",
@@ -900,10 +875,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			_log.info("Importing KB Articles...");
 		}
 
-		JSONArray jsonArray = _getJSONArray("kb-articles.json");
-
 		_kbArticleImporter.importKBArticles(
-			jsonArray, serviceContext.getScopeGroupId(),
+			_getJSONArray("kb-articles.json"), serviceContext.getScopeGroupId(),
 			serviceContext.getUserId());
 
 		if (_log.isInfoEnabled()) {
@@ -921,10 +894,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 		Company company = _companyLocalService.getCompany(
 			serviceContext.getCompanyId());
 
-		JSONArray jsonArray = _getJSONArray("portlet-settings.json");
-
 		_portletSettingsImporter.importPortletSettings(
-			jsonArray,
+			_getJSONArray("portlet-settings.json"),
 			_siteInitializerDependencyResolver.getDisplayTemplatesClassLoader(),
 			_siteInitializerDependencyResolver.
 				getDisplayTemplatesDependencyPath(),
@@ -975,9 +946,7 @@ public class MiniumSiteInitializer implements SiteInitializer {
 				cpDefinition);
 		}
 
-		JSONArray jsonArray = _getJSONArray("products.json");
-
-		_importRelatedProducts(jsonArray, serviceContext);
+		_importRelatedProducts(_getJSONArray("products.json"), serviceContext);
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Related products successfully imported");
@@ -990,10 +959,8 @@ public class MiniumSiteInitializer implements SiteInitializer {
 		Company company = _companyLocalService.getCompany(
 			serviceContext.getCompanyId());
 
-		JSONArray jsonArray = _getJSONArray("theme-portlet-settings.json");
-
 		_portletSettingsImporter.importPortletSettings(
-			jsonArray,
+			_getJSONArray("theme-portlet-settings.json"),
 			_siteInitializerDependencyResolver.getDisplayTemplatesClassLoader(),
 			_siteInitializerDependencyResolver.
 				getDisplayTemplatesDependencyPath(),
@@ -1026,9 +993,6 @@ public class MiniumSiteInitializer implements SiteInitializer {
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
-
-	@Reference
-	private CommerceCountryLocalService _commerceCountryLocalService;
 
 	@Reference
 	private CommerceCurrencyLocalService _commerceCurrencyLocalService;

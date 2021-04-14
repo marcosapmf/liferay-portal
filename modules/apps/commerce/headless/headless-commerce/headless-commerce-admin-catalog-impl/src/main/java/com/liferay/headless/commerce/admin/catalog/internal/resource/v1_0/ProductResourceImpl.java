@@ -15,9 +15,9 @@
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.exception.NoSuchCatalogException;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
@@ -67,11 +67,13 @@ import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
@@ -194,7 +196,8 @@ public class ProductResourceImpl
 		return _productHelper.getProductsPage(
 			contextCompany.getCompanyId(), search, filter, pagination, sorts,
 			document -> _toProduct(
-				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))),
+			contextAcceptLanguage.getPreferredLocale());
 	}
 
 	@Override
@@ -208,6 +211,12 @@ public class ProductResourceImpl
 		}
 
 		_updateProduct(cpDefinition, product);
+
+		if (!Validator.isBlank(product.getExternalReferenceCode())) {
+			_cpDefinitionService.updateExternalReferenceCode(
+				cpDefinition.getCPDefinitionId(),
+				product.getExternalReferenceCode());
+		}
 
 		Response.ResponseBuilder responseBuilder = Response.ok();
 
@@ -302,29 +311,23 @@ public class ProductResourceImpl
 	}
 
 	private Map<String, Map<String, String>> _getActions(
-		CommerceCatalog commerceCatalog) {
+		CPDefinition cpDefinition) {
 
 		return HashMapBuilder.<String, Map<String, String>>put(
 			"delete",
 			addAction(
-				"UPDATE", commerceCatalog.getCommerceCatalogId(),
-				"deleteProduct", commerceCatalog.getUserId(),
-				"com.liferay.commerce.product.model.CommerceCatalog",
-				commerceCatalog.getGroupId())
+				"UPDATE", cpDefinition.getCPDefinitionId(), "deleteProduct",
+				_cpDefinitionModelResourcePermission)
 		).put(
 			"get",
 			addAction(
-				"VIEW", commerceCatalog.getCommerceCatalogId(), "getProduct",
-				commerceCatalog.getUserId(),
-				"com.liferay.commerce.product.model.CommerceCatalog",
-				commerceCatalog.getGroupId())
+				"VIEW", cpDefinition.getCPDefinitionId(), "getProduct",
+				_cpDefinitionModelResourcePermission)
 		).put(
 			"update",
 			addAction(
-				"UPDATE", commerceCatalog.getCommerceCatalogId(),
-				"patchProduct", commerceCatalog.getUserId(),
-				"com.liferay.commerce.product.model.CommerceCatalog",
-				commerceCatalog.getGroupId())
+				"UPDATE", cpDefinition.getCPDefinitionId(), "patchProduct",
+				_cpDefinitionModelResourcePermission)
 		).build();
 	}
 
@@ -371,12 +374,10 @@ public class ProductResourceImpl
 		CPDefinition cpDefinition = _cpDefinitionService.getCPDefinition(
 			cpDefinitionId);
 
-		CommerceCatalog commerceCatalog = cpDefinition.getCommerceCatalog();
-
 		return _productDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(),
-				_getActions(commerceCatalog), _dtoConverterRegistry,
+				_getActions(cpDefinition), _dtoConverterRegistry,
 				cpDefinitionId, contextAcceptLanguage.getPreferredLocale(),
 				contextUriInfo, contextUser));
 	}
@@ -596,6 +597,12 @@ public class ProductResourceImpl
 			serviceContext.setAssetCategoryIds(categoryIds);
 		}
 
+		Map<String, String> nameMap = product.getName();
+
+		if ((cpDefinition != null) && (nameMap == null)) {
+			nameMap = LanguageUtils.getLanguageIdMap(cpDefinition.getNameMap());
+		}
+
 		Map<String, String> shortDescriptionMap = product.getShortDescription();
 
 		if ((cpDefinition != null) && (shortDescriptionMap == null)) {
@@ -612,7 +619,7 @@ public class ProductResourceImpl
 
 		cpDefinition = _cpDefinitionService.updateCPDefinition(
 			cpDefinition.getCPDefinitionId(),
-			LanguageUtils.getLocalizedMap(product.getName()),
+			LanguageUtils.getLocalizedMap(nameMap),
 			LanguageUtils.getLocalizedMap(shortDescriptionMap),
 			LanguageUtils.getLocalizedMap(descriptionMap),
 			cpDefinition.getUrlTitleMap(), cpDefinition.getMetaTitleMap(),
@@ -630,7 +637,7 @@ public class ProductResourceImpl
 
 		// Workflow
 
-		if (!product.getActive()) {
+		if ((product.getActive() != null) && !product.getActive()) {
 			Map<String, Serializable> workflowContext = new HashMap<>();
 
 			_cpDefinitionService.updateStatus(
@@ -695,6 +702,12 @@ public class ProductResourceImpl
 			serviceContext.setAssetCategoryIds(categoryIds);
 		}
 
+		Map<String, String> nameMap = product.getName();
+
+		if ((cpDefinition != null) && (nameMap == null)) {
+			nameMap = LanguageUtils.getLanguageIdMap(cpDefinition.getNameMap());
+		}
+
 		Map<String, String> shortDescriptionMap = product.getShortDescription();
 
 		if ((cpDefinition != null) && (shortDescriptionMap == null)) {
@@ -717,7 +730,7 @@ public class ProductResourceImpl
 
 		cpDefinition = _cpDefinitionService.upsertCPDefinition(
 			commerceCatalog.getGroupId(), contextUser.getUserId(),
-			LanguageUtils.getLocalizedMap(product.getName()),
+			LanguageUtils.getLocalizedMap(nameMap),
 			LanguageUtils.getLocalizedMap(shortDescriptionMap),
 			LanguageUtils.getLocalizedMap(descriptionMap), null,
 			LanguageUtils.getLocalizedMap(product.getMetaTitle()),
@@ -753,7 +766,7 @@ public class ProductResourceImpl
 
 		// Workflow
 
-		if (!product.getActive()) {
+		if ((product.getActive() != null) && !product.getActive()) {
 			Map<String, Serializable> workflowContext = new HashMap<>();
 
 			_cpDefinitionService.updateStatus(
@@ -779,8 +792,6 @@ public class ProductResourceImpl
 		return cpDefinition;
 	}
 
-	private static final EntityModel _entityModel = new ProductEntityModel();
-
 	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
@@ -798,6 +809,12 @@ public class ProductResourceImpl
 
 	@Reference
 	private CPDefinitionLinkService _cpDefinitionLinkService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.commerce.product.model.CPDefinition)"
+	)
+	private ModelResourcePermission<CPDefinition>
+		_cpDefinitionModelResourcePermission;
 
 	@Reference
 	private CPDefinitionOptionRelService _cpDefinitionOptionRelService;
@@ -824,6 +841,8 @@ public class ProductResourceImpl
 
 	@Reference
 	private DTOConverterRegistry _dtoConverterRegistry;
+
+	private final EntityModel _entityModel = new ProductEntityModel();
 
 	@Reference
 	private ProductDTOConverter _productDTOConverter;

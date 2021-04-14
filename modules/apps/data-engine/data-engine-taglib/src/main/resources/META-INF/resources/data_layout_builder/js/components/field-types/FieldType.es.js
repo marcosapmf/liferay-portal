@@ -12,18 +12,18 @@
  * details.
  */
 
+import {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClaySticker from '@clayui/sticker';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import classnames from 'classnames';
 import React, {useEffect, useState} from 'react';
 import {useDrag} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
+import './FieldType.scss';
 import {DRAG_FIELD_TYPE} from '../../drag-and-drop/dragTypes.es';
-import Button from '../button/Button.es';
 import DropDown from '../drop-down/DropDown.es';
 import FieldTypeDragPreview from './FieldTypeDragPreview.es';
 
@@ -35,7 +35,7 @@ const ICONS = {
 	select: 'list',
 };
 
-export default (props) => {
+const FieldType = (props) => {
 	const {
 		actions,
 		active,
@@ -49,6 +49,7 @@ export default (props) => {
 		icon,
 		label,
 		name,
+		required,
 		onClick,
 		onDelete,
 		onDoubleClick,
@@ -121,9 +122,14 @@ export default (props) => {
 			</ClayLayout.ContentCol>
 
 			<ClayLayout.ContentCol className="pr-2" expand>
-				<h4 className="list-group-title text-truncate">
-					<span>{label}</span>
-				</h4>
+				<div className="d-flex list-group-title">
+					<span className="text-truncate">{label}</span>
+					{required && (
+						<span className="reference-mark">
+							<ClayIcon symbol="asterisk" />
+						</span>
+					)}
+				</div>
 
 				{description && (
 					<p className="list-group-subtitle text-truncate">
@@ -147,32 +153,33 @@ export default (props) => {
 					{loading ? (
 						<ClayLoadingIndicator />
 					) : (
-						<ClayTooltipProvider>
-							<Button
-								borderless
-								data-tooltip-align="right"
-								data-tooltip-delay="200"
-								displayType="secondary"
-								onClick={(event) => {
-									event.stopPropagation();
+						<ClayButtonWithIcon
+							borderless
+							data-tooltip-align="right"
+							data-tooltip-delay="200"
+							displayType="secondary"
+							onClick={(event) => {
+								event.stopPropagation();
 
-									setLoading(true);
+								setLoading(true);
 
-									onDelete(name)
-										.then(() => setLoading(false))
-										.catch((error) => {
-											setLoading(false);
+								onDelete(name)
+									.then(() => setLoading(false))
+									.catch((error) => {
+										setLoading(false);
 
-											throw error;
-										});
-								}}
-								symbol="times-circle"
-								title={deleteLabel}
-							/>
-						</ClayTooltipProvider>
+										throw error;
+									});
+							}}
+							symbol="times-circle"
+							title={deleteLabel}
+						/>
 					)}
 				</div>
 			)}
 		</ClayLayout.ContentRow>
 	);
 };
+
+FieldType.displayName = 'FieldType';
+export default FieldType;

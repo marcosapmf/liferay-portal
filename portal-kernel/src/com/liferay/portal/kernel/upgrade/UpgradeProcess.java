@@ -245,6 +245,7 @@ public abstract class UpgradeProcess
 		@Deprecated
 		public AlterTableAddColumn(String columnName) {
 			_columnName = columnName;
+
 			_columnType = StringPool.BLANK;
 		}
 
@@ -643,6 +644,21 @@ public abstract class UpgradeProcess
 				StringBundler.concat(
 					"alter table ", normalizedTableName, " drop primary key"));
 		}
+	}
+
+	protected void updateIndexes(Class<?> tableClass) throws Exception {
+		DB db = DBManagerUtil.getDB();
+
+		Field tableSQLCreateField = tableClass.getField("TABLE_SQL_CREATE");
+		Field tableSQLAddIndexesField = tableClass.getField(
+			"TABLE_SQL_ADD_INDEXES");
+
+		db.updateIndexes(
+			connection, (String)tableSQLCreateField.get(null),
+			StringUtil.merge(
+				(String[])tableSQLAddIndexesField.get(null),
+				System.lineSeparator()),
+			true);
 	}
 
 	protected void upgradeTable(String tableName, Object[][] tableColumns)

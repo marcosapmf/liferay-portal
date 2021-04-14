@@ -53,6 +53,7 @@ public class MFAFIDO2CredentialEntryWrapper
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("credentialKey", getCredentialKey());
+		attributes.put("credentialKeyHash", getCredentialKeyHash());
 		attributes.put("credentialType", getCredentialType());
 		attributes.put("failedAttempts", getFailedAttempts());
 		attributes.put("publicKeyCOSE", getPublicKeyCOSE());
@@ -112,6 +113,12 @@ public class MFAFIDO2CredentialEntryWrapper
 			setCredentialKey(credentialKey);
 		}
 
+		Long credentialKeyHash = (Long)attributes.get("credentialKeyHash");
+
+		if (credentialKeyHash != null) {
+			setCredentialKeyHash(credentialKeyHash);
+		}
+
 		Integer credentialType = (Integer)attributes.get("credentialType");
 
 		if (credentialType != null) {
@@ -165,6 +172,16 @@ public class MFAFIDO2CredentialEntryWrapper
 	@Override
 	public String getCredentialKey() {
 		return model.getCredentialKey();
+	}
+
+	/**
+	 * Returns the credential key hash of this mfafido2 credential entry.
+	 *
+	 * @return the credential key hash of this mfafido2 credential entry
+	 */
+	@Override
+	public long getCredentialKeyHash() {
+		return model.getCredentialKeyHash();
 	}
 
 	/**
@@ -310,6 +327,16 @@ public class MFAFIDO2CredentialEntryWrapper
 	@Override
 	public void setCredentialKey(String credentialKey) {
 		model.setCredentialKey(credentialKey);
+	}
+
+	/**
+	 * Sets the credential key hash of this mfafido2 credential entry.
+	 *
+	 * @param credentialKeyHash the credential key hash of this mfafido2 credential entry
+	 */
+	@Override
+	public void setCredentialKeyHash(long credentialKeyHash) {
+		model.setCredentialKeyHash(credentialKeyHash);
 	}
 
 	/**

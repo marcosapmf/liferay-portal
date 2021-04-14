@@ -18,6 +18,7 @@ import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.model.AccountRole;
+import com.liferay.account.model.AccountRoleTable;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
@@ -25,13 +26,16 @@ import com.liferay.account.service.AccountRoleLocalServiceUtil;
 import com.liferay.account.service.test.util.AccountEntryTestUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
@@ -39,15 +43,15 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
-import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.comparator.RoleNameComparator;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -100,7 +104,19 @@ public class AccountRoleLocalServiceTest {
 
 		String name = RandomTestUtil.randomString(50);
 
-		_addAccountRole(_accountEntry1.getAccountEntryId(), name);
+		AccountRole accountRole = _addAccountRole(
+			_accountEntry1.getAccountEntryId(), name);
+
+		Assert.assertEquals(
+			1L,
+			(long)_accountRoleLocalService.dslQuery(
+				DSLQueryFactoryUtil.countDistinct(
+					AccountRoleTable.INSTANCE.accountRoleId
+				).from(
+					AccountRoleTable.INSTANCE
+				).where(
+					AccountRoleTable.INSTANCE.roleId.eq(accountRole.getRoleId())
+				)));
 
 		accountRoles =
 			_accountRoleLocalService.getAccountRolesByAccountEntryIds(
@@ -108,9 +124,14 @@ public class AccountRoleLocalServiceTest {
 
 		Assert.assertEquals(accountRoles.toString(), 1, accountRoles.size());
 
-		AccountRole accountRole = accountRoles.get(0);
+		accountRole = accountRoles.get(0);
 
 		Assert.assertEquals(name, accountRole.getRoleName());
+
+		Role role = accountRole.getRole();
+
+		Assert.assertEquals(AccountRole.class.getName(), role.getClassName());
+		Assert.assertEquals(accountRole.getAccountRoleId(), role.getClassPK());
 	}
 
 	@Test
@@ -333,20 +354,103 @@ public class AccountRoleLocalServiceTest {
 
 		BaseModelSearchResult<AccountRole> baseModelSearchResult =
 			AccountRoleLocalServiceUtil.searchAccountRoles(
+				_accountEntry1.getCompanyId(),
 				_accountEntry1.getAccountEntryId(), StringPool.BLANK,
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		Assert.assertEquals(2, baseModelSearchResult.getLength());
 
 		baseModelSearchResult = AccountRoleLocalServiceUtil.searchAccountRoles(
-			_accountEntry1.getAccountEntryId(), keywords, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+			_accountEntry1.getCompanyId(), _accountEntry1.getAccountEntryId(),
+			keywords, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		Assert.assertEquals(1, baseModelSearchResult.getLength());
 
 		List<AccountRole> accountRoles = baseModelSearchResult.getBaseModels();
 
 		Assert.assertEquals(accountRole, accountRoles.get(0));
+	}
+
+	@Test
+	public void testSearchAccountRolesByDescription() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
+			TestPropsValues.getUserId(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			RandomTestUtil.randomString(), null,
+			Collections.singletonMap(LocaleUtil.getDefault(), keyword));
+
+		BaseModelSearchResult<AccountRole> baseModelSearchResult =
+			_accountRoleLocalService.searchAccountRoles(
+				accountRole.getCompanyId(),
+				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, keyword,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		Assert.assertEquals(1, baseModelSearchResult.getLength());
+
+		List<AccountRole> accountRoles = baseModelSearchResult.getBaseModels();
+
+		Assert.assertEquals(accountRole, accountRoles.get(0));
+	}
+
+	@Test
+	public void testSearchAccountRolesByTitle() throws Exception {
+		String keyword = RandomTestUtil.randomString();
+
+		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
+			TestPropsValues.getUserId(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			RandomTestUtil.randomString(),
+			Collections.singletonMap(LocaleUtil.getDefault(), keyword), null);
+
+		BaseModelSearchResult<AccountRole> baseModelSearchResult =
+			_accountRoleLocalService.searchAccountRoles(
+				accountRole.getCompanyId(),
+				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, keyword,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+		Assert.assertEquals(1, baseModelSearchResult.getLength());
+
+		List<AccountRole> accountRoles = baseModelSearchResult.getBaseModels();
+
+		Assert.assertEquals(accountRole, accountRoles.get(0));
+	}
+
+	@Test
+	public void testSearchAccountRolesWithDefaultAccountEntryId()
+		throws Exception {
+
+		String keyword = RandomTestUtil.randomString();
+
+		AccountRole accountRoleA = _accountRoleLocalService.addAccountRole(
+			TestPropsValues.getUserId(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, keyword, null, null);
+
+		Company companyB = CompanyTestUtil.addCompany();
+
+		User adminUserB = UserTestUtil.getAdminUser(companyB.getCompanyId());
+
+		AccountRole accountRoleB = _accountRoleLocalService.addAccountRole(
+			adminUserB.getUserId(), AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			keyword, null, null);
+
+		for (AccountRole accountRole :
+				new AccountRole[] {accountRoleA, accountRoleB}) {
+
+			BaseModelSearchResult<AccountRole> baseModelSearchResult =
+				_accountRoleLocalService.searchAccountRoles(
+					accountRole.getCompanyId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, keyword,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+
+			Assert.assertEquals(1, baseModelSearchResult.getLength());
+
+			List<AccountRole> accountRoles =
+				baseModelSearchResult.getBaseModels();
+
+			Assert.assertEquals(accountRole, accountRoles.get(0));
+		}
 	}
 
 	@Test
@@ -363,6 +467,7 @@ public class AccountRoleLocalServiceTest {
 
 		BaseModelSearchResult<AccountRole> baseModelSearchResult =
 			AccountRoleLocalServiceUtil.searchAccountRoles(
+				_accountEntry1.getCompanyId(),
 				_accountEntry1.getAccountEntryId(), keywords, 0, 2, null);
 
 		Assert.assertEquals(
@@ -375,8 +480,9 @@ public class AccountRoleLocalServiceTest {
 		Assert.assertEquals(expectedAccountRoles.subList(0, 2), accountRoles);
 
 		baseModelSearchResult = AccountRoleLocalServiceUtil.searchAccountRoles(
-			_accountEntry1.getAccountEntryId(), keywords, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, new RoleNameComparator(false));
+			_accountEntry1.getCompanyId(), _accountEntry1.getAccountEntryId(),
+			keywords, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			new RoleNameComparator(false));
 
 		expectedAccountRoles = ListUtil.sort(
 			expectedAccountRoles, Collections.reverseOrder());
@@ -442,9 +548,8 @@ public class AccountRoleLocalServiceTest {
 			_accountEntry1.getAccountEntryId(), accountRole.getAccountRoleId(),
 			user.getUserId());
 
-		long[] roleIds = _getRoleIds(user);
-
-		Assert.assertTrue(ArrayUtil.contains(roleIds, accountRole.getRoleId()));
+		Assert.assertTrue(
+			ArrayUtil.contains(_getRoleIds(user), accountRole.getRoleId()));
 
 		deleteAccountRoleFunction.apply(accountRole);
 
@@ -477,12 +582,6 @@ public class AccountRoleLocalServiceTest {
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
-
-	@Inject
-	private RoleLocalService _roleLocalService;
-
-	@Inject
-	private UserGroupRoleLocalService _userGroupRoleLocalService;
 
 	@DeleteAfterTestRun
 	private final List<User> _users = new ArrayList<>();

@@ -2,7 +2,6 @@
 definition {
 
 	property portal.release = "true";
-	property portal.upstream = "quarantine";
 	property testray.main.component.name = "Commerce";
 
 	setUp {
@@ -19,11 +18,14 @@ definition {
 		}
 		else {
 			Navigator.openURL();
+
+			CommerceConfiguration.commerceAdminTearDown();
 		}
 	}
 
 	test CreateNewAvailabilityEstimate {
 		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewAvailabilityEstimate";
 
 		CommerceNavigator.gotoPortlet(
@@ -41,6 +43,7 @@ definition {
 
 	test CreateNewCountry {
 		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewCountry";
 
 		CommerceNavigator.gotoPortlet(
@@ -49,7 +52,11 @@ definition {
 
 		Click(locator1 = "Button#PLUS");
 
-		CommerceEntry.addNewCountriesEntry(entryName = "New Country");
+		CommerceEntry.addNewCountriesEntry(
+			entryIsoNumber = "020",
+			entryIsoThreeLetters = "TCO",
+			entryIsoTwoLetters = "TC",
+			entryName = "Test Country");
 
 		Button.clickSave();
 
@@ -60,8 +67,8 @@ definition {
 		Click(locator1 = "Button#PLUS");
 
 		CommerceEntry.addNewRegionsEntry(
-			code = "NRE",
-			entryName = "New Region");
+			code = "TRE",
+			entryName = "Test Region");
 
 		Button.clickSave();
 
@@ -70,6 +77,7 @@ definition {
 
 	test CreateNewMeasurementUnits {
 		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewMeasurementUnits";
 
 		CommerceNavigator.gotoPortlet(
@@ -95,36 +103,17 @@ definition {
 		AssertElementPresent(locator1 = "Message#SUCCESS");
 	}
 
-	test CreateNewNotificationTemplate {
+	test ViewInstanceCurrenciesAvailable {
+		property environment.acceptance = "true";
 		property portal.acceptance = "quarantine";
-		property test.name.skip.portal.instance = "CPCommerceSettings#CreateNewNotificationTemplate";
+		property portal.upstream = "quarantine";
+		property test.name.skip.portal.instance = "CommerceSmoke#ViewAvailableCurrencies";
 
-		CommerceEntry.createNewAccountGroup(
-			criteriaType = "Users",
-			criterionEntryName = "Commerce User",
-			entryName = "Account groups");
+		CommerceNavigator.gotoPortlet(
+			category = "Store Management",
+			portlet = "Currencies");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Commerce",
-			panel = "Site Administration",
-			portlet = "Settings");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Notificatios");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Notification Templates");
-
-		Click(locator1 = "Button#PLUS");
-
-		CommerceEntry.addNewNotificationTemplate(
-			accountGroup = "Account groups",
-			entryName = "New Notification Template",
-			fromAddress = "test@liferay.com",
-			fromName = "Test Test",
-			notificationType = "Order Placed");
-
-		Button.clickSave();
-
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		CommerceEntry.viewCurrenciesEntry(currenciesList = "US Dollar,Australian Dollar,British Pound,Canadian Dollar,Chinese Yuan Renminbi,Euro,Hong Kong Dollar,Japanese Yen,Indian Rupee,Brazilian Real");
 	}
 
 }

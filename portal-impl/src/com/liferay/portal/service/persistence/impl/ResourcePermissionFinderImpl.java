@@ -122,7 +122,7 @@ public class ResourcePermissionFinderImpl
 		};
 
 		Long count = (Long)FinderCacheUtil.getResult(
-			FINDER_PATH_COUNT_BY_C_N_S_P_R_A, finderArgs, this);
+			FINDER_PATH_COUNT_BY_C_N_S_P_R_A, finderArgs);
 
 		if (count != null) {
 			return count.intValue();
@@ -183,6 +183,10 @@ public class ResourcePermissionFinderImpl
 		return count.intValue();
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public Map<Serializable, ResourcePermission> fetchByPrimaryKeys(
 		Set<Serializable> primaryKeys) {

@@ -1505,6 +1505,10 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 					bean = configurableApplicationContext.getBean(beanName);
 				}
 				catch (BeanIsAbstractException beanIsAbstractException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							beanIsAbstractException, beanIsAbstractException);
+					}
 				}
 				catch (Exception exception) {
 					_log.error(exception, exception);
@@ -1772,7 +1776,17 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 
 		Bundle fileInstallBundle = null;
 
-		for (Bundle bundle : bundles) {
+		Iterator<Bundle> bundleIterator = bundles.iterator();
+
+		while (bundleIterator.hasNext()) {
+			Bundle bundle = bundleIterator.next();
+
+			if (bundle.getState() == Bundle.UNINSTALLED) {
+				bundleIterator.remove();
+
+				continue;
+			}
+
 			if (!_isFragmentBundle(bundle)) {
 				if (Objects.equals(
 						bundle.getSymbolicName(),
@@ -2036,7 +2050,8 @@ public class ModuleFrameworkImpl implements ModuleFramework {
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Service registration " + serviceRegistration +
-							" is already unregistered");
+							" is already unregistered",
+						illegalStateException);
 				}
 			}
 		}

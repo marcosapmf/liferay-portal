@@ -75,7 +75,8 @@ public class ViewAccountRolesManagementToolbarDisplayContext
 					"deleteAccountRolesURL", deleteAccountRolesURL.toString());
 
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 
 				return dropdownItem;
@@ -99,16 +100,11 @@ public class ViewAccountRolesManagementToolbarDisplayContext
 					liferayPortletResponse.createRenderURL(), "mvcPath",
 					"/account_entries_admin/edit_account_role.jsp",
 					"accountEntryId",
-					ParamUtil.getString(request, "accountEntryId"));
+					ParamUtil.getString(httpServletRequest, "accountEntryId"));
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "add-account-role"));
+					LanguageUtil.get(httpServletRequest, "add-account-role"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "ACCOUNT_ROLES_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override

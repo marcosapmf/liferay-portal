@@ -15,10 +15,12 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.layout.content.page.editor.web.internal.segments.SegmentsExperienceUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.segments.service.SegmentsExperienceService;
 
 import javax.portlet.ActionRequest;
@@ -34,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/update_segments_experience_priority"
+		"mvc.command.name=/layout_content_page_editor/update_segments_experience_priority"
 	},
 	service = MVCActionCommand.class
 )
@@ -54,8 +56,14 @@ public class UpdateSegmentsExperiencePriorityMVCActionCommand
 		_segmentsExperienceService.updateSegmentsExperiencePriority(
 			segmentsExperienceId, newPriority);
 
-		return JSONFactoryUtil.createJSONObject();
+		return JSONUtil.put(
+			"availableSegmentsExperiences",
+			SegmentsExperienceUtil.getAvailableSegmentsExperiences(
+				_portal.getHttpServletRequest(actionRequest)));
 	}
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private SegmentsExperienceService _segmentsExperienceService;

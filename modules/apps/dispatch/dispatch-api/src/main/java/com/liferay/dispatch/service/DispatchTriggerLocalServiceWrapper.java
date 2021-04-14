@@ -52,14 +52,15 @@ public class DispatchTriggerLocalServiceWrapper
 
 	@Override
 	public com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
-			long userId, String name, boolean system,
+			long userId, String dispatchTaskExecutorType,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				taskSettingsUnicodeProperties,
-			String taskType)
+				dispatchTaskSettingsUnicodeProperties,
+			String name, boolean system)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerLocalService.addDispatchTrigger(
-			userId, name, system, taskSettingsUnicodeProperties, taskType);
+			userId, dispatchTaskExecutorType,
+			dispatchTaskSettingsUnicodeProperties, name, system);
 	}
 
 	/**
@@ -252,6 +253,12 @@ public class DispatchTriggerLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.Date fetchPreviousFireDate(long dispatchTriggerId) {
+		return _dispatchTriggerLocalService.fetchPreviousFireDate(
+			dispatchTriggerId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -272,6 +279,17 @@ public class DispatchTriggerLocalServiceWrapper
 
 		return _dispatchTriggerLocalService.getDispatchTrigger(
 			dispatchTriggerId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.dispatch.model.DispatchTrigger>
+		getDispatchTriggers(
+			boolean active,
+			com.liferay.dispatch.executor.DispatchTaskClusterMode
+				dispatchTaskClusterMode) {
+
+		return _dispatchTriggerLocalService.getDispatchTriggers(
+			active, dispatchTaskClusterMode);
 	}
 
 	/**
@@ -324,7 +342,9 @@ public class DispatchTriggerLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.Date getNextFireDate(long dispatchTriggerId) {
+	public java.util.Date getNextFireDate(long dispatchTriggerId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _dispatchTriggerLocalService.getNextFireDate(dispatchTriggerId);
 	}
 
@@ -350,7 +370,9 @@ public class DispatchTriggerLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.Date getPreviousFireDate(long dispatchTriggerId) {
+	public java.util.Date getPreviousFireDate(long dispatchTriggerId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _dispatchTriggerLocalService.getPreviousFireDate(
 			dispatchTriggerId);
 	}
@@ -391,27 +413,31 @@ public class DispatchTriggerLocalServiceWrapper
 	@Override
 	public com.liferay.dispatch.model.DispatchTrigger updateDispatchTrigger(
 			long dispatchTriggerId, boolean active, String cronExpression,
+			com.liferay.dispatch.executor.DispatchTaskClusterMode
+				dispatchTaskClusterMode,
 			int endDateMonth, int endDateDay, int endDateYear, int endDateHour,
-			int endDateMinute, boolean neverEnd, int startDateMonth,
-			int startDateDay, int startDateYear, int startDateHour,
-			int startDateMinute)
+			int endDateMinute, boolean neverEnd, boolean overlapAllowed,
+			int startDateMonth, int startDateDay, int startDateYear,
+			int startDateHour, int startDateMinute)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerLocalService.updateDispatchTrigger(
-			dispatchTriggerId, active, cronExpression, endDateMonth, endDateDay,
-			endDateYear, endDateHour, endDateMinute, neverEnd, startDateMonth,
-			startDateDay, startDateYear, startDateHour, startDateMinute);
+			dispatchTriggerId, active, cronExpression, dispatchTaskClusterMode,
+			endDateMonth, endDateDay, endDateYear, endDateHour, endDateMinute,
+			neverEnd, overlapAllowed, startDateMonth, startDateDay,
+			startDateYear, startDateHour, startDateMinute);
 	}
 
 	@Override
 	public com.liferay.dispatch.model.DispatchTrigger updateDispatchTrigger(
-			long dispatchTriggerId, String name,
+			long dispatchTriggerId,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				taskSettingsUnicodeProperties)
+				taskSettingsUnicodeProperties,
+			String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _dispatchTriggerLocalService.updateDispatchTrigger(
-			dispatchTriggerId, name, taskSettingsUnicodeProperties);
+			dispatchTriggerId, taskSettingsUnicodeProperties, name);
 	}
 
 	@Override

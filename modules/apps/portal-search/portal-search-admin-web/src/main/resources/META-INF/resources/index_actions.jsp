@@ -50,11 +50,11 @@ page import="java.util.Map" %>
 <%
 PortletURL portletURL = renderResponse.createRenderURL();
 
-portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
+portletURL.setParameter("mvcRenderCommandName", "/portal_search_admin/view");
 %>
 
 <portlet:renderURL var="redirectURL">
-	<portlet:param name="mvcRenderCommandName" value="/search_admin/view" />
+	<portlet:param name="mvcRenderCommandName" value="/portal_search_admin/view" />
 	<portlet:param name="tabs1" value="index-actions" />
 </portlet:renderURL>
 
@@ -65,6 +65,7 @@ portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
 	Map<String, BackgroundTaskDisplay> classNameToBackgroundTaskDisplayMap = new HashMap<>();
 
 	List<BackgroundTask> reindexPortalBackgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(CompanyConstants.SYSTEM, "com.liferay.portal.search.internal.background.task.ReindexPortalBackgroundTaskExecutor", BackgroundTaskConstants.STATUS_IN_PROGRESS);
+
 	List<BackgroundTask> reindexSingleBackgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(CompanyConstants.SYSTEM, "com.liferay.portal.search.internal.background.task.ReindexSingleIndexerBackgroundTaskExecutor", BackgroundTaskConstants.STATUS_IN_PROGRESS);
 
 	if (!reindexSingleBackgroundTasks.isEmpty()) {
@@ -177,6 +178,6 @@ portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
 		redirectUrl: '<%= redirectURL %>',
 		submitButton: '.save-server-button',
 		url:
-			'<portlet:actionURL name="/search_admin/edit"><portlet:param name="redirect" value="<%= redirectURL %>" /></portlet:actionURL>',
+			'<portlet:actionURL name="/portal_search_admin/edit"><portlet:param name="redirect" value="<%= redirectURL %>" /></portlet:actionURL>',
 	});
 </aui:script>

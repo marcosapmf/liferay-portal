@@ -47,11 +47,11 @@ exports[`Select calls onChange callback when an item is selected using multisele
                 type="button"
               >
                 <svg
-                  class="lexicon-icon lexicon-icon-times"
+                  class="lexicon-icon lexicon-icon-times-small"
                   role="presentation"
                 >
                   <use
-                    xlink:href="#times"
+                    xlink:href="#times-small"
                   />
                 </svg>
               </button>
@@ -632,8 +632,7 @@ exports[`Select has a help text 1`] = `
       Type something
     </span>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       Type something
@@ -719,7 +718,7 @@ exports[`Select has a label 1`] = `
     class="form-group hide"
   >
     <label
-      aria-labelledby="undefined_fieldDetails"
+      aria-describedby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -784,8 +783,7 @@ exports[`Select has a label 1`] = `
       </div>
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       label
@@ -1292,13 +1290,13 @@ exports[`Select puts an asterisk when field is required 1`] = `
     class="form-group hide"
   >
     <label
-      aria-labelledby="undefined_fieldDetails"
+      aria-describedby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
       This is the label
       <span
-        class="reference-mark"
+        class="ddm-label-required reference-mark"
       >
         <svg
           class="lexicon-icon lexicon-icon-asterisk"
@@ -1369,8 +1367,7 @@ exports[`Select puts an asterisk when field is required 1`] = `
       </div>
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       This is the label
@@ -1387,7 +1384,7 @@ exports[`Select renders Label if showLabel is true 1`] = `
     class="form-group hide"
   >
     <label
-      aria-labelledby="undefined_fieldDetails"
+      aria-describedby="undefined_fieldDetails"
       class="ddm-label"
       tabindex="0"
     >
@@ -1452,8 +1449,7 @@ exports[`Select renders Label if showLabel is true 1`] = `
       </div>
     </div>
     <span
-      aria-hidden="false"
-      hidden=""
+      class="sr-only"
       id="undefined_fieldDetails"
     >
       text

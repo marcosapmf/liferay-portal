@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 )
 @Generated("")
 @OpenAPIDefinition(
-	info = @Info(description = "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.headless.delivery.client', and version '3.0.6'.", license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0.html"), title = "Headless Delivery", version = "v1.0")
+	info = @Info(description = "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.headless.delivery.client', and version '4.0.0'.", license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0.html"), title = "Headless Delivery", version = "v1.0")
 )
 @Path("/v1.0")
 public class OpenAPIResourceImpl {
@@ -104,6 +104,8 @@ public class OpenAPIResourceImpl {
 
 			add(KnowledgeBaseFolderResourceImpl.class);
 
+			add(LanguageResourceImpl.class);
+
 			add(MessageBoardAttachmentResourceImpl.class);
 
 			add(MessageBoardMessageResourceImpl.class);
@@ -113,6 +115,8 @@ public class OpenAPIResourceImpl {
 			add(MessageBoardThreadResourceImpl.class);
 
 			add(NavigationMenuResourceImpl.class);
+
+			add(SitePageResourceImpl.class);
 
 			add(StructuredContentResourceImpl.class);
 

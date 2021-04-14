@@ -18,32 +18,36 @@ import DataLayoutBuilderContextProvider from './AppContextProvider.es';
 import * as DataLayoutBuilderActions from './actions.es';
 import FieldType from './components/field-types/FieldType.es';
 import FieldTypeList from './components/field-types/FieldTypeList.es';
+import FormsRuleBuilder from './components/rule-builder/FormsRuleBuilder.es';
 import SearchInput, {
 	SearchInputWithForm,
 } from './components/search-input/SearchInput.es';
+import {ReactMultiPanelSidebarAdapter} from './components/sidebar/MultiPanelSidebarFormsProxy.es';
 import Sidebar from './components/sidebar/Sidebar.es';
 import TranslationManager from './components/translation-manager/TranslationManager.es';
 import * as DataLayoutBuilder from './data-layout-builder/DataLayoutBuilder.es';
 import DragLayer from './drag-and-drop/DragLayer.es';
 import * as DragTypes from './drag-and-drop/dragTypes.es';
 import withDragAndDropContext from './drag-and-drop/withDragAndDropContext.es';
+import * as DataConverter from './utils/dataConverter.es';
 import * as DataDefinitionUtils from './utils/dataDefinition.es';
 import * as DataLayoutVisitor from './utils/dataLayoutVisitor.es';
-import saveDataDefinition from './utils/saveDataDefinition.es';
 
 export {
+	DataConverter,
 	DataDefinitionUtils,
 	DataLayoutBuilder,
 	DataLayoutBuilderActions,
 	DataLayoutBuilderContext,
+	FormsRuleBuilder,
 	DataLayoutBuilderContextProvider,
 	DataLayoutVisitor,
 	DragLayer,
 	DragTypes,
 	FieldType,
 	FieldTypeList,
+	ReactMultiPanelSidebarAdapter,
 	SearchInput,
-	saveDataDefinition,
 	SearchInputWithForm,
 	Sidebar,
 	TranslationManager,

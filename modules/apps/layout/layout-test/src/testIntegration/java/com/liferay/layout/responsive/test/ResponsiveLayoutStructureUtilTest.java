@@ -14,8 +14,6 @@
 
 package com.liferay.layout.responsive.test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentEntry;
@@ -64,6 +62,8 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.util.List;
+
+import org.hamcrest.CoreMatchers;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -153,15 +153,15 @@ public class ResponsiveLayoutStructureUtilTest {
 			layoutPageTemplateStructure.getData(
 				SegmentsExperienceConstants.ID_DEFAULT));
 
-		LayoutStructureItem rowLayoutStructureItem =
-			layoutStructure.addRowLayoutStructureItem(
+		LayoutStructureItem rowStyledLayoutStructureItem =
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0, 1);
 
 		LayoutStructureItem columnLayoutStructureItem =
 			layoutStructure.addColumnLayoutStructureItem(
-				rowLayoutStructureItem.getItemId(), 0);
+				rowStyledLayoutStructureItem.getItemId(), 0);
 
-		layoutStructure.addFragmentLayoutStructureItem(
+		layoutStructure.addFragmentStyledLayoutStructureItem(
 			_fragmentEntryLink.getFragmentEntryLinkId(),
 			columnLayoutStructureItem.getItemId(), 0);
 
@@ -195,17 +195,20 @@ public class ResponsiveLayoutStructureUtilTest {
 			String alignClassName =
 				"align-items" + viewportSize.getCssClassPrefix();
 
-			Assert.assertThat(content, containsString(alignClassName));
+			Assert.assertThat(
+				content, CoreMatchers.containsString(alignClassName));
 
 			String flexClassName =
 				"flex" + viewportSize.getCssClassPrefix() + "row";
 
-			Assert.assertThat(content, containsString(flexClassName));
+			Assert.assertThat(
+				content, CoreMatchers.containsString(flexClassName));
 
 			String colClassName =
 				"col" + viewportSize.getCssClassPrefix() + "12";
 
-			Assert.assertThat(content, containsString(colClassName));
+			Assert.assertThat(
+				content, CoreMatchers.containsString(colClassName));
 		}
 	}
 
@@ -224,7 +227,7 @@ public class ResponsiveLayoutStructureUtilTest {
 
 		StyledLayoutStructureItem rowStyledLayoutStructureItem =
 			(StyledLayoutStructureItem)
-				layoutStructure.addRowLayoutStructureItem(
+				layoutStructure.addRowStyledLayoutStructureItem(
 					layoutStructure.getMainItemId(), 0, 1);
 
 		for (ViewportSize viewportSize : ViewportSize.values()) {
@@ -267,7 +270,8 @@ public class ResponsiveLayoutStructureUtilTest {
 					).build());
 
 				Assert.assertThat(
-					actualCssClass, containsString(expectedCssClass));
+					actualCssClass,
+					CoreMatchers.containsString(expectedCssClass));
 			}
 		}
 	}

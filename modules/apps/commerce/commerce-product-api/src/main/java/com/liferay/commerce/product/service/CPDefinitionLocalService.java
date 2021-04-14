@@ -613,6 +613,10 @@ public interface CPDefinitionLocalService
 	public void updateCPDefinitionsByCPTaxCategoryId(long cpTaxCategoryId)
 		throws PortalException;
 
+	public CPDefinition updateExternalReferenceCode(
+			long cpDefinitionId, String externalReferenceCode)
+		throws PortalException;
+
 	@Indexable(type = IndexableType.REINDEX)
 	public CPDefinition updateShippingInfo(
 			long cpDefinitionId, boolean shippable, boolean freeShipping,

@@ -35,6 +35,8 @@ public class PullRequestPortalTopLevelBuild
 
 		super(url, topLevelBuild);
 
+		setCompareToUpstream(true);
+
 		try {
 			String testSuiteName = getTestSuiteName();
 
@@ -97,7 +99,9 @@ public class PullRequestPortalTopLevelBuild
 					"pull.request.forward.upstream.failure.comparison." +
 						"enabled"));
 
-		if (!pullRequestForwardUpstreamFailureComparisonEnabled) {
+		if (!pullRequestForwardUpstreamFailureComparisonEnabled ||
+			!isCompareToUpstream()) {
+
 			return result;
 		}
 
@@ -190,10 +194,16 @@ public class PullRequestPortalTopLevelBuild
 
 	@Override
 	public boolean isUniqueFailure() {
-		for (Build downstreamBuild : getFailedDownstreamBuilds()) {
+		List<Build> failedDownstreamBuilds = getFailedDownstreamBuilds();
+
+		for (Build downstreamBuild : failedDownstreamBuilds) {
 			if (downstreamBuild.isUniqueFailure()) {
 				return true;
 			}
+		}
+
+		if (failedDownstreamBuilds.isEmpty()) {
+			return true;
 		}
 
 		return false;

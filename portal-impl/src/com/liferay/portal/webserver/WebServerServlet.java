@@ -33,7 +33,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.flash.FlashMagicBytesUtil;
 import com.liferay.portal.kernel.image.ImageBag;
 import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -219,6 +218,10 @@ public class WebServerServlet extends HttpServlet {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return false;
 		}
 		finally {
@@ -271,10 +274,8 @@ public class WebServerServlet extends HttpServlet {
 			PrincipalThreadLocal.setPassword(
 				PortalUtil.getUserPassword(httpServletRequest));
 
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
 
 			_checkResourcePermission(httpServletRequest, httpServletResponse);
 
@@ -448,7 +449,19 @@ public class WebServerServlet extends HttpServlet {
 					0, fileName.indexOf(StringPool.QUESTION));
 			}
 
-			return DLAppServiceUtil.getFileEntry(groupId, folderId, fileName);
+			try {
+				return DLAppServiceUtil.getFileEntryByFileName(
+					groupId, folderId, fileName);
+			}
+			catch (NoSuchFileEntryException noSuchFileEntryException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						noSuchFileEntryException, noSuchFileEntryException);
+				}
+
+				return DLAppServiceUtil.getFileEntry(
+					groupId, folderId, fileName);
+			}
 		}
 		else {
 			long groupId = GetterUtil.getLong(pathArray[0]);
@@ -536,6 +549,9 @@ public class WebServerServlet extends HttpServlet {
 					image = convertFileEntry(igSmallImage, fileEntry);
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception, exception);
+					}
 				}
 			}
 		}
@@ -684,6 +700,9 @@ public class WebServerServlet extends HttpServlet {
 					fileEntry = getFileEntry(pathArray);
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception, exception);
+					}
 				}
 
 				if (fileEntry == null) {
@@ -816,6 +835,9 @@ public class WebServerServlet extends HttpServlet {
 			return true;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return false;
@@ -1111,15 +1133,6 @@ public class WebServerServlet extends HttpServlet {
 			}
 		}
 
-		FlashMagicBytesUtil.Result flashMagicBytesUtilResult =
-			FlashMagicBytesUtil.check(inputStream);
-
-		if (flashMagicBytesUtilResult.isFlash()) {
-			fileName = FileUtil.stripExtension(fileName) + ".swf";
-		}
-
-		inputStream = flashMagicBytesUtilResult.getInputStream();
-
 		// Determine proper content type
 
 		String contentType = null;
@@ -1259,20 +1272,10 @@ public class WebServerServlet extends HttpServlet {
 				HttpHeaders.CONTENT_DISPOSITION_ATTACHMENT);
 		}
 		else {
-			InputStream inputStream = fileEntry.getContentStream();
-
-			FlashMagicBytesUtil.Result flashMagicBytesUtilResult =
-				FlashMagicBytesUtil.check(inputStream);
-
-			inputStream = flashMagicBytesUtilResult.getInputStream();
-
-			if (flashMagicBytesUtilResult.isFlash()) {
-				fileName = FileUtil.stripExtension(fileName) + ".swf";
-			}
-
 			ServletResponseUtil.sendFile(
-				httpServletRequest, httpServletResponse, fileName, inputStream,
-				fileEntry.getSize(), fileEntry.getMimeType());
+				httpServletRequest, httpServletResponse, fileName,
+				fileEntry.getContentStream(), fileEntry.getSize(),
+				fileEntry.getMimeType());
 		}
 	}
 
@@ -1350,7 +1353,19 @@ public class WebServerServlet extends HttpServlet {
 			String fileName = HttpUtil.decodeURL(pathArray[2]);
 
 			try {
-				DLAppLocalServiceUtil.getFileEntry(groupId, folderId, fileName);
+				try {
+					DLAppLocalServiceUtil.getFileEntryByFileName(
+						groupId, folderId, fileName);
+				}
+				catch (NoSuchFileEntryException noSuchFileEntryException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							noSuchFileEntryException, noSuchFileEntryException);
+					}
+
+					DLAppLocalServiceUtil.getFileEntry(
+						groupId, folderId, fileName);
+				}
 			}
 			catch (RepositoryException repositoryException) {
 

@@ -21,22 +21,19 @@ import React, {useMemo, useState} from 'react';
 
 import {VIEWPORT_SIZES} from '../config/constants/viewportSizes';
 import {config} from '../config/index';
+import selectLanguageId from '../selectors/selectLanguageId';
+import selectSegmentsExperienceId from '../selectors/selectSegmentsExperienceId';
 import {useSelector} from '../store/index';
 import {useId} from '../utils/useId';
 import Translation from './Translation';
 import ViewportSizeSelector from './ViewportSizeSelector';
 
 const PreviewModal = ({observer}) => {
-	const [languageId, setLanguageId] = useState(
-		useSelector((state) => state.languageId)
-	);
+	const initialSegmentsExperienceId = useSelector(selectSegmentsExperienceId);
+	const [languageId, setLanguageId] = useState(useSelector(selectLanguageId));
 
 	const [viewportSize, setViewportSize] = useState(
 		useSelector((state) => state.selectedViewportSize)
-	);
-
-	const initialSegmentsExperienceId = useSelector(
-		(state) => state.segmentsExperienceId
 	);
 
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
@@ -80,7 +77,7 @@ const PreviewModal = ({observer}) => {
 			<ClayModal.Header>
 				<ClayLayout.ContainerFluid size={false}>
 					<ClayModal.Title className="pb-3 pt-3">
-						<div className="d-flex justify-content-between responsive-mode">
+						<div className="d-flex justify-content-between page-editor__theme-adapter-buttons responsive-mode">
 							<ul className="navbar-nav page-editor__preview-modal__part">
 								{availableSegmentsExperiences && (
 									<li className="mr-2 nav-item">

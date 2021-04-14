@@ -54,6 +54,7 @@ public class MySitesItemSelectorViewDisplayContext
 			itemSelectedEventName, portletURL);
 
 		_groupSearchProvider = groupSearchProvider;
+
 		_portletRequest = getPortletRequest();
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -128,7 +129,8 @@ public class MySitesItemSelectorViewDisplayContext
 		catch (Exception exception) {
 			_log.error(
 				"Unable to add breadcrumb entries for group " +
-					group.getGroupId());
+					group.getGroupId(),
+				exception);
 		}
 	}
 

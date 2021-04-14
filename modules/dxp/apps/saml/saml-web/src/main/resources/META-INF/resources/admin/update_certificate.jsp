@@ -40,7 +40,7 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 				{
 					PortletURL portletURL = renderResponse.createRenderURL();
 
-					portletURL.setParameter("mvcRenderCommandName", "/admin/updateCertificate");
+					portletURL.setParameter("mvcRenderCommandName", "/admin/update_certificate");
 					portletURL.setParameter("certificateUsage", certificateUsage.name());
 
 					portletURL.setParameter(Constants.CMD, "replace");
@@ -49,7 +49,7 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 						navigationItem -> {
 							navigationItem.setActive(cmd.equals("replace"));
 							navigationItem.setHref(portletURL.toString());
-							navigationItem.setLabel(LanguageUtil.get(request, "create-certificate"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "create-certificate"));
 						});
 
 					portletURL.setParameter(Constants.CMD, "import");
@@ -58,7 +58,7 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 						navigationItem -> {
 							navigationItem.setActive(cmd.equals("import"));
 							navigationItem.setHref(portletURL.toString());
-							navigationItem.setLabel(LanguageUtil.get(request, "import-certificate"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "import-certificate"));
 						});
 				}
 			}
@@ -66,8 +66,8 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 	/>
 </c:if>
 
-<liferay-portlet:actionURL name="/admin/updateCertificate" var="updateCertificateURL">
-	<portlet:param name="mvcRenderCommandName" value="/admin/updateCertificate" />
+<liferay-portlet:actionURL name="/admin/update_certificate" var="updateCertificateURL">
+	<portlet:param name="mvcRenderCommandName" value="/admin/update_certificate" />
 	<portlet:param name="<%= Constants.CMD %>" value="<%= cmd %>" />
 	<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
 </liferay-portlet:actionURL>

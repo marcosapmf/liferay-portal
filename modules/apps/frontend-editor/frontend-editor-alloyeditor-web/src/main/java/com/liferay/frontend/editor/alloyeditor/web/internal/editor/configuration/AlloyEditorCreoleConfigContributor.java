@@ -22,6 +22,8 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -107,7 +109,7 @@ public class AlloyEditorCreoleConfigContributor
 
 		StringBundler sb = new StringBundler(4);
 
-		sb.append("ae_dragresize,ae_tableresize,bidi,div,flash,font,forms,");
+		sb.append("ae_dragresize,ae_tableresize,bidi,div,font,forms,");
 		sb.append("indentblock,justify,keystrokes,maximize,newpage,pagebreak,");
 		sb.append("preview,print,save,showblocks,smiley,stylescombo,");
 		sb.append("templates,video");
@@ -143,6 +145,10 @@ public class AlloyEditorCreoleConfigContributor
 			resourceBundle = _resourceBundleLoader.loadResourceBundle(locale);
 		}
 		catch (MissingResourceException missingResourceException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(missingResourceException, missingResourceException);
+			}
+
 			resourceBundle = ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE;
 		}
 
@@ -291,6 +297,9 @@ public class AlloyEditorCreoleConfigContributor
 	}
 
 	private static final int _CKEDITOR_STYLE_BLOCK = 1;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AlloyEditorCreoleConfigContributor.class);
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,

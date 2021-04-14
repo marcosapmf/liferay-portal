@@ -16,6 +16,7 @@ package com.liferay.frontend.taglib.clay.servlet.taglib.soy;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +37,20 @@ public interface BaseClayCard {
 		return null;
 	}
 
+	public default String getCssClass() {
+		return null;
+	}
+
 	public default Map<String, String> getData() {
 		return null;
 	}
 
 	public default String getDefaultEventHandler() {
 		return null;
+	}
+
+	public default Map<String, String> getDynamicAttributes() {
+		return Collections.emptyMap();
 	}
 
 	public default String getElementClasses() {

@@ -29,6 +29,7 @@ import com.liferay.app.builder.workflow.rest.dto.v1_0.AppWorkflowTransition;
 import com.liferay.app.builder.workflow.rest.resource.v1_0.AppWorkflowResource;
 import com.liferay.data.engine.model.DEDataListView;
 import com.liferay.data.engine.rest.dto.v2_0.DataRecord;
+import com.liferay.data.engine.rest.strategy.util.DataRecordValueKeyUtil;
 import com.liferay.data.engine.service.DEDataListViewLocalService;
 import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
@@ -319,7 +320,7 @@ public abstract class BaseAppBuilderPortletTestCase {
 			PortalUtil.getClassNameId(AppBuilderApp.class.getName()),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			_read("test-structured-content-structure.json"),
-			StorageType.JSON.getValue());
+			StorageType.DEFAULT.getValue());
 	}
 
 	private DDMStructureLayout _addDDMStructureLayout(long ddmStructureId)
@@ -365,13 +366,10 @@ public abstract class BaseAppBuilderPortletTestCase {
 			{
 				dataRecordCollectionId = app.getDataRecordCollectionId();
 				dataRecordValues = HashMapBuilder.<String, Object>put(
-					"MyText",
+					DataRecordValueKeyUtil.createDataRecordValueKey(
+						"MyText", "nIanTAmS", StringPool.BLANK, 0),
 					HashMapBuilder.put(
-						"en_US",
-						new String[] {
-							RandomTestUtil.randomString(),
-							RandomTestUtil.randomString()
-						}
+						"en_US", RandomTestUtil.randomString()
 					).build()
 				).build();
 			}
@@ -467,7 +465,9 @@ public abstract class BaseAppBuilderPortletTestCase {
 			byteArrayOutputStream.toString());
 	}
 
-	@Inject(filter = "mvc.command.name=/app_builder/add_workflow_app")
+	@Inject(
+		filter = "mvc.command.name=/app_builder_workflow/add_app_builder_app"
+	)
 	private MVCResourceCommand _addAppBuilderAppMVCResourceCommand;
 
 	@Inject(filter = "mvc.command.name=/app_builder/add_data_record")
@@ -490,7 +490,9 @@ public abstract class BaseAppBuilderPortletTestCase {
 	@Inject
 	private DEDataListViewLocalService _deDataListViewLocalService;
 
-	@Inject(filter = "mvc.command.name=/app_builder/delete_workflow_app")
+	@Inject(
+		filter = "mvc.command.name=/app_builder_workflow/delete_app_builder_app"
+	)
 	private MVCResourceCommand _deleteAppBuilderAppMVCResourceCommand;
 
 	private Group _group;
@@ -504,10 +506,14 @@ public abstract class BaseAppBuilderPortletTestCase {
 	@Inject
 	private RoleLocalService _roleLocalService;
 
-	@Inject(filter = "mvc.command.name=/app_builder/update_workflow_app")
+	@Inject(
+		filter = "mvc.command.name=/app_builder_workflow/update_app_builder_app"
+	)
 	private MVCResourceCommand _updateAppBuilderAppMVCResourceCommand;
 
-	@Inject(filter = "mvc.command.name=/app_builder/update_data_record")
+	@Inject(
+		filter = "mvc.command.name=/app_builder_workflow/update_data_record"
+	)
 	private MVCResourceCommand _updateDataRecordMVCResourceCommand;
 
 	@Inject

@@ -80,16 +80,16 @@ boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
 DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 %>
 
-<portlet:actionURL name="addTemplate" var="addTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/add_template" var="addTemplateURL">
 	<portlet:param name="mvcPath" value="/edit_template.jsp" />
 </portlet:actionURL>
 
-<portlet:actionURL name="updateTemplate" var="updateTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/update_template" var="updateTemplateURL">
 	<portlet:param name="mvcPath" value="/edit_template.jsp" />
 </portlet:actionURL>
 
 <clay:container-fluid>
-	<aui:form action="<%= (template == null) ? addTemplateURL : updateTemplateURL %>" cssClass="container-fluid-1280" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault();" %>'>
+	<aui:form action="<%= (template == null) ? addTemplateURL : updateTemplateURL %>" cssClass="container-fluid container-fluid-max-xl" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault();" %>'>
 		<aui:input name="redirect" type="hidden" value="<%= ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource) %>" />
 		<aui:input name="closeRedirect" type="hidden" value="<%= closeRedirect %>" />
 		<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
@@ -273,7 +273,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 							<c:if test="<%= template != null %>">
 								<aui:input helpMessage="template-key-help" name="templateKey" type="resource" value="<%= template.getTemplateKey() %>" />
 
-								<portlet:resourceURL id="getTemplate" var="getTemplateURL">
+								<portlet:resourceURL id="/dynamic_data_mapping/get_template" var="getTemplateURL">
 									<portlet:param name="templateId" value="<%= String.valueOf(templateId) %>" />
 								</portlet:resourceURL>
 
@@ -366,7 +366,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 
 			container.delegate(
 				'change',
-				function (event) {
+				(event) => {
 					var index = types.indexOf(event.currentTarget);
 
 					selectSmallImageType(index);
@@ -390,7 +390,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 						A.one('#<portlet:namespace />smallImage').attr('checked', expanded);
 
 						if (expanded) {
-							types.each(function (item, index) {
+							types.each((item, index) => {
 								if (item.get('checked')) {
 									values.item(index).attr('disabled', false);
 								}
@@ -425,7 +425,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 						showAncestorScopes: true,
 						title: '<%= UnicodeLanguageUtil.get(request, "structures") %>',
 					},
-					function (event) {
+					(event) => {
 						if (
 							document.<portlet:namespace />fm.<portlet:namespace />classPK
 								.value != event.ddmstructureid
@@ -443,7 +443,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 
 	<aui:button-row>
 		<aui:script>
-			Liferay.after('<portlet:namespace />saveTemplate', function () {
+			Liferay.after('<portlet:namespace />saveTemplate', () => {
 				submitForm(document.<portlet:namespace />fm);
 			});
 

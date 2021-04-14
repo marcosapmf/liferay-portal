@@ -45,6 +45,7 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 		soapModel.setCreateDate(model.getCreateDate());
 		soapModel.setModifiedDate(model.getModifiedDate());
 		soapModel.setCredentialKey(model.getCredentialKey());
+		soapModel.setCredentialKeyHash(model.getCredentialKeyHash());
 		soapModel.setCredentialType(model.getCredentialType());
 		soapModel.setFailedAttempts(model.getFailedAttempts());
 		soapModel.setPublicKeyCOSE(model.getPublicKeyCOSE());
@@ -176,6 +177,14 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 		_credentialKey = credentialKey;
 	}
 
+	public long getCredentialKeyHash() {
+		return _credentialKeyHash;
+	}
+
+	public void setCredentialKeyHash(long credentialKeyHash) {
+		_credentialKeyHash = credentialKeyHash;
+	}
+
 	public int getCredentialType() {
 		return _credentialType;
 	}
@@ -216,6 +225,7 @@ public class MFAFIDO2CredentialEntrySoap implements Serializable {
 	private Date _createDate;
 	private Date _modifiedDate;
 	private String _credentialKey;
+	private long _credentialKeyHash;
 	private int _credentialType;
 	private int _failedAttempts;
 	private String _publicKeyCOSE;

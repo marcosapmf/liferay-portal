@@ -129,10 +129,9 @@ public class RESTBuilderBatchTestClassGroup extends ModulesBatchTestClassGroup {
 	}
 
 	protected RESTBuilderBatchTestClassGroup(
-		String batchName, BuildProfile buildProfile,
-		PortalTestClassJob portalTestClassJob) {
+		String batchName, PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, buildProfile, portalTestClassJob);
+		super(batchName, portalTestClassJob);
 	}
 
 	@Override
@@ -142,7 +141,8 @@ public class RESTBuilderBatchTestClassGroup extends ModulesBatchTestClassGroup {
 		int axisCount = getAxisCount();
 
 		if ((testClassCount == 0) && (axisCount == 1)) {
-			axisTestClassGroups.put(0, new AxisTestClassGroup(this, 0));
+			axisTestClassGroups.add(
+				0, TestClassGroupFactory.newAxisTestClassGroup(this));
 
 			return;
 		}

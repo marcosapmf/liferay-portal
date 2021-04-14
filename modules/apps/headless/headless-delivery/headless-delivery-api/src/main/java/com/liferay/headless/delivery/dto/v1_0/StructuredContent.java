@@ -28,6 +28,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -57,7 +59,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "Represents content that has fields and is rendered by a template backed by a `ContentStructure`. This is modeled internally as a `JournalArticle`."
 )
 @XmlRootElement(name = "StructuredContent")
-public class StructuredContent {
+public class StructuredContent implements Serializable {
 
 	public static StructuredContent toDTO(String json) {
 		return ObjectMapperUtil.readValue(StructuredContent.class, json);
@@ -668,7 +670,7 @@ public class StructuredContent {
 	protected RelatedContent[] relatedContents;
 
 	@Schema(
-		description = "A list of rendered structured content, which results from using a template to process the content and return HTML."
+		description = "A list of rendered content, which results from using a template to process the content and return HTML."
 	)
 	@Valid
 	public RenderedContent[] getRenderedContents() {
@@ -696,7 +698,7 @@ public class StructuredContent {
 	}
 
 	@GraphQLField(
-		description = "A list of rendered structured content, which results from using a template to process the content and return HTML."
+		description = "A list of rendered content, which results from using a template to process the content and return HTML."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected RenderedContent[] renderedContents;

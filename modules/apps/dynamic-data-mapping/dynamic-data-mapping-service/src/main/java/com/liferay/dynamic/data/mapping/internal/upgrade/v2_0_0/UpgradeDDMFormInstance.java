@@ -275,8 +275,8 @@ public class UpgradeDDMFormInstance extends UpgradeProcess {
 	protected void readAndCheckResourceActions() throws Exception {
 		Class<?> clazz = getClass();
 
-		_resourceActions.readAndCheck(
-			null, clazz.getClassLoader(), "/resource-actions/default.xml");
+		_resourceActions.populateModelResources(
+			clazz.getClassLoader(), "/resource-actions/default.xml");
 	}
 
 	protected void updateDDMStructure(long ddmStructureId) throws Exception {

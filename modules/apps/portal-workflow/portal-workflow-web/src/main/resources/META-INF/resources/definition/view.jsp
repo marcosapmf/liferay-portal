@@ -31,8 +31,6 @@ else if (StringUtil.equals(definitionsNavigation, "not-published")) {
 PortletURL portletURL = renderResponse.createRenderURL();
 
 portletURL.setParameter("definitionsNavigation", definitionsNavigation);
-
-WorkflowDefinitionSearch workflowDefinitionSearch = new WorkflowDefinitionSearch(renderRequest, portletURL);
 %>
 
 <clay:management-toolbar
@@ -40,7 +38,6 @@ WorkflowDefinitionSearch workflowDefinitionSearch = new WorkflowDefinitionSearch
 	creationMenu="<%= workflowDefinitionDisplayContext.getCreationMenu(pageContext) %>"
 	filterDropdownItems="<%= workflowDefinitionDisplayContext.getFilterOptions(request) %>"
 	itemsTotal="<%= workflowDefinitionDisplayContext.getTotalItems(request, renderRequest, displayedStatus) %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
 	searchActionURL="<%= workflowDefinitionDisplayContext.getSearchURL(request) %>"
 	searchContainerId="workflowDefinitions"
 	searchFormName="fm1"
@@ -115,7 +112,7 @@ WorkflowDefinitionSearch workflowDefinitionSearch = new WorkflowDefinitionSearch
 			displayStyle="list"
 			markupView="lexicon"
 			resultRowSplitter="<%= new WorkflowDefinitionResultRowSplitter() %>"
-			searchContainer="<%= workflowDefinitionSearch %>"
+			searchContainer="<%= new WorkflowDefinitionSearch(renderRequest, portletURL) %>"
 		/>
 	</liferay-ui:search-container>
 </clay:container-fluid>

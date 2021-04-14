@@ -58,8 +58,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
-
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
@@ -79,7 +77,7 @@ public class ProductResourceImpl
 
 	@Override
 	public Product getChannelProduct(
-			@NotNull Long channelId, @NotNull Long productId, Long accountId)
+			Long channelId, Long productId, Long accountId)
 		throws Exception {
 
 		CommerceChannel commerceChannel =
@@ -102,11 +100,10 @@ public class ProductResourceImpl
 
 	@Override
 	public Page<Product> getChannelProductsPage(
-			@NotNull Long channelId, Long accountId, Filter filter,
+			Long channelId, Long accountId, Filter filter,
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		long companyId = contextCompany.getCompanyId();
 		SearchContext searchContext = new SearchContext();
 
 		CommerceChannel commerceChannel =
@@ -116,18 +113,21 @@ public class ProductResourceImpl
 			HashMapBuilder.<String, Serializable>put(
 				Field.STATUS, WorkflowConstants.STATUS_APPROVED
 			).put(
+				"commerceAccountGroupIds",
+				_commerceAccountHelper.getCommerceAccountGroupIds(
+					_getAccountId(accountId, commerceChannel))
+			).put(
 				"commerceChannelGroupId", commerceChannel.getGroupId()
 			).build();
 
-		long[] commerceAccountGroupIds =
-			_commerceAccountHelper.getCommerceAccountGroupIds(
-				_getAccountId(accountId, commerceChannel));
-
-		searchContext.setAttribute(
-			"commerceAccountGroupIds", commerceAccountGroupIds);
-
 		searchContext.setAttributes(attributes);
-		searchContext.setCompanyId(companyId);
+
+		searchContext.setBooleanClauses(
+			new BooleanClause[] {
+				_getBooleanClause(
+					booleanQuery -> booleanQuery.getPreBooleanFilter(), filter)
+			});
+		searchContext.setCompanyId(contextCompany.getCompanyId());
 
 		CPQuery cpQuery = new CPQuery();
 
@@ -136,18 +136,15 @@ public class ProductResourceImpl
 		cpQuery.setOrderByType1("ASC");
 		cpQuery.setOrderByType2("DESC");
 
-		BooleanClause<Query> booleanClause = _getBooleanClause(
-			booleanQuery -> booleanQuery.getPreBooleanFilter(), filter);
-
-		searchContext.setBooleanClauses(new BooleanClause[] {booleanClause});
-
-		CPDataSourceResult cpDataSourceResult = _cpDefinitionHelper.search(
-			commerceChannel.getGroupId(), searchContext, cpQuery,
-			pagination.getStartPosition(), pagination.getEndPosition());
-
 		return Page.of(
-			_toProducts(cpDataSourceResult), pagination,
-			cpDataSourceResult.getLength());
+			_toProducts(
+				_cpDefinitionHelper.search(
+					commerceChannel.getGroupId(), searchContext, cpQuery,
+					pagination.getStartPosition(),
+					pagination.getEndPosition())),
+			pagination,
+			_cpDefinitionHelper.searchCount(
+				commerceChannel.getGroupId(), searchContext, cpQuery));
 	}
 
 	@Override

@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_DEFINITIONS,
-		"mvc.command.name=editCPDefinitionLink"
+		"mvc.command.name=/cp_definitions/edit_cp_definition_link"
 	},
 	service = MVCRenderCommand.class
 )
@@ -58,7 +58,7 @@ public class EditCPDefinitionLinkMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, cpDefinitionLinkDisplayContext);
 
-		return "/edit_definition_link.jsp";
+		return "/edit_cp_definition_link.jsp";
 	}
 
 	@Reference

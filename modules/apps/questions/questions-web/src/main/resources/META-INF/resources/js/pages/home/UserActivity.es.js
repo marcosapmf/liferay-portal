@@ -22,22 +22,29 @@ import QuestionRow from '../../components/QuestionRow.es';
 import UserIcon from '../../components/UserIcon.es';
 import useQueryParams from '../../hooks/useQueryParams.es';
 import {getUserActivityQuery} from '../../utils/client.es';
-import {historyPushWithSlug} from '../../utils/utils.es';
+import {isWebCrawler} from '../../utils/utils.es';
 
 export default withRouter(
 	({
-		history,
 		location,
 		match: {
 			params: {creatorId},
 		},
 	}) => {
 		const context = useContext(AppContext);
-		const historyPushParser = historyPushWithSlug(history.push);
 		const queryParams = useQueryParams(location);
 		const siteKey = context.siteKey;
 		const [page, setPage] = useState(1);
 		const [pageSize, setPageSize] = useState(20);
+		const [userInfo, setUserInfo] = useState({
+			id: creatorId,
+			image: null,
+			name: decodeURI(
+				JSON.parse(`"${Liferay.ThemeDisplay.getUserName()}"`)
+			),
+			postsNumber: 0,
+			rank: context.defaultRank,
+		});
 
 		useEffect(() => {
 			const pageNumber = queryParams.get('page') || 1;
@@ -49,6 +56,19 @@ export default withRouter(
 		}, [queryParams]);
 
 		const {data, loading} = useQuery(getUserActivityQuery, {
+			onCompleted(data) {
+				const {
+					creator,
+					creatorStatistics,
+				} = data.messageBoardMessages.items[0];
+				setUserInfo({
+					id: creator.id,
+					image: creator.image,
+					name: creator.name,
+					postsNumber: creatorStatistics.postsNumber,
+					rank: creatorStatistics.rank,
+				});
+			},
 			variables: {
 				filter: `creatorId eq ${creatorId}`,
 				page,
@@ -57,110 +77,80 @@ export default withRouter(
 			},
 		});
 
-		let creatorInfo = {
-			id: creatorId,
-			image: null,
-			name: decodeURI(
-				JSON.parse(`"${Liferay.ThemeDisplay.getUserName()}"`)
-			),
-			postsNumber: 0,
-			rank: context.defaultRank,
-		};
-
-		if (
-			data &&
-			data.messageBoardThreads.items &&
-			data.messageBoardThreads.items.length
-		) {
-			const {
-				creator,
-				creatorStatistics,
-			} = data.messageBoardThreads.items[0];
-
-			creatorInfo = {
-				id: creatorId,
-				image: creator.image,
-				name: creator.name,
-				postsNumber: creatorStatistics.postsNumber,
-				rank: creatorStatistics.rank,
-			};
-		}
-
-		const changePage = (page, pageSize) => {
-			historyPushParser(
-				`/activity/${creatorId}?page=${page}&pagesize=${pageSize}`
-			);
-		};
+		const hrefConstructor = (page) =>
+			`${
+				isWebCrawler() ? '/-' : '#'
+			}/activity/${creatorId}?page=${page}&pagesize=${pageSize}`;
 
 		return (
 			<section className="questions-section questions-section-list">
-				<div className="questions-container">
-					<div className="c-p-5 row">
-						<div className="c-mt-3 c-mx-auto c-px-0 col-xl-10">
-							<div className="d-flex flex-row">
-								<div className="c-mt-3">
-									<UserIcon
-										fullName={creatorInfo.name}
-										portraitURL={creatorInfo.image}
-										size="xl"
-										userId={String(creatorInfo.id)}
-									/>
+				<div className="c-p-5 questions-container row">
+					<div className="c-mt-3 c-mx-auto c-px-0 col-xl-10">
+						<div className="d-flex flex-row">
+							<div className="c-mt-3">
+								<UserIcon
+									fullName={userInfo.name}
+									portraitURL={userInfo.image}
+									size="xl"
+									userId={String(userInfo.id)}
+								/>
+							</div>
+							<div className="c-ml-4 flex-column">
+								<div>
+									<span className="small">
+										{Liferay.Language.get('rank')}:{' '}
+										{userInfo.rank}
+									</span>
 								</div>
-								<div className="c-ml-4 flex-column">
-									<div>
-										<span className="small">
-											Rank: {creatorInfo.rank}
-										</span>
-									</div>
-									<div>
-										<strong className="h2">
-											{creatorInfo.name}
-										</strong>
-									</div>
-									<div>
-										<span className="small">
-											Posts: {creatorInfo.postsNumber}
-										</span>
-									</div>
+								<div>
+									<strong className="h2">
+										{userInfo.name}
+									</strong>
+								</div>
+								<div>
+									<span className="small">
+										{Liferay.Language.get('posts')}:{' '}
+										{userInfo.postsNumber}
+									</span>
 								</div>
 							</div>
-							<div className="border-bottom c-mt-5">
-								<h2>Latest Questions Asked</h2>
-							</div>
 						</div>
-						<div className="c-mx-auto c-px-0 col-xl-10">
-							<PaginatedList
-								activeDelta={pageSize}
-								activePage={page}
-								changeDelta={(pageSize) =>
-									changePage(page, pageSize)
-								}
-								changePage={(page) =>
-									changePage(page, pageSize)
-								}
-								data={data && data.messageBoardThreads}
-								loading={loading}
-							>
-								{(question) => (
-									<QuestionRow
-										currentSection={
-											context.useTopicNamesInURL
-												? question.messageBoardSection &&
-												  question.messageBoardSection
-														.title
-												: (question.messageBoardSection &&
-														question
-															.messageBoardSection
-															.id) ||
-												  context.rootTopicId
-										}
-										key={question.id}
-										question={question}
-										showSectionLabel={true}
-									/>
-								)}
-							</PaginatedList>
+						<div className="border-bottom c-mt-5">
+							<h2>
+								{Liferay.Language.get('latest-questions-asked')}
+							</h2>
 						</div>
+					</div>
+					<div className="c-mx-auto c-px-0 col-xl-10">
+						<PaginatedList
+							activeDelta={pageSize}
+							activePage={page}
+							changeDelta={setPageSize}
+							data={data && data.messageBoardMessages}
+							hrefConstructor={hrefConstructor}
+							loading={loading}
+						>
+							{(question) => (
+								<QuestionRow
+									currentSection={
+										context.useTopicNamesInURL
+											? question.messageBoardThread
+													.messageBoardSection &&
+											  question.messageBoardThread
+													.messageBoardSection.title
+											: (question.messageBoardThread
+													.messageBoardSection &&
+													question.messageBoardThread
+														.messageBoardSection
+														.id) ||
+											  context.rootTopicId
+									}
+									key={question.id}
+									question={question}
+									showSectionLabel={true}
+								/>
+							)}
+						</PaginatedList>
 					</div>
 				</div>
 			</section>

@@ -22,6 +22,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -64,7 +66,8 @@ public class SiteAdminManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteSites");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -96,8 +99,9 @@ public class SiteAdminManagementToolbarDisplayContext
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (!PortalPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(),
@@ -110,7 +114,7 @@ public class SiteAdminManagementToolbarDisplayContext
 			PortletURL addSiteURL = liferayPortletResponse.createRenderURL();
 
 			addSiteURL.setParameter(
-				"mvcRenderCommandName", "/site/select_site_initializer");
+				"mvcRenderCommandName", "/site_admin/select_site_initializer");
 			addSiteURL.setParameter("redirect", themeDisplay.getURLCurrent());
 
 			Group group = _siteAdminDisplayContext.getGroup();
@@ -125,11 +129,15 @@ public class SiteAdminManagementToolbarDisplayContext
 			return CreationMenuBuilder.addPrimaryDropdownItem(
 				dropdownItem -> {
 					dropdownItem.setHref(addSiteURL.toString());
-					dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+					dropdownItem.setLabel(
+						LanguageUtil.get(httpServletRequest, "add"));
 				}
 			).build();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -162,8 +170,9 @@ public class SiteAdminManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (PortalPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(),
@@ -197,8 +206,9 @@ public class SiteAdminManagementToolbarDisplayContext
 			return false;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (!GroupPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(), group,
@@ -213,6 +223,9 @@ public class SiteAdminManagementToolbarDisplayContext
 
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SiteAdminManagementToolbarDisplayContext.class);
 
 	private final SiteAdminDisplayContext _siteAdminDisplayContext;
 

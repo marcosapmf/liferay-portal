@@ -60,7 +60,7 @@ SearchContainer<?> searchContainer = editPasswordPolicyAssignmentsManagementTool
 	viewTypeItems="<%= editPasswordPolicyAssignmentsManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="selectMemberFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectMemberFm">
 	<liferay-ui:search-container
 		id="passwordPolicyMembers"
 		searchContainer="<%= searchContainer %>"
@@ -87,7 +87,7 @@ SearchContainer<?> searchContainer = editPasswordPolicyAssignmentsManagementTool
 		'<portlet:namespace />' + 'passwordPolicyMembers'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var selectedItems = event.elements.allSelectedElements;
 
 		var result = {};

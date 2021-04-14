@@ -23,6 +23,7 @@ import com.liferay.change.tracking.web.internal.constants.CTWebKeys;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.display.context.PublicationsDisplayContext;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -60,7 +61,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.display-name=Overview",
 		"javax.portlet.expiration-cache=0",
 		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/publications/view.jsp",
+		"javax.portlet.init-param.view-template=/publications/view_publications.jsp",
 		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"javax.portlet.resource-bundle=content.Language",
 		"javax.portlet.security-role-ref=administrator"
@@ -84,8 +85,9 @@ public class PublicationsPortlet extends MVCPortlet {
 		PublicationsDisplayContext publicationsDisplayContext =
 			new PublicationsDisplayContext(
 				_ctCollectionService, _ctDisplayRendererRegistry,
-				_ctEntryLocalService, _ctPreferencesLocalService, _language,
-				_portal, renderRequest, renderResponse);
+				_ctEntryLocalService, _ctPreferencesLocalService,
+				_portal.getHttpServletRequest(renderRequest), _language,
+				renderRequest, renderResponse);
 
 		renderRequest.setAttribute(
 			CTWebKeys.PUBLICATIONS_DISPLAY_CONTEXT, publicationsDisplayContext);
@@ -132,5 +134,10 @@ public class PublicationsPortlet extends MVCPortlet {
 
 	@Reference
 	private PortletPermission _portletPermission;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.change.tracking.web)(&(release.schema.version>=1.0.1)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
 
 }

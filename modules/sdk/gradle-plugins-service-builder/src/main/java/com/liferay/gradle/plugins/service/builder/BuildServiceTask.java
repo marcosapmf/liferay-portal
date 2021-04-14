@@ -15,6 +15,7 @@
 package com.liferay.gradle.plugins.service.builder;
 
 import com.liferay.gradle.util.FileUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.GradleUtil;
 import com.liferay.gradle.util.Validator;
 import com.liferay.portal.tools.service.builder.ServiceBuilderArgs;
@@ -30,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -39,7 +41,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.util.CollectionUtils;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -107,6 +108,19 @@ public class BuildServiceTask extends JavaExec {
 	@PathSensitive(PathSensitivity.RELATIVE)
 	public File getInputFile() {
 		return GradleUtil.toFile(getProject(), _inputFile);
+	}
+
+	@Override
+	public List<String> getJvmArgs() {
+		List<String> jvmArgs = new ArrayList<>();
+
+		JavaVersion javaVersion = getJavaVersion();
+
+		if (javaVersion.isJava9Compatible()) {
+			jvmArgs.add("--illegal-access=permit");
+		}
+
+		return jvmArgs;
 	}
 
 	@Input

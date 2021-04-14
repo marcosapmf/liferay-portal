@@ -36,7 +36,6 @@ definition {
 		var reindexElapsedTime = "0";
 
 		while ("${reindexElapsedTime}" == "0" || "${reindexElapsedTime}" == "10" || "${reindexElapsedTime}" == "480" && (maxIterations = "2")) {
-
 			Navigator.gotoNavItem(navItem = "Index Actions");
 
 			Click(
@@ -76,29 +75,6 @@ definition {
 					echo("Current Elasticsearch Tasks:");
 
 					elasticsearchTasks = JSONCurlUtil.get("${curl}");
-				}
-			}
-			else if (contains("${searchEngineVendor}", "Solr") && contains("${actionsDescription}", "spell check")) {
-				Pause.pauseNoSPARefresh(locator1 = "60000");
-			}
-			else if (contains("${searchEngineVendor}", "Solr")) {
-				while ((IsElementNotPresent(locator1 = "ControlMenu#RELOAD_TOOLTIP")) && ("${reindexStartTime}" != "60")) {
-					Pause.pauseNoSPARefresh(locator1 = "5000");
-
-					var reindexStartTime = ${reindexStartTime} + 5;
-				}
-
-				if ("${reindexStartTime}" == "60") {
-					echo("Solr failed to receive reindex request after 60 seconds.");
-				}
-				else {
-					echo("Started reindexing ${reindexStartTime} second(s) after clicking 'Execute'.");
-				}
-
-				while ((IsElementPresent(locator1 = "ControlMenu#RELOAD_TOOLTIP")) && ("${reindexElapsedTime}" != "480") && (maxIterations = "48")) {
-					Pause.pauseNoSPARefresh(locator1 = "10000");
-
-					var reindexElapsedTime = ${reindexElapsedTime} + 10;
 				}
 			}
 

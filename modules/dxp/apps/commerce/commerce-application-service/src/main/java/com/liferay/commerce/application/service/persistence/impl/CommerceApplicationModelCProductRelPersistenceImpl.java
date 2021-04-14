@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -48,7 +48,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -203,7 +202,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceApplicationModelCProductRel>)
-					finderCache.getResult(finderPath, finderArgs, this);
+					finderCache.getResult(finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceApplicationModelCProductRel
@@ -612,7 +611,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceApplicationModelId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -758,7 +757,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceApplicationModelCProductRel>)
-					finderCache.getResult(finderPath, finderArgs, this);
+					finderCache.getResult(finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceApplicationModelCProductRel
@@ -1147,7 +1146,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {CProductId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1254,9 +1253,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(CommerceApplicationModelCProductRelImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceApplicationModelCProductRelImpl.class);
 	}
 
 	/**
@@ -1293,9 +1290,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceApplicationModelCProductRelImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -1666,7 +1661,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 		if (useFinderCache) {
 			list =
 				(List<CommerceApplicationModelCProductRel>)
-					finderCache.getResult(finderPath, finderArgs, this);
+					finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1740,7 +1735,7 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1804,24 +1799,22 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new CommerceApplicationModelCProductRelModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name",
-				CommerceApplicationModelCProductRel.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByCommerceApplicationModelId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 				"findByCommerceApplicationModelId",
 				new String[] {
@@ -1831,19 +1824,19 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 				new String[] {"commerceApplicationModelId"}, true);
 
 		_finderPathWithoutPaginationFindByCommerceApplicationModelId =
-			_createFinderPath(
+			new FinderPath(
 				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 				"findByCommerceApplicationModelId",
 				new String[] {Long.class.getName()},
 				new String[] {"commerceApplicationModelId"}, true);
 
-		_finderPathCountByCommerceApplicationModelId = _createFinderPath(
+		_finderPathCountByCommerceApplicationModelId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceApplicationModelId",
 			new String[] {Long.class.getName()},
 			new String[] {"commerceApplicationModelId"}, false);
 
-		_finderPathWithPaginationFindByCProductId = _createFinderPath(
+		_finderPathWithPaginationFindByCProductId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCProductId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1851,12 +1844,12 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 			},
 			new String[] {"CProductId"}, true);
 
-		_finderPathWithoutPaginationFindByCProductId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCProductId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCProductId",
 			new String[] {Long.class.getName()}, new String[] {"CProductId"},
 			true);
 
-		_finderPathCountByCProductId = _createFinderPath(
+		_finderPathCountByCProductId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCProductId",
 			new String[] {Long.class.getName()}, new String[] {"CProductId"},
 			false);
@@ -1867,12 +1860,6 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 			CommerceApplicationModelCProductRelImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -1913,27 +1900,13 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"commerceApplicationModelCProductRelId"});
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class
 		CommerceApplicationModelCProductRelModelArgumentsResolver
@@ -1990,6 +1963,17 @@ public class CommerceApplicationModelCProductRelPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return CommerceApplicationModelCProductRelImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return CommerceApplicationModelCProductRelTable.INSTANCE.
+				getTableName();
 		}
 
 		private Object[] _getValue(

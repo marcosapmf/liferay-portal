@@ -52,8 +52,8 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -137,7 +137,7 @@ public class CommerceChannelDisplayContext
 				CommerceShippingTaxConfiguration.class,
 				new GroupServiceSettingsLocator(
 					commerceChannel.getGroupId(),
-					CommerceConstants.TAX_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_TAX));
 
 		return _cpTaxCategoryLocalService.fetchCPTaxCategory(
 			commerceShippingTaxConfiguration.taxCategoryId());
@@ -158,7 +158,7 @@ public class CommerceChannelDisplayContext
 				PortletRequest.RENDER_PHASE);
 
 		editCommerceChannelPortletURL.setParameter(
-			"mvcRenderCommandName", "addCommerceChannel");
+			"mvcRenderCommandName", "/commerce_channels/add_commerce_channel");
 
 		editCommerceChannelPortletURL.setWindowState(LiferayWindowState.POP_UP);
 
@@ -178,7 +178,8 @@ public class CommerceChannelDisplayContext
 			PortletProvider.Action.EDIT);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommercePaymentMethodGroupRel");
+			"mvcRenderCommandName",
+			"/commerce_payment_methods/edit_commerce_payment_method_group_rel");
 		portletURL.setParameter(
 			"commerceChannelId", String.valueOf(getCommerceChannelId()));
 
@@ -206,7 +207,8 @@ public class CommerceChannelDisplayContext
 		portletURL.setParameter(
 			"commerceChannelId",
 			String.valueOf(commerceChannel.getCommerceChannelId()));
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceChannel");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_channels/edit_commerce_channel");
 
 		return portletURL.toString();
 	}
@@ -273,7 +275,8 @@ public class CommerceChannelDisplayContext
 			cpRequestHelper.getRequest(), CPPortletKeys.COMMERCE_CHANNELS,
 			PortletRequest.RENDER_PHASE);
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceChannel");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_channels/edit_commerce_channel");
 
 		return portletURL;
 	}
@@ -363,8 +366,12 @@ public class CommerceChannelDisplayContext
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		return PortalPermissionUtil.contains(
-			themeDisplay.getPermissionChecker(),
+		PortletResourcePermission portletResourcePermission =
+			_commerceChannelModelResourcePermission.
+				getPortletResourcePermission();
+
+		return portletResourcePermission.contains(
+			themeDisplay.getPermissionChecker(), null,
 			CPActionKeys.ADD_COMMERCE_CHANNEL);
 	}
 
@@ -406,7 +413,7 @@ public class CommerceChannelDisplayContext
 				CommerceOrderCheckoutConfiguration.class,
 				new GroupServiceSettingsLocator(
 					commerceChannel.getGroupId(),
-					CommerceConstants.ORDER_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_ORDER));
 
 		return commerceOrderCheckoutConfiguration.guestCheckoutEnabled();
 	}
@@ -419,7 +426,7 @@ public class CommerceChannelDisplayContext
 				CommerceOrderFieldsConfiguration.class,
 				new GroupServiceSettingsLocator(
 					commerceChannel.getGroupId(),
-					CommerceConstants.ORDER_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_ORDER));
 
 		return commerceOrderFieldsConfiguration.showPurchaseOrderNumber();
 	}
@@ -459,7 +466,7 @@ public class CommerceChannelDisplayContext
 				CommerceOrderFieldsConfiguration.class,
 				new GroupServiceSettingsLocator(
 					commerceChannel.getGroupId(),
-					CommerceConstants.ORDER_FIELDS_SERVICE_NAME));
+					CommerceConstants.SERVICE_NAME_ORDER_FIELDS));
 
 		return _commerceOrderFieldsConfiguration;
 	}

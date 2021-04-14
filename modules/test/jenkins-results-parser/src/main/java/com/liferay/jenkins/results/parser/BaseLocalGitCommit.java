@@ -26,14 +26,23 @@ public abstract class BaseLocalGitCommit
 	}
 
 	protected BaseLocalGitCommit(
-		GitWorkingDirectory gitWorkingDirectory, String message, String sha,
-		GitCommit.Type type, long commitTime) {
+		String emailAddress, GitWorkingDirectory gitWorkingDirectory,
+		String message, String sha, GitCommit.Type type, long commitTime) {
 
 		super(
-			gitWorkingDirectory.getGitRepositoryName(), message, sha, type,
-			commitTime);
+			emailAddress, gitWorkingDirectory.getGitRepositoryName(), message,
+			sha, type, commitTime);
 
 		_gitWorkingDirectory = gitWorkingDirectory;
+	}
+
+	protected void initCommitTime() {
+	}
+
+	protected void initEmailAddress() {
+	}
+
+	protected void initMessage() {
 	}
 
 	private final GitWorkingDirectory _gitWorkingDirectory;

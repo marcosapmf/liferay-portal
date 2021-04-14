@@ -26,7 +26,7 @@ String portletNamespace = PortalUtil.getPortletNamespace(CommercePortletKeys.COM
 String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_cart_quantity_control_page") + StringPool.UNDERLINE;
 %>
 
-<liferay-portlet:actionURL name="editCommerceOrderItem" portletName="<%= CommercePortletKeys.COMMERCE_CART_CONTENT %>" var="editCommerceOrderItemURL" />
+<liferay-portlet:actionURL name="/commerce_cart_content/edit_commerce_order_item" portletName="<%= CommercePortletKeys.COMMERCE_CART_CONTENT %>" var="editCommerceOrderItemURL" />
 
 <aui:form action="<%= editCommerceOrderItemURL %>" method="post" name='<%= randomNamespace + "Fm" %>' portletNamespace="<%= portletNamespace %>">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
@@ -65,7 +65,7 @@ String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_
 	Liferay.provide(
 		window,
 		'<%= portletNamespace + randomNamespace %>updateQuantity',
-		function () {
+		() => {
 			var A = AUI();
 
 			var form = A.one('#<%= portletNamespace + randomNamespace %>Fm');
@@ -88,7 +88,7 @@ String randomNamespace = PortalUtil.generateRandomKey(request, "taglib_commerce_
 
 		form.delegate(
 			'change',
-			function () {
+			() => {
 				<%= portletNamespace + randomNamespace %>updateQuantity();
 			},
 			'select'

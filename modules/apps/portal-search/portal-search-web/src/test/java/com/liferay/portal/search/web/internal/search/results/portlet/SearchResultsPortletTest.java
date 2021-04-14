@@ -78,7 +78,7 @@ public class SearchResultsPortletTest {
 
 		setUpHtmlUtil();
 		setUpPortletSharedSearchResponse();
-		setUpProps();
+		setUpPropsUtil();
 		setUpSearchSettings();
 
 		_portletURLFactory = createPortletURLFactory();
@@ -345,7 +345,7 @@ public class SearchResultsPortletTest {
 		);
 	}
 
-	protected void setUpProps() {
+	protected void setUpPropsUtil() {
 		PropsTestUtil.setProps(Collections.emptyMap());
 	}
 

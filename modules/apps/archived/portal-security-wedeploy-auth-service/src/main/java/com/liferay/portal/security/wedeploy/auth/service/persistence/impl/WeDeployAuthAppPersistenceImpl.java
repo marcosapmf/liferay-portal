@@ -31,8 +31,9 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -50,7 +51,6 @@ import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +76,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Supritha Sundaram
  * @generated
  */
-@Component(service = WeDeployAuthAppPersistence.class)
+@Component(service = {WeDeployAuthAppPersistence.class, BasePersistence.class})
 public class WeDeployAuthAppPersistenceImpl
 	extends BasePersistenceImpl<WeDeployAuthApp>
 	implements WeDeployAuthAppPersistence {
@@ -174,8 +174,7 @@ public class WeDeployAuthAppPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByRU_CI, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByRU_CI, finderArgs);
 		}
 
 		if (result instanceof WeDeployAuthApp) {
@@ -316,7 +315,7 @@ public class WeDeployAuthAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {redirectURI, clientId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -467,8 +466,7 @@ public class WeDeployAuthAppPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByCI_CS, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByCI_CS, finderArgs);
 		}
 
 		if (result instanceof WeDeployAuthApp) {
@@ -609,7 +607,7 @@ public class WeDeployAuthAppPersistenceImpl
 
 		Object[] finderArgs = new Object[] {clientId, clientSecret};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -747,9 +745,7 @@ public class WeDeployAuthAppPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(WeDeployAuthAppImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(WeDeployAuthAppImpl.class);
 	}
 
 	/**
@@ -774,9 +770,7 @@ public class WeDeployAuthAppPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(WeDeployAuthAppImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(WeDeployAuthAppImpl.class, primaryKey);
@@ -791,20 +785,18 @@ public class WeDeployAuthAppPersistenceImpl
 			weDeployAuthAppModelImpl.getClientId()
 		};
 
+		finderCache.putResult(_finderPathCountByRU_CI, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByRU_CI, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByRU_CI, args, weDeployAuthAppModelImpl, false);
+			_finderPathFetchByRU_CI, args, weDeployAuthAppModelImpl);
 
 		args = new Object[] {
 			weDeployAuthAppModelImpl.getClientId(),
 			weDeployAuthAppModelImpl.getClientSecret()
 		};
 
+		finderCache.putResult(_finderPathCountByCI_CS, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByCI_CS, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByCI_CS, args, weDeployAuthAppModelImpl, false);
+			_finderPathFetchByCI_CS, args, weDeployAuthAppModelImpl);
 	}
 
 	/**
@@ -1129,7 +1121,7 @@ public class WeDeployAuthAppPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<WeDeployAuthApp>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1199,7 +1191,7 @@ public class WeDeployAuthAppPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1255,37 +1247,36 @@ public class WeDeployAuthAppPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new WeDeployAuthAppModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", WeDeployAuthApp.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathFetchByRU_CI = _createFinderPath(
+		_finderPathFetchByRU_CI = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByRU_CI",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"redirectURI", "clientId"}, true);
 
-		_finderPathCountByRU_CI = _createFinderPath(
+		_finderPathCountByRU_CI = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRU_CI",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"redirectURI", "clientId"}, false);
 
-		_finderPathFetchByCI_CS = _createFinderPath(
+		_finderPathFetchByCI_CS = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByCI_CS",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"clientId", "clientSecret"}, true);
 
-		_finderPathCountByCI_CS = _createFinderPath(
+		_finderPathCountByCI_CS = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCI_CS",
 			new String[] {String.class.getName(), String.class.getName()},
 			new String[] {"clientId", "clientSecret"}, false);
@@ -1296,12 +1287,6 @@ public class WeDeployAuthAppPersistenceImpl
 		entityCache.removeCache(WeDeployAuthAppImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -1361,36 +1346,13 @@ public class WeDeployAuthAppPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		WeDeployAuthAppPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(WeDeployAuthPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class WeDeployAuthAppModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1441,6 +1403,16 @@ public class WeDeployAuthAppPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return WeDeployAuthAppImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return WeDeployAuthAppTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

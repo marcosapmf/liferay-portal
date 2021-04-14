@@ -23,7 +23,14 @@ import EmptyState from '../empty-state/EmptyState.es';
 import List from '../list/List.es';
 import Card from './Card.es';
 
-const chartFactory = ({field, structure, summary, totalEntries, values}) => {
+const chartFactory = ({
+	field,
+	structure,
+	sumTotalValues,
+	summary,
+	totalEntries,
+	values,
+}) => {
 	const {options, type} = field;
 
 	switch (type) {
@@ -57,7 +64,7 @@ const chartFactory = ({field, structure, summary, totalEntries, values}) => {
 					data={values}
 					field={field}
 					structure={structure}
-					totalEntries={totalEntries}
+					totalEntries={sumTotalValues}
 				/>
 			);
 		}
@@ -67,7 +74,7 @@ const chartFactory = ({field, structure, summary, totalEntries, values}) => {
 			return (
 				<PieChart
 					data={toDataArray(options, values)}
-					totalEntries={totalEntries}
+					totalEntries={sumTotalValues}
 				/>
 			);
 		case 'color':
@@ -97,19 +104,24 @@ export default ({data, fields}) => {
 	let hasCards = false;
 
 	const cards = fields.map((field, index) => {
-		const {
-			values = {},
-			structure = {},
-			summary = {},
-			totalEntries = sumTotalEntries(values),
-		} = data[field.name] || {};
+		const {values = {}, structure = {}, summary = {}, totalEntries} =
+			data[field.name] || {};
+
+		const sumTotalValues = sumTotalEntries(values);
 
 		field = {
 			...field,
 			...fieldTypes[field.type],
 		};
 
-		const chartContent = {field, structure, summary, totalEntries, values};
+		const chartContent = {
+			field,
+			structure,
+			sumTotalValues,
+			summary,
+			totalEntries,
+			values,
+		};
 
 		const chart = chartFactory(chartContent);
 
@@ -126,7 +138,7 @@ export default ({data, fields}) => {
 				index={index}
 				key={index}
 				summary={summary}
-				totalEntries={totalEntries}
+				totalEntries={totalEntries ? totalEntries : sumTotalValues}
 			>
 				{chart}
 			</Card>

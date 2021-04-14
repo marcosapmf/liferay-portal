@@ -250,7 +250,7 @@ else {
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var form = document.<portlet:namespace />fm;
 
 	form.addEventListener('change', <portlet:namespace />resetPreview);
@@ -339,7 +339,7 @@ else {
 		selectSiteNavigationMenuTypeSelect &&
 		siteNavigationMenuIdInput
 	) {
-		chooseRootMenuItemButton.addEventListener('click', function (event) {
+		chooseRootMenuItemButton.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			var uri =
@@ -394,7 +394,7 @@ else {
 		rootMenuItemNameSpan &&
 		siteNavigationMenuIdInput
 	) {
-		chooseSiteNavigationMenuButton.addEventListener('click', function (event) {
+		chooseSiteNavigationMenuButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				id: '<portlet:namespace />selectSiteNavigationMenu',
 				onSelect: function (selectedItem) {
@@ -404,7 +404,7 @@ else {
 						rootMenuItemNameSpan.innerText = selectedItem.name;
 						siteNavigationMenuIdInput.value = selectedItem.id;
 
-						dom.toggleClasses(removeSiteNavigationMenu, 'hide');
+						removeSiteNavigationMenu.classList.toggle('hide');
 
 						<portlet:namespace />resetPreview();
 					}
@@ -430,13 +430,13 @@ else {
 		rootMenuItemNameSpan &&
 		siteNavigationMenuIdInput
 	) {
-		removeSiteNavigationMenuButton.addEventListener('click', function (event) {
+		removeSiteNavigationMenuButton.addEventListener('click', (event) => {
 			navigationMenuName.innerText = '';
 			rootMenuItemIdInput.value = '0';
 			rootMenuItemNameSpan.innerText = '';
 			siteNavigationMenuIdInput.value = '0';
 
-			dom.toggleClasses(removeSiteNavigationMenu, 'hide');
+			removeSiteNavigationMenu.classList.toggle('hide');
 
 			<portlet:namespace />resetPreview();
 		});
@@ -450,7 +450,7 @@ else {
 
 	Liferay.Util.toggleSelectBox(
 		'<portlet:namespace />rootMenuItemType',
-		function (currentValue, value) {
+		(currentValue, value) => {
 			return currentValue === 'absolute' || currentValue === 'relative';
 		},
 		'<portlet:namespace />rootMenuItemLevel'
@@ -465,7 +465,7 @@ else {
 		selectSiteNavigationMenuTypeSelect &&
 		siteNavigationMenuType
 	) {
-		selectSiteNavigationMenuTypeSelect.addEventListener('change', function () {
+		selectSiteNavigationMenuTypeSelect.addEventListener('change', () => {
 			var selectedSelectSiteNavigationMenuType = document.querySelector(
 				'#<portlet:namespace />selectSiteNavigationMenuType option:checked'
 			);
@@ -490,11 +490,13 @@ else {
 		siteNavigationMenuIdInput &&
 		siteNavigationMenuType
 	) {
-		dom.delegate(
+		var delegate = delegateModule.default;
+
+		delegate(
 			document.<portlet:namespace />fm,
 			'change',
 			'.select-navigation',
-			function () {
+			() => {
 				var siteNavigationDisabled =
 					selectSiteNavigationMenuTypeSelect.disabled;
 

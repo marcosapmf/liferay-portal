@@ -9,10 +9,9 @@
  * distribution rights of the Software.
  */
 
-import ClayButton from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import ClayLayout from '@clayui/layout';
-import ClayLink from '@clayui/link';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
 import {useEventListener} from 'frontend-js-react-web';
@@ -41,6 +40,8 @@ const {
 	useState,
 } = React;
 
+const ENTER_KEY = 'Enter';
+
 const ESCAPE_KEYS = [
 	'Escape', // Most browsers.
 	'Esc', // IE and Edge.
@@ -52,6 +53,8 @@ const THROTTLE_INTERVAL_MS = 100;
 
 const DispatchContext = React.createContext();
 
+const OVERLAY_TARGET_CLASS = 'lfr-segments-experiment-click-goal-target';
+
 /**
  * Top-level entry point for displaying, selecting, editing and removing click
  * goal targets.
@@ -59,14 +62,20 @@ const DispatchContext = React.createContext();
 function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 	const [state, dispatch] = useReducer(reducer, target, getInitialState);
 
-	const {selectedTarget} = state;
+	const {isValidTarget, mode, selectedTarget} = state;
+
+	const [selectorInputValue, setSelectorInputValue] = useState(
+		selectedTarget
+	);
 
 	const {errors} = useContext(GlobalStateContext);
 
-	const ref = useRef(state.selectedTarget);
+	const ref = useRef(selectedTarget);
 
 	useEffect(() => {
 		ref.current = selectedTarget;
+
+		setSelectorInputValue(selectedTarget);
 	}, [selectedTarget]);
 
 	const previousTarget = ref.current;
@@ -99,7 +108,7 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 	}
 
 	const scrollIntoView = (event) => {
-		const target = document.querySelector(state.selectedTarget);
+		const target = document.getElementById(selectedTarget);
 
 		if (target) {
 			target.scrollIntoView();
@@ -114,6 +123,61 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 		dispatch({type: 'activate'});
 	};
 
+	const isValidNewClickTargetElement = (value) => {
+		const target = value && document.getElementById(value);
+
+		if (!target) {
+			dispatch({type: 'invalidTarget'});
+		}
+
+		return !!target;
+	};
+
+	const selectNewClickTargetElement = (event) => {
+		scrollIntoView(event);
+
+		dispatch({
+			selector: event.target.value,
+			type: 'selectTarget',
+		});
+
+		event.preventDefault();
+		stopImmediatePropagation(event);
+	};
+
+	const handleBlur = (event) => {
+		if (!selectedTarget) {
+			const value = event.target.value;
+
+			if (isValidNewClickTargetElement(value)) {
+				selectNewClickTargetElement(event);
+			}
+		}
+	};
+
+	const handleKeyDown = (event) => {
+		if (event.key === ENTER_KEY) {
+			const value = event.target.value;
+
+			if (isValidNewClickTargetElement(value)) {
+				selectNewClickTargetElement(event);
+			}
+		}
+	};
+
+	const handleInputChange = (event) => {
+		setSelectorInputValue(event.target.value);
+	};
+
+	const handleDelete = (event) => {
+		stopImmediatePropagation(event);
+
+		dispatch({
+			selector: '',
+			type: 'selectTarget',
+		});
+	};
+
 	return (
 		<DispatchContext.Provider value={dispatch}>
 			<StateContext.Provider value={state}>
@@ -126,66 +190,118 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 					/>
 				</h4>
 
-				{state.selectedTarget && (
-					<ClayLayout.ContentRow containerElement="dl">
-						<ClayLayout.ContentCol containerElement="dt">
-							{Liferay.Language.get('element')}:
-						</ClayLayout.ContentCol>
-
-						<ClayLayout.ContentCol
-							className="mb-0 ml-2 text-truncate-inline"
-							containerElement="dd"
-							expand
-						>
-							<ClayLink
-								className="text-truncate"
-								href={state.selectedTarget}
-								onClick={scrollIntoView}
-								title={state.selectedTarget}
-							>
-								{state.selectedTarget}
-							</ClayLink>
-						</ClayLayout.ContentCol>
-					</ClayLayout.ContentRow>
+				{allowEdit && (
+					<div className="c-mb-2 text-secondary">
+						{Liferay.Language.get('click-goal-description')}
+					</div>
 				)}
 
-				{!state.selectedTarget && (
-					<dl>
-						<dt className="d-inline">
-							{Liferay.Language.get('element')}:
-						</dt>
-						<dd className="d-inline ml-2 text-secondary">
-							{Liferay.Language.get(
-								'a-clickable-element-on-the-page-must-be-selected-to-be-measured'
-							)}
-							{errors.clickTargetError && (
-								<div className="font-weight-bold mt-2 text-danger">
-									<ClayIcon
-										className="mr-2"
-										symbol="exclamation-full"
-									/>
-									{Liferay.Language.get(
-										'an-element-needs-to-be-set'
-									)}
-								</div>
-							)}
-						</dd>
-					</dl>
+				{isValidTarget && errors.clickTargetError && (
+					<div className="c-mb-2 c-mt-2 font-weight-semi-bold text-danger">
+						<ClayIcon
+							className="c-mr-2"
+							symbol="exclamation-full"
+						/>
+						{Liferay.Language.get(
+							'an-element-needs-to-be-selected'
+						)}
+					</div>
 				)}
 
 				{allowEdit && (
 					<ClayButton
+						className="c-mb-2"
 						displayType="secondary"
 						onClick={() => dispatch({type: 'activate'})}
 						small
 					>
-						{state.selectedTarget
-							? Liferay.Language.get('edit-element')
-							: Liferay.Language.get('set-element')}
+						{selectedTarget
+							? Liferay.Language.get('change-clickable-element')
+							: Liferay.Language.get('select-clickable-element')}
 					</ClayButton>
 				)}
 
-				{state.mode === 'active' ? (
+				<ClayForm.Group>
+					<label htmlFor="clickableElement">
+						{Liferay.Language.get('element-id')}
+						<ClayTooltipProvider>
+							<ClayIcon
+								className="c-ml-1 text-secondary"
+								data-tooltip-align="top"
+								small="true"
+								symbol="question-circle"
+								title={Liferay.Language.get('element-id-help')}
+							/>
+						</ClayTooltipProvider>
+					</label>
+					<ClayInput.Group
+						className={classNames({
+							'has-error': !isValidTarget,
+						})}
+					>
+						<ClayInput.GroupItem prepend shrink>
+							<ClayInput.GroupText>{'#'}</ClayInput.GroupText>
+						</ClayInput.GroupItem>
+						<ClayInput.GroupItem append>
+							<ClayTooltipProvider>
+								<ClayInput
+									className={classNames({
+										'input-group-inset input-group-inset-after':
+											allowEdit && selectedTarget,
+									})}
+									data-tooltip-align="top"
+									id="clickableElement"
+									onBlur={handleBlur}
+									onChange={handleInputChange}
+									onKeyDown={handleKeyDown}
+									readOnly={!allowEdit || selectedTarget}
+									title={selectorInputValue}
+									type="text"
+									value={selectorInputValue}
+								/>
+							</ClayTooltipProvider>
+							{allowEdit && selectedTarget && (
+								<ClayInput.GroupInsetItem after>
+									<ClayTooltipProvider>
+										<ClayButtonWithIcon
+											data-tooltip-align="bottom-right"
+											disabled={!selectedTarget}
+											displayType="unstyled"
+											monospaced={false}
+											onClick={handleDelete}
+											symbol="times-circle"
+											title={Liferay.Language.get(
+												'clear'
+											)}
+										/>
+									</ClayTooltipProvider>
+								</ClayInput.GroupInsetItem>
+							)}
+						</ClayInput.GroupItem>
+						<ClayInput.GroupItem shrink>
+							<ClayTooltipProvider>
+								<ClayButtonWithIcon
+									data-tooltip-align="bottom-right"
+									disabled={!selectedTarget}
+									displayType="secondary"
+									onClick={scrollIntoView}
+									symbol="view"
+									title={Liferay.Language.get('show-element')}
+								/>
+							</ClayTooltipProvider>
+						</ClayInput.GroupItem>
+						{!isValidTarget && (
+							<ClayForm.FeedbackGroup>
+								<ClayForm.FeedbackItem>
+									<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+									{Liferay.Language.get('id-was-not-found')}
+								</ClayForm.FeedbackItem>
+							</ClayForm.FeedbackGroup>
+						)}
+					</ClayInput.Group>
+				</ClayForm.Group>
+
+				{mode === 'active' ? (
 					<ClickGoalPicker.OverlayContainer
 						allowEdit={allowEdit}
 						root={root}
@@ -207,9 +323,12 @@ ClickGoalPicker.propTypes = {
  * <Overlay /> component when active.
  */
 function OverlayContainer({allowEdit, root}) {
+	const mousedownRef = useRef(false);
+
 	const cssId = 'segments-experiments-click-goal-css-overrides';
 
 	const dispatch = useContext(DispatchContext);
+	const {selectedTarget} = useContext(StateContext);
 
 	const targetableElements = useRef();
 
@@ -220,22 +339,22 @@ function OverlayContainer({allowEdit, root}) {
 		// Apply CSS overrides.
 
 		const css = `
-			#banner {
+			#banner, #footer,
+			#banner .input-group .input-group-item .input-group-inset-after.form-control:hover {
 				cursor: not-allowed;
 			}
-			#banner a, #banner button {
+			#banner a, #banner button,
+			#footer a, #footer button {
 				cursor: not-allowed;
 				pointer-events: none;
+			}
+			#banner section.portlet:hover .portlet-content.portlet-content-editable {
+				border-color: transparent;
 			}
 			#content {
 				position: relative;
 				cursor: not-allowed;
 			}
-
-			.portlet-content-editable {
-				border-color: transparent;
-			}
-
 			.portlet-topper {
 				visibility: hidden;
 			}
@@ -251,7 +370,10 @@ function OverlayContainer({allowEdit, root}) {
 
 		// This must happen after hiding the toppers.
 
-		targetableElements.current = getTargetableElements(root);
+		targetableElements.current = getTargetableElements(
+			root,
+			selectedTarget
+		);
 	}
 
 	// On unmount.
@@ -280,21 +402,29 @@ function OverlayContainer({allowEdit, root}) {
 		[dispatch]
 	);
 
-	const handleClick = useCallback(
+	useEventListener('keydown', handleKeydown, true, document);
+
+	const handleMouseDown = useCallback(() => {
+		mousedownRef.current = true;
+	}, []);
+
+	const handleMouseUp = useCallback(
 		(event) => {
+			const overlayTarget = event.target.closest(
+				`.${OVERLAY_TARGET_CLASS}`
+			);
 
-			// Clicking anywhere other than a target aborts target selection.
+			if (mousedownRef.current === true && !overlayTarget) {
+				dispatch({type: 'deactivate'});
+			}
 
-			event.preventDefault();
-			stopImmediatePropagation(event);
-			dispatch({type: 'deactivate'});
+			mousedownRef.current = false;
 		},
 		[dispatch]
 	);
 
-	useEventListener('keydown', handleKeydown, true, document);
-
-	useEventListener('click', handleClick, false, document);
+	useEventListener('mousedown', handleMouseDown, false, document);
+	useEventListener('mouseup', handleMouseUp, false, document);
 
 	return ReactDOM.createPortal(
 		<ClickGoalPicker.Overlay
@@ -342,24 +472,19 @@ function Overlay({allowEdit, root, targetableElements}) {
 		<div className="lfr-segments-experiment-click-goal-root">
 			{targetableElements
 				.filter((element) => {
-					if (allowEdit === true) {
-						return true;
-					}
-					if ('#' + element.id === selectedTarget) {
-						return true;
-					}
-
-					return false;
+					return allowEdit || element.id === selectedTarget;
 				})
 				.map((element) => {
-					const selector = `#${element.id}`;
+					const elementId = element.id;
 
 					const mode =
-						editingTarget === selector && allowEdit
+						editingTarget === elementId && allowEdit
 							? 'editing'
-							: selectedTarget === selector
+							: selectedTarget === elementId
 							? 'selected'
 							: 'inactive';
+
+					const selector = `#${element.id}`;
 
 					return (
 						<ClickGoalPicker.Target
@@ -395,6 +520,8 @@ Overlay.propTypes = {
 function Target({allowEdit, element, geometry, mode, selector}) {
 	const dispatch = useContext(DispatchContext);
 
+	const {selectedTarget} = useContext(StateContext);
+
 	const {bottom, height, left, right, top, width} = getElementGeometry(
 		element
 	);
@@ -405,7 +532,7 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 
 	const handleClick = (event) => {
 		dispatch({
-			selector,
+			selector: selector.substring(1),
 			type: 'editTarget',
 		});
 
@@ -426,7 +553,7 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 
 	return (
 		<div
-			className="lfr-segments-experiment-click-goal-target"
+			className={OVERLAY_TARGET_CLASS}
 			style={{
 				alignItems: align === 'left' ? 'flex-start' : 'flex-end',
 				left: align === 'left' ? spaceOnLeft : null,
@@ -436,15 +563,16 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 		>
 			<ClayTooltipProvider>
 				<div
-					className={classNames(
-						'lfr-segments-experiment-click-goal-target-overlay',
-						{
-							'lfr-segments-experiment-click-goal-target-overlay-editing':
-								mode === 'editing',
-							'lfr-segments-experiment-click-goal-target-overlay-selected':
-								mode === 'selected',
-						}
-					)}
+					className={classNames({
+						'lfr-segments-experiment-click-goal-target-overlay':
+							!selectedTarget ||
+							mode === 'editing' ||
+							mode === 'selected',
+						'lfr-segments-experiment-click-goal-target-overlay-editing':
+							mode === 'editing',
+						'lfr-segments-experiment-click-goal-target-overlay-selected':
+							mode === 'selected',
+					})}
 					data-target-selector={selector}
 					data-tooltip-align="bottom-left"
 					onClick={handleClick}
@@ -583,7 +711,7 @@ function TargetPopover({selector}) {
 
 	const handleClick = () => {
 		dispatch({
-			selector,
+			selector: selector.substring(1),
 			type: 'selectTarget',
 		});
 	};

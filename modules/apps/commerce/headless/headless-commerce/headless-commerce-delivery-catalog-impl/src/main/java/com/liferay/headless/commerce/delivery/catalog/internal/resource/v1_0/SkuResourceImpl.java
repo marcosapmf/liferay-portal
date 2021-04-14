@@ -35,13 +35,12 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,16 +51,17 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	enabled = false, properties = "OSGI-INF/liferay/rest/v1_0/sku.properties",
-	scope = ServiceScope.PROTOTYPE, service = SkuResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {NestedFieldSupport.class, SkuResource.class}
 )
-public class SkuResourceImpl extends BaseSkuResourceImpl {
+public class SkuResourceImpl
+	extends BaseSkuResourceImpl implements NestedFieldSupport {
 
 	@NestedField(parentClass = Product.class, value = "skus")
 	@Override
 	public Page<Sku> getChannelProductSkusPage(
-			@NotNull Long channelId,
-			@NestedFieldId("productId") @NotNull Long productId, Long accountId,
-			Pagination pagination)
+			Long channelId, @NestedFieldId("productId") Long productId,
+			Long accountId, Pagination pagination)
 		throws Exception {
 
 		CommerceChannel commerceChannel =

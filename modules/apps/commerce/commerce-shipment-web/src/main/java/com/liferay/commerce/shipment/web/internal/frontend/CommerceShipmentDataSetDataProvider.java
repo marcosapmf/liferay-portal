@@ -19,13 +19,13 @@ import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.model.CommerceAccountModel;
 import com.liferay.commerce.account.service.CommerceAccountLocalService;
+import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceShipmentConstants;
 import com.liferay.commerce.constants.CommerceShipmentDataSetConstants;
 import com.liferay.commerce.frontend.model.LabelField;
 import com.liferay.commerce.frontend.model.Shipment;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
@@ -40,10 +40,11 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -179,8 +180,8 @@ public class CommerceShipmentDataSetDataProvider
 	}
 
 	private long[] _getCommerceAccountIds(long userId) throws PortalException {
-		if (!PortalPermissionUtil.contains(
-				PermissionThreadLocal.getPermissionChecker(),
+		if (!_portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
 				CommerceAccountActionKeys.MANAGE_ALL_ACCOUNTS)) {
 
 			List<CommerceAccount> commerceAccounts =
@@ -219,17 +220,17 @@ public class CommerceShipmentDataSetDataProvider
 			return StringPool.BLANK;
 		}
 
-		CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
+		Region region = commerceAddress.getRegion();
 
-		StringBundler sb = new StringBundler((commerceRegion == null) ? 5 : 7);
+		StringBundler sb = new StringBundler((region == null) ? 5 : 7);
 
 		sb.append(commerceAddress.getStreet1());
 		sb.append(StringPool.SPACE);
 		sb.append(commerceAddress.getCity());
 		sb.append(StringPool.NEW_LINE);
 
-		if (commerceRegion != null) {
-			sb.append(commerceRegion.getCode());
+		if (region != null) {
+			sb.append(region.getRegionCode());
 			sb.append(StringPool.SPACE);
 		}
 
@@ -255,5 +256,10 @@ public class CommerceShipmentDataSetDataProvider
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(resource.name=" + CommerceConstants.RESOURCE_NAME_SHIPMENT + ")"
+	)
+	private PortletResourcePermission _portletResourcePermission;
 
 }

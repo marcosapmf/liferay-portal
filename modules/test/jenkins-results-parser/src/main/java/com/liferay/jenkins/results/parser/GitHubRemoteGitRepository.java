@@ -20,6 +20,7 @@ import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil.HttpRequestMe
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +73,42 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 		updateLabel(null, null, null, oldLabel);
 	}
 
+	public List<String> getCollaboratorUsernames() {
+		if (_collaboratorUsernames != null) {
+			return _collaboratorUsernames;
+		}
+
+		String url = JenkinsResultsParserUtil.getGitHubApiUrl(
+			getName(), getUsername(), "collaborators");
+
+		try {
+			JSONArray collaboratorsJSONArray =
+				JenkinsResultsParserUtil.toJSONArray(url);
+
+			_collaboratorUsernames = new ArrayList<>(
+				collaboratorsJSONArray.length());
+
+			for (int i = 0; i < collaboratorsJSONArray.length(); i++) {
+				JSONObject collaboratorUserJSONObject =
+					collaboratorsJSONArray.getJSONObject(i);
+
+				_collaboratorUsernames.add(
+					collaboratorUserJSONObject.getString("login"));
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(
+				"Unable to get collaborators", ioException);
+		}
+
+		return _collaboratorUsernames;
+	}
+
+	public String getHtmlURL() {
+		return JenkinsResultsParserUtil.combine(
+			"https://github.com/", getUsername(), "/", getName());
+	}
+
 	public Label getLabel(String name) {
 		for (Label label : getLabels()) {
 			if (name.equals(label.getName())) {
@@ -93,13 +130,19 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 
 		Set<Label> labels = new HashSet<>();
 
-		int page = 1;
+		for (int pageNumber = 1;
+			 pageNumber <=
+				 JenkinsResultsParserUtil.PAGES_GITHUB_API_PAGES_SIZE_MAX;
+			 pageNumber++) {
 
-		while (page <= _PAGES_LABEL_PAGES_SIZE_MAX) {
 			try {
 				labelsJSONArray = JenkinsResultsParserUtil.toJSONArray(
 					JenkinsResultsParserUtil.combine(
-						labelRequestURL, "?page=", String.valueOf(page)),
+						labelRequestURL, "?per_page=",
+						String.valueOf(
+							JenkinsResultsParserUtil.
+								PER_PAGE_GITHUB_API_PAGES_SIZE_MAX),
+						"&page=", String.valueOf(pageNumber)),
 					false);
 			}
 			catch (IOException ioException) {
@@ -118,7 +161,21 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 				labels.add(new Label((JSONObject)labelsJSONArray.get(i), this));
 			}
 
-			page++;
+			if (labelsJSONArray.length() <
+					JenkinsResultsParserUtil.PAGES_GITHUB_API_PAGES_SIZE_MAX) {
+
+				break;
+			}
+
+			if (pageNumber ==
+					JenkinsResultsParserUtil.PAGES_GITHUB_API_PAGES_SIZE_MAX) {
+
+				throw new RuntimeException(
+					JenkinsResultsParserUtil.combine(
+						"Too many GitHub labels (>",
+						String.valueOf(labels.size()), ") found for ",
+						"GitHub repository ", getRemoteURL()));
+			}
 		}
 
 		_labelsLists.put(labelRequestURL, Lists.newArrayList(labels));
@@ -284,11 +341,10 @@ public class GitHubRemoteGitRepository extends BaseRemoteGitRepository {
 		_labelRequestURL = labelRequestURL;
 	}
 
-	private static final int _PAGES_LABEL_PAGES_SIZE_MAX = 10;
-
 	private static final Map<String, List<Label>> _labelsLists =
 		new ConcurrentHashMap<>();
 
+	private List<String> _collaboratorUsernames;
 	private String _labelRequestURL;
 
 }

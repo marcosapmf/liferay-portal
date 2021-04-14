@@ -32,9 +32,10 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.segments.exception.NoSuchEntryRoleException;
@@ -80,7 +81,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eduardo Garcia
  * @generated
  */
-@Component(service = SegmentsEntryRolePersistence.class)
+@Component(
+	service = {SegmentsEntryRolePersistence.class, BasePersistence.class}
+)
 public class SegmentsEntryRolePersistenceImpl
 	extends BasePersistenceImpl<SegmentsEntryRole>
 	implements SegmentsEntryRolePersistence {
@@ -204,7 +207,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SegmentsEntryRole>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SegmentsEntryRole segmentsEntryRole : list) {
@@ -584,7 +587,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 			finderArgs = new Object[] {segmentsEntryId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -726,7 +729,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SegmentsEntryRole>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SegmentsEntryRole segmentsEntryRole : list) {
@@ -1096,7 +1099,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 			finderArgs = new Object[] {roleId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1216,8 +1219,7 @@ public class SegmentsEntryRolePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByS_R, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByS_R, finderArgs);
 		}
 
 		if (result instanceof SegmentsEntryRole) {
@@ -1325,7 +1327,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 			finderArgs = new Object[] {segmentsEntryId, roleId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1440,9 +1442,7 @@ public class SegmentsEntryRolePersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(SegmentsEntryRoleImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(SegmentsEntryRoleImpl.class);
 	}
 
 	/**
@@ -1468,9 +1468,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(SegmentsEntryRoleImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(SegmentsEntryRoleImpl.class, primaryKey);
@@ -1485,10 +1483,9 @@ public class SegmentsEntryRolePersistenceImpl
 			segmentsEntryRoleModelImpl.getRoleId()
 		};
 
+		finderCache.putResult(_finderPathCountByS_R, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByS_R, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByS_R, args, segmentsEntryRoleModelImpl, false);
+			_finderPathFetchByS_R, args, segmentsEntryRoleModelImpl);
 	}
 
 	/**
@@ -1948,7 +1945,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SegmentsEntryRole>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -2024,7 +2021,7 @@ public class SegmentsEntryRolePersistenceImpl
 
 		if (productionMode) {
 			count = (Long)finderCache.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -2143,22 +2140,21 @@ public class SegmentsEntryRolePersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new SegmentsEntryRoleModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", SegmentsEntryRole.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindBySegmentsEntryId = _createFinderPath(
+		_finderPathWithPaginationFindBySegmentsEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findBySegmentsEntryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -2166,17 +2162,17 @@ public class SegmentsEntryRolePersistenceImpl
 			},
 			new String[] {"segmentsEntryId"}, true);
 
-		_finderPathWithoutPaginationFindBySegmentsEntryId = _createFinderPath(
+		_finderPathWithoutPaginationFindBySegmentsEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findBySegmentsEntryId",
 			new String[] {Long.class.getName()},
 			new String[] {"segmentsEntryId"}, true);
 
-		_finderPathCountBySegmentsEntryId = _createFinderPath(
+		_finderPathCountBySegmentsEntryId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countBySegmentsEntryId",
 			new String[] {Long.class.getName()},
 			new String[] {"segmentsEntryId"}, false);
 
-		_finderPathWithPaginationFindByRoleId = _createFinderPath(
+		_finderPathWithPaginationFindByRoleId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByRoleId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -2184,21 +2180,21 @@ public class SegmentsEntryRolePersistenceImpl
 			},
 			new String[] {"roleId"}, true);
 
-		_finderPathWithoutPaginationFindByRoleId = _createFinderPath(
+		_finderPathWithoutPaginationFindByRoleId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByRoleId",
 			new String[] {Long.class.getName()}, new String[] {"roleId"}, true);
 
-		_finderPathCountByRoleId = _createFinderPath(
+		_finderPathCountByRoleId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRoleId",
 			new String[] {Long.class.getName()}, new String[] {"roleId"},
 			false);
 
-		_finderPathFetchByS_R = _createFinderPath(
+		_finderPathFetchByS_R = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByS_R",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"segmentsEntryId", "roleId"}, true);
 
-		_finderPathCountByS_R = _createFinderPath(
+		_finderPathCountByS_R = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByS_R",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"segmentsEntryId", "roleId"}, false);
@@ -2209,12 +2205,6 @@ public class SegmentsEntryRolePersistenceImpl
 		entityCache.removeCache(SegmentsEntryRoleImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -2277,36 +2267,13 @@ public class SegmentsEntryRolePersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsEntryRolePersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(SegmentsPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class SegmentsEntryRoleModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -2357,6 +2324,16 @@ public class SegmentsEntryRolePersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return SegmentsEntryRoleImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return SegmentsEntryRoleTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

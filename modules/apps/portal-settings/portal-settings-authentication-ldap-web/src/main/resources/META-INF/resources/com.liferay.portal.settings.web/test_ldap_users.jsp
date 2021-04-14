@@ -128,7 +128,7 @@ boolean showMissingAttributeMessage = false;
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
-portletURL.setParameter("mvcRenderCommandName", "/portal_settings/test_ldap_users");
+portletURL.setParameter("mvcRenderCommandName", "/portal_settings_authentication_ldap/test_ldap_users");
 portletURL.setParameter("ldapServerId", String.valueOf(ldapServerId));
 portletURL.setParameter("baseProviderURL", baseProviderURL);
 portletURL.setParameter("baseDN", baseDN);
@@ -209,17 +209,13 @@ portletURL.setWindowState(LiferayWindowState.POP_UP);
 	<liferay-ui:search-iterator />
 </liferay-ui:search-container>
 
-<%
-if (showMissingAttributeMessage) {
-%>
-
+<c:if test="<%= showMissingAttributeMessage %>">
 	<div class="alert alert-info">
 		<liferay-ui:message key="the-above-results-include-users-which-are-missing-the-required-attributes-(screen-name,-password,-email-address,-first-name,-and-last-name).-these-users-will-not-be-imported-until-these-attributes-are-filled-in" />
 	</div>
+</c:if>
 
 <%
-}
-
 if (safeLdapContext != null) {
 	safeLdapContext.close();
 }

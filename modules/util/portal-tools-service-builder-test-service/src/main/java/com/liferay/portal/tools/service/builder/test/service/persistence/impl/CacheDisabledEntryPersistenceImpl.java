@@ -17,6 +17,7 @@ package com.liferay.portal.tools.service.builder.test.service.persistence.impl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
@@ -26,7 +27,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchCacheDisabledEntryException;
@@ -40,7 +41,6 @@ import java.io.Serializable;
 
 import java.lang.reflect.InvocationHandler;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -151,7 +151,7 @@ public class CacheDisabledEntryPersistenceImpl
 
 		if (useFinderCache) {
 			result = dummyFinderCache.getResult(
-				_finderPathFetchByName, finderArgs, this);
+				_finderPathFetchByName, finderArgs);
 		}
 
 		if (result instanceof CacheDisabledEntry) {
@@ -254,8 +254,7 @@ public class CacheDisabledEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {name};
 
-		Long count = (Long)dummyFinderCache.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)dummyFinderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -355,23 +354,21 @@ public class CacheDisabledEntryPersistenceImpl
 	 * Clears the cache for all cache disabled entries.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		dummyEntityCache.clearCache(CacheDisabledEntryImpl.class);
 
-		dummyFinderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		dummyFinderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		dummyFinderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		dummyFinderCache.clearCache(CacheDisabledEntryImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the cache disabled entry.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -390,9 +387,7 @@ public class CacheDisabledEntryPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		dummyFinderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		dummyFinderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		dummyFinderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		dummyFinderCache.clearCache(CacheDisabledEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			dummyEntityCache.removeResult(
@@ -406,9 +401,9 @@ public class CacheDisabledEntryPersistenceImpl
 		Object[] args = new Object[] {cacheDisabledEntryModelImpl.getName()};
 
 		dummyFinderCache.putResult(
-			_finderPathCountByName, args, Long.valueOf(1), false);
+			_finderPathCountByName, args, Long.valueOf(1));
 		dummyFinderCache.putResult(
-			_finderPathFetchByName, args, cacheDisabledEntryModelImpl, false);
+			_finderPathFetchByName, args, cacheDisabledEntryModelImpl);
 	}
 
 	/**
@@ -712,7 +707,7 @@ public class CacheDisabledEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CacheDisabledEntry>)dummyFinderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -782,7 +777,7 @@ public class CacheDisabledEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)dummyFinderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -841,26 +836,25 @@ public class CacheDisabledEntryPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new CacheDisabledEntryModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", CacheDisabledEntry.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathFetchByName = _createFinderPath(
+		_finderPathFetchByName = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByName",
 			new String[] {String.class.getName()}, new String[] {"name"}, true);
 
-		_finderPathCountByName = _createFinderPath(
+		_finderPathCountByName = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByName",
 			new String[] {String.class.getName()}, new String[] {"name"},
 			false);
@@ -870,12 +864,6 @@ public class CacheDisabledEntryPersistenceImpl
 		dummyEntityCache.removeCache(CacheDisabledEntryImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -903,27 +891,13 @@ public class CacheDisabledEntryPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CacheDisabledEntryPersistenceImpl.class);
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return dummyFinderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class CacheDisabledEntryModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -975,6 +949,16 @@ public class CacheDisabledEntryPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return CacheDisabledEntryImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return CacheDisabledEntryTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

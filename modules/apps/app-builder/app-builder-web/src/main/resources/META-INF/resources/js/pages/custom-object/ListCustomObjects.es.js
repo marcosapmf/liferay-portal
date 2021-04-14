@@ -12,16 +12,23 @@
  * details.
  */
 
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import useQuery from 'data-engine-js-components-web/js/hooks/useQuery.es';
+import {
+	addItem,
+	parseResponse,
+	updateItem,
+} from 'data-engine-js-components-web/js/utils/client.es';
+import {
+	errorToast,
+	successToast,
+} from 'data-engine-js-components-web/js/utils/toast.es';
 import {createResourceURL, fetch} from 'frontend-js-web';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 
 import {AppContext} from '../../AppContext.es';
-import Button from '../../components/button/Button.es';
 import {useKeyDown} from '../../hooks/index.es';
-import useQuery from '../../hooks/useQuery.es';
 import isClickOutside from '../../utils/clickOutside.es';
-import {addItem, parseResponse, updateItem} from '../../utils/client.es';
-import {errorToast, successToast} from '../../utils/toast.es';
 import {getValidName} from '../../utils/utils.es';
 import ListObjects from '../object/ListObjects.es';
 import CustomObjectPopover from './CustomObjectPopover.es';
@@ -47,7 +54,7 @@ export default ({history}) => {
 			if (confirmed) {
 				fetch(
 					createResourceURL(baseResourceURL, {
-						p_p_resource_id: '/objects/delete_data_definition',
+						p_p_resource_id: '/app_builder/delete_data_definition',
 					}),
 					{
 						body: new URLSearchParams(
@@ -152,7 +159,8 @@ export default ({history}) => {
 							basePortletURL,
 							{
 								dataDefinitionId: id,
-								mvcRenderCommandName: '/edit_form_view',
+								mvcRenderCommandName:
+									'/app_builder/edit_form_view',
 								newCustomObject: true,
 							}
 						)
@@ -225,27 +233,24 @@ export default ({history}) => {
 						},
 					],
 					addButton: () => (
-						<div ref={addButtonRef}>
-							<Button
-								className="nav-btn nav-btn-monospaced"
-								onClick={onClickAddButton}
-								symbol="plus"
-								tooltip={Liferay.Language.get(
-									'new-custom-object'
-								)}
-							/>
-						</div>
+						<ClayButtonWithIcon
+							className="nav-btn nav-btn-monospaced"
+							onClick={onClickAddButton}
+							ref={addButtonRef}
+							symbol="plus"
+							title={Liferay.Language.get('new-custom-object')}
+						/>
 					),
 					editMode,
 					emptyState: {
 						button: () => (
-							<Button
+							<ClayButton
 								displayType="secondary"
 								onClick={onClickAddButton}
 								ref={emptyStateButtonRef}
 							>
 								{Liferay.Language.get('new-custom-object')}
-							</Button>
+							</ClayButton>
 						),
 						description: Liferay.Language.get(
 							'custom-objects-define-the-types-of-data-your-business-application-needs'

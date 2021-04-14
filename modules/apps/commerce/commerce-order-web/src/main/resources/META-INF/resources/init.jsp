@@ -53,9 +53,9 @@ page import="com.liferay.commerce.order.CommerceOrderValidatorResult" %><%@
 page import="com.liferay.commerce.order.web.internal.display.context.CommerceOrderEditDisplayContext" %><%@
 page import="com.liferay.commerce.order.web.internal.display.context.CommerceOrderListDisplayContext" %><%@
 page import="com.liferay.commerce.order.web.internal.display.context.CommerceOrderNoteEditDisplayContext" %><%@
-page import="com.liferay.commerce.order.web.internal.frontend.CommerceOrderDataSetConstants" %><%@
+page import="com.liferay.commerce.order.web.internal.frontend.constants.CommerceOrderDataSetConstants" %><%@
 page import="com.liferay.commerce.order.web.internal.security.permission.resource.CommerceOrderPermission" %><%@
-page import="com.liferay.commerce.order.web.internal.servlet.taglib.ui.CommerceOrderScreenNavigationConstants" %><%@
+page import="com.liferay.commerce.order.web.internal.servlet.taglib.ui.constants.CommerceOrderScreenNavigationConstants" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
@@ -77,10 +77,7 @@ page import="com.liferay.portal.kernel.util.WebKeys" %>
 
 <%@ page import="java.util.Calendar" %><%@
 page import="java.util.Collections" %><%@
-page import="java.util.Date" %><%@
-page import="java.util.Map" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
+page import="java.util.Date" %>
 
 <liferay-frontend:defineObjects />
 

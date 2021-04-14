@@ -3,7 +3,7 @@
 The Go Gradle plugin lets you run [Go](https://golang.org/) as part of your
 build.
 
-The plugin has been successfully tested with Gradle 5.6.4.
+The plugin has been successfully tested with Gradle 5.6.4 and 6.6.1.
 
 ## Usage
 
@@ -12,7 +12,7 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.go", version: "1.0.1"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.go", version: "1.0.2"
 	}
 
 	repositories {

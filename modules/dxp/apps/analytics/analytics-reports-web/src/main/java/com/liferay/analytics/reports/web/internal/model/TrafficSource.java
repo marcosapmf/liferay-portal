@@ -21,7 +21,9 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -43,6 +45,17 @@ public class TrafficSource {
 		_name = name;
 		_trafficAmount = trafficAmount;
 		_trafficShare = trafficShare;
+
+		_error = false;
+	}
+
+	public TrafficSource(String name) {
+		_name = name;
+
+		_countrySearchKeywordsList = Collections.emptyList();
+		_error = true;
+		_trafficAmount = 0;
+		_trafficShare = 0;
 	}
 
 	@Override
@@ -114,19 +127,38 @@ public class TrafficSource {
 	public JSONObject toJSONObject(
 		String helpMessage, Locale locale, String title) {
 
-		return JSONUtil.put(
-			"countryKeywords", _getCountryKeywordsJSONArray(locale)
-		).put(
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+		if (!ListUtil.isEmpty(_countrySearchKeywordsList)) {
+			jsonObject.put(
+				"countryKeywords", _getCountryKeywordsJSONArray(locale));
+		}
+
+		jsonObject.put(
 			"helpMessage", helpMessage
 		).put(
 			"name", getName()
-		).put(
-			"share", getTrafficShare()
-		).put(
-			"title", title
-		).put(
-			"value", Math.toIntExact(getTrafficAmount())
 		);
+
+		if (!_error) {
+			jsonObject.put("share", String.format("%.1f", _trafficShare));
+		}
+
+		jsonObject.put("title", title);
+
+		if (!_error) {
+			jsonObject.put("value", Math.toIntExact(_trafficAmount));
+		}
+
+		return jsonObject;
+	}
+
+	@Override
+	public String toString() {
+		JSONObject jsonObject = toJSONObject(
+			null, LocaleUtil.getDefault(), _name);
+
+		return jsonObject.toJSONString();
 	}
 
 	private JSONArray _getCountryKeywordsJSONArray(Locale locale) {
@@ -145,6 +177,7 @@ public class TrafficSource {
 	}
 
 	private List<CountrySearchKeywords> _countrySearchKeywordsList;
+	private boolean _error;
 	private String _name;
 	private long _trafficAmount;
 	private double _trafficShare;

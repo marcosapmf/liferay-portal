@@ -66,6 +66,9 @@ SortPortletInstanceConfiguration sortPortletInstanceConfiguration = sortDisplayC
 			>
 				<aui:fieldset>
 					<aui:select class="sort-term" label="sort-by" name="sortSelection">
+						<c:if test="<%= !sortDisplayContext.isAnySelected() %>">
+							<aui:option disabled="<%= true %>" label="sort-default-order" selected="<%= true %>" />
+						</c:if>
 
 						<%
 						for (SortTermDisplayContext sortTermDisplayContext : sortDisplayContext.getSortTermDisplayContexts()) {
@@ -85,8 +88,8 @@ SortPortletInstanceConfiguration sortPortletInstanceConfiguration = sortDisplayC
 </c:choose>
 
 <aui:script use="liferay-search-sort-util">
-	AUI().ready('aui-base', 'node', 'event', function (A) {
-		A.one('#<portlet:namespace />sortSelection').on('change', function () {
+	AUI().ready('aui-base', 'node', 'event', (A) => {
+		A.one('#<portlet:namespace />sortSelection').on('change', () => {
 			var selections = [];
 
 			var sortSelect = A.one('#<portlet:namespace />sortSelection').get(

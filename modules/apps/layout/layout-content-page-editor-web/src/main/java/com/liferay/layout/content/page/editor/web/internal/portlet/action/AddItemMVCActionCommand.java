@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/add_item"
+		"mvc.command.name=/layout_content_page_editor/add_item"
 	},
 	service = MVCActionCommand.class
 )
@@ -82,8 +82,9 @@ public class AddItemMVCActionCommand extends BaseMVCActionCommand {
 					themeDisplay.getPlid(),
 					layoutStructure -> {
 						LayoutStructureItem layoutStructureItem =
-							layoutStructure.addCollectionLayoutStructureItem(
-								parentItemId, position);
+							layoutStructure.
+								addCollectionStyledLayoutStructureItem(
+									parentItemId, position);
 
 						jsonObject.put(
 							"addedItemId", layoutStructureItem.getItemId());
@@ -98,7 +99,7 @@ public class AddItemMVCActionCommand extends BaseMVCActionCommand {
 					themeDisplay.getPlid(),
 					layoutStructure -> {
 						LayoutStructureItem layoutStructureItem =
-							layoutStructure.addRowLayoutStructureItem(
+							layoutStructure.addRowStyledLayoutStructureItem(
 								parentItemId, position, _DEFAULT_ROW_COLUMNS);
 
 						for (int i = 0; i < _DEFAULT_ROW_COLUMNS; i++) {

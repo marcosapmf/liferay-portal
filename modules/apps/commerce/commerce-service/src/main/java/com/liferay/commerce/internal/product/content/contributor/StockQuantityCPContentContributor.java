@@ -27,10 +27,7 @@ import com.liferay.commerce.service.CPDefinitionInventoryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.WebKeys;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -84,18 +81,12 @@ public class StockQuantityCPContentContributor implements CPContentContributor {
 		boolean displayStockQuantity =
 			cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance);
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		if (displayStockQuantity) {
 			jsonObject.put(
 				CPContentContributorConstants.STOCK_QUANTITY_NAME,
-				LanguageUtil.format(
-					themeDisplay.getLocale(), "stock-quantity-x",
-					_commerceInventoryEngine.getStockQuantity(
-						cpInstance.getCompanyId(), commerceChannel.getGroupId(),
-						cpInstance.getSku())));
+				_commerceInventoryEngine.getStockQuantity(
+					cpInstance.getCompanyId(), commerceChannel.getGroupId(),
+					cpInstance.getSku()));
 		}
 
 		return jsonObject;

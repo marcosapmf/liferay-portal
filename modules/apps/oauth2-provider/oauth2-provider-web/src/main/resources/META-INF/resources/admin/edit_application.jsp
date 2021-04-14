@@ -30,6 +30,7 @@ if (oAuth2Application != null) {
 }
 
 String oAuth2ApplicationIdString = String.valueOf(oAuth2ApplicationId);
+
 String headerTitle = LanguageUtil.get(request, "add-o-auth2-application");
 
 if (oAuth2Application != null) {
@@ -59,14 +60,14 @@ if (request.getAttribute(OAuth2ProviderWebKeys.ASSIGN_SCOPES_TREE_DISPLAY_CONTEX
 
 							PortletURL portletURL = renderResponse.createRenderURL();
 
-							portletURL.setParameter("mvcRenderCommandName", "/admin/update_oauth2_application");
+							portletURL.setParameter("mvcRenderCommandName", "/oauth2_provider/update_oauth2_application");
 							portletURL.setParameter("navigation", "credentials");
 							portletURL.setParameter("redirect", redirect);
 							portletURL.setParameter("oAuth2ApplicationId", oAuth2ApplicationIdString);
 
 							navigationItem.setHref(portletURL.toString());
 
-							navigationItem.setLabel(LanguageUtil.get(request, "credentials"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "credentials"));
 						});
 
 					add(
@@ -75,14 +76,14 @@ if (request.getAttribute(OAuth2ProviderWebKeys.ASSIGN_SCOPES_TREE_DISPLAY_CONTEX
 
 							PortletURL portletURL = renderResponse.createRenderURL();
 
-							portletURL.setParameter("mvcRenderCommandName", "/admin/assign_scopes");
+							portletURL.setParameter("mvcRenderCommandName", "/oauth2_provider/assign_scopes");
 							portletURL.setParameter("navigation", "assign_scopes");
 							portletURL.setParameter("redirect", redirect);
 							portletURL.setParameter("oAuth2ApplicationId", oAuth2ApplicationIdString);
 
 							navigationItem.setHref(portletURL.toString());
 
-							navigationItem.setLabel(LanguageUtil.get(request, "scopes"));
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "scopes"));
 						});
 
 					if (oAuth2AdminPortletDisplayContext.hasViewGrantedAuthorizationsPermission()) {
@@ -92,14 +93,14 @@ if (request.getAttribute(OAuth2ProviderWebKeys.ASSIGN_SCOPES_TREE_DISPLAY_CONTEX
 
 								PortletURL portletURL = renderResponse.createRenderURL();
 
-								portletURL.setParameter("mvcRenderCommandName", "/admin/view_oauth2_authorizations");
+								portletURL.setParameter("mvcRenderCommandName", "/oauth2_provider/view_oauth2_authorizations");
 								portletURL.setParameter("navigation", "application_authorizations");
 								portletURL.setParameter("redirect", redirect);
 								portletURL.setParameter("oAuth2ApplicationId", oAuth2ApplicationIdString);
 
 								navigationItem.setHref(portletURL.toString());
 
-								navigationItem.setLabel(LanguageUtil.get(request, "authorizations"));
+								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "authorizations"));
 							});
 					}
 				}

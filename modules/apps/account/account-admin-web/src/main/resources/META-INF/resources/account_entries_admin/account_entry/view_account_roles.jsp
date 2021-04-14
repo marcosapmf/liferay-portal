@@ -30,7 +30,8 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 %>
 
 <clay:management-toolbar
-	displayContext="<%= viewAccountRolesManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= viewAccountRolesManagementToolbarDisplayContext %>"
+	propsTransformer="account_entries_admin/js/AccountRolesManagementToolbarPropsTransformer"
 />
 
 <clay:container-fluid>
@@ -77,8 +78,3 @@ renderResponse.setTitle(accountEntryDisplay.getName());
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<liferay-frontend:component
-	componentId="<%= viewAccountRolesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="account_entries_admin/js/AccountRolesManagementToolbarDefaultEventHandler.es"
-/>

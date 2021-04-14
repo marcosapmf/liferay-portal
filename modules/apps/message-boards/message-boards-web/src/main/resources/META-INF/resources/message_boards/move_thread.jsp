@@ -47,7 +47,7 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl\"" : StringPool.BLANK %>>
 	<portlet:actionURL name="/message_boards/move_thread" var="moveThreadURL">
 		<portlet:param name="mvcRenderCommandName" value="/message_boards/move_thread" />
 	</portlet:actionURL>
@@ -145,7 +145,7 @@ if (portletTitleBasedNavigation) {
 	);
 
 	if (selectCategoryButton) {
-		selectCategoryButton.addEventListener('click', function (event) {
+		selectCategoryButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (event) {
 					Liferay.Util.setFormValues(form, {

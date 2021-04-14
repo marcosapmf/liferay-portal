@@ -44,13 +44,20 @@ definition {
 	}
 
 	macro mapURLToAsset {
-		Variables.assertDefined(parameterList = "${entryTitle},${field},${navItem}");
-
 		PageEditorEditableLink._gotoFromContentField();
 
-		PageEditorEditableLink._selectContent(
-			entryTitle = "${entryTitle}",
-			navItem = "${navItem}");
+		if (isSet(entryTitle)) {
+			PageEditorEditableLink._selectContent(
+				entryTitle = "${entryTitle}",
+				navItem = "${navItem}");
+		}
+
+		if (isSet(source)) {
+			Select(
+				key_fieldLabel = "Source",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "${source}");
+		}
 
 		PageEditorEditableLink._selectField(field = "${field}");
 	}
@@ -66,11 +73,21 @@ definition {
 			key_sidebarButton = "Selection",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
 
-		if (isSet(target)) {
-			Select(
-				key_fieldLabel = "Target",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "${target}");
+		if ("${target}" == "Blank") {
+			while (IsNotChecked.isNotCheckedNotVisible(checkboxName = "Open in a new tab.", locator1 = "Checkbox#ANY_CHECKBOX")) {
+				Click.clickAtNotVisible(
+					checkboxName = "Open in a new tab.",
+					locator1 = "Checkbox#ANY_CHECKBOX");
+			}
+
+			Pause(locator1 = "3000");
+		}
+		else if ("${target}" == "Self") {
+			while (IsChecked.isNotCheckedNotVisible(checkboxName = "Open in a new tab.", locator1 = "Checkbox#ANY_CHECKBOX")) {
+				Click.clickAtNotVisible(
+					checkboxName = "Open in a new tab.",
+					locator1 = "Checkbox#ANY_CHECKBOX");
+			}
 
 			Pause(locator1 = "3000");
 		}

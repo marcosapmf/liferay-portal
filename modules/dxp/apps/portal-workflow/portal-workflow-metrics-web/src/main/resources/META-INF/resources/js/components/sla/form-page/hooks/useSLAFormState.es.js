@@ -24,7 +24,7 @@ import {START_NODE_KEYS, STOP_NODE_KEYS} from '../SLAFormConstants.es';
 const useSLAFormState = ({errors, id, processId, setErrors}) => {
 	const [sla, setSLA] = useState({
 		calendarKey: null,
-		days: null,
+		days: '',
 		description: '',
 		hours: '',
 		name: '',
@@ -154,6 +154,8 @@ const useSLAFormState = ({errors, id, processId, setErrors}) => {
 
 	const updateSLA = usePut({body, url: `/slas/${id}`});
 
+	const getNodeKeys = (nodes) => nodes.map(({compositeId}) => compositeId);
+
 	const changeNodesKeys = (type, nodeKeys, callback) => (selectedNodes) => {
 		const selectedNodeKeys = getNodeKeys(selectedNodes);
 
@@ -193,8 +195,6 @@ const useSLAFormState = ({errors, id, processId, setErrors}) => {
 			)
 		);
 	};
-
-	const getNodeKeys = (nodes) => nodes.map(({compositeId}) => compositeId);
 
 	const getPauseNodeTags = (pauseNodes, pauseNodeKeys) => {
 		const nodeKeys = pauseNodeKeys || [];

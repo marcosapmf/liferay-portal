@@ -38,7 +38,7 @@ PortletURL portletURL = commerceAccountAddressAdminDisplayContext.getPortletURL(
 			/>
 
 			<portlet:renderURL var="addCommerceAddressURL">
-				<portlet:param name="mvcRenderCommandName" value="editCommerceAddress" />
+				<portlet:param name="mvcRenderCommandName" value="/commerce_account_admin/edit_commerce_address" />
 				<portlet:param name="redirect" value="<%= currentURL %>" />
 				<portlet:param name="commerceAccountId" value="<%= String.valueOf(commerceAccountId) %>" />
 			</portlet:renderURL>
@@ -69,7 +69,7 @@ PortletURL portletURL = commerceAccountAddressAdminDisplayContext.getPortletURL(
 		</liferay-frontend:management-bar-action-buttons>
 	</liferay-frontend:management-bar>
 
-	<div class="container-fluid-1280">
+	<div class="container-fluid container-fluid-max-xl">
 		<aui:form action="<%= portletURL.toString() %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.DELETE %>" />
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -82,7 +82,6 @@ PortletURL portletURL = commerceAccountAddressAdminDisplayContext.getPortletURL(
 			>
 				<liferay-ui:search-container-row
 					className="com.liferay.commerce.model.CommerceAddress"
-					cssClass="entry-display-style"
 					keyProperty="commerceAddressId"
 					modelVar="commerceAddress"
 				>
@@ -140,7 +139,10 @@ PortletURL portletURL = commerceAccountAddressAdminDisplayContext.getPortletURL(
 					'<portlet:namespace />allRowIds'
 				);
 
-				submitForm(form, '<portlet:actionURL name="editCommerceAddress" />');
+				submitForm(
+					form,
+					'<portlet:actionURL name="/commerce_account_admin/edit_commerce_address" />'
+				);
 			}
 		}
 	</aui:script>

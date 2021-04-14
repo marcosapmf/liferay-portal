@@ -24,9 +24,11 @@ import {useSyncValue} from '../hooks/useSyncValue.es';
 const defaultValue = {description: '', title: '', url: ''};
 
 const ImagePicker = ({
+	editingLanguageId,
 	id,
 	inputValue,
 	itemSelectorURL,
+	message,
 	name,
 	onClearClick,
 	onDescriptionChange,
@@ -44,8 +46,8 @@ const ImagePicker = ({
 	const dispatchValue = ({clear, value}, callback = () => {}) =>
 		setImageValues((oldValues) => {
 			let mergedValues = {...oldValues, ...value};
-
 			mergedValues = clear ? {} : mergedValues;
+			mergedValues.alt = mergedValues.description || '';
 
 			callback(mergedValues);
 
@@ -113,10 +115,13 @@ const ImagePicker = ({
 					<ClayInput.GroupItem className="d-none d-sm-block" prepend>
 						<ClayInput
 							className="field"
-							disabled
-							id={id ? id : name}
+							dir={Liferay.Language.direction[editingLanguageId]}
+							disabled={readOnly}
+							id={id}
+							lang={editingLanguageId}
+							onClick={handleItemSelectorTriggerClick}
 							type="text"
-							value={imageValues.title}
+							value={imageValues.title || ''}
 						/>
 					</ClayInput.GroupItem>
 
@@ -158,6 +163,8 @@ const ImagePicker = ({
 						</ClayInput.GroupItem>
 					)}
 				</ClayInput.Group>
+
+				{message && <div className="form-feedback-item">{message}</div>}
 			</ClayForm.Group>
 
 			{imageValues.url && modalVisible ? (
@@ -200,7 +207,13 @@ const ImagePicker = ({
 
 						<ClayForm.Group>
 							<ClayInput
+								dir={
+									Liferay.Language.direction[
+										editingLanguageId
+									]
+								}
 								disabled={readOnly}
+								lang={editingLanguageId}
 								name={`${name}-description`}
 								onChange={({event, target: {value}}) =>
 									dispatchValue(
@@ -223,10 +236,12 @@ const ImagePicker = ({
 
 const Main = ({
 	displayErrors,
+	editingLanguageId,
 	errorMessage,
 	id,
 	inputValue,
 	itemSelectorURL,
+	message,
 	name,
 	onChange,
 	portletNamespace,
@@ -275,6 +290,7 @@ const Main = ({
 			valid={isSignedIn ? valid : false}
 		>
 			<ImagePicker
+				editingLanguageId={editingLanguageId}
 				id={id}
 				inputValue={
 					transformValue(inputValue) ??
@@ -282,6 +298,7 @@ const Main = ({
 					defaultValue
 				}
 				itemSelectorURL={itemSelectorURL}
+				message={message}
 				name={name}
 				onClearClick={({event, ...data}) => onChange(event, data)}
 				onDescriptionChange={({event, ...data}) =>

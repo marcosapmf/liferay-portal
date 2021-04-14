@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -44,7 +45,6 @@ import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapper;
 import com.liferay.portal.kernel.service.persistence.impl.TableMapperFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
@@ -204,7 +204,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DLFileEntryType>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DLFileEntryType dlFileEntryType : list) {
@@ -597,8 +597,7 @@ public class DLFileEntryTypePersistenceImpl
 
 			finderArgs = new Object[] {uuid};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -734,7 +733,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof DLFileEntryType) {
@@ -854,8 +853,7 @@ public class DLFileEntryTypePersistenceImpl
 
 			finderArgs = new Object[] {uuid, groupId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1027,7 +1025,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DLFileEntryType>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DLFileEntryType dlFileEntryType : list) {
@@ -1452,8 +1450,7 @@ public class DLFileEntryTypePersistenceImpl
 
 			finderArgs = new Object[] {uuid, companyId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1617,7 +1614,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DLFileEntryType>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DLFileEntryType dlFileEntryType : list) {
@@ -2531,7 +2528,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DLFileEntryType>)FinderCacheUtil.getResult(
-				_finderPathWithPaginationFindByGroupId, finderArgs, this);
+				_finderPathWithPaginationFindByGroupId, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DLFileEntryType dlFileEntryType : list) {
@@ -2641,8 +2638,7 @@ public class DLFileEntryTypePersistenceImpl
 
 			finderArgs = new Object[] {groupId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2708,7 +2704,7 @@ public class DLFileEntryTypePersistenceImpl
 			finderArgs = new Object[] {StringUtil.merge(groupIds)};
 
 			count = (Long)FinderCacheUtil.getResult(
-				_finderPathWithPaginationCountByGroupId, finderArgs, this);
+				_finderPathWithPaginationCountByGroupId, finderArgs);
 		}
 
 		if (count == null) {
@@ -2877,6 +2873,242 @@ public class DLFileEntryTypePersistenceImpl
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_7 =
 		"dlFileEntryType.groupId IN (";
 
+	private FinderPath _finderPathFetchByG_DDI;
+	private FinderPath _finderPathCountByG_DDI;
+
+	/**
+	 * Returns the document library file entry type where groupId = &#63; and dataDefinitionId = &#63; or throws a <code>NoSuchFileEntryTypeException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param dataDefinitionId the data definition ID
+	 * @return the matching document library file entry type
+	 * @throws NoSuchFileEntryTypeException if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType findByG_DDI(long groupId, long dataDefinitionId)
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType = fetchByG_DDI(
+			groupId, dataDefinitionId);
+
+		if (dlFileEntryType == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("groupId=");
+			sb.append(groupId);
+
+			sb.append(", dataDefinitionId=");
+			sb.append(dataDefinitionId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchFileEntryTypeException(sb.toString());
+		}
+
+		return dlFileEntryType;
+	}
+
+	/**
+	 * Returns the document library file entry type where groupId = &#63; and dataDefinitionId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param dataDefinitionId the data definition ID
+	 * @return the matching document library file entry type, or <code>null</code> if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType fetchByG_DDI(long groupId, long dataDefinitionId) {
+		return fetchByG_DDI(groupId, dataDefinitionId, true);
+	}
+
+	/**
+	 * Returns the document library file entry type where groupId = &#63; and dataDefinitionId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param dataDefinitionId the data definition ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching document library file entry type, or <code>null</code> if a matching document library file entry type could not be found
+	 */
+	@Override
+	public DLFileEntryType fetchByG_DDI(
+		long groupId, long dataDefinitionId, boolean useFinderCache) {
+
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			DLFileEntryType.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {groupId, dataDefinitionId};
+		}
+
+		Object result = null;
+
+		if (useFinderCache && productionMode) {
+			result = FinderCacheUtil.getResult(
+				_finderPathFetchByG_DDI, finderArgs);
+		}
+
+		if (result instanceof DLFileEntryType) {
+			DLFileEntryType dlFileEntryType = (DLFileEntryType)result;
+
+			if ((groupId != dlFileEntryType.getGroupId()) ||
+				(dataDefinitionId != dlFileEntryType.getDataDefinitionId())) {
+
+				result = null;
+			}
+		}
+
+		if (result == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_SELECT_DLFILEENTRYTYPE_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_DDI_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_DDI_DATADEFINITIONID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(dataDefinitionId);
+
+				List<DLFileEntryType> list = query.list();
+
+				if (list.isEmpty()) {
+					if (useFinderCache && productionMode) {
+						FinderCacheUtil.putResult(
+							_finderPathFetchByG_DDI, finderArgs, list);
+					}
+				}
+				else {
+					DLFileEntryType dlFileEntryType = list.get(0);
+
+					result = dlFileEntryType;
+
+					cacheResult(dlFileEntryType);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		if (result instanceof List<?>) {
+			return null;
+		}
+		else {
+			return (DLFileEntryType)result;
+		}
+	}
+
+	/**
+	 * Removes the document library file entry type where groupId = &#63; and dataDefinitionId = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param dataDefinitionId the data definition ID
+	 * @return the document library file entry type that was removed
+	 */
+	@Override
+	public DLFileEntryType removeByG_DDI(long groupId, long dataDefinitionId)
+		throws NoSuchFileEntryTypeException {
+
+		DLFileEntryType dlFileEntryType = findByG_DDI(
+			groupId, dataDefinitionId);
+
+		return remove(dlFileEntryType);
+	}
+
+	/**
+	 * Returns the number of document library file entry types where groupId = &#63; and dataDefinitionId = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param dataDefinitionId the data definition ID
+	 * @return the number of matching document library file entry types
+	 */
+	@Override
+	public int countByG_DDI(long groupId, long dataDefinitionId) {
+		boolean productionMode = CTPersistenceHelperUtil.isProductionMode(
+			DLFileEntryType.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_DDI;
+
+			finderArgs = new Object[] {groupId, dataDefinitionId};
+
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_DLFILEENTRYTYPE_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_DDI_GROUPID_2);
+
+			sb.append(_FINDER_COLUMN_G_DDI_DATADEFINITIONID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				queryPos.add(dataDefinitionId);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_DDI_GROUPID_2 =
+		"dlFileEntryType.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_DDI_DATADEFINITIONID_2 =
+		"dlFileEntryType.dataDefinitionId = ?";
+
 	private FinderPath _finderPathFetchByG_F;
 	private FinderPath _finderPathCountByG_F;
 
@@ -2956,7 +3188,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByG_F, finderArgs, this);
+				_finderPathFetchByG_F, finderArgs);
 		}
 
 		if (result instanceof DLFileEntryType) {
@@ -3077,8 +3309,7 @@ public class DLFileEntryTypePersistenceImpl
 
 			finderArgs = new Object[] {groupId, fileEntryTypeKey};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3180,6 +3411,14 @@ public class DLFileEntryTypePersistenceImpl
 			dlFileEntryType);
 
 		FinderCacheUtil.putResult(
+			_finderPathFetchByG_DDI,
+			new Object[] {
+				dlFileEntryType.getGroupId(),
+				dlFileEntryType.getDataDefinitionId()
+			},
+			dlFileEntryType);
+
+		FinderCacheUtil.putResult(
 			_finderPathFetchByG_F,
 			new Object[] {
 				dlFileEntryType.getGroupId(),
@@ -3213,23 +3452,21 @@ public class DLFileEntryTypePersistenceImpl
 	 * Clears the cache for all document library file entry types.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(DLFileEntryTypeImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(DLFileEntryTypeImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the document library file entry type.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
@@ -3248,9 +3485,7 @@ public class DLFileEntryTypePersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(DLFileEntryTypeImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(DLFileEntryTypeImpl.class, primaryKey);
@@ -3266,19 +3501,28 @@ public class DLFileEntryTypePersistenceImpl
 		};
 
 		FinderCacheUtil.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
+			_finderPathCountByUUID_G, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathFetchByUUID_G, args, dlFileEntryTypeModelImpl, false);
+			_finderPathFetchByUUID_G, args, dlFileEntryTypeModelImpl);
+
+		args = new Object[] {
+			dlFileEntryTypeModelImpl.getGroupId(),
+			dlFileEntryTypeModelImpl.getDataDefinitionId()
+		};
+
+		FinderCacheUtil.putResult(
+			_finderPathCountByG_DDI, args, Long.valueOf(1));
+		FinderCacheUtil.putResult(
+			_finderPathFetchByG_DDI, args, dlFileEntryTypeModelImpl);
 
 		args = new Object[] {
 			dlFileEntryTypeModelImpl.getGroupId(),
 			dlFileEntryTypeModelImpl.getFileEntryTypeKey()
 		};
 
+		FinderCacheUtil.putResult(_finderPathCountByG_F, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathCountByG_F, args, Long.valueOf(1), false);
-		FinderCacheUtil.putResult(
-			_finderPathFetchByG_F, args, dlFileEntryTypeModelImpl, false);
+			_finderPathFetchByG_F, args, dlFileEntryTypeModelImpl);
 	}
 
 	/**
@@ -3746,7 +3990,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DLFileEntryType>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -3822,7 +4066,7 @@ public class DLFileEntryTypePersistenceImpl
 
 		if (productionMode) {
 			count = (Long)FinderCacheUtil.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -4274,6 +4518,9 @@ public class DLFileEntryTypePersistenceImpl
 		_uniqueIndexColumnNames.add(new String[] {"uuid_", "groupId"});
 
 		_uniqueIndexColumnNames.add(
+			new String[] {"groupId", "dataDefinitionId"});
+
+		_uniqueIndexColumnNames.add(
 			new String[] {"groupId", "fileEntryTypeKey"});
 	}
 
@@ -4285,29 +4532,26 @@ public class DLFileEntryTypePersistenceImpl
 
 		_argumentsResolverServiceRegistration = registry.registerService(
 			ArgumentsResolver.class,
-			new DLFileEntryTypeModelArgumentsResolver(),
-			HashMapBuilder.<String, Object>put(
-				"model.class.name", DLFileEntryType.class.getName()
-			).build());
+			new DLFileEntryTypeModelArgumentsResolver());
 
 		dlFileEntryTypeToDLFolderTableMapper =
 			TableMapperFactory.getTableMapper(
 				"DLFileEntryTypes_DLFolders", "companyId", "fileEntryTypeId",
 				"folderId", this, dlFolderPersistence);
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = _createFinderPath(
+		_finderPathWithPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -4315,27 +4559,27 @@ public class DLFileEntryTypePersistenceImpl
 			},
 			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			true);
 
-		_finderPathCountByUuid = _createFinderPath(
+		_finderPathCountByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
-		_finderPathFetchByUUID_G = _createFinderPath(
+		_finderPathFetchByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = _createFinderPath(
+		_finderPathCountByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
@@ -4344,17 +4588,17 @@ public class DLFileEntryTypePersistenceImpl
 			},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = _createFinderPath(
+		_finderPathCountByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -4362,27 +4606,37 @@ public class DLFileEntryTypePersistenceImpl
 			},
 			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			true);
 
-		_finderPathCountByGroupId = _createFinderPath(
+		_finderPathCountByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathWithPaginationCountByGroupId = _createFinderPath(
+		_finderPathWithPaginationCountByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathFetchByG_F = _createFinderPath(
+		_finderPathFetchByG_DDI = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_DDI",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "dataDefinitionId"}, true);
+
+		_finderPathCountByG_DDI = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_DDI",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "dataDefinitionId"}, false);
+
+		_finderPathFetchByG_F = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_F",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "fileEntryTypeKey"}, true);
 
-		_finderPathCountByG_F = _createFinderPath(
+		_finderPathCountByG_F = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_F",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "fileEntryTypeKey"}, false);
@@ -4392,12 +4646,6 @@ public class DLFileEntryTypePersistenceImpl
 		EntityCacheUtil.removeCache(DLFileEntryTypeImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 
 		TableMapperFactory.removeTableMapper("DLFileEntryTypes_DLFolders");
 	}
@@ -4458,31 +4706,13 @@ public class DLFileEntryTypePersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			Registry registry = RegistryUtil.getRegistry();
-
-			_serviceRegistrations.add(
-				registry.registerService(
-					FinderPath.class, finderPath,
-					HashMapBuilder.<String, Object>put(
-						"cache.name", cacheName
-					).build()));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class DLFileEntryTypeModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -4533,6 +4763,16 @@ public class DLFileEntryTypePersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return DLFileEntryTypeImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return DLFileEntryTypeTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

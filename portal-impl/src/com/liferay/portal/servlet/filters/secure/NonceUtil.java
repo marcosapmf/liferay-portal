@@ -122,7 +122,8 @@ public class NonceUtil {
 		catch (InterruptedException interruptedException) {
 			_log.error(
 				"Interrupted while waiting for nonce verification in the " +
-					"cluster");
+					"cluster",
+				interruptedException);
 		}
 
 		return false;
@@ -155,6 +156,7 @@ public class NonceUtil {
 			}
 
 			_nonce = nonce;
+
 			_createTime = System.currentTimeMillis();
 		}
 

@@ -44,6 +44,7 @@ import com.liferay.portal.test.rule.Inject;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -267,6 +268,32 @@ public class DataDefinitionResourceTest
 	public void testPostDataDefinitionByContentType() throws Exception {
 		super.testPostDataDefinitionByContentType();
 
+		// Allow invalid field languages for app builder
+
+		DataDefinition fieldsetDataDefinition =
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				testGroup.getGroupId(), _CONTENT_TYPE,
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read("data-definition-basic.json")));
+
+		DataDefinition dataDefinition = DataDefinition.toDTO(
+			DataDefinitionTestUtil.read(
+				"data-definition-with-invalid-field-languages.json"));
+
+		for (DataDefinitionField dataDefinitionField :
+				dataDefinition.getDataDefinitionFields()) {
+
+			Map<String, Object> customProperties =
+				dataDefinitionField.getCustomProperties();
+
+			customProperties.put(
+				"ddmStructureId", fieldsetDataDefinition.getId());
+		}
+
+		assertValid(
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				testGroup.getGroupId(), "app-builder", dataDefinition));
+
 		// MustNotDuplicateFieldName
 
 		try {
@@ -388,33 +415,6 @@ public class DataDefinitionResourceTest
 			Assert.assertEquals("MustSetOptionsForField", problem.getType());
 		}
 
-		// MustSetValidAvailableLocalesForProperty
-
-		try {
-			dataDefinitionResource.postDataDefinitionByContentType(
-				_CONTENT_TYPE,
-				DataDefinition.toDTO(
-					DataDefinitionTestUtil.read(
-						"data-definition-must-set-valid-available-locales-" +
-							"for-property.json")));
-
-			Assert.fail("An exception must be thrown");
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals(
-				JSONUtil.put(
-					"fieldName", "select1"
-				).put(
-					"property", "options"
-				).toJSONString(),
-				problem.getDetail());
-			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
-			Assert.assertEquals(
-				"MustSetValidAvailableLocalesForProperty", problem.getType());
-		}
-
 		// MustSetValidCharactersForFieldName
 
 		try {
@@ -512,15 +512,14 @@ public class DataDefinitionResourceTest
 			Assert.assertEquals("string", problem.getDetail());
 		}
 
-		// Fill the data layout name with the data definition's name when no
-		// name is set
+		// Provide default layout name when none is informed
 
-		DataDefinition dataDefinition =
+		dataDefinition =
 			dataDefinitionResource.postSiteDataDefinitionByContentType(
 				testGroup.getGroupId(), _CONTENT_TYPE,
 				DataDefinition.toDTO(
 					DataDefinitionTestUtil.read(
-						"data-definition-must-set-data-layout-name.json")));
+						"data-definition-empty-data-layout-name.json")));
 
 		DataLayout dataLayout = dataDefinition.getDefaultDataLayout();
 
@@ -824,7 +823,7 @@ public class DataDefinitionResourceTest
 		dataDefinitionResource.deleteDataDefinition(dataDefinition.getId());
 	}
 
-	private static final String _CONTENT_TYPE = "app-builder";
+	private static final String _CONTENT_TYPE = "app-builder-fieldset";
 
 	@Inject(type = DataEngineNativeObjectTracker.class)
 	private DataEngineNativeObjectTracker _dataEngineNativeObjectTracker;

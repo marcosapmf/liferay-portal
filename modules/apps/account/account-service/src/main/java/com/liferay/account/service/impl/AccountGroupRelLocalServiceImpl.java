@@ -1,0 +1,133 @@
+/**
+ * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+package com.liferay.account.service.impl;
+
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.exception.DuplicateAccountGroupRelException;
+import com.liferay.account.model.AccountGroupRel;
+import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.base.AccountGroupRelLocalServiceBaseImpl;
+import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+
+import java.util.List;
+
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+
+/**
+ * @author Brian Wing Shun Chan
+ */
+@Component(
+	property = "model.class.name=com.liferay.account.model.AccountGroupRel",
+	service = AopService.class
+)
+public class AccountGroupRelLocalServiceImpl
+	extends AccountGroupRelLocalServiceBaseImpl {
+
+	@Override
+	public AccountGroupRel addAccountGroupRel(
+			long accountGroupId, String className, long classPK)
+		throws PortalException {
+
+		long classNameId = _classNameLocalService.getClassNameId(className);
+
+		AccountGroupRel accountGroupRel =
+			accountGroupRelPersistence.fetchByA_C_C(
+				accountGroupId, classNameId, classPK);
+
+		if (accountGroupRel != null) {
+			throw new DuplicateAccountGroupRelException();
+		}
+
+		_accountGroupLocalService.getAccountGroup(accountGroupId);
+
+		if (classPK != AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT) {
+			_accountEntryLocalService.getAccountEntry(classPK);
+		}
+
+		accountGroupRel = createAccountGroupRel(
+			counterLocalService.increment());
+
+		accountGroupRel.setAccountGroupId(accountGroupId);
+		accountGroupRel.setClassNameId(classNameId);
+		accountGroupRel.setClassPK(classPK);
+
+		return addAccountGroupRel(accountGroupRel);
+	}
+
+	@Override
+	public void addAccountGroupRels(
+			long accountGroupId, String className, long[] classPKs)
+		throws PortalException {
+
+		for (long classPK : classPKs) {
+			addAccountGroupRel(accountGroupId, className, classPK);
+		}
+	}
+
+	@Override
+	public void deleteAccountGroupRels(
+			long accountGroupId, String className, long[] classPKs)
+		throws PortalException {
+
+		for (long classPK : classPKs) {
+			accountGroupRelPersistence.removeByA_C_C(
+				accountGroupId,
+				_classNameLocalService.getClassNameId(className), classPK);
+		}
+	}
+
+	@Override
+	public AccountGroupRel fetchAccountGroupRel(
+		long accountGroupId, String className, long classPK) {
+
+		return accountGroupRelPersistence.fetchByA_C_C(
+			accountGroupId, _classNameLocalService.getClassNameId(className),
+			classPK);
+	}
+
+	@Override
+	public List<AccountGroupRel> getAccountGroupRels(
+		String className, long classPK) {
+
+		return accountGroupRelPersistence.findByC_C(
+			_classNameLocalService.getClassNameId(className), classPK);
+	}
+
+	@Override
+	public List<AccountGroupRel> getAccountGroupRelsByAccountGroupId(
+		long accountGroupId) {
+
+		return accountGroupRelPersistence.findByAccountGroupId(accountGroupId);
+	}
+
+	@Override
+	public long getAccountGroupRelsCountByAccountGroupId(long accountGroupId) {
+		return accountGroupRelPersistence.countByAccountGroupId(accountGroupId);
+	}
+
+	@Reference
+	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
+	private AccountGroupLocalService _accountGroupLocalService;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+}

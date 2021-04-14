@@ -20,7 +20,7 @@
 SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= new SelectThemeManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectThemeDisplayContext) %>"
 />
 
@@ -35,7 +35,7 @@ SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayCont
 	</div>
 </c:if>
 
-<aui:form cssClass="container-fluid-1280" name="selectThemeFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectThemeFm">
 	<liferay-ui:search-container
 		id="themes"
 		searchContainer="<%= selectThemeDisplayContext.getThemesSearchContainer() %>"
@@ -53,6 +53,12 @@ SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayCont
 			Map<String, Object> data = HashMapBuilder.<String, Object>put(
 				"themeid", theme.getThemeId()
 			).build();
+
+			String themeId = ParamUtil.getString(request, "themeId");
+
+			if (themeId.equals(theme.getThemeId())) {
+				row.setCssClass("active");
+			}
 			%>
 
 			<c:choose>
@@ -80,7 +86,7 @@ SelectThemeDisplayContext selectThemeDisplayContext = new SelectThemeDisplayCont
 				<c:when test='<%= Objects.equals(selectThemeDisplayContext.getDisplayStyle(), "icon") %>'>
 
 					<%
-					row.setCssClass("entry-card lfr-asset-item");
+					row.setCssClass(row.getCssClass() + " card-page-item card-page-item-asset");
 					%>
 
 					<liferay-ui:search-container-column-text>

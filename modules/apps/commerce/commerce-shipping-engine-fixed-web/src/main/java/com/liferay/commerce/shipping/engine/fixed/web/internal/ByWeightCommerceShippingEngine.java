@@ -22,7 +22,6 @@ import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.CommerceShippingOption;
-import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.service.CommerceAddressRestrictionLocalService;
 import com.liferay.commerce.service.CommerceShippingMethodLocalService;
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOption;
@@ -62,9 +61,7 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 
 	@Override
 	public String getCommerceShippingOptionLabel(String name, Locale locale) {
-		ResourceBundle resourceBundle = _getResourceBundle(locale);
-
-		return ResourceBundleUtil.getString(resourceBundle, name);
+		return ResourceBundleUtil.getString(_getResourceBundle(locale), name);
 	}
 
 	@Override
@@ -78,7 +75,7 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 
 		try {
 			commerceShippingOptions = _getCommerceShippingOptions(
-				commerceContext, commerceOrder, locale);
+				commerceOrder, locale);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
@@ -91,16 +88,13 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 
 	@Override
 	public String getDescription(Locale locale) {
-		ResourceBundle resourceBundle = _getResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, "by-weight-description");
+		return LanguageUtil.get(
+			_getResourceBundle(locale), "by-weight-description");
 	}
 
 	@Override
 	public String getName(Locale locale) {
-		ResourceBundle resourceBundle = _getResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, "variable-rate");
+		return LanguageUtil.get(_getResourceBundle(locale), "variable-rate");
 	}
 
 	private List<CommerceShippingFixedOption> _getCommerceShippingFixedOptions(
@@ -121,8 +115,8 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 	}
 
 	private CommerceShippingOption _getCommerceShippingOption(
-			CommerceContext commerceContext, CommerceOrder commerceOrder,
-			Locale locale, CommerceAddress commerceAddress,
+			CommerceOrder commerceOrder, Locale locale,
+			CommerceAddress commerceAddress,
 			CommerceShippingFixedOption commerceShippingFixedOption)
 		throws PortalException {
 
@@ -161,9 +155,7 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 		BigDecimal ratePercentage = new BigDecimal(
 			commerceShippingFixedOptionRel.getRatePercentage());
 
-		CommerceMoney commerceMoney =
-			_commerceOrderPriceCalculation.getSubtotal(
-				commerceOrder, false, commerceContext);
+		CommerceMoney commerceMoney = commerceOrder.getSubtotalMoney();
 
 		BigDecimal orderPrice = commerceMoney.getPrice();
 
@@ -174,8 +166,7 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 	}
 
 	private List<CommerceShippingOption> _getCommerceShippingOptions(
-			CommerceContext commerceContext, CommerceOrder commerceOrder,
-			Locale locale)
+			CommerceOrder commerceOrder, Locale locale)
 		throws PortalException {
 
 		List<CommerceShippingOption> commerceShippingOptions =
@@ -202,7 +193,7 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 
 			CommerceShippingOption commerceShippingOption =
 				_getCommerceShippingOption(
-					commerceContext, commerceOrder, locale, commerceAddress,
+					commerceOrder, locale, commerceAddress,
 					commerceShippingFixedOption);
 
 			if (commerceShippingOption != null) {
@@ -224,9 +215,6 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 	@Reference
 	private CommerceAddressRestrictionLocalService
 		_commerceAddressRestrictionLocalService;
-
-	@Reference
-	private CommerceOrderPriceCalculation _commerceOrderPriceCalculation;
 
 	@Reference
 	private CommerceShippingFixedOptionLocalService

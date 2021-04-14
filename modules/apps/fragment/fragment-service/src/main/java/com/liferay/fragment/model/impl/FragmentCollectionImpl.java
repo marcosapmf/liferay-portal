@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.model.impl;
 
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
@@ -26,6 +27,8 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
@@ -102,6 +105,10 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 				String.valueOf(getFragmentCollectionId()));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			if (createIfAbsent) {
 				ServiceContext serviceContext = new ServiceContext();
 
@@ -173,6 +180,10 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 				QueryUtil.ALL_POS);
 
 		for (FragmentEntry fragmentEntry : fragmentEntries) {
+			if (fragmentEntry.getType() == FragmentConstants.TYPE_REACT) {
+				continue;
+			}
+
 			fragmentEntry.populateZipWriter(zipWriter, path + "/fragments");
 		}
 
@@ -191,6 +202,9 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 			zipWriter.addEntry(sb.toString(), fileEntry.getContentStream());
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentCollectionImpl.class);
 
 	private long _resourcesFolderId;
 

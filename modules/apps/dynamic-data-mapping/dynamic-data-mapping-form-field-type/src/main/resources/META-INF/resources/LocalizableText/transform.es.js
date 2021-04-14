@@ -12,15 +12,38 @@
  * details.
  */
 
-export const getEditingValue = ({defaultLocale, editingLocale, value}) => {
+export const convertValueToJSON = (value) => {
+	if (value && typeof value === 'string') {
+		try {
+			return JSON.parse(value);
+		}
+		catch (e) {
+			console.warn('Unable to parse JSON', value);
+		}
+	}
+
+	return value;
+};
+
+export const getEditingValue = ({
+	defaultLocale,
+	editingLocale,
+	fieldName,
+	value,
+}) => {
 	const valueJSON = convertValueToJSON(value);
 
 	if (valueJSON) {
-		return (
-			valueJSON[editingLocale.localeId] ||
-			valueJSON[defaultLocale.localeId] ||
-			''
-		);
+		if (fieldName === 'submitLabel') {
+			return valueJSON[editingLocale.localeId] || '';
+		}
+		else {
+			return (
+				valueJSON[editingLocale.localeId] ||
+				valueJSON[defaultLocale.localeId] ||
+				''
+			);
+		}
 	}
 
 	return editingLocale;
@@ -35,19 +58,6 @@ export const getInitialInternalValue = ({editingLocale, value}) => {
 const convertValueToString = (value) => {
 	if (value && typeof value === 'object') {
 		return JSON.stringify(value);
-	}
-
-	return value;
-};
-
-export const convertValueToJSON = (value) => {
-	if (value && typeof value === 'string') {
-		try {
-			return JSON.parse(value);
-		}
-		catch (e) {
-			console.warn('Unable to parse JSON', value);
-		}
 	}
 
 	return value;
@@ -75,6 +85,26 @@ export const normalizeLocaleId = (localeId) => {
 	return localeId.replace('_', '-').toLowerCase();
 };
 
+export const transformAvailableLocales = (
+	availableLocales,
+	defaultLocale,
+	value
+) => ({
+	availableLocales: availableLocales.map((availableLocale) => ({
+		displayName: availableLocale[1].label,
+		icon: normalizeLocaleId(availableLocale[0]),
+		isDefault: isDefaultLocale({
+			defaultLocale,
+			localeId: availableLocale[0],
+		}),
+		isTranslated: isTranslated({
+			localeId: availableLocale[0],
+			value,
+		}),
+		localeId: availableLocale[0],
+	})),
+});
+
 export const transformAvailableLocalesAndValue = ({
 	availableLocales,
 	defaultLocale,
@@ -93,4 +123,16 @@ export const transformAvailableLocalesAndValue = ({
 		}),
 	})),
 	value: convertValueToString(value),
+});
+
+export const transformEditingLocale = ({
+	defaultLocale,
+	editingLocale,
+	value,
+}) => ({
+	displayName: editingLocale.label,
+	icon: editingLocale.icon,
+	isDefault: isDefaultLocale({defaultLocale, localeId: editingLocale.id}),
+	isTranslated: isTranslated({localeId: editingLocale.id, value}),
+	localeId: editingLocale.id,
 });

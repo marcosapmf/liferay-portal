@@ -31,6 +31,18 @@ definition {
 			value1 = "${criterionInputOption}");
 	}
 
+	macro clickAssignSiteRolesOption {
+		Click(locator1 = "Segmentation#SEGMENT_OPTIONS_MENU");
+
+		Click(locator1 = "Segmentation#ASSIGN_SITE_ROLES_OPTION");
+
+		SelectFrame(value1 = "relative=top");
+
+		AssertTextPresent(
+			locator1 = "Segmentation#ASSIGN_SITE_ROLES_MODAL_TITLE",
+			value1 = "Assign Site Roles");
+	}
+
 	macro deleteProperties {
 		Click(locator1 = "Segmentation#DELETE_SEGMENT");
 	}
@@ -39,6 +51,20 @@ definition {
 		while (IsElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS")) {
 			LexiconEntry.gotoEllipsisMenuItemNoError(menuItem = "Edit");
 		}
+	}
+
+	macro enableAssingRolesBySegmentsCheckbox {
+		Click(locator1 = "Segmentation#ENABLE_ASSIGN_ROLES_SEGMENTS_CHECKBOX");
+
+		if (IsElementPresent(locator1 = "Button#SAVE")) {
+			Click(locator1 = "Button#SAVE");
+		}
+
+		if (IsElementPresent(locator1 = "Button#UPDATE")) {
+			Click(locator1 = "Button#UPDATE");
+		}
+
+		Pause(locator1 = "3000");
 	}
 
 	macro fillProperty {
@@ -95,6 +121,24 @@ definition {
 		}
 
 		AssertElementNotPresent(locator1 = "Segmentation#SEGMENT_LIST");
+	}
+
+	macro viewMembers {
+		var key_memberName = "${memberName}";
+
+		Click(locator1 = "Segmentation#VIEW_MEMBERS_BUTTON");
+
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+
+		AssertTextPresent(
+			locator1 = "Segmentation#MEMBER_NAME_LISTED",
+			value1 = "Test Test");
+
+		SelectFrame(value1 = "relative=top");
+
+		Click(locator1 = "Segmentation#CLOSE_MODAL");
+
+		SelectFrame(value1 = "relative=top");
 	}
 
 }

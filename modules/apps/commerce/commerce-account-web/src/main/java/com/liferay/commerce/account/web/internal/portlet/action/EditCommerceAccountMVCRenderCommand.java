@@ -19,12 +19,12 @@ import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.commerce.account.web.internal.display.context.CommerceAccountDisplayContext;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -49,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceAccountPortletKeys.COMMERCE_ACCOUNT,
-		"mvc.command.name=editCommerceAccount"
+		"mvc.command.name=/commerce_account/edit_commerce_account"
 	},
 	service = MVCRenderCommand.class
 )
@@ -63,16 +63,15 @@ public class EditCommerceAccountMVCRenderCommand implements MVCRenderCommand {
 		CommerceAccountDisplayContext commerceAccountDisplayContext =
 			new CommerceAccountDisplayContext(
 				_commerceAccountService, _commerceAddressService,
-				_commerceCountryService, _commerceRegionService,
-				_configurationProvider,
+				_configurationProvider, _countryService,
 				_portal.getHttpServletRequest(renderRequest),
-				_modelResourcePermission, _userFileUploadsConfiguration,
-				_userLocalService);
+				_modelResourcePermission, _regionService,
+				_userFileUploadsConfiguration, _userLocalService);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, commerceAccountDisplayContext);
 
-		return "/edit_account.jsp";
+		return "/edit_commerce_account.jsp";
 	}
 
 	@Activate
@@ -89,13 +88,10 @@ public class EditCommerceAccountMVCRenderCommand implements MVCRenderCommand {
 	private CommerceAddressService _commerceAddressService;
 
 	@Reference
-	private CommerceCountryService _commerceCountryService;
-
-	@Reference
-	private CommerceRegionService _commerceRegionService;
-
-	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
+	private CountryService _countryService;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.account.model.CommerceAccount)"
@@ -104,6 +100,9 @@ public class EditCommerceAccountMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RegionService _regionService;
 
 	private volatile UserFileUploadsConfiguration _userFileUploadsConfiguration;
 

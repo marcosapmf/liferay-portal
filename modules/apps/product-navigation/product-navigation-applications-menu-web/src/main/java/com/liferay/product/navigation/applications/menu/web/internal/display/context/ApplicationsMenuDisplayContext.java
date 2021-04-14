@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
@@ -86,6 +85,8 @@ public class ApplicationsMenuDisplayContext {
 
 				applicationsMenuPanelAppsURL.setResourceID(
 					"/applications_menu/panel_apps");
+				applicationsMenuPanelAppsURL.setParameter(
+					"selectedPortletId", themeDisplay.getPpid());
 
 				return applicationsMenuPanelAppsURL.toString();
 			}
@@ -94,7 +95,7 @@ public class ApplicationsMenuDisplayContext {
 		).put(
 			"virtualInstance",
 			HashMapBuilder.<String, Object>put(
-				"label", HtmlUtil.escape(company.getName())
+				"label", company.getName()
 			).put(
 				"logoURL",
 				StringBundler.concat(

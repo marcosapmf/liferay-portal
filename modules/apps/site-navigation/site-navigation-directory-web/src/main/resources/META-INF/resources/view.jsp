@@ -43,11 +43,6 @@
 								>
 									<c:choose>
 										<c:when test='<%= Objects.equals(sitesDirectoryDisplayContext.getDisplayStyle(), "icon") %>'>
-
-											<%
-											row.setCssClass("entry-card lfr-asset-item");
-											%>
-
 											<liferay-ui:search-container-column-text>
 												<clay:vertical-card
 													verticalCard="<%= new GroupVerticalCard(childGroup, renderRequest) %>"
@@ -87,14 +82,14 @@
 												</h6>
 
 												<h6 class="text-default">
-													<liferay-ui:asset-tags-summary
+													<liferay-asset:asset-tags-summary
 														className="<%= Group.class.getName() %>"
 														classPK="<%= childGroup.getGroupId() %>"
 													/>
 												</h6>
 
 												<h6 class="text-default">
-													<liferay-ui:asset-categories-summary
+													<liferay-asset:asset-categories-summary
 														className="<%= Group.class.getName() %>"
 														classPK="<%= childGroup.getGroupId() %>"
 													/>

@@ -23,18 +23,13 @@ DDMStructureVersion structureVersion = structure.getStructureVersion();
 
 long classNameId = PortalUtil.getClassNameId(DDMStructure.class);
 long classPK = BeanParamUtil.getLong(structure, request, "structureId");
-
-boolean copyFormTemplates = ParamUtil.getBoolean(request, "copyFormTemplates");
-boolean copyDisplayTemplates = ParamUtil.getBoolean(request, "copyDisplayTemplates");
-
-boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
 %>
 
-<portlet:actionURL name="copyStructure" var="copyStructureURL">
+<portlet:actionURL name="/dynamic_data_mapping/copy_structure" var="copyStructureURL">
 	<portlet:param name="mvcPath" value="/copy_structure.jsp" />
 </portlet:actionURL>
 
-<aui:form action="<%= copyStructureURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= copyStructureURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= ddmDisplay.getViewTemplatesBackURL(liferayPortletRequest, liferayPortletResponse, classPK) %>" />
 	<aui:input name="classNameId" type="hidden" value="<%= String.valueOf(classNameId) %>" />
 	<aui:input name="classPK" type="hidden" value="<%= String.valueOf(classPK) %>" />
@@ -43,15 +38,13 @@ boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
 
 	<liferay-ui:error exception="<%= StructureNameException.class %>" message="please-enter-a-valid-name" />
 
-	<c:if test="<%= showBackURL %>">
+	<c:if test='<%= ParamUtil.getBoolean(request, "showBackURL", true) %>'>
 
 		<%
-		String title = LanguageUtil.format(request, "copy-x", ddmDisplay.getStructureName(locale), false);
-
 		portletDisplay.setShowBackIcon(true);
 		portletDisplay.setURLBack(ddmDisplay.getViewTemplatesBackURL(liferayPortletRequest, liferayPortletResponse, classPK));
 
-		renderResponse.setTitle(title);
+		renderResponse.setTitle(LanguageUtil.format(request, "copy-x", ddmDisplay.getStructureName(locale), false));
 		%>
 
 	</c:if>
@@ -65,11 +58,11 @@ boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
 			<aui:input name="description" />
 
 			<c:if test="<%= Validator.isNull(templateTypeValue) || templateTypeValue.equals(DDMTemplateConstants.TEMPLATE_TYPE_FORM) %>">
-				<aui:input checked="<%= copyFormTemplates %>" label='<%= Validator.isNull(templateTypeValue) ? "copy-form-templates" : "copy-templates" %>' name="copyFormTemplates" type="checkbox" />
+				<aui:input checked='<%= ParamUtil.getBoolean(request, "copyFormTemplates") %>' label='<%= Validator.isNull(templateTypeValue) ? "copy-form-templates" : "copy-templates" %>' name="copyFormTemplates" type="checkbox" />
 			</c:if>
 
 			<c:if test="<%= Validator.isNull(templateTypeValue) || templateTypeValue.equals(DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY) %>">
-				<aui:input checked="<%= copyDisplayTemplates %>" label='<%= Validator.isNull(templateTypeValue) ? "copy-display-templates" : "copy-templates" %>' name="copyDisplayTemplates" type="checkbox" />
+				<aui:input checked='<%= ParamUtil.getBoolean(request, "copyDisplayTemplates") %>' label='<%= Validator.isNull(templateTypeValue) ? "copy-display-templates" : "copy-templates" %>' name="copyDisplayTemplates" type="checkbox" />
 			</c:if>
 		</aui:fieldset>
 	</aui:fieldset-group>

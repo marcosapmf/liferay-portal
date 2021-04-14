@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
@@ -135,11 +136,95 @@ public class CommercePriceEntryLocalServiceImpl
 			promoPrice, serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #addCommercePriceEntry(String, long, String, long,
+	 *             BigDecimal, BigDecimal, boolean, BigDecimal, BigDecimal,
+	 *             BigDecimal, BigDecimal, int, int, int, int, int, int, int,
+	 *             int, int, int, boolean, ServiceContext)}
+	 */
+	@Deprecated
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePriceEntry addCommercePriceEntry(
 			long cProductId, String cpInstanceUuid, long commercePriceListId,
 			String externalReferenceCode, BigDecimal price,
+			BigDecimal promoPrice, boolean discountDiscovery,
+			BigDecimal discountLevel1, BigDecimal discountLevel2,
+			BigDecimal discountLevel3, BigDecimal discountLevel4,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, ServiceContext serviceContext)
+		throws PortalException {
+
+		return addCommercePriceEntry(
+			externalReferenceCode, cProductId, cpInstanceUuid,
+			commercePriceListId, price, promoPrice, discountDiscovery,
+			discountLevel1, discountLevel2, discountLevel3, discountLevel4,
+			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
+			displayDateMinute, expirationDateMonth, expirationDateDay,
+			expirationDateYear, expirationDateHour, expirationDateMinute,
+			neverExpire, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #addCommercePriceEntry(String, long, String, long,
+	 *             BigDecimal, BigDecimal, ServiceContext)}
+	 */
+	@Deprecated
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommercePriceEntry addCommercePriceEntry(
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
+			String externalReferenceCode, BigDecimal price,
+			BigDecimal promoPrice, ServiceContext serviceContext)
+		throws PortalException {
+
+		return addCommercePriceEntry(
+			externalReferenceCode, cProductId, cpInstanceUuid,
+			commercePriceListId, price, promoPrice, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #addCommercePriceEntry(String, long, String, long,
+	 *             BigDecimal, boolean, BigDecimal, BigDecimal, BigDecimal,
+	 *             BigDecimal, int, int, int, int, int, int, int, int, int,
+	 *             int, boolean, ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public CommercePriceEntry addCommercePriceEntry(
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
+			String externalReferenceCode, BigDecimal price,
+			boolean discountDiscovery, BigDecimal discountLevel1,
+			BigDecimal discountLevel2, BigDecimal discountLevel3,
+			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return addCommercePriceEntry(
+			externalReferenceCode, cProductId, cpInstanceUuid,
+			commercePriceListId, price, discountDiscovery, discountLevel1,
+			discountLevel2, discountLevel3, discountLevel4, displayDateMonth,
+			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			serviceContext);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommercePriceEntry addCommercePriceEntry(
+			String externalReferenceCode, long cProductId,
+			String cpInstanceUuid, long commercePriceListId, BigDecimal price,
 			BigDecimal promoPrice, boolean discountDiscovery,
 			BigDecimal discountLevel1, BigDecimal discountLevel2,
 			BigDecimal discountLevel3, BigDecimal discountLevel4,
@@ -159,7 +244,7 @@ public class CommercePriceEntryLocalServiceImpl
 		}
 
 		validateExternalReferenceCode(
-			serviceContext.getCompanyId(), externalReferenceCode);
+			externalReferenceCode, serviceContext.getCompanyId());
 
 		Date expirationDate = null;
 		Date now = new Date();
@@ -181,6 +266,7 @@ public class CommercePriceEntryLocalServiceImpl
 		CommercePriceEntry commercePriceEntry =
 			commercePriceEntryPersistence.create(commercePriceEntryId);
 
+		commercePriceEntry.setExternalReferenceCode(externalReferenceCode);
 		commercePriceEntry.setCompanyId(user.getCompanyId());
 		commercePriceEntry.setUserId(user.getUserId());
 		commercePriceEntry.setUserName(user.getFullName());
@@ -193,7 +279,6 @@ public class CommercePriceEntryLocalServiceImpl
 		commercePriceEntry.setDiscountLevel3(discountLevel3);
 		commercePriceEntry.setDiscountLevel4(discountLevel4);
 		commercePriceEntry.setExpandoBridgeAttributes(serviceContext);
-		commercePriceEntry.setExternalReferenceCode(externalReferenceCode);
 		commercePriceEntry.setCPInstanceUuid(cpInstanceUuid);
 		commercePriceEntry.setCProductId(cProductId);
 		commercePriceEntry.setDisplayDate(displayDate);
@@ -221,8 +306,8 @@ public class CommercePriceEntryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePriceEntry addCommercePriceEntry(
-			long cProductId, String cpInstanceUuid, long commercePriceListId,
-			String externalReferenceCode, BigDecimal price,
+			String externalReferenceCode, long cProductId,
+			String cpInstanceUuid, long commercePriceListId, BigDecimal price,
 			BigDecimal promoPrice, ServiceContext serviceContext)
 		throws PortalException {
 
@@ -238,8 +323,8 @@ public class CommercePriceEntryLocalServiceImpl
 
 	@Override
 	public CommercePriceEntry addCommercePriceEntry(
-			long cProductId, String cpInstanceUuid, long commercePriceListId,
-			String externalReferenceCode, BigDecimal price,
+			String externalReferenceCode, long cProductId,
+			String cpInstanceUuid, long commercePriceListId, BigDecimal price,
 			boolean discountDiscovery, BigDecimal discountLevel1,
 			BigDecimal discountLevel2, BigDecimal discountLevel3,
 			BigDecimal discountLevel4, int displayDateMonth, int displayDateDay,
@@ -251,13 +336,19 @@ public class CommercePriceEntryLocalServiceImpl
 		throws PortalException {
 
 		return addCommercePriceEntry(
-			cProductId, cpInstanceUuid, commercePriceListId,
-			externalReferenceCode, price, null, discountDiscovery,
-			discountLevel1, discountLevel2, discountLevel3, discountLevel4,
-			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
-			displayDateMinute, expirationDateMonth, expirationDateDay,
-			expirationDateYear, expirationDateHour, expirationDateMinute,
-			neverExpire, serviceContext);
+			externalReferenceCode, cProductId, cpInstanceUuid,
+			commercePriceListId, price, null, discountDiscovery, discountLevel1,
+			discountLevel2, discountLevel3, discountLevel4, displayDateMonth,
+			displayDateDay, displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire,
+			serviceContext);
+	}
+
+	@Override
+	public void checkCommercePriceEntries() throws PortalException {
+		checkCommercePriceEntriesByDisplayDate();
+		checkCommercePriceEntriesByExpirationDate();
 	}
 
 	@Override
@@ -341,9 +432,21 @@ public class CommercePriceEntryLocalServiceImpl
 			commercePriceEntry);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #fetchByExternalReferenceCode(String, long)}
+	 */
+	@Deprecated
 	@Override
 	public CommercePriceEntry fetchByExternalReferenceCode(
 		long companyId, String externalReferenceCode) {
+
+		return fetchByExternalReferenceCode(externalReferenceCode, companyId);
+	}
+
+	@Override
+	public CommercePriceEntry fetchByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
 
 		if (Validator.isBlank(externalReferenceCode)) {
 			return null;
@@ -755,10 +858,25 @@ public class CommercePriceEntryLocalServiceImpl
 			neverExpire, serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #updateExternalReferenceCode(String, CommercePriceEntry)}
+	 */
+	@Deprecated
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePriceEntry updateExternalReferenceCode(
 			CommercePriceEntry commercePriceEntry, String externalReferenceCode)
+		throws PortalException {
+
+		return updateExternalReferenceCode(
+			externalReferenceCode, commercePriceEntry);
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommercePriceEntry updateExternalReferenceCode(
+			String externalReferenceCode, CommercePriceEntry commercePriceEntry)
 		throws PortalException {
 
 		if (Validator.isBlank(externalReferenceCode)) {
@@ -843,10 +961,99 @@ public class CommercePriceEntryLocalServiceImpl
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #upsertCommercePriceEntry(String, long, long, String, long,
+	 *             BigDecimal, BigDecimal, boolean, BigDecimal, BigDecimal,
+	 *             BigDecimal, BigDecimal, int, int, int, int, int, int, int,
+	 *             int, int, int, boolean, String, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public CommercePriceEntry upsertCommercePriceEntry(
 			long commercePriceEntryId, long cProductId, String cpInstanceUuid,
 			long commercePriceListId, String externalReferenceCode,
+			BigDecimal price, BigDecimal promoPrice, boolean discountDiscovery,
+			BigDecimal discountLevel1, BigDecimal discountLevel2,
+			BigDecimal discountLevel3, BigDecimal discountLevel4,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, String skuExternalReferenceCode,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return upsertCommercePriceEntry(
+			externalReferenceCode, commercePriceEntryId, cProductId,
+			cpInstanceUuid, commercePriceListId, price, promoPrice,
+			discountDiscovery, discountLevel1, discountLevel2, discountLevel3,
+			discountLevel4, displayDateMonth, displayDateDay, displayDateYear,
+			displayDateHour, displayDateMinute, expirationDateMonth,
+			expirationDateDay, expirationDateYear, expirationDateHour,
+			expirationDateMinute, neverExpire, skuExternalReferenceCode,
+			serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #upsertCommercePriceEntry(String, long, long, String, long,
+	 *             BigDecimal, BigDecimal, String, ServiceContext)}
+	 */
+	@Deprecated
+	@Indexable(type = IndexableType.REINDEX)
+	@Override
+	public CommercePriceEntry upsertCommercePriceEntry(
+			long commercePriceEntryId, long cProductId, String cpInstanceUuid,
+			long commercePriceListId, String externalReferenceCode,
+			BigDecimal price, BigDecimal promoPrice,
+			String skuExternalReferenceCode, ServiceContext serviceContext)
+		throws PortalException {
+
+		return upsertCommercePriceEntry(
+			externalReferenceCode, commercePriceEntryId, cProductId,
+			cpInstanceUuid, commercePriceListId, price, promoPrice,
+			skuExternalReferenceCode, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #upsertCommercePriceEntry(String, long, long, String, long,
+	 *             BigDecimal, BigDecimal, BigDecimal, BigDecimal, int, int,
+	 *             int, int, int, int, int, int, int, int, boolean, String,
+	 *             ServiceContext)}
+	 */
+	@Deprecated
+	@Override
+	public CommercePriceEntry upsertCommercePriceEntry(
+			long commercePriceEntryId, long cProductId, String cpInstanceUuid,
+			long commercePriceListId, String externalReferenceCode,
+			BigDecimal price, boolean discountDiscovery,
+			BigDecimal discountLevel1, BigDecimal discountLevel2,
+			BigDecimal discountLevel3, BigDecimal discountLevel4,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire, String skuExternalReferenceCode,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return upsertCommercePriceEntry(
+			commercePriceEntryId, cProductId, cpInstanceUuid,
+			commercePriceListId, externalReferenceCode, price,
+			discountDiscovery, discountLevel1, discountLevel2, discountLevel3,
+			discountLevel4, displayDateMonth, displayDateDay, displayDateYear,
+			displayDateHour, displayDateMinute, expirationDateMonth,
+			expirationDateDay, expirationDateYear, expirationDateHour,
+			expirationDateMinute, neverExpire, skuExternalReferenceCode,
+			serviceContext);
+	}
+
+	@Override
+	public CommercePriceEntry upsertCommercePriceEntry(
+			String externalReferenceCode, long commercePriceEntryId,
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
 			BigDecimal price, BigDecimal promoPrice, boolean discountDiscovery,
 			BigDecimal discountLevel1, BigDecimal discountLevel2,
 			BigDecimal discountLevel3, BigDecimal discountLevel4,
@@ -875,7 +1082,8 @@ public class CommercePriceEntryLocalServiceImpl
 				if (_log.isDebugEnabled()) {
 					_log.debug(
 						"Unable to find price entry with ID: " +
-							commercePriceEntryId);
+							commercePriceEntryId,
+						noSuchPriceEntryException);
 				}
 			}
 		}
@@ -922,8 +1130,8 @@ public class CommercePriceEntryLocalServiceImpl
 			validate(commercePriceListId, cpInstanceUuid);
 
 			return addCommercePriceEntry(
-				cProductId, cpInstanceUuid, commercePriceListId,
-				externalReferenceCode, price, promoPrice, discountDiscovery,
+				externalReferenceCode, cProductId, cpInstanceUuid,
+				commercePriceListId, price, promoPrice, discountDiscovery,
 				discountLevel1, discountLevel2, discountLevel3, discountLevel4,
 				displayDateMonth, displayDateDay, displayDateYear,
 				displayDateHour, displayDateMinute, expirationDateMonth,
@@ -943,9 +1151,9 @@ public class CommercePriceEntryLocalServiceImpl
 					cpInstance.getCPDefinitionId());
 
 			return addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commercePriceListId, externalReferenceCode, price, promoPrice,
-				discountDiscovery, discountLevel1, discountLevel2,
+				externalReferenceCode, cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(), commercePriceListId, price,
+				promoPrice, discountDiscovery, discountLevel1, discountLevel2,
 				discountLevel3, discountLevel4, displayDateMonth,
 				displayDateDay, displayDateYear, displayDateHour,
 				displayDateMinute, expirationDateMonth, expirationDateDay,
@@ -972,15 +1180,15 @@ public class CommercePriceEntryLocalServiceImpl
 	 * This method is used to insert a new CommercePriceEntry or update an
 	 * existing one
 	 *
+	 * @param  externalReferenceCode - The external identifier code from a 3rd
+	 *         party system to be able to locate the same entity in the portal
+	 *         <b>Only</b> used when updating an entity; the first entity with a
+	 *         matching reference code one will be updated
 	 * @param  commercePriceEntryId - <b>Only</b> used when updating an entity
 	 *         the matching one will be updated
 	 * @param  cProductId - <b>Only</b> used when adding a new entity
 	 * @param  commercePriceListId - <b>Only</b> used when adding a new entity
 	 *         to a price list
-	 * @param  externalReferenceCode - The external identifier code from a 3rd
-	 *         party system to be able to locate the same entity in the portal
-	 *         <b>Only</b> used when updating an entity; the first entity with a
-	 *         matching reference code one will be updated
 	 * @param  price
 	 * @param  promoPrice
 	 * @param  skuExternalReferenceCode - <b>Only</b> used when adding a new
@@ -996,8 +1204,8 @@ public class CommercePriceEntryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CommercePriceEntry upsertCommercePriceEntry(
-			long commercePriceEntryId, long cProductId, String cpInstanceUuid,
-			long commercePriceListId, String externalReferenceCode,
+			String externalReferenceCode, long commercePriceEntryId,
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
 			BigDecimal price, BigDecimal promoPrice,
 			String skuExternalReferenceCode, ServiceContext serviceContext)
 		throws PortalException {
@@ -1005,9 +1213,9 @@ public class CommercePriceEntryLocalServiceImpl
 		Calendar now = new GregorianCalendar();
 
 		return upsertCommercePriceEntry(
-			commercePriceEntryId, cProductId, cpInstanceUuid,
-			commercePriceListId, externalReferenceCode, price, promoPrice, true,
-			null, null, null, null, now.get(Calendar.MONTH),
+			externalReferenceCode, commercePriceEntryId, cProductId,
+			cpInstanceUuid, commercePriceListId, price, promoPrice, true, null,
+			null, null, null, now.get(Calendar.MONTH),
 			now.get(Calendar.DAY_OF_MONTH), now.get(Calendar.YEAR),
 			now.get(Calendar.HOUR), now.get(Calendar.MINUTE), 0, 0, 0, 0, 0,
 			true, skuExternalReferenceCode, serviceContext);
@@ -1015,8 +1223,8 @@ public class CommercePriceEntryLocalServiceImpl
 
 	@Override
 	public CommercePriceEntry upsertCommercePriceEntry(
-			long commercePriceEntryId, long cProductId, String cpInstanceUuid,
-			long commercePriceListId, String externalReferenceCode,
+			String externalReferenceCode, long commercePriceEntryId,
+			long cProductId, String cpInstanceUuid, long commercePriceListId,
 			BigDecimal price, boolean discountDiscovery,
 			BigDecimal discountLevel1, BigDecimal discountLevel2,
 			BigDecimal discountLevel3, BigDecimal discountLevel4,
@@ -1078,6 +1286,70 @@ public class CommercePriceEntryLocalServiceImpl
 		queryConfig.setScoreEnabled(false);
 
 		return searchContext;
+	}
+
+	protected void checkCommercePriceEntriesByDisplayDate()
+		throws PortalException {
+
+		List<CommercePriceEntry> commercePriceEntries =
+			commercePriceEntryPersistence.findByLtD_S(
+				new Date(), WorkflowConstants.STATUS_SCHEDULED);
+
+		for (CommercePriceEntry commercePriceEntry : commercePriceEntries) {
+			long userId = PortalUtil.getValidUserId(
+				commercePriceEntry.getCompanyId(),
+				commercePriceEntry.getUserId());
+
+			ServiceContext serviceContext = new ServiceContext();
+
+			serviceContext.setCommand(Constants.UPDATE);
+
+			CommercePriceList commercePriceList =
+				commercePriceEntry.getCommercePriceList();
+
+			serviceContext.setScopeGroupId(commercePriceList.getGroupId());
+
+			commercePriceEntryLocalService.updateStatus(
+				userId, commercePriceEntry.getCommercePriceEntryId(),
+				WorkflowConstants.STATUS_APPROVED, serviceContext,
+				new HashMap<String, Serializable>());
+		}
+	}
+
+	protected void checkCommercePriceEntriesByExpirationDate()
+		throws PortalException {
+
+		List<CommercePriceEntry> commercePriceEntries =
+			commercePriceEntryPersistence.findByLtE_S(
+				new Date(), WorkflowConstants.STATUS_APPROVED);
+
+		if (_log.isDebugEnabled()) {
+			_log.debug(
+				"Expiring " + commercePriceEntries.size() +
+					" commerce price entries");
+		}
+
+		if ((commercePriceEntries != null) && !commercePriceEntries.isEmpty()) {
+			for (CommercePriceEntry commercePriceEntry : commercePriceEntries) {
+				long userId = PortalUtil.getValidUserId(
+					commercePriceEntry.getCompanyId(),
+					commercePriceEntry.getUserId());
+
+				ServiceContext serviceContext = new ServiceContext();
+
+				serviceContext.setCommand(Constants.UPDATE);
+
+				CommercePriceList commercePriceList =
+					commercePriceEntry.getCommercePriceList();
+
+				serviceContext.setScopeGroupId(commercePriceList.getGroupId());
+
+				commercePriceEntryLocalService.updateStatus(
+					userId, commercePriceEntry.getCommercePriceEntryId(),
+					WorkflowConstants.STATUS_EXPIRED, serviceContext,
+					new HashMap<String, Serializable>());
+			}
+		}
 	}
 
 	protected List<CommercePriceEntry> getCommercePriceEntries(Hits hits)
@@ -1173,7 +1445,7 @@ public class CommercePriceEntryLocalServiceImpl
 	}
 
 	protected void validateExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		if (Validator.isNull(externalReferenceCode)) {

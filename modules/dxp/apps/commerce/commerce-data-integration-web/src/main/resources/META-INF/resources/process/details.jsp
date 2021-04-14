@@ -34,16 +34,16 @@ if (commerceDataIntegrationProcess != null) {
 }
 %>
 
-<portlet:actionURL name="editCommerceDataIntegrationProcess" var="editCommerceDataIntegrationProcessActionURL" />
+<portlet:actionURL name="/commerce_data_integration/edit_commerce_data_integration_process" var="editCommerceDataIntegrationProcessActionURL" />
 
-<div class="closed container-fluid-1280" id="<portlet:namespace />editCommerceDataIntegrationProcessId">
+<div class="closed container-fluid container-fluid-max-xl" id="<portlet:namespace />editCommerceDataIntegrationProcessId">
 	<div class="container main-content-body sheet">
 		<liferay-ui:error exception="<%= NoSuchDataIntegrationProcessException.class %>" message="the-process-could-not-be-found" />
 		<liferay-ui:error exception="<%= NoSuchDataIntegrationProcessLogException.class %>" message="the-log-could-not-be-found" />
 
 		<liferay-ui:error-principal />
 
-		<aui:form action="<%= editCommerceDataIntegrationProcessActionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+		<aui:form action="<%= editCommerceDataIntegrationProcessActionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 			<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 			<aui:input name="commerceDataIntegrationProcessId" type="hidden" value="<%= String.valueOf(commerceDataIntegrationProcessId) %>" />
@@ -78,7 +78,7 @@ if (commerceDataIntegrationProcess != null) {
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectType',
-		function () {
+		() => {
 			var A = AUI();
 
 			var processType = A.one(<portlet:namespace />type).val();
@@ -116,7 +116,7 @@ if (commerceDataIntegrationProcess != null) {
 
 	contentEditor.set(STR_VALUE, content);
 
-	Liferay.on('<portlet:namespace />saveProcess', function (event) {
+	Liferay.on('<portlet:namespace />saveProcess', (event) => {
 		var form = window.document.querySelector('#<portlet:namespace />fm');
 
 		form['<portlet:namespace />typeSettings'].value = contentEditor.get(

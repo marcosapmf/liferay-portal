@@ -14,9 +14,9 @@
 
 package com.liferay.headless.commerce.admin.catalog.internal.resource.v1_0;
 
+import com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
-import com.liferay.commerce.product.model.CPAttachmentFileEntryConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
 import com.liferay.commerce.product.service.CPDefinitionService;
@@ -33,14 +33,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.upload.UniqueFileNameProvider;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -53,9 +52,11 @@ import org.osgi.service.component.annotations.ServiceScope;
 @Component(
 	enabled = false,
 	properties = "OSGI-INF/liferay/rest/v1_0/attachment.properties",
-	scope = ServiceScope.PROTOTYPE, service = AttachmentResource.class
+	scope = ServiceScope.PROTOTYPE,
+	service = {AttachmentResource.class, NestedFieldSupport.class}
 )
-public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
+public class AttachmentResourceImpl
+	extends BaseAttachmentResourceImpl implements NestedFieldSupport {
 
 	@Override
 	public Page<Attachment> getProductByExternalReferenceCodeAttachmentsPage(
@@ -158,8 +159,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductByExternalReferenceCodeAttachmentByBase64(
-			@NotNull String externalReferenceCode,
-			AttachmentBase64 attachmentBase64)
+			String externalReferenceCode, AttachmentBase64 attachmentBase64)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -178,7 +178,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductByExternalReferenceCodeAttachmentByUrl(
-			@NotNull String externalReferenceCode, AttachmentUrl attachmentUrl)
+			String externalReferenceCode, AttachmentUrl attachmentUrl)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -216,8 +216,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductByExternalReferenceCodeImageByBase64(
-			@NotNull String externalReferenceCode,
-			AttachmentBase64 attachmentBase64)
+			String externalReferenceCode, AttachmentBase64 attachmentBase64)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -236,7 +235,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductByExternalReferenceCodeImageByUrl(
-			@NotNull String externalReferenceCode, AttachmentUrl attachmentUrl)
+			String externalReferenceCode, AttachmentUrl attachmentUrl)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -270,7 +269,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductIdAttachmentByBase64(
-			@NotNull Long id, AttachmentBase64 attachmentBase64)
+			Long id, AttachmentBase64 attachmentBase64)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -286,7 +285,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductIdAttachmentByUrl(
-			@NotNull Long id, AttachmentUrl attachmentUrl)
+			Long id, AttachmentUrl attachmentUrl)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -317,7 +316,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductIdImageByBase64(
-			@NotNull Long id, AttachmentBase64 attachmentBase64)
+			Long id, AttachmentBase64 attachmentBase64)
 		throws Exception {
 
 		CPDefinition cpDefinition =
@@ -333,7 +332,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 
 	@Override
 	public Attachment postProductIdImageByUrl(
-			@NotNull Long id, AttachmentUrl attachmentUrl)
+			Long id, AttachmentUrl attachmentUrl)
 		throws Exception {
 
 		CPDefinition cpDefinition =

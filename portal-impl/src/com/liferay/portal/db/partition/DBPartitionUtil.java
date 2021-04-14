@@ -27,8 +27,10 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.InfrastructureUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.spring.hibernate.DialectDetector;
+import com.liferay.portal.util.PropsValues;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -37,8 +39,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -78,19 +82,11 @@ public class DBPartitionUtil {
 
 					if (_isControlTable(dbInspector, tableName)) {
 						statement.executeUpdate(
-							StringBundler.concat(
-								"create view ", _getSchemaName(companyId),
-								StringPool.PERIOD, tableName, " as select * ",
-								"from ", _defaultSchemaName, StringPool.PERIOD,
-								tableName));
+							_getCreateViewSQL(companyId, tableName));
 					}
 					else {
 						statement.executeUpdate(
-							StringBundler.concat(
-								"create table ", _getSchemaName(companyId),
-								StringPool.PERIOD, tableName, " like ",
-								_defaultSchemaName, StringPool.PERIOD,
-								tableName));
+							_getCreateTableSQL(companyId, tableName));
 					}
 				}
 			}
@@ -104,8 +100,84 @@ public class DBPartitionUtil {
 		return true;
 	}
 
-	public static boolean removeDBPartition(long companyId) {
-		return _DATABASE_PARTITION_ENABLED;
+	public static boolean removeDBPartition(long companyId)
+		throws PortalException {
+
+		if (!_DATABASE_PARTITION_ENABLED || (companyId == _defaultCompanyId)) {
+			return false;
+		}
+
+		Connection connection = CurrentConnectionUtil.getConnection(
+			InfrastructureUtil.getDataSource());
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		List<String> controlTableNames = new ArrayList<>();
+
+		try {
+			DatabaseMetaData databaseMetaData = connection.getMetaData();
+
+			try (ResultSet resultSet = databaseMetaData.getTables(
+					dbInspector.getCatalog(), dbInspector.getSchema(), null,
+					new String[] {"TABLE"});
+				Statement statement = connection.createStatement()) {
+
+				while (resultSet.next()) {
+					String tableName = resultSet.getString("TABLE_NAME");
+
+					if (_isControlTable(dbInspector, tableName)) {
+						controlTableNames.add(tableName);
+
+						_migrateTable(
+							companyId, tableName, statement, dbInspector);
+					}
+				}
+			}
+		}
+		catch (Exception exception1) {
+			if (ListUtil.isEmpty(controlTableNames)) {
+				throw new PortalException(exception1);
+			}
+
+			try {
+				for (String tableName : controlTableNames) {
+					try (Statement statement = connection.createStatement()) {
+						_restoreTable(
+							companyId, tableName, statement, dbInspector);
+					}
+				}
+			}
+			catch (Exception exception2) {
+				throw new PortalException(
+					StringBundler.concat(
+						"Unable to rollback the removal of database ",
+						"partition. Recover a backup of the database schema ",
+						_getSchemaName(companyId), "."),
+					exception2);
+			}
+
+			throw new PortalException(
+				"Removal of database partition removal was rolled back",
+				exception1);
+		}
+
+		return true;
+	}
+
+	public static void setDefaultCompanyId(Connection connection)
+		throws SQLException {
+
+		if (_DATABASE_PARTITION_ENABLED) {
+			try (PreparedStatement ps = connection.prepareStatement(
+					"select companyId from Company where webId = '" +
+						PropsValues.COMPANY_DEFAULT_WEB_ID + "'");
+				ResultSet rs = ps.executeQuery()) {
+
+				if (rs.next()) {
+					_defaultCompanyId = rs.getLong(1);
+				}
+			}
+		}
 	}
 
 	public static void setDefaultCompanyId(long companyId) {
@@ -158,6 +230,44 @@ public class DBPartitionUtil {
 		};
 	}
 
+	private static void _copyData(
+			String tableName, String fromSchemaName, String toSchemaName,
+			Statement statement, String whereClause)
+		throws Exception {
+
+		statement.executeUpdate(
+			StringBundler.concat(
+				"insert ", toSchemaName, StringPool.PERIOD, tableName,
+				" select * from ", fromSchemaName, StringPool.PERIOD, tableName,
+				whereClause));
+	}
+
+	private static String _getCreateTableSQL(long companyId, String tableName) {
+		return StringBundler.concat(
+			"create table if not exists ", _getSchemaName(companyId),
+			StringPool.PERIOD, tableName, " like ", _defaultSchemaName,
+			StringPool.PERIOD, tableName);
+	}
+
+	private static String _getCreateViewSQL(long companyId, String viewName) {
+		return StringBundler.concat(
+			"create or replace view ", _getSchemaName(companyId),
+			StringPool.PERIOD, viewName, " as select * from ",
+			_defaultSchemaName, StringPool.PERIOD, viewName);
+	}
+
+	private static String _getDropTableSQL(long companyId, String tableName) {
+		return StringBundler.concat(
+			"drop table if exists ", _getSchemaName(companyId),
+			StringPool.PERIOD, tableName);
+	}
+
+	private static String _getDropViewSQL(long companyId, String viewName) {
+		return StringBundler.concat(
+			"drop view if exists ", _getSchemaName(companyId),
+			StringPool.PERIOD, viewName);
+	}
+
 	private static String _getSchemaName(long companyId) {
 		return _DATABASE_PARTITION_SCHEMA_NAME_PREFIX + companyId;
 	}
@@ -174,6 +284,61 @@ public class DBPartitionUtil {
 		}
 
 		return false;
+	}
+
+	private static void _migrateTable(
+			long companyId, String tableName, Statement statement,
+			DBInspector dbInspector)
+		throws Exception {
+
+		statement.executeUpdate(_getDropViewSQL(companyId, tableName));
+
+		statement.executeUpdate(_getCreateTableSQL(companyId, tableName));
+
+		if (dbInspector.hasColumn(tableName, "companyId")) {
+			_moveCompanyData(
+				companyId, tableName, _defaultSchemaName,
+				_getSchemaName(companyId), statement);
+		}
+		else {
+			_copyData(
+				tableName, _defaultSchemaName, _getSchemaName(companyId),
+				statement, StringPool.BLANK);
+		}
+	}
+
+	private static void _moveCompanyData(
+			long companyId, String tableName, String fromSchemaName,
+			String toSchemaName, Statement statement)
+		throws Exception {
+
+		String whereClause = " where companyId = " + companyId;
+
+		_copyData(
+			tableName, fromSchemaName, toSchemaName, statement, whereClause);
+
+		if (!whereClause.isEmpty()) {
+			statement.executeUpdate(
+				StringBundler.concat(
+					"delete from ", fromSchemaName, StringPool.PERIOD,
+					tableName, whereClause));
+		}
+	}
+
+	private static void _restoreTable(
+			long companyId, String tableName, Statement statement,
+			DBInspector dbInspector)
+		throws Exception {
+
+		if (dbInspector.hasColumn(tableName, "companyId")) {
+			_moveCompanyData(
+				companyId, tableName, _getSchemaName(companyId),
+				_defaultSchemaName, statement);
+		}
+
+		statement.executeUpdate(_getDropTableSQL(companyId, tableName));
+
+		statement.executeUpdate(_getCreateViewSQL(companyId, tableName));
 	}
 
 	private static void _useSchema(Connection connection) throws SQLException {
@@ -204,7 +369,7 @@ public class DBPartitionUtil {
 			"lpartition_");
 
 	private static final Set<String> _controlTableNames = new HashSet<>(
-		Arrays.asList("Company", "Portlet", "VirtualHost"));
+		Arrays.asList("Company", "VirtualHost"));
 	private static volatile long _defaultCompanyId;
 	private static String _defaultSchemaName;
 

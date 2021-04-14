@@ -22,6 +22,8 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
@@ -161,6 +163,10 @@ public class CKEditorConfigContributor extends BaseCKEditorConfigContributor {
 			resourceBundle = _resourceBundleLoader.loadResourceBundle(locale);
 		}
 		catch (MissingResourceException missingResourceException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(missingResourceException, missingResourceException);
+			}
+
 			resourceBundle = ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE;
 		}
 
@@ -206,10 +212,10 @@ public class CKEditorConfigContributor extends BaseCKEditorConfigContributor {
 			toJSONArray("['Styles', 'Bold', 'Italic', 'Underline']"),
 			toJSONArray("['NumberedList', 'BulletedList']"),
 			toJSONArray("['Link', Unlink]"),
-			toJSONArray("['Table', 'ImageSelector', 'VideoEmbed']"));
+			toJSONArray("['Table', 'ImageSelector', 'VideoSelector']"));
 
 		if (XugglerUtil.isEnabled()) {
-			jsonArray.put(toJSONArray("['AudioSelector', 'VideoSelector']"));
+			jsonArray.put(toJSONArray("['AudioSelector']"));
 		}
 
 		if (isShowSource(inputEditorTaglibAttributes)) {
@@ -254,6 +260,9 @@ public class CKEditorConfigContributor extends BaseCKEditorConfigContributor {
 
 		return jsonArray;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CKEditorConfigContributor.class);
 
 	@Reference(
 		policy = ReferencePolicy.DYNAMIC,

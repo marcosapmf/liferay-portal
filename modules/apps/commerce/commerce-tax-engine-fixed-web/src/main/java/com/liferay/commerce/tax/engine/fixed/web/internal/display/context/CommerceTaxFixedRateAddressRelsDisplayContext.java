@@ -16,27 +16,27 @@ package com.liferay.commerce.tax.engine.fixed.web.internal.display.context;
 
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
-import com.liferay.commerce.model.CommerceCountry;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.percentage.PercentageFormatter;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPTaxCategoryService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
-import com.liferay.commerce.service.CommerceCountryService;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.commerce.tax.engine.fixed.configuration.CommerceTaxByAddressTypeConfiguration;
 import com.liferay.commerce.tax.engine.fixed.model.CommerceTaxFixedRateAddressRel;
 import com.liferay.commerce.tax.engine.fixed.service.CommerceTaxFixedRateAddressRelService;
-import com.liferay.commerce.tax.engine.fixed.web.internal.frontend.CommerceTaxRateSettingDataSetConstants;
-import com.liferay.commerce.tax.engine.fixed.web.internal.servlet.taglib.ui.CommerceTaxMethodAddressRateRelsScreenNavigationEntry;
+import com.liferay.commerce.tax.engine.fixed.web.internal.frontend.constants.CommerceTaxRateSettingDataSetConstants;
+import com.liferay.commerce.tax.engine.fixed.web.internal.frontend.taglib.servlet.taglib.CommerceTaxMethodAddressRateRelsScreenNavigationCategory;
 import com.liferay.commerce.tax.model.CommerceTaxMethod;
 import com.liferay.commerce.tax.service.CommerceTaxMethodService;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -56,26 +56,25 @@ public class CommerceTaxFixedRateAddressRelsDisplayContext
 
 	public CommerceTaxFixedRateAddressRelsDisplayContext(
 		CommerceChannelLocalService commerceChannelLocalService,
-		ModelResourcePermission<CommerceChannel>
-			commerceChannelModelResourcePermission,
-		CommerceCountryService commerceCountryService,
 		CommerceCurrencyLocalService commerceCurrencyLocalService,
-		CommerceRegionService commerceRegionService,
-		CommerceTaxMethodService commerceTaxMethodService,
 		CommerceTaxFixedRateAddressRelService
 			commerceTaxFixedRateAddressRelService,
+		CommerceTaxMethodService commerceTaxMethodService,
+		CountryService countryService,
 		CPTaxCategoryService cpTaxCategoryService,
-		PercentageFormatter percentageFormatter, RenderRequest renderRequest) {
+		ModelResourcePermission<CommerceChannel> modelResourcePermission,
+		PercentageFormatter percentageFormatter, RegionService regionService,
+		RenderRequest renderRequest) {
 
 		super(
-			commerceChannelLocalService, commerceChannelModelResourcePermission,
-			commerceCurrencyLocalService, commerceTaxMethodService,
-			cpTaxCategoryService, percentageFormatter, renderRequest);
+			commerceChannelLocalService, commerceCurrencyLocalService,
+			commerceTaxMethodService, cpTaxCategoryService,
+			modelResourcePermission, percentageFormatter, renderRequest);
 
-		_commerceCountryService = commerceCountryService;
-		_commerceRegionService = commerceRegionService;
 		_commerceTaxFixedRateAddressRelService =
 			commerceTaxFixedRateAddressRelService;
+		_countryService = countryService;
+		_regionService = regionService;
 	}
 
 	public String getAddTaxRateSettingURL() throws Exception {
@@ -85,18 +84,14 @@ public class CommerceTaxFixedRateAddressRelsDisplayContext
 			PortletRequest.RENDER_PHASE);
 
 		portletURL.setParameter(
-			"mvcRenderCommandName", "editCommerceTaxFixedRateAddressRel");
+			"mvcRenderCommandName",
+			"/commerce_tax_methods/edit_commerce_tax_fixed_rate_address_rel");
 		portletURL.setParameter(
 			"commerceTaxMethodId", String.valueOf(getCommerceTaxMethodId()));
 
 		portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 		return portletURL.toString();
-	}
-
-	public List<CommerceCountry> getCommerceCountries() {
-		return _commerceCountryService.getCommerceCountries(
-			commerceTaxFixedRateRequestHelper.getCompanyId(), true);
 	}
 
 	public long getCommerceCountryId() throws PortalException {
@@ -127,11 +122,6 @@ public class CommerceTaxFixedRateAddressRelsDisplayContext
 		return commerceRegionId;
 	}
 
-	public List<CommerceRegion> getCommerceRegions() throws PortalException {
-		return _commerceRegionService.getCommerceRegions(
-			getCommerceCountryId(), true);
-	}
-
 	public CommerceTaxFixedRateAddressRel getCommerceTaxFixedRateAddressRel()
 		throws PortalException {
 
@@ -142,6 +132,11 @@ public class CommerceTaxFixedRateAddressRelsDisplayContext
 		return _commerceTaxFixedRateAddressRelService.
 			fetchCommerceTaxFixedRateAddressRel(
 				commerceTaxFixedRateAddressRelId);
+	}
+
+	public List<Country> getCountries() {
+		return _countryService.getCompanyCountries(
+			commerceTaxFixedRateRequestHelper.getCompanyId(), true);
 	}
 
 	public CreationMenu getCreationMenu() throws Exception {
@@ -174,9 +169,13 @@ public class CommerceTaxFixedRateAddressRelsDisplayContext
 			COMMERCE_DATA_SET_KEY_TAX_RATE_SETTING;
 	}
 
+	public List<Region> getRegions() throws PortalException {
+		return _regionService.getRegions(getCommerceCountryId(), true);
+	}
+
 	@Override
 	public String getScreenNavigationCategoryKey() {
-		return CommerceTaxMethodAddressRateRelsScreenNavigationEntry.
+		return CommerceTaxMethodAddressRateRelsScreenNavigationCategory.
 			CATEGORY_KEY;
 	}
 
@@ -195,9 +194,9 @@ public class CommerceTaxFixedRateAddressRelsDisplayContext
 			taxAppliedToShippingAddress();
 	}
 
-	private final CommerceCountryService _commerceCountryService;
-	private final CommerceRegionService _commerceRegionService;
 	private final CommerceTaxFixedRateAddressRelService
 		_commerceTaxFixedRateAddressRelService;
+	private final CountryService _countryService;
+	private final RegionService _regionService;
 
 }

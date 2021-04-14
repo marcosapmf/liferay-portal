@@ -14,7 +14,7 @@
 
 // For details about this file see: LPS-2155
 
-(function (A, Liferay) {
+(function (A) {
 	var Util = Liferay.Util;
 
 	var Lang = A.Lang;
@@ -127,25 +127,6 @@
 	 */
 	Util.addInputType = function (el) {
 		Util.addInputType = Lang.emptyFn;
-
-		if (Liferay.Browser.isIe() && Liferay.Browser.getMajorVersion() < 7) {
-			Util.addInputType = function (el) {
-				if (el) {
-					el = A.one(el);
-				}
-				else {
-					el = A.one(document.body);
-				}
-
-				var defaultType = 'text';
-
-				el.all('input').each((item) => {
-					var type = item.get('type') || defaultType;
-
-					item.addClass(type);
-				});
-			};
-		}
 
 		return Util.addInputType(el);
 	};
@@ -521,4 +502,4 @@
 		},
 		['aui-io']
 	);
-})(AUI(), Liferay);
+})(AUI());

@@ -21,6 +21,7 @@
 		<!-- Other fields -->
 
 		<column name="credentialKey" type="String" />
+		<column name="credentialKeyHash" type="long" />
 		<column name="credentialType" type="int" />
 		<column name="failedAttempts" type="int" />
 		<column name="publicKeyCOSE" type="String" />
@@ -31,12 +32,12 @@
 		<finder name="UserId" return-type="Collection">
 			<finder-column name="userId" />
 		</finder>
-		<finder name="CredentialKey" return-type="Collection">
-			<finder-column name="credentialKey" />
+		<finder name="CredentialKeyHash" return-type="Collection">
+			<finder-column name="credentialKeyHash" />
 		</finder>
 		<finder name="U_C" return-type="MFAFIDO2Credential" unique="true">
 			<finder-column name="userId" />
-			<finder-column name="credentialKey" />
+			<finder-column name="credentialKeyHash" />
 		</finder>
 
 		<!-- References -->

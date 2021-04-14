@@ -20,7 +20,7 @@ import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarLocalService;
 import com.liferay.calendar.service.CalendarResourceLocalService;
-import com.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler;
+import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
@@ -28,6 +28,8 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -242,6 +244,12 @@ public class CalendarResourceStagedModelDataHandler
 			catch (DuplicateCalendarResourceException
 						duplicateCalendarResourceException) {
 
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						duplicateCalendarResourceException,
+						duplicateCalendarResourceException);
+				}
+
 				// The calendar resource for the site's default calendar is
 				// always generated beforehand, so we only want to add it once
 
@@ -354,6 +362,9 @@ public class CalendarResourceStagedModelDataHandler
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CalendarResourceStagedModelDataHandler.class);
 
 	@Reference
 	private CalendarLocalService _calendarLocalService;

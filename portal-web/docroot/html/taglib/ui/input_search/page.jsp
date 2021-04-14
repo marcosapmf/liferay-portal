@@ -25,6 +25,7 @@ String name = GetterUtil.getString((String)request.getAttribute("liferay-ui:inpu
 String placeholder = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-search:placeholder"));
 boolean showButton = GetterUtil.getBoolean(request.getAttribute("liferay-ui:input-search:showButton"));
 String title = GetterUtil.getString((String)request.getAttribute("liferay-ui:input-search:title"));
+
 boolean useNamespace = GetterUtil.getBoolean(request.getAttribute("liferay-ui:input-search:useNamespace"), true);
 
 if (!useNamespace) {
@@ -35,16 +36,18 @@ String value = ParamUtil.getString(request, name);
 %>
 
 <div class="<%= cssClass %> input-group taglib-input-search">
-	<label class="hide-accessible" for="<%= namespace + id %>"><%= title %></label>
+	<div class="input-group-item input-group-prepend">
+		<label class="hide-accessible" for="<%= namespace + id %>"><%= title %></label>
 
-	<input class="form-control search-query" id="<%= namespace + id %>" name="<%= namespace + name %>" placeholder="<%= placeholder %>" title="<%= title %>" type="text" value="<%= HtmlUtil.escapeAttribute(value) %>" />
+		<input class="form-control search-query" id="<%= namespace + id %>" name="<%= namespace + name %>" placeholder="<%= placeholder %>" title="<%= title %>" type="text" value="<%= HtmlUtil.escapeAttribute(value) %>" />
+	</div>
 
 	<c:if test="<%= showButton %>">
-		<span class="input-group-btn">
+		<div class="input-group-append input-group-item input-group-item-shrink">
 			<button class="btn btn-secondary" type="submit">
 				<%= buttonLabel %>
 			</button>
-		</span>
+		</div>
 	</c:if>
 </div>
 

@@ -18,6 +18,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -53,14 +55,20 @@ public class SelectLayoutPageTemplateEntryVerticalCard implements VerticalCard {
 	}
 
 	@Override
-	public Map<String, String> getData() {
+	public String getCssClass() {
+		return "add-layout-action-option card-interactive " +
+			"card-interactive-primary";
+	}
+
+	@Override
+	public Map<String, String> getDynamicAttributes() {
 		Map<String, String> data = new HashMap<>();
 
 		try {
 			PortletURL addLayoutURL = _renderResponse.createRenderURL();
 
 			addLayoutURL.setParameter(
-				"mvcRenderCommandName", "/layout/add_layout");
+				"mvcRenderCommandName", "/layout_admin/add_layout");
 
 			String redirect = ParamUtil.getString(
 				_httpServletRequest, "redirect");
@@ -83,18 +91,18 @@ public class SelectLayoutPageTemplateEntryVerticalCard implements VerticalCard {
 					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
 			addLayoutURL.setWindowState(LiferayWindowState.POP_UP);
 
-			data.put("add-layout-url", addLayoutURL.toString());
+			data.put("data-add-layout-url", addLayoutURL.toString());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
-		return data;
-	}
+		data.put("role", "button");
+		data.put("tabIndex", "0");
 
-	@Override
-	public String getElementClasses() {
-		return "add-layout-action-option card-interactive " +
-			"card-interactive-primary";
+		return data;
 	}
 
 	@Override
@@ -136,6 +144,9 @@ public class SelectLayoutPageTemplateEntryVerticalCard implements VerticalCard {
 	public boolean isSelectable() {
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SelectLayoutPageTemplateEntryVerticalCard.class);
 
 	private final HttpServletRequest _httpServletRequest;
 	private final LayoutPageTemplateEntry _layoutPageTemplateEntry;

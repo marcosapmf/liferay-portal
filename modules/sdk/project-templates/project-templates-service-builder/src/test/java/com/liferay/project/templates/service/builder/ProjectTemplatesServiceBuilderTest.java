@@ -24,6 +24,9 @@ import java.io.File;
 import java.net.URI;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import java.util.Optional;
 import java.util.Properties;
@@ -32,6 +35,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -100,6 +104,18 @@ public class ProjectTemplatesServiceBuilderTest
 		testContains(
 			gradleProjectDir, "foo-bar-service/service.xml",
 			"liferay-service-builder_7_2_0.dtd");
+	}
+
+	@Test
+	public void testBuildTemplateContentDTDVersionServiceBuilder73()
+		throws Exception {
+
+		File gradleProjectDir = _buildTemplateWithGradle(
+			"service-builder", "foo-bar", "--liferay-version", "7.3.5");
+
+		testContains(
+			gradleProjectDir, "foo-bar-service/service.xml",
+			"liferay-service-builder_7_3_0.dtd");
 	}
 
 	@Test
@@ -201,7 +217,109 @@ public class ProjectTemplatesServiceBuilderTest
 	}
 
 	@Test
+	public void testBuildTemplateServiceBuilderWorkspaceUAD() throws Exception {
+		String dependencyInjector = "ds";
+		String liferayVersion = getDefaultLiferayVersion();
+		String name = "guestbook";
+		String packageName = "com.test.guestbook";
+		String template = "service-builder";
+
+		File gradleWorkspaceDir = buildWorkspace(
+			temporaryFolder, "gradle", "gradleWS", liferayVersion,
+			mavenExecutor);
+
+		writeGradlePropertiesInWorkspace(
+			gradleWorkspaceDir, "liferay.workspace.product=portal-7.3-ga6");
+
+		File modulesDir = new File(gradleWorkspaceDir, "modules");
+
+		File gradleProjectDir = buildTemplateWithGradle(
+			modulesDir, template, name, "--liferay-version", liferayVersion,
+			"--package-name", packageName, "--dependency-injector",
+			dependencyInjector, "--add-ons", "true");
+
+		File gradleUADModuleDir = new File(gradleProjectDir, name + "-uad");
+
+		testExists(gradleUADModuleDir, "bnd.bnd");
+		testExists(gradleUADModuleDir, "build.gradle");
+
+		File mavenWorkspaceDir = buildWorkspace(
+			temporaryFolder, "maven", "mavenWS", liferayVersion, mavenExecutor);
+
+		File mavenModulesDir = new File(mavenWorkspaceDir, "modules");
+
+		File mavenProjectDir = buildTemplateWithMaven(
+			mavenModulesDir, mavenModulesDir, template, name, "com.test",
+			mavenExecutor, "-Dpackage=" + packageName,
+			"-DdependencyInjector=" + dependencyInjector,
+			"-DliferayVersion=" + liferayVersion, "-DaddOns=true");
+
+		File mavenUADModuleDir = new File(mavenProjectDir, name + "-uad");
+
+		testExists(mavenUADModuleDir, "bnd.bnd");
+		testExists(mavenUADModuleDir, "pom.xml");
+
+		if (isBuildProjects()) {
+			String content = FileTestUtil.read(
+				BaseProjectTemplatesTestCase.class.getClassLoader(),
+				"com/liferay/project/templates/service/builder/dependencies" +
+					"/service.xml");
+
+			Path tempPath = Files.createTempFile("service", "xml");
+
+			Files.write(tempPath, content.getBytes());
+
+			Path gradleServiceXmlPath = Paths.get(
+				gradleProjectDir.getPath(), name + "-service/service.xml");
+			Path mavenServiceXmlPath = Paths.get(
+				mavenProjectDir.getPath(), name + "-service/service.xml");
+
+			Files.copy(
+				tempPath, gradleServiceXmlPath,
+				StandardCopyOption.REPLACE_EXISTING);
+			Files.copy(
+				tempPath, mavenServiceXmlPath,
+				StandardCopyOption.REPLACE_EXISTING);
+
+			String projectPath = ":modules:" + name;
+
+			testBuildTemplateServiceBuilder(
+				gradleProjectDir, mavenProjectDir, gradleWorkspaceDir, name,
+				packageName, projectPath, _gradleDistribution, mavenExecutor);
+
+			executeGradle(
+				gradleWorkspaceDir, _gradleDistribution,
+				projectPath + ":" + name + "-uad" + GRADLE_TASK_PATH_BUILD);
+
+			File gradleUADBundleFile = testExists(
+				gradleUADModuleDir,
+				"/build/libs/com.test.guestbook.uad-1.0.0.jar");
+			File mavenUADBundleFile = testExists(
+				mavenUADModuleDir, "/target/guestbook-uad-1.0.0.jar");
+
+			testBundlesDiff(gradleUADBundleFile, mavenUADBundleFile);
+		}
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testBuildTemplateServiceBuilderWorkspaceUADUnsupported()
+		throws Exception {
+
+		String liferayVersion = "7.0.6";
+		String name = "sample";
+
+		File gradleWorkspaceDir = buildWorkspace(
+			temporaryFolder, "gradle", "gradleWS", liferayVersion,
+			mavenExecutor);
+
+		buildTemplateWithGradle(
+			gradleWorkspaceDir, "service-builder", name, "--liferay-version",
+			liferayVersion, "--add-ons", "true");
+	}
+
+	@Test
 	public void testCompareServiceBuilderPluginVersions() throws Exception {
+		Assume.assumeTrue(isBuildProjects());
 		String liferayVersion = getDefaultLiferayVersion();
 		String name = "sample";
 		String packageName = "com.test.sample";

@@ -23,7 +23,8 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 %>
 
 <clay:management-toolbar
-	displayContext="<%= viewAccountEntriesManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= viewAccountEntriesManagementToolbarDisplayContext %>"
+	propsTransformer="account_entries_admin/js/AccountEntriesManagementToolbarPropsTransformer"
 />
 
 <clay:container-fluid>
@@ -40,11 +41,10 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 			>
 
 				<%
-				Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-					"actions", StringUtil.merge(viewAccountEntriesManagementToolbarDisplayContext.getAvailableActions(accountEntryDisplay))
-				).build();
-
-				row.setData(rowData);
+				row.setData(
+					HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(viewAccountEntriesManagementToolbarDisplayContext.getAvailableActions(accountEntryDisplay))
+					).build());
 				%>
 
 				<portlet:renderURL var="rowURL">
@@ -102,8 +102,3 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 		</liferay-ui:search-container>
 	</aui:form>
 </clay:container-fluid>
-
-<liferay-frontend:component
-	componentId="<%= viewAccountEntriesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="account_entries_admin/js/AccountEntriesManagementToolbarDefaultEventHandler.es"
-/>

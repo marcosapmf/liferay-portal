@@ -550,8 +550,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -605,7 +604,7 @@ definition {
 
 		LexiconEntry.gotoEntry(rowEntry = "WC Structure Name");
 
-		DynamicDataMapping.viewField(
+		DataEngine.viewField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -933,6 +932,47 @@ definition {
 		WebContent.viewSpecificVersionHistoryCP(
 			webContentStatus = "DRAFT",
 			webContentTitle = "Web Content Title Edit Draft");
+	}
+
+	@description = "This is a test for LPS-109555. The error message should be shown when restore a document from recycle bin when it has the same name as existing document."
+	@priority = "2"
+	test ViewErrorMessageWhenRestoreDocumentHasTheSameNameWithExistingOne {
+		task ("Add a document entry named DM Document Title") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "DM Document Title",
+				groupName = "Site Name",
+				mimeType = "image/png",
+				sourceFileName = "Document_1.png");
+		}
+
+		task ("Remove the document to the recycle bin") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
+
+			DMDocument.moveToRecycleBinCP(dmDocumentTitle = "DM Document Title");
+		}
+
+		task ("Add another document entry with the same name") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "DM Document Title",
+				groupName = "Site Name",
+				mimeType = "text/plain",
+				sourceFileName = "Document_1.txt");
+		}
+
+		task ("View error message when restore the document from recycle bin") {
+			RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
+
+			RecycleBin.viewCP(
+				assetName = "DM Document Title",
+				assetType = "Document",
+				deleteUser = "Test Test");
+
+			RecycleBin.clickEllipsisItem(
+				assetName = "DM Document Title",
+				item = "Restore");
+
+			Alert.viewErrorMessage(errorMessage = "Error:An entry with name DM Document Title already exists.");
+		}
 	}
 
 }

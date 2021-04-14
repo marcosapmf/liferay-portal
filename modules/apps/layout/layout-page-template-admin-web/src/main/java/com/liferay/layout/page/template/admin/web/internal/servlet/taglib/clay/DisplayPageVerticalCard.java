@@ -25,11 +25,12 @@ import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
-import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
 import com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util.DisplayPageActionDropdownItemsProvider;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.RowChecker;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
@@ -87,15 +88,12 @@ public class DisplayPageVerticalCard
 				getActionDropdownItems();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return LayoutPageTemplateAdminWebKeys.
-			DISPLAY_PAGE_DROPDOWN_DEFAULT_EVENT_HANDLER;
 	}
 
 	@Override
@@ -111,6 +109,9 @@ public class DisplayPageVerticalCard
 				layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -165,6 +166,9 @@ public class DisplayPageVerticalCard
 			subtypeLabel = _getSubtypeLabel();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		if (Validator.isNull(subtypeLabel)) {
@@ -223,6 +227,9 @@ public class DisplayPageVerticalCard
 
 		return infoItemClassDetails.getLabel(_themeDisplay.getLocale());
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DisplayPageVerticalCard.class);
 
 	private final Layout _draftLayout;
 	private final InfoItemServiceTracker _infoItemServiceTracker;

@@ -26,6 +26,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -72,8 +74,9 @@ public class UsersManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return new DropdownItemList() {
 			{
@@ -82,7 +85,7 @@ public class UsersManagementToolbarDisplayContext
 						dropdownItem.putData("action", "deleteSelectedUsers");
 						dropdownItem.setIcon("times-circle");
 						dropdownItem.setLabel(
-							LanguageUtil.get(request, "delete"));
+							LanguageUtil.get(httpServletRequest, "delete"));
 						dropdownItem.setQuickAction(true);
 					});
 
@@ -113,7 +116,8 @@ public class UsersManagementToolbarDisplayContext
 
 								dropdownItem.setIcon("add-role");
 								dropdownItem.setLabel(
-									LanguageUtil.get(request, "assign-roles"));
+									LanguageUtil.get(
+										httpServletRequest, "assign-roles"));
 								dropdownItem.setQuickAction(true);
 							});
 
@@ -121,7 +125,7 @@ public class UsersManagementToolbarDisplayContext
 
 						if (role != null) {
 							String label = LanguageUtil.format(
-								request, "remove-role-x",
+								httpServletRequest, "remove-role-x",
 								role.getTitle(themeDisplay.getLocale()), false);
 
 							add(
@@ -131,7 +135,7 @@ public class UsersManagementToolbarDisplayContext
 									dropdownItem.putData(
 										"message",
 										LanguageUtil.format(
-											request,
+											httpServletRequest,
 											"are-you-sure-you-want-to-remove-" +
 												"x-role-to-selected-users",
 											role.getTitle(
@@ -157,6 +161,9 @@ public class UsersManagementToolbarDisplayContext
 					}
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception, exception);
+					}
 				}
 			}
 		};
@@ -165,8 +172,9 @@ public class UsersManagementToolbarDisplayContext
 	public String getAvailableActions(User user) throws PortalException {
 		List<String> availableActions = new ArrayList<>();
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (GroupPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(),
@@ -221,7 +229,7 @@ public class UsersManagementToolbarDisplayContext
 					dropdownItem.putData("action", "selectUsers");
 
 					ThemeDisplay themeDisplay =
-						(ThemeDisplay)request.getAttribute(
+						(ThemeDisplay)httpServletRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
 
 					dropdownItem.putData(
@@ -232,11 +240,16 @@ public class UsersManagementToolbarDisplayContext
 
 					dropdownItem.putData(
 						"selectUsersURL", selectUsersURL.toString());
-					dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+					dropdownItem.setLabel(
+						LanguageUtil.get(httpServletRequest, "add"));
 				}
 			).build();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return null;
 		}
 	}
@@ -248,8 +261,9 @@ public class UsersManagementToolbarDisplayContext
 
 	@Override
 	public List<LabelItem> getFilterLabelItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Role role = _usersDisplayContext.getRole();
 
@@ -289,8 +303,9 @@ public class UsersManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		try {
 			if (GroupPermissionUtil.contains(
@@ -302,6 +317,9 @@ public class UsersManagementToolbarDisplayContext
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return false;
@@ -329,7 +347,8 @@ public class UsersManagementToolbarDisplayContext
 				dropdownItem.setActive(Objects.equals(getNavigation(), "all"));
 				dropdownItem.setHref(
 					getPortletURL(), "navigation", "all", "roleId", "0");
-				dropdownItem.setLabel(LanguageUtil.get(request, "all"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "all"));
 			}
 		).add(
 			dropdownItem -> {
@@ -344,8 +363,9 @@ public class UsersManagementToolbarDisplayContext
 				viewRoleURL.setParameter("tabs1", "users");
 				viewRoleURL.setParameter("navigation", "roles");
 
-				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-					WebKeys.THEME_DISPLAY);
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
 				viewRoleURL.setParameter(
 					"redirect", themeDisplay.getURLCurrent());
@@ -358,7 +378,8 @@ public class UsersManagementToolbarDisplayContext
 
 				dropdownItem.setActive(
 					Objects.equals(getNavigation(), "roles"));
-				dropdownItem.setLabel(LanguageUtil.get(request, "roles"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "roles"));
 			}
 		).build();
 	}
@@ -375,8 +396,9 @@ public class UsersManagementToolbarDisplayContext
 		selectURL.setParameter(
 			"groupId", String.valueOf(_usersDisplayContext.getGroupId()));
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group scopeGroup = themeDisplay.getScopeGroup();
 
@@ -389,6 +411,9 @@ public class UsersManagementToolbarDisplayContext
 
 		return selectURL.toString();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UsersManagementToolbarDisplayContext.class);
 
 	private final UsersDisplayContext _usersDisplayContext;
 

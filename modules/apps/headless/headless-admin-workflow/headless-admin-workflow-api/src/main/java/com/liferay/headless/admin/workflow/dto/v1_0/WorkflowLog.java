@@ -28,6 +28,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -51,7 +53,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("WorkflowLog")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "WorkflowLog")
-public class WorkflowLog {
+public class WorkflowLog implements Serializable {
 
 	public static WorkflowLog toDTO(String json) {
 		return ObjectMapperUtil.readValue(WorkflowLog.class, json);
@@ -145,6 +147,34 @@ public class WorkflowLog {
 	@GraphQLField(description = "The log's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
+
+	@Schema(description = "The log's description.")
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	@JsonIgnore
+	public void setDescription(
+		UnsafeSupplier<String, Exception> descriptionUnsafeSupplier) {
+
+		try {
+			description = descriptionUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The log's description.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String description;
 
 	@Schema(description = "The log's ID.")
 	public Long getId() {
@@ -470,6 +500,20 @@ public class WorkflowLog {
 			sb.append("\"");
 
 			sb.append(liferayToJSONDateFormat.format(dateCreated));
+
+			sb.append("\"");
+		}
+
+		if (description != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"description\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(description));
 
 			sb.append("\"");
 		}

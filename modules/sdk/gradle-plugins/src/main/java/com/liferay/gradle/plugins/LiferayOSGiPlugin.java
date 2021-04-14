@@ -31,11 +31,7 @@ import com.liferay.gradle.plugins.extensions.BundleExtension;
 import com.liferay.gradle.plugins.extensions.LiferayExtension;
 import com.liferay.gradle.plugins.extensions.LiferayOSGiExtension;
 import com.liferay.gradle.plugins.internal.AlloyTaglibDefaultsPlugin;
-import com.liferay.gradle.plugins.internal.CSSBuilderDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.DBSupportDefaultsPlugin;
-import com.liferay.gradle.plugins.internal.EclipseDefaultsPlugin;
-import com.liferay.gradle.plugins.internal.IdeaDefaultsPlugin;
-import com.liferay.gradle.plugins.internal.JSModuleConfigGeneratorDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.JavadocFormatterDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.RESTBuilderDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.ServiceBuilderDefaultsPlugin;
@@ -43,24 +39,18 @@ import com.liferay.gradle.plugins.internal.TLDFormatterDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.TestIntegrationDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.UpgradeTableBuilderDefaultsPlugin;
 import com.liferay.gradle.plugins.internal.WSDDBuilderDefaultsPlugin;
-import com.liferay.gradle.plugins.internal.WatchOSGiPlugin;
 import com.liferay.gradle.plugins.internal.util.FileUtil;
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.internal.util.IncludeResourceCompileIncludeInstruction;
 import com.liferay.gradle.plugins.internal.util.copy.RenameDependencyAction;
 import com.liferay.gradle.plugins.jasper.jspc.JspCPlugin;
 import com.liferay.gradle.plugins.javadoc.formatter.JavadocFormatterPlugin;
-import com.liferay.gradle.plugins.js.module.config.generator.JSModuleConfigGeneratorPlugin;
-import com.liferay.gradle.plugins.js.transpiler.JSTranspilerBasePlugin;
-import com.liferay.gradle.plugins.js.transpiler.JSTranspilerPlugin;
 import com.liferay.gradle.plugins.lang.builder.LangBuilderPlugin;
 import com.liferay.gradle.plugins.node.NodePlugin;
 import com.liferay.gradle.plugins.node.tasks.DownloadNodeModuleTask;
 import com.liferay.gradle.plugins.node.tasks.NpmInstallTask;
+import com.liferay.gradle.plugins.python.PythonPlugin;
 import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
-import com.liferay.gradle.plugins.soy.SoyPlugin;
-import com.liferay.gradle.plugins.soy.SoyTranslationPlugin;
-import com.liferay.gradle.plugins.soy.tasks.BuildSoyTask;
 import com.liferay.gradle.plugins.tasks.DirectDeployTask;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationPlugin;
 import com.liferay.gradle.plugins.tld.formatter.TLDFormatterPlugin;
@@ -129,6 +119,7 @@ import org.gradle.api.tasks.TaskOutputs;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.bundling.War;
+import org.gradle.api.tasks.bundling.Zip;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -157,6 +148,9 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 	public static final String DEPLOY_FAST_TASK_NAME = "deployFast";
 
 	public static final String PLUGIN_NAME = "liferayOSGi";
+
+	public static final String ZIP_ZIPPABLE_RESOURCES_TASK_NAME =
+		"zipZippableResources";
 
 	@Override
 	public void apply(final Project project) {
@@ -228,6 +222,9 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 		TaskProvider<DirectDeployTask> directDeployTaskProvider =
 			GradleUtil.addTaskProvider(
 				project, AUTO_UPDATE_XML_TASK_NAME, DirectDeployTask.class);
+		TaskProvider<Task> zipZippableResourcesTaskProvider =
+			GradleUtil.addTaskProvider(
+				project, ZIP_ZIPPABLE_RESOURCES_TASK_NAME, Task.class);
 
 		TaskProvider<Task> classesTaskProvider = GradleUtil.getTaskProvider(
 			project, JavaPlugin.CLASSES_TASK_NAME);
@@ -248,6 +245,25 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 		TaskProvider<Test> testTaskProvider = GradleUtil.getTaskProvider(
 			project, JavaPlugin.TEST_TASK_NAME, Test.class);
 
+		List<TaskProvider<Zip>> zippableResourcesTaskProviders =
+			new ArrayList<>();
+
+		File[] zippableResourcesDirs = FileUtil.getDirectories(
+			project.file("src/main/zippableResources"));
+
+		for (File zippableResourcesDir : zippableResourcesDirs) {
+			String taskName = GradleUtil.getTaskName(
+				ZIP_ZIPPABLE_RESOURCES_TASK_NAME, zippableResourcesDir);
+
+			TaskProvider<Zip> zippableResourcesTaskProvider =
+				GradleUtil.addTaskProvider(project, taskName, Zip.class);
+
+			zippableResourcesTaskProviders.add(zippableResourcesTaskProvider);
+
+			_configureTaskZippableResources(
+				project, zippableResourcesTaskProvider, zippableResourcesDir);
+		}
+
 		_configureTaskAutoUpdateXmlProvider(
 			project, liferayExtension, liferayOSGiExtension,
 			directDeployTaskProvider, jarTaskProvider);
@@ -260,9 +276,14 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 			project, bundleExtension, liferayExtension, javaMainSourceSet,
 			classesTaskProvider, compileJSPTaskProvider, deployFastTaskProvider,
 			processResourcesTaskProvider);
-		_configureTaskJarProvider(project, bundleExtension, jarTaskProvider);
+		_configureTaskJarProvider(
+			project, bundleExtension, jarTaskProvider,
+			zipZippableResourcesTaskProvider);
 		_configureTaskJavadocProvider(bundleExtension, javadocTaskProvider);
 		_configureTaskTestProvider(testTaskProvider);
+		_configureTaskZipZippableResources(
+			project, zippableResourcesTaskProviders,
+			zipZippableResourcesTaskProvider);
 
 		_configureTaskCleanProvider(
 			liferayExtension, cleanTaskProvider, deployTaskProvider,
@@ -355,24 +376,12 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 		GradleUtil.applyPlugin(project, NodePlugin.class);
 
-		if (GradleUtil.hasTask(
-				project, NodePlugin.PACKAGE_RUN_BUILD_TASK_NAME)) {
-
-			GradleUtil.applyPlugin(project, JSTranspilerBasePlugin.class);
-		}
-		else {
-			GradleUtil.applyPlugin(
-				project, JSModuleConfigGeneratorPlugin.class);
-			GradleUtil.applyPlugin(project, JSTranspilerPlugin.class);
-		}
-
 		GradleUtil.applyPlugin(project, EclipsePlugin.class);
 		GradleUtil.applyPlugin(project, JavadocFormatterPlugin.class);
 		GradleUtil.applyPlugin(project, JspCPlugin.class);
 		GradleUtil.applyPlugin(project, LangBuilderPlugin.class);
+		GradleUtil.applyPlugin(project, PythonPlugin.class);
 		GradleUtil.applyPlugin(project, SourceFormatterPlugin.class);
-		GradleUtil.applyPlugin(project, SoyPlugin.class);
-		GradleUtil.applyPlugin(project, SoyTranslationPlugin.class);
 		GradleUtil.applyPlugin(project, TLDDocBuilderPlugin.class);
 		GradleUtil.applyPlugin(project, TLDFormatterPlugin.class);
 		GradleUtil.applyPlugin(project, TestIntegrationPlugin.class);
@@ -382,7 +391,6 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 		DBSupportDefaultsPlugin.INSTANCE.apply(project);
 		EclipseDefaultsPlugin.INSTANCE.apply(project);
 		IdeaDefaultsPlugin.INSTANCE.apply(project);
-		JSModuleConfigGeneratorDefaultsPlugin.INSTANCE.apply(project);
 		JavadocFormatterDefaultsPlugin.INSTANCE.apply(project);
 		JspCDefaultsPlugin.INSTANCE.apply(project);
 		RESTBuilderDefaultsPlugin.INSTANCE.apply(project);
@@ -941,7 +949,7 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 									}
 								}
 								catch (Exception exception) {
-									new GradleException(
+									throw new GradleException(
 										buildWSDDTask + " failed", exception);
 								}
 							}
@@ -1036,10 +1044,10 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 								if (taskName.equals(DEPLOY_FAST_TASK_NAME) ||
 									taskName.equals(
 										LiferayBasePlugin.DEPLOY_TASK_NAME) ||
+									taskName.equals("buildSoy") ||
 									taskName.equals("eclipseClasspath") ||
 									taskName.equals("eclipseProject") ||
 									taskName.equals("ideaModule") ||
-									(task instanceof BuildSoyTask) ||
 									(task instanceof DownloadNodeModuleTask) ||
 									(task instanceof NpmInstallTask)) {
 
@@ -1404,13 +1412,16 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 	private void _configureTaskJarProvider(
 		final Project project, final BundleExtension bundleExtension,
-		TaskProvider<Jar> jarTaskProvider) {
+		TaskProvider<Jar> jarTaskProvider,
+		final TaskProvider<Task> zipZippableResourcesTaskProvider) {
 
 		jarTaskProvider.configure(
 			new Action<Jar>() {
 
 				@Override
 				public void execute(Jar jar) {
+					jar.dependsOn(zipZippableResourcesTaskProvider);
+
 					Convention convention = jar.getConvention();
 
 					Map<String, Object> plugins = convention.getPlugins();
@@ -1445,7 +1456,7 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 									String key = entry.getKey();
 									Object value = entry.getValue();
 
-									Matcher matcher = _keyRegex.matcher(key);
+									Matcher matcher = _keyPattern.matcher(key);
 
 									if (matcher.matches() &&
 										(value instanceof String)) {
@@ -1543,6 +1554,70 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 			});
 	}
 
+	private void _configureTaskZippableResources(
+		final Project project, TaskProvider<Zip> zippableResourcesTaskProvider,
+		final File zippableResourcesDir) {
+
+		zippableResourcesTaskProvider.configure(
+			new Action<Zip>() {
+
+				@Override
+				public void execute(Zip zippableResourcesZip) {
+					File zippableResourcesFile =
+						zippableResourcesZip.getArchivePath();
+
+					StringBuilder sb = new StringBuilder();
+
+					sb.append("Assembles ");
+					sb.append(project.relativePath(zippableResourcesFile));
+					sb.append(" with the contents of the ");
+					sb.append(project.relativePath(zippableResourcesDir));
+					sb.append(" directory.");
+
+					zippableResourcesZip.setDescription(sb.toString());
+
+					zippableResourcesZip.from(zippableResourcesDir);
+					zippableResourcesZip.setArchiveName(
+						zippableResourcesDir.getName() + ".zip");
+					zippableResourcesZip.setDestinationDir(
+						project.file("classes"));
+				}
+
+			});
+	}
+
+	private void _configureTaskZipZippableResources(
+		final Project project,
+		final List<TaskProvider<Zip>> zippableResourcesTaskProviders,
+		TaskProvider<Task> zipZippableResourcesTaskProvider) {
+
+		zipZippableResourcesTaskProvider.configure(
+			new Action<Task>() {
+
+				@Override
+				public void execute(Task zipZippableResourcesTask) {
+					File zippableResourcesDir = project.file(
+						"src/main/zippableResources");
+
+					StringBuilder sb = new StringBuilder();
+
+					sb.append("Assembles Zip files from the subdirectories ");
+					sb.append(project.relativePath(zippableResourcesDir));
+					sb.append('.');
+
+					zipZippableResourcesTask.setDescription(sb.toString());
+
+					for (TaskProvider<Zip> zippableResourcesTaskProvider :
+							zippableResourcesTaskProviders) {
+
+						zipZippableResourcesTask.dependsOn(
+							zippableResourcesTaskProvider);
+					}
+				}
+
+			});
+	}
+
 	private Map<String, String> _getBuilderProperties(
 		Project project, BundleExtension bundleExtension,
 		LiferayOSGiExtension liferayOSGiExtension,
@@ -1555,9 +1630,10 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 		for (Map.Entry<String, ?> entry : projectProperties.entrySet()) {
 			String key = entry.getKey();
+			Object value = entry.getValue();
 
-			if (Character.isLowerCase(key.charAt(0))) {
-				properties.put(key, GradleUtil.toString(entry.getValue()));
+			if (Character.isLowerCase(key.charAt(0)) && (value != null)) {
+				properties.put(key, GradleUtil.toString(value));
 			}
 		}
 
@@ -1605,7 +1681,7 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 	private static final Logger _logger = Logging.getLogger(
 		LiferayOSGiPlugin.class);
 
-	private static final Pattern _keyRegex = Pattern.compile(
+	private static final Pattern _keyPattern = Pattern.compile(
 		"[a-z][\\p{Alnum}-_.]*");
 
 }

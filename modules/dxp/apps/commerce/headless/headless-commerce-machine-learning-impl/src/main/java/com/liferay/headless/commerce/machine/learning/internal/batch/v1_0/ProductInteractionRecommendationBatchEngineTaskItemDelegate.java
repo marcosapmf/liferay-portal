@@ -18,8 +18,8 @@ import com.liferay.batch.engine.BaseBatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
-import com.liferay.commerce.machine.learning.recommendation.model.ProductInteractionCommerceMLRecommendation;
-import com.liferay.commerce.machine.learning.recommendation.service.ProductInteractionCommerceMLRecommendationService;
+import com.liferay.commerce.machine.learning.recommendation.ProductInteractionCommerceMLRecommendation;
+import com.liferay.commerce.machine.learning.recommendation.ProductInteractionCommerceMLRecommendationManager;
 import com.liferay.headless.commerce.machine.learning.dto.v1_0.ProductInteractionRecommendation;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -43,27 +43,30 @@ public class ProductInteractionRecommendationBatchEngineTaskItemDelegate
 
 	@Override
 	public void createItem(
-			ProductInteractionRecommendation item,
+			ProductInteractionRecommendation productInteractionRecommendation,
 			Map<String, Serializable> parameters)
 		throws Exception {
 
 		ProductInteractionCommerceMLRecommendation
 			productInteractionCommerceMLRecommendation =
-				_productInteractionCommerceMLRecommendationService.create();
+				_productInteractionCommerceMLRecommendationManager.create();
 
 		productInteractionCommerceMLRecommendation.setCompanyId(
 			contextCompany.getCompanyId());
 		productInteractionCommerceMLRecommendation.setCreateDate(
-			item.getCreateDate());
+			productInteractionRecommendation.getCreateDate());
 		productInteractionCommerceMLRecommendation.setEntryClassPK(
-			item.getProductId());
-		productInteractionCommerceMLRecommendation.setJobId(item.getJobId());
-		productInteractionCommerceMLRecommendation.setRank(item.getRank());
+			productInteractionRecommendation.getProductId());
+		productInteractionCommerceMLRecommendation.setJobId(
+			productInteractionRecommendation.getJobId());
+		productInteractionCommerceMLRecommendation.setRank(
+			productInteractionRecommendation.getRank());
 		productInteractionCommerceMLRecommendation.setRecommendedEntryClassPK(
-			item.getRecommendedProductId());
-		productInteractionCommerceMLRecommendation.setScore(item.getScore());
+			productInteractionRecommendation.getRecommendedProductId());
+		productInteractionCommerceMLRecommendation.setScore(
+			productInteractionRecommendation.getScore());
 
-		_productInteractionCommerceMLRecommendationService.
+		_productInteractionCommerceMLRecommendationManager.
 			addProductInteractionCommerceMLRecommendation(
 				productInteractionCommerceMLRecommendation);
 	}
@@ -78,7 +81,7 @@ public class ProductInteractionRecommendationBatchEngineTaskItemDelegate
 	}
 
 	@Reference
-	private ProductInteractionCommerceMLRecommendationService
-		_productInteractionCommerceMLRecommendationService;
+	private ProductInteractionCommerceMLRecommendationManager
+		_productInteractionCommerceMLRecommendationManager;
 
 }

@@ -12,9 +12,8 @@
  * details.
  */
 
+import {getItem} from 'data-engine-js-components-web/js/utils/client.es';
 import React, {createContext, useEffect, useState} from 'react';
-
-import {getItem} from '../../utils/client.es';
 
 const PermissionsContext = createContext();
 
@@ -27,7 +26,10 @@ const ACTIONS = {
 };
 
 const PermissionsContextProvider = ({children, dataDefinitionId}) => {
-	const [actionIds, setActionIds] = useState([]);
+	const [state, setState] = useState({
+		actionIds: [],
+		isLoading: true,
+	});
 
 	useEffect(() => {
 		getItem(
@@ -38,12 +40,17 @@ const PermissionsContextProvider = ({children, dataDefinitionId}) => {
 					`/o/data-engine/v2.0/data-record-collections/${dataRecordCollectionId}/permissions/by-current-user`
 				)
 			)
-			.then((actionIds) => setActionIds(actionIds))
-			.catch((_) => setActionIds([]));
+			.then((actionIds) => setState({actionIds, isLoading: false}))
+			.catch((_) => {
+				setState((prevState) => ({
+					...prevState,
+					isLoading: false,
+				}));
+			});
 	}, [dataDefinitionId]);
 
 	return (
-		<PermissionsContext.Provider value={actionIds}>
+		<PermissionsContext.Provider value={state}>
 			{children}
 		</PermissionsContext.Provider>
 	);

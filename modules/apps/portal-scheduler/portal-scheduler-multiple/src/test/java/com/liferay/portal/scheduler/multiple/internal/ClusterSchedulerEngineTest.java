@@ -97,7 +97,7 @@ public class ClusterSchedulerEngineTest {
 
 	@Before
 	public void setUp() throws Exception {
-		setUpProps();
+		setUpPropsUtil();
 
 		setUpSchedulerEngineHelperUtil();
 		setUpClusterSchedulerEngine();
@@ -1867,7 +1867,7 @@ public class ClusterSchedulerEngineTest {
 			_clusterSchedulerEngine, "_memoryClusteredJobs");
 	}
 
-	protected void setUpProps() {
+	protected void setUpPropsUtil() {
 		_props = PropsTestUtil.setProps(
 			PropsKeys.CLUSTERABLE_ADVICE_CALL_MASTER_TIMEOUT, "100");
 	}

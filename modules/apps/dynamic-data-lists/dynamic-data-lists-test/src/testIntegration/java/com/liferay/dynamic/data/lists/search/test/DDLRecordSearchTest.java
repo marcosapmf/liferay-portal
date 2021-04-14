@@ -109,7 +109,7 @@ public class DDLRecordSearchTest {
 				PortalUtil.getClassNameId(DDLRecordSet.class), group);
 
 		DDMStructure ddmStructure = ddmStructureTestHelper.addStructure(
-			createDDMForm(LocaleUtil.US), StorageType.JSON.toString());
+			createDDMForm(LocaleUtil.US), StorageType.DEFAULT.toString());
 
 		DDLRecordSet recordSet = recordSetTestHelper.addRecordSet(ddmStructure);
 
@@ -221,7 +221,7 @@ public class DDLRecordSearchTest {
 		ddmForm.addDDMFormField(nameDDMFormField);
 
 		DDMStructure ddmStructure = ddmStructureTestHelper.addStructure(
-			ddmForm, StorageType.JSON.toString());
+			ddmForm, StorageType.DEFAULT.toString());
 
 		DDLRecordSet recordSet = recordSetTestHelper.addRecordSet(ddmStructure);
 
@@ -421,7 +421,7 @@ public class DDLRecordSearchTest {
 				PortalUtil.getClassNameId(DDLRecordSet.class), _group);
 
 		DDMStructure ddmStructure = ddmStructureTestHelper.addStructure(
-			createDDMForm(LocaleUtil.US), StorageType.JSON.toString());
+			createDDMForm(LocaleUtil.US), StorageType.DEFAULT.toString());
 
 		return recordSetTestHelper.addRecordSet(ddmStructure);
 	}
@@ -487,7 +487,7 @@ public class DDLRecordSearchTest {
 
 		String vendor = searchEngine.getVendor();
 
-		if (vendor.equals("Elasticsearch") || vendor.equals("Solr")) {
+		if (vendor.equals("Elasticsearch")) {
 			return false;
 		}
 

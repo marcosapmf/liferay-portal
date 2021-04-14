@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.LocalizationUtil;
-import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.upgrade.v7_0_0.util.GroupTable;
 
@@ -34,17 +33,11 @@ import java.util.Locale;
  */
 public class UpgradeGroup extends UpgradeProcess {
 
-	protected void createIndex() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			runSQL("create index IX_8257E37B on Group_ (classNameId, classPK)");
-		}
-	}
-
 	@Override
 	protected void doUpgrade() throws Exception {
 		alter(GroupTable.class, new AlterColumnType("name", "STRING null"));
 
-		createIndex();
+		updateIndexes(GroupTable.class);
 
 		updateGlobalGroupName();
 	}

@@ -50,6 +50,79 @@ public class XMLServiceFileCheck extends BaseFileCheck {
 		return content;
 	}
 
+	private void _checkColumnsThatShouldComeLast(
+		String fileName, String absolutePath, Element entityElement,
+		String entityName) {
+
+		Iterator<Node> iterator = entityElement.nodeIterator();
+
+		boolean otherFields = false;
+		String previousColumnName = null;
+
+		while (iterator.hasNext()) {
+			Node node = (Node)iterator.next();
+
+			if (node instanceof DefaultComment) {
+				DefaultComment defaultComment = (DefaultComment)node;
+
+				if (Objects.equals(
+						defaultComment.asXML(), "<!-- Other fields -->")) {
+
+					otherFields = true;
+				}
+				else if (otherFields) {
+					return;
+				}
+			}
+			else if (otherFields && (node instanceof Element)) {
+				Element element = (Element)node;
+
+				if (!Objects.equals(element.getName(), "column")) {
+					continue;
+				}
+
+				String columnName = element.attributeValue("name");
+
+				if ((previousColumnName == null) ||
+					_isStatusColumnName(columnName)) {
+
+					previousColumnName = columnName;
+
+					continue;
+				}
+
+				if (_isStatusColumnName(previousColumnName)) {
+					addMessage(
+						fileName,
+						StringBundler.concat(
+							"Incorrect order '", entityName, "#",
+							previousColumnName, "'. Status columns should ",
+							"come last in the category 'Other fields'."));
+				}
+				else if (previousColumnName.equals("lastPublishDate")) {
+					List<String> allowedIncorrectLastPublishDateEntities =
+						getAttributeValues(
+							_ALLOWED_INCORRECT_LAST_PUBLISHED_DATE_ENTITIES_KEY,
+							absolutePath);
+
+					if (!allowedIncorrectLastPublishDateEntities.contains(
+							entityName)) {
+
+						addMessage(
+							fileName,
+							StringBundler.concat(
+								"Incorrect order '", entityName,
+								"#lastPublishDate'. 'lastPublishDate' column ",
+								"should come last (only followed by status ",
+								"columns) in the category 'Other fields'."));
+					}
+				}
+
+				previousColumnName = columnName;
+			}
+		}
+	}
+
 	private void _checkMVCCEnabled(
 		String fileName, String absolutePath, Element element) {
 
@@ -98,7 +171,8 @@ public class XMLServiceFileCheck extends BaseFileCheck {
 
 			String entityName = entityElement.attributeValue("name");
 
-			_checkStatusColumns(fileName, entityElement, entityName);
+			_checkColumnsThatShouldComeLast(
+				fileName, absolutePath, entityElement, entityName);
 
 			List<String> columnNames = new ArrayList<>();
 
@@ -159,54 +233,6 @@ public class XMLServiceFileCheck extends BaseFileCheck {
 			new ServiceExceptionElementComparator());
 	}
 
-	private void _checkStatusColumns(
-		String fileName, Element entityElement, String entityName) {
-
-		Iterator<Node> iterator = entityElement.nodeIterator();
-
-		boolean otherFields = false;
-		String previousColumnName = null;
-
-		while (iterator.hasNext()) {
-			Node node = (Node)iterator.next();
-
-			if (node instanceof DefaultComment) {
-				DefaultComment defaultComment = (DefaultComment)node;
-
-				if (Objects.equals(
-						defaultComment.asXML(), "<!-- Other fields -->")) {
-
-					otherFields = true;
-				}
-				else if (otherFields) {
-					return;
-				}
-			}
-			else if (otherFields && (node instanceof Element)) {
-				Element element = (Element)node;
-
-				if (!Objects.equals(element.getName(), "column")) {
-					continue;
-				}
-
-				String columnName = element.attributeValue("name");
-
-				if (_isStatusColumnName(previousColumnName) &&
-					!_isStatusColumnName(columnName)) {
-
-					addMessage(
-						fileName,
-						StringBundler.concat(
-							"Incorrect order '", entityName, "#",
-							previousColumnName, "'. Status columns should ",
-							"come last in the category 'Other fields'."));
-				}
-
-				previousColumnName = columnName;
-			}
-		}
-	}
-
 	private boolean _isStatusColumnName(String columnName) {
 		if ((columnName != null) &&
 			(columnName.equals("status") ||
@@ -220,6 +246,10 @@ public class XMLServiceFileCheck extends BaseFileCheck {
 
 		return false;
 	}
+
+	private static final String
+		_ALLOWED_INCORRECT_LAST_PUBLISHED_DATE_ENTITIES_KEY =
+			"allowedIncorrectLastPublishDateEntities";
 
 	private static final String _ALLOWED_MISSING_COMPANY_ID_ENTITY_NAMES_KEY =
 		"allowedMissingCompanyIdEntityNames";

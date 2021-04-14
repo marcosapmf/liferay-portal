@@ -17,6 +17,10 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
+
+DLPortletInstanceSettings dlPortletInstanceSettings = dlRequestHelper.getDLPortletInstanceSettings();
+
 DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(dlRequestHelper);
 %>
 
@@ -38,7 +42,7 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 
 	<liferay-frontend:edit-form-body>
 		<liferay-frontend:fieldset-group>
-			<aui:input name="preferences--rootFolderId--" type="hidden" value="<%= rootFolderId %>" />
+			<aui:input name="preferences--rootFolderId--" type="hidden" value="<%= dlAdminDisplayContext.getRootFolderId() %>" />
 			<aui:input name="preferences--displayViews--" type="hidden" />
 			<aui:input name="preferences--entryColumns--" type="hidden" />
 
@@ -86,7 +90,7 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 				label="folders-listing"
 			>
 				<div class="form-group">
-					<aui:input label="root-folder" name="rootFolderName" type="resource" value="<%= rootFolderName %>" />
+					<aui:input label="root-folder" name="rootFolderName" type="resource" value="<%= dlAdminDisplayContext.getRootFolderName() %>" />
 
 					<aui:button name="selectFolderButton" value="select" />
 
@@ -94,7 +98,7 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('rootFolderId', 'rootFolderName', this, '" + liferayPortletResponse.getNamespace() + "');";
 					%>
 
-					<aui:button disabled="<%= rootFolderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
+					<aui:button disabled="<%= dlAdminDisplayContext.getRootFolderId() <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 				</div>
 			</liferay-frontend:fieldset>
 
@@ -127,13 +131,13 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 				<aui:input label="enable-ratings-for-comments" name="preferences--enableCommentRatings--" type="checkbox" value="<%= dlPortletInstanceSettings.isEnableCommentRatings() %>" />
 			</liferay-frontend:fieldset>
 
-			<aui:script require="metal-dom/src/dom as dom">
+			<aui:script sandbox="<%= true %>">
 				var selectFolderButton = document.getElementById(
 					'<portlet:namespace />selectFolderButton'
 				);
 
 				if (selectFolderButton) {
-					selectFolderButton.addEventListener('click', function (event) {
+					selectFolderButton.addEventListener('click', (event) => {
 						Liferay.Util.getOpener().Liferay.Util.openSelectionModal({
 							id:
 								'_<%= HtmlUtil.escapeJS(dlRequestHelper.getPortletResource()) %>_selectFolder',
@@ -153,7 +157,7 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 
 							<liferay-portlet:renderURL portletName="<%= dlRequestHelper.getPortletResource() %>" var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
 								<portlet:param name="mvcRenderCommandName" value="/document_library/select_folder" />
-								<portlet:param name="folderId" value="<%= String.valueOf(rootFolderId) %>" />
+								<portlet:param name="folderId" value="<%= String.valueOf(dlAdminDisplayContext.getRootFolderId()) %>" />
 								<portlet:param name="ignoreRootFolder" value="<%= Boolean.TRUE.toString() %>" />
 								<portlet:param name="showMountFolder" value="<%= Boolean.FALSE.toString() %>" />
 							</liferay-portlet:renderURL>
@@ -168,16 +172,19 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 				);
 
 				if (showActionsInput) {
-					showActionsInput.addEventListener('change', function (event) {
+					showActionsInput.addEventListener('change', (event) => {
 						var currentColumnsElement = document.getElementById(
 							'<portlet:namespace />currentEntryColumns'
 						);
 
 						if (currentColumnsElement) {
 							if (showActionsInput.checked) {
-								dom.append(
-									currentColumnsElement,
-									'<option value="action"><%= UnicodeLanguageUtil.get(request, "action") %></option>'
+								currentColumnsElement.appendChild(
+									document
+										.createRange()
+										.createContextualFragment(
+											'<option value="action"><%= UnicodeLanguageUtil.get(request, "action") %></option>'
+										)
 								);
 							}
 							else {
@@ -185,8 +192,8 @@ DLPortletInstanceSettingsHelper dlPortletInstanceSettingsHelper = new DLPortletI
 									'#<portlet:namespace />currentEntryColumns option[value="action"], #<portlet:namespace />availableEntryColumns option[value="action"]'
 								);
 
-								Array.prototype.forEach.call(options, function (option) {
-									dom.exitDocument(option);
+								Array.prototype.forEach.call(options, (option) => {
+									option.remove();
 								});
 							}
 						}

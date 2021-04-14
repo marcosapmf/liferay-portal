@@ -17,18 +17,26 @@ import ClayForm, {ClayInput} from '@clayui/form';
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import {VIEWPORT_SIZES} from '../../app/config/constants/viewportSizes';
+import {useSelector} from '../../app/store/index';
 import {useId} from '../../app/utils/useId';
 import {openImageSelector} from '../../core/openImageSelector';
 
+const DEFAULT_IMAGE_TITLE = Liferay.Language.get('none');
+
 export function ImageSelector({
-	imageTitle = Liferay.Language.get('none'),
+	imageTitle = DEFAULT_IMAGE_TITLE,
 	label,
 	onClearButtonPressed,
 	onImageSelected,
 }) {
 	const imageTitleId = useId();
 
-	return (
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
+
+	return selectedViewportSize === VIEWPORT_SIZES.desktop ? (
 		<>
 			<ClayForm.Group>
 				<label htmlFor={imageTitleId}>{label}</label>
@@ -63,6 +71,9 @@ export function ImageSelector({
 				<div className="btn-group-item">
 					<ClayButton
 						borderless
+						disabled={
+							!imageTitle || imageTitle === DEFAULT_IMAGE_TITLE
+						}
 						displayType="secondary"
 						onClick={onClearButtonPressed}
 						small
@@ -72,6 +83,8 @@ export function ImageSelector({
 				</div>
 			</ClayButton.Group>
 		</>
+	) : (
+		<ReadOnlyImageInput imageTitle={imageTitle} label={label} />
 	);
 }
 
@@ -80,4 +93,28 @@ ImageSelector.propTypes = {
 	label: PropTypes.string,
 	onClearButtonPressed: PropTypes.func.isRequired,
 	onImageSelected: PropTypes.func.isRequired,
+};
+
+function ReadOnlyImageInput({imageTitle, label}) {
+	const readOnlyInputId = useId();
+
+	return (
+		<>
+			<label htmlFor={readOnlyInputId}>{label}</label>
+			<ClayForm.Group small>
+				<ClayInput
+					className="mb-2"
+					disabled
+					id={readOnlyInputId}
+					readOnly
+					value={imageTitle}
+				/>
+			</ClayForm.Group>
+		</>
+	);
+}
+
+ReadOnlyImageInput.propTypes = {
+	imageTitle: PropTypes.string,
+	label: PropTypes.string,
 };

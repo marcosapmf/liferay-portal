@@ -32,7 +32,9 @@ renderResponse.setTitle((kbTemplate == null) ? LanguageUtil.get(request, "new-te
 
 <liferay-portlet:actionURL name="updateKBTemplate" var="updateKBTemplateURL" />
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
 	<aui:form action="<%= updateKBTemplateURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updateKBTemplate();" %>'>
 		<aui:input name="mvcPath" type="hidden" value='<%= templatePath + "edit_template.jsp" %>' />
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
@@ -46,9 +48,7 @@ renderResponse.setTitle((kbTemplate == null) ? LanguageUtil.get(request, "new-te
 
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
-				<h1 class="kb-title">
-					<aui:input autocomplete="off" label='<%= LanguageUtil.get(request, "title") %>' name="title" required="<%= true %>" type="text" value="<%= HtmlUtil.escape(title) %>" />
-				</h1>
+				<aui:input autocomplete="off" label='<%= LanguageUtil.get(request, "title") %>' name="title" required="<%= true %>" type="text" value="<%= HtmlUtil.escape(title) %>" />
 
 				<liferay-editor:editor
 					contents="<%= content %>"
@@ -67,17 +67,17 @@ renderResponse.setTitle((kbTemplate == null) ? LanguageUtil.get(request, "new-te
 					/>
 				</aui:fieldset>
 			</c:if>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" value="publish" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" value="publish" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </clay:container-fluid>
 
-<aui:script>
+<script>
 	function <portlet:namespace />updateKBTemplate() {
 		Liferay.Util.postForm(document.<portlet:namespace />fm, {
 			data: {
@@ -88,4 +88,4 @@ renderResponse.setTitle((kbTemplate == null) ? LanguageUtil.get(request, "new-te
 			},
 		});
 	}
-</aui:script>
+</script>

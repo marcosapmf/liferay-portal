@@ -29,17 +29,16 @@ long calendarNotificationTemplateId = BeanPropertiesUtil.getLong(calendarNotific
 String fromAddress = NotificationUtil.getTemplatePropertyValue(calendarNotificationTemplate, CalendarNotificationTemplateConstants.PROPERTY_FROM_ADDRESS, PrefsPropsUtil.getString(PropsKeys.ADMIN_EMAIL_FROM_ADDRESS));
 String fromName = NotificationUtil.getTemplatePropertyValue(calendarNotificationTemplate, CalendarNotificationTemplateConstants.PROPERTY_FROM_NAME, PrefsPropsUtil.getString(PropsKeys.ADMIN_EMAIL_FROM_NAME));
 String notificationTemplateBody = BeanPropertiesUtil.getString(calendarNotificationTemplate, "body", NotificationUtil.getDefaultTemplate(notificationType, notificationTemplateType, NotificationField.BODY));
-String notificationTemplateSubject = BeanPropertiesUtil.getString(calendarNotificationTemplate, "subject", NotificationUtil.getDefaultTemplate(notificationType, notificationTemplateType, NotificationField.SUBJECT));
 %>
 
 <liferay-ui:header
 	backURL="<%= backURL %>"
-	cssClass="container-fluid-1280"
+	cssClass="container-fluid container-fluid-max-xl"
 	localizeTitle="<%= false %>"
 	title="<%= calendarName %>"
 />
 
-<aui:nav-bar cssClass="container-fluid-1280" markupView="lexicon">
+<aui:nav-bar cssClass="navbar-collapse-absolute navbar-expand-md navbar-underline navigation-bar navigation-bar-light" markupView="lexicon">
 	<aui:nav cssClass="navbar-nav">
 
 		<%
@@ -58,7 +57,7 @@ String notificationTemplateSubject = BeanPropertiesUtil.getString(calendarNotifi
 
 <liferay-portlet:actionURL name="updateCalendarNotificationTemplate" var="updateCalendarNotificationTemplateURL" />
 
-<aui:form action="<%= updateCalendarNotificationTemplateURL %>" cssClass="container-fluid-1280" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updateCalendarNotificationTemplate();" %>'>
+<aui:form action="<%= updateCalendarNotificationTemplateURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updateCalendarNotificationTemplate();" %>'>
 	<aui:input name="mvcPath" type="hidden" value="/edit_calendar.jsp" />
 	<aui:input name="calendarNotificationTemplateId" type="hidden" value="<%= calendarNotificationTemplateId %>" />
 	<aui:input name="tabs2" type="hidden" value="<%= tabs2 %>" />
@@ -76,7 +75,7 @@ String notificationTemplateSubject = BeanPropertiesUtil.getString(calendarNotifi
 
 		<aui:input name="fromAddress" value="<%= fromAddress %>" />
 
-		<aui:input name="subject" value="<%= notificationTemplateSubject %>" />
+		<aui:input name="subject" value='<%= BeanPropertiesUtil.getString(calendarNotificationTemplate, "subject", NotificationUtil.getDefaultTemplate(notificationType, notificationTemplateType, NotificationField.SUBJECT)) %>' />
 
 		<aui:field-wrapper label="body">
 			<liferay-editor:editor

@@ -19,6 +19,8 @@ import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -48,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=com_liferay_asset_categories_admin_web_portlet_AssetCategoriesAdminPortlet",
-		"mvc.command.name=editAssetCategoryFriendlyURL"
+		"mvc.command.name=/commerce_product_asset_categories/edit_asset_category_friendly_url"
 	},
 	service = MVCActionCommand.class
 )
@@ -86,8 +88,12 @@ public class EditAssetCategoryFriendlyURLMVCActionCommand
 				_getUniqueUrlTitles(assetCategory, urlTitleMap));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			Group companyGroup = _groupLocalService.getCompanyGroup(
-				_portal.getDefaultCompanyId());
+				assetCategory.getCompanyId());
 
 			_friendlyURLEntryLocalService.addFriendlyURLEntry(
 				companyGroup.getGroupId(),
@@ -104,7 +110,7 @@ public class EditAssetCategoryFriendlyURLMVCActionCommand
 		Map<String, String> newUrlTitleMap = new HashMap<>();
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
-			_portal.getDefaultCompanyId());
+			assetCategory.getCompanyId());
 
 		long classNameId = _portal.getClassNameId(AssetCategory.class);
 
@@ -124,6 +130,9 @@ public class EditAssetCategoryFriendlyURLMVCActionCommand
 
 		return newUrlTitleMap;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditAssetCategoryFriendlyURLMVCActionCommand.class);
 
 	@Reference
 	private AssetCategoryService _assetCategoryService;

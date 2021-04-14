@@ -15,13 +15,13 @@
 package com.liferay.portal.search.elasticsearch7.internal.connection;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConnectionConfiguration;
 
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -55,6 +55,8 @@ public class ElasticsearchConnectionConfigurationActivationHandler {
 			elasticsearchConnectionConfiguration.networkHostAddresses()
 		).password(
 			elasticsearchConnectionConfiguration.password()
+		).proxyConfig(
+			createProxyConfig(elasticsearchConnectionConfiguration)
 		).truststorePassword(
 			elasticsearchConnectionConfiguration.truststorePassword()
 		).truststorePath(
@@ -69,18 +71,29 @@ public class ElasticsearchConnectionConfigurationActivationHandler {
 			elasticsearchConnectionBuilder.build());
 	}
 
-	@Deactivate
-	protected void deactivate(Map<String, Object> properties) {
+	protected ProxyConfig createProxyConfig(
 		ElasticsearchConnectionConfiguration
-			elasticsearchConnectionConfiguration =
-				ConfigurableUtil.createConfigurable(
-					ElasticsearchConnectionConfiguration.class, properties);
+			elasticsearchConnectionConfiguration) {
 
-		elasticsearchConnectionManager.removeElasticsearchConnection(
-			elasticsearchConnectionConfiguration.connectionId());
+		ProxyConfig.Builder proxyConfigBuilder = ProxyConfig.builder(http);
+
+		return proxyConfigBuilder.networkAddresses(
+			elasticsearchConnectionConfiguration.networkHostAddresses()
+		).host(
+			elasticsearchConnectionConfiguration.proxyHost()
+		).password(
+			elasticsearchConnectionConfiguration.proxyPassword()
+		).port(
+			elasticsearchConnectionConfiguration.proxyPort()
+		).userName(
+			elasticsearchConnectionConfiguration.proxyHost()
+		).build();
 	}
 
 	@Reference
 	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
+
+	@Reference
+	protected Http http;
 
 }

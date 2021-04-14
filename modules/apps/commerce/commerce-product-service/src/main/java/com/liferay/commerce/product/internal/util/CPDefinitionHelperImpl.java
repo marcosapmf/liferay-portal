@@ -197,7 +197,7 @@ public class CPDefinitionHelperImpl implements CPDefinitionHelper {
 		}
 		catch (Exception exception) {
 			if (_log.isInfoEnabled()) {
-				_log.info("No friendly URL found for " + cProductId);
+				_log.info("No friendly URL found for " + cProductId, exception);
 			}
 
 			return StringPool.BLANK;
@@ -268,11 +268,9 @@ public class CPDefinitionHelperImpl implements CPDefinitionHelper {
 	}
 
 	private Sort _getSort(String orderByType, String sortField) {
-		int sortType = _getSortType(sortField);
-
 		return SortFactoryUtil.getSort(
-			CPDefinition.class, sortType, _getOrderByCol(sortField),
-			orderByType);
+			CPDefinition.class, _getSortType(sortField),
+			_getOrderByCol(sortField), orderByType);
 	}
 
 	private Sort[] _getSorts(CPQuery cpQuery) {

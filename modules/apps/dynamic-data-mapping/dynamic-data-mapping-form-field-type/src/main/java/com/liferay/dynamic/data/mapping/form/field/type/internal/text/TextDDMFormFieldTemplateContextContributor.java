@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.form.field.type.internal.text;
 
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldOptionsFactory;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
@@ -41,7 +42,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcellus Tavares
  */
 @Component(
-	immediate = true, property = "ddm.form.field.type.name=text",
+	immediate = true,
+	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.TEXT,
 	service = {
 		DDMFormFieldTemplateContextContributor.class,
 		TextDDMFormFieldTemplateContextContributor.class
@@ -104,20 +106,22 @@ public class TextDDMFormFieldTemplateContextContributor
 				ddmFormField, ddmFormFieldRenderingContext);
 
 		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
-			Map<String, String> optionMap = HashMapBuilder.put(
-				"label",
-				() -> {
-					LocalizedValue optionLabel =
-						ddmFormFieldOptions.getOptionLabels(optionValue);
+			options.add(
+				HashMapBuilder.put(
+					"label",
+					() -> {
+						LocalizedValue optionLabel =
+							ddmFormFieldOptions.getOptionLabels(optionValue);
 
-					return optionLabel.getString(
-						ddmFormFieldRenderingContext.getLocale());
-				}
-			).put(
-				"value", optionValue
-			).build();
-
-			options.add(optionMap);
+						return optionLabel.getString(
+							ddmFormFieldRenderingContext.getLocale());
+					}
+				).put(
+					"reference",
+					ddmFormFieldOptions.getOptionReference(optionValue)
+				).put(
+					"value", optionValue
+				).build());
 		}
 
 		return options;
@@ -168,7 +172,7 @@ public class TextDDMFormFieldTemplateContextContributor
 			ddmFormFieldRenderingContext.getProperty("value"));
 
 		if (ddmFormFieldRenderingContext.isViewMode()) {
-			value = HtmlUtil.extractText(value);
+			value = HtmlUtil.escape(value);
 		}
 
 		return value;

@@ -17,6 +17,7 @@ package com.liferay.multi.factor.authentication.fido2.credential.model;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.base.BaseTable;
 
+import java.sql.Clob;
 import java.sql.Types;
 
 import java.util.Date;
@@ -55,9 +56,12 @@ public class MFAFIDO2CredentialEntryTable
 	public final Column<MFAFIDO2CredentialEntryTable, Date> modifiedDate =
 		createColumn(
 			"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
-	public final Column<MFAFIDO2CredentialEntryTable, String> credentialKey =
+	public final Column<MFAFIDO2CredentialEntryTable, Clob> credentialKey =
 		createColumn(
-			"credentialKey", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+			"credentialKey", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
+	public final Column<MFAFIDO2CredentialEntryTable, Long> credentialKeyHash =
+		createColumn(
+			"credentialKeyHash", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<MFAFIDO2CredentialEntryTable, Integer> credentialType =
 		createColumn(
 			"credentialType", Integer.class, Types.INTEGER,

@@ -92,11 +92,13 @@ definition {
 	}
 
 	macro gotoDocumentsAndMediaDocumentPG {
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Permissions",
 			rowEntry = "${dmDocumentTitle}");
 
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		IFrame.selectPermissionsFrame();
 	}
 
 	macro gotoDocumentsAndMediaHomeFolderPG {

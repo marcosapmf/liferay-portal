@@ -37,7 +37,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -48,7 +48,6 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -192,7 +191,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAccountOrganizationRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAccountOrganizationRel
@@ -571,7 +570,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {commerceAccountId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -713,7 +712,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAccountOrganizationRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CommerceAccountOrganizationRel
@@ -1091,7 +1090,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 
 		Object[] finderArgs = new Object[] {organizationId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1187,9 +1186,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(CommerceAccountOrganizationRelImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceAccountOrganizationRelImpl.class);
 	}
 
 	/**
@@ -1223,9 +1220,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CommerceAccountOrganizationRelImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -1579,7 +1574,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CommerceAccountOrganizationRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1652,7 +1647,7 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1716,23 +1711,21 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new CommerceAccountOrganizationRelModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name",
-				CommerceAccountOrganizationRel.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByCommerceAccountId = _createFinderPath(
+		_finderPathWithPaginationFindByCommerceAccountId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCommerceAccountId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1740,17 +1733,17 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 			},
 			new String[] {"commerceAccountId"}, true);
 
-		_finderPathWithoutPaginationFindByCommerceAccountId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCommerceAccountId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByCommerceAccountId", new String[] {Long.class.getName()},
 			new String[] {"commerceAccountId"}, true);
 
-		_finderPathCountByCommerceAccountId = _createFinderPath(
+		_finderPathCountByCommerceAccountId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByCommerceAccountId", new String[] {Long.class.getName()},
 			new String[] {"commerceAccountId"}, false);
 
-		_finderPathWithPaginationFindByOrganizationId = _createFinderPath(
+		_finderPathWithPaginationFindByOrganizationId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByOrganizationId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -1758,12 +1751,12 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 			},
 			new String[] {"organizationId"}, true);
 
-		_finderPathWithoutPaginationFindByOrganizationId = _createFinderPath(
+		_finderPathWithoutPaginationFindByOrganizationId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByOrganizationId",
 			new String[] {Long.class.getName()},
 			new String[] {"organizationId"}, true);
 
-		_finderPathCountByOrganizationId = _createFinderPath(
+		_finderPathCountByOrganizationId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByOrganizationId",
 			new String[] {Long.class.getName()},
 			new String[] {"organizationId"}, false);
@@ -1774,12 +1767,6 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 			CommerceAccountOrganizationRelImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	private BundleContext _bundleContext;
@@ -1819,27 +1806,13 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 	private static final Set<String> _compoundPKColumnNames = SetUtil.fromArray(
 		new String[] {"commerceAccountId", "organizationId"});
 
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class CommerceAccountOrganizationRelModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -1895,6 +1868,16 @@ public class CommerceAccountOrganizationRelPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return CommerceAccountOrganizationRelImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return CommerceAccountOrganizationRelTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

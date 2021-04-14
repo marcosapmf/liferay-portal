@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.product.definitions.web.internal.frontend;
 
+import com.liferay.commerce.product.definitions.web.internal.frontend.constants.CommerceProductDataSetConstants;
 import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaBuilder;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchemaField;
@@ -44,7 +45,7 @@ public class CommerceProductInstanceClayTableDataSetDisplayView
 	@Override
 	protected void addFields(ClayTableSchemaBuilder clayTableSchemaBuilder) {
 		clayTableSchemaBuilder.addClayTableSchemaField("options", "options");
-		clayTableSchemaBuilder.addClayTableSchemaField("price", "price");
+		clayTableSchemaBuilder.addClayTableSchemaField("price", "base-price");
 		clayTableSchemaBuilder.addClayTableSchemaField(
 			"availableQuantity", "available-quantity");
 

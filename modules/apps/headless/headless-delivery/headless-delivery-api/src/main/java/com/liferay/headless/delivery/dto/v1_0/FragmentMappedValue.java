@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("FragmentMappedValue")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentMappedValue")
-public class FragmentMappedValue {
+public class FragmentMappedValue implements Serializable {
 
 	public static FragmentMappedValue toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentMappedValue.class, json);
@@ -85,6 +87,7 @@ public class FragmentMappedValue {
 	protected FragmentInlineValue defaultFragmentInlineValue;
 
 	@Schema(
+		deprecated = true,
 		description = "Deprecated as of Athanasius (7.3.x), replaced by defaultFragmentInlineValue"
 	)
 	@Valid

@@ -66,7 +66,7 @@ public class ServerDetector {
 	public static final String WILDFLY_ID = "wildfly";
 
 	public static String getServerId() {
-		return StringUtil.toLowerCase(_serverType.toString());
+		return _serverType.getLowerCaseName();
 	}
 
 	/**
@@ -195,6 +195,10 @@ public class ServerDetector {
 			return true;
 		}
 		catch (ClassNotFoundException classNotFoundException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(classNotFoundException, classNotFoundException);
+			}
+
 			if (ServerDetector.class.getResource(className) != null) {
 				return true;
 			}
@@ -273,19 +277,31 @@ public class ServerDetector {
 	static {
 		_serverType = _detectServerType();
 
-		if (System.getProperty("external-properties") == null) {
+		if (!GetterUtil.getBoolean(
+				System.getProperty("server.detector.quiet")) &&
+			(System.getProperty("external-properties") == null)) {
+
 			if (_log.isInfoEnabled()) {
-				_log.info(
-					"Detected server " +
-						StringUtil.toLowerCase(_serverType.toString()));
+				_log.info("Detected server " + _serverType.getLowerCaseName());
 			}
 		}
 	}
 
 	private enum ServerType {
 
-		GLASSFISH, JBOSS, JETTY, JONAS, OC4J, RESIN, TOMCAT, UNKNOWN, WEBLOGIC,
-		WEBSPHERE, WILDFLY
+		GLASSFISH("glassfish"), JBOSS("jboss"), JETTY("jetty"), JONAS("jonas"),
+		OC4J("oc4j"), RESIN("resin"), TOMCAT("tomcat"), UNKNOWN("unknown"),
+		WEBLOGIC("weblogic"), WEBSPHERE("websphere"), WILDFLY("wildfly");
+
+		public String getLowerCaseName() {
+			return _lowerCaseName;
+		}
+
+		private ServerType(String lowerCaseName) {
+			_lowerCaseName = lowerCaseName;
+		}
+
+		private final String _lowerCaseName;
 
 	}
 

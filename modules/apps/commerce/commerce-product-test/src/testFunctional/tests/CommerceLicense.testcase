@@ -1,0 +1,114 @@
+@component-name = "portal-commerce"
+definition {
+
+	property portal.release = "true";
+	property portal.upstream = "false";
+	property test.run.environment = "EE";
+	property testray.main.component.name = "Commerce";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		SignIn.signInTestSetup();
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if ("${testPortalInstance}" == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "This is a test for covering the following LPS-121306 and LPS-128094."
+	@priority = "5"
+	test AssertLicensesAppliedOnRestarts {
+		property commerce.enabled = "true";
+
+		CommerceLicense.viewCommerceAvailable();
+
+		var count = "0";
+
+		while ("${count}" != "3") {
+			Portlet.shutdownServer();
+
+			Portlet.startServer(deleteLiferayHome = "false");
+
+			AssertConsoleTextNotPresent(value1 = "Unable to install bundle");
+
+			Navigator.openURL();
+
+			CommerceLicense.viewCommerceAvailable();
+
+			var count = ${count} + 1;
+		}
+	}
+
+	@priority = "3"
+	test DeleteLiferayDXPLicense {
+		property commerce.enabled = "false";
+
+		ApplicationsMenuHelper.openApplicationsMenu();
+
+		AssertElementPresent(
+			key_panel = "Applications",
+			locator1 = "ApplicationsMenu#PANEL");
+
+		Portlet.shutdownServer();
+
+		License.deleteLicenseFile(licenseFileName = "license.xml");
+
+		Portlet.startServer(deleteLiferayHome = "false");
+
+		Navigator.openURL();
+
+		Alert.viewErrorMessage(errorMessage = "This instance is not registered.");
+	}
+
+	@priority = "3"
+	test DeleteModuleLicense {
+		property commerce.enabled = "true";
+
+		ApplicationsMenuHelper.openApplicationsMenu();
+
+		CommerceLicense.viewCommerceAvailable();
+
+		Portlet.shutdownServer();
+
+		License.deleteLicenseFile(licenseFileName = "portal-commerce-license.xml");
+
+		Portlet.startServer(deleteLiferayHome = "false");
+
+		User.firstLoginPG();
+
+		CommerceLicense.viewCommerceMissing();
+	}
+
+	@ignore = "true"
+	@priority = "4"
+	test DeployModuleLicenseToLCSPortal {
+		property commerce.enabled = "true";
+		property deploy.lcs.token.file = "true";
+
+		Pause(locator1 = "60000");
+
+		AssertConsoleTextNotPresent(value1 = "Processing license.xml");
+
+		CommerceLicense.executeSmoke();
+	}
+
+	@priority = "5"
+	test ViewCommerceDisabled {
+		property commerce.enabled = "false";
+
+		CommerceLicense.viewCommerceMissing();
+	}
+
+	@priority = "5"
+	test ViewCommerceEnabled {
+		property commerce.enabled = "true";
+
+		CommerceLicense.executeSmoke();
+	}
+
+}

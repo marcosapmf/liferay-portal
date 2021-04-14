@@ -31,12 +31,8 @@ Layout selLayout = layoutsAdminDisplayContext.getSelLayout();
 
 LayoutRevision layoutRevision = LayoutStagingUtil.getLayoutRevision(selLayout);
 
-if (layoutRevision != null) {
-	long layoutSetBranchId = layoutRevision.getLayoutSetBranchId();
-
-	if (StagingUtil.isIncomplete(selLayout, layoutSetBranchId)) {
-		portletDisplay.setShowStagingIcon(false);
-	}
+if ((layoutRevision != null) && StagingUtil.isIncomplete(selLayout, layoutRevision.getLayoutSetBranchId())) {
+	portletDisplay.setShowStagingIcon(false);
 }
 
 if (Validator.isNotNull(backURL)) {
@@ -53,7 +49,6 @@ renderResponse.setTitle(selLayout.getName(locale));
 	containerCssClass="col-lg-8"
 	containerWrapperCssClass="container-fluid container-fluid-max-xl container-form-lg"
 	context="<%= selLayout %>"
-	headerContainerCssClass=""
 	inverted="<%= true %>"
 	key="<%= LayoutScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_LAYOUT %>"
 	menubarCssClass="menubar menubar-transparent menubar-vertical-expand-lg"

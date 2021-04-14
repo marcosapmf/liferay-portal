@@ -12,18 +12,14 @@
  * details.
  */
 
-import {
-	FormNoop,
-	PagesVisitor,
-	compose,
-	getConnectedReactComponentAdapter,
-} from 'dynamic-data-mapping-form-renderer';
+import {FormNoop} from 'dynamic-data-mapping-form-renderer/js/containers/FormNoop.es';
+import {getConnectedReactComponentAdapter} from 'dynamic-data-mapping-form-renderer/js/util/ReactComponentAdapter.es';
+import compose from 'dynamic-data-mapping-form-renderer/js/util/compose.es';
+import {PagesVisitor} from 'dynamic-data-mapping-form-renderer/js/util/visitors.es';
 import Component from 'metal-jsx';
 import {Config} from 'metal-state';
 
 import {pageStructure} from '../../util/config.es';
-import withActionableFields from './withActionableFields.es';
-import withClickableFields from './withClickableFields.es';
 import withEditablePageHeader from './withEditablePageHeader.es';
 import withMoveableFields from './withMoveableFields.es';
 import withMultiplePages from './withMultiplePages.es';
@@ -83,29 +79,46 @@ class FormBuilderBase extends Component {
 	}
 
 	render() {
-		const {props} = this;
 		const {
 			activePage,
-			allowNestedFields,
+			allowInvalidAvailableLocalesForProperty,
+			allowNestedFields = true,
+			dataEngineSidebar,
 			dnd,
 			editingLanguageId,
+			fieldActions,
+			fieldTypes,
+			focusedField,
 			pages,
 			paginationMode,
 			portletNamespace,
+			sidebarOpen,
 			spritemap,
 			successPageSettings,
 			view,
-		} = props;
+		} = this.props;
 
 		return (
 			<div class="ddm-form-builder-wrapper">
-				<div class="container ddm-form-builder">
+				<div
+					class={`container ddm-form-builder ${
+						dataEngineSidebar && sidebarOpen
+							? 'ddm-form-builder--sidebar-open'
+							: ''
+					}`}
+				>
 					<FormNoopAdapter
 						activePage={activePage}
+						allowInvalidAvailableLocalesForProperty={
+							allowInvalidAvailableLocalesForProperty
+						}
 						allowNestedFields={allowNestedFields}
 						dnd={dnd}
 						editable={true}
 						editingLanguageId={editingLanguageId}
+						fieldActions={fieldActions}
+						fieldTypesMetadata={fieldTypes}
+						focusedField={focusedField}
 						pages={this.preparePagesForRender(pages)}
 						paginationMode={paginationMode}
 						portletNamespace={portletNamespace}
@@ -215,8 +228,6 @@ FormBuilderBase.PROPS = {
 };
 
 export default compose(
-	withActionableFields,
-	withClickableFields,
 	withEditablePageHeader,
 	withMoveableFields,
 	withMultiplePages,

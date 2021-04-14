@@ -141,6 +141,7 @@ public class DDMFormXSDDeserializer implements DDMFormDeserializer {
 		setDDMFormFieldMultiple(dynamicElementElement, ddmFormField);
 		setDDMFormFieldNamespace(dynamicElementElement, ddmFormField);
 		setDDMFormFieldReadOnly(dynamicElementElement, ddmFormField);
+		setDDMFormFieldReference(dynamicElementElement, ddmFormField);
 		setDDMFormFieldRepeatable(dynamicElementElement, ddmFormField);
 		setDDMFormFieldRequired(dynamicElementElement, ddmFormField);
 		setDDMFormFieldShowLabel(dynamicElementElement, ddmFormField);
@@ -171,6 +172,8 @@ public class DDMFormXSDDeserializer implements DDMFormDeserializer {
 			String value = dynamicElementElement.attributeValue("value");
 
 			ddmFormFieldOptions.addOption(value);
+			ddmFormFieldOptions.addOptionReference(
+				value, dynamicElementElement.attributeValue("reference"));
 
 			addOptionValueLabels(
 				dynamicElementElement, ddmFormFieldOptions, value);
@@ -210,17 +213,15 @@ public class DDMFormXSDDeserializer implements DDMFormDeserializer {
 	protected void setDDMFormFieldDataType(
 		Element dynamicElementElement, DDMFormField ddmFormField) {
 
-		String dataType = dynamicElementElement.attributeValue("dataType");
-
-		ddmFormField.setDataType(dataType);
+		ddmFormField.setDataType(
+			dynamicElementElement.attributeValue("dataType"));
 	}
 
 	protected void setDDMFormFieldIndexType(
 		Element dynamicElementElement, DDMFormField ddmFormField) {
 
-		String indexType = dynamicElementElement.attributeValue("indexType");
-
-		ddmFormField.setIndexType(indexType);
+		ddmFormField.setIndexType(
+			dynamicElementElement.attributeValue("indexType"));
 	}
 
 	protected void setDDMFormFieldLocalizable(
@@ -347,6 +348,13 @@ public class DDMFormXSDDeserializer implements DDMFormDeserializer {
 			dynamicElementElement.attributeValue("readOnly"));
 
 		ddmFormField.setReadOnly(readOnly);
+	}
+
+	protected void setDDMFormFieldReference(
+		Element dynamicElementElement, DDMFormField ddmFormField) {
+
+		ddmFormField.setFieldReference(
+			dynamicElementElement.attributeValue("fieldReference"));
 	}
 
 	protected void setDDMFormFieldRepeatable(

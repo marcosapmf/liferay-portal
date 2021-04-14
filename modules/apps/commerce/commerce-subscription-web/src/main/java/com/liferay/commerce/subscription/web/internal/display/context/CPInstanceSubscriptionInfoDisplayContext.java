@@ -16,7 +16,7 @@ package com.liferay.commerce.subscription.web.internal.display.context;
 
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
-import com.liferay.commerce.product.servlet.taglib.ui.CPInstanceScreenNavigationConstants;
+import com.liferay.commerce.product.servlet.taglib.ui.constants.CPInstanceScreenNavigationConstants;
 import com.liferay.commerce.product.util.CPSubscriptionTypeJSPContributorRegistry;
 import com.liferay.commerce.product.util.CPSubscriptionTypeRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -62,7 +62,8 @@ public class CPInstanceSubscriptionInfoDisplayContext
 	public PortletURL getPortletURL() throws PortalException {
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editProductInstance");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/cp_definitions/edit_cp_instance");
 		portletURL.setParameter(
 			"cpDefinitionId", String.valueOf(getCPDefinitionId()));
 		portletURL.setParameter(

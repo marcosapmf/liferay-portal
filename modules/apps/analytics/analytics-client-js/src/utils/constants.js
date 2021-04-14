@@ -16,11 +16,15 @@ export const DEBOUNCE = 1500;
 
 export const FLUSH_INTERVAL = 2000;
 
+// Custom Headers
+
+export const HEADER_PROJECT_ID = 'OSB-Asah-Project-ID';
+
 // Limit of a queue localStorage size in kilobytes.
 
 export const QUEUE_STORAGE_LIMIT = 512;
 
-//Queue priority
+// Queue priority
 
 export const QUEUE_PRIORITY_DEFAULT = 1;
 
@@ -40,13 +44,15 @@ export const STORAGE_KEY_MESSAGE_IDENTITY = 'ac_message_queue_identity';
 
 export const STORAGE_KEY_USER_ID = 'ac_client_user_id';
 
+export const STORAGE_KEY_STORAGE_VERSION = 'ac_client_storage_version';
+
 // Request Constants
 
 export const LIMIT_FAILED_ATTEMPTS = 7;
 
 export const REQUEST_TIMEOUT = 5000;
 
-//DXP Timing
+// DXP Timing
 
 export const MARK_LOAD_EVENT_START = 'loadEventStartSPA';
 
@@ -67,3 +73,9 @@ export const READ_MINIMUM_SCROLL_DEPTH = 75;
 export const READ_TIME_FACTOR = 0.75;
 
 export const READ_WORDS_PER_MIN = 265;
+
+// Track method
+
+export const TRACK_DEFAULT_OPTIONS = {
+	applicationId: 'CustomEvent',
+};

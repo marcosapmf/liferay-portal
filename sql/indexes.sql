@@ -1,5 +1,8 @@
 create index IX_923BD178 on Address (companyId, classNameId, classPK, mailing);
 create index IX_9226DBB4 on Address (companyId, classNameId, classPK, primary_);
+create index IX_CBAD282F on Address (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
+create index IX_5A2093E7 on Address (countryId);
+create index IX_C8E3E87D on Address (regionId);
 create index IX_5BC8B0D4 on Address (userId);
 create index IX_8FCB620E on Address (uuid_[$COLUMN_LENGTH:75$], companyId);
 
@@ -32,9 +35,6 @@ create index IX_59B2EF86 on AssetCategory (uuid_[$COLUMN_LENGTH:75$], companyId,
 create index IX_A9CC915E on AssetCategory (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 create unique index IX_5B65C08 on AssetCategory (uuid_[$COLUMN_LENGTH:75$], groupId, ctCollectionId);
 create index IX_24AFC3E7 on AssetCategory (vocabularyId, ctCollectionId);
-
-create index IX_38A65B55 on AssetEntries_AssetCategories (companyId);
-create index IX_E119938A on AssetEntries_AssetCategories (entryId);
 
 create index IX_112337B8 on AssetEntries_AssetTags (companyId);
 create index IX_B2A61B55 on AssetEntries_AssetTags (tagId);
@@ -92,10 +92,16 @@ create index IX_B8C28C53 on Contact_ (accountId);
 create index IX_791914FA on Contact_ (classNameId, classPK);
 create index IX_66D496A3 on Contact_ (companyId);
 
-create unique index IX_717B97E1 on Country (a2[$COLUMN_LENGTH:75$]);
-create unique index IX_717B9BA2 on Country (a3[$COLUMN_LENGTH:75$]);
 create index IX_25D734CD on Country (active_);
-create unique index IX_19DA007B on Country (name[$COLUMN_LENGTH:75$]);
+create unique index IX_742FFB11 on Country (companyId, a2[$COLUMN_LENGTH:75$]);
+create unique index IX_742FFED2 on Country (companyId, a3[$COLUMN_LENGTH:75$]);
+create index IX_F9CD867E on Country (companyId, active_, billingAllowed);
+create index IX_54E98CCD on Country (companyId, active_, shippingAllowed);
+create unique index IX_410257AB on Country (companyId, name[$COLUMN_LENGTH:75$]);
+create unique index IX_4B78E87A on Country (companyId, number_[$COLUMN_LENGTH:75$]);
+create index IX_BEAF8B0 on Country (uuid_[$COLUMN_LENGTH:75$], companyId);
+
+create unique index IX_518948B3 on CountryLocalization (countryId, languageId[$COLUMN_LENGTH:75$]);
 
 create index IX_33E8A112 on DLFileEntry (companyId, ctCollectionId);
 create index IX_5444C427 on DLFileEntry (companyId, fileEntryTypeId);
@@ -129,6 +135,7 @@ create index IX_EABA15 on DLFileEntryMetadata (uuid_[$COLUMN_LENGTH:75$], compan
 create index IX_EAA9CA2F on DLFileEntryMetadata (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
 create index IX_C0561BFA on DLFileEntryType (groupId, ctCollectionId);
+create unique index IX_B6F21286 on DLFileEntryType (groupId, dataDefinitionId, ctCollectionId);
 create unique index IX_402227BD on DLFileEntryType (groupId, fileEntryTypeKey[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_F147FBA0 on DLFileEntryType (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
 create index IX_17A61184 on DLFileEntryType (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
@@ -342,6 +349,11 @@ create index IX_96BDD537 on PortletItem (groupId, classNameId);
 create index IX_D699243F on PortletItem (groupId, name[$COLUMN_LENGTH:75$], portletId[$COLUMN_LENGTH:200$], classNameId);
 create index IX_E922D6C0 on PortletItem (groupId, portletId[$COLUMN_LENGTH:200$], classNameId);
 
+create index IX_4462FCD on PortletPreferenceValue (portletPreferencesId, ctCollectionId);
+create unique index IX_AD38E28D on PortletPreferenceValue (portletPreferencesId, index_, name[$COLUMN_LENGTH:255$], ctCollectionId);
+create index IX_B94C124C on PortletPreferenceValue (portletPreferencesId, name[$COLUMN_LENGTH:255$], ctCollectionId);
+create index IX_2E0FE9EA on PortletPreferenceValue (portletPreferencesId, name[$COLUMN_LENGTH:255$], smallValue[$COLUMN_LENGTH:255$], ctCollectionId);
+
 create index IX_F0B8A3A0 on PortletPreferences (companyId, ownerId, ownerType, portletId[$COLUMN_LENGTH:200$], ctCollectionId);
 create index IX_31DA3CB8 on PortletPreferences (ownerId, ctCollectionId);
 create index IX_451D78CC on PortletPreferences (ownerId, ownerType, plid, ctCollectionId);
@@ -378,6 +390,9 @@ create unique index IX_4654D204 on RecentLayoutSetBranch (userId, layoutSetId);
 create index IX_2D9A426F on Region (active_);
 create index IX_11FB3E42 on Region (countryId, active_);
 create unique index IX_A2635F5C on Region (countryId, regionCode[$COLUMN_LENGTH:75$]);
+create index IX_60C0214E on Region (uuid_[$COLUMN_LENGTH:75$], companyId);
+
+create unique index IX_A149763D on RegionLocalization (regionId, languageId[$COLUMN_LENGTH:75$]);
 
 create unique index IX_8BD6BCA7 on Release_ (servletContextName[$COLUMN_LENGTH:75$]);
 
@@ -488,6 +503,7 @@ create index IX_6C051FA5 on SystemEvent (groupId, classNameId, classPK, type_, c
 create index IX_E9FA8197 on SystemEvent (groupId, ctCollectionId);
 create index IX_C009825D on SystemEvent (groupId, systemEventSetKey, ctCollectionId);
 
+create index IX_713531A3 on Team (companyId, ctCollectionId);
 create index IX_622C8165 on Team (groupId, ctCollectionId);
 create unique index IX_D424D1E4 on Team (groupId, name[$COLUMN_LENGTH:75$], ctCollectionId);
 create index IX_14857E95 on Team (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);

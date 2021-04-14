@@ -17,14 +17,6 @@ definition {
 	}
 
 	macro setupCrossClusterReplication {
-		OSGiConfig.deployOSGiConfigs(
-			OSGiConfigFileName = "com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config",
-			OSGiConfigs = "productionModeEnabled=&quot;true&quot;,logExceptionsOnly=&quot;true&quot;");
-
-		OSGiConfig.deployOSGiConfigs(
-			OSGiConfigFileName = "com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConnectionConfiguration-default_ccr.config",
-			OSGiConfigs = "active=&quot;true&quot;,connectionId=&quot;ccr&quot;,networkHostAddresses=[&quot;http://localhost:9202&quot;]");
-
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -39,9 +31,44 @@ definition {
 
 		FormFields.editTextMultiline(
 			fieldName = "ccrLocalClusterConnectionConfigurations",
-			fieldValue = "localhost:8080,ccr");
+			fieldValue = "localhost:8080,localcluster");
 
 		SystemSettings.saveConfiguration();
+
+		echo("##");
+		echo("## Local Cluster Index List");
+		echo("##");
+
+		var localClusterIndexList = JSONCurlUtil.get("http://localhost:9202/_cat/indices?h=index");
+
+		echo("##");
+		echo("## Remote Cluster Index List");
+		echo("##");
+
+		var remoteClusterIndexList = JSONCurlUtil.get("http://localhost:9200/_cat/indices?h=index");
+		var remoteClusterIndexList = RegexUtil.replace("${remoteClusterIndexList}", "\n", ",");
+
+		for (var indexName : list "${remoteClusterIndexList}") {
+			if ((!(contains("${indexName}", "."))) && (!(contains("${indexName}", "ilm-history"))) && (!(contains("${localClusterIndexList}", "${indexName}")))) {
+				fail("Failed to create a follower index for ${indexName}.");
+			}
+		}
+
+		echo("##");
+		echo("## Local Cluster Health");
+		echo("##");
+
+		var localClusterHealth = JSONCurlUtil.get("http://localhost:9202/_cluster/health?pretty");
+
+		if (contains("${localClusterHealth}", "red")) {
+			echo("##");
+			echo("## Local Cluster Index Status");
+			echo("##");
+
+			JSONCurlUtil.get("http://localhost:9202/_cat/indices?pretty");
+
+			fail("A follower index is in red status.");
+		}
 	}
 
 	macro setupWorkflow {

@@ -72,16 +72,17 @@ public class ViewAccountRoleAssigneesManagementToolbarDisplayContext
 					"redirect", currentURLObj.toString());
 				removeUsersURL.setParameter(
 					"accountEntryId",
-					ParamUtil.getString(request, "accountEntryId"));
+					ParamUtil.getString(httpServletRequest, "accountEntryId"));
 				removeUsersURL.setParameter(
 					"accountRoleId",
-					ParamUtil.getString(request, "accountRoleId"));
+					ParamUtil.getString(httpServletRequest, "accountRoleId"));
 
 				dropdownItem.putData(
 					"removeUsersURL", removeUsersURL.toString());
 
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "remove"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "remove"));
 				dropdownItem.setQuickAction(true);
 
 				return dropdownItem;
@@ -104,14 +105,9 @@ public class ViewAccountRoleAssigneesManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "selectAccountUsers");
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "assign-users"));
+					LanguageUtil.get(httpServletRequest, "assign-users"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "ACCOUNT_ROLE_USERS_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override

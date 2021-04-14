@@ -25,7 +25,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 %>
 
 <c:if test="<%= itemSelectorViewDescriptor.isShowManagementToolbar() %>">
-	<clay:management-toolbar
+	<clay:management-toolbar-v2
 		displayContext="<%= new ItemSelectorViewDescriptorRendererManagementToolbarDisplayContext(itemSelectorViewDescriptor, request, liferayPortletRequest, liferayPortletResponse, searchContainer) %>"
 	/>
 </c:if>
@@ -47,7 +47,6 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 	>
 		<liferay-ui:search-container-row
 			className="Object"
-			cssClass="entry"
 			modelVar="entry"
 		>
 
@@ -62,27 +61,34 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 
 			<c:choose>
 				<c:when test="<%= itemSelectorViewDescriptorRendererDisplayContext.isIconDisplayStyle() %>">
+					<c:choose>
+						<c:when test="<%= itemDescriptor.isCompact() %>">
 
-					<%
-					row.setCssClass("entry-card entry-display-style lfr-asset-item " + row.getCssClass());
-					%>
+							<%
+							row.setCssClass("card-page-item card-page-item-directory entry " + row.getCssClass());
+							%>
 
-					<liferay-ui:search-container-column-text>
-						<c:choose>
-							<c:when test="<%= itemDescriptor.isCompact() %>">
+							<liferay-ui:search-container-column-text>
 								<clay:horizontal-card
 									horizontalCard="<%= new ItemDescriptorHorizontalCard(itemDescriptor, renderRequest, searchContainer.getRowChecker()) %>"
 								/>
-							</c:when>
-							<c:otherwise>
+							</liferay-ui:search-container-column-text>
+						</c:when>
+						<c:otherwise>
+
+							<%
+							row.setCssClass("card-page-item card-page-item-asset entry " + row.getCssClass());
+							%>
+
+							<liferay-ui:search-container-column-text>
 								<clay:vertical-card
 									verticalCard="<%= new ItemDescriptorVerticalCard(itemDescriptor, renderRequest, searchContainer.getRowChecker()) %>"
 								/>
-							</c:otherwise>
-						</c:choose>
-					</liferay-ui:search-container-column-text>
+							</liferay-ui:search-container-column-text>
+						</c:otherwise>
+					</c:choose>
 				</c:when>
-				<c:otherwise>
+				<c:when test="<%= itemSelectorViewDescriptorRendererDisplayContext.isDescriptiveDisplayStyle() %>">
 
 					<%
 					row.setCssClass("item-selector-list-row " + row.getCssClass());
@@ -103,6 +109,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
+						cssClass="entry"
 					>
 						<c:if test="<%= Objects.nonNull(itemDescriptor.getModifiedDate()) %>">
 
@@ -134,6 +141,38 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 							<%= itemDescriptor.getSubtitle(locale) %>
 						</p>
 					</liferay-ui:search-container-column-text>
+				</c:when>
+				<c:otherwise>
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand table-cell-minw-200"
+						name="title"
+					>
+						<a class="entry" title="<%= itemDescriptor.getTitle(locale) %>">
+							<%= itemDescriptor.getTitle(locale) %>
+						</a>
+					</liferay-ui:search-container-column-text>
+
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand-smaller table-cell-minw-150"
+						name="user"
+						value="<%= itemDescriptor.getUserName() %>"
+					/>
+
+					<liferay-ui:search-container-column-text
+						cssClass="table-cell-expand-smaller table-cell-minw-150"
+						name="modified-date"
+					>
+						<c:if test="<%= Objects.nonNull(itemDescriptor.getModifiedDate()) %>">
+
+							<%
+							Date modifiedDate = itemDescriptor.getModifiedDate();
+							%>
+
+							<span class="text-default">
+								<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true) %>" key="modified-x-ago" />
+							</span>
+						</c:if>
+					</liferay-ui:search-container-column-text>
 				</c:otherwise>
 			</c:choose>
 		</liferay-ui:search-container-row>
@@ -153,7 +192,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 				'<portlet:namespace />entries'
 			);
 
-			searchContainer.on('rowToggled', function (event) {
+			searchContainer.on('rowToggled', (event) => {
 				var searchContainerItems = event.elements.allSelectedElements;
 
 				var arr = [];
@@ -186,20 +225,41 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 		</aui:script>
 	</c:when>
 	<c:otherwise>
-		<aui:script require="metal-dom/src/all/dom as dom">
-			var selectItemHandler = dom.delegate(
+		<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+			var delegate = delegateModule.default;
+
+			var selectItemHandler = delegate(
 				document.querySelector('#<portlet:namespace />entriesContainer'),
 				'click',
 				'.entry',
-				function (event) {
-					dom.removeClasses(
-						document.querySelectorAll('.form-check-card.active'),
-						'active'
-					);
-					dom.addClasses(
-						dom.closest(event.delegateTarget, '.form-check-card'),
-						'active'
-					);
+				(event) => {
+					var activeCards = document.querySelectorAll('.form-check-card.active');
+
+					if (activeCards.length) {
+						activeCards.forEach((card) => {
+							card.classList.remove('active');
+						});
+					}
+
+					var target = event.delegateTarget;
+
+					var newSelectedCard = target.closest('.form-check-card');
+
+					if (newSelectedCard) {
+						newSelectedCard.classList.add('active');
+					}
+
+					var domElement = target.closest('li');
+
+					if (domElement == null) {
+						domElement = target.closest('tr');
+					}
+
+					var itemValue = '';
+
+					if (domElement != null) {
+						itemValue = domElement.dataset.value;
+					}
 
 					Liferay.Util.getOpener().Liferay.fire(
 						'<%= itemSelectorViewDescriptorRendererDisplayContext.getItemSelectedEventName() %>',
@@ -207,7 +267,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 							data: {
 								returnType:
 									'<%= itemSelectorViewDescriptorRendererDisplayContext.getReturnType() %>',
-								value: event.delegateTarget.dataset.value,
+								value: itemValue,
 							},
 						}
 					);
@@ -215,7 +275,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 			);
 
 			Liferay.on('destroyPortlet', function removeListener() {
-				selectItemHandler.removeListener();
+				selectItemHandler.dispose();
 
 				Liferay.detach('destroyPortlet', removeListener);
 			});

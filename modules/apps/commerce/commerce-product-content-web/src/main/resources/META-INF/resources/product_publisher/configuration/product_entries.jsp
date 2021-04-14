@@ -77,7 +77,7 @@ List<CPCatalogEntry> catalogEntries = cpPublisherConfigurationDisplayContext.get
 		</c:choose>
 
 		<liferay-ui:search-container-column-text
-			cssClass="important table-cell-content"
+			cssClass="important table-cell-expand"
 			name="name"
 			value="<%= HtmlUtil.escape(cpCatalogEntry.getName()) %>"
 		/>
@@ -87,7 +87,7 @@ List<CPCatalogEntry> catalogEntries = cpPublisherConfigurationDisplayContext.get
 		%>
 
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="sku"
 			value="<%= (cpSku == null) ? StringPool.BLANK : HtmlUtil.escape(cpSku.getSku()) %>"
 		/>
@@ -143,7 +143,7 @@ List<CPCatalogEntry> catalogEntries = cpPublisherConfigurationDisplayContext.get
 <aui:script use="liferay-item-selector-dialog">
 	window.document
 		.querySelector('#<portlet:namespace />addCommerceProductDefinition')
-		.addEventListener('click', function (event) {
+		.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			var itemSelectorDialog = new A.LiferayItemSelectorDialog({

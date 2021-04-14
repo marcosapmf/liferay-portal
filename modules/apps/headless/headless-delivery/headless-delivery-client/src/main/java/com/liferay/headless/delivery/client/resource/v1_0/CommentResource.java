@@ -300,8 +300,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments",
-				blogPostingId);
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -366,8 +367,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments",
-				blogPostingId);
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -427,8 +429,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments/batch",
-				blogPostingId);
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments/batch");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -488,8 +491,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{commentId}",
-				commentId);
+						"/o/headless-delivery/v1.0/comments/{commentId}");
+
+			httpInvoker.path("commentId", commentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -604,8 +608,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{commentId}",
-				commentId);
+						"/o/headless-delivery/v1.0/comments/{commentId}");
+
+			httpInvoker.path("commentId", commentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -669,8 +674,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{commentId}",
-				commentId);
+						"/o/headless-delivery/v1.0/comments/{commentId}");
+
+			httpInvoker.path("commentId", commentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -814,8 +820,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments",
-				parentCommentId);
+						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments");
+
+			httpInvoker.path("parentCommentId", parentCommentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -879,8 +886,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments",
-				parentCommentId);
+						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments");
+
+			httpInvoker.path("parentCommentId", parentCommentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -966,8 +974,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/documents/{documentId}/comments",
-				documentId);
+						"/o/headless-delivery/v1.0/documents/{documentId}/comments");
+
+			httpInvoker.path("documentId", documentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1031,8 +1040,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/documents/{documentId}/comments",
-				documentId);
+						"/o/headless-delivery/v1.0/documents/{documentId}/comments");
+
+			httpInvoker.path("documentId", documentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1092,8 +1102,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/documents/{documentId}/comments/batch",
-				documentId);
+						"/o/headless-delivery/v1.0/documents/{documentId}/comments/batch");
+
+			httpInvoker.path("documentId", documentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1182,8 +1193,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1250,8 +1262,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1312,8 +1325,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments/batch",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments/batch");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

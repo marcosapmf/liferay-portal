@@ -26,7 +26,7 @@ portletDisplay.setShowBackIcon(true);
 
 PortletURL importProcessesURL = PortalUtil.getControlPanelPortletURL(request, ExportImportPortletKeys.IMPORT, PortletRequest.RENDER_PHASE);
 
-importProcessesURL.setParameter("mvcPath", "/import/view.jsp");
+importProcessesURL.setParameter("mvcPath", "/import/view_import_layouts.jsp");
 
 portletDisplay.setURLBack(importProcessesURL.toString());
 
@@ -34,7 +34,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-import-process"));
 %>
 
 <clay:container-fluid
-	cssClass="container-view"
+	cssClass="container-form-lg"
 	id='<%= liferayPortletResponse.getNamespace() + "exportImportOptions" %>'
 >
 

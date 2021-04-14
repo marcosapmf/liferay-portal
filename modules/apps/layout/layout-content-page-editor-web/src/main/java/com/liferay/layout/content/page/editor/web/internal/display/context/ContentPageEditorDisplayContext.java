@@ -14,6 +14,8 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
+import com.liferay.asset.categories.item.selector.AssetCategoryTreeNodeItemSelectorReturnType;
+import com.liferay.asset.categories.item.selector.criterion.AssetCategoryTreeNodeItemSelectorCriterion;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.fragment.constants.FragmentEntryLinkConstants;
@@ -46,6 +48,7 @@ import com.liferay.item.selector.criteria.DownloadFileEntryItemSelectorReturnTyp
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
+import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoListItemSelectorCriterion;
@@ -63,6 +66,7 @@ import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLin
 import com.liferay.layout.content.page.editor.web.internal.util.StyleBookEntryUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.item.selector.criterion.LayoutItemSelectorCriterion;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
@@ -75,7 +79,6 @@ import com.liferay.layout.util.structure.CommonStylesUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
-import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
@@ -143,6 +146,8 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PortletCategoryUtil;
 import com.liferay.portal.util.WebAppPool;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.site.navigation.item.selector.SiteNavigationMenuItemSelectorReturnType;
+import com.liferay.site.navigation.item.selector.criterion.SiteNavigationMenuItemSelectorCriterion;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 import com.liferay.style.book.util.DefaultStyleBookEntryUtil;
@@ -157,7 +162,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -217,6 +221,7 @@ public class ContentPageEditorDisplayContext {
 		_itemSelector = itemSelector;
 		_pageEditorConfiguration = pageEditorConfiguration;
 		_renderResponse = renderResponse;
+
 		_resourceBundleLoader =
 			ResourceBundleLoaderUtil.
 				getResourceBundleLoaderByBundleSymbolicName(
@@ -236,27 +241,36 @@ public class ContentPageEditorDisplayContext {
 		return HashMapBuilder.<String, Object>put(
 			"config",
 			HashMapBuilder.<String, Object>put(
+				"adaptiveMediaEnabled",
+				_ffLayoutContentPageEditorConfiguration.adaptiveMediaEnabled()
+			).put(
 				"addFragmentCompositionURL",
 				getFragmentEntryActionURL(
-					"/content_layout/add_fragment_composition")
+					"/layout_content_page_editor/add_fragment_composition")
 			).put(
 				"addFragmentEntryLinkCommentURL",
 				getFragmentEntryActionURL(
-					"/content_layout/add_fragment_entry_link_comment")
+					"/layout_content_page_editor" +
+						"/add_fragment_entry_link_comment")
 			).put(
 				"addFragmentEntryLinksURL",
 				getFragmentEntryActionURL(
-					"/content_layout/add_fragment_entry_links")
+					"/layout_content_page_editor/add_fragment_entry_links")
 			).put(
 				"addFragmentEntryLinkURL",
 				getFragmentEntryActionURL(
-					"/content_layout/add_fragment_entry_link")
+					"/layout_content_page_editor/add_fragment_entry_link")
 			).put(
 				"addItemURL",
-				getFragmentEntryActionURL("/content_layout/add_item")
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/add_item")
 			).put(
 				"addPortletURL",
-				getFragmentEntryActionURL("/content_layout/add_portlet")
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/add_portlet")
+			).put(
+				"assetCategoryTreeNodeItemSelectorURL",
+				_getAssetCategoryTreeNodeItemSelectorURL()
 			).put(
 				"autoExtendSessionEnabled",
 				_pageEditorConfiguration.autoExtendSessionEnabled()
@@ -267,11 +281,11 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"changeMasterLayoutURL",
 				getFragmentEntryActionURL(
-					"/content_layout/change_master_layout")
+					"/layout_content_page_editor/change_master_layout")
 			).put(
 				"changeStyleBookEntryURL",
 				getFragmentEntryActionURL(
-					"/content_layout/change_style_book_entry")
+					"/layout_content_page_editor/change_style_book_entry")
 			).put(
 				"collectionSelectorURL", _getCollectionSelectorURL()
 			).put(
@@ -292,7 +306,7 @@ public class ContentPageEditorDisplayContext {
 				"defaultStyleBookEntryImagePreviewURL",
 				() -> {
 					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultStyleBookEntry();
+						_getDefaultMasterStyleBookEntry();
 
 					if (defaultStyleBookEntry != null) {
 						return defaultStyleBookEntry.getImagePreviewURL(
@@ -305,7 +319,7 @@ public class ContentPageEditorDisplayContext {
 				"defaultStyleBookEntryName",
 				() -> {
 					StyleBookEntry defaultStyleBookEntry =
-						_getDefaultStyleBookEntry();
+						_getDefaultMasterStyleBookEntry();
 
 					if (defaultStyleBookEntry != null) {
 						return defaultStyleBookEntry.getName();
@@ -316,10 +330,12 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"deleteFragmentEntryLinkCommentURL",
 				getFragmentEntryActionURL(
-					"/content_layout/delete_fragment_entry_link_comment")
+					"/layout_content_page_editor" +
+						"/delete_fragment_entry_link_comment")
 			).put(
 				"deleteItemURL",
-				getFragmentEntryActionURL("/content_layout/delete_item")
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/delete_item")
 			).put(
 				"discardDraftRedirectURL", themeDisplay.getURLCurrent()
 			).put(
@@ -333,16 +349,22 @@ public class ContentPageEditorDisplayContext {
 				}
 			).put(
 				"duplicateItemURL",
-				getFragmentEntryActionURL("/content_layout/duplicate_item")
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/duplicate_item")
+			).put(
+				"duplicateSegmentsExperienceURL",
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/duplicate_segments_experience")
 			).put(
 				"editFragmentEntryLinkCommentURL",
 				getFragmentEntryActionURL(
-					"/content_layout/edit_fragment_entry_link_comment",
+					"/layout_content_page_editor" +
+						"/edit_fragment_entry_link_comment",
 					Constants.UPDATE)
 			).put(
 				"editFragmentEntryLinkURL",
 				getFragmentEntryActionURL(
-					"/content_layout/edit_fragment_entry_link")
+					"/layout_content_page_editor/edit_fragment_entry_link")
 			).put(
 				"frontendTokens",
 				() -> {
@@ -363,24 +385,35 @@ public class ContentPageEditorDisplayContext {
 						_getDefaultStyleBookEntry());
 				}
 			).put(
+				"getAvailableImageConfigurationsURL",
+				getResourceURL(
+					"/layout_content_page_editor" +
+						"/get_available_image_configurations")
+			).put(
 				"getAvailableListItemRenderersURL",
 				getResourceURL(
-					"/content_layout/get_available_list_item_renderers")
+					"/layout_content_page_editor" +
+						"/get_available_list_item_renderers")
 			).put(
 				"getAvailableListRenderersURL",
-				getResourceURL("/content_layout/get_available_list_renderers")
+				getResourceURL(
+					"/layout_content_page_editor/get_available_list_renderers")
 			).put(
 				"getAvailableTemplatesURL",
-				getResourceURL("/content_layout/get_available_templates")
+				getResourceURL(
+					"/layout_content_page_editor/get_available_templates")
 			).put(
 				"getCollectionFieldURL",
-				getResourceURL("/content_layout/get_collection_field")
+				getResourceURL(
+					"/layout_content_page_editor/get_collection_field")
 			).put(
 				"getCollectionMappingFieldsURL",
-				getResourceURL("/content_layout/get_collection_mapping_fields")
+				getResourceURL(
+					"/layout_content_page_editor/get_collection_mapping_fields")
 			).put(
 				"getExperienceUsedPortletsURL",
-				getResourceURL("/content_layout/get_experience_used_portlets")
+				getResourceURL(
+					"/layout_content_page_editor/get_experience_used_portlets")
 			).put(
 				"getIframeContentCssURL",
 				PortalUtil.getStaticResourceURL(
@@ -399,13 +432,19 @@ public class ContentPageEditorDisplayContext {
 				}
 			).put(
 				"getInfoItemFieldValueURL",
-				getResourceURL("/content_layout/get_info_item_field_value")
+				getResourceURL(
+					"/layout_content_page_editor/get_info_item_field_value")
 			).put(
 				"getInfoItemMappingFieldsURL",
-				getResourceURL("/content_layout/get_info_item_mapping_fields")
+				getResourceURL(
+					"/layout_content_page_editor/get_info_item_mapping_fields")
+			).put(
+				"getLayoutFriendlyURL",
+				getResourceURL(
+					"/layout_content_page_editor/get_layout_friendly_url")
 			).put(
 				"getPageContentsURL",
-				getResourceURL("/content_layout/get_page_contents")
+				getResourceURL("/layout_content_page_editor/get_page_content")
 			).put(
 				"imageSelectorURL", _getItemSelectorURL()
 			).put(
@@ -413,22 +452,22 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"infoListSelectorURL", _getInfoListSelectorURL()
 			).put(
-				"languageDirection", _getLanguageDirection()
-			).put(
 				"layoutConversionWarningMessages",
 				MultiSessionMessages.get(
 					portletRequest, "layoutConversionWarningMessages")
+			).put(
+				"layoutItemSelectorURL", _getLayoutItemSelectorURL()
 			).put(
 				"layoutType", String.valueOf(_getLayoutType())
 			).put(
 				"lookAndFeelURL", _getLookAndFeelURL()
 			).put(
 				"mappingFieldsURL",
-				getResourceURL("/content_layout/get_mapping_fields")
+				getResourceURL("/layout_content_page_editor/get_mapping_fields")
 			).put(
 				"markItemForDeletionURL",
 				getFragmentEntryActionURL(
-					"/content_layout/mark_item_for_deletion")
+					"/layout_content_page_editor/mark_item_for_deletion")
 			).put(
 				"masterLayouts", _getMasterLayouts()
 			).put(
@@ -436,7 +475,7 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"moveItemURL",
 				getFragmentEntryActionURL(
-					"/content_layout/move_fragment_entry_link")
+					"/layout_content_page_editor/move_fragment_entry_link")
 			).put(
 				"paddingOptions",
 				() -> {
@@ -477,16 +516,37 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"previewPageURL",
 				getResourceURL(
-					"/content_layout/get_page_preview", !isLayoutPageTemplate())
+					"/layout_content_page_editor/get_page_preview",
+					!isLayoutPageTemplate())
 			).put(
 				"publishURL", getPublishURL()
 			).put(
 				"redirectURL", _getRedirect()
 			).put(
 				"renderFragmentEntryURL",
-				getResourceURL("/content_layout/get_fragment_entry_link")
+				getResourceURL(
+					"/layout_content_page_editor/get_fragment_entry_link")
 			).put(
 				"sidebarPanels", getSidebarPanels()
+			).put(
+				"siteNavigationMenuItemSelectorURL",
+				_getSiteNavigationMenuItemSelectorURL()
+			).put(
+				"styleBookEnabled",
+				() -> {
+					Layout layout = themeDisplay.getLayout();
+
+					LayoutSet layoutSet = layout.getLayoutSet();
+
+					if (Validator.isNull(layout.getThemeId()) ||
+						Objects.equals(
+							layout.getThemeId(), layoutSet.getThemeId())) {
+
+						return true;
+					}
+
+					return false;
+				}
 			).put(
 				"styleBookEntryId",
 				() -> {
@@ -501,29 +561,33 @@ public class ContentPageEditorDisplayContext {
 			).put(
 				"unmarkItemForDeletionURL",
 				getFragmentEntryActionURL(
-					"/content_layout/unmark_item_for_deletion")
+					"/layout_content_page_editor/unmark_item_for_deletion")
 			).put(
 				"updateConfigurationValuesURL",
 				getFragmentEntryActionURL(
-					"/content_layout/update_configuration_values")
+					"/layout_content_page_editor/update_configuration_values")
 			).put(
 				"updateItemConfigURL",
-				getFragmentEntryActionURL("/content_layout/update_item_config")
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/update_item_config")
 			).put(
 				"updateLayoutPageTemplateDataURL",
 				getFragmentEntryActionURL(
-					"/content_layout/update_layout_page_template_data")
+					"/layout_content_page_editor" +
+						"/update_layout_page_template_data")
 			).put(
 				"updateRowColumnsURL",
-				getFragmentEntryActionURL("/content_layout/update_row_columns")
+				getFragmentEntryActionURL(
+					"/layout_content_page_editor/update_row_columns")
 			).put(
 				"updateSegmentsExperiencePriorityURL",
 				getFragmentEntryActionURL(
-					"/content_layout/update_segments_experience_priority")
+					"/layout_content_page_editor" +
+						"/update_segments_experience_priority")
 			).put(
 				"updateSegmentsExperienceURL",
 				getFragmentEntryActionURL(
-					"/content_layout/update_segments_experience")
+					"/layout_content_page_editor/update_segments_experience")
 			).put(
 				"workflowEnabled", isWorkflowEnabled()
 			).build()
@@ -572,7 +636,8 @@ public class ContentPageEditorDisplayContext {
 	}
 
 	public String getPublishURL() {
-		return getFragmentEntryActionURL("/content_layout/publish_layout");
+		return getFragmentEntryActionURL(
+			"/layout_content_page_editor/publish_layout");
 	}
 
 	public List<Map<String, Object>> getSidebarPanels() {
@@ -739,6 +804,21 @@ public class ContentPageEditorDisplayContext {
 	protected final PortletRequest portletRequest;
 	protected final ThemeDisplay themeDisplay;
 
+	private String _getAssetCategoryTreeNodeItemSelectorURL() {
+		ItemSelectorCriterion itemSelectorCriterion =
+			new AssetCategoryTreeNodeItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new AssetCategoryTreeNodeItemSelectorReturnType());
+
+		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+			_renderResponse.getNamespace() + "selectAssetCategoryTreeNode",
+			itemSelectorCriterion);
+
+		return itemSelectorURL.toString();
+	}
+
 	private Map<String, Object> _getAvailableLanguages() {
 		Map<String, Object> availableLanguages = new HashMap<>();
 
@@ -751,12 +831,9 @@ public class ContentPageEditorDisplayContext {
 				HashMapBuilder.<String, Object>put(
 					"languageIcon",
 					StringUtil.toLowerCase(
-						StringUtil.replace(
-							languageId, CharPool.UNDERLINE, CharPool.DASH))
+						LocaleUtil.toW3cLanguageId(languageId))
 				).put(
-					"languageLabel",
-					StringUtil.replace(
-						languageId, CharPool.UNDERLINE, CharPool.DASH)
+					"w3cLanguageId", LocaleUtil.toW3cLanguageId(languageId)
 				).build());
 		}
 
@@ -903,6 +980,18 @@ public class ContentPageEditorDisplayContext {
 		return _defaultConfigurations;
 	}
 
+	private StyleBookEntry _getDefaultMasterStyleBookEntry() {
+		if (_defaultMasterStyleBookEntry != null) {
+			return _defaultMasterStyleBookEntry;
+		}
+
+		_defaultMasterStyleBookEntry =
+			DefaultStyleBookEntryUtil.getDefaultMasterStyleBookEntry(
+				themeDisplay.getLayout());
+
+		return _defaultMasterStyleBookEntry;
+	}
+
 	private StyleBookEntry _getDefaultStyleBookEntry() {
 		if (_defaultStyleBookEntry != null) {
 			return _defaultStyleBookEntry;
@@ -926,7 +1015,8 @@ public class ContentPageEditorDisplayContext {
 				PortletRequest.ACTION_PHASE);
 
 			discardDraftURL.setParameter(
-				ActionRequest.ACTION_NAME, "/layout/discard_draft_layout");
+				ActionRequest.ACTION_NAME,
+				"/layout_admin/discard_draft_layout");
 			discardDraftURL.setParameter(
 				"redirect", themeDisplay.getURLCurrent());
 			discardDraftURL.setParameter(
@@ -940,7 +1030,7 @@ public class ContentPageEditorDisplayContext {
 			PortletRequest.ACTION_PHASE);
 
 		deleteLayoutURL.setParameter(
-			ActionRequest.ACTION_NAME, "/layout/delete_layout");
+			ActionRequest.ACTION_NAME, "/layout_admin/delete_layout");
 
 		PortletURL redirectURL = PortalUtil.getControlPanelPortletURL(
 			httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
@@ -1434,7 +1524,7 @@ public class ContentPageEditorDisplayContext {
 					).put(
 						"editableTypes",
 						EditableFragmentEntryProcessorUtil.getEditableTypes(
-							fragmentEntryLink.getHtml())
+							content)
 					).put(
 						"editableValues",
 						JSONFactoryUtil.createJSONObject(
@@ -1569,18 +1659,21 @@ public class ContentPageEditorDisplayContext {
 		return itemSelectorURL.toString();
 	}
 
-	private Map<String, String> _getLanguageDirection() {
-		Map<String, String> languageDirection = new HashMap<>();
+	private String _getLayoutItemSelectorURL() {
+		LayoutItemSelectorCriterion layoutItemSelectorCriterion =
+			new LayoutItemSelectorCriterion();
 
-		for (Locale curLocale :
-				LanguageUtil.getAvailableLocales(getGroupId())) {
+		layoutItemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new UUIDItemSelectorReturnType());
+		layoutItemSelectorCriterion.setMultiSelection(false);
+		layoutItemSelectorCriterion.setShowPrivatePages(true);
 
-			languageDirection.put(
-				LocaleUtil.toLanguageId(curLocale),
-				LanguageUtil.get(curLocale, "lang.dir"));
-		}
+		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+			_renderResponse.getNamespace() + "selectLayout",
+			layoutItemSelectorCriterion);
 
-		return languageDirection;
+		return itemSelectorURL.toString();
 	}
 
 	private LayoutStructure _getLayoutStructure() throws Exception {
@@ -1638,7 +1731,7 @@ public class ContentPageEditorDisplayContext {
 			PortletRequest.RENDER_PHASE);
 
 		lookAndFeelURL.setParameter(
-			"mvcRenderCommandName", "/layout/edit_layout");
+			"mvcRenderCommandName", "/layout_admin/edit_layout");
 
 		lookAndFeelURL.setParameter(
 			"redirect",
@@ -1695,12 +1788,10 @@ public class ContentPageEditorDisplayContext {
 	private JSONObject _getMasterLayoutJSONObject() {
 		Layout layout = themeDisplay.getLayout();
 
-		LayoutStructure masterLayoutStructure = _getMasterLayoutStructure();
-
 		return JSONUtil.put(
 			"masterLayoutData",
 			Optional.ofNullable(
-				masterLayoutStructure
+				_getMasterLayoutStructure()
 			).map(
 				LayoutStructure::toJSONObject
 			).orElse(
@@ -1958,6 +2049,21 @@ public class ContentPageEditorDisplayContext {
 		return _redirect;
 	}
 
+	private String _getSiteNavigationMenuItemSelectorURL() {
+		ItemSelectorCriterion itemSelectorCriterion =
+			new SiteNavigationMenuItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new SiteNavigationMenuItemSelectorReturnType());
+
+		PortletURL itemSelectorURL = _itemSelector.getItemSelectorURL(
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+			_renderResponse.getNamespace() + "selectSiteNavigationMenu",
+			itemSelectorCriterion);
+
+		return itemSelectorURL.toString();
+	}
+
 	private List<Map<String, Object>> _getStyleBooks() {
 		ArrayList<Map<String, Object>> styleBooks = new ArrayList<>();
 
@@ -2192,6 +2298,7 @@ public class ContentPageEditorDisplayContext {
 	private final List<ContentPageEditorSidebarPanel>
 		_contentPageEditorSidebarPanels;
 	private Map<String, Object> _defaultConfigurations;
+	private StyleBookEntry _defaultMasterStyleBookEntry;
 	private StyleBookEntry _defaultStyleBookEntry;
 	private final FFLayoutContentPageEditorConfiguration
 		_ffLayoutContentPageEditorConfiguration;

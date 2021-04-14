@@ -105,15 +105,15 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		LayoutStructure layoutStructure = _getLayoutStructure(draftLayout);
 
 		LayoutStructureItem layoutStructureItem1 =
-			layoutStructure.addContainerLayoutStructureItem(
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0);
 
 		LayoutStructureItem layoutStructureItem2 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 1, 3);
 
 		LayoutStructureItem layoutStructureItem3 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 1, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
@@ -180,7 +180,7 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/content_layout/publish_layout_page_template_entry"
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout_page_template_entry"
 	)
 	private MVCActionCommand _mvcActionCommand;
 

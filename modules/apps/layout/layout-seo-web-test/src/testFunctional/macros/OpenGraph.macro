@@ -43,27 +43,39 @@ definition {
 
 			Click.pauseClickAt(locator1 = "Button#SELECT_OPEN_GRAPH_IMAGE");
 
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Open Graph Image");
 
 			Pause(locator1 = "3000");
 
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
 			AssertElementPresent(locator1 = "ItemSelector#SELECT_FILE_UPLOAD_IMAGE");
 
-			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
-				locator1 = "TextInput#FILE",
-				value1 = "${uploadFileName}");
+			if (isSet(depotName)) {
+				ItemSelector.selectRepositoryImage(
+					customImage = "${customImage}",
+					depotName = "${depotName}",
+					imageFileName = "${uploadFileName}");
+			}
+			else {
+				UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
+					locator1 = "TextInput#FILE",
+					value1 = "${uploadFileName}");
 
-			Pause(locator1 = "2000");
+				Pause(locator1 = "2000");
 
-			AssertElementPresent.pauseAssertVisible(
-				locator1 = "ItemSelector#ADD_BUTTON",
-				value1 = "Add");
+				AssertElementPresent.pauseAssertVisible(
+					locator1 = "ItemSelector#ADD_BUTTON",
+					value1 = "Add");
 
-			AssertClick(
-				locator1 = "ItemSelector#ADD_BUTTON",
-				value1 = "Add");
+				AssertClick(
+					locator1 = "ItemSelector#ADD_BUTTON",
+					value1 = "Add");
 
-			SelectFrameTop(value1 = "relative=top");
+				SelectFrameTop(value1 = "relative=top");
+			}
 
 			if (isSet(altDescription)) {
 				Type(
@@ -76,10 +88,11 @@ definition {
 			Button.click(button = "Save");
 
 			if (isSet(customImage)) {
-				AssertTextEquals(
+				var uploadFileName = StringUtil.extractFirst("${uploadFileName}", ".");
+
+				AssertElementPresent.assertVisible(
 					key_dmDocumentURL = "${uploadFileName}",
-					locator1 = "TextInput#OPEN_GRAPH_CUSTOM_IMAGE_INPUT",
-					value1 = "${uploadFileName}");
+					locator1 = "TextInput#OPEN_GRAPH_CUSTOM_IMAGE_INPUT");
 			}
 		}
 	}
@@ -87,8 +100,7 @@ definition {
 	macro disableOpenGraphAtSiteLevel {
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
-			portlet = "Settings");
+			portlet = "Site Settings");
 
 		Panel.expandPanel(panel = "Open Graph");
 

@@ -33,7 +33,7 @@ public class DLWebComponentProvider {
 		return _dlWebComponentProvider;
 	}
 
-	public DLAdminDisplayContextProvider getDLAdminDisplayContextProvider() {
+	public DLAdminDisplayContextProvider getDlAdminDisplayContextProvider() {
 		return _dlAdminDisplayContextProvider;
 	}
 
@@ -56,6 +56,13 @@ public class DLWebComponentProvider {
 	}
 
 	@Reference(unbind = "-")
+	protected void setDlAdminDisplayContextProvider(
+		DLAdminDisplayContextProvider dlAdminDisplayContextProvider) {
+
+		_dlAdminDisplayContextProvider = dlAdminDisplayContextProvider;
+	}
+
+	@Reference(unbind = "-")
 	protected void setDLDisplayContextProvider(
 		DLDisplayContextProvider dlDisplayContextProvider) {
 
@@ -71,9 +78,7 @@ public class DLWebComponentProvider {
 
 	private static DLWebComponentProvider _dlWebComponentProvider;
 
-	@Reference
 	private DLAdminDisplayContextProvider _dlAdminDisplayContextProvider;
-
 	private DLDisplayContextProvider _dlDisplayContextProvider;
 	private IGDisplayContextProvider _igDisplayContextProvider;
 

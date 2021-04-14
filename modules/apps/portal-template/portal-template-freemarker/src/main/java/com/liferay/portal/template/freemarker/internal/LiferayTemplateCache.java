@@ -15,6 +15,8 @@
 package com.liferay.portal.template.freemarker.internal;
 
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.template.TemplateConstants;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.template.TemplateResourceLoader;
@@ -55,13 +57,6 @@ public class LiferayTemplateCache extends TemplateCache {
 	}
 
 	@Override
-	public void clear() {
-		if (_portalCache != null) {
-			_portalCache.removeAll();
-		}
-	}
-
-	@Override
 	public MaybeMissingTemplate getTemplate(
 			String templateId, Locale locale, Object customLookupCondition,
 			String encoding, boolean parse)
@@ -93,6 +88,10 @@ public class LiferayTemplateCache extends TemplateCache {
 					templateId);
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception, exception);
+				}
+
 				templateResource = null;
 			}
 		}
@@ -129,6 +128,9 @@ public class LiferayTemplateCache extends TemplateCache {
 			throw new IOException(reflectiveOperationException);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		LiferayTemplateCache.class);
 
 	private final Configuration _configuration;
 	private final Constructor<MaybeMissingTemplate> _constructor;

@@ -12,11 +12,11 @@
  * details.
  */
 
+import ClayButton from '@clayui/button';
 import ClayForm, {ClayCheckbox, ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import React, {useEffect, useRef, useState} from 'react';
 
-import Button from '../../components/button/Button.es';
 import Popover from '../../components/popover/Popover.es';
 
 const CustomObjectPopover = ({
@@ -32,6 +32,14 @@ const CustomObjectPopover = ({
 	const [hasError, setHasError] = useState(false);
 	const [isLoading, setLoading] = useState(false);
 
+	const validate = (value) => {
+		const invalid = value.trim() === '';
+
+		setHasError(invalid);
+
+		return !invalid;
+	};
+
 	const handleSubmit = () => {
 		const name = nameInputRef.current.value;
 
@@ -44,14 +52,6 @@ const CustomObjectPopover = ({
 		else {
 			nameInputRef.current.focus();
 		}
-	};
-
-	const validate = (value) => {
-		const invalid = value.trim() === '';
-
-		setHasError(invalid);
-
-		return !invalid;
 	};
 
 	const resetForm = () => {
@@ -139,7 +139,7 @@ const CustomObjectPopover = ({
 			footer={() => (
 				<div className="border-top p-3" style={{width: 450}}>
 					<div className="d-flex justify-content-end">
-						<Button
+						<ClayButton
 							className="mr-3"
 							displayType="secondary"
 							onClick={() => {
@@ -150,15 +150,15 @@ const CustomObjectPopover = ({
 							small
 						>
 							{Liferay.Language.get('cancel')}
-						</Button>
+						</ClayButton>
 
-						<Button
+						<ClayButton
 							disabled={isLoading}
 							onClick={() => handleSubmit()}
 							small
 						>
 							{Liferay.Language.get('continue')}
-						</Button>
+						</ClayButton>
 					</div>
 				</div>
 			)}

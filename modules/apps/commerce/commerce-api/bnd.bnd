@@ -1,14 +1,16 @@
 Bundle-Name: Liferay Commerce API
 Bundle-SymbolicName: com.liferay.commerce.api
-Bundle-Version: 22.4.0
+Bundle-Version: 23.0.0
 Export-Package:\
 	com.liferay.commerce.address,\
 	com.liferay.commerce.configuration,\
 	com.liferay.commerce.constants,\
 	com.liferay.commerce.context,\
+	com.liferay.commerce.country,\
 	com.liferay.commerce.discount,\
 	com.liferay.commerce.exception,\
 	com.liferay.commerce.health.status,\
+	com.liferay.commerce.helper,\
 	com.liferay.commerce.inventory,\
 	com.liferay.commerce.model,\
 	com.liferay.commerce.order,\

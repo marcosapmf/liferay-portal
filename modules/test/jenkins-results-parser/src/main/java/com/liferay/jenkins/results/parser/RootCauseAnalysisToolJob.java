@@ -25,8 +25,10 @@ import java.util.Set;
 public class RootCauseAnalysisToolJob
 	extends BaseJob implements PortalTestClassJob {
 
-	public RootCauseAnalysisToolJob(String jobName, String portalBranchName) {
-		super(jobName);
+	public RootCauseAnalysisToolJob(
+		String jobName, BuildProfile buildProfile, String portalBranchName) {
+
+		super(jobName, buildProfile);
 
 		_jenkinsGitWorkingDirectory =
 			GitWorkingDirectoryFactory.newJenkinsGitWorkingDirectory();
@@ -54,14 +56,6 @@ public class RootCauseAnalysisToolJob
 	}
 
 	@Override
-	public Set<String> getBatchNames() {
-		String testBatchNames = JenkinsResultsParserUtil.getProperty(
-			getJobProperties(), "test.batch.names");
-
-		return getSetFromString(testBatchNames);
-	}
-
-	@Override
 	public Set<String> getDistTypes() {
 		return Collections.emptySet();
 	}
@@ -73,6 +67,18 @@ public class RootCauseAnalysisToolJob
 	@Override
 	public PortalGitWorkingDirectory getPortalGitWorkingDirectory() {
 		return _portalGitWorkingDirectory;
+	}
+
+	@Override
+	public boolean isSegmentEnabled() {
+		return true;
+	}
+
+	@Override
+	protected Set<String> getRawBatchNames() {
+		return getSetFromString(
+			JenkinsResultsParserUtil.getProperty(
+				getJobProperties(), "test.batch.names"));
 	}
 
 	private final GitWorkingDirectory _jenkinsGitWorkingDirectory;

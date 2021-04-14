@@ -37,15 +37,19 @@ import com.liferay.app.builder.util.comparator.AppBuilderAppModifiedDateComparat
 import com.liferay.app.builder.util.comparator.AppBuilderAppNameComparator;
 import com.liferay.data.engine.model.DEDataListView;
 import com.liferay.data.engine.service.DEDataListViewLocalService;
+import com.liferay.dynamic.data.lists.model.DDLRecord;
 import com.liferay.dynamic.data.mapping.exception.NoSuchStructureLayoutException;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
@@ -58,9 +62,11 @@ import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.service.ResourceLocalService;
+import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -108,6 +114,12 @@ public class AppResourceImpl
 			ActionKeys.DELETE);
 
 		_appBuilderAppLocalService.deleteAppBuilderApp(appId);
+
+		_workflowDefinitionLinkLocalService.deleteWorkflowDefinitionLink(
+			contextCompany.getCompanyId(), 0,
+			ResourceActionsUtil.getCompositeModelName(
+				AppBuilderApp.class.getName(), DDLRecord.class.getName()),
+			appId, 0);
 	}
 
 	@Override
@@ -141,20 +153,33 @@ public class AppResourceImpl
 		}
 
 		if (Objects.isNull(active) && ArrayUtil.isEmpty(deploymentTypes) &&
-			Validator.isNull(keywords) && Validator.isNull(scope) &&
-			ArrayUtil.isEmpty(userIds)) {
+			Validator.isNull(keywords) && ArrayUtil.isEmpty(userIds)) {
+
+			if (Validator.isNull(scope)) {
+				return Page.of(
+					transform(
+						_appBuilderAppLocalService.getCompanyAppBuilderApps(
+							contextCompany.getCompanyId(),
+							pagination.getStartPosition(),
+							pagination.getEndPosition(),
+							_toOrderByComparator(sorts[0])),
+						this::_toApp),
+					pagination,
+					_appBuilderAppLocalService.getCompanyAppBuilderAppsCount(
+						contextCompany.getCompanyId()));
+			}
 
 			return Page.of(
 				transform(
 					_appBuilderAppLocalService.getCompanyAppBuilderApps(
-						contextCompany.getCompanyId(),
+						contextCompany.getCompanyId(), scope,
 						pagination.getStartPosition(),
 						pagination.getEndPosition(),
 						_toOrderByComparator(sorts[0])),
 					this::_toApp),
 				pagination,
 				_appBuilderAppLocalService.getCompanyAppBuilderAppsCount(
-					contextCompany.getCompanyId()));
+					contextCompany.getCompanyId(), scope));
 		}
 
 		return SearchUtil.search(
@@ -453,6 +478,10 @@ public class AppResourceImpl
 			contextUser.getUserId(), AppBuilderApp.class.getName(),
 			appBuilderApp.getPrimaryKey(), false, false, false);
 
+		_updateWorkflowDefinitionLink(
+			appBuilderApp.getAppBuilderAppId(), app.getWorkflowDefinitionName(),
+			app.getWorkflowDefinitionVersion());
+
 		return _toApp(appBuilderApp);
 	}
 
@@ -500,6 +529,10 @@ public class AppResourceImpl
 				appDeployer.deploy(appId);
 			}
 		}
+
+		_updateWorkflowDefinitionLink(
+			appBuilderApp.getAppBuilderAppId(), app.getWorkflowDefinitionName(),
+			app.getWorkflowDefinitionVersion());
 
 		return _toApp(appBuilderApp);
 	}
@@ -565,6 +598,13 @@ public class AppResourceImpl
 			return null;
 		}
 
+		WorkflowDefinitionLink workflowDefinitionLink =
+			_workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
+				appBuilderApp.getCompanyId(), 0,
+				ResourceActionsUtil.getCompositeModelName(
+					AppBuilderApp.class.getName(), DDLRecord.class.getName()),
+				appBuilderApp.getAppBuilderAppId(), 0);
+
 		return new App() {
 			{
 				active = appBuilderApp.isActive();
@@ -609,6 +649,24 @@ public class AppResourceImpl
 									appBuilderApp.getAppBuilderAppId());
 
 						return latestAppBuilderAppVersion.getVersion();
+					});
+				setWorkflowDefinitionName(
+					() -> {
+						if (workflowDefinitionLink == null) {
+							return null;
+						}
+
+						return workflowDefinitionLink.
+							getWorkflowDefinitionName();
+					});
+				setWorkflowDefinitionVersion(
+					() -> {
+						if (workflowDefinitionLink == null) {
+							return null;
+						}
+
+						return workflowDefinitionLink.
+							getWorkflowDefinitionVersion();
 					});
 			}
 		};
@@ -660,6 +718,27 @@ public class AppResourceImpl
 				}
 			}
 		};
+	}
+
+	private void _updateWorkflowDefinitionLink(
+			long appId, String workflowDefinitionName,
+			Integer workflowDefinitionVersion)
+		throws Exception {
+
+		String workflowDefinitionKey = StringPool.BLANK;
+
+		if (Validator.isNotNull(workflowDefinitionName) &&
+			Objects.nonNull(workflowDefinitionVersion)) {
+
+			workflowDefinitionKey = StringBundler.concat(
+				workflowDefinitionName, CharPool.AT, workflowDefinitionVersion);
+		}
+
+		_workflowDefinitionLinkLocalService.updateWorkflowDefinitionLink(
+			contextUser.getUserId(), contextCompany.getCompanyId(), 0,
+			ResourceActionsUtil.getCompositeModelName(
+				AppBuilderApp.class.getName(), DDLRecord.class.getName()),
+			appId, 0, workflowDefinitionKey);
 	}
 
 	private void _validate(
@@ -751,5 +830,9 @@ public class AppResourceImpl
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	@Reference
+	private WorkflowDefinitionLinkLocalService
+		_workflowDefinitionLinkLocalService;
 
 }

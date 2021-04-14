@@ -19,8 +19,6 @@ package com.liferay.change.tracking.web.internal.constants;
  */
 public interface CTWebKeys {
 
-	public static final String CONFLICT_INFO_MAP = "CONFLICT_INFO_MAP";
-
 	public static final String CT_COLLECTION = "CT_COLLECTION";
 
 	public static final String CT_ENTRY_DIFF_DISPLAY = "CT_ENTRY_DIFF_DISPLAY";
@@ -31,14 +29,17 @@ public interface CTWebKeys {
 	public static final String PUBLICATIONS_DISPLAY_CONTEXT =
 		"PUBLICATIONS_DISPLAY_CONTEXT";
 
-	public static final String SCHEDULE_PUBLICATION_DISPLAY_CONTEXT =
-		"SCHEDULE_PUBLICATION_DISPLAY_CONTEXT";
+	public static final String RESCHEDULE_PUBLICATION_DISPLAY_CONTEXT =
+		"RESCHEDULE_PUBLICATION_DISPLAY_CONTEXT";
 
 	public static final String VIEW_CHANGES_DISPLAY_CONTEXT =
 		"VIEW_CHANGES_DISPLAY_CONTEXT";
 
 	public static final String VIEW_CHANGES_SESSION_STATE =
 		"VIEW_CHANGES_SESSION_STATE";
+
+	public static final String VIEW_CONFLICTS_DISPLAY_CONTEXT =
+		"VIEW_CONFLICTS_DISPLAY_CONTEXT";
 
 	public static final String VIEW_DISCARD_DISPLAY_CONTEXT =
 		"VIEW_DISCARD_DISPLAY_CONTEXT";

@@ -102,7 +102,7 @@ kbArticlePortletInstanceConfiguration = ParameterMapUtil.setParameterMap(KBArtic
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script>
+<script>
 	var <portlet:namespace />form = document.getElementById(
 		'<portlet:namespace />fm'
 	);
@@ -110,7 +110,7 @@ kbArticlePortletInstanceConfiguration = ParameterMapUtil.setParameterMap(KBArtic
 	if (<portlet:namespace />form) {
 		document
 			.getElementById('<portlet:namespace />selectKBArticleButton')
-			.addEventListener('click', function (event) {
+			.addEventListener('click', (event) => {
 				Liferay.Util.openSelectionModal({
 					onSelect: function (event) {
 						var kbArticleData = {
@@ -141,4 +141,4 @@ kbArticlePortletInstanceConfiguration = ParameterMapUtil.setParameterMap(KBArtic
 				});
 			});
 	}
-</aui:script>
+</script>

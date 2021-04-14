@@ -6,11 +6,11 @@
 
 	<meta content="initial-scale=1.0, width=device-width" name="viewport" />
 
-	<script type="text/javascript" src="${javascript_folder}/intersection-observer.js"></script>
+	<script src="${javascript_folder}/intersection-observer.js" type="text/javascript"></script>
 	<@liferay_util["include"] page=top_head_include />
 </head>
 
-<#if redirect_to_private_layouts && themeDisplay.isSignedIn() && themeDisplay.getLayout().isPublicLayout()>
+<#if is_login_page && redirect_to_private_layouts && themeDisplay.isSignedIn() && themeDisplay.getLayout().isPublicLayout()>
 
 	<#-- Instant redirect, when the page is hit directly or refreshed -->
 

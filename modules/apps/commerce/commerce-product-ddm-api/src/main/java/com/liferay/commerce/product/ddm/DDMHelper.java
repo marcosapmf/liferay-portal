@@ -26,9 +26,14 @@ import java.util.Map;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
+import javax.servlet.jsp.PageContext;
+
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Igor Beslic
  */
+@ProviderType
 public interface DDMHelper {
 
 	public DDMForm getCPAttachmentFileEntryDDMForm(
@@ -48,6 +53,17 @@ public interface DDMHelper {
 			cpDefinitionOptionRelCPDefinitionOptionValueRels,
 		long companyId, long userId);
 
+	public String renderCPAttachmentFileEntryOptions(
+			long cpDefinitionId, String json, PageContext pageContext,
+			RenderRequest renderRequest, RenderResponse renderResponse,
+			Map<CPDefinitionOptionRel, List<CPDefinitionOptionValueRel>>
+				cpDefinitionOptionRelCPDefinitionOptionValueRels)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
 	public String renderCPAttachmentFileEntryOptions(
 			long cpDefinitionId, String json, RenderRequest renderRequest,
 			RenderResponse renderResponse,

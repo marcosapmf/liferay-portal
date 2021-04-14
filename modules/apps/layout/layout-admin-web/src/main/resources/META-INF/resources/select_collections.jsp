@@ -28,14 +28,8 @@ SelectLayoutCollectionDisplayContext selectLayoutCollectionDisplayContext = (Sel
 	>
 		<liferay-ui:search-container-row
 			className="com.liferay.asset.list.model.AssetListEntry"
-			cssClass="entry"
 			modelVar="assetListEntry"
 		>
-
-			<%
-			row.setCssClass("entry-card entry-display-style lfr-asset-item " + row.getCssClass());
-			%>
-
 			<liferay-ui:search-container-column-text>
 				<clay:vertical-card
 					verticalCard="<%= new CollectionsVerticalCard(assetListEntry, selectLayoutCollectionDisplayContext.getSelGroupId(), renderRequest, renderResponse) %>"
@@ -50,18 +44,20 @@ SelectLayoutCollectionDisplayContext selectLayoutCollectionDisplayContext = (Sel
 	</liferay-ui:search-container>
 </div>
 
-<aui:script require="metal-dom/src/all/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var collections = document.getElementById('<portlet:namespace />collections');
 
-	var addCollectionActionOptionQueryClickHandler = dom.delegate(
+	var delegate = delegateModule.default;
+
+	var addCollectionActionOptionQueryClickHandler = delegate(
 		collections,
 		'click',
 		'.select-collection-action-option',
-		function (event) {}
+		(event) => {}
 	);
 
 	function handleDestroyPortlet() {
-		addCollectionActionOptionQueryClickHandler.removeListener();
+		addCollectionActionOptionQueryClickHandler.dispose();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);
 	}

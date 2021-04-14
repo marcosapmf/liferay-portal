@@ -383,6 +383,10 @@ public class JournalArticleModelValidator
 						FileUtil.write(smallImageFile, smallImageBytes, false);
 					}
 					catch (IOException ioException) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(ioException, ioException);
+						}
+
 						smallImageBytes = null;
 					}
 				}
@@ -486,6 +490,10 @@ public class JournalArticleModelValidator
 			ArrayUtil.isEmpty(smallImageBytes)) {
 
 			Image image = _imageLocalService.fetchImage(smallImageId);
+
+			if (image != null) {
+				smallImageBytes = image.getTextObj();
+			}
 
 			if ((image == null) || (smallImageBytes == null)) {
 				throw new NoSuchImageException(

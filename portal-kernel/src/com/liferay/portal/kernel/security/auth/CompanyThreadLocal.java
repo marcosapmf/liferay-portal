@@ -57,12 +57,21 @@ public class CompanyThreadLocal {
 			_companyId.set(companyId);
 
 			try {
-				User defaultUser = UserLocalServiceUtil.getDefaultUser(
+				User defaultUser = UserLocalServiceUtil.fetchDefaultUser(
 					companyId);
 
-				LocaleThreadLocal.setDefaultLocale(defaultUser.getLocale());
-				TimeZoneThreadLocal.setDefaultTimeZone(
-					defaultUser.getTimeZone());
+				if (defaultUser == null) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"No default user was found for company " +
+								companyId);
+					}
+				}
+				else {
+					LocaleThreadLocal.setDefaultLocale(defaultUser.getLocale());
+					TimeZoneThreadLocal.setDefaultTimeZone(
+						defaultUser.getTimeZone());
+				}
 			}
 			catch (Exception exception) {
 				_log.error(exception, exception);

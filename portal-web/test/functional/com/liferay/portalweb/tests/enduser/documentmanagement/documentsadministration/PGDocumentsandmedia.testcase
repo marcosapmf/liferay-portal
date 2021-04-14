@@ -1,10 +1,11 @@
 @component-name = "portal-document-management"
 definition {
 
+	property custom.properties = "default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column";
 	property testray.main.component.name = "Documents Management";
+
 	var pageName = "Documents and Media Page";
 	var portletName = "Documents and Media";
 
@@ -186,60 +187,18 @@ definition {
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_1.xlsx",
 			dmDocumentType = "Basic Document");
-	}
 
-	@priority = "4"
-	test AddDocumentTypes {
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
+		Navigator.gotoPage(pageName = "Documents and Media Page");
 
-		DMNavigator.gotoDocumentType();
+		DMDocument.addPG(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.mov",
+			dmDocumentTitle = "Document_1.mov");
 
-		DMDocumentType.add(
-			dmDocumentTypeDescription = "DM Document Type 1 Description",
-			dmDocumentTypeFieldNames = "Text Box",
-			dmDocumentTypeName = "DM Document Type 1 Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMDocumentType.viewMenulistOption(dmDocumentTypeName = "DM Document Type 1 Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.add(
-			dmDocumentTypeDescription = "DM Document Type 2 Description",
-			dmDocumentTypeFieldNames = "Text Box",
-			dmDocumentTypeName = "DM Document Type 2 Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMDocumentType.viewMenulistOption(dmDocumentTypeName = "DM Document Type 2 Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.add(
-			dmDocumentTypeDescription = "DM Document Type 3 Description",
-			dmDocumentTypeFieldNames = "Text Box",
-			dmDocumentTypeName = "DM Document Type 3 Name");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMDocumentType.viewMenulistOption(dmDocumentTypeName = "DM Document Type 3 Name");
+		DMDocument.viewAllPG(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1.mov",
+			dmDocumentType = "Basic Document");
 	}
 
 	@priority = "4"
@@ -525,6 +484,25 @@ definition {
 		DMFolder.viewPG(dmFolderName = "Subfolder3 Name");
 	}
 
+	@description = "This test ensures that a document with forbidden characters in the title can be published successfully."
+	@priority = "5"
+	test AllowTitleWithForbiddenCharacters {
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.addPG(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.jpg",
+			dmDocumentTitle = '''/\<>:"?|*''');
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.viewPG(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = '''/\<>:"?|*''',
+			escapedDocumentTitle = '''/\&lt;&gt;:&#34;?|*''',
+			titleWithForbiddenCharacters = "true");
+	}
+
 	@priority = "4"
 	test CancelCheckout {
 		JSONDocument.addFileWithUploadedFile(
@@ -549,8 +527,7 @@ definition {
 		DMDocument.addMultiplePG(dmDocumentFileList = "Document_1.doc,Document_2.docx");
 
 		for (var tagName : list "tagone,tagtwo,tagthree") {
-
-			var key_dmDocumentTitle = "Document_1.doc";
+			var key_dmDocumentTitle = "Document_1";
 
 			Check(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_CHECKBOX");
 
@@ -558,7 +535,7 @@ definition {
 
 			DMDocument.editTags(tagName = "${tagName}");
 
-			DMNavigator.gotoDocumentPG(dmDocumentTitle = "Document_1.doc");
+			DMNavigator.gotoDocumentPG(dmDocumentTitle = "Document_1");
 
 			DMDocument.viewTag(tagName = "${tagName}");
 
@@ -567,7 +544,7 @@ definition {
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-		var key_dmDocumentTitle = "Document_2.docx";
+		var key_dmDocumentTitle = "Document_2";
 
 		Check(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_CHECKBOX");
 
@@ -600,14 +577,14 @@ definition {
 
 		Alert.viewSuccessMessageText(successMessage = "Changes saved.");
 
-		DMNavigator.gotoDocumentPG(dmDocumentTitle = "Document_2.docx");
+		DMNavigator.gotoDocumentPG(dmDocumentTitle = "Document_2");
 
 		DMDocument.viewTag(tagName = "tagtwo");
 	}
 
 	@priority = "5"
 	test DeleteDocumentInFolder {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
@@ -638,7 +615,7 @@ definition {
 
 		DMDocumentType.add(
 			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text Box",
+			dmDocumentTypeFieldNames = "Text",
 			dmDocumentTypeName = "DM Document Type Name");
 
 		ProductMenu.gotoPortlet(
@@ -782,10 +759,9 @@ definition {
 			configurationName = "Google Drive",
 			configurationScope = "Virtual Instance Scope");
 
-		var googlePropertiesSet = MathUtil.randomNumber("3");
-		var googleClientID = PropsUtil.get("google.client.id.${googlePropertiesSet}");
-		var googleClientSecret = PropsUtil.get("google.client.secret.${googlePropertiesSet}");
-		var googlePickerAPIKey = PropsUtil.get("google.api.key.${googlePropertiesSet}");
+		var googleClientID = PropsUtil.get("google.client.id.4");
+		var googleClientSecret = PropsUtil.get("google.client.secret.4");
+		var googlePickerAPIKey = PropsUtil.get("google.api.key.4");
 
 		PortalSettings.configureGoogleDrive(
 			googleClientID = "${googleClientID}",
@@ -799,33 +775,51 @@ definition {
 		MenuItem.click(menuItem = "Google Drive Shortcut");
 
 		GoogleDrive.gotoDrive(
-			userEmailAddress = PropsUtil.get("email.address.3"),
-			userPassword = PropsUtil.get("email.password.3"),
+			userEmailAddress = PropsUtil.get("email.address.4"),
+			userPassword = PropsUtil.get("email.password.4"),
 			windowTitle = "New Google Drive Shortcut - ${siteName}");
 
-		GoogleDrive.selectDocument(googleDocName = "liferay.txt");
+		GoogleDrive.selectDocument(
+			googleDocName = "liferay.txt",
+			googleDocTitle = "liferay");
 
 		PortletEntry.publish();
 
-		DMDocument.viewPG(dmDocumentTitle = "liferay.txt");
+		DMDocument.viewPG(dmDocumentTitle = "liferay");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
-		DMDocument.deletePG(dmDocumentTitle = "liferay.txt");
+		DMDocument.deletePG(dmDocumentTitle = "liferay");
 	}
 
 	@priority = "5"
 	test EditDocument {
-		JSONDocument.addFile(
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.addPG(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest");
+			dmDocumentFile = "Document_1.doc",
+			useCurrentTitle = "true");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
-		DMDocument.editPG(
-			dmDocumentTitle = "DM Document Title",
+		DMDocument.editCmdPG(
+			checkFileNameText = "true",
+			checkTitleText = "true",
+			dmDocumentDescriptionEdit = "DM Document Description Edit",
+			dmDocumentFileNameEdit = "DM Document File Name Edit.doc",
+			dmDocumentTitle = "Document_1",
 			dmDocumentTitleEdit = "DM Document Title Edit");
+
+		PortletEntry.publish();
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.viewPG(
+			dmDocumentDescription = "DM Document Description Edit",
+			dmDocumentFileName = "DM Document File Name Edit.doc",
+			dmDocumentTitle = "DM Document Title Edit",
+			dmDocumentVersionNumber = "1.1");
 	}
 
 	@priority = "5"
@@ -840,7 +834,7 @@ definition {
 
 		DMDocumentType.add(
 			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text Box",
+			dmDocumentTypeFieldNames = "Text",
 			dmDocumentTypeName = "DM Document Type Name");
 
 		ProductMenu.gotoPortlet(
@@ -1082,6 +1076,10 @@ definition {
 			dmFolderName = "DM Folder1 Name",
 			locationFieldName = "true");
 
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder1 Name");
+
 		DMDocument.moveToFolderPG(
 			dmDocumentTitle = "DM Document Title",
 			dmFolderName = "DM Folder2 Name");
@@ -1109,10 +1107,9 @@ definition {
 			configurationName = "Google Drive",
 			configurationScope = "Virtual Instance Scope");
 
-		var googlePropertiesSet = MathUtil.randomNumber("3");
-		var googleClientID = PropsUtil.get("google.client.id.${googlePropertiesSet}");
-		var googleClientSecret = PropsUtil.get("google.client.secret.${googlePropertiesSet}");
-		var googlePickerAPIKey = PropsUtil.get("google.api.key.${googlePropertiesSet}");
+		var googleClientID = PropsUtil.get("google.client.id.4");
+		var googleClientSecret = PropsUtil.get("google.client.secret.4");
+		var googlePickerAPIKey = PropsUtil.get("google.api.key.4");
 
 		PortalSettings.configureGoogleDrive(
 			googleClientID = "${googleClientID}",
@@ -1126,11 +1123,13 @@ definition {
 		MenuItem.click(menuItem = "Google Drive Shortcut");
 
 		GoogleDrive.gotoDrive(
-			userEmailAddress = PropsUtil.get("email.address.3"),
-			userPassword = PropsUtil.get("email.password.3"),
+			userEmailAddress = PropsUtil.get("email.address.4"),
+			userPassword = PropsUtil.get("email.password.4"),
 			windowTitle = "New Google Drive Shortcut - ${siteName}");
 
-		GoogleDrive.selectDocument(googleDocName = "liferay.txt");
+		GoogleDrive.selectDocument(
+			googleDocName = "liferay.txt",
+			googleDocTitle = "liferay");
 
 		PortletEntry.publish();
 
@@ -1142,12 +1141,12 @@ definition {
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
 		DMDocument.moveToFolderPG(
-			dmDocumentTitle = "liferay.txt",
+			dmDocumentTitle = "liferay",
 			dmFolderName = "DM Folder Name");
 
 		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
 
-		DMDocument.viewPG(dmDocumentTitle = "liferay.txt");
+		DMDocument.viewPG(dmDocumentTitle = "liferay");
 	}
 
 	@priority = "5"
@@ -1561,7 +1560,6 @@ definition {
 	@priority = "4"
 	test ViewDocumentPagination {
 		for (var documentName : list "Document_2.doc,Document_1.xls,Document_4.jpg,Document_3.jpg,Document_2.xls,Document_1.txt,Document_4.txt,Document_3.xls,Document_2.jpg,Document_1.doc") {
-
 			var extension = StringUtil.extractLast("${documentName}", ".");
 
 			if ("${extension}" == "doc") {
@@ -1606,6 +1604,75 @@ definition {
 			value1 = "2 of 10 Selected");
 	}
 
+	@description = "This ensures that the user can create a document with the topic from the Global site."
+	@priority = "4"
+	test ViewDocumentWithTopic {
+		JSONCategory.addCategory(
+			groupName = "Global",
+			title = "Apple",
+			vocabularyName = "Topic");
+
+		JSONCategory.addCategory(
+			groupName = "Global",
+			title = "Dragon Fruit",
+			vocabularyName = "Topic");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.addPG(
+			categoryName = "Apple",
+			dmDocumentDescription = "Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "Document_1.doc",
+			vocabularyName = "Topic");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		Click(
+			key_dmDocumentTitle = "Document_1.doc",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Edit");
+
+		Panel.expandPanel(panel = "Categorization");
+
+		AssetCategorization.addCategory(
+			categoryName = "Dragon Fruit",
+			vocabularyName = "Topic");
+
+		Button.clickPublish();
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		Click(
+			key_dmDocumentTitle = "Document_1.doc",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Edit");
+
+		DMDocument.viewCategories(categoryNameList = "Apple,Dragon Fruit");
+	}
+
+	@description = "This ensures that a user can view the information about an image when navigating to info panel."
+	@priority = "4"
+	test ViewImageInfoPanel {
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_2.jpg");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.viewPG(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentExtension = "jpg",
+			dmDocumentFileTypeInfo = "Image",
+			dmDocumentTitle = "DM Document Title",
+			dmDocumentType = "Basic Document");
+	}
+
 	@priority = "4"
 	test ViewOlderVersion {
 		JSONDocument.addFileWithUploadedFile(
@@ -1639,6 +1706,48 @@ definition {
 			dmDocumentTitle = "DM Document Title");
 
 		DMDocument.viewDocumentVersionNumberCmdPG(dmDocumentVersionNumber = "1.1");
+	}
+
+	@description = "This ensures that the user can view the document through related assets."
+	@priority = "3"
+	test ViewRelatedDocument {
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1.doc",
+			groupName = "Guest",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_2.jpg",
+			groupName = "Guest",
+			mimeType = "image/jpeg",
+			sourceFileName = "Document_2.jpg");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		Click(
+			key_dmDocumentTitle = "Document_2.jpg",
+			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Edit");
+
+		RelatedAssets.selectAsset(
+			assetTitle = "Document_1.doc",
+			assetType = "Basic Document");
+
+		Button.clickPublish();
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMNavigator.gotoRelatedAssetPG(
+			assetTitle = "Document_2.jpg",
+			dmDocumentTitle = "Document_1.doc");
+
+		AssertVisible(
+			key_dmDocumentFileName = "Document_2.jpg",
+			locator1 = "DocumentsAndMediaDocument#DOCUMENT_DETAILS_IMAGE_PREVIEW");
 	}
 
 	@priority = "5"

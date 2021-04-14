@@ -238,6 +238,9 @@ public class JournalArticleAssetRenderer
 				HtmlUtil.stripHtml(articleDisplay.getContent()));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return summary;
@@ -326,7 +329,7 @@ public class JournalArticleAssetRenderer
 		liferayPortletURL.setParameter(
 			"groupId", String.valueOf(_article.getGroupId()));
 		liferayPortletURL.setParameter("articleId", _article.getArticleId());
-		liferayPortletURL.setResourceID("exportArticle");
+		liferayPortletURL.setResourceID("/journal/export_article");
 
 		return liferayPortletURL;
 	}
@@ -421,7 +424,8 @@ public class JournalArticleAssetRenderer
 		if (_assetDisplayPageFriendlyURLProvider != null) {
 			String friendlyURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					getClassName(), getClassPK(), themeDisplay);
+					getClassName(), _article.getResourcePrimKey(),
+					themeDisplay);
 
 			if (Validator.isNotNull(friendlyURL)) {
 				if (!_article.isApproved()) {
@@ -578,16 +582,20 @@ public class JournalArticleAssetRenderer
 		String viewMode = ParamUtil.getString(
 			httpServletRequest, "viewMode", Constants.VIEW);
 
-		String languageId = LanguageUtil.getLanguageId(httpServletRequest);
+		String languageId = ParamUtil.getString(
+			httpServletRequest, "languageId");
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if ((themeDisplay != null) &&
+		if (Validator.isNull(languageId) && (themeDisplay != null) &&
 			Validator.isNotNull(themeDisplay.getLanguageId())) {
 
 			languageId = themeDisplay.getLanguageId();
+		}
+		else {
+			languageId = LanguageUtil.getLanguageId(httpServletRequest);
 		}
 
 		int articlePage = ParamUtil.getInteger(httpServletRequest, "page", 1);
@@ -656,7 +664,7 @@ public class JournalArticleAssetRenderer
 			getAssetRendererFactory();
 
 		AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
-			JournalArticle.class.getName(), getClassPK());
+			JournalArticle.class.getName(), article.getResourcePrimKey());
 
 		boolean hasDisplayPage = AssetDisplayPageUtil.hasAssetDisplayPage(
 			groupId, assetEntry);

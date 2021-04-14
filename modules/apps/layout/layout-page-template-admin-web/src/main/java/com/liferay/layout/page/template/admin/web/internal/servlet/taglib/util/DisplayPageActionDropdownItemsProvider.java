@@ -23,7 +23,6 @@ import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
-import com.liferay.layout.page.template.admin.web.internal.configuration.FFDisplayPageAdminWebConfigurationUtil;
 import com.liferay.layout.page.template.admin.web.internal.configuration.LayoutPageTemplateAdminWebConfiguration;
 import com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys;
 import com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplateEntryPermission;
@@ -136,20 +135,21 @@ public class DisplayPageActionDropdownItemsProvider {
 			() -> {
 				int count =
 					AssetDisplayPageEntryServiceUtil.
-						getAssetDisplayPageEntriesCountByLayoutPageTemplateEntryId(
+						getAssetDisplayPageEntriesCount(
+							_layoutPageTemplateEntry.getClassNameId(),
+							_layoutPageTemplateEntry.getClassTypeId(),
 							_layoutPageTemplateEntry.
-								getLayoutPageTemplateEntryId());
+								getLayoutPageTemplateEntryId(),
+							_layoutPageTemplateEntry.isDefaultTemplate());
 
-				return FFDisplayPageAdminWebConfigurationUtil.
-					viewUsagesEnabled() &&
-					   (count > 0);
+				return count > 0;
 			},
 			_getViewUsagesDisplayPageActionUnsafeConsumer()
 		).add(
 			() -> LayoutPageTemplateEntryPermission.contains(
 				_themeDisplay.getPermissionChecker(), _layoutPageTemplateEntry,
 				ActionKeys.DELETE),
-			_getDeleteLayoutPrototypeActionUnsafeConsumer()
+			_getDeleteDisplayPageActionUnsafeConsumer()
 		).build();
 	}
 
@@ -162,14 +162,52 @@ public class DisplayPageActionDropdownItemsProvider {
 
 		return dropdownItem -> {
 			dropdownItem.setHref(
-				editPageURL, "mvcRenderCommandName", "/layout/edit_layout",
-				"redirect", _themeDisplay.getURLCurrent(), "backURL",
+				editPageURL, "mvcRenderCommandName",
+				"/layout_admin/edit_layout", "redirect",
+				_themeDisplay.getURLCurrent(), "backURL",
 				_themeDisplay.getURLCurrent(), "portletResource",
 				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
 				"selPlid", _layoutPageTemplateEntry.getPlid());
 
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "configure"));
+		};
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception>
+		_getDeleteDisplayPageActionUnsafeConsumer() {
+
+		PortletURL deleteDisplayPageURL = _renderResponse.createActionURL();
+
+		deleteDisplayPageURL.setParameter(
+			ActionRequest.ACTION_NAME,
+			"/layout_page_template_admin/delete_layout_page_template_entry");
+
+		deleteDisplayPageURL.setParameter(
+			"redirect", _themeDisplay.getURLCurrent());
+		deleteDisplayPageURL.setParameter(
+			"layoutPageTemplateEntryId",
+			String.valueOf(
+				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
+
+		return dropdownItem -> {
+			dropdownItem.putData("action", "deleteDisplayPage");
+
+			String key = "are-you-sure-you-want-to-delete-this";
+
+			if (_layoutPageTemplateEntry.isDefaultTemplate()) {
+				key =
+					"are-you-sure-you-want-to-delete-the-default-display-" +
+						"page-template";
+			}
+
+			dropdownItem.putData(
+				"deleteDisplayPageMessage",
+				LanguageUtil.get(_httpServletRequest, key));
+			dropdownItem.putData(
+				"deleteDisplayPageURL", deleteDisplayPageURL.toString());
+			dropdownItem.setLabel(
+				LanguageUtil.get(_httpServletRequest, "delete"));
 		};
 	}
 
@@ -181,7 +219,8 @@ public class DisplayPageActionDropdownItemsProvider {
 
 		deleteLayoutPageTemplateEntryPreviewURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/layout_page_template/delete_layout_page_template_entry_preview");
+			"/layout_page_template_admin" +
+				"/delete_layout_page_template_entry_preview");
 
 		deleteLayoutPageTemplateEntryPreviewURL.setParameter(
 			"redirect", _themeDisplay.getURLCurrent());
@@ -206,31 +245,6 @@ public class DisplayPageActionDropdownItemsProvider {
 	}
 
 	private UnsafeConsumer<DropdownItem, Exception>
-		_getDeleteLayoutPrototypeActionUnsafeConsumer() {
-
-		PortletURL deleteDisplayPageURL = _renderResponse.createActionURL();
-
-		deleteDisplayPageURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/layout_page_template/delete_layout_page_template_entry");
-
-		deleteDisplayPageURL.setParameter(
-			"redirect", _themeDisplay.getURLCurrent());
-		deleteDisplayPageURL.setParameter(
-			"layoutPageTemplateEntryId",
-			String.valueOf(
-				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
-
-		return dropdownItem -> {
-			dropdownItem.putData("action", "deleteDisplayPage");
-			dropdownItem.putData(
-				"deleteDisplayPageURL", deleteDisplayPageURL.toString());
-			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "delete"));
-		};
-	}
-
-	private UnsafeConsumer<DropdownItem, Exception>
 		_getDiscardDraftActionUnsafeConsumer() {
 
 		if (_draftLayout == null) {
@@ -242,7 +256,7 @@ public class DisplayPageActionDropdownItemsProvider {
 			PortletRequest.ACTION_PHASE);
 
 		discardDraftURL.setParameter(
-			ActionRequest.ACTION_NAME, "/layout/discard_draft_layout");
+			ActionRequest.ACTION_NAME, "/layout_admin/discard_draft_layout");
 		discardDraftURL.setParameter("redirect", _themeDisplay.getURLCurrent());
 		discardDraftURL.setParameter(
 			"selPlid", String.valueOf(_draftLayout.getPlid()));
@@ -284,7 +298,7 @@ public class DisplayPageActionDropdownItemsProvider {
 			String.valueOf(
 				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
 		exportDisplayPageURL.setResourceID(
-			"/layout_page_template/export_display_page");
+			"/layout_page_template_admin/export_display_pages");
 
 		return dropdownItem -> {
 			dropdownItem.setDisabled(_layoutPageTemplateEntry.isDraft());
@@ -299,7 +313,8 @@ public class DisplayPageActionDropdownItemsProvider {
 
 		uploadURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/layout_page_template/upload_layout_page_template_entry_preview");
+			"/layout_page_template_admin" +
+				"/upload_layout_page_template_entry_preview");
 		uploadURL.setParameter(
 			"layoutPageTemplateEntryId",
 			String.valueOf(
@@ -332,7 +347,8 @@ public class DisplayPageActionDropdownItemsProvider {
 
 		markAsDefaultDisplayPageURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/layout_page_template/edit_layout_page_template_settings");
+			"/layout_page_template_admin" +
+				"/edit_layout_page_template_entry_settings");
 
 		markAsDefaultDisplayPageURL.setParameter(
 			"redirect", _themeDisplay.getURLCurrent());
@@ -426,7 +442,7 @@ public class DisplayPageActionDropdownItemsProvider {
 
 		updateDisplayPageURL.setParameter(
 			ActionRequest.ACTION_NAME,
-			"/layout_page_template/update_layout_page_template_entry");
+			"/layout_page_template_admin/update_layout_page_template_entry");
 
 		updateDisplayPageURL.setParameter(
 			"redirect", _themeDisplay.getURLCurrent());
@@ -477,11 +493,16 @@ public class DisplayPageActionDropdownItemsProvider {
 		return dropdownItem -> {
 			dropdownItem.setHref(
 				_renderResponse.createRenderURL(), "mvcRenderCommandName",
-				"/layout_page_template/view_display_page_usages",
+				"/layout_page_template_admin/view_asset_display_page_usages",
+				"redirect", _themeDisplay.getURLCurrent(), "classNameId",
+				String.valueOf(_layoutPageTemplateEntry.getClassNameId()),
+				"classTypeId",
+				String.valueOf(_layoutPageTemplateEntry.getClassTypeId()),
 				"layoutPageTemplateEntryId",
 				String.valueOf(
 					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()),
-				"redirect", _themeDisplay.getURLCurrent());
+				"defaultTemplate",
+				String.valueOf(_layoutPageTemplateEntry.isDefaultTemplate()));
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "view-usages"));
 		};

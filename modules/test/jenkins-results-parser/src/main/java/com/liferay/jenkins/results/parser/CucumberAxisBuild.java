@@ -50,11 +50,38 @@ public class CucumberAxisBuild extends AxisBuild {
 		return _cucumberFeatureResults;
 	}
 
+	public CucumberTestClassResult getCucumberTestClassResult(
+		String cucumberTestName) {
+
+		for (TestClassResult testClassResult : getTestClassResults()) {
+			if (!(testClassResult instanceof CucumberTestClassResult)) {
+				continue;
+			}
+
+			CucumberTestClassResult cucumberTestClassResult =
+				(CucumberTestClassResult)testClassResult;
+
+			if (cucumberTestName.equals(
+					cucumberTestClassResult.getCucumberTestName())) {
+
+				return cucumberTestClassResult;
+			}
+		}
+
+		return null;
+	}
+
 	public List<CucumberTestResult> getCucumberTestResults(String testStatus) {
 		List<CucumberTestResult> cucumberTestResults = new ArrayList<>();
 
-		for (TestResult testResult : getTestResults(testStatus)) {
+		for (TestResult testResult : getTestResults()) {
 			if (!(testResult instanceof CucumberTestResult)) {
+				continue;
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(testStatus) ||
+				!testStatus.equals(testResult.getStatus())) {
+
 				continue;
 			}
 
@@ -65,7 +92,22 @@ public class CucumberAxisBuild extends AxisBuild {
 	}
 
 	@Override
-	public List<TestResult> getTestResults(String testStatus) {
+	public List<TestClassResult> getTestClassResults() {
+		List<TestClassResult> testClassResults = new ArrayList<>();
+
+		for (CucumberScenarioResult cucumberScenarioResult :
+				_getCucumberScenarioResults()) {
+
+			testClassResults.add(
+				TestClassResultFactory.newCucumberTestClassResultTestResult(
+					this, cucumberScenarioResult));
+		}
+
+		return testClassResults;
+	}
+
+	@Override
+	public List<TestResult> getTestResults() {
 		List<TestResult> testResults = new ArrayList<>();
 
 		for (CucumberScenarioResult cucumberScenarioResult :

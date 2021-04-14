@@ -21,7 +21,6 @@ import com.liferay.fragment.exception.DuplicateFragmentCollectionKeyException;
 import com.liferay.fragment.exception.DuplicateFragmentCompositionKeyException;
 import com.liferay.fragment.exception.DuplicateFragmentEntryKeyException;
 import com.liferay.fragment.exception.FragmentCollectionNameException;
-import com.liferay.fragment.exception.FragmentEntryConfigurationException;
 import com.liferay.fragment.importer.FragmentsImporter;
 import com.liferay.fragment.importer.FragmentsImporterResultEntry;
 import com.liferay.fragment.model.FragmentCollection;
@@ -257,41 +256,34 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 			throw new DuplicateFragmentEntryKeyException(fragmentEntryKey);
 		}
 
+		int type = FragmentConstants.getTypeFromLabel(
+			StringUtil.toLowerCase(StringUtil.trim(typeLabel)));
 		int status = WorkflowConstants.STATUS_APPROVED;
 		String errorMessage = null;
 
 		try {
 			_fragmentEntryProcessorRegistry.validateFragmentEntryHTML(
 				html, configuration);
+
+			_fragmentEntryValidator.validateConfiguration(configuration);
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(portalException, portalException);
 			}
 
-			status = WorkflowConstants.STATUS_DRAFT;
-			errorMessage = portalException.getLocalizedMessage();
-		}
+			if (type == FragmentConstants.TYPE_REACT) {
+				_fragmentsImporterResultEntries.add(
+					new FragmentsImporterResultEntry(
+						name, FragmentsImporterResultEntry.Status.INVALID,
+						portalException.getMessage()));
 
-		try {
-			_fragmentEntryValidator.validateConfiguration(configuration);
-		}
-		catch (FragmentEntryConfigurationException
-					fragmentEntryConfigurationException) {
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					fragmentEntryConfigurationException,
-					fragmentEntryConfigurationException);
+				return null;
 			}
 
 			status = WorkflowConstants.STATUS_DRAFT;
-			errorMessage =
-				fragmentEntryConfigurationException.getLocalizedMessage();
+			errorMessage = portalException.getLocalizedMessage();
 		}
-
-		int type = FragmentConstants.getTypeFromLabel(
-			StringUtil.toLowerCase(StringUtil.trim(typeLabel)));
 
 		try {
 			if (fragmentEntry == null) {

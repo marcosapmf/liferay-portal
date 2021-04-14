@@ -26,6 +26,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -49,7 +51,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("DataLayout")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "DataLayout")
-public class DataLayout {
+public class DataLayout implements Serializable {
 
 	public static DataLayout toDTO(String json) {
 		return ObjectMapperUtil.readValue(DataLayout.class, json);
@@ -110,6 +112,36 @@ public class DataLayout {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long dataDefinitionId;
+
+	@Schema
+	@Valid
+	public Map<String, Object> getDataLayoutFields() {
+		return dataLayoutFields;
+	}
+
+	public void setDataLayoutFields(Map<String, Object> dataLayoutFields) {
+		this.dataLayoutFields = dataLayoutFields;
+	}
+
+	@JsonIgnore
+	public void setDataLayoutFields(
+		UnsafeSupplier<Map<String, Object>, Exception>
+			dataLayoutFieldsUnsafeSupplier) {
+
+		try {
+			dataLayoutFields = dataLayoutFieldsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, Object> dataLayoutFields;
 
 	@Schema
 	public String getDataLayoutKey() {
@@ -475,6 +507,16 @@ public class DataLayout {
 			sb.append("\"dataDefinitionId\": ");
 
 			sb.append(dataDefinitionId);
+		}
+
+		if (dataLayoutFields != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataLayoutFields\": ");
+
+			sb.append(_toJSON(dataLayoutFields));
 		}
 
 		if (dataLayoutKey != null) {

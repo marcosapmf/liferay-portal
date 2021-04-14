@@ -192,6 +192,7 @@ public abstract class BaseAccountResourceTestCase {
 		Account account = randomAccount();
 
 		account.setExternalReferenceCode(regex);
+		account.setLogoURL(regex);
 		account.setName(regex);
 		account.setTaxId(regex);
 
@@ -202,6 +203,7 @@ public abstract class BaseAccountResourceTestCase {
 		account = AccountSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, account.getExternalReferenceCode());
+		Assert.assertEquals(regex, account.getLogoURL());
 		Assert.assertEquals(regex, account.getName());
 		Assert.assertEquals(regex, account.getTaxId());
 	}
@@ -821,6 +823,14 @@ public abstract class BaseAccountResourceTestCase {
 	protected void assertValid(Account account) throws Exception {
 		boolean valid = true;
 
+		if (account.getDateCreated() == null) {
+			valid = false;
+		}
+
+		if (account.getDateModified() == null) {
+			valid = false;
+		}
+
 		if (account.getId() == null) {
 			valid = false;
 		}
@@ -882,6 +892,14 @@ public abstract class BaseAccountResourceTestCase {
 
 			if (Objects.equals("logoId", additionalAssertFieldName)) {
 				if (account.getLogoId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("logoURL", additionalAssertFieldName)) {
+				if (account.getLogoURL() == null) {
 					valid = false;
 				}
 
@@ -1056,6 +1074,27 @@ public abstract class BaseAccountResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						account1.getDateCreated(), account2.getDateCreated())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("dateModified", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						account1.getDateModified(),
+						account2.getDateModified())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("emailAddresses", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						account1.getEmailAddresses(),
@@ -1091,6 +1130,16 @@ public abstract class BaseAccountResourceTestCase {
 			if (Objects.equals("logoId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						account1.getLogoId(), account2.getLogoId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("logoURL", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						account1.getLogoURL(), account2.getLogoURL())) {
 
 					return false;
 				}
@@ -1242,6 +1291,68 @@ public abstract class BaseAccountResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("dateCreated")) {
+			if (operator.equals("between")) {
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(
+					_dateFormat.format(
+						DateUtils.addSeconds(account.getDateCreated(), -2)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(
+					_dateFormat.format(
+						DateUtils.addSeconds(account.getDateCreated(), 2)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_dateFormat.format(account.getDateCreated()));
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("dateModified")) {
+			if (operator.equals("between")) {
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(
+					_dateFormat.format(
+						DateUtils.addSeconds(account.getDateModified(), -2)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(
+					_dateFormat.format(
+						DateUtils.addSeconds(account.getDateModified(), 2)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_dateFormat.format(account.getDateModified()));
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("emailAddresses")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1263,6 +1374,14 @@ public abstract class BaseAccountResourceTestCase {
 		if (entityFieldName.equals("logoId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("logoURL")) {
+			sb.append("'");
+			sb.append(String.valueOf(account.getLogoURL()));
+			sb.append("'");
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("name")) {
@@ -1335,10 +1454,13 @@ public abstract class BaseAccountResourceTestCase {
 	protected Account randomAccount() throws Exception {
 		return new Account() {
 			{
+				dateCreated = RandomTestUtil.nextDate();
+				dateModified = RandomTestUtil.nextDate();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				logoId = RandomTestUtil.randomLong();
+				logoURL = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				name = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				root = RandomTestUtil.randomBoolean();
 				taxId = StringUtil.toLowerCase(RandomTestUtil.randomString());

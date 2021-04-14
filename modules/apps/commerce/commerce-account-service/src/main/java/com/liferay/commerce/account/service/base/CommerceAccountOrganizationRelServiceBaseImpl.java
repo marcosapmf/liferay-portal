@@ -14,9 +14,9 @@
 
 package com.liferay.commerce.account.service.base;
 
+import com.liferay.account.service.persistence.AccountEntryOrganizationRelPersistence;
 import com.liferay.commerce.account.model.CommerceAccountOrganizationRel;
 import com.liferay.commerce.account.service.CommerceAccountOrganizationRelService;
-import com.liferay.commerce.account.service.persistence.CommerceAccountFinder;
 import com.liferay.commerce.account.service.persistence.CommerceAccountGroupCommerceAccountRelPersistence;
 import com.liferay.commerce.account.service.persistence.CommerceAccountGroupFinder;
 import com.liferay.commerce.account.service.persistence.CommerceAccountGroupPersistence;
@@ -124,26 +124,6 @@ public abstract class CommerceAccountOrganizationRelServiceBaseImpl
 		CommerceAccountPersistence commerceAccountPersistence) {
 
 		this.commerceAccountPersistence = commerceAccountPersistence;
-	}
-
-	/**
-	 * Returns the commerce account finder.
-	 *
-	 * @return the commerce account finder
-	 */
-	public CommerceAccountFinder getCommerceAccountFinder() {
-		return commerceAccountFinder;
-	}
-
-	/**
-	 * Sets the commerce account finder.
-	 *
-	 * @param commerceAccountFinder the commerce account finder
-	 */
-	public void setCommerceAccountFinder(
-		CommerceAccountFinder commerceAccountFinder) {
-
-		this.commerceAccountFinder = commerceAccountFinder;
 	}
 
 	/**
@@ -528,6 +508,78 @@ public abstract class CommerceAccountOrganizationRelServiceBaseImpl
 	}
 
 	/**
+	 * Returns the account entry organization rel local service.
+	 *
+	 * @return the account entry organization rel local service
+	 */
+	public com.liferay.account.service.AccountEntryOrganizationRelLocalService
+		getAccountEntryOrganizationRelLocalService() {
+
+		return accountEntryOrganizationRelLocalService;
+	}
+
+	/**
+	 * Sets the account entry organization rel local service.
+	 *
+	 * @param accountEntryOrganizationRelLocalService the account entry organization rel local service
+	 */
+	public void setAccountEntryOrganizationRelLocalService(
+		com.liferay.account.service.AccountEntryOrganizationRelLocalService
+			accountEntryOrganizationRelLocalService) {
+
+		this.accountEntryOrganizationRelLocalService =
+			accountEntryOrganizationRelLocalService;
+	}
+
+	/**
+	 * Returns the account entry organization rel remote service.
+	 *
+	 * @return the account entry organization rel remote service
+	 */
+	public com.liferay.account.service.AccountEntryOrganizationRelService
+		getAccountEntryOrganizationRelService() {
+
+		return accountEntryOrganizationRelService;
+	}
+
+	/**
+	 * Sets the account entry organization rel remote service.
+	 *
+	 * @param accountEntryOrganizationRelService the account entry organization rel remote service
+	 */
+	public void setAccountEntryOrganizationRelService(
+		com.liferay.account.service.AccountEntryOrganizationRelService
+			accountEntryOrganizationRelService) {
+
+		this.accountEntryOrganizationRelService =
+			accountEntryOrganizationRelService;
+	}
+
+	/**
+	 * Returns the account entry organization rel persistence.
+	 *
+	 * @return the account entry organization rel persistence
+	 */
+	public AccountEntryOrganizationRelPersistence
+		getAccountEntryOrganizationRelPersistence() {
+
+		return accountEntryOrganizationRelPersistence;
+	}
+
+	/**
+	 * Sets the account entry organization rel persistence.
+	 *
+	 * @param accountEntryOrganizationRelPersistence the account entry organization rel persistence
+	 */
+	public void setAccountEntryOrganizationRelPersistence(
+		AccountEntryOrganizationRelPersistence
+			accountEntryOrganizationRelPersistence) {
+
+		this.accountEntryOrganizationRelPersistence =
+			accountEntryOrganizationRelPersistence;
+	}
+
+	/**
 	 * Returns the counter local service.
 	 *
 	 * @return the counter local service
@@ -762,9 +814,6 @@ public abstract class CommerceAccountOrganizationRelServiceBaseImpl
 	@BeanReference(type = CommerceAccountPersistence.class)
 	protected CommerceAccountPersistence commerceAccountPersistence;
 
-	@BeanReference(type = CommerceAccountFinder.class)
-	protected CommerceAccountFinder commerceAccountFinder;
-
 	@BeanReference(
 		type = com.liferay.commerce.account.service.CommerceAccountGroupLocalService.class
 	)
@@ -853,6 +902,23 @@ public abstract class CommerceAccountOrganizationRelServiceBaseImpl
 	@BeanReference(type = CommerceAccountUserRelPersistence.class)
 	protected CommerceAccountUserRelPersistence
 		commerceAccountUserRelPersistence;
+
+	@ServiceReference(
+		type = com.liferay.account.service.AccountEntryOrganizationRelLocalService.class
+	)
+	protected
+		com.liferay.account.service.AccountEntryOrganizationRelLocalService
+			accountEntryOrganizationRelLocalService;
+
+	@ServiceReference(
+		type = com.liferay.account.service.AccountEntryOrganizationRelService.class
+	)
+	protected com.liferay.account.service.AccountEntryOrganizationRelService
+		accountEntryOrganizationRelService;
+
+	@ServiceReference(type = AccountEntryOrganizationRelPersistence.class)
+	protected AccountEntryOrganizationRelPersistence
+		accountEntryOrganizationRelPersistence;
 
 	@ServiceReference(
 		type = com.liferay.counter.kernel.service.CounterLocalService.class

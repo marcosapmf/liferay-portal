@@ -37,7 +37,7 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl container-form-lg\"" : StringPool.BLANK %>>
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 		<h3><%= LanguageUtil.format(request, "move-x", category.getName(), false) %></h3>
 	</c:if>
@@ -80,13 +80,13 @@ if (portletTitleBasedNavigation) {
 
 				<aui:input label="merge-with-parent-category" name="mergeWithParentCategory" type="checkbox" />
 			</aui:fieldset>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" value="move" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" value="move" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </div>
 
@@ -102,7 +102,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "move"),
 	);
 
 	if (selectCategoryButton) {
-		selectCategoryButton.addEventListener('click', function (event) {
+		selectCategoryButton.addEventListener('click', (event) => {
 			Liferay.Util.openSelectionModal({
 				onSelect: function (event) {
 					var form = document.<portlet:namespace />fm;

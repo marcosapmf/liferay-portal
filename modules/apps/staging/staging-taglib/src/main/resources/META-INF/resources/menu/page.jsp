@@ -59,7 +59,7 @@ String publishMessage = LanguageUtil.get(request, publishDialogTitle);
 %>
 
 <liferay-portlet:renderURL plid="<%= plid %>" portletMode="<%= PortletMode.VIEW.toString() %>" portletName="<%= PortletKeys.EXPORT_IMPORT %>" varImpl="publishRenderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<liferay-portlet:param name="mvcRenderCommandName" value="publishLayouts" />
+	<liferay-portlet:param name="mvcRenderCommandName" value="/export_import/publish_layouts" />
 	<liferay-portlet:param name="<%= Constants.CMD %>" value="<%= localPublishing ? Constants.PUBLISH_TO_LIVE : Constants.PUBLISH_TO_REMOTE %>" />
 	<liferay-portlet:param name="tabs1" value='<%= privateLayout ? "private-pages" : "public-pages" %>' />
 	<liferay-portlet:param name="closeRedirect" value="<%= currentURL %>" />
@@ -74,8 +74,8 @@ String publishMessage = LanguageUtil.get(request, publishDialogTitle);
 			<%@ include file="/menu/staging_actions.jspf" %>
 		</c:when>
 		<c:otherwise>
-			<aui:nav-bar>
-				<aui:nav cssClass="navbar-nav">
+			<aui:nav-bar cssClass="navbar-collapse-absolute navbar-expand-md navbar-underline navigation-bar navigation-bar-light">
+				<aui:nav collapsible="<%= false %>" cssClass="navbar-nav">
 					<aui:nav-item dropdown="<%= true %>" label="staging">
 						<aui:nav-item cssClass="<%= cssClass %>">
 							<%@ include file="/menu/staging_actions.jspf" %>

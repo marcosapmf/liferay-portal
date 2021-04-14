@@ -14,12 +14,14 @@
 
 package com.liferay.frontend.js.svg4everybody.web.internal.servlet.taglib;
 
-import com.liferay.portal.kernel.servlet.BrowserSniffer;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilderFactory;
-import com.liferay.portal.util.PropsValues;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -48,14 +50,43 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		if (!PropsValues.CDN_DYNAMIC_RESOURCES_ENABLED ||
-			_browserSniffer.isIe(httpServletRequest)) {
+		boolean cdnDynamicResourcesEnabled = true;
 
+		try {
+			cdnDynamicResourcesEnabled = _portal.isCDNDynamicResourcesEnabled(
+				httpServletRequest);
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Unable to verify if CDN dynamic resources are enabled",
+					portalException);
+			}
+		}
+
+		boolean cdnHostEnabled = false;
+
+		try {
+			String cdnHost = _portal.getCDNHost(httpServletRequest);
+
+			cdnHostEnabled = !cdnHost.isEmpty();
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to get CDN host", portalException);
+			}
+		}
+
+		if (cdnHostEnabled) {
 			PrintWriter printWriter = httpServletResponse.getWriter();
 
 			AbsolutePortalURLBuilder absolutePortalURLBuilder =
 				_absolutePortalURLBuilderFactory.getAbsolutePortalURLBuilder(
 					httpServletRequest);
+
+			if (!cdnDynamicResourcesEnabled) {
+				absolutePortalURLBuilder.ignoreCDNHost();
+			}
 
 			for (String jsFileName : _JS_FILE_NAMES) {
 				printWriter.print(
@@ -82,16 +113,17 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 		_bundleContext = bundleContext;
 	}
 
-	private static final String[] _JS_FILE_NAMES = {
-		"/svg4everybody/svg4everybody.js"
-	};
+	private static final String[] _JS_FILE_NAMES = {"/index.js"};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SVG4EverybodyTopHeadDynamicInclude.class);
 
 	@Reference
 	private AbsolutePortalURLBuilderFactory _absolutePortalURLBuilderFactory;
 
-	@Reference
-	private BrowserSniffer _browserSniffer;
-
 	private BundleContext _bundleContext;
+
+	@Reference
+	private Portal _portal;
 
 }

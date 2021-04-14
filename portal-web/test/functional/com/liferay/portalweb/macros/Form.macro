@@ -56,6 +56,14 @@ definition {
 		AssertVisible(locator1 = "Form#PUBLISH_URL_ICON");
 	}
 
+	macro changeFieldTypeModalConfirmation {
+		FormFields.changeFieldType(selectOption = "${selectOption}");
+
+		while (IsElementPresent(locator1 = "Form#VALIDATE_CHANGE_FIELD_TYPE_MODAL_MESSAGE")) {
+			Click(locator1 = "Form#SIDEBAR_CHANGE_FIELD_TYPE_MODAL_BUTTON");
+		}
+	}
+
 	macro closeSidebar {
 		Pause(locator1 = "1000");
 
@@ -69,7 +77,7 @@ definition {
 	macro configureEmailNotifications {
 		AssertClick(
 			locator1 = "Form#SETTINGS_TAB_EMAIL_NOTIFICATIONS",
-			value1 = "Email Notifications");
+			value1 = "Notifications");
 
 		FormFields.enableSwitcher(fieldName = "sendEmailNotification");
 
@@ -98,6 +106,16 @@ definition {
 		Button.clickDone();
 	}
 
+	macro configureSubmitLabel {
+		AssertClick(
+			locator1 = "Form#SETTINGS_TAB_PERSONALIZATION",
+			value1 = "Personalization");
+
+		FormFields.editText(
+			fieldName = "submitLabel",
+			fieldValue = "${submitLabel}");
+	}
+
 	macro configureWorkflow {
 		Click(locator1 = "Form#SETTINGS_TAB_WORKFLOW_CONFIGURATION_FIELD");
 
@@ -123,6 +141,18 @@ definition {
 			value1 = "Remove Page");
 
 		AssertElementNotPresent(locator1 = "FormPortlet#FORM_PAGE");
+	}
+
+	macro deleteFieldModalConfirmation {
+		FormsAdminNavigator.gotoDeleteField(
+			fieldLabel = "${fieldLabel}",
+			fieldName = "${fieldName}");
+
+		while (IsElementPresent(locator1 = "Form#VALIDATE_DELETE_FIELD_MODAL_DELETE_MESSAGE")) {
+			Click(locator1 = "Form#SIDEBAR_DELETE_FIELD_MODAL_DELETE_BUTTON");
+		}
+
+		Form.validateNoFieldLabel(fieldLabel = "${fieldLabel}");
 	}
 
 	macro deleteSuccessPage {
@@ -203,6 +233,18 @@ definition {
 			value1 = "${fieldValue}");
 	}
 
+	macro editFieldReferenceMetal {
+		FormFields.editText(
+			fieldName = "fieldReference",
+			fieldValue = "${fieldValue}");
+
+		var key_fieldName = "${fieldValue}";
+
+		AssertTextEquals(
+			locator1 = "Form#FIELD_REFERENCE",
+			value1 = "${fieldValue}");
+	}
+
 	macro editImageDescription {
 		var descriptionPosition = "${descriptionPosition}";
 
@@ -222,11 +264,9 @@ definition {
 
 		AssertVisible(locator1 = "Form#DESCRIPTION_FIELD");
 
-		Click(locator1 = "Form#NAME_FIELD");
-
-		AlloyEditor.typeEditor(
-			content = "${formName}",
-			editor = "name");
+		Type(
+			locator1 = "Form#NAME_FIELD",
+			value1 = "${formName}");
 	}
 
 	macro editNameLocalized {
@@ -238,11 +278,9 @@ definition {
 
 		AssertVisible(locator1 = "Form#DESCRIPTION_FIELD");
 
-		Click(locator1 = "Form#NAME_FIELD");
-
-		AlloyEditor.typeEditor(
-			content = "${formName}",
-			editor = "name");
+		Type(
+			locator1 = "Form#NAME_FIELD",
+			value1 = "${formName}");
 	}
 
 	macro editPageTitle {
@@ -331,10 +369,18 @@ definition {
 			var key_fieldLocation = "${fieldPositionNumber}";
 		}
 
-		DragAndDrop.dragAndDropPortletToObject(
-			locator1 = "Form#ADD_FIELD_TYPE",
-			locator2 = "Form#ADD_FIELD_POSITION",
-			value1 = "${fieldType}");
+		if (isSet(local)) {
+			DragAndDrop.dragAndDropPortletToObject(
+				locator1 = "Form#ADD_FIELD_TYPE",
+				locator2 = "Form#ADD_FIELD_POSITION_1",
+				value1 = "${fieldType}");
+		}
+		else {
+			DragAndDrop.dragAndDropPortletToObject(
+				locator1 = "Form#ADD_FIELD_TYPE",
+				locator2 = "Form#ADD_FIELD_POSITION",
+				value1 = "${fieldType}");
+		}
 
 		if (isSet(localeBasic)) {
 			var key_localeBasic = "${localeBasic}";
@@ -450,7 +496,7 @@ definition {
 			fieldName = "${fieldName}",
 			fieldValue = "${fieldValue}");
 
-		AssertElementNotPresent(locator1 = "Button#SUBMIT");
+		AssertElementNotPresent(locator1 = "FormPortlet#SUBMIT_BUTTON");
 	}
 
 	macro publishForm {
@@ -577,6 +623,12 @@ definition {
 		var key_uniqueSuccess = "The form was unpublished successfully.";
 
 		AssertElementPresent(locator1 = "Message#UNIQUE_SUCCESS");
+	}
+
+	macro validateNoFieldLabel {
+		AssertElementNotPresent(
+			locator1 = "Form#FIELD_LABEL",
+			value1 = "${fieldLabel}");
 	}
 
 	macro viewAltPagePagination {

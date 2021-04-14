@@ -41,11 +41,11 @@ public interface WorkflowDefinitionResource {
 	}
 
 	public Page<WorkflowDefinition> getWorkflowDefinitionsPage(
-			Pagination pagination)
+			Boolean active, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getWorkflowDefinitionsPageHttpResponse(
-			Pagination pagination)
+			Boolean active, Pagination pagination, String sortString)
 		throws Exception;
 
 	public WorkflowDefinition getWorkflowDefinitionByName(String name)
@@ -145,11 +145,12 @@ public interface WorkflowDefinitionResource {
 		implements WorkflowDefinitionResource {
 
 		public Page<WorkflowDefinition> getWorkflowDefinitionsPage(
-				Pagination pagination)
+				Boolean active, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				getWorkflowDefinitionsPageHttpResponse(pagination);
+				getWorkflowDefinitionsPageHttpResponse(
+					active, pagination, sortString);
 
 			String content = httpResponse.getContent();
 
@@ -172,7 +173,7 @@ public interface WorkflowDefinitionResource {
 		}
 
 		public HttpInvoker.HttpResponse getWorkflowDefinitionsPageHttpResponse(
-				Pagination pagination)
+				Boolean active, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -196,11 +197,19 @@ public interface WorkflowDefinitionResource {
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
 
+			if (active != null) {
+				httpInvoker.parameter("active", String.valueOf(active));
+			}
+
 			if (pagination != null) {
 				httpInvoker.parameter(
 					"page", String.valueOf(pagination.getPage()));
 				httpInvoker.parameter(
 					"pageSize", String.valueOf(pagination.getPageSize()));
+			}
+
+			if (sortString != null) {
+				httpInvoker.parameter("sort", sortString);
 			}
 
 			httpInvoker.path(
@@ -268,8 +277,9 @@ public interface WorkflowDefinitionResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-admin-workflow/v1.0/workflow-definitions/by-name/{name}",
-				name);
+						"/o/headless-admin-workflow/v1.0/workflow-definitions/by-name/{name}");
+
+			httpInvoker.path("name", name);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

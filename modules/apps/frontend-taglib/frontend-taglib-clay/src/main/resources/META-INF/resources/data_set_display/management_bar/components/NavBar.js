@@ -16,24 +16,24 @@ import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 import PropTypes from 'prop-types';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 
+import ViewsContext from '../../views/ViewsContext';
 import ActiveViewSelector from './ActiveViewSelector';
-import {useAppState} from './Context';
 import CreationMenu from './CreationMenu';
 import FiltersDropdown from './FiltersDropdown';
 import MainSearch from './MainSearch';
+import FiltersContext from './filters/FiltersContext';
 
-function NavBar({creationMenu, showSearch, views}) {
-	const {
-		state: {filters},
-	} = useAppState();
+function NavBar({creationMenu, showSearch}) {
+	const filtersState = useContext(FiltersContext);
+	const [{views}] = useContext(ViewsContext);
 	const [showMobile, setShowMobile] = useState(false);
 
 	return (
 		<ClayManagementToolbar className="c-mb-0 justify-content-space-between">
 			<ClayManagementToolbar.ItemList>
-				{!!filters.length && (
+				{!!filtersState.filters.length && (
 					<ClayManagementToolbar.Item>
 						<FiltersDropdown />
 					</ClayManagementToolbar.Item>
@@ -65,6 +65,7 @@ function NavBar({creationMenu, showSearch, views}) {
 						</ClayButton>
 					</ClayManagementToolbar.Item>
 				)}
+
 				{views?.length > 1 && (
 					<ClayManagementToolbar.Item>
 						<ActiveViewSelector views={views} />

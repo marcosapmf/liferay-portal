@@ -42,8 +42,14 @@ export const addField = (
 						nestedFields
 					);
 
+					let {rows} = field;
+
+					if (typeof rows === 'string') {
+						rows = JSON.parse(rows);
+					}
+
 					const pages = FormSupport.addFieldToColumn(
-						[{rows: field.rows}],
+						[{rows}],
 						0,
 						rowIndex,
 						columnIndex,
@@ -84,7 +90,7 @@ const handleFieldAdded = (props, state, event) => {
 	const {pages} = state;
 	const {parentFieldName} = data;
 
-	const newField = createField(props, event);
+	const newField = event.newField || createField(props, event);
 
 	return addField(props, {
 		indexes,

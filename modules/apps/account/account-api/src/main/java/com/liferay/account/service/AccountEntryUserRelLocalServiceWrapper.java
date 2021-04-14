@@ -73,6 +73,20 @@ public class AccountEntryUserRelLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.account.model.AccountEntryUserRel
+			addAccountEntryUserRelByEmailAddress(
+				long accountEntryId, String emailAddress, long[] accountRoleIds,
+				String userExternalReferenceCode,
+				com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountEntryUserRelLocalService.
+			addAccountEntryUserRelByEmailAddress(
+				accountEntryId, emailAddress, accountRoleIds,
+				userExternalReferenceCode, serviceContext);
+	}
+
+	@Override
 	public void addAccountEntryUserRels(
 			long accountEntryId, long[] accountUserIds)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -176,6 +190,12 @@ public class AccountEntryUserRelLocalServiceWrapper
 
 		_accountEntryUserRelLocalService.
 			deleteAccountEntryUserRelsByAccountEntryId(accountEntryId);
+	}
+
+	@Override
+	public void deleteAccountEntryUserRelsByAccountUserId(long accountUserId) {
+		_accountEntryUserRelLocalService.
+			deleteAccountEntryUserRelsByAccountUserId(accountUserId);
 	}
 
 	/**
@@ -294,6 +314,14 @@ public class AccountEntryUserRelLocalServiceWrapper
 			accountEntryUserRelId);
 	}
 
+	@Override
+	public com.liferay.account.model.AccountEntryUserRel
+		fetchAccountEntryUserRel(long accountEntryId, long accountUserId) {
+
+		return _accountEntryUserRelLocalService.fetchAccountEntryUserRel(
+			accountEntryId, accountUserId);
+	}
+
 	/**
 	 * Returns the account entry user rel with the primary key.
 	 *
@@ -308,6 +336,15 @@ public class AccountEntryUserRelLocalServiceWrapper
 
 		return _accountEntryUserRelLocalService.getAccountEntryUserRel(
 			accountEntryUserRelId);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountEntryUserRel getAccountEntryUserRel(
+			long accountEntryId, long accountUserId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountEntryUserRelLocalService.getAccountEntryUserRel(
+			accountEntryId, accountUserId);
 	}
 
 	/**
@@ -335,6 +372,15 @@ public class AccountEntryUserRelLocalServiceWrapper
 
 		return _accountEntryUserRelLocalService.
 			getAccountEntryUserRelsByAccountEntryId(accountEntryId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.account.model.AccountEntryUserRel>
+		getAccountEntryUserRelsByAccountEntryId(
+			long accountEntryId, int start, int end) {
+
+		return _accountEntryUserRelLocalService.
+			getAccountEntryUserRelsByAccountEntryId(accountEntryId, start, end);
 	}
 
 	@Override

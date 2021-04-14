@@ -296,6 +296,7 @@ public abstract class AccountRoleLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -313,6 +314,7 @@ public abstract class AccountRoleLocalServiceBaseImpl
 			(AccountRole)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AccountRole> getBasePersistence() {
 		return accountRolePersistence;
 	}
@@ -437,12 +439,12 @@ public abstract class AccountRoleLocalServiceBaseImpl
 		counterLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.RoleLocalService
-		roleLocalService;
+	protected com.liferay.portal.kernel.service.CompanyLocalService
+		companyLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	protected com.liferay.portal.kernel.service.RoleLocalService
+		roleLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserGroupRoleLocalService

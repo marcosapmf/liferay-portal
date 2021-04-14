@@ -46,12 +46,13 @@ import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -95,7 +96,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = MBMessagePersistence.class)
+@Component(service = {MBMessagePersistence.class, BasePersistence.class})
 public class MBMessagePersistenceImpl
 	extends BasePersistenceImpl<MBMessage> implements MBMessagePersistence {
 
@@ -214,7 +215,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -603,7 +604,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {uuid};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -739,7 +740,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof MBMessage) {
@@ -859,7 +860,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {uuid, groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1031,7 +1032,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -1452,7 +1453,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {uuid, companyId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1613,7 +1614,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -2301,7 +2302,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2491,7 +2492,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -2858,7 +2859,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {companyId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2997,7 +2998,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -3361,7 +3362,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {userId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3501,7 +3502,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -3867,7 +3868,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4010,7 +4011,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -4377,7 +4378,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4522,7 +4523,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -4892,7 +4893,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {parentMessageId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5041,7 +5042,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -5772,7 +5773,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, userId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5981,7 +5982,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -6717,7 +6718,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, categoryId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -6898,8 +6899,7 @@ public class MBMessagePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_US, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByG_US, finderArgs);
 		}
 
 		if (result instanceof MBMessage) {
@@ -7019,7 +7019,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, urlSubject};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -7188,7 +7188,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -7919,7 +7919,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -8128,7 +8128,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -8524,7 +8524,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {companyId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -8681,7 +8681,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -9157,7 +9157,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				_finderPathWithPaginationFindByU_C, finderArgs, this);
+				_finderPathWithPaginationFindByU_C, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -9276,7 +9276,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {userId, classNameId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -9347,7 +9347,7 @@ public class MBMessagePersistenceImpl
 			finderArgs = new Object[] {userId, StringUtil.merge(classNameIds)};
 
 			count = (Long)finderCache.getResult(
-				_finderPathWithPaginationCountByU_C, finderArgs, this);
+				_finderPathWithPaginationCountByU_C, finderArgs);
 		}
 
 		if (count == null) {
@@ -9518,7 +9518,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -9915,7 +9915,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {classNameId, classPK};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -10072,7 +10072,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -10470,7 +10470,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId, parentMessageId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -10625,7 +10625,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -11020,7 +11020,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId, answer};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -11175,7 +11175,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -11570,7 +11570,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -11715,7 +11715,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -12110,7 +12110,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -12266,7 +12266,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -12661,7 +12661,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {threadId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -12818,7 +12818,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -13215,7 +13215,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {parentMessageId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -13376,7 +13376,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -14151,7 +14151,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, userId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -14379,7 +14379,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -15155,7 +15155,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, categoryId, threadId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -15385,7 +15385,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -16160,7 +16160,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, categoryId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -16388,7 +16388,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -16808,7 +16808,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {userId, classNameId, classPK};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -16979,7 +16979,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -17483,7 +17483,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				_finderPathWithPaginationFindByU_C_S, finderArgs, this);
+				_finderPathWithPaginationFindByU_C_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -17611,7 +17611,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {userId, classNameId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -17689,7 +17689,7 @@ public class MBMessagePersistenceImpl
 			};
 
 			count = (Long)finderCache.getResult(
-				_finderPathWithPaginationCountByU_C_S, finderArgs, this);
+				_finderPathWithPaginationCountByU_C_S, finderArgs);
 		}
 
 		if (count == null) {
@@ -17877,7 +17877,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -18297,7 +18297,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {classNameId, classPK, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -18477,7 +18477,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -19295,7 +19295,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, categoryId, threadId, answer};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -19547,7 +19547,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -20365,7 +20365,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {groupId, categoryId, threadId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -20617,7 +20617,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBMessage mbMessage : list) {
@@ -21064,7 +21064,7 @@ public class MBMessagePersistenceImpl
 
 			finderArgs = new Object[] {userId, classNameId, classPK, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -21128,6 +21128,287 @@ public class MBMessagePersistenceImpl
 	private static final String _FINDER_COLUMN_U_C_C_S_STATUS_2 =
 		"mbMessage.status = ?";
 
+	private FinderPath _finderPathFetchByG_ERC;
+	private FinderPath _finderPathCountByG_ERC;
+
+	/**
+	 * Returns the message-boards message where groupId = &#63; and externalReferenceCode = &#63; or throws a <code>NoSuchMessageException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching message-boards message
+	 * @throws NoSuchMessageException if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage findByG_ERC(long groupId, String externalReferenceCode)
+		throws NoSuchMessageException {
+
+		MBMessage mbMessage = fetchByG_ERC(groupId, externalReferenceCode);
+
+		if (mbMessage == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("groupId=");
+			sb.append(groupId);
+
+			sb.append(", externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchMessageException(sb.toString());
+		}
+
+		return mbMessage;
+	}
+
+	/**
+	 * Returns the message-boards message where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the matching message-boards message, or <code>null</code> if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage fetchByG_ERC(long groupId, String externalReferenceCode) {
+		return fetchByG_ERC(groupId, externalReferenceCode, true);
+	}
+
+	/**
+	 * Returns the message-boards message where groupId = &#63; and externalReferenceCode = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching message-boards message, or <code>null</code> if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage fetchByG_ERC(
+		long groupId, String externalReferenceCode, boolean useFinderCache) {
+
+		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBMessage.class);
+
+		Object[] finderArgs = null;
+
+		if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {groupId, externalReferenceCode};
+		}
+
+		Object result = null;
+
+		if (useFinderCache && productionMode) {
+			result = finderCache.getResult(_finderPathFetchByG_ERC, finderArgs);
+		}
+
+		if (result instanceof MBMessage) {
+			MBMessage mbMessage = (MBMessage)result;
+
+			if ((groupId != mbMessage.getGroupId()) ||
+				!Objects.equals(
+					externalReferenceCode,
+					mbMessage.getExternalReferenceCode())) {
+
+				result = null;
+			}
+		}
+
+		if (result == null) {
+			StringBundler sb = new StringBundler(4);
+
+			sb.append(_SQL_SELECT_MBMESSAGE_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_ERC_GROUPID_2);
+
+			boolean bindExternalReferenceCode = false;
+
+			if (externalReferenceCode.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_ERC_EXTERNALREFERENCECODE_3);
+			}
+			else {
+				bindExternalReferenceCode = true;
+
+				sb.append(_FINDER_COLUMN_G_ERC_EXTERNALREFERENCECODE_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindExternalReferenceCode) {
+					queryPos.add(externalReferenceCode);
+				}
+
+				List<MBMessage> list = query.list();
+
+				if (list.isEmpty()) {
+					if (useFinderCache && productionMode) {
+						finderCache.putResult(
+							_finderPathFetchByG_ERC, finderArgs, list);
+					}
+				}
+				else {
+					if (list.size() > 1) {
+						Collections.sort(list, Collections.reverseOrder());
+
+						if (_log.isWarnEnabled()) {
+							if (!productionMode || !useFinderCache) {
+								finderArgs = new Object[] {
+									groupId, externalReferenceCode
+								};
+							}
+
+							_log.warn(
+								"MBMessagePersistenceImpl.fetchByG_ERC(long, String, boolean) with parameters (" +
+									StringUtil.merge(finderArgs) +
+										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
+						}
+					}
+
+					MBMessage mbMessage = list.get(0);
+
+					result = mbMessage;
+
+					cacheResult(mbMessage);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		if (result instanceof List<?>) {
+			return null;
+		}
+		else {
+			return (MBMessage)result;
+		}
+	}
+
+	/**
+	 * Removes the message-boards message where groupId = &#63; and externalReferenceCode = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the message-boards message that was removed
+	 */
+	@Override
+	public MBMessage removeByG_ERC(long groupId, String externalReferenceCode)
+		throws NoSuchMessageException {
+
+		MBMessage mbMessage = findByG_ERC(groupId, externalReferenceCode);
+
+		return remove(mbMessage);
+	}
+
+	/**
+	 * Returns the number of message-boards messages where groupId = &#63; and externalReferenceCode = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param externalReferenceCode the external reference code
+	 * @return the number of matching message-boards messages
+	 */
+	@Override
+	public int countByG_ERC(long groupId, String externalReferenceCode) {
+		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBMessage.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_ERC;
+
+			finderArgs = new Object[] {groupId, externalReferenceCode};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_MBMESSAGE_WHERE);
+
+			sb.append(_FINDER_COLUMN_G_ERC_GROUPID_2);
+
+			boolean bindExternalReferenceCode = false;
+
+			if (externalReferenceCode.isEmpty()) {
+				sb.append(_FINDER_COLUMN_G_ERC_EXTERNALREFERENCECODE_3);
+			}
+			else {
+				bindExternalReferenceCode = true;
+
+				sb.append(_FINDER_COLUMN_G_ERC_EXTERNALREFERENCECODE_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(groupId);
+
+				if (bindExternalReferenceCode) {
+					queryPos.add(externalReferenceCode);
+				}
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_G_ERC_GROUPID_2 =
+		"mbMessage.groupId = ? AND ";
+
+	private static final String _FINDER_COLUMN_G_ERC_EXTERNALREFERENCECODE_2 =
+		"mbMessage.externalReferenceCode = ?";
+
+	private static final String _FINDER_COLUMN_G_ERC_EXTERNALREFERENCECODE_3 =
+		"(mbMessage.externalReferenceCode IS NULL OR mbMessage.externalReferenceCode = '')";
+
 	public MBMessagePersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
@@ -21166,6 +21447,13 @@ public class MBMessagePersistenceImpl
 			_finderPathFetchByG_US,
 			new Object[] {mbMessage.getGroupId(), mbMessage.getUrlSubject()},
 			mbMessage);
+
+		finderCache.putResult(
+			_finderPathFetchByG_ERC,
+			new Object[] {
+				mbMessage.getGroupId(), mbMessage.getExternalReferenceCode()
+			},
+			mbMessage);
 	}
 
 	/**
@@ -21199,9 +21487,7 @@ public class MBMessagePersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(MBMessageImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(MBMessageImpl.class);
 	}
 
 	/**
@@ -21225,9 +21511,7 @@ public class MBMessagePersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(MBMessageImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(MBMessageImpl.class, primaryKey);
@@ -21241,19 +21525,25 @@ public class MBMessagePersistenceImpl
 			mbMessageModelImpl.getUuid(), mbMessageModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, mbMessageModelImpl, false);
+			_finderPathFetchByUUID_G, args, mbMessageModelImpl);
 
 		args = new Object[] {
 			mbMessageModelImpl.getGroupId(), mbMessageModelImpl.getUrlSubject()
 		};
 
+		finderCache.putResult(_finderPathCountByG_US, args, Long.valueOf(1));
+		finderCache.putResult(_finderPathFetchByG_US, args, mbMessageModelImpl);
+
+		args = new Object[] {
+			mbMessageModelImpl.getGroupId(),
+			mbMessageModelImpl.getExternalReferenceCode()
+		};
+
+		finderCache.putResult(_finderPathCountByG_ERC, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByG_US, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByG_US, args, mbMessageModelImpl, false);
+			_finderPathFetchByG_ERC, args, mbMessageModelImpl);
 	}
 
 	/**
@@ -21729,7 +22019,7 @@ public class MBMessagePersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<MBMessage>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -21805,7 +22095,7 @@ public class MBMessagePersistenceImpl
 
 		if (productionMode) {
 			count = (Long)finderCache.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -21898,6 +22188,7 @@ public class MBMessagePersistenceImpl
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("groupId");
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
@@ -21949,22 +22240,21 @@ public class MBMessagePersistenceImpl
 
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class, new MBMessageModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name", MBMessage.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByUuid = _createFinderPath(
+		_finderPathWithPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
@@ -21972,27 +22262,27 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"uuid_"}, true);
 
-		_finderPathWithoutPaginationFindByUuid = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			true);
 
-		_finderPathCountByUuid = _createFinderPath(
+		_finderPathCountByUuid = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
 			new String[] {String.class.getName()}, new String[] {"uuid_"},
 			false);
 
-		_finderPathFetchByUUID_G = _createFinderPath(
+		_finderPathFetchByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
 
-		_finderPathCountByUUID_G = _createFinderPath(
+		_finderPathCountByUUID_G = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, false);
 
-		_finderPathWithPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
@@ -22001,17 +22291,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathWithoutPaginationFindByUuid_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, true);
 
-		_finderPathCountByUuid_C = _createFinderPath(
+		_finderPathCountByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "companyId"}, false);
 
-		_finderPathWithPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22019,17 +22309,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId"}, true);
 
-		_finderPathWithoutPaginationFindByGroupId = _createFinderPath(
+		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			true);
 
-		_finderPathCountByGroupId = _createFinderPath(
+		_finderPathCountByGroupId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
 			new String[] {Long.class.getName()}, new String[] {"groupId"},
 			false);
 
-		_finderPathWithPaginationFindByCompanyId = _createFinderPath(
+		_finderPathWithPaginationFindByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22037,17 +22327,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"companyId"}, true);
 
-		_finderPathWithoutPaginationFindByCompanyId = _createFinderPath(
+		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			true);
 
-		_finderPathCountByCompanyId = _createFinderPath(
+		_finderPathCountByCompanyId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
 			new String[] {Long.class.getName()}, new String[] {"companyId"},
 			false);
 
-		_finderPathWithPaginationFindByUserId = _createFinderPath(
+		_finderPathWithPaginationFindByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22055,16 +22345,16 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId"}, true);
 
-		_finderPathWithoutPaginationFindByUserId = _createFinderPath(
+		_finderPathWithoutPaginationFindByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
-		_finderPathCountByUserId = _createFinderPath(
+		_finderPathCountByUserId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
 			new String[] {Long.class.getName()}, new String[] {"userId"},
 			false);
 
-		_finderPathWithPaginationFindByThreadId = _createFinderPath(
+		_finderPathWithPaginationFindByThreadId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByThreadId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22072,17 +22362,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId"}, true);
 
-		_finderPathWithoutPaginationFindByThreadId = _createFinderPath(
+		_finderPathWithoutPaginationFindByThreadId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByThreadId",
 			new String[] {Long.class.getName()}, new String[] {"threadId"},
 			true);
 
-		_finderPathCountByThreadId = _createFinderPath(
+		_finderPathCountByThreadId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByThreadId",
 			new String[] {Long.class.getName()}, new String[] {"threadId"},
 			false);
 
-		_finderPathWithPaginationFindByThreadReplies = _createFinderPath(
+		_finderPathWithPaginationFindByThreadReplies = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByThreadReplies",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22090,17 +22380,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId"}, true);
 
-		_finderPathWithoutPaginationFindByThreadReplies = _createFinderPath(
+		_finderPathWithoutPaginationFindByThreadReplies = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByThreadReplies",
 			new String[] {Long.class.getName()}, new String[] {"threadId"},
 			true);
 
-		_finderPathCountByThreadReplies = _createFinderPath(
+		_finderPathCountByThreadReplies = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByThreadReplies",
 			new String[] {Long.class.getName()}, new String[] {"threadId"},
 			false);
 
-		_finderPathWithPaginationFindByParentMessageId = _createFinderPath(
+		_finderPathWithPaginationFindByParentMessageId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByParentMessageId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22108,17 +22398,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"parentMessageId"}, true);
 
-		_finderPathWithoutPaginationFindByParentMessageId = _createFinderPath(
+		_finderPathWithoutPaginationFindByParentMessageId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByParentMessageId",
 			new String[] {Long.class.getName()},
 			new String[] {"parentMessageId"}, true);
 
-		_finderPathCountByParentMessageId = _createFinderPath(
+		_finderPathCountByParentMessageId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByParentMessageId",
 			new String[] {Long.class.getName()},
 			new String[] {"parentMessageId"}, false);
 
-		_finderPathWithPaginationFindByG_U = _createFinderPath(
+		_finderPathWithPaginationFindByG_U = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_U",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22127,17 +22417,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "userId"}, true);
 
-		_finderPathWithoutPaginationFindByG_U = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_U = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_U",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "userId"}, true);
 
-		_finderPathCountByG_U = _createFinderPath(
+		_finderPathCountByG_U = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_U",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "userId"}, false);
 
-		_finderPathWithPaginationFindByG_C = _createFinderPath(
+		_finderPathWithPaginationFindByG_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22146,27 +22436,27 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId"}, true);
 
-		_finderPathWithoutPaginationFindByG_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "categoryId"}, true);
 
-		_finderPathCountByG_C = _createFinderPath(
+		_finderPathCountByG_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"groupId", "categoryId"}, false);
 
-		_finderPathFetchByG_US = _createFinderPath(
+		_finderPathFetchByG_US = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_US",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "urlSubject"}, true);
 
-		_finderPathCountByG_US = _createFinderPath(
+		_finderPathCountByG_US = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_US",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"groupId", "urlSubject"}, false);
 
-		_finderPathWithPaginationFindByG_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22175,17 +22465,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"groupId", "status"}, true);
 
-		_finderPathCountByG_S = _createFinderPath(
+		_finderPathCountByG_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"groupId", "status"}, false);
 
-		_finderPathWithPaginationFindByC_S = _createFinderPath(
+		_finderPathWithPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22194,17 +22484,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"companyId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByC_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"companyId", "status"}, true);
 
-		_finderPathCountByC_S = _createFinderPath(
+		_finderPathCountByC_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"companyId", "status"}, false);
 
-		_finderPathWithPaginationFindByU_C = _createFinderPath(
+		_finderPathWithPaginationFindByU_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22213,22 +22503,22 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId"}, true);
 
-		_finderPathWithoutPaginationFindByU_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByU_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"userId", "classNameId"}, true);
 
-		_finderPathCountByU_C = _createFinderPath(
+		_finderPathCountByU_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"userId", "classNameId"}, false);
 
-		_finderPathWithPaginationCountByU_C = _createFinderPath(
+		_finderPathWithPaginationCountByU_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByU_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"userId", "classNameId"}, false);
 
-		_finderPathWithPaginationFindByC_C = _createFinderPath(
+		_finderPathWithPaginationFindByC_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22237,17 +22527,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByC_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"classNameId", "classPK"}, true);
 
-		_finderPathCountByC_C = _createFinderPath(
+		_finderPathCountByC_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByT_P = _createFinderPath(
+		_finderPathWithPaginationFindByT_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByT_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22256,17 +22546,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId", "parentMessageId"}, true);
 
-		_finderPathWithoutPaginationFindByT_P = _createFinderPath(
+		_finderPathWithoutPaginationFindByT_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByT_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"threadId", "parentMessageId"}, true);
 
-		_finderPathCountByT_P = _createFinderPath(
+		_finderPathCountByT_P = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByT_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"threadId", "parentMessageId"}, false);
 
-		_finderPathWithPaginationFindByT_A = _createFinderPath(
+		_finderPathWithPaginationFindByT_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByT_A",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
@@ -22275,17 +22565,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId", "answer"}, true);
 
-		_finderPathWithoutPaginationFindByT_A = _createFinderPath(
+		_finderPathWithoutPaginationFindByT_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByT_A",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"threadId", "answer"}, true);
 
-		_finderPathCountByT_A = _createFinderPath(
+		_finderPathCountByT_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByT_A",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
 			new String[] {"threadId", "answer"}, false);
 
-		_finderPathWithPaginationFindByT_S = _createFinderPath(
+		_finderPathWithPaginationFindByT_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByT_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22294,17 +22584,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByT_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByT_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByT_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"threadId", "status"}, true);
 
-		_finderPathCountByT_S = _createFinderPath(
+		_finderPathCountByT_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByT_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"threadId", "status"}, false);
 
-		_finderPathWithPaginationFindByT_notS = _createFinderPath(
+		_finderPathWithPaginationFindByT_notS = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByT_notS",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22313,12 +22603,12 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId", "status"}, true);
 
-		_finderPathWithPaginationCountByT_notS = _createFinderPath(
+		_finderPathWithPaginationCountByT_notS = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByT_notS",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"threadId", "status"}, false);
 
-		_finderPathWithPaginationFindByTR_S = _createFinderPath(
+		_finderPathWithPaginationFindByTR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByTR_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22327,17 +22617,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"threadId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByTR_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByTR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByTR_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"threadId", "status"}, true);
 
-		_finderPathCountByTR_S = _createFinderPath(
+		_finderPathCountByTR_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByTR_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"threadId", "status"}, false);
 
-		_finderPathWithPaginationFindByP_S = _createFinderPath(
+		_finderPathWithPaginationFindByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -22346,17 +22636,17 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"parentMessageId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByP_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByP_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"parentMessageId", "status"}, true);
 
-		_finderPathCountByP_S = _createFinderPath(
+		_finderPathCountByP_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByP_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"parentMessageId", "status"}, false);
 
-		_finderPathWithPaginationFindByG_U_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_U_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_U_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22365,7 +22655,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "userId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_U_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_U_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_U_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22373,7 +22663,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "userId", "status"}, true);
 
-		_finderPathCountByG_U_S = _createFinderPath(
+		_finderPathCountByG_U_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_U_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22381,7 +22671,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "userId", "status"}, false);
 
-		_finderPathWithPaginationFindByG_C_T = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22390,21 +22680,21 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "threadId"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_T = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "categoryId", "threadId"}, true);
 
-		_finderPathCountByG_C_T = _createFinderPath(
+		_finderPathCountByG_C_T = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_T",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"groupId", "categoryId", "threadId"}, false);
 
-		_finderPathWithPaginationFindByG_C_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22413,7 +22703,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22421,7 +22711,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "status"}, true);
 
-		_finderPathCountByG_C_S = _createFinderPath(
+		_finderPathCountByG_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22429,7 +22719,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "status"}, false);
 
-		_finderPathWithPaginationFindByU_C_C = _createFinderPath(
+		_finderPathWithPaginationFindByU_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22438,21 +22728,21 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "classPK"}, true);
 
-		_finderPathWithoutPaginationFindByU_C_C = _createFinderPath(
+		_finderPathWithoutPaginationFindByU_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"userId", "classNameId", "classPK"}, true);
 
-		_finderPathCountByU_C_C = _createFinderPath(
+		_finderPathCountByU_C_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
 			new String[] {"userId", "classNameId", "classPK"}, false);
 
-		_finderPathWithPaginationFindByU_C_S = _createFinderPath(
+		_finderPathWithPaginationFindByU_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22461,7 +22751,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByU_C_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByU_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22469,7 +22759,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "status"}, true);
 
-		_finderPathCountByU_C_S = _createFinderPath(
+		_finderPathCountByU_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22477,7 +22767,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "status"}, false);
 
-		_finderPathWithPaginationCountByU_C_S = _createFinderPath(
+		_finderPathWithPaginationCountByU_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByU_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22485,7 +22775,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "status"}, false);
 
-		_finderPathWithPaginationFindByC_C_S = _createFinderPath(
+		_finderPathWithPaginationFindByC_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22494,7 +22784,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "status"}, true);
 
-		_finderPathWithoutPaginationFindByC_C_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByC_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22502,7 +22792,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "status"}, true);
 
-		_finderPathCountByC_C_S = _createFinderPath(
+		_finderPathCountByC_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22510,7 +22800,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"classNameId", "classPK", "status"}, false);
 
-		_finderPathWithPaginationFindByG_C_T_A = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_T_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_T_A",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22520,7 +22810,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "threadId", "answer"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_T_A = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_T_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_T_A",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22528,7 +22818,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "threadId", "answer"}, true);
 
-		_finderPathCountByG_C_T_A = _createFinderPath(
+		_finderPathCountByG_C_T_A = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_T_A",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22537,7 +22827,7 @@ public class MBMessagePersistenceImpl
 			new String[] {"groupId", "categoryId", "threadId", "answer"},
 			false);
 
-		_finderPathWithPaginationFindByG_C_T_S = _createFinderPath(
+		_finderPathWithPaginationFindByG_C_T_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_T_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22547,7 +22837,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "threadId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByG_C_T_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByG_C_T_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_T_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22555,7 +22845,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"groupId", "categoryId", "threadId", "status"}, true);
 
-		_finderPathCountByG_C_T_S = _createFinderPath(
+		_finderPathCountByG_C_T_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_T_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22564,7 +22854,7 @@ public class MBMessagePersistenceImpl
 			new String[] {"groupId", "categoryId", "threadId", "status"},
 			false);
 
-		_finderPathWithPaginationFindByU_C_C_S = _createFinderPath(
+		_finderPathWithPaginationFindByU_C_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_C_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22574,7 +22864,7 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "classPK", "status"}, true);
 
-		_finderPathWithoutPaginationFindByU_C_C_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByU_C_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_C_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -22582,13 +22872,23 @@ public class MBMessagePersistenceImpl
 			},
 			new String[] {"userId", "classNameId", "classPK", "status"}, true);
 
-		_finderPathCountByU_C_C_S = _createFinderPath(
+		_finderPathCountByU_C_C_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName()
 			},
 			new String[] {"userId", "classNameId", "classPK", "status"}, false);
+
+		_finderPathFetchByG_ERC = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_ERC",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "externalReferenceCode"}, true);
+
+		_finderPathCountByG_ERC = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_ERC",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "externalReferenceCode"}, false);
 	}
 
 	@Deactivate
@@ -22596,12 +22896,6 @@ public class MBMessagePersistenceImpl
 		entityCache.removeCache(MBMessageImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -22690,36 +22984,13 @@ public class MBMessagePersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
 
-	static {
-		try {
-			Class.forName(MBPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class MBMessageModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -22768,6 +23039,16 @@ public class MBMessagePersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return MBMessageImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return MBMessageTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

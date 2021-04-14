@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermissionFactory;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 
@@ -289,7 +288,7 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			OrderByComparator<CommerceOrder> orderByComparator)
 		throws PortalException {
 
-		_checkAccountOrderPermissions(
+		_checkAccountOrder(
 			groupId, commerceAccountId,
 			CommerceOrderActionKeys.MANAGE_COMMERCE_ORDERS);
 
@@ -310,7 +309,7 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 	public int getCommerceOrdersCount(long groupId, long commerceAccountId)
 		throws PortalException {
 
-		_checkAccountOrderPermissions(
+		_checkAccountOrder(
 			groupId, commerceAccountId,
 			CommerceOrderActionKeys.MANAGE_COMMERCE_ORDERS);
 
@@ -324,7 +323,7 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			int end)
 		throws PortalException {
 
-		_checkAccountOrderPermissions(
+		_checkAccountOrder(
 			groupId, commerceAccountId,
 			CommerceOrderActionKeys.VIEW_OPEN_COMMERCE_ORDERS);
 
@@ -352,7 +351,7 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			long groupId, long commerceAccountId, String keywords)
 		throws PortalException {
 
-		_checkAccountOrderPermissions(
+		_checkAccountOrder(
 			groupId, commerceAccountId,
 			CommerceOrderActionKeys.VIEW_OPEN_COMMERCE_ORDERS);
 
@@ -383,7 +382,7 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			int end)
 		throws PortalException {
 
-		_checkAccountOrderPermissions(
+		_checkAccountOrder(
 			groupId, commerceAccountId,
 			CommerceOrderActionKeys.VIEW_COMMERCE_ORDERS);
 
@@ -411,7 +410,7 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			long groupId, long commerceAccountId, String keywords)
 		throws PortalException {
 
-		_checkAccountOrderPermissions(
+		_checkAccountOrder(
 			groupId, commerceAccountId,
 			CommerceOrderActionKeys.VIEW_COMMERCE_ORDERS);
 
@@ -651,8 +650,11 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 		_commerceOrderModelResourcePermission.check(
 			getPermissionChecker(), commerceOrderId, ActionKeys.UPDATE);
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(),
+		CommerceOrder commerceOrder =
+			commerceOrderLocalService.getCommerceOrder(commerceOrderId);
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), commerceOrder.getGroupId(),
 			CommerceActionKeys.MANAGE_COMMERCE_ORDER_PRICES);
 
 		return commerceOrderLocalService.updateCommerceOrderPrices(
@@ -708,8 +710,11 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 		_commerceOrderModelResourcePermission.check(
 			getPermissionChecker(), commerceOrderId, ActionKeys.UPDATE);
 
-		PortalPermissionUtil.check(
-			getPermissionChecker(),
+		CommerceOrder commerceOrder =
+			commerceOrderLocalService.getCommerceOrder(commerceOrderId);
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), commerceOrder.getGroupId(),
 			CommerceActionKeys.MANAGE_COMMERCE_ORDER_PRICES);
 
 		return commerceOrderLocalService.updateCommerceOrderPrices(
@@ -898,6 +903,10 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 		return commerceOrderLocalService.updateUser(commerceOrderId, userId);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
 	@Override
 	public CommerceOrder upsertCommerceOrder(
 			long userId, long groupId, long commerceAccountId,
@@ -912,30 +921,20 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			CommerceContext commerceContext, ServiceContext serviceContext)
 		throws PortalException {
 
-		CommerceOrder commerceOrder =
-			commerceOrderLocalService.fetchByExternalReferenceCode(
-				serviceContext.getCompanyId(), externalReferenceCode);
-
-		if (commerceOrder == null) {
-			_portletResourcePermission.check(
-				getPermissionChecker(), serviceContext.getScopeGroupId(),
-				CommerceOrderActionKeys.ADD_COMMERCE_ORDER);
-		}
-		else {
-			_commerceOrderModelResourcePermission.check(
-				getPermissionChecker(), commerceOrder, ActionKeys.UPDATE);
-		}
-
-		return commerceOrderLocalService.upsertCommerceOrder(
-			userId, groupId, commerceAccountId, commerceCurrencyId,
-			billingAddressId, shippingAddressId, commercePaymentMethodKey,
-			commerceShippingMethodId, shippingOptionName, purchaseOrderNumber,
-			subtotal, shippingAmount, total, subtotalWithTaxAmount,
-			shippingWithTaxAmount, totalWithTaxAmount, paymentStatus,
-			orderStatus, advanceStatus, externalReferenceCode, commerceContext,
-			serviceContext);
+		return commerceOrderService.upsertCommerceOrder(
+			externalReferenceCode, userId, groupId, commerceAccountId,
+			commerceCurrencyId, billingAddressId, shippingAddressId,
+			commercePaymentMethodKey, commerceShippingMethodId,
+			shippingOptionName, purchaseOrderNumber, subtotal, shippingAmount,
+			total, subtotalWithTaxAmount, shippingWithTaxAmount,
+			totalWithTaxAmount, paymentStatus, 0, 0, 0, 0, 0, orderStatus,
+			advanceStatus, commerceContext, serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
 	@Override
 	public CommerceOrder upsertCommerceOrder(
 			long userId, long groupId, long commerceAccountId,
@@ -971,7 +970,72 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 			serviceContext);
 	}
 
-	private void _checkAccountOrderPermissions(
+	@Override
+	public CommerceOrder upsertCommerceOrder(
+			String externalReferenceCode, long userId, long groupId,
+			long commerceAccountId, long commerceCurrencyId,
+			long billingAddressId, long shippingAddressId,
+			String commercePaymentMethodKey, long commerceShippingMethodId,
+			String shippingOptionName, String purchaseOrderNumber,
+			BigDecimal subtotal, BigDecimal shippingAmount, BigDecimal total,
+			BigDecimal subtotalWithTaxAmount, BigDecimal shippingWithTaxAmount,
+			BigDecimal totalWithTaxAmount, int paymentStatus,
+			int orderDateMonth, int orderDateDay, int orderDateYear,
+			int orderDateHour, int orderDateMinute, int orderStatus,
+			String advanceStatus, CommerceContext commerceContext,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		CommerceOrder commerceOrder =
+			commerceOrderLocalService.fetchByExternalReferenceCode(
+				serviceContext.getCompanyId(), externalReferenceCode);
+
+		if (commerceOrder == null) {
+			_portletResourcePermission.check(
+				getPermissionChecker(), serviceContext.getScopeGroupId(),
+				CommerceOrderActionKeys.ADD_COMMERCE_ORDER);
+		}
+		else {
+			_commerceOrderModelResourcePermission.check(
+				getPermissionChecker(), commerceOrder, ActionKeys.UPDATE);
+		}
+
+		return commerceOrderLocalService.upsertCommerceOrder(
+			externalReferenceCode, userId, groupId, commerceAccountId,
+			commerceCurrencyId, billingAddressId, shippingAddressId,
+			commercePaymentMethodKey, commerceShippingMethodId,
+			shippingOptionName, purchaseOrderNumber, subtotal, shippingAmount,
+			total, subtotalWithTaxAmount, shippingWithTaxAmount,
+			totalWithTaxAmount, paymentStatus, orderDateMonth, orderDateDay,
+			orderDateYear, orderDateHour, orderDateMinute, orderStatus,
+			advanceStatus, commerceContext, serviceContext);
+	}
+
+	@Override
+	public CommerceOrder upsertCommerceOrder(
+			String externalReferenceCode, long userId, long groupId,
+			long commerceAccountId, long commerceCurrencyId,
+			long billingAddressId, long shippingAddressId,
+			String commercePaymentMethodKey, long commerceShippingMethodId,
+			String shippingOptionName, String purchaseOrderNumber,
+			BigDecimal subtotal, BigDecimal shippingAmount, BigDecimal total,
+			BigDecimal subtotalWithTaxAmount, BigDecimal shippingWithTaxAmount,
+			BigDecimal totalWithTaxAmount, int paymentStatus, int orderStatus,
+			String advanceStatus, CommerceContext commerceContext,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return commerceOrderService.upsertCommerceOrder(
+			externalReferenceCode, userId, groupId, commerceAccountId,
+			commerceCurrencyId, billingAddressId, shippingAddressId,
+			commercePaymentMethodKey, commerceShippingMethodId,
+			shippingOptionName, purchaseOrderNumber, subtotal, shippingAmount,
+			total, subtotalWithTaxAmount, shippingWithTaxAmount,
+			totalWithTaxAmount, paymentStatus, 0, 0, 0, 0, 0, orderStatus,
+			advanceStatus, commerceContext, serviceContext);
+	}
+
+	private void _checkAccountOrder(
 			long groupId, long commerceAccountId, String action)
 		throws PortalException {
 
@@ -991,8 +1055,12 @@ public class CommerceOrderServiceImpl extends CommerceOrderServiceBaseImpl {
 	}
 
 	private long[] _getCommerceAccountIds(long groupId) throws PortalException {
-		if (!PortalPermissionUtil.contains(
-				getPermissionChecker(),
+		PortletResourcePermission portletResourcePermission =
+			_commerceOrderModelResourcePermission.
+				getPortletResourcePermission();
+
+		if (!portletResourcePermission.contains(
+				getPermissionChecker(), groupId,
 				CommerceAccountActionKeys.MANAGE_ALL_ACCOUNTS)) {
 
 			return _commerceAccountHelper.getUserCommerceAccountIds(

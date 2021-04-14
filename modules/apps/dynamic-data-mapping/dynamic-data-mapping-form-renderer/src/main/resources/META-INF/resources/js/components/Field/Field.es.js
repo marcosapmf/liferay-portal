@@ -181,8 +181,24 @@ const getRootParentField = (field, {root}) => {
 
 export const Field = ({field, ...otherProps}) => {
 	const parentField = useContext(ParentFieldContext);
-	const {fieldTypes} = usePage();
+	const {defaultLanguageId, editingLanguageId, fieldTypes} = usePage();
 	const [hasError, setHasError] = useState();
+
+	const getReadOnly = ({
+		editOnlyInDefaultLanguage = false,
+		localizable,
+		readOnly,
+	}) => {
+		if (
+			editOnlyInDefaultLanguage &&
+			!localizable &&
+			editingLanguageId !== defaultLanguageId
+		) {
+			return true;
+		}
+
+		return readOnly;
+	};
 
 	if (!fieldTypes) {
 		return <ClayLoadingIndicator />;
@@ -215,24 +231,24 @@ export const Field = ({field, ...otherProps}) => {
 
 	return (
 		<ErrorBoundary onError={setHasError}>
-			<Suspense fallback={<ClayLoadingIndicator />}>
-				<ParentFieldContext.Provider
-					value={getRootParentField(field, parentField)}
-				>
-					<AutoFocus>
-						<div
-							className="ddm-field"
-							data-field-name={field.fieldName}
+			<AutoFocus>
+				<div className="ddm-field" data-field-name={field.fieldName}>
+					<Suspense fallback={<ClayLoadingIndicator />}>
+						<ParentFieldContext.Provider
+							value={getRootParentField(field, parentField)}
 						>
 							<FieldLazy
-								field={field}
+								field={{
+									...field,
+									readOnly: getReadOnly(field),
+								}}
 								fieldTypes={fieldTypes}
 								{...otherProps}
 							/>
-						</div>
-					</AutoFocus>
-				</ParentFieldContext.Provider>
-			</Suspense>
+						</ParentFieldContext.Provider>
+					</Suspense>
+				</div>
+			</AutoFocus>
 		</ErrorBoundary>
 	);
 };

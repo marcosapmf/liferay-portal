@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.catalog.web.internal.frontend;
 
+import com.liferay.commerce.catalog.web.internal.frontend.constants.CommerceCatalogDataSetConstants;
 import com.liferay.frontend.taglib.clay.data.set.ClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.BaseTableClayDataSetDisplayView;
 import com.liferay.frontend.taglib.clay.data.set.view.table.ClayTableSchema;
@@ -50,7 +51,7 @@ public class CommerceCatalogClayTableDataSetDisplayView
 			"defaultLanguageId", "default-language");
 
 		clayTableSchemaBuilder.addClayTableSchemaField(
-			"currencyCode", "currency");
+			"currencyCode", "default-currency");
 
 		return clayTableSchemaBuilder.build();
 	}

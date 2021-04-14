@@ -24,17 +24,13 @@ import com.liferay.commerce.constants.CommerceShipmentDataSetConstants;
 import com.liferay.commerce.frontend.model.HeaderActionModel;
 import com.liferay.commerce.frontend.model.StepModel;
 import com.liferay.commerce.model.CommerceAddress;
-import com.liferay.commerce.model.CommerceCountry;
 import com.liferay.commerce.model.CommerceOrder;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
 import com.liferay.commerce.service.CommerceAddressService;
-import com.liferay.commerce.service.CommerceCountryService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
-import com.liferay.commerce.service.CommerceRegionService;
 import com.liferay.commerce.shipment.web.internal.portlet.action.ActionHelper;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -43,11 +39,16 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.CountryService;
+import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -74,24 +75,25 @@ public class CommerceShipmentDisplayContext
 	extends BaseCommerceShipmentDisplayContext<CommerceShipment> {
 
 	public CommerceShipmentDisplayContext(
-		ActionHelper actionHelper, HttpServletRequest httpServletRequest,
+		ActionHelper actionHelper,
 		CommerceAddressFormatter commerceAddressFormatter,
 		CommerceAddressService commerceAddressService,
 		CommerceChannelService commerceChannelService,
-		CommerceCountryService commerceCountryService,
 		CommerceOrderItemService commerceOrderItemService,
 		CommerceOrderLocalService commerceOrderLocalService,
-		CommerceRegionService commerceRegionService) {
+		CountryService countryService, HttpServletRequest httpServletRequest,
+		PortletResourcePermission portletResourcePermission,
+		RegionService regionService) {
 
-		super(actionHelper, httpServletRequest);
+		super(actionHelper, httpServletRequest, portletResourcePermission);
 
 		_commerceAddressFormatter = commerceAddressFormatter;
 		_commerceAddressService = commerceAddressService;
 		_commerceChannelService = commerceChannelService;
-		_commerceCountryService = commerceCountryService;
 		_commerceOrderItemService = commerceOrderItemService;
 		_commerceOrderLocalService = commerceOrderLocalService;
-		_commerceRegionService = commerceRegionService;
+		_countryService = countryService;
+		_regionService = regionService;
 	}
 
 	public List<CommerceAccount> getCommerceAccountsWithShippableOrders()
@@ -152,11 +154,6 @@ public class CommerceShipmentDisplayContext
 			cpRequestHelper.getCompanyId());
 	}
 
-	public List<CommerceCountry> getCommerceCountries() {
-		return _commerceCountryService.getCommerceCountries(
-			cpRequestHelper.getCompanyId(), true);
-	}
-
 	public List<CommerceOrder> getCommerceOrders() throws PortalException {
 		SearchContext searchContext = _buildSearchContext();
 
@@ -166,9 +163,9 @@ public class CommerceShipmentDisplayContext
 		return baseModelSearchResult.getBaseModels();
 	}
 
-	public List<CommerceRegion> getCommerceRegions(long commerceCountryId) {
-		return _commerceRegionService.getCommerceRegions(
-			commerceCountryId, true);
+	public List<Country> getCountries() {
+		return _countryService.getCompanyCountries(
+			cpRequestHelper.getCompanyId(), true);
 	}
 
 	public String getDatasetView() throws PortalException {
@@ -209,12 +206,13 @@ public class CommerceShipmentDisplayContext
 
 		CommerceShipment commerceShipment = getCommerceShipment();
 
-		int[] shipmentStatuses = CommerceShipmentConstants.SHIPMENT_STATUSES;
-
 		int currentShipmentStatus = commerceShipment.getStatus();
 
 		if (currentShipmentStatus !=
 				CommerceShipmentConstants.SHIPMENT_STATUS_DELIVERED) {
+
+			int[] shipmentStatuses =
+				CommerceShipmentConstants.SHIPMENT_STATUSES;
 
 			int[] availableShipmentStatuses = new int[0];
 
@@ -241,7 +239,8 @@ public class CommerceShipmentDisplayContext
 					PortletRequest.ACTION_PHASE);
 
 				portletURL.setParameter(
-					ActionRequest.ACTION_NAME, "editCommerceShipment");
+					ActionRequest.ACTION_NAME,
+					"/commerce_shipment/edit_commerce_shipment");
 				portletURL.setParameter(Constants.CMD, "transition");
 				portletURL.setParameter(
 					"redirect", PortalUtil.getCurrentURL(httpServletRequest));
@@ -286,6 +285,10 @@ public class CommerceShipmentDisplayContext
 		return portletURL;
 	}
 
+	public List<Region> getRegions(long countryId) {
+		return _regionService.getRegions(countryId, true);
+	}
+
 	public List<DropdownItem> getShipmentItemBulkActions()
 		throws PortalException {
 
@@ -322,7 +325,8 @@ public class CommerceShipmentDisplayContext
 				"commerceShipmentId",
 				String.valueOf(commerceShipment.getCommerceShipmentId()));
 			portletURL.setParameter(
-				"mvcRenderCommandName", "addCommerceShipmentItems");
+				"mvcRenderCommandName",
+				"/commerce_shipment/add_commerce_shipment_items");
 			portletURL.setWindowState(LiferayWindowState.POP_UP);
 
 			creationMenu.addDropdownItem(
@@ -433,9 +437,9 @@ public class CommerceShipmentDisplayContext
 	private final CommerceAddressFormatter _commerceAddressFormatter;
 	private final CommerceAddressService _commerceAddressService;
 	private final CommerceChannelService _commerceChannelService;
-	private final CommerceCountryService _commerceCountryService;
 	private final CommerceOrderItemService _commerceOrderItemService;
 	private final CommerceOrderLocalService _commerceOrderLocalService;
-	private final CommerceRegionService _commerceRegionService;
+	private final CountryService _countryService;
+	private final RegionService _regionService;
 
 }

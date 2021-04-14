@@ -24,8 +24,10 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.style.book.model.StyleBookEntry;
@@ -113,8 +115,14 @@ public class StyleBookScopedCSSVariablesProvider
 				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getSiteGroup();
+		Layout layout = themeDisplay.getLayout();
 
-		if (group.isControlPanel()) {
+		boolean styleBookEntryPreview = ParamUtil.getBoolean(
+			httpServletRequest, "styleBookEntryPreview");
+
+		if (group.isControlPanel() || layout.isTypeControlPanel() ||
+			styleBookEntryPreview) {
+
 			return StringPool.BLANK;
 		}
 

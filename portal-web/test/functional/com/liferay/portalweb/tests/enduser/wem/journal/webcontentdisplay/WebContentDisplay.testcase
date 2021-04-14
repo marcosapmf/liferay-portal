@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Display";
+
 	var pageName = "Web Content Display Page";
 	var portletName = "Web Content Display";
 
@@ -44,6 +45,7 @@ definition {
 	test AddAudioViaWebContent {
 		property custom.properties = "xuggler.enabled=true";
 		property dummy.socket.proxy.disabled = "true";
+		property environment.acceptance = "true";
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WebContentDisplay#AddAudioViaWebContent";
 		property testray.component.names = "Training,Web Content Administration";
@@ -79,7 +81,7 @@ definition {
 
 		WebContentNavigator.gotoAddCP();
 
-		WebContent.addViaCKEditor(
+		WebContent.addCP(
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
@@ -111,6 +113,8 @@ definition {
 		WebContent.addDraftPGViaWCD(
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
+
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
 		Navigator.gotoSitePage(
 			pageName = "Web Content Display Page",
@@ -244,6 +248,7 @@ definition {
 	test AddVideoViaWebContent {
 		property custom.properties = "xuggler.enabled=true";
 		property dummy.socket.proxy.disabled = "true";
+		property environment.acceptance = "true";
 		property test.name.skip.portal.instance = "WebContentDisplay#AddVideoViaWebContent";
 		property testray.component.names = "Web Content Administration";
 
@@ -266,14 +271,6 @@ definition {
 			mimeType = "video/mp4",
 			sourceFileName = "Document_1.mp4");
 
-		DMDocument.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_1.mp4");
-
-		DMNavigator.gotoURLDetail();
-
-		var dmDocumentURL = selenium.getElementValue("//input[contains(@id,'url')]");
-
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		WebContentNavigator.gotoAddCP();
@@ -283,8 +280,9 @@ definition {
 			webContentTitle = "WC WebContent Title");
 
 		WebContent.uploadVideo(
-			dmDocumentURL = "${dmDocumentURL}",
-			navTab = "URL");
+			navTab = "Documents and Media",
+			videoShortcutPreview = "Document_1.mp4",
+			videoShortcutTitle = "Document_1.mp4");
 
 		PortletEntry.publish();
 
@@ -296,7 +294,7 @@ definition {
 
 		IFrame.closeFrame();
 
-		WebContent.viewVideoViaWCD();
+		WebContent.viewVideoViaWCD(videoShortcutTitle = "Document_1.mp4");
 	}
 
 	@priority = "5"
@@ -460,8 +458,8 @@ definition {
 	test AddWithStructure {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property environment.acceptance = "true";
-		property portal.acceptance = "true";
+		property environment.acceptance = "false";
+		property portal.acceptance = "false";
 		property testray.component.names = "Web Content Display,Training";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
@@ -470,19 +468,17 @@ definition {
 
 		WebContentStructures.addCP(structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
-		DynamicDataMapping.addField(
-			field = "Text Box",
+		DataEngine.addField(
 			fieldFieldLabel = "Text Box",
-			fieldName = "TextBox");
+			fieldLocation = "2",
+			fieldName = "Text",
+			fieldType = "Multiple Lines");
 
 		WebContentStructures.saveCP(structureName = "WC Structure Name");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoTemplates();
 
@@ -495,18 +491,37 @@ definition {
 			pageName = "Web Content Display Page",
 			siteName = "Test Site Name");
 
+		var content = '''Hello World
+Welcome to Liferay Community Edition Portal 7.4.0 CE GA1''';
+
 		WebContent.addStructuredPGViaWCD(
-			structureFieldName = "Text",
+			fieldLabelList = "Text,Text Box",
 			structureName = "WC Structure Name",
-			templateName = "WC Template Name",
-			textBoxFieldName = "TextBox",
-			webContentText = "WC WebContent Text",
-			webContentTextBox = "WC WebContent TextBox",
+			text = "WC WebContent Text",
+			textBox = "${content}",
 			webContentTitle = "WC WebContent Title");
 
-		AssertElementPresent(locator1 = "//div[contains(@class,journal-content-article)]//h1[contains(@class,'text')][contains(.,'WC WebContent Text')]");
+		AssertTextEquals(
+			locator1 = "//div[contains(@class,journal-content-article)]//h1[contains(@class,'text')]",
+			value1 = "WC WebContent Text");
 
-		AssertElementPresent(locator1 = "//div[contains(@class,journal-content-article)]//h2[contains(@class,'text-box')][contains(.,'WC WebContent TextBox')]");
+		var actual = selenium.getHtmlNodeText("//div[contains(@class,journal-content-article)]//h2[contains(@class,'text-box')]");
+
+		TestUtils.assertEquals(
+			actual = "${actual}",
+			expected = "${content}");
+
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+		WebContent.viewWithStructureCP(
+			webContentText = "WC WebContent Text",
+			webContentTitle = "WC WebContent Title");
+
+		WebContent.viewWithStructureCP(
+			fieldType = "Multiple Lines",
+			predefinedValue = "true",
+			webContentText = "${content}",
+			webContentTextFieldLabel = "Text Box");
 	}
 
 	@priority = "4"
@@ -678,7 +693,7 @@ definition {
 			webContentContent = "世界您好 Content",
 			webContentTitle = "世界您好 Title");
 
-		Button.clickPublish();
+		PortletEntry.publish();
 
 		Navigator.gotoSitePage(
 			pageName = "Web Content Display Page",
@@ -1106,7 +1121,7 @@ definition {
 			webContentContent = "世界您好 Content",
 			webContentTitle = "世界您好 Title");
 
-		Button.clickPublish();
+		PortletEntry.publish();
 
 		Navigator.gotoSitePage(
 			pageName = "Web Content Display Page",

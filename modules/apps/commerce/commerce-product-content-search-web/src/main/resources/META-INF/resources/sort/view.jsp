@@ -28,7 +28,7 @@ SearchContainer<CPCatalogEntry> cpCatalogEntrySearchContainer = cpSearchResultsD
 			<liferay-ui:message arguments="<%= cpCatalogEntrySearchContainer.getTotal() %>" key="x-products-available" />
 		</p>
 
-		<button aria-expanded="false" aria-haspopup="true" class="btn btn-default commerce-order-by dropdown-toggle" data-toggle="dropdown" onclick="<portlet:namespace />toggleDropdown();" type="button">
+		<button aria-expanded="false" aria-haspopup="true" class="btn btn-secondary commerce-order-by dropdown-toggle" data-toggle="dropdown" onclick="<portlet:namespace />toggleDropdown();" type="button">
 			<c:set var="orderByColArgument">
 				<span class="ml-1">
 					<liferay-ui:message key="<%= cpSearchResultsDisplayContext.getOrderByCol() %>" />
@@ -49,7 +49,7 @@ SearchContainer<CPCatalogEntry> cpCatalogEntrySearchContainer = cpSearchResultsD
 			%>
 
 				<clay:link
-					elementClasses="dropdown-item transition-link"
+					cssClass="dropdown-item transition-link"
 					href="#"
 					id="<%= liferayPortletResponse.getNamespace() + sortOption %>"
 					label="<%= LanguageUtil.get(request, sortOption) %>"
@@ -59,7 +59,7 @@ SearchContainer<CPCatalogEntry> cpCatalogEntrySearchContainer = cpSearchResultsD
 				<aui:script>
 					document
 						.querySelector('#<%= liferayPortletResponse.getNamespace() + sortOption %>')
-						.addEventListener('click', function (e) {
+						.addEventListener('click', (e) => {
 							e.preventDefault();
 							<%= liferayPortletResponse.getNamespace() + "changeOrderBy('" + sortOption + "');" %>;
 						});
@@ -77,7 +77,7 @@ SearchContainer<CPCatalogEntry> cpCatalogEntrySearchContainer = cpSearchResultsD
 	Liferay.provide(
 		window,
 		'<portlet:namespace />changeOrderBy',
-		function (orderBy) {
+		(orderBy) => {
 			var portletURL = new Liferay.PortletURL.createURL(
 				'<%= themeDisplay.getURLCurrent() %>'
 			);
@@ -90,7 +90,7 @@ SearchContainer<CPCatalogEntry> cpCatalogEntrySearchContainer = cpSearchResultsD
 		['liferay-portlet-url']
 	);
 
-	Liferay.provide(window, '<portlet:namespace />toggleDropdown', function () {
+	Liferay.provide(window, '<portlet:namespace />toggleDropdown', () => {
 		var dropdownElement = window.document.querySelector(
 			'#<portlet:namespace />commerce-dropdown-order-by'
 		);

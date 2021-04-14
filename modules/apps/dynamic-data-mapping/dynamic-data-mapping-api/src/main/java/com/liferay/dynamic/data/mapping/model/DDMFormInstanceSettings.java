@@ -45,7 +45,7 @@ import org.osgi.annotation.versioning.ProviderType;
 	paginationMode = com.liferay.dynamic.data.mapping.model.DDMFormLayout.TABBED_MODE,
 	value = {
 		@DDMFormLayoutPage(
-			title = "%form-options",
+			title = "%general",
 			value = {
 				@DDMFormLayoutRow(
 					{
@@ -53,7 +53,7 @@ import org.osgi.annotation.versioning.ProviderType;
 							size = 12,
 							value = {
 								"requireAuthentication", "requireCaptcha",
-								"autosaveEnabled", "redirectURL", "storageType",
+								"autosaveEnabled", "storageType",
 								"workflowDefinition"
 							}
 						)
@@ -62,7 +62,19 @@ import org.osgi.annotation.versioning.ProviderType;
 			}
 		),
 		@DDMFormLayoutPage(
-			title = "%email-notifications",
+			title = "%personalization",
+			value = {
+				@DDMFormLayoutRow(
+					{
+						@DDMFormLayoutColumn(
+							size = 12, value = {"redirectURL", "submitLabel"}
+						)
+					}
+				)
+			}
+		),
+		@DDMFormLayoutPage(
+			title = "%notifications",
 			value = {
 				@DDMFormLayoutRow(
 					{
@@ -139,7 +151,7 @@ public interface DDMFormInstanceSettings {
 	public boolean sendEmailNotification();
 
 	@DDMFormField(
-		label = "%select-a-storage-type", predefinedValue = "[\"json\"]",
+		label = "%select-a-storage-type", predefinedValue = "[\"default\"]",
 		properties = {
 			"dataSourceType=data-provider",
 			"ddmDataProviderInstanceId=ddm-storage-types"
@@ -147,6 +159,12 @@ public interface DDMFormInstanceSettings {
 		type = "select"
 	)
 	public String storageType();
+
+	@DDMFormField(
+		label = "%submit-button-label", properties = "placeholder=%submit-form",
+		type = "localizable_text"
+	)
+	public String submitLabel();
 
 	@DDMFormField(
 		label = "%select-a-workflow", predefinedValue = "[\"no-workflow\"]",

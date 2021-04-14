@@ -51,16 +51,13 @@ public class CommerceAccountOrganizationRelAdminDisplayContext
 		<CommerceAccountOrganizationRel> {
 
 	public CommerceAccountOrganizationRelAdminDisplayContext(
-		ModelResourcePermission<CommerceAccount>
-			commerceAccountModelResourcePermission,
 		CommerceAccountService commerceAccountService,
 		CommerceAccountOrganizationRelService
 			commerceAccountOrganizationRelService,
+		ModelResourcePermission<CommerceAccount> modelResourcePermission,
 		ItemSelector itemSelector, RenderRequest renderRequest) {
 
-		super(
-			commerceAccountModelResourcePermission, commerceAccountService,
-			renderRequest);
+		super(commerceAccountService, modelResourcePermission, renderRequest);
 
 		_commerceAccountOrganizationRelService =
 			commerceAccountOrganizationRelService;
@@ -112,7 +109,9 @@ public class CommerceAccountOrganizationRelAdminDisplayContext
 	public PortletURL getPortletURL() {
 		PortletURL portletURL = super.getPortletURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceAccount");
+		portletURL.setParameter(
+			"mvcRenderCommandName",
+			"/commerce_account_admin/edit_commerce_account");
 
 		return portletURL;
 	}

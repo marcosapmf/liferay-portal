@@ -14,6 +14,7 @@
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import ClayList from '@clayui/list';
@@ -34,6 +35,7 @@ const ExperienceItem = ({
 	lockedDecreasePriority,
 	lockedIncreasePriority,
 	onDeleteExperience,
+	onDuplicateExperience,
 	onEditExperience,
 	onPriorityDecrease,
 	onPriorityIncrease,
@@ -51,9 +53,19 @@ const ExperienceItem = ({
 			experience.priority
 		);
 	const handleExperienceEdit = () => {
-		const {name, segmentsEntryId, segmentsExperienceId} = experience;
+		const {
+			languageIds,
+			name,
+			segmentsEntryId,
+			segmentsExperienceId,
+		} = experience;
 
-		onEditExperience({name, segmentsEntryId, segmentsExperienceId});
+		onEditExperience({
+			languageIds,
+			name,
+			segmentsEntryId,
+			segmentsExperienceId,
+		});
 	};
 	const handleExperienceDelete = () => {
 		const experienceHasRunningExperiment =
@@ -71,6 +83,9 @@ const ExperienceItem = ({
 		if (confirmed) {
 			onDeleteExperience(experience.segmentsExperienceId);
 		}
+	};
+	const handleExperienceDuplicate = () => {
+		onDuplicateExperience(experience.segmentsExperienceId);
 	};
 	const handleExperimentNavigation = (event) => {
 		event.preventDefault();
@@ -95,57 +110,70 @@ const ExperienceItem = ({
 		>
 			<ClayList.ItemField expand>
 				<ClayButton displayType="unstyled" onClick={handleSelect}>
-					<ClayLayout.ContentRow verticalAlign="center">
-						<ClayLayout.ContentCol
-							style={{flexShrink: 1, minWidth: 0}}
-						>
-							<ClayLayout.ContentSection>
-								<span className="text-truncate-inline">
-									<ClayTooltipProvider>
-										<span
-											className="font-weight-semi-bold text-truncate"
-											data-tooltip-align="top"
-											title={experience.name}
-										>
-											{experience.name}
-										</span>
-									</ClayTooltipProvider>
+					<div className="c-inner" tabIndex="-1">
+						<ClayLayout.ContentRow verticalAlign="center">
+							<ClayLayout.ContentCol
+								style={{flexShrink: 1, minWidth: 0}}
+							>
+								<ClayLayout.ContentSection>
+									<span className="text-truncate-inline">
+										<ClayTooltipProvider>
+											<span
+												className="font-weight-semi-bold text-truncate"
+												data-tooltip-align="top"
+												title={experience.name}
+											>
+												{experience.name}
+											</span>
+										</ClayTooltipProvider>
 
-									{experience.hasLockedSegmentsExperiment && (
-										<ExperienceLockIcon />
-									)}
-								</span>
+										{experience.hasLockedSegmentsExperiment && (
+											<ExperienceLockIcon />
+										)}
 
-								<span className="text-truncate">
-									<span className="mr-1 text-secondary">
-										{Liferay.Language.get('audience')}
+										{experience.active && (
+											<ClayLabel
+												className="inline-item-after"
+												displayType="success"
+											>
+												{Liferay.Language.get('active')}
+											</ClayLabel>
+										)}
 									</span>
-									{experience.segmentsEntryName}
-								</span>
 
-								{experience.segmentsExperimentStatus && (
-									<div>
-										<span className="font-weight-normal mr-1 text-secondary">
-											{Liferay.Language.get('ab-test')}
+									<span className="text-truncate">
+										<span className="mr-1 text-secondary">
+											{Liferay.Language.get('audience')}
 										</span>
+										{experience.segmentsEntryName}
+									</span>
 
-										<ExperimentLabel
-											label={
-												experience
-													.segmentsExperimentStatus
-													.label
-											}
-											value={
-												experience
-													.segmentsExperimentStatus
-													.value
-											}
-										/>
-									</div>
-								)}
-							</ClayLayout.ContentSection>
-						</ClayLayout.ContentCol>
-					</ClayLayout.ContentRow>
+									{experience.segmentsExperimentStatus && (
+										<div>
+											<span className="font-weight-normal inline-item-before text-secondary">
+												{Liferay.Language.get(
+													'ab-test'
+												)}
+											</span>
+
+											<ExperimentLabel
+												label={
+													experience
+														.segmentsExperimentStatus
+														.label
+												}
+												value={
+													experience
+														.segmentsExperimentStatus
+														.value
+												}
+											/>
+										</div>
+									)}
+								</ClayLayout.ContentSection>
+							</ClayLayout.ContentCol>
+						</ClayLayout.ContentRow>
+					</div>
 				</ClayButton>
 			</ClayList.ItemField>
 			<ClayList.ItemField className="align-self-center">
@@ -153,6 +181,7 @@ const ExperienceItem = ({
 					editable={editable}
 					experience={experience}
 					handleExperienceDelete={handleExperienceDelete}
+					handleExperienceDuplicate={handleExperienceDuplicate}
 					handleExperienceEdit={handleExperienceEdit}
 					handleExperimentNavigation={handleExperimentNavigation}
 					handlePriorityDecrease={handlePriorityDecrease}
@@ -169,6 +198,7 @@ const ExperienceActions = ({
 	editable,
 	experience,
 	handleExperienceDelete,
+	handleExperienceDuplicate,
 	handleExperienceEdit,
 	handleExperimentNavigation,
 	handlePriorityDecrease,
@@ -226,6 +256,21 @@ const ExperienceActions = ({
 					/>
 
 					<ClayButtonWithIcon
+						aria-label={Liferay.Language.get(
+							'duplicate-experience'
+						)}
+						borderless
+						className="component-action mx-1"
+						displayType="unstyled"
+						monospaced
+						onClick={handleExperienceDuplicate}
+						outline
+						symbol="copy"
+						title={Liferay.Language.get('duplicate-experience')}
+						type="button"
+					/>
+
+					<ClayButtonWithIcon
 						aria-label={Liferay.Language.get('delete-experience')}
 						borderless
 						className="component-action mx-1"
@@ -269,7 +314,7 @@ const ExperienceLockIcon = () => {
 	const [showtoolTip, setShowtoolTip] = React.useState(false);
 
 	return (
-		<span>
+		<span className="inline-item-after">
 			<ClayIcon
 				className="text-secondary"
 				onMouseEnter={() => setShowtoolTip(true)}
@@ -299,6 +344,7 @@ ExperienceItem.propTypes = {
 	lockedDecreasePriority: PropTypes.bool.isRequired,
 	lockedIncreasePriority: PropTypes.bool.isRequired,
 	onDeleteExperience: PropTypes.func.isRequired,
+	onDuplicateExperience: PropTypes.func.isRequired,
 	onEditExperience: PropTypes.func.isRequired,
 	onPriorityDecrease: PropTypes.func.isRequired,
 	onPriorityIncrease: PropTypes.func.isRequired,

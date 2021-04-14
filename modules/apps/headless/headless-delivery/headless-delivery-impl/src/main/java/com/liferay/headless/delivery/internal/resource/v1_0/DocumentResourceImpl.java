@@ -26,6 +26,7 @@ import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
@@ -38,11 +39,17 @@ import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.internal.dto.v1_0.converter.DocumentDTOConverter;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.DDMFormValuesUtil;
+import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.EntityFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.DocumentEntityModel;
+import com.liferay.headless.delivery.internal.search.aggregation.AggregationUtil;
+import com.liferay.headless.delivery.internal.search.filter.FilterUtil;
+import com.liferay.headless.delivery.internal.search.sort.SortUtil;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
+import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.journal.service.JournalArticleService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
@@ -64,6 +71,11 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -185,6 +197,20 @@ public class DocumentResourceImpl
 		SPIRatingResource<Rating> spiRatingResource = _getSPIRatingResource();
 
 		return spiRatingResource.getRating(documentId);
+	}
+
+	@Override
+	public String getDocumentRenderedContentByDisplayPageDisplayPageKey(
+			Long documentId, String displayPageKey)
+		throws Exception {
+
+		FileEntry fileEntry = _dlAppService.getFileEntry(documentId);
+
+		return DisplayPageRendererUtil.toHTML(
+			FileEntry.class.getName(), _getDDMStructureId(fileEntry),
+			displayPageKey, fileEntry.getGroupId(), contextHttpServletRequest,
+			contextHttpServletResponse, fileEntry, _infoItemServiceTracker,
+			_layoutLocalService, _layoutPageTemplateEntryService);
 	}
 
 	@Override
@@ -425,6 +451,30 @@ public class DocumentResourceImpl
 		};
 	}
 
+	private long _getDDMStructureId(FileEntry fileEntry) throws Exception {
+		if (!(fileEntry.getModel() instanceof DLFileEntry)) {
+			return 0;
+		}
+
+		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+
+		DLFileEntryType dlFileEntryType =
+			_dlFileEntryTypeLocalService.fetchDLFileEntryType(
+				dlFileEntry.getFileEntryTypeId());
+
+		if ((dlFileEntryType == null) ||
+			(dlFileEntryType.getDataDefinitionId() == 0)) {
+
+			return 0;
+		}
+
+		com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure =
+			_ddmStructureService.getStructure(
+				dlFileEntryType.getDataDefinitionId());
+
+		return ddmStructure.getStructureId();
+	}
+
 	private Optional<DLFileEntryType> _getDLFileEntryTypeOptional(
 		long documentFolderId, Optional<Document> documentOptional,
 		Long groupId) {
@@ -470,13 +520,25 @@ public class DocumentResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
-			actions, booleanQueryUnsafeConsumer, filter, DLFileEntry.class,
+			actions, booleanQueryUnsafeConsumer,
+			FilterUtil.processFilter(_ddmIndexer, filter), DLFileEntry.class,
 			keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
 				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
+
+				SearchRequestBuilder searchRequestBuilder =
+					_searchRequestBuilderFactory.builder(searchContext);
+
+				AggregationUtil.processVulcanAggregation(
+					_aggregations, _ddmIndexer, _queries, searchRequestBuilder,
+					aggregation);
+
+				SortUtil.processSorts(
+					_ddmIndexer, searchRequestBuilder, searchContext.getSorts(),
+					_queries, _sorts);
 			},
 			sorts,
 			document -> _toDocument(
@@ -651,6 +713,14 @@ public class DocumentResourceImpl
 						"com.liferay.document.library.kernel.model.DLFileEntry",
 						fileEntry.getGroupId())
 				).put(
+					"get-rendered-content-by-display-page",
+					addAction(
+						"VIEW", fileEntry.getPrimaryKey(),
+						"getDocumentRenderedContentByDisplayPageDisplayPageKey",
+						fileEntry.getUserId(),
+						"com.liferay.document.library.kernel.model.DLFileEntry",
+						fileEntry.getGroupId())
+				).put(
 					"replace",
 					addAction(
 						"UPDATE", fileEntry.getPrimaryKey(), "putDocument",
@@ -674,6 +744,9 @@ public class DocumentResourceImpl
 		DocumentResourceImpl.class);
 
 	@Reference
+	private Aggregations _aggregations;
+
+	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	@Reference
@@ -681,6 +754,9 @@ public class DocumentResourceImpl
 
 	@Reference
 	private DDMBeanTranslator _ddmBeanTranslator;
+
+	@Reference
+	private DDMIndexer _ddmIndexer;
 
 	@Reference
 	private DDMStructureService _ddmStructureService;
@@ -704,16 +780,31 @@ public class DocumentResourceImpl
 	private ExpandoTableLocalService _expandoTableLocalService;
 
 	@Reference
+	private InfoItemServiceTracker _infoItemServiceTracker;
+
+	@Reference
 	private JournalArticleService _journalArticleService;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
+	private Queries _queries;
+
+	@Reference
 	private RatingsEntryLocalService _ratingsEntryLocalService;
+
+	@Reference
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Reference
+	private Sorts _sorts;
 
 	@Reference
 	private UserLocalService _userLocalService;

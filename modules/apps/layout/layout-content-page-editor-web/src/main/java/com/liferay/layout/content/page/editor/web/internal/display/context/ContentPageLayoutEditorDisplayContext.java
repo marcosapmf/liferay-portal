@@ -36,6 +36,7 @@ import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSid
 import com.liferay.layout.content.page.editor.web.internal.configuration.FFLayoutContentPageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorActionKeys;
+import com.liferay.layout.content.page.editor.web.internal.segments.SegmentsExperienceUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
@@ -57,39 +58,38 @@ import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
-import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
-import com.liferay.segments.model.SegmentsExperiment;
 import com.liferay.segments.service.SegmentsEntryServiceUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
-import com.liferay.segments.service.SegmentsExperienceServiceUtil;
-import com.liferay.segments.service.SegmentsExperimentLocalServiceUtil;
 import com.liferay.staging.StagingGroupHelper;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
@@ -151,7 +151,8 @@ public class ContentPageLayoutEditorDisplayContext
 		configContext.put(
 			"addSegmentsExperienceURL",
 			getFragmentEntryActionURL(
-				"/content_layout/add_segments_experience"));
+				"/layout_content_page_editor/add_segments_experience"));
+		configContext.put("availableLanguages", _getAvailableLanguages());
 		configContext.put(
 			"availableSegmentsEntries", _getAvailableSegmentsEntries());
 		configContext.put(
@@ -162,7 +163,7 @@ public class ContentPageLayoutEditorDisplayContext
 		configContext.put(
 			"deleteSegmentsExperienceURL",
 			getFragmentEntryActionURL(
-				"/content_layout/delete_segments_experience"));
+				"/layout_content_page_editor/delete_segments_experience"));
 		configContext.put("editSegmentsEntryURL", _getEditSegmentsEntryURL());
 		configContext.put("plid", themeDisplay.getPlid());
 
@@ -182,13 +183,16 @@ public class ContentPageLayoutEditorDisplayContext
 			(Map<String, Object>)editorContext.get("state");
 
 		stateContext.put(
-			"availableSegmentsExperiences", _getAvailableSegmentsExperiences());
+			"availableSegmentsExperiences",
+			SegmentsExperienceUtil.getAvailableSegmentsExperiences(
+				httpServletRequest));
 		stateContext.put("layoutDataList", _getLayoutDataList());
 		stateContext.put(
 			"segmentsExperienceId", String.valueOf(getSegmentsExperienceId()));
 		stateContext.put(
 			"segmentsExperimentStatus",
-			_getSegmentsExperimentStatus(getSegmentsExperienceId()));
+			SegmentsExperienceUtil.getSegmentsExperimentStatus(
+				themeDisplay, getSegmentsExperienceId()));
 
 		Map<String, Object> permissionsContext =
 			(Map<String, Object>)stateContext.get("permissions");
@@ -323,6 +327,65 @@ public class ContentPageLayoutEditorDisplayContext
 			));
 	}
 
+	private Map<String, Map<String, Object>> _getAvailableLanguages() {
+		Group group = GroupLocalServiceUtil.fetchGroup(
+			_getStagingAwareGroupId());
+
+		String defaultLanguageId = group.getDefaultLanguageId();
+
+		Set<Locale> locales = LanguageUtil.getAvailableLocales(
+			themeDisplay.getSiteGroupId());
+
+		Stream<Locale> stream = locales.stream();
+
+		return stream.map(
+			locale -> new AbstractMap.SimpleEntry<String, Map<String, Object>>(
+				LocaleUtil.toLanguageId(locale),
+				HashMapBuilder.<String, Object>put(
+					"default",
+					Objects.equals(
+						defaultLanguageId, LocaleUtil.toLanguageId(locale))
+				).put(
+					"displayName",
+					locale.getDisplayName(themeDisplay.getLocale())
+				).put(
+					"languageIcon",
+					StringUtil.toLowerCase(LocaleUtil.toW3cLanguageId(locale))
+				).put(
+					"languageId", LocaleUtil.toLanguageId(locale)
+				).put(
+					"w3cLanguageId", LocaleUtil.toW3cLanguageId(locale)
+				).build())
+		).sorted(
+			(Comparator<Map.Entry<String, Map<String, Object>>>)
+				(entry1, entry2) -> {
+					Map<String, Object> value1 = entry1.getValue();
+
+					if ((boolean)value1.get("default")) {
+						return -1;
+					}
+
+					Map<String, Object> value2 = entry2.getValue();
+
+					if ((boolean)value2.get("default")) {
+						return 1;
+					}
+
+					String displayName1 = String.valueOf(
+						value1.get("displayName"));
+
+					String displayName2 = String.valueOf(
+						value2.get("displayName"));
+
+					return displayName1.compareToIgnoreCase(displayName2);
+				}
+		).collect(
+			Collectors.toMap(
+				Map.Entry::getKey, Map.Entry::getValue,
+				(oldValue, newValue) -> oldValue, LinkedHashMap::new)
+		);
+	}
+
 	private Map<String, Object> _getAvailableSegmentsEntries() {
 		Map<String, Object> availableSegmentsEntries = new HashMap<>();
 
@@ -352,82 +415,6 @@ public class ContentPageLayoutEditorDisplayContext
 			).build());
 
 		return availableSegmentsEntries;
-	}
-
-	private Map<String, Object> _getAvailableSegmentsExperiences()
-		throws Exception {
-
-		Map<String, Object> availableSegmentsExperiences = new HashMap<>();
-
-		Layout draftLayout = themeDisplay.getLayout();
-
-		Layout layout = LayoutLocalServiceUtil.getLayout(
-			draftLayout.getClassPK());
-
-		String layoutFullURL = PortalUtil.getLayoutFullURL(
-			layout, themeDisplay);
-
-		List<SegmentsExperience> segmentsExperiences =
-			SegmentsExperienceServiceUtil.getSegmentsExperiences(
-				getGroupId(), PortalUtil.getClassNameId(Layout.class.getName()),
-				themeDisplay.getPlid(), true);
-
-		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
-			availableSegmentsExperiences.put(
-				String.valueOf(segmentsExperience.getSegmentsExperienceId()),
-				HashMapBuilder.<String, Object>put(
-					"hasLockedSegmentsExperiment",
-					segmentsExperience.hasSegmentsExperiment()
-				).put(
-					"name", segmentsExperience.getName(themeDisplay.getLocale())
-				).put(
-					"priority", segmentsExperience.getPriority()
-				).put(
-					"segmentsEntryId",
-					String.valueOf(segmentsExperience.getSegmentsEntryId())
-				).put(
-					"segmentsExperienceId",
-					String.valueOf(segmentsExperience.getSegmentsExperienceId())
-				).put(
-					"segmentsExperimentStatus",
-					_getSegmentsExperimentStatus(
-						segmentsExperience.getSegmentsExperienceId())
-				).put(
-					"segmentsExperimentURL",
-					_getSegmentsExperimentURL(
-						layoutFullURL,
-						segmentsExperience.getSegmentsExperienceId())
-				).build());
-		}
-
-		availableSegmentsExperiences.put(
-			String.valueOf(SegmentsExperienceConstants.ID_DEFAULT),
-			HashMapBuilder.<String, Object>put(
-				"hasLockedSegmentsExperiment",
-				_hasDefaultSegmentsExperienceLockedSegmentsExperiment()
-			).put(
-				"name",
-				SegmentsExperienceConstants.getDefaultSegmentsExperienceName(
-					themeDisplay.getLocale())
-			).put(
-				"priority", SegmentsExperienceConstants.PRIORITY_DEFAULT
-			).put(
-				"segmentsEntryId",
-				String.valueOf(SegmentsEntryConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperienceId",
-				String.valueOf(SegmentsExperienceConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperimentStatus",
-				_getSegmentsExperimentStatus(
-					SegmentsExperienceConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperimentURL",
-				_getSegmentsExperimentURL(
-					layoutFullURL, SegmentsExperienceConstants.ID_DEFAULT)
-			).build());
-
-		return availableSegmentsExperiences;
 	}
 
 	private String _getClassName(InfoListProvider<?> infoListProvider) {
@@ -569,61 +556,6 @@ public class ContentPageLayoutEditorDisplayContext
 		return _segmentsEntryId;
 	}
 
-	private Optional<SegmentsExperiment> _getSegmentsExperimentOptional(
-			long segmentsExperienceId)
-		throws Exception {
-
-		Layout draftLayout = themeDisplay.getLayout();
-
-		Layout layout = LayoutLocalServiceUtil.getLayout(
-			draftLayout.getClassPK());
-
-		return Optional.ofNullable(
-			SegmentsExperimentLocalServiceUtil.fetchSegmentsExperiment(
-				segmentsExperienceId, PortalUtil.getClassNameId(Layout.class),
-				layout.getPlid(),
-				SegmentsExperimentConstants.Status.getExclusiveStatusValues()));
-	}
-
-	private Map<String, Object> _getSegmentsExperimentStatus(
-			long segmentsExperienceId)
-		throws Exception {
-
-		Optional<SegmentsExperiment> segmentsExperimentOptional =
-			_getSegmentsExperimentOptional(segmentsExperienceId);
-
-		if (!segmentsExperimentOptional.isPresent()) {
-			return null;
-		}
-
-		SegmentsExperiment segmentsExperiment =
-			segmentsExperimentOptional.get();
-
-		SegmentsExperimentConstants.Status status =
-			SegmentsExperimentConstants.Status.valueOf(
-				segmentsExperiment.getStatus());
-
-		return HashMapBuilder.<String, Object>put(
-			"label",
-			LanguageUtil.get(
-				ResourceBundleUtil.getBundle(
-					themeDisplay.getLocale(), getClass()),
-				status.getLabel())
-		).put(
-			"value", status.getValue()
-		).build();
-	}
-
-	private String _getSegmentsExperimentURL(
-		String layoutFullURL, long segmentsExperienceId) {
-
-		HttpUtil.addParameter(
-			layoutFullURL, "p_l_back_url", themeDisplay.getURLCurrent());
-
-		return HttpUtil.addParameter(
-			layoutFullURL, "segmentsExperienceId", segmentsExperienceId);
-	}
-
 	private Map<String, Object> _getSelectedMappingTypes() throws Exception {
 		Layout layout = themeDisplay.getLayout();
 
@@ -747,30 +679,8 @@ public class ContentPageLayoutEditorDisplayContext
 		return groupId;
 	}
 
-	private boolean _hasDefaultSegmentsExperienceLockedSegmentsExperiment()
-		throws Exception {
-
-		Optional<SegmentsExperiment> segmentsExperimentOptional =
-			_getSegmentsExperimentOptional(
-				SegmentsExperienceConstants.ID_DEFAULT);
-
-		if (!segmentsExperimentOptional.isPresent()) {
-			return false;
-		}
-
-		SegmentsExperiment segmentsExperiment =
-			segmentsExperimentOptional.get();
-
-		List<Integer> lockedStatusValuesList = ListUtil.fromArray(
-			SegmentsExperimentConstants.Status.getLockedStatusValues());
-
-		return lockedStatusValuesList.contains(segmentsExperiment.getStatus());
-	}
-
 	private boolean _hasEditSegmentsEntryPermission() throws Exception {
-		String editSegmentsEntryURL = _getEditSegmentsEntryURL();
-
-		if (Validator.isNull(editSegmentsEntryURL)) {
+		if (Validator.isNull(_getEditSegmentsEntryURL())) {
 			return false;
 		}
 
@@ -786,7 +696,9 @@ public class ContentPageLayoutEditorDisplayContext
 
 		if (SegmentsExperienceConstants.ID_DEFAULT == segmentsExperienceId) {
 			_lockedSegmentsExperience =
-				_hasDefaultSegmentsExperienceLockedSegmentsExperiment();
+				SegmentsExperienceUtil.
+					hasDefaultSegmentsExperienceLockedSegmentsExperiment(
+						themeDisplay);
 		}
 		else {
 			SegmentsExperience segmentsExperience =

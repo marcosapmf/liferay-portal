@@ -23,16 +23,12 @@ portletURL.setParameter("mvcRenderCommandName", "/wedeploy_auth_admin/view");
 
 SearchContainer<WeDeployAuthApp> weDeployAuthAppsSearchContainer = new SearchContainer(renderRequest, portletURL, null, "no-wedeploy-apps-were-found");
 
-int weDeployAuthAppsCount = WeDeployAuthAppLocalServiceUtil.getWeDeployAuthAppsCount();
+weDeployAuthAppsSearchContainer.setTotal(WeDeployAuthAppLocalServiceUtil.getWeDeployAuthAppsCount());
 
-weDeployAuthAppsSearchContainer.setTotal(weDeployAuthAppsCount);
-
-List<WeDeployAuthApp> weDeployAuthApps = WeDeployAuthAppLocalServiceUtil.getWeDeployAuthApps(QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-
-weDeployAuthAppsSearchContainer.setResults(weDeployAuthApps);
+weDeployAuthAppsSearchContainer.setResults(WeDeployAuthAppLocalServiceUtil.getWeDeployAuthApps(QueryUtil.ALL_POS, QueryUtil.ALL_POS));
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= new WeDeployAuthAppsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, weDeployAuthAppsSearchContainer) %>"
 />
 

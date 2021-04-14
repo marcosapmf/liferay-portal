@@ -84,8 +84,6 @@ String[] mediaGalleryMimeTypes = dlPortletInstanceSettings.getMimeTypes();
 	portletURL.setParameter("topLink", topLink);
 	portletURL.setParameter("folderId", String.valueOf(folderId));
 
-	request.setAttribute("view.jsp-folder", folder);
-
 	request.setAttribute("view.jsp-rootFolderId", String.valueOf(rootFolderId));
 
 	request.setAttribute("view.jsp-folderId", String.valueOf(folderId));
@@ -124,13 +122,9 @@ String[] mediaGalleryMimeTypes = dlPortletInstanceSettings.getMimeTypes();
 			assetEntryQuery.setEnablePermissions(true);
 			assetEntryQuery.setExcludeZeroViewCount(false);
 
-			int total = AssetEntryServiceUtil.getEntriesCount(assetEntryQuery);
+			igSearchContainer.setTotal(AssetEntryServiceUtil.getEntriesCount(assetEntryQuery));
 
-			igSearchContainer.setTotal(total);
-
-			List<AssetEntry> results = AssetEntryServiceUtil.getEntries(assetEntryQuery);
-
-			igSearchContainer.setResults(results);
+			igSearchContainer.setResults(AssetEntryServiceUtil.getEntries(assetEntryQuery));
 
 			mediaGalleryMimeTypes = null;
 
@@ -243,15 +237,14 @@ String[] mediaGalleryMimeTypes = dlPortletInstanceSettings.getMimeTypes();
 
 			SearchContainer<FileEntry> igSearchContainer = new SearchContainer(renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, SearchContainer.DEFAULT_DELTA, portletURL, null, null);
 
-			int total = DLAppServiceUtil.getGroupFileEntriesCount(repositoryId, groupImagesUserId, rootFolderId, mediaGalleryMimeTypes, status);
-
-			igSearchContainer.setTotal(total);
+			igSearchContainer.setTotal(DLAppServiceUtil.getGroupFileEntriesCount(repositoryId, groupImagesUserId, rootFolderId, mediaGalleryMimeTypes, status));
 
 			List<FileEntry> results = DLAppServiceUtil.getGroupFileEntries(repositoryId, groupImagesUserId, rootFolderId, mediaGalleryMimeTypes, status, igSearchContainer.getStart(), igSearchContainer.getEnd(), igSearchContainer.getOrderByComparator());
 
 			igSearchContainer.setResults(results);
 
 			request.setAttribute("view.jsp-igSearchContainer", igSearchContainer);
+
 			request.setAttribute("view.jsp-mediaGalleryMimeTypes", mediaGalleryMimeTypes);
 			%>
 

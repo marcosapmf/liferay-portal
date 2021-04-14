@@ -1,9 +1,9 @@
 @component-name = "portal-document-management"
 definition {
 
+	property custom.properties = "default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column";
 	property testray.main.component.name = "Documents Management";
 
 	setUp {
@@ -35,48 +35,6 @@ definition {
 
 			Site.tearDownCP();
 		}
-	}
-
-	@priority = "4"
-	test AddAndRemoveMetadataSets {
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoMetadataSets();
-
-		DMMetadataSet.add(
-			dmMetadataSetFieldNames = "Text Box",
-			metadataSetName = "DM Metadata Set Name");
-
-		DDLDataDefinition.save();
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.add(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Text Box",
-			dmDocumentTypeName = "DM Document Type Name",
-			metadataSetName = "DM Metadata Set Name");
-
-		DMNavigator.gotoMetadataSets();
-
-		DMMetadataSet.delete(
-			metadataSetHasReference = "true",
-			metadataSetName = "DM Metadata Set Name");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.edit(
-			dmDocumentTypeName = "DM Document Type Name",
-			metadataSetName = "DM Metadata Set Name",
-			removeMetadataSet = "true");
-
-		DMNavigator.gotoMetadataSets();
-
-		DMMetadataSet.delete(metadataSetName = "DM Metadata Set Name");
 	}
 
 	@description = "This test covers LPS-94657. It ensures that auto complete for edit categories."
@@ -143,60 +101,6 @@ definition {
 			rowEntry = "DM Document Title");
 
 		DMDocument.viewCategories(categoryNameList = "category");
-	}
-
-	@priority = "5"
-	test AddDocumentTypeAndMetadata {
-		property portal.acceptance = "true";
-		property testray.component.names = "Training";
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoMetadataSets();
-
-		DMMetadataSet.add(
-			dmMetadataSetFieldNames = "Boolean",
-			metadataSetName = "Document Metadata Set Name");
-
-		DDLDataDefinition.save();
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.add(
-			dmDocumentTypeDescription = "DM Document Type Description",
-			dmDocumentTypeFieldNames = "Date",
-			dmDocumentTypeName = "DM Document Type Name",
-			metadataSetName = "Document Metadata Set Name");
-
-		DMDocumentType.edit(
-			dmDocumentTypeFieldRequiredEdit = "Date",
-			dmDocumentTypeName = "DM Document Type Name");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "DM Document Type Name");
-
-		AssertElementPresent(
-			key_fieldFieldLabel = "Date",
-			locator1 = "Icon#ASTERISK_DATE_FIELD");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Type Contract Description",
-			dmDocumentFile = "Document_1.doc",
-			dmDocumentTitle = "DM Document Type Contract Title",
-			dmDocumentTypeName = "DM Document Type Name");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Type Contract Title");
-
-		DMDocument.viewCP(dmDocumentTitle = "DM Document Type Contract Title");
 	}
 
 	@priority = "4"
@@ -748,6 +652,8 @@ definition {
 
 		Pause(locator1 = "30000");
 
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EXTERNAL_VIDEO_IFRAME");
+
 		var videoGenerationTimeCounter = "0";
 		var videoGenerationTimeMaxWaitTime = "6";
 
@@ -762,6 +668,8 @@ definition {
 		}
 
 		var videoPreviewThumbnailLink = selenium.getAttribute("//video@poster");
+
+		SelectFrameTop();
 
 		Navigator.openSpecificURL(url = "${videoPreviewThumbnailLink}");
 
@@ -1000,87 +908,59 @@ definition {
 		DMDocument.viewDefaultCP();
 	}
 
+	@description = "This test ensures that a document with forbidden characters in the filename can not be published successfully."
 	@priority = "5"
-	test UpdateDocumentTypeWithPermissions {
+	test ValidateFileNameRestrictions {
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.jpg",
+			dmDocumentFileName = '''Document_1''',
+			dmDocumentTitle = "DM Document Title",
+			emptyFileNameRestriction = "true");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.jpg",
+			dmDocumentFileName = "",
+			dmDocumentTitle = "DM Document Title",
+			emptyFileNameRestriction = "true");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.jpg",
+			dmDocumentFileName = '''\\\///.jpg''',
+			dmDocumentTitle = "DM Document Title",
+			validateFileNameRestriction = "true");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.txt",
+			dmDocumentFileName = '''<>.txt''',
+			dmDocumentTitle = "DM Document Title",
+			validateFileNameRestriction = "true");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentFileName = ''':"?.doc''',
+			dmDocumentTitle = "DM Document Title",
+			validateFileNameRestriction = "true");
+	}
+
+	@description = "This test covers LPS-93031. It ensures that the document still can be viewed after the author is deleted."
+	@priority = "4"
+	test ViewDocumentAfterDeletingAuthor {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property test.name.skip.portal.instance = "DocumentsadministrationUsecase#UpdateDocumentTypeWithPermissions";
-		property testray.component.names = "Training";
-
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.add(
-			dmDocumentTypeDescription = "Images",
-			dmDocumentTypeFieldNames = "Text Box,Date",
-			dmDocumentTypeName = "Photos");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
-
-		ServerAdministration.executeServerResourcesActions(actionsDescription = "Clean up permissions.");
-
-		Navigator.openURL();
-
-		JSONRole.addRegularRole(
-			roleKey = "Technical Writer",
-			roleTitle = "Technical Writer");
-
-		for (var resourceActionIndex : list "DELETE,VIEW,UPDATE") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com.liferay.document.library.kernel.model.DLFileEntryType",
-				roleTitle = "Technical Writer");
-		}
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW",
-			resourceName = "com_liferay_document_library_web_portlet_DLAdminPortlet",
-			roleTitle = "Technical Writer");
-
-		for (var resourceActionIndex : list "VIEW,ADD_FOLDER,ADD_DOCUMENT") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com.liferay.document.library",
-				roleTitle = "Site Member",
-				roleType = "site");
-		}
-
-		for (var resourceActionIndex : list "UPDATE,DELETE") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com.liferay.document.library.kernel.model.DLFileEntry",
-				roleTitle = "Site Member",
-				roleType = "site");
-		}
-
-		for (var resourceActionIndex : list "UPDATE,ADD_SUBFOLDER,ADD_DOCUMENT") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com.liferay.document.library.kernel.model.DLFolder",
-				roleTitle = "Site Member",
-				roleType = "site");
-		}
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_SITE_ADMINISTRATION",
-			resourceName = "com.liferay.portal.kernel.model.Group",
-			roleTitle = "Site Member",
-			roleType = "site");
-
-		for (var resourceActionIndex : list "VIEW,ACCESS_IN_CONTROL_PANEL") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com_liferay_document_library_web_portlet_DLAdminPortlet",
-				roleTitle = "Site Member",
-				roleType = "site");
-		}
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -1098,99 +978,49 @@ definition {
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		Site.assignUserSitesCP(
-			siteName = "${siteName}",
-			userScreenName = "usersn");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
 		User.assignRegularRoleCP(
-			roleTitle = "Technical Writer",
+			roleTitle = "Administrator",
 			userScreenName = "usersn");
 
-		JSONUser.addUser(
-			userEmailAddress = "userea2@liferay.com",
-			userFirstName = "userfn2",
-			userLastName = "userln2",
-			userScreenName = "usersn2");
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "userea@liferay.com",
+			userLoginFullName = "userfn userln");
 
-		JSONUser.setFirstPassword(
-			agreeToTermsAndAnswerReminderQuery = "true",
-			requireReset = "false",
-			userEmailAddress = "userea2@liferay.com");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.addCP(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentFile = "Document_1.jpg",
+			dmDocumentTitle = "DM Document Title");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewCP(
+			dmDocumentFileName = "Document_1.jpg",
+			dmDocumentTitle = "DM Document Title");
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		Site.assignUserSitesCP(
-			siteName = "${siteName}",
-			userScreenName = "usersn2");
+		User.deactivateCP(userFirstName = "userfn");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages",
-			site = "${siteName}");
+		User.deleteCP();
 
-		SitePages.addPublicPage(
-			pageName = "Documents and Media Page",
-			sitePageType = "Widget Page");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-		SitePages.configurePage(
-			columnName = "1 Column",
-			pageName = "Documents and Media Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page");
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
 
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		Portlet.addPG(portletName = "Documents and Media");
-
-		DMDocument.enableActionsMenuOnPortlet();
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		User.logoutPG();
-
-		User.loginUserPG(
-			password = "test",
-			userEmailAddress = "userea@liferay.com");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		AssertVisible(
-			locator1 = "Portlet#HEADER",
-			value1 = "Documents and Media");
-
-		DMNavigator.gotoDocumentType();
-
-		DMDocumentType.edit(
-			dmDocumentTypeFieldNames = "Radio",
-			dmDocumentTypeName = "Photos");
-
-		User.logoutPG();
-
-		User.loginUserPG(
-			password = "test",
-			userEmailAddress = "userea2@liferay.com");
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.viewCannotAddRepository();
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			portlet = "Documents and Media");
-
-		DMDocumentType.viewNoAvailableActionsViaDocumentTypesPG();
+		DMDocument.viewCP(
+			dmDocumentFileName = "Document_1.jpg",
+			dmDocumentTitle = "DM Document Title");
 	}
 
 	@description = "This test covers LPS-118268. It ensures that the user without document view permission can not view the document via the display page."
@@ -1390,9 +1220,85 @@ definition {
 
 		Refresh();
 
-		DMDocument.viewPG(
+		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
+
+		DMDocument.viewCardTitle(dmDocumentTitle = "DM Document Title");
+	}
+
+	@description = "This ensures that the user can create document viewable only by the owner."
+	@priority = "4"
+	test ViewDocumentWithOwnerAccessOnly {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Documents and Media Page");
+
+		JSONLayout.addWidgetToPublicLayout(
+			column = "1",
+			groupName = "Guest",
+			layoutName = "Documents and Media Page",
+			widgetName = "Documents and Media");
+
+		Site.openSiteMembershipsAdmin(siteURLKey = "guest");
+
+		Site.assignUserAsMemberCP(
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.enableActionsMenuOnPortlet();
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.addPG(
 			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title");
+			dmDocumentFile = "Document_1.doc",
+			dmDocumentTitle = "Document_1.doc");
+
+		PermissionsInline.gotoDocumentsAndMediaDocumentPG(
+			dmDocumentTitle = "Document_1.doc",
+			pageName = "Documents and Media Page");
+
+		for (var roleTitle : list "guest,site-member") {
+			Role.removePermissionPG(
+				permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
+				roleTitle = "${roleTitle}");
+		}
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMDocument.viewAllPG(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "Document_1.doc",
+			dmDocumentType = "Basic Document");
+
+		User.logoutPG();
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		DMPortlet.viewDefaultPG();
+
+		User.loginUserPG(userEmailAddress = "userea@liferay.com");
+
+		Navigator.gotoPage(pageName = "Documents and Media Page");
+
+		DMPortlet.viewDefaultPG();
 	}
 
 	@priority = "5"
@@ -1516,7 +1422,7 @@ definition {
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
-		Organization.addMemberCP(
+		Organization.assignUser(
 			orgName = "Organization Name",
 			userFirstName = "userfn",
 			userLastName = "userln",
@@ -1641,42 +1547,6 @@ definition {
 			dmDocumentTitle = "Document_1.doc");
 	}
 
-	@description = "This test covers LPS-107966. It ensures that the image description can be propagated after creating a new image via image editor in web content."
-	@priority = "3"
-	test ViewImageDescriptionAfterImageEditedViaWebContent {
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "Document_2.jpg",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Document_2.jpg");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-		WebContentNavigator.gotoAddCP();
-
-		ImageEditor.gotoImageEditorViaItemSelector(
-			ckEditor = "true",
-			imageFileName = "Document_2.jpg",
-			navTab = "Documents and Media");
-
-		ImageEditor.rotateImage(rotateDirection = "right");
-
-		Pause(locator1 = "3000");
-
-		ImageEditor.applyChangesAndSaveFile();
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		LexiconEntry.gotoEntryMenuItem(
-			menuItem = "Edit",
-			rowEntry = "Document_2 (1).jpg");
-
-		AssertTextEquals(
-			locator1 = "TextArea#DESCRIPTION",
-			value1 = "DM Document Description");
-	}
-
 	@description = "This test covers LPS-93601 and LPS-91661. It ensures that the user can check all files in the current pagination using the DM toolbar and can move documents not on the current pagination to another folder."
 	@priority = "4"
 	test ViewPaginationToolbarCheckboxAndMoveMultiplePaginationDocuments {
@@ -1696,7 +1566,6 @@ definition {
 			groupName = "Guest");
 
 		for (var documentName : list "Document_2.doc,Document_1.xls,Document_4.jpg,Document_3.jpg,Document_2.xls,Document_1.txt,Document_4.txt,Document_3.xls,Document_2.jpg,Document_1.doc") {
-
 			var extension = StringUtil.extractLast("${documentName}", ".");
 
 			if ("${extension}" == "doc") {
@@ -1813,19 +1682,15 @@ definition {
 
 	@priority = "4"
 	test ViewSingleDocumentSelectionDoesNotCheckAllFileSelectionCP {
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document1 Title",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Document_1.jpg");
+		for (var documentNumber : list "1,2") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document2 Description",
-			dmDocumentTitle = "DM Document2 Title",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Document_1.jpg");
+			DMDocument.addCP(
+				dmDocumentDescription = "DM Document Description",
+				dmDocumentFile = "Document_1.jpg",
+				dmDocumentFileName = "Document${documentNumber}.jpg",
+				dmDocumentTitle = "DM Document${documentNumber} Title");
+		}
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 

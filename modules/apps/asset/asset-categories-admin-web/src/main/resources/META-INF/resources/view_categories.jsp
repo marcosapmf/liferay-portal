@@ -20,7 +20,7 @@
 AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarDisplayContext = new AssetCategoriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetCategoriesDisplayContext);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	displayContext="<%= assetCategoriesManagementToolbarDisplayContext %>"
 />
 
@@ -28,7 +28,7 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteCategoryURL %>" cssClass="container-fluid-1280" name="fm">
+<aui:form action="<%= deleteCategoryURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
 
 	<%
 	List<BreadcrumbEntry> breadcrumbEntries = AssetCategoryUtil.getAssetCategoriesBreadcrumbEntries(assetCategoriesDisplayContext.getVocabulary(), assetCategoriesDisplayContext.getCategory(), request, renderResponse);
@@ -58,11 +58,10 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 			<%
 			int subcategoriesCount = AssetCategoryLocalServiceUtil.getChildCategoriesCount(curCategory.getCategoryId());
 
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"actions", assetCategoriesManagementToolbarDisplayContext.getAvailableActions(curCategory)
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"actions", assetCategoriesManagementToolbarDisplayContext.getAvailableActions(curCategory)
+				).build());
 			%>
 
 			<c:choose>

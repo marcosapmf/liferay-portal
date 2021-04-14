@@ -42,7 +42,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 	</div>
 </c:if>
 
-<portlet:actionURL name="editProductDefinition" var="editProductDefinitionActionURL" />
+<portlet:actionURL name="/cp_definitions/edit_cp_definition" var="editProductDefinitionActionURL" />
 
 <aui:form action="<%= editProductDefinitionActionURL %>" cssClass="pt-4" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (cpDefinition == null) ? Constants.ADD : Constants.UPDATE %>" />
@@ -111,7 +111,6 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 					<div class="entry-content form-group">
 						<liferay-ui:input-localized
 							defaultLanguageId="<%= defaultLanguageId %>"
-							editorName="alloyeditor"
 							name="descriptionMapAsXML"
 							type="editor"
 							xml="<%= descriptionMapAsXML %>"
@@ -227,7 +226,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 								headers: headers,
 								method: 'POST',
 							}
-						).then(function () {
+						).then(() => {
 							Liferay.fire(events.UPDATE_DATASET_DISPLAY, {
 								id:
 									'<%= CommerceProductDataSetConstants.COMMERCE_DATA_SET_KEY_PRODUCT_DEFINITION_SPECIFICATIONS %>',
@@ -256,12 +255,12 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 								method: 'POST',
 							}
 						)
-							.then(function (response) {
+							.then((response) => {
 								if (response.ok) {
 									return response.json();
 								}
 
-								return response.json().then(function (data) {
+								return response.json().then((data) => {
 									return Promise.reject(data.errorDescription);
 								});
 							})
@@ -356,7 +355,7 @@ if ((cpDefinition != null) && (cpDefinition.getExpirationDate() != null)) {
 	<aui:script>
 		document
 			.getElementById('<portlet:namespace />commerceCatalogGroupId')
-			.addEventListener('change', function (event) {
+			.addEventListener('change', (event) => {
 				var languageId = event.target.querySelector(
 					'[value="' + event.target.value + '"]'
 				).dataset.languageid;

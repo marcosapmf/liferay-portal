@@ -26,7 +26,7 @@ WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
 boolean hasAssignableUsers = workflowTaskDisplayContext.hasAssignableUsers(workflowTask);
 %>
 
-<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="assignWorkflowTask" var="assignURL" />
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/portal_workflow_task/assign_task" var="assignURL" />
 
 <div class="task-action">
 	<aui:form action="<%= assignURL %>" method="post" name="assignFm">
@@ -77,7 +77,7 @@ boolean hasAssignableUsers = workflowTaskDisplayContext.hasAssignableUsers(workf
 	var done = A.one('#<portlet:namespace />done');
 
 	if (done) {
-		done.on('click', function (event) {
+		done.on('click', (event) => {
 			var data = new FormData(
 				document.querySelector('#<portlet:namespace />assignFm')
 			);
@@ -85,7 +85,7 @@ boolean hasAssignableUsers = workflowTaskDisplayContext.hasAssignableUsers(workf
 			Liferay.Util.fetch('<%= assignURL.toString() %>', {
 				body: data,
 				method: 'POST',
-			}).then(function () {
+			}).then(() => {
 				Liferay.Util.getOpener().<portlet:namespace />refreshPortlet(
 					'<%= PortalUtil.escapeRedirect(redirect.toString()) %>'
 				);

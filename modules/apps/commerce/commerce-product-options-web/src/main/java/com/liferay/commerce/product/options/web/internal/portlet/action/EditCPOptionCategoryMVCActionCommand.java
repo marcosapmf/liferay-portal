@@ -46,7 +46,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CPPortletKeys.CP_SPECIFICATION_OPTIONS,
-		"mvc.command.name=editProductOptionCategory"
+		"mvc.command.name=/cp_specification_options/edit_cp_option_category"
 	},
 	service = MVCActionCommand.class
 )
@@ -107,7 +107,8 @@ public class EditCPOptionCategoryMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, exception.getClass());
 
 				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "editProductOptionCategory");
+					"mvcRenderCommandName",
+					"/cp_specification_options/edit_cp_option_category");
 			}
 			else {
 				throw exception;
@@ -129,14 +130,14 @@ public class EditCPOptionCategoryMVCActionCommand extends BaseMVCActionCommand {
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
 		String key = ParamUtil.getString(actionRequest, "key");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			CPOptionCategory.class.getName(), actionRequest);
-
 		CPOptionCategory cpOptionCategory = null;
 
 		if (cpOptionCategoryId <= 0) {
 
 			// Add commerce product option category
+
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(
+				CPOptionCategory.class.getName(), actionRequest);
 
 			cpOptionCategory = _cpOptionCategoryService.addCPOptionCategory(
 				titleMap, descriptionMap, priority, key, serviceContext);

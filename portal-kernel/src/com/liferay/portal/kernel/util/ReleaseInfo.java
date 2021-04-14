@@ -72,6 +72,10 @@ public class ReleaseInfo {
 
 	public static final int RELEASE_7_3_10_BUILD_NUMBER = 7310;
 
+	public static final int RELEASE_7_4_0_BUILD_NUMBER = 7400;
+
+	public static final int RELEASE_7_4_10_BUILD_NUMBER = 7410;
+
 	public static final Date getBuildDate() {
 		DateFormat df = DateFormat.getDateInstance(DateFormat.LONG);
 
@@ -125,7 +129,7 @@ public class ReleaseInfo {
 
 	private static final int _BUILD_NUMBER = GetterUtil.getInteger(_BUILD);
 
-	private static final String _CODE_NAME = "Athanasius";
+	private static final String _CODE_NAME = "Cavanaugh";
 
 	private static final String _DATE = "@release.info.date@";
 

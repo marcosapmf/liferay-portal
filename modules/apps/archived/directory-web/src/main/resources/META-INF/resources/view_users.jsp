@@ -27,8 +27,6 @@ PortletURL portletURL = (PortletURL)request.getAttribute("view.jsp-portletURL");
 if (Validator.isNotNull(viewUsersRedirect)) {
 	portletURL.setParameter("viewUsersRedirect", viewUsersRedirect);
 }
-
-boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 %>
 
 <c:if test="<%= Validator.isNotNull(viewUsersRedirect) %>">
@@ -57,7 +55,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 			portletURL="<%= portletURL %>"
 		/>
 
-		<c:if test="<%= showSearch %>">
+		<c:if test='<%= ParamUtil.getBoolean(request, "showSearch", true) %>'>
 			<li>
 				<liferay-util:include page="/user_search.jsp" servletContext="<%= application %>" />
 			</li>
@@ -65,7 +63,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280">
+<div class="container-fluid container-fluid-max-xl">
 	<liferay-ui:search-container
 		searchContainer="<%= new UserSearch(renderRequest, portletURL) %>"
 		var="userSearchContainer"
@@ -122,17 +120,18 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 			userParams.put("socialRelationType", new Long[] {themeDisplay.getUserId(), Long.valueOf(SocialRelationConstants.TYPE_BI_FRIEND)});
 		}
 		else if (portletName.equals(PortletKeys.MY_SITES_DIRECTORY) && (organizationId == 0) && (userGroupId == 0)) {
-			LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
-				"inherit", Boolean.FALSE
-			).put(
-				"site", Boolean.TRUE
-			).put(
-				"usersGroups", user.getUserId()
-			).build();
-
 			userParams.put("inherit", Boolean.TRUE);
 
-			List<Group> groups = GroupLocalServiceUtil.search(user.getCompanyId(), groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			List<Group> groups = GroupLocalServiceUtil.search(
+				user.getCompanyId(),
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", Boolean.FALSE
+				).put(
+					"site", Boolean.TRUE
+				).put(
+					"usersGroups", user.getUserId()
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 			userParams.put("usersGroups", SitesUtil.filterGroups(groups, PropsValues.MY_SITES_DIRECTORY_SITE_EXCLUDES));
 		}
@@ -142,9 +141,25 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 		}
 		%>
 
-		<liferay-ui:user-search-container-results
-			userParams="<%= userParams %>"
-		/>
+		<liferay-ui:search-container-results>
+
+			<%
+			if (searchTerms.isAdvancedSearch()) {
+				total = UserLocalServiceUtil.searchCount(company.getCompanyId(), searchTerms.getFirstName(), searchTerms.getMiddleName(), searchTerms.getLastName(), searchTerms.getScreenName(), searchTerms.getEmailAddress(), searchTerms.getStatus(), userParams, searchTerms.isAndOperator());
+
+				results = UserLocalServiceUtil.search(company.getCompanyId(), searchTerms.getFirstName(), searchTerms.getMiddleName(), searchTerms.getLastName(), searchTerms.getScreenName(), searchTerms.getEmailAddress(), searchTerms.getStatus(), userParams, searchTerms.isAndOperator(), userSearchContainer.getStart(), userSearchContainer.getEnd(), userSearchContainer.getOrderByComparator());
+			}
+			else {
+				total = UserLocalServiceUtil.searchCount(company.getCompanyId(), searchTerms.getKeywords(), searchTerms.getStatus(), userParams);
+
+				results = UserLocalServiceUtil.search(company.getCompanyId(), searchTerms.getKeywords(), searchTerms.getStatus(), userParams, userSearchContainer.getStart(), userSearchContainer.getEnd(), userSearchContainer.getOrderByComparator());
+			}
+
+			userSearchContainer.setTotal(total);
+			userSearchContainer.setResults(results);
+			%>
+
+		</liferay-ui:search-container-results>
 
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.kernel.model.User"

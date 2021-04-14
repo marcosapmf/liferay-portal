@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -69,6 +70,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Riccardo Alberti
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class CommercePriceListLowestDiscoveryTest {
 
@@ -147,15 +149,16 @@ public class CommercePriceListLowestDiscoveryTest {
 
 		CommercePriceEntry commercePriceEntry =
 			CommercePriceEntryTestUtil.addCommercePriceEntry(
-				cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-				commerceUnqualifiedPriceList.getCommercePriceListId(), "",
+				"", cpDefinition.getCProductId(),
+				cpInstance.getCPInstanceUuid(),
+				commerceUnqualifiedPriceList.getCommercePriceListId(),
 				BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		BigDecimal lowestPrice = commercePriceEntry.getPrice();
 
 		CommercePriceList expectedPriceList = commerceUnqualifiedPriceList;
 
-		CommercePriceList discoveredPriceList =
+		CommercePriceList discoveredCommercePriceList =
 			_commercePriceListDiscovery.getCommercePriceList(
 				_commerceCatalog.getGroupId(),
 				_commerceAccount.getCommerceAccountId(),
@@ -164,7 +167,7 @@ public class CommercePriceListLowestDiscoveryTest {
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
-			discoveredPriceList.getCommercePriceListId());
+			discoveredCommercePriceList.getCommercePriceListId());
 
 		CommercePriceList commerceChannelPriceList =
 			CommercePriceListTestUtil.addChannelPriceList(
@@ -172,8 +175,8 @@ public class CommercePriceListLowestDiscoveryTest {
 				_commerceChannel.getCommerceChannelId(), _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commerceChannelPriceList.getCommercePriceListId(), "",
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commerceChannelPriceList.getCommercePriceListId(),
 			BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		if (lowestPrice.compareTo(commercePriceEntry.getPrice()) > 0) {
@@ -181,15 +184,16 @@ public class CommercePriceListLowestDiscoveryTest {
 			expectedPriceList = commerceChannelPriceList;
 		}
 
-		discoveredPriceList = _commercePriceListDiscovery.getCommercePriceList(
-			_commerceCatalog.getGroupId(),
-			_commerceAccount.getCommerceAccountId(),
-			_commerceChannel.getCommerceChannelId(),
-			cpInstance.getCPInstanceUuid(), _TYPE);
+		discoveredCommercePriceList =
+			_commercePriceListDiscovery.getCommercePriceList(
+				_commerceCatalog.getGroupId(),
+				_commerceAccount.getCommerceAccountId(),
+				_commerceChannel.getCommerceChannelId(),
+				cpInstance.getCPInstanceUuid(), _TYPE);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
-			discoveredPriceList.getCommercePriceListId());
+			discoveredCommercePriceList.getCommercePriceListId());
 
 		long[] commerceAccountGroupIds =
 			_commerceAccountHelper.getCommerceAccountGroupIds(
@@ -200,8 +204,8 @@ public class CommercePriceListLowestDiscoveryTest {
 				_commerceCatalog.getGroupId(), commerceAccountGroupIds, _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commerceAccountGroupPriceList.getCommercePriceListId(), "",
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commerceAccountGroupPriceList.getCommercePriceListId(),
 			BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		if (lowestPrice.compareTo(commercePriceEntry.getPrice()) > 0) {
@@ -209,15 +213,16 @@ public class CommercePriceListLowestDiscoveryTest {
 			expectedPriceList = commerceAccountGroupPriceList;
 		}
 
-		discoveredPriceList = _commercePriceListDiscovery.getCommercePriceList(
-			_commerceCatalog.getGroupId(),
-			_commerceAccount.getCommerceAccountId(),
-			_commerceChannel.getCommerceChannelId(),
-			cpInstance.getCPInstanceUuid(), _TYPE);
+		discoveredCommercePriceList =
+			_commercePriceListDiscovery.getCommercePriceList(
+				_commerceCatalog.getGroupId(),
+				_commerceAccount.getCommerceAccountId(),
+				_commerceChannel.getCommerceChannelId(),
+				cpInstance.getCPInstanceUuid(), _TYPE);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
-			discoveredPriceList.getCommercePriceListId());
+			discoveredCommercePriceList.getCommercePriceListId());
 
 		CommercePriceList commerceAccountGroupAndChannelPriceList =
 			CommercePriceListTestUtil.addAccountGroupAndChannelPriceList(
@@ -225,24 +230,25 @@ public class CommercePriceListLowestDiscoveryTest {
 				_commerceChannel.getCommerceChannelId(), _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
 			commerceAccountGroupAndChannelPriceList.getCommercePriceListId(),
-			"", BigDecimal.valueOf(RandomTestUtil.randomDouble()));
+			BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		if (lowestPrice.compareTo(commercePriceEntry.getPrice()) > 0) {
 			lowestPrice = commercePriceEntry.getPrice();
 			expectedPriceList = commerceAccountGroupAndChannelPriceList;
 		}
 
-		discoveredPriceList = _commercePriceListDiscovery.getCommercePriceList(
-			_commerceCatalog.getGroupId(),
-			_commerceAccount.getCommerceAccountId(),
-			_commerceChannel.getCommerceChannelId(),
-			cpInstance.getCPInstanceUuid(), _TYPE);
+		discoveredCommercePriceList =
+			_commercePriceListDiscovery.getCommercePriceList(
+				_commerceCatalog.getGroupId(),
+				_commerceAccount.getCommerceAccountId(),
+				_commerceChannel.getCommerceChannelId(),
+				cpInstance.getCPInstanceUuid(), _TYPE);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
-			discoveredPriceList.getCommercePriceListId());
+			discoveredCommercePriceList.getCommercePriceListId());
 
 		CommercePriceList commerceAccountPriceList =
 			CommercePriceListTestUtil.addAccountPriceList(
@@ -250,8 +256,8 @@ public class CommercePriceListLowestDiscoveryTest {
 				_commerceAccount.getCommerceAccountId(), _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commerceAccountPriceList.getCommercePriceListId(), "",
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commerceAccountPriceList.getCommercePriceListId(),
 			BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		if (lowestPrice.compareTo(commercePriceEntry.getPrice()) > 0) {
@@ -259,15 +265,16 @@ public class CommercePriceListLowestDiscoveryTest {
 			expectedPriceList = commerceAccountPriceList;
 		}
 
-		discoveredPriceList = _commercePriceListDiscovery.getCommercePriceList(
-			_commerceCatalog.getGroupId(),
-			_commerceAccount.getCommerceAccountId(),
-			_commerceChannel.getCommerceChannelId(),
-			cpInstance.getCPInstanceUuid(), _TYPE);
+		discoveredCommercePriceList =
+			_commercePriceListDiscovery.getCommercePriceList(
+				_commerceCatalog.getGroupId(),
+				_commerceAccount.getCommerceAccountId(),
+				_commerceChannel.getCommerceChannelId(),
+				cpInstance.getCPInstanceUuid(), _TYPE);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
-			discoveredPriceList.getCommercePriceListId());
+			discoveredCommercePriceList.getCommercePriceListId());
 
 		CommercePriceList commerceAccountAndChannelPriceList =
 			CommercePriceListTestUtil.addAccountAndChannelPriceList(
@@ -276,23 +283,24 @@ public class CommercePriceListLowestDiscoveryTest {
 				_commerceChannel.getCommerceChannelId(), _TYPE);
 
 		commercePriceEntry = CommercePriceEntryTestUtil.addCommercePriceEntry(
-			cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
-			commerceAccountAndChannelPriceList.getCommercePriceListId(), "",
+			"", cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
+			commerceAccountAndChannelPriceList.getCommercePriceListId(),
 			BigDecimal.valueOf(RandomTestUtil.randomDouble()));
 
 		if (lowestPrice.compareTo(commercePriceEntry.getPrice()) > 0) {
 			expectedPriceList = commerceAccountAndChannelPriceList;
 		}
 
-		discoveredPriceList = _commercePriceListDiscovery.getCommercePriceList(
-			_commerceCatalog.getGroupId(),
-			_commerceAccount.getCommerceAccountId(),
-			_commerceChannel.getCommerceChannelId(),
-			cpInstance.getCPInstanceUuid(), _TYPE);
+		discoveredCommercePriceList =
+			_commercePriceListDiscovery.getCommercePriceList(
+				_commerceCatalog.getGroupId(),
+				_commerceAccount.getCommerceAccountId(),
+				_commerceChannel.getCommerceChannelId(),
+				cpInstance.getCPInstanceUuid(), _TYPE);
 
 		Assert.assertEquals(
 			expectedPriceList.getCommercePriceListId(),
-			discoveredPriceList.getCommercePriceListId());
+			discoveredCommercePriceList.getCommercePriceListId());
 	}
 
 	@Rule

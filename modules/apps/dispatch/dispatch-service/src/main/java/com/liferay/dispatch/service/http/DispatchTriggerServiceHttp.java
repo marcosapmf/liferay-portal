@@ -52,10 +52,11 @@ import com.liferay.portal.kernel.util.MethodKey;
 public class DispatchTriggerServiceHttp {
 
 	public static com.liferay.dispatch.model.DispatchTrigger addDispatchTrigger(
-			HttpPrincipal httpPrincipal, long userId, String name,
+			HttpPrincipal httpPrincipal, long userId,
+			String dispatchTaskExecutorType,
 			com.liferay.portal.kernel.util.UnicodeProperties
-				taskSettingsUnicodeProperties,
-			String taskType)
+				dispatchTaskSettingsUnicodeProperties,
+			String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -64,8 +65,8 @@ public class DispatchTriggerServiceHttp {
 				_addDispatchTriggerParameterTypes0);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, userId, name, taskSettingsUnicodeProperties,
-				taskType);
+				methodKey, userId, dispatchTaskExecutorType,
+				dispatchTaskSettingsUnicodeProperties, name);
 
 			Object returnObj = null;
 
@@ -213,11 +214,13 @@ public class DispatchTriggerServiceHttp {
 	public static com.liferay.dispatch.model.DispatchTrigger
 			updateDispatchTrigger(
 				HttpPrincipal httpPrincipal, long dispatchTriggerId,
-				boolean active, String cronExpression, int endDateMonth,
-				int endDateDay, int endDateYear, int endDateHour,
-				int endDateMinute, boolean neverEnd, int startDateMonth,
-				int startDateDay, int startDateYear, int startDateHour,
-				int startDateMinute)
+				boolean active, String cronExpression,
+				com.liferay.dispatch.executor.DispatchTaskClusterMode
+					dispatchTaskClusterMode,
+				int endDateMonth, int endDateDay, int endDateYear,
+				int endDateHour, int endDateMinute, boolean neverEnd,
+				boolean overlapAllowed, int startDateMonth, int startDateDay,
+				int startDateYear, int startDateHour, int startDateMinute)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -227,9 +230,10 @@ public class DispatchTriggerServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, dispatchTriggerId, active, cronExpression,
-				endDateMonth, endDateDay, endDateYear, endDateHour,
-				endDateMinute, neverEnd, startDateMonth, startDateDay,
-				startDateYear, startDateHour, startDateMinute);
+				dispatchTaskClusterMode, endDateMonth, endDateDay, endDateYear,
+				endDateHour, endDateMinute, neverEnd, overlapAllowed,
+				startDateMonth, startDateDay, startDateYear, startDateHour,
+				startDateMinute);
 
 			Object returnObj = null;
 
@@ -262,9 +266,9 @@ public class DispatchTriggerServiceHttp {
 	public static com.liferay.dispatch.model.DispatchTrigger
 			updateDispatchTrigger(
 				HttpPrincipal httpPrincipal, long dispatchTriggerId,
-				String name,
 				com.liferay.portal.kernel.util.UnicodeProperties
-					taskSettingsUnicodeProperties)
+					dispatchTaskSettingsUnicodeProperties,
+				String name)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -273,8 +277,8 @@ public class DispatchTriggerServiceHttp {
 				_updateDispatchTriggerParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, dispatchTriggerId, name,
-				taskSettingsUnicodeProperties);
+				methodKey, dispatchTriggerId,
+				dispatchTaskSettingsUnicodeProperties, name);
 
 			Object returnObj = null;
 
@@ -320,14 +324,16 @@ public class DispatchTriggerServiceHttp {
 		new Class[] {};
 	private static final Class<?>[] _updateDispatchTriggerParameterTypes4 =
 		new Class[] {
-			long.class, boolean.class, String.class, int.class, int.class,
-			int.class, int.class, int.class, boolean.class, int.class,
-			int.class, int.class, int.class, int.class
+			long.class, boolean.class, String.class,
+			com.liferay.dispatch.executor.DispatchTaskClusterMode.class,
+			int.class, int.class, int.class, int.class, int.class,
+			boolean.class, boolean.class, int.class, int.class, int.class,
+			int.class, int.class
 		};
 	private static final Class<?>[] _updateDispatchTriggerParameterTypes5 =
 		new Class[] {
-			long.class, String.class,
-			com.liferay.portal.kernel.util.UnicodeProperties.class
+			long.class, com.liferay.portal.kernel.util.UnicodeProperties.class,
+			String.class
 		};
 
 }

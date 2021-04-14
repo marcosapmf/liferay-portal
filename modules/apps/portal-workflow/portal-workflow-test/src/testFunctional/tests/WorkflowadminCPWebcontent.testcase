@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
+
 	var workflowAssetType = "Web Content Article";
 
 	setUp {
@@ -37,7 +38,6 @@ definition {
 	@priority = "5"
 	test ApproveInWCSubfolderWorkflow {
 		property portal.acceptance = "true";
-
 		property testray.component.names = "Training";
 
 		Navigator.gotoNavItem(navItem = "Structures");
@@ -46,8 +46,7 @@ definition {
 			structureDescription = "WC Structure Description",
 			structureName = "WC Structure Name");
 
-		DynamicDataMapping.addField(
-			field = "Text",
+		DataEngine.addField(
 			fieldFieldLabel = "Text",
 			fieldName = "Text");
 
@@ -126,12 +125,6 @@ definition {
 			webContentTitle = "WC Subfolder Name");
 
 		WebContent.viewApprovedStatus(webContentTitle = "WC WebContent Title");
-
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
-
-		WebContent.viewCP(
-			webContentText = "WC WebContent Text",
-			webContentTitle = "WC WebContent Title");
 	}
 
 }

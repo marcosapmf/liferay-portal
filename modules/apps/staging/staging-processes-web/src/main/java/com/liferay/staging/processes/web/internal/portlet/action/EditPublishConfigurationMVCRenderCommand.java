@@ -26,7 +26,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + StagingProcessesPortletKeys.STAGING_PROCESSES,
-		"mvc.command.name=editPublishConfiguration"
+		"mvc.command.name=/staging_processes/edit_publish_configuration"
 	},
 	service = MVCRenderCommand.class
 )
@@ -35,7 +35,7 @@ public class EditPublishConfigurationMVCRenderCommand
 
 	@Override
 	protected String getPath() {
-		return "/publish_templates/edit_template.jsp";
+		return "/publish_templates/edit_publish_configuration.jsp";
 	}
 
 }

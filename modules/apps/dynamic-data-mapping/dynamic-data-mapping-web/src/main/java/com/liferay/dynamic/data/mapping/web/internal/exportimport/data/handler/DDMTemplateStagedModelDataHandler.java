@@ -135,6 +135,10 @@ public class DDMTemplateStagedModelDataHandler
 				template.getCompanyId());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
+
 			return referenceAttributes;
 		}
 
@@ -206,8 +210,7 @@ public class DDMTemplateStagedModelDataHandler
 					_ddmTemplateExportImportContentProcessor.
 						replaceExportContentReferences(
 							portletDataContext, template,
-							template.getSmallImageURL() + StringPool.SPACE,
-							true, true);
+							template.getSmallImageURL(), true, true);
 
 				template.setSmallImageURL(smallImageURL);
 			}

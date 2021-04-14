@@ -25,6 +25,8 @@ import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistry;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
@@ -47,7 +49,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-		"mvc.command.name=/document_library/onedrive_background_task_status"
+		"mvc.command.name=/document_library/one_drive_background_task_status"
 	},
 	service = MVCResourceCommand.class
 )
@@ -119,6 +121,12 @@ public class OneDriveBackgroundTaskStatusMVCResourceCommand
 				catch (GraphServicePortalException
 							graphServicePortalException) {
 
+					if (_log.isDebugEnabled()) {
+						_log.debug(
+							graphServicePortalException,
+							graphServicePortalException);
+					}
+
 					jsonObject.put("error", true);
 				}
 			}
@@ -127,6 +135,9 @@ public class OneDriveBackgroundTaskStatusMVCResourceCommand
 		JSONPortletResponseUtil.writeJSON(
 			resourceRequest, resourceResponse, jsonObject);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OneDriveBackgroundTaskStatusMVCResourceCommand.class);
 
 	@Reference
 	private BackgroundTaskStatusRegistry _backgroundTaskStatusRegistry;

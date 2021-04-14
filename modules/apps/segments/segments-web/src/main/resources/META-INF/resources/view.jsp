@@ -24,7 +24,7 @@ String eventName = liferayPortletResponse.getNamespace() + "assignSiteRoles";
 request.setAttribute("view.jsp-eventName", eventName);
 %>
 
-<clay:management-toolbar
+<clay:management-toolbar-v2
 	actionDropdownItems="<%= segmentsDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= segmentsDisplayContext.getClearResultsURL() %>"
 	componentId="segmentsEntriesManagementToolbar"
@@ -41,11 +41,11 @@ request.setAttribute("view.jsp-eventName", eventName);
 	sortingURL="<%= segmentsDisplayContext.getSortingURL() %>"
 />
 
-<portlet:actionURL name="deleteSegmentsEntry" var="deleteSegmentsEntryURL">
+<portlet:actionURL name="/segments/delete_segments_entry" var="deleteSegmentsEntryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteSegmentsEntryURL %>" cssClass="container-fluid-1280" method="post" name="fmSegmentsEntries">
+<aui:form action="<%= deleteSegmentsEntryURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fmSegmentsEntries">
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 	<liferay-ui:error exception="<%= RequiredSegmentsEntryException.MustNotDeleteSegmentsEntryReferencedBySegmentsExperiences.class %>" message="the-segment-cannot-be-deleted-because-it-is-required-by-one-or-more-experiences" />
@@ -61,11 +61,10 @@ request.setAttribute("view.jsp-eventName", eventName);
 		>
 
 			<%
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"actions", segmentsDisplayContext.getAvailableActions(segmentsEntry)
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"actions", segmentsDisplayContext.getAvailableActions(segmentsEntry)
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text
@@ -150,20 +149,20 @@ request.setAttribute("view.jsp-eventName", eventName);
 		deleteSegmentsEntries: deleteSegmentsEntries,
 	};
 
-	Liferay.componentReady('segmentsEntriesManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
+	Liferay.componentReady('segmentsEntriesManagementToolbar').then(
+		(managementToolbar) => {
+			managementToolbar.on('actionItemClicked', (event) => {
+				var itemData = event.data.item.data;
 
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
+				if (itemData && itemData.action && ACTIONS[itemData.action]) {
+					ACTIONS[itemData.action]();
+				}
+			});
+		}
+	);
 </aui:script>
 
-<portlet:actionURL name="updateSegmentsEntrySiteRoles" var="updateSegmentsEntrySiteRolesURL">
+<portlet:actionURL name="/segments/update_segments_entry_site_roles" var="updateSegmentsEntrySiteRolesURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
@@ -172,13 +171,15 @@ request.setAttribute("view.jsp-eventName", eventName);
 	<aui:input name="siteRoleIds" type="hidden" />
 </aui:form>
 
-<aui:script require="metal-dom/src/all/dom as dom">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var form = document.getElementById(
 		'<portlet:namespace />updateSegmentsEntrySiteRolesFm'
 	);
 
-	dom.delegate(document, 'click', '.assign-site-roles-link', function (event) {
-		var link = dom.closest(event.target, '.assign-site-roles-link');
+	var delegate = delegateModule.default;
+
+	delegate(document, 'click', '.assign-site-roles-link', (event) => {
+		var link = event.target.closest('.assign-site-roles-link');
 
 		var itemSelectorURL = link.dataset.itemselectorurl;
 		var segmentsEntryId = link.dataset.segmentsentryid;

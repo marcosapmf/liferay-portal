@@ -18,6 +18,8 @@ import React from 'react';
 
 import KeyValue from '../../../src/main/resources/META-INF/resources/KeyValue/KeyValue.es';
 
+const globalLanguageDirection = Liferay.Language.direction;
+
 const spritemap = 'icons.svg';
 
 const KeyValueWithProvider = (props) => (
@@ -38,11 +40,17 @@ describe('KeyValue', () => {
 			}
 			originalWarn.call(console, ...args);
 		};
+
+		Liferay.Language.direction = {
+			en_US: 'rtl',
+		};
 	});
 
 	afterAll(() => {
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
+
+		Liferay.Language.direction = globalLanguageDirection;
 	});
 
 	afterEach(cleanup);
@@ -132,6 +140,20 @@ describe('KeyValue', () => {
 		expect(container).toMatchSnapshot();
 	});
 
+	it('hides keyword input', () => {
+		const {container} = render(
+			<KeyValueWithProvider
+				name="keyValue"
+				readOnly={true}
+				spritemap={spritemap}
+			/>
+		);
+
+		const keyValueInput = container.querySelectorAll('.key-value-input');
+
+		expect(keyValueInput.length).toBe(0);
+	});
+
 	it('is not required', () => {
 		const {container} = render(
 			<KeyValueWithProvider
@@ -195,5 +217,20 @@ describe('KeyValue', () => {
 		});
 
 		expect(container).toMatchSnapshot();
+	});
+
+	it('shows keyword input', () => {
+		const {container} = render(
+			<KeyValueWithProvider
+				name="keyValue"
+				readOnly={true}
+				showKeyword={true}
+				spritemap={spritemap}
+			/>
+		);
+
+		const keyValueInput = container.querySelectorAll('.key-value-input');
+
+		expect(keyValueInput.length).toBe(1);
 	});
 });

@@ -342,6 +342,7 @@ public abstract class BaseBlogPostingResourceTestCase {
 
 		BlogPosting randomPatchBlogPosting = randomPatchBlogPosting();
 
+		@SuppressWarnings("PMD.UnusedLocalVariable")
 		BlogPosting patchBlogPosting = blogPostingResource.patchBlogPosting(
 			postBlogPosting.getId(), randomPatchBlogPosting);
 
@@ -413,6 +414,13 @@ public abstract class BaseBlogPostingResourceTestCase {
 
 		return blogPostingResource.postSiteBlogPosting(
 			testGroup.getGroupId(), randomBlogPosting());
+	}
+
+	@Test
+	public void testGetBlogPostingRenderedContentByDisplayPageDisplayPageKey()
+		throws Exception {
+
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -1176,6 +1184,14 @@ public abstract class BaseBlogPostingResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("renderedContents", additionalAssertFieldName)) {
+				if (blogPosting.getRenderedContents() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"taxonomyCategoryBriefs", additionalAssertFieldName)) {
 
@@ -1563,6 +1579,17 @@ public abstract class BaseBlogPostingResourceTestCase {
 				if (!Objects.deepEquals(
 						blogPosting1.getRelatedContents(),
 						blogPosting2.getRelatedContents())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("renderedContents", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						blogPosting1.getRenderedContents(),
+						blogPosting2.getRenderedContents())) {
 
 					return false;
 				}
@@ -1972,6 +1999,11 @@ public abstract class BaseBlogPostingResourceTestCase {
 		}
 
 		if (entityFieldName.equals("relatedContents")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("renderedContents")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}

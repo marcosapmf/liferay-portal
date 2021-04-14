@@ -24,10 +24,11 @@ int userOAuth2AuthorizationsCount = OAuth2AuthorizationServiceUtil.getUserOAuth2
 
 <clay:management-toolbar
 	actionDropdownItems="<%= oAuth2ConnectedApplicationsManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	additionalProps="<%= oAuth2ConnectedApplicationsManagementToolbarDisplayContext.getAdditionalProps() %>"
 	disabled="<%= userOAuth2AuthorizationsCount == 0 %>"
 	filterDropdownItems="<%= oAuth2ConnectedApplicationsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= userOAuth2AuthorizationsCount %>"
-	namespace="<%= liferayPortletResponse.getNamespace() %>"
+	propsTransformer="connected_applications/js/OAuth2ConnectedApplicationsManagementToolbarPropsTransformer"
 	searchContainerId="oAuth2ConnectedApplicationsSearchContainer"
 	selectable="<%= true %>"
 	showSearch="<%= false %>"
@@ -68,7 +69,7 @@ int userOAuth2AuthorizationsCount = OAuth2AuthorizationServiceUtil.getUserOAuth2
 				/>
 
 				<portlet:renderURL var="viewURL">
-					<portlet:param name="mvcRenderCommandName" value="/connected_applications/view" />
+					<portlet:param name="mvcRenderCommandName" value="/oauth2_provider/view_connected_applications" />
 					<portlet:param name="oAuth2ApplicationId" value="<%= String.valueOf(oAuth2Authorization.getOAuth2ApplicationId()) %>" />
 					<portlet:param name="oAuth2AuthorizationId" value="<%= String.valueOf(oAuth2Authorization.getOAuth2AuthorizationId()) %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -102,24 +103,5 @@ int userOAuth2AuthorizationsCount = OAuth2AuthorizationServiceUtil.getUserOAuth2
 </clay:container-fluid>
 
 <script>
-	function <portlet:namespace />removeAccess() {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-remove-access-for-the-selected-entries") %>'
-			)
-		) {
-			var form = document.<portlet:namespace />fm;
-
-			Liferay.Util.postForm(form, {
-				data: {
-					oAuth2AuthorizationIds: Liferay.Util.listCheckedExcept(
-						form,
-						'<portlet:namespace />allRowIds'
-					),
-				},
-				url:
-					'<portlet:actionURL name="/connected_applications/revoke_oauth2_authorizations" />',
-			});
-		}
-	}
+	function <portlet:namespace />removeAccess() {}
 </script>

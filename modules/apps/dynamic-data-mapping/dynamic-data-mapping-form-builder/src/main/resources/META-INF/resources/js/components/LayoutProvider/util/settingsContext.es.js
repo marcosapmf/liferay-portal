@@ -14,30 +14,35 @@
 
 import {
 	PagesVisitor,
+	generateInstanceId,
 	normalizeFieldName,
 } from 'dynamic-data-mapping-form-renderer';
 
 import {getDefaultFieldName} from '../../../util/fieldSupport.es';
 import {updateFieldValidationProperty} from './fields.es';
 
-export const getSettingsContextProperty = (settingsContext, propertyName) => {
+export const getSettingsContextProperty = (
+	settingsContext,
+	propertyName,
+	propertyType = 'value'
+) => {
 	let propertyValue;
 	const visitor = new PagesVisitor(settingsContext.pages);
 
 	visitor.mapFields((field) => {
 		if (propertyName === field.fieldName) {
-			propertyValue = field.value;
+			propertyValue = field[propertyType];
 		}
 	});
 
 	return propertyValue;
 };
 
-export const updateSettingsContextProperty = (
-	editingLanguageId,
+export const setFieldReferenceErrorMessage = (
 	settingsContext,
 	propertyName,
-	propertyValue
+	displayErrors = true,
+	shouldUpdateValue = false
 ) => {
 	const visitor = new PagesVisitor(settingsContext.pages);
 
@@ -47,13 +52,59 @@ export const updateSettingsContextProperty = (
 			if (propertyName === field.fieldName) {
 				field = {
 					...field,
-					value: propertyValue,
+					displayErrors,
+					errorMessage: Liferay.Language.get(
+						'this-reference-is-already-being-used'
+					),
+					shouldUpdateValue,
+					valid: !displayErrors,
+				};
+			}
+
+			return field;
+		}),
+	};
+};
+
+export const updateSettingsContextProperty = (
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
+	editingLanguageId,
+	settingsContext,
+	propertyName,
+	propertyValue
+) => {
+	const visitor = new PagesVisitor(settingsContext.pages);
+	const isLocalizablePropertyValue = typeof propertyValue === 'object';
+	const isLocalizableLabel =
+		propertyName === 'label' && isLocalizablePropertyValue;
+
+	return {
+		...settingsContext,
+		pages: visitor.mapFields((field) => {
+			if (propertyName === field.fieldName) {
+				let value = propertyValue;
+
+				if (isLocalizableLabel) {
+					value =
+						propertyValue[editingLanguageId] ||
+						propertyValue[defaultLanguageId];
+				}
+
+				field = {
+					...field,
+					value,
 				};
 
 				if (field.localizable) {
+					if (isLocalizableLabel) {
+						field.localizedValue = {
+							...propertyValue,
+						};
+					}
+
 					field.localizedValue = {
 						...field.localizedValue,
-						[editingLanguageId]: propertyValue,
+						[editingLanguageId]: value,
 					};
 				}
 			}
@@ -63,7 +114,24 @@ export const updateSettingsContextProperty = (
 	};
 };
 
+export const updateSettingsContextInstanceId = ({settingsContext}) => {
+	const visitor = new PagesVisitor(settingsContext.pages);
+
+	return {
+		...settingsContext,
+		pages: visitor.mapFields((field) => {
+			const newField = {
+				...field,
+				instanceId: generateInstanceId(8),
+			};
+
+			return newField;
+		}),
+	};
+};
+
 export const updateFieldName = (
+	defaultLanguageId,
 	editingLanguageId,
 	fieldNameGenerator,
 	focusedField,
@@ -99,6 +167,7 @@ export const updateFieldName = (
 			fieldName: newFieldName,
 			name: newFieldName,
 			settingsContext: updateSettingsContextProperty(
+				defaultLanguageId,
 				editingLanguageId,
 				settingsContext,
 				'name',
@@ -110,7 +179,32 @@ export const updateFieldName = (
 	return focusedField;
 };
 
-export const updateFieldDataType = (editingLanguageId, focusedField, value) => {
+export const updateFieldReference = (
+	focusedField,
+	invalid = false,
+	shouldUpdateValue = false
+) => {
+	const {settingsContext} = focusedField;
+
+	focusedField = {
+		...focusedField,
+		settingsContext: setFieldReferenceErrorMessage(
+			settingsContext,
+			'fieldReference',
+			invalid,
+			shouldUpdateValue
+		),
+	};
+
+	return focusedField;
+};
+
+export const updateFieldDataType = (
+	defaultLanguageId,
+	editingLanguageId,
+	focusedField,
+	value
+) => {
 	let {settingsContext} = focusedField;
 
 	settingsContext = {
@@ -127,6 +221,7 @@ export const updateFieldDataType = (editingLanguageId, focusedField, value) => {
 		...focusedField,
 		dataType: value,
 		settingsContext: updateSettingsContextProperty(
+			defaultLanguageId,
 			editingLanguageId,
 			settingsContext,
 			'dataType',
@@ -144,12 +239,14 @@ export const updateFieldLabel = (
 	value
 ) => {
 	let {fieldName, settingsContext} = focusedField;
+	let label = value;
 
 	if (
 		generateFieldNameUsingFieldLabel &&
 		defaultLanguageId === editingLanguageId
 	) {
 		const updates = updateFieldName(
+			defaultLanguageId,
 			editingLanguageId,
 			fieldNameGenerator,
 			focusedField,
@@ -160,11 +257,16 @@ export const updateFieldLabel = (
 		settingsContext = updates.settingsContext;
 	}
 
+	if (typeof value === 'object') {
+		label = value[editingLanguageId] || value[defaultLanguageId];
+	}
+
 	return {
 		...focusedField,
 		fieldName,
-		label: value,
+		label,
 		settingsContext: updateSettingsContextProperty(
+			defaultLanguageId,
 			editingLanguageId,
 			settingsContext,
 			'label',
@@ -174,6 +276,7 @@ export const updateFieldLabel = (
 };
 
 export const updateFieldProperty = (
+	defaultLanguageId,
 	editingLanguageId,
 	focusedField,
 	propertyName,
@@ -183,6 +286,7 @@ export const updateFieldProperty = (
 		...focusedField,
 		[propertyName]: propertyValue,
 		settingsContext: updateSettingsContextProperty(
+			defaultLanguageId,
 			editingLanguageId,
 			focusedField.settingsContext,
 			propertyName,
@@ -191,13 +295,19 @@ export const updateFieldProperty = (
 	};
 };
 
-export const updateFieldOptions = (editingLanguageId, focusedField, value) => {
+export const updateFieldOptions = (
+	defaultLanguageId,
+	editingLanguageId,
+	focusedField,
+	value
+) => {
 	const options = value[editingLanguageId];
 
 	return {
 		...focusedField,
 		options,
 		settingsContext: updateSettingsContextProperty(
+			defaultLanguageId,
 			editingLanguageId,
 			focusedField.settingsContext,
 			'options',
@@ -220,7 +330,12 @@ export const updateField = (
 	if (propertyName === 'dataType') {
 		field = {
 			...field,
-			...updateFieldDataType(editingLanguageId, field, propertyValue),
+			...updateFieldDataType(
+				defaultLanguageId,
+				editingLanguageId,
+				field,
+				propertyValue
+			),
 		};
 	}
 	else if (propertyName === 'label') {
@@ -240,6 +355,7 @@ export const updateField = (
 		field = {
 			...field,
 			...updateFieldName(
+				defaultLanguageId,
 				editingLanguageId,
 				fieldNameGenerator,
 				field,
@@ -250,13 +366,19 @@ export const updateField = (
 	else if (propertyName === 'options') {
 		field = {
 			...field,
-			...updateFieldOptions(editingLanguageId, field, propertyValue),
+			...updateFieldOptions(
+				defaultLanguageId,
+				editingLanguageId,
+				field,
+				propertyValue
+			),
 		};
 	}
 	else {
 		field = {
 			...field,
 			...updateFieldProperty(
+				defaultLanguageId,
 				editingLanguageId,
 				field,
 				propertyName,

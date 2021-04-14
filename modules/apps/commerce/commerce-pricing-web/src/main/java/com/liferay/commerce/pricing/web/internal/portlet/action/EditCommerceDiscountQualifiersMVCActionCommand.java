@@ -40,7 +40,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommercePricingPortletKeys.COMMERCE_DISCOUNT,
-		"mvc.command.name=editCommerceDiscountQualifiers"
+		"mvc.command.name=/commerce_discount/edit_commerce_discount_qualifiers"
 	},
 	service = MVCActionCommand.class
 )
@@ -99,10 +99,12 @@ public class EditCommerceDiscountQualifiersMVCActionCommand
 			long commerceDiscountId)
 		throws Exception {
 
-		if (_commerceDiscountCommerceAccountGroupRelService.
+		int count =
+			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(
-					commerceDiscountId) == 0) {
+					commerceDiscountId);
 
+		if (count == 0) {
 			return;
 		}
 
@@ -114,9 +116,11 @@ public class EditCommerceDiscountQualifiersMVCActionCommand
 	private void _deleteCommerceDiscountAccountRels(long commerceDiscountId)
 		throws Exception {
 
-		if (_commerceDiscountAccountRelService.
-				getCommerceDiscountAccountRelsCount(commerceDiscountId) == 0) {
+		int count =
+			_commerceDiscountAccountRelService.
+				getCommerceDiscountAccountRelsCount(commerceDiscountId);
 
+		if (count == 0) {
 			return;
 		}
 

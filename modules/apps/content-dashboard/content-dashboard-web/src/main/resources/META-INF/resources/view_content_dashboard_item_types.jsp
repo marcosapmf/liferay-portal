@@ -23,7 +23,7 @@ ContentDashboardItemTypeItemSelectorViewDisplayContext contentDashboardItemTypeI
 %>
 
 <clay:management-toolbar
-	displayContext="<%= contentDashboardItemTypeItemSelectorViewManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= contentDashboardItemTypeItemSelectorViewManagementToolbarDisplayContext %>"
 />
 
 <clay:container-fluid>
@@ -39,19 +39,17 @@ ContentDashboardItemTypeItemSelectorViewDisplayContext contentDashboardItemTypeI
 			<%
 			InfoItemReference infoItemReference = contentDashboardItemType.getInfoItemReference();
 
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"className", infoItemReference.getClassName()
-			).put(
-				"classPK", infoItemReference.getClassPK()
-			).put(
-				"title", contentDashboardItemType.getFullLabel(locale)
-			).build();
-
-			row.setData(data);
+			row.setPrimaryKey(
+				HtmlUtil.toInputSafe(
+					JSONUtil.put(
+						"className", infoItemReference.getClassName()
+					).put(
+						"classPK", infoItemReference.getClassPK()
+					).toJSONString()));
 			%>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="name"
 				value="<%= contentDashboardItemType.getFullLabel(locale) %>"
 			/>
@@ -68,19 +66,16 @@ ContentDashboardItemTypeItemSelectorViewDisplayContext contentDashboardItemTypeI
 		'<portlet:namespace />contentDashboardItemTypes'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var allSelectedElements = event.elements.allSelectedElements;
 		var arr = [];
 
 		allSelectedElements.each(function () {
-			var row = this.ancestor('tr');
-
-			var data = row.getDOM().dataset;
+			var payload = JSON.parse(Liferay.Util.unescape(this.getDOM().value));
 
 			arr.push({
-				classPK: data.classpk,
-				className: data.classname,
-				title: data.title,
+				classPK: payload.classPK,
+				className: payload.className,
 			});
 		});
 

@@ -1,7 +1,7 @@
 dependencies {
 	testIntegrationCompile group: "com.fasterxml.jackson.core", name: "jackson-annotations", version: "2.10.3"
 	testIntegrationCompile group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.10.3"
-	testIntegrationCompile group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.10.3"
+	testIntegrationCompile group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.10.5.1"
 	testIntegrationCompile group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	testIntegrationCompile group: "commons-beanutils", name: "commons-beanutils", version: "1.9.4"
 	testIntegrationCompile group: "commons-lang", name: "commons-lang", version: "2.6"
@@ -19,11 +19,14 @@ dependencies {
 	testIntegrationCompile project(":apps:journal:journal-api")
 	testIntegrationCompile project(":apps:journal:journal-test-util")
 	testIntegrationCompile project(":apps:knowledge-base:knowledge-base-api")
+	testIntegrationCompile project(":apps:layout:layout-api")
+	testIntegrationCompile project(":apps:layout:layout-page-template-api")
 	testIntegrationCompile project(":apps:message-boards:message-boards-api")
 	testIntegrationCompile project(":apps:message-boards:message-boards-test-util")
 	testIntegrationCompile project(":apps:portal-odata:portal-odata-api")
 	testIntegrationCompile project(":apps:portal-search:portal-search-test-util")
 	testIntegrationCompile project(":apps:portal-vulcan:portal-vulcan-api")
+	testIntegrationCompile project(":apps:segments:segments-api")
 	testIntegrationCompile project(":apps:wiki:wiki-api")
 	testIntegrationCompile project(":core:petra:petra-function")
 	testIntegrationCompile project(":core:petra:petra-string")

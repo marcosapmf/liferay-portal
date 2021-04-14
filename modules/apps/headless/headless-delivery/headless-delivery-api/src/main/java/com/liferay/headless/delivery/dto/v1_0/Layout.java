@@ -28,6 +28,8 @@ import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -47,13 +49,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("Layout")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Layout")
-public class Layout {
+public class Layout implements Serializable {
 
 	public static Layout toDTO(String json) {
 		return ObjectMapperUtil.readValue(Layout.class, json);
 	}
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public Align getAlign() {
 		return align;
@@ -90,7 +92,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Align align;
 
-	@Schema
+	@Schema(deprecated = true)
 	public String getBorderColor() {
 		return borderColor;
 	}
@@ -119,7 +121,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String borderColor;
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public BorderRadius getBorderRadius() {
 		return borderRadius;
@@ -158,7 +160,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected BorderRadius borderRadius;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getBorderWidth() {
 		return borderWidth;
 	}
@@ -225,7 +227,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ContainerType containerType;
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public ContentDisplay getContentDisplay() {
 		return contentDisplay;
@@ -265,7 +267,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ContentDisplay contentDisplay;
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public Justify getJustify() {
 		return justify;
@@ -304,7 +306,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Justify justify;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getMarginBottom() {
 		return marginBottom;
 	}
@@ -333,7 +335,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer marginBottom;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getMarginLeft() {
 		return marginLeft;
 	}
@@ -362,7 +364,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer marginLeft;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getMarginRight() {
 		return marginRight;
 	}
@@ -391,7 +393,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer marginRight;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getMarginTop() {
 		return marginTop;
 	}
@@ -420,7 +422,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer marginTop;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getOpacity() {
 		return opacity;
 	}
@@ -449,7 +451,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer opacity;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getPaddingBottom() {
 		return paddingBottom;
 	}
@@ -478,7 +480,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer paddingBottom;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getPaddingHorizontal() {
 		return paddingHorizontal;
 	}
@@ -507,7 +509,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer paddingHorizontal;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getPaddingLeft() {
 		return paddingLeft;
 	}
@@ -536,7 +538,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer paddingLeft;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getPaddingRight() {
 		return paddingRight;
 	}
@@ -565,7 +567,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer paddingRight;
 
-	@Schema
+	@Schema(deprecated = true)
 	public Integer getPaddingTop() {
 		return paddingTop;
 	}
@@ -594,7 +596,7 @@ public class Layout {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer paddingTop;
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public Shadow getShadow() {
 		return shadow;

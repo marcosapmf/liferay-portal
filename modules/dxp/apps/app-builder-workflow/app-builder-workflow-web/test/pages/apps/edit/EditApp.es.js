@@ -42,7 +42,6 @@ const app = {
 const appContextMock = {
 	baseResourceUrl: '',
 	namespace: '',
-	showTranslationManager: true,
 };
 
 const customObjectItems = {
@@ -50,6 +49,7 @@ const customObjectItems = {
 		{
 			availableLanguageIds: ['en_US', 'pt_BR'],
 			contentType: 'app-builder',
+			dataDefinitionFields: [{name: 'Text1', required: false}],
 			dataDefinitionKey: '37496',
 			dateCreated: '2020-06-05T13:43:16Z',
 			dateModified: '2020-06-05T13:44:08Z',
@@ -61,6 +61,8 @@ const customObjectItems = {
 		},
 	],
 };
+
+const nativeObjectItems = {items: []};
 
 const formViewItems = {
 	items: [
@@ -237,17 +239,21 @@ const mockGetItem = jest
 	.fn()
 	.mockResolvedValueOnce(roleItems)
 	.mockResolvedValueOnce(customObjectItems)
+	.mockResolvedValueOnce(nativeObjectItems)
 	.mockResolvedValueOnce(customObjectItems)
+	.mockResolvedValueOnce(nativeObjectItems)
 	.mockResolvedValueOnce(formViewItems)
 	.mockResolvedValueOnce(tableViewItems)
 	.mockResolvedValueOnce(roleItems)
 	.mockResolvedValueOnce(customObjectItems)
+	.mockResolvedValueOnce(nativeObjectItems)
 	.mockResolvedValueOnce(app)
 	.mockResolvedValueOnce(workflow)
 	.mockResolvedValueOnce(customObjectItems.items[0])
 	.mockResolvedValueOnce(formViewItems)
 	.mockResolvedValueOnce(tableViewItems)
 	.mockResolvedValueOnce(customObjectItems)
+	.mockResolvedValueOnce(nativeObjectItems)
 	.mockResolvedValueOnce(formViewItems)
 	.mockResolvedValueOnce(tableViewItems)
 	.mockResolvedValueOnce(formViewItems);
@@ -260,12 +266,12 @@ jest.mock('frontend-js-web', () => ({
 	fetch: () => mockFetch(),
 }));
 
-jest.mock('app-builder-web/js/utils/client.es', () => ({
+jest.mock('data-engine-js-components-web/js/utils/client.es', () => ({
 	getItem: () => mockGetItem(),
 	parseResponse: (response) => response,
 }));
 
-jest.mock('app-builder-web/js/utils/toast.es', () => ({
+jest.mock('data-engine-js-components-web/js/utils/toast.es', () => ({
 	__esModule: true,
 	errorToast: (message) => mockToast(message),
 	successToast: (message) => mockToast(message),

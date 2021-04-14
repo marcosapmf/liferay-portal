@@ -21,7 +21,6 @@ import React from 'react';
 import {EVENT_TYPES} from '../../actions/eventTypes.es';
 import {useForm} from '../../hooks/useForm.es';
 import {usePage} from '../../hooks/usePage.es';
-import {Placeholder} from './DefaultVariant.es';
 
 /* eslint-disable react/jsx-fragments */
 export const Container = ({children, empty, page, pageIndex, pages}) => {
@@ -186,68 +185,4 @@ export const Container = ({children, empty, page, pageIndex, pages}) => {
 	);
 };
 
-export const Page = ({
-	children,
-	editable,
-	empty,
-	header: Header,
-	pageIndex,
-}) => (
-	<div
-		className="active ddm-form-page lfr-ddm-form-page"
-		data-ddm-page={pageIndex}
-	>
-		{Header}
-
-		{empty && editable ? (
-			<ClayLayout.Row>
-				<ClayLayout.Col
-					className="col-ddm col-empty last-col lfr-initial-col mb-4 mt-5"
-					data-ddm-field-column="0"
-					data-ddm-field-page={pageIndex}
-					data-ddm-field-row="0"
-				>
-					<div className="ddm-empty-page ddm-target">
-						<p className="ddm-empty-page-message">
-							{Liferay.Language.get(
-								'drag-fields-from-the-sidebar-to-compose-your-form'
-							)}
-						</p>
-					</div>
-				</ClayLayout.Col>
-			</ClayLayout.Row>
-		) : (
-			children
-		)}
-	</div>
-);
-
-export const Rows = ({children, editable, pageIndex, rows}) => {
-	if (!rows) {
-		return null;
-	}
-
-	return rows.map((row, index) => (
-		<div key={index}>
-			{index === 0 && editable && (
-				<Placeholder
-					isRow
-					pageIndex={pageIndex}
-					rowIndex={0}
-					size={12}
-				/>
-			)}
-
-			{children({index, row})}
-
-			{editable && (
-				<Placeholder
-					isRow
-					pageIndex={pageIndex}
-					rowIndex={index + 1}
-					size={12}
-				/>
-			)}
-		</div>
-	));
-};
+Container.displayName = 'MultiPagesVariant.Container';

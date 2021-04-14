@@ -19,7 +19,6 @@
 <%
 String title = LocalizationUtil.getPreferencesValue(portletPreferences, "title", themeDisplay.getLanguageId());
 String description = LocalizationUtil.getPreferencesValue(portletPreferences, "description", themeDisplay.getLanguageId());
-boolean requireCaptcha = GetterUtil.getBoolean(portletPreferences.getValue("requireCaptcha", StringPool.BLANK));
 String successURL = portletPreferences.getValue("successURL", StringPool.BLANK);
 %>
 
@@ -53,6 +52,7 @@ String successURL = portletPreferences.getValue("successURL", StringPool.BLANK);
 		String fieldName = "field" + i;
 		String fieldLabel = LocalizationUtil.getPreferencesValue(portletPreferences, "fieldLabel" + i, themeDisplay.getLanguageId());
 		boolean fieldOptional = PrefsParamUtil.getBoolean(portletPreferences, request, "fieldOptional" + i, false);
+
 		String fieldValue = ParamUtil.getString(request, fieldName);
 
 		while ((i == 1) || Validator.isNotNull(fieldLabel)) {
@@ -134,7 +134,7 @@ String successURL = portletPreferences.getValue("successURL", StringPool.BLANK);
 		}
 		%>
 
-		<c:if test="<%= requireCaptcha %>">
+		<c:if test='<%= GetterUtil.getBoolean(portletPreferences.getValue("requireCaptcha", StringPool.BLANK)) %>'>
 			<liferay-captcha:captcha />
 		</c:if>
 

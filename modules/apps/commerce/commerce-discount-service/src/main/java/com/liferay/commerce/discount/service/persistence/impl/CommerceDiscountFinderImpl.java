@@ -49,6 +49,9 @@ public class CommerceDiscountFinderImpl
 		CommerceDiscountFinder.class.getName() +
 			".countByCommercePricingClassId";
 
+	public static final String COUNT_BY_VALID_DISCOUNT =
+		CommerceDiscountFinder.class.getName() + ".countByValidDiscount";
+
 	public static final String FIND_BY_COMMERCE_PRICING_CLASS_ID =
 		CommerceDiscountFinder.class.getName() +
 			".findByCommercePricingClassId";
@@ -171,6 +174,64 @@ public class CommerceDiscountFinderImpl
 	}
 
 	@Override
+	public int countByValidCommerceDiscount(
+		long commerceAccountId, long[] commerceAccountGroupIds,
+		long commerceChannelId, long commerceDiscountId) {
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = _customSQL.get(getClass(), COUNT_BY_VALID_DISCOUNT);
+
+			if ((commerceAccountGroupIds != null) &&
+				(commerceAccountGroupIds.length > 0)) {
+
+				sql = replaceQueryClassPKs(
+					sql, "[$ACCOUNT_GROUP_IDS$]", commerceAccountGroupIds);
+			}
+			else {
+				sql = replaceQueryClassPKs(
+					sql, "[$ACCOUNT_GROUP_IDS$]", new long[] {0});
+			}
+
+			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
+
+			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
+
+			QueryPos queryPos = QueryPos.getInstance(sqlQuery);
+
+			queryPos.add(
+				PortalUtil.getClassNameId(CommerceDiscount.class.getName()));
+			queryPos.add(commerceDiscountId);
+			queryPos.add(commerceAccountId);
+			queryPos.add(commerceChannelId);
+			queryPos.add(commerceAccountId);
+			queryPos.add(commerceChannelId);
+			queryPos.add(commerceChannelId);
+
+			Iterator<Long> iterator = sqlQuery.iterate();
+
+			if (iterator.hasNext()) {
+				Long count = iterator.next();
+
+				if (count != null) {
+					return count.intValue();
+				}
+			}
+
+			return 0;
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	@Override
 	public List<CommerceDiscount> findByCommercePricingClassId(
 		long commercePricingClassId, String title, int start, int end) {
 
@@ -265,7 +326,7 @@ public class CommerceDiscountFinderImpl
 		long[] commercePricingClassIds) {
 
 		return _findProductDiscount(
-			FIND_BY_A_C_C_PRODUCT, null, commerceAccountId, null, null,
+			FIND_BY_A_C_C_PRODUCT, null, commerceAccountId, null, -1L,
 			cpDefinitionId, assetCategoryIds, commercePricingClassIds);
 	}
 
@@ -274,7 +335,7 @@ public class CommerceDiscountFinderImpl
 		long commerceAccountId, String commerceDiscountTargetType) {
 
 		return _findOrderDiscounts(
-			FIND_BY_A_C_C_ORDER, null, commerceAccountId, null, null,
+			FIND_BY_A_C_C_ORDER, null, commerceAccountId, null, -1L,
 			commerceDiscountTargetType);
 	}
 
@@ -284,7 +345,7 @@ public class CommerceDiscountFinderImpl
 		long[] assetCategoryIds, long[] commercePricingClassIds) {
 
 		return _findProductDiscount(
-			FIND_BY_AG_C_C_PRODUCT, null, null, commerceAccountGroupIds, null,
+			FIND_BY_AG_C_C_PRODUCT, null, null, commerceAccountGroupIds, -1L,
 			cpDefinitionId, assetCategoryIds, commercePricingClassIds);
 	}
 
@@ -293,7 +354,7 @@ public class CommerceDiscountFinderImpl
 		long[] commerceAccountGroupIds, String commerceDiscountTargetType) {
 
 		return _findOrderDiscounts(
-			FIND_BY_AG_C_C_ORDER, null, null, commerceAccountGroupIds, null,
+			FIND_BY_AG_C_C_ORDER, null, null, commerceAccountGroupIds, -1L,
 			commerceDiscountTargetType);
 	}
 
@@ -592,7 +653,7 @@ public class CommerceDiscountFinderImpl
 			queryPos.add(commerceAccountId);
 		}
 
-		if (commerceChannelId != null) {
+		if ((commerceChannelId != null) && (commerceChannelId > -1)) {
 			queryPos.add(commerceChannelId);
 		}
 

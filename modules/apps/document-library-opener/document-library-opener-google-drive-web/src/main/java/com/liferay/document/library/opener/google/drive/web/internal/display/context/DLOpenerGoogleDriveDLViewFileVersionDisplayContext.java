@@ -135,7 +135,7 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 	}
 
 	/**
-	 * @see com.liferay.frontend.image.editor.integration.document.library.internal.display.context.ImageEditorDLViewFileVersionDisplayContext#_addEditWithImageEditorUIItem
+	 * @see com.liferay.sharing.document.library.internal.display.context.SharingDLViewFileVersionDisplayContext#_addSharingUIItem(List, BaseUIItem)
 	 */
 	private <T extends BaseUIItem> List<T> _addEditInGoogleDocsUIItem(
 		List<T> uiItems, T editInGoogleDocsUIItem) {
@@ -165,6 +165,7 @@ public class DLOpenerGoogleDriveDLViewFileVersionDisplayContext
 
 		URLMenuItem urlMenuItem = new URLMenuItem();
 
+		urlMenuItem.setKey("#edit-in-google-drive");
 		urlMenuItem.setLabel(LanguageUtil.get(_resourceBundle, _getLabelKey()));
 		urlMenuItem.setMethod(HttpMethods.POST);
 		urlMenuItem.setURL(_getActionURL(cmd));

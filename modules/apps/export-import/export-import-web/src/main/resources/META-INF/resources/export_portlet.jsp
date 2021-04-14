@@ -21,7 +21,7 @@ String tabs3 = ParamUtil.getString(request, "tabs3", "new-export-process");
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
-portletURL.setParameter("mvcRenderCommandName", "exportImport");
+portletURL.setParameter("mvcRenderCommandName", "/export_import/export_import");
 portletURL.setParameter("portletResource", portletResource);
 %>
 
@@ -35,7 +35,7 @@ portletURL.setParameter("portletResource", portletResource);
 					navigationItem -> {
 						navigationItem.setActive(tabs3.equals("new-export-process"));
 						navigationItem.setHref(portletURL.toString());
-						navigationItem.setLabel(LanguageUtil.get(request, "new-export-process"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "new-export-process"));
 					});
 
 				portletURL.setParameter("tabs3", "current-and-previous");
@@ -44,7 +44,7 @@ portletURL.setParameter("portletResource", portletResource);
 					navigationItem -> {
 						navigationItem.setActive(tabs3.equals("current-and-previous"));
 						navigationItem.setHref(portletURL.toString());
-						navigationItem.setLabel(LanguageUtil.get(request, "current-and-previous"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "current-and-previous"));
 					});
 			}
 		}
@@ -64,12 +64,12 @@ portletURL.setParameter("portletResource", portletResource);
 			</liferay-util:include>
 		</div>
 
-		<portlet:actionURL name="exportImport" var="exportURL">
-			<portlet:param name="mvcRenderCommandName" value="exportImport" />
+		<portlet:actionURL name="/export_import/export_import" var="exportURL">
+			<portlet:param name="mvcRenderCommandName" value="/export_import/export_import" />
 		</portlet:actionURL>
 
 		<liferay-portlet:renderURL var="redirectURL">
-			<portlet:param name="mvcRenderCommandName" value="exportImport" />
+			<portlet:param name="mvcRenderCommandName" value="/export_import/export_import" />
 			<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.EXPORT %>" />
 			<portlet:param name="tabs2" value="export" />
 			<portlet:param name="tabs3" value="current-and-previous" />
@@ -138,13 +138,17 @@ portletURL.setParameter("portletResource", portletResource);
 													<li>
 														<span class="selected-labels" id="<portlet:namespace />selectedConfiguration_<%= selPortlet.getRootPortletId() %>"></span>
 
-														<%
-														Map<String, Object> data = HashMapBuilder.<String, Object>put(
-															"portletid", selPortlet.getRootPortletId()
-														).build();
-														%>
-
-														<aui:a cssClass="configuration-link modify-link" data="<%= data %>" href="javascript:;" label="change" method="get" />
+														<aui:a
+															cssClass="configuration-link modify-link"
+															data='<%=
+																HashMapBuilder.<String, Object>put(
+																	"portletid", selPortlet.getRootPortletId()
+																).build()
+															%>'
+															href="javascript:;"
+															label="change"
+															method="get"
+														/>
 													</li>
 												</ul>
 
@@ -185,20 +189,20 @@ portletURL.setParameter("portletResource", portletResource);
 									<ul class="lfr-tree list-unstyled select-options">
 										<li class="tree-item">
 											<div id="<portlet:namespace />range">
-												<div class="flex-container">
-													<div class="flex-item-center range-options">
+												<div class="align-items-center d-flex flex-wrap">
+													<div class="range-options">
 														<aui:input checked="<%= true %>" data-name='<%= LanguageUtil.get(request, "all") %>' id="rangeAll" label="all" name="range" type="radio" value="all" />
 													</div>
 
-													<div class="flex-item-center range-options">
+													<div class="range-options">
 														<aui:input data-name='<%= LanguageUtil.get(request, "date-range") %>' helpMessage="export-date-range-help" id="rangeDateRange" label="date-range" name="range" type="radio" value="dateRange" />
 													</div>
 
-													<div class="flex-item-center range-options">
+													<div class="range-options">
 														<aui:input id="rangeLast" label='<%= LanguageUtil.get(request, "last") + StringPool.TRIPLE_PERIOD %>' name="range" type="radio" value="last" />
 													</div>
 
-													<div class="flex-item-center range-options">
+													<div class="range-options">
 														<liferay-ui:icon
 															icon="reload"
 															markupView="lexicon"
@@ -228,7 +232,7 @@ portletURL.setParameter("portletResource", portletResource);
 												%>
 
 												<ul class="date-range-options hide list-unstyled" id="<portlet:namespace />startEndDate">
-													<li class="flex-container">
+													<li class="d-flex flex-wrap">
 														<aui:fieldset label="start-date">
 															<liferay-ui:input-date
 																cssClass="form-group form-group-inline"
@@ -328,10 +332,9 @@ portletURL.setParameter("portletResource", portletResource);
 														<%
 														PortletDataHandlerControl[] exportControls = portletDataHandler.getExportControls();
 														PortletDataHandlerControl[] metadataControls = portletDataHandler.getExportMetadataControls();
-
-														if (ArrayUtil.isNotEmpty(exportControls) || ArrayUtil.isNotEmpty(metadataControls)) {
 														%>
 
+														<c:if test="<%= ArrayUtil.isNotEmpty(exportControls) || ArrayUtil.isNotEmpty(metadataControls) %>">
 															<div class="hide" id="<portlet:namespace />content_<%= selPortlet.getRootPortletId() %>">
 																<ul class="lfr-tree list-unstyled">
 																	<li class="tree-item">
@@ -361,19 +364,22 @@ portletURL.setParameter("portletResource", portletResource);
 																					PortletDataHandlerBoolean control = (PortletDataHandlerBoolean)metadataControl;
 
 																					PortletDataHandlerControl[] childrenControls = control.getChildren();
-
-																					if (ArrayUtil.isNotEmpty(childrenControls)) {
-																						request.setAttribute("render_controls.jsp-controls", childrenControls);
 																				%>
+
+																					<c:if test="<%= ArrayUtil.isNotEmpty(childrenControls) %>">
+
+																						<%
+																						request.setAttribute("render_controls.jsp-controls", childrenControls);
+																						%>
 
 																						<aui:field-wrapper label="content-metadata">
 																							<ul class="lfr-tree list-unstyled">
 																								<liferay-util:include page="/render_controls.jsp" servletContext="<%= application %>" />
 																							</ul>
 																						</aui:field-wrapper>
+																					</c:if>
 
 																				<%
-																					}
 																				}
 																				%>
 
@@ -387,13 +393,18 @@ portletURL.setParameter("portletResource", portletResource);
 																<li>
 																	<span class="selected-labels" id="<portlet:namespace />selectedContent_<%= selPortlet.getRootPortletId() %>"></span>
 
-																	<%
-																	Map<String, Object> data = HashMapBuilder.<String, Object>put(
-																		"portletid", selPortlet.getRootPortletId()
-																	).build();
-																	%>
-
-																	<aui:a cssClass="content-link modify-link" data="<%= data %>" href="javascript:;" id='<%= "contentLink_" + selPortlet.getRootPortletId() %>' label="change" method="get" />
+																	<aui:a
+																		cssClass="content-link modify-link"
+																		data='<%=
+																			HashMapBuilder.<String, Object>put(
+																				"portletid", selPortlet.getRootPortletId()
+																			).build()
+																		%>'
+																		href="javascript:;"
+																		id='<%= "contentLink_" + selPortlet.getRootPortletId() %>'
+																		label="change"
+																		method="get"
+																	/>
 																</li>
 															</ul>
 
@@ -403,11 +414,7 @@ portletURL.setParameter("portletResource", portletResource);
 																	'<portlet:namespace />showChangeContent<%= StringPool.UNDERLINE + selPortlet.getRootPortletId() %>'
 																);
 															</aui:script>
-
-														<%
-														}
-														%>
-
+														</c:if>
 													</li>
 												</ul>
 
@@ -465,7 +472,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 			var form = liferayForm.formNode;
 
-			form.on('submit', function (event) {
+			form.on('submit', (event) => {
 				event.halt();
 
 				var exportImport = Liferay.component(
@@ -529,7 +536,7 @@ portletURL.setParameter("portletResource", portletResource);
 </c:choose>
 
 <aui:script use="liferay-export-import-export-import">
-	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="exportImport" var="exportProcessesURL">
+	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/export_import/export_import" var="exportProcessesURL">
 		<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.EXPORT %>" />
 		<portlet:param name="tabs2" value="export" />
 		<portlet:param name="<%= SearchContainer.DEFAULT_CUR_PARAM %>" value="<%= ParamUtil.getString(request, SearchContainer.DEFAULT_CUR_PARAM) %>" />
@@ -558,7 +565,7 @@ portletURL.setParameter("portletResource", portletResource);
 
 	Liferay.component('<portlet:namespace />ExportImportComponent', exportImport);
 
-	Liferay.once('destroyPortlet', function () {
+	Liferay.once('destroyPortlet', () => {
 		exportImport.destroy();
 	});
 </aui:script>

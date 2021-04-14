@@ -5,6 +5,7 @@ definition {
 	property portal.upstream = "true";
 	property testray.component.names = "Wiki";
 	property testray.main.component.name = "Workflow";
+
 	var pageName = "Wiki Page";
 	var portletName = "Wiki";
 	var workflowAssetType = "Wiki Page";
@@ -62,7 +63,8 @@ definition {
 
 	@priority = "5"
 	test ApproveFrontPageUserEdit {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.upstream = "quarantine";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
@@ -158,7 +160,6 @@ definition {
 
 	@priority = "4"
 	test RejectFrontPageUserEdit {
-
 		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",

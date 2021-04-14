@@ -27,6 +27,7 @@ groups.addAll(userDisplayContext.getInheritedSiteGroups());
 List<Organization> organizations = userDisplayContext.getOrganizations();
 
 Long[] organizationIds = UsersAdminUtil.getOrganizationIds(organizations);
+
 List<Role> roles = userDisplayContext.getRoles();
 List<UserGroupRole> organizationRoles = userDisplayContext.getOrganizationRoles();
 List<UserGroupRole> siteRoles = userDisplayContext.getSiteRoles();
@@ -110,7 +111,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			modelVar="role"
 		>
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="title"
 			>
 				<liferay-ui:icon
@@ -139,7 +140,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			);
 
 			if (selectRegularRoleLink) {
-				selectRegularRoleLink.addEventListener('click', function (event) {
+				selectRegularRoleLink.addEventListener('click', (event) => {
 					var searchContainerName = '<portlet:namespace />rolesSearchContainer';
 
 					var searchContainer = Liferay.SearchContainer.get(searchContainerName);
@@ -283,7 +284,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				modelVar="userGroupRole"
 			>
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 				>
 					<liferay-ui:icon
@@ -294,7 +295,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="organization"
 					value="<%= HtmlUtil.escape(userGroupRole.getGroup().getDescriptiveName(locale)) %>"
 				/>
@@ -341,7 +342,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 				searchContainerContentBox.delegate(
 					'click',
-					function (event) {
+					(event) => {
 						var link = event.currentTarget;
 						var tr = link.ancestor('tr');
 
@@ -384,7 +385,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			);
 
 			if (selectOrganizationRoleLink) {
-				selectOrganizationRoleLink.addEventListener('click', function (event) {
+				selectOrganizationRoleLink.addEventListener('click', (event) => {
 					var searchContainerName =
 						'<portlet:namespace />organizationRolesSearchContainer';
 
@@ -483,7 +484,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				modelVar="userGroupRole"
 			>
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 				>
 					<liferay-ui:icon
@@ -494,7 +495,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="site"
 				>
 					<liferay-staging:descriptive-name
@@ -543,7 +544,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 				searchContainerContentBox.delegate(
 					'click',
-					function (event) {
+					(event) => {
 						var link = event.currentTarget;
 						var tr = link.ancestor('tr');
 
@@ -576,7 +577,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 					'.modify-link'
 				);
 
-				A.one('#<portlet:namespace />selectSiteRoleLink').on('click', function (event) {
+				A.one('#<portlet:namespace />selectSiteRoleLink').on('click', (event) => {
 					var searchContainerName = '<portlet:namespace />siteRolesSearchContainer';
 
 					var searchContainer = Liferay.SearchContainer.get(searchContainerName);
@@ -609,7 +610,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 							uri: '<%= selectSiteRoleURL.toString() %>',
 						},
-						function (event) {
+						(event) => {
 							<portlet:namespace />selectRole(
 								event.entityid,
 								event.entityname,
@@ -646,7 +647,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				modelVar="userGroupGroupRole"
 			>
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 				>
 					<liferay-ui:icon
@@ -657,7 +658,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="site"
 				>
 					<liferay-staging:descriptive-name
@@ -666,7 +667,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="user-group"
 					value="<%= HtmlUtil.escape(userGroupGroupRole.getUserGroup().getName()) %>"
 				/>
@@ -739,7 +740,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 						.get('contentBox')
 						.all('.modify-link')
 						.getData()
-						.map(function (data) {
+						.map((data) => {
 							return data.groupid + '-' + data.rowid;
 						})
 				);
@@ -850,7 +851,7 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 
 			searchContainerContentBox.delegate(
 				'click',
-				function (event) {
+				(event) => {
 					var link = event.currentTarget;
 
 					var rowId = link.attr('data-rowId');

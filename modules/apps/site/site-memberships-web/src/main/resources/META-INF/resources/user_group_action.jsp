@@ -86,13 +86,13 @@ UserGroup userGroup = (UserGroup)row.getObject();
 	</c:if>
 </liferay-ui:icon-menu>
 
-<aui:script require="metal-dom/src/dom as dom">
+<aui:script sandbox="<%= true %>">
 	var assignRolesLink = document.getElementById(
 		'<portlet:namespace /><%= row.getRowId() %>assignRoles'
 	);
 
 	if (assignRolesLink) {
-		assignRolesLink.addEventListener('click', function (event) {
+		assignRolesLink.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			var target = event.target;
@@ -113,12 +113,12 @@ UserGroup userGroup = (UserGroup)row.getObject();
 				multiple: true,
 				onSelect: function (selectedItems) {
 					if (selectedItems) {
-						Array.prototype.forEach.call(selectedItems, function (
-							selectedItem,
-							index
-						) {
-							dom.append(addUserGroupGroupRoleFm, selectedItem);
-						});
+						Array.prototype.forEach.call(
+							selectedItems,
+							(selectedItem, index) => {
+								addUserGroupGroupRoleFm.append(selectedItem);
+							}
+						);
 
 						submitForm(addUserGroupGroupRoleFm);
 					}
@@ -135,7 +135,7 @@ UserGroup userGroup = (UserGroup)row.getObject();
 	);
 
 	if (unassignRolesLink) {
-		unassignRolesLink.addEventListener('click', function (event) {
+		unassignRolesLink.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			var target = event.target;
@@ -156,12 +156,12 @@ UserGroup userGroup = (UserGroup)row.getObject();
 				multiple: true,
 				onSelect: function (selectedItems) {
 					if (selectedItems) {
-						Array.prototype.forEach.call(selectedItems, function (
-							selectedItem,
-							index
-						) {
-							dom.append(unassignUserGroupGroupRoleFm, selectedItem);
-						});
+						Array.prototype.forEach.call(
+							selectedItems,
+							(selectedItem, index) => {
+								unassignUserGroupGroupRoleFm.append(selectedItem);
+							}
+						);
 
 						submitForm(unassignUserGroupGroupRoleFm);
 					}

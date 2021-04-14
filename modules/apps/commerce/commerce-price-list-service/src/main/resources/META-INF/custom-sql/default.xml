@@ -8,14 +8,14 @@
 			FROM
 				CommercePriceListAccountRel
 			JOIN
+				AccountEntry ON
+					CommercePriceListAccountRel.commerceAccountId = AccountEntry.accountEntryId
+			JOIN
 				CommercePriceList ON
 					CommercePriceListAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
-			JOIN
-				CommerceAccount ON
-					CommercePriceListAccountRel.commerceAccountId = CommerceAccount.commerceAccountId
 			WHERE
 				(CommercePriceList.commercePriceListId = ?) AND
-				(LOWER(CommerceAccount.name) LIKE ? [$AND_OR_NULL_CHECK$])
+				(LOWER(AccountEntry.name) LIKE ? [$AND_OR_NULL_CHECK$])
 		]]>
 	</sql>
 	<sql id="com.liferay.commerce.price.list.service.persistence.CommercePriceListAccountRelFinder.findByCommercePriceListId">
@@ -25,14 +25,14 @@
 			FROM
 				CommercePriceListAccountRel
 			JOIN
+				AccountEntry ON
+					CommercePriceListAccountRel.commerceAccountId = AccountEntry.accountEntryId
+			JOIN
 				CommercePriceList ON
 					CommercePriceListAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
-			JOIN
-				CommerceAccount ON
-					CommercePriceListAccountRel.commerceAccountId = CommerceAccount.commerceAccountId
 			WHERE
 				(CommercePriceList.commercePriceListId = ?) AND
-				(LOWER(CommerceAccount.name) LIKE ? [$AND_OR_NULL_CHECK$])
+				(LOWER(AccountEntry.name) LIKE ? [$AND_OR_NULL_CHECK$])
 		]]>
 	</sql>
 	<sql id="com.liferay.commerce.price.list.service.persistence.CommercePriceListChannelRelFinder.countByCommercePriceListId">
@@ -167,8 +167,12 @@
 			INNER JOIN
 				CommercePriceList ON
 					CommercePriceListAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
+			LEFT JOIN
+				CommercePriceListChannelRel ON
+					CommercePriceListAccountRel.commercePriceListId = CommercePriceListChannelRel.commercePriceListId
 			WHERE
 				(CommercePriceListAccountRel.commerceAccountId = ?) AND
+				(CommercePriceListChannelRel.commercePriceListChannelRelId IS NULL) AND
 				(CommercePriceList.groupId = ?) AND
 				(CommercePriceList.type_ = ?) AND
 				(CommercePriceList.status = 0)
@@ -235,8 +239,12 @@
 			INNER JOIN
 				CommercePriceList ON
 					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
+			LEFT JOIN
+				CommercePriceListChannelRel ON
+					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceListChannelRel.commercePriceListId
 			WHERE
 				(CPLCommerceGroupAccountRel.commerceAccountGroupId IN ([$ACCOUNT_GROUP_IDS$])) AND
+				(CommercePriceListChannelRel.commercePriceListChannelRelId IS NULL) AND
 				(CommercePriceList.groupId = ?) AND
 				(CommercePriceList.type_ = ?) AND
 				(CommercePriceList.status = 0)
@@ -275,8 +283,16 @@
 			INNER JOIN
 				CommercePriceList ON
 					CommercePriceListChannelRel.commercePriceListId = CommercePriceList.commercePriceListId
+			LEFT JOIN
+				CommercePriceListAccountRel ON
+					CommercePriceListAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
+			LEFT JOIN
+				CPLCommerceGroupAccountRel ON
+					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
 			WHERE
 				(CommercePriceListChannelRel.commerceChannelId = ?) AND
+				(CommercePriceListAccountRel.commercePriceListAccountRelId IS NULL) AND
+				(CPLCommerceGroupAccountRel.CPLCommerceAccountGroupRelId IS NULL) AND
 				(CommercePriceList.groupId = ?) AND
 				(CommercePriceList.type_ = ?) AND
 				(CommercePriceList.status = 0)
@@ -294,18 +310,18 @@
 				CommercePriceListAccountRel ON
 					CommercePriceListAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
 			LEFT JOIN
-				CPLCommerceGroupAccountRel ON
-					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
-			LEFT JOIN
 				CommercePriceListChannelRel ON
 					CommercePriceListChannelRel.commercePriceListId = CommercePriceList.commercePriceListId
+			LEFT JOIN
+				CPLCommerceGroupAccountRel ON
+					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
 			WHERE
+				(CommercePriceListAccountRel.commercePriceListAccountRelId IS NULL) AND
+				(CommercePriceListChannelRel.commercePriceListChannelRelId IS NULL) AND
+				(CPLCommerceGroupAccountRel.cPLCommerceAccountGroupRelId IS NULL) AND
 				(CommercePriceList.groupId = ?) AND
 				(CommercePriceList.type_ = ?) AND
-				(CommercePriceList.status = 0) AND
-				(CommercePriceListAccountRel.commercePriceListAccountRelId IS NULL) AND
-				(CPLCommerceGroupAccountRel.cPLCommerceAccountGroupRelId IS NULL) AND
-				(CommercePriceListChannelRel.commercePriceListChannelRelId IS NULL)
+				(CommercePriceList.status = 0)
 			ORDER BY
 				CommercePriceList.priority DESC,
 				CommercePriceList.catalogBasePriceList ASC
@@ -324,11 +340,11 @@
 				CommercePriceListAccountRel ON
 					CommercePriceListAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
 			LEFT JOIN
-				CPLCommerceGroupAccountRel ON
-					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
-			LEFT JOIN
 				CommercePriceListChannelRel ON
 					CommercePriceListChannelRel.commercePriceListId = CommercePriceList.commercePriceListId
+			LEFT JOIN
+				CPLCommerceGroupAccountRel ON
+					CPLCommerceGroupAccountRel.commercePriceListId = CommercePriceList.commercePriceListId
 			WHERE
 				(CommercePriceEntry.CPInstanceUuid = ?) AND
 				(CommercePriceEntry.status = 0) AND
@@ -340,12 +356,12 @@
 					(CommercePriceListAccountRel.commercePriceListAccountRelId IS NULL)
 				) AND
 				(
-					(CPLCommerceGroupAccountRel.commerceAccountGroupId IN ([$ACCOUNT_GROUP_IDS$])) OR
-					(CPLCommerceGroupAccountRel.cPLCommerceAccountGroupRelId IS NULL)
-				) AND
-				(
 					(CommercePriceListChannelRel.commerceChannelId = ?) OR
 					(CommercePriceListChannelRel.commercePriceListChannelRelId IS NULL)
+				) AND
+				(
+					(CPLCommerceGroupAccountRel.commerceAccountGroupId IN ([$ACCOUNT_GROUP_IDS$])) OR
+					(CPLCommerceGroupAccountRel.cPLCommerceAccountGroupRelId IS NULL)
 				)
 			ORDER BY
 				CommercePriceEntry.price ASC

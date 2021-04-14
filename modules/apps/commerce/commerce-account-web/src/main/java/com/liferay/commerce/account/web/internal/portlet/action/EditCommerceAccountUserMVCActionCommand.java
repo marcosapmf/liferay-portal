@@ -14,8 +14,6 @@
 
 package com.liferay.commerce.account.web.internal.portlet.action;
 
-import static com.liferay.portal.kernel.security.permission.PermissionThreadLocal.getPermissionChecker;
-
 import com.liferay.commerce.account.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.account.constants.CommerceAccountActionKeys;
 import com.liferay.commerce.account.constants.CommerceAccountConstants;
@@ -23,7 +21,7 @@ import com.liferay.commerce.account.constants.CommerceAccountPortletKeys;
 import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.permission.CommerceAccountPermission;
 import com.liferay.commerce.account.service.CommerceAccountService;
-import com.liferay.commerce.account.web.internal.servlet.taglib.ui.CommerceAccountScreenNavigationConstants;
+import com.liferay.commerce.account.web.internal.servlet.taglib.ui.constants.CommerceAccountScreenNavigationConstants;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
@@ -55,6 +53,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManager;
 import com.liferay.portal.kernel.security.ldap.LDAPSettingsUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
@@ -96,7 +95,7 @@ import org.osgi.service.component.annotations.Reference;
 	enabled = false, immediate = true,
 	property = {
 		"javax.portlet.name=" + CommerceAccountPortletKeys.COMMERCE_ACCOUNT,
-		"mvc.command.name=editCommerceAccountUser"
+		"mvc.command.name=/commerce_account/edit_commerce_account_user"
 	},
 	service = MVCActionCommand.class
 )
@@ -211,7 +210,8 @@ public class EditCommerceAccountUserMVCActionCommand
 				CommerceAccountActionKeys.MANAGE_MEMBERS)) {
 
 			backPortletURL.setParameter(
-				"mvcRenderCommandName", "viewCommerceAccount");
+				"mvcRenderCommandName",
+				"/commerce_account/view_commerce_account");
 
 			backPortletURL.setParameter(
 				"screenNavigationCategoryKey",
@@ -227,11 +227,13 @@ public class EditCommerceAccountUserMVCActionCommand
 
 		if (cmd.equals(_EDIT_ROLES)) {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "viewCommerceAccountUser");
+				"mvcRenderCommandName",
+				"/commerce_account/view_commerce_account_user");
 		}
 		else {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "editCommerceAccountUser");
+				"mvcRenderCommandName",
+				"/commerce_account/edit_commerce_account_user");
 		}
 
 		portletURL.setParameter(
@@ -292,7 +294,8 @@ public class EditCommerceAccountUserMVCActionCommand
 		_userLocalService.updatePasswordReset(user.getUserId(), passwordReset);
 
 		if (Validator.isNotNull(reminderQueryQuestion) &&
-			Validator.isNotNull(reminderQueryAnswer)) {
+			Validator.isNotNull(reminderQueryAnswer) &&
+			!reminderQueryAnswer.equals(Portal.TEMP_OBFUSCATION_VALUE)) {
 
 			_userLocalService.updateReminderQuery(
 				user.getUserId(), reminderQueryQuestion, reminderQueryAnswer);
@@ -339,7 +342,8 @@ public class EditCommerceAccountUserMVCActionCommand
 
 			if (Objects.equals(user, _userService.getCurrentUser())) {
 				UserPermissionUtil.check(
-					getPermissionChecker(), userId, ActionKeys.UPDATE);
+					PermissionThreadLocal.getPermissionChecker(), userId,
+					ActionKeys.UPDATE);
 			}
 			else {
 				long commerceAccountId = ParamUtil.getLong(

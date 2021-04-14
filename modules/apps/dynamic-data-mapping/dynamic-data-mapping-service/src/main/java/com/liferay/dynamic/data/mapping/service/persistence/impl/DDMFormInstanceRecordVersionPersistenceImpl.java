@@ -37,9 +37,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ProxyUtil;
 
@@ -78,7 +79,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = DDMFormInstanceRecordVersionPersistence.class)
+@Component(
+	service = {
+		DDMFormInstanceRecordVersionPersistence.class, BasePersistence.class
+	}
+)
 public class DDMFormInstanceRecordVersionPersistenceImpl
 	extends BasePersistenceImpl<DDMFormInstanceRecordVersion>
 	implements DDMFormInstanceRecordVersionPersistence {
@@ -206,7 +211,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMFormInstanceRecordVersion>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
@@ -597,7 +602,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 			finderArgs = new Object[] {formInstanceRecordId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -755,7 +760,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMFormInstanceRecordVersion>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
@@ -1193,7 +1198,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 			finderArgs = new Object[] {formInstanceId, formInstanceVersion};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1339,8 +1344,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByF_V, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByF_V, finderArgs);
 		}
 
 		if (result instanceof DDMFormInstanceRecordVersion) {
@@ -1466,7 +1470,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 			finderArgs = new Object[] {formInstanceRecordId, version};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1639,7 +1643,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMFormInstanceRecordVersion>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
@@ -2047,7 +2051,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 			finderArgs = new Object[] {formInstanceRecordId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2226,7 +2230,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMFormInstanceRecordVersion>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion :
@@ -2724,7 +2728,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 				userId, formInstanceId, formInstanceVersion, status
 			};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2874,9 +2878,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(DDMFormInstanceRecordVersionImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DDMFormInstanceRecordVersionImpl.class);
 	}
 
 	/**
@@ -2910,9 +2912,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DDMFormInstanceRecordVersionImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
@@ -2929,11 +2929,9 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			ddmFormInstanceRecordVersionModelImpl.getVersion()
 		};
 
+		finderCache.putResult(_finderPathCountByF_V, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByF_V, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByF_V, args, ddmFormInstanceRecordVersionModelImpl,
-			false);
+			_finderPathFetchByF_V, args, ddmFormInstanceRecordVersionModelImpl);
 	}
 
 	/**
@@ -3396,7 +3394,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<DDMFormInstanceRecordVersion>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -3475,7 +3473,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 
 		if (productionMode) {
 			count = (Long)finderCache.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -3603,23 +3601,21 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 		_argumentsResolverServiceRegistration = _bundleContext.registerService(
 			ArgumentsResolver.class,
 			new DDMFormInstanceRecordVersionModelArgumentsResolver(),
-			MapUtil.singletonDictionary(
-				"model.class.name",
-				DDMFormInstanceRecordVersion.class.getName()));
+			new HashMapDictionary<>());
 
-		_finderPathWithPaginationFindAll = _createFinderPath(
+		_finderPathWithPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathWithoutPaginationFindAll = _createFinderPath(
+		_finderPathWithoutPaginationFindAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
 			new String[0], true);
 
-		_finderPathCountAll = _createFinderPath(
+		_finderPathCountAll = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
 			new String[0], new String[0], false);
 
-		_finderPathWithPaginationFindByFormInstanceRecordId = _createFinderPath(
+		_finderPathWithPaginationFindByFormInstanceRecordId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
 			"findByFormInstanceRecordId",
 			new String[] {
@@ -3628,19 +3624,17 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			},
 			new String[] {"formInstanceRecordId"}, true);
 
-		_finderPathWithoutPaginationFindByFormInstanceRecordId =
-			_createFinderPath(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-				"findByFormInstanceRecordId",
-				new String[] {Long.class.getName()},
-				new String[] {"formInstanceRecordId"}, true);
+		_finderPathWithoutPaginationFindByFormInstanceRecordId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
+			"findByFormInstanceRecordId", new String[] {Long.class.getName()},
+			new String[] {"formInstanceRecordId"}, true);
 
-		_finderPathCountByFormInstanceRecordId = _createFinderPath(
+		_finderPathCountByFormInstanceRecordId = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"countByFormInstanceRecordId", new String[] {Long.class.getName()},
 			new String[] {"formInstanceRecordId"}, false);
 
-		_finderPathWithPaginationFindByF_F = _createFinderPath(
+		_finderPathWithPaginationFindByF_F = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByF_F",
 			new String[] {
 				Long.class.getName(), String.class.getName(),
@@ -3649,27 +3643,27 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			},
 			new String[] {"formInstanceId", "formInstanceVersion"}, true);
 
-		_finderPathWithoutPaginationFindByF_F = _createFinderPath(
+		_finderPathWithoutPaginationFindByF_F = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByF_F",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"formInstanceId", "formInstanceVersion"}, true);
 
-		_finderPathCountByF_F = _createFinderPath(
+		_finderPathCountByF_F = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByF_F",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"formInstanceId", "formInstanceVersion"}, false);
 
-		_finderPathFetchByF_V = _createFinderPath(
+		_finderPathFetchByF_V = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByF_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"formInstanceRecordId", "version"}, true);
 
-		_finderPathCountByF_V = _createFinderPath(
+		_finderPathCountByF_V = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByF_V",
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"formInstanceRecordId", "version"}, false);
 
-		_finderPathWithPaginationFindByF_S = _createFinderPath(
+		_finderPathWithPaginationFindByF_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByF_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
@@ -3678,17 +3672,17 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			},
 			new String[] {"formInstanceRecordId", "status"}, true);
 
-		_finderPathWithoutPaginationFindByF_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByF_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByF_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"formInstanceRecordId", "status"}, true);
 
-		_finderPathCountByF_S = _createFinderPath(
+		_finderPathCountByF_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByF_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
 			new String[] {"formInstanceRecordId", "status"}, false);
 
-		_finderPathWithPaginationFindByU_F_F_S = _createFinderPath(
+		_finderPathWithPaginationFindByU_F_F_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_F_F_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -3701,7 +3695,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			},
 			true);
 
-		_finderPathWithoutPaginationFindByU_F_F_S = _createFinderPath(
+		_finderPathWithoutPaginationFindByU_F_F_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_F_F_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -3712,7 +3706,7 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			},
 			true);
 
-		_finderPathCountByU_F_F_S = _createFinderPath(
+		_finderPathCountByU_F_F_S = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_F_F_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
@@ -3730,12 +3724,6 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			DDMFormInstanceRecordVersionImpl.class.getName());
 
 		_argumentsResolverServiceRegistration.unregister();
-
-		for (ServiceRegistration<FinderPath> serviceRegistration :
-				_serviceRegistrations) {
-
-			serviceRegistration.unregister();
-		}
 	}
 
 	@Override
@@ -3799,36 +3787,13 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormInstanceRecordVersionPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(DDMPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
-	}
-
-	private FinderPath _createFinderPath(
-		String cacheName, String methodName, String[] params,
-		String[] columnNames, boolean baseModelResult) {
-
-		FinderPath finderPath = new FinderPath(
-			cacheName, methodName, params, columnNames, baseModelResult);
-
-		if (!cacheName.equals(FINDER_CLASS_NAME_LIST_WITH_PAGINATION)) {
-			_serviceRegistrations.add(
-				_bundleContext.registerService(
-					FinderPath.class, finderPath,
-					MapUtil.singletonDictionary("cache.name", cacheName)));
-		}
-
-		return finderPath;
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
 
 	private ServiceRegistration<ArgumentsResolver>
 		_argumentsResolverServiceRegistration;
-	private Set<ServiceRegistration<FinderPath>> _serviceRegistrations =
-		new HashSet<>();
 
 	private static class DDMFormInstanceRecordVersionModelArgumentsResolver
 		implements ArgumentsResolver {
@@ -3884,6 +3849,16 @@ public class DDMFormInstanceRecordVersionPersistenceImpl
 			}
 
 			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return DDMFormInstanceRecordVersionImpl.class.getName();
+		}
+
+		@Override
+		public String getTableName() {
+			return DDMFormInstanceRecordVersionTable.INSTANCE.getTableName();
 		}
 
 		private Object[] _getValue(

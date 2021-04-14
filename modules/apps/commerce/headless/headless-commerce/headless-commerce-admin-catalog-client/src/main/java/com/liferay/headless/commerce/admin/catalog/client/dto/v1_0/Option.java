@@ -17,6 +17,8 @@ package com.liferay.headless.commerce.admin.catalog.client.dto.v1_0;
 import com.liferay.headless.commerce.admin.catalog.client.function.UnsafeSupplier;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.OptionSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,11 +29,33 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Option implements Cloneable {
+public class Option implements Cloneable, Serializable {
 
 	public static Option toDTO(String json) {
 		return OptionSerDes.toDTO(json);
 	}
+
+	public Map<String, Map<String, String>> getActions() {
+		return actions;
+	}
+
+	public void setActions(Map<String, Map<String, String>> actions) {
+		this.actions = actions;
+	}
+
+	public void setActions(
+		UnsafeSupplier<Map<String, Map<String, String>>, Exception>
+			actionsUnsafeSupplier) {
+
+		try {
+			actions = actionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, Map<String, String>> actions;
 
 	public Long getCatalogId() {
 		return catalogId;
@@ -324,7 +348,8 @@ public class Option implements Cloneable {
 	public static enum FieldType {
 
 		CHECKBOX("checkbox"), CHECKBOX_MULTIPLE("checkbox_multiple"),
-		DATE("date"), NUMERIC("numeric"), RADIO("radio"), SELECT("select");
+		DATE("date"), NUMERIC("numeric"), RADIO("radio"), SELECT("select"),
+		TEXT("text");
 
 		public static FieldType create(String value) {
 			for (FieldType fieldType : values()) {

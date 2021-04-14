@@ -19,7 +19,6 @@ import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandl
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -61,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/add_simple_layout"
+		"mvc.command.name=/layout_admin/add_simple_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -117,7 +116,7 @@ public class AddSimpleLayoutMVCActionCommand
 				groupId, privateLayout, parentLayoutId, nameMap,
 				new HashMap<>(), new HashMap<>(), new HashMap<>(),
 				new HashMap<>(), type, typeSettingsUnicodeProperties.toString(),
-				false, masterLayoutPlid, new HashMap<>(), serviceContext);
+				false, new HashMap<>(), masterLayoutPlid, serviceContext);
 
 			if (!Objects.equals(type, LayoutConstants.TYPE_CONTENT)) {
 				LayoutTypePortlet layoutTypePortlet =
@@ -158,13 +157,13 @@ public class AddSimpleLayoutMVCActionCommand
 				actionRequest, actionResponse,
 				JSONUtil.put("redirectURL", redirectURL));
 		}
-		catch (PortalException portalException) {
+		catch (Exception exception) {
 			SessionErrors.add(actionRequest, "layoutNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
-			_layoutExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, portalException);
+			_layoutExceptionRequestHandler.handleException(
+				actionRequest, actionResponse, exception);
 		}
 	}
 

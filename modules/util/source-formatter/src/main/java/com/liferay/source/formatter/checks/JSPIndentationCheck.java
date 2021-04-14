@@ -51,7 +51,7 @@ public class JSPIndentationCheck extends BaseFileCheck {
 			if (newContent.equals(content) ||
 				newContent.equals(originalContent)) {
 
-				return newContent;
+				return _fixTabsInJavaSource(newContent);
 			}
 
 			content = newContent;
@@ -293,7 +293,7 @@ public class JSPIndentationCheck extends BaseFileCheck {
 			closeTagJSPLine.setClosed(true);
 		}
 
-		return _fixTabsInJavaSource(content);
+		return content;
 	}
 
 	private JSPLine _getCloseTagJSPLine(
@@ -538,7 +538,7 @@ public class JSPIndentationCheck extends BaseFileCheck {
 	}
 
 	private static final Pattern _javaSourcePattern1 = Pattern.compile(
-		"\n(\t*)(<%\n(\t*[^\t%].*?))\n(\t*)%>\n", Pattern.DOTALL);
+		"\n(\t*)(<%\\!?\n(\t*[^\t%].*?))\n(\t*)%>(\n|\\Z)", Pattern.DOTALL);
 	private static final Pattern _javaSourcePattern2 = Pattern.compile(
 		"\n(\t*)([^\t\n]+[\"']<%=\n(\t*[^\t%].*?))\n\t*%>[\"']\n",
 		Pattern.DOTALL);

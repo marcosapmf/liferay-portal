@@ -269,6 +269,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DUPLICATE</td>
+	<td>//button[contains(@class, 'ddm-form-field-repeatable-add-button p-0 btn btn-sm btn-primary')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>EDIT</td>
 	<td>//a[contains(@class,'btn') and contains(.,'Edit')] | //a[contains(@id,'edit') and contains(@class,'btn')] | //button[contains(.,'Edit')]</td>
 	<td></td>
@@ -399,6 +404,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>LOCALIZATION_SUMMARY</td>
+	<td>//button[@id='_com_liferay_journal_web_portlet_JournalPortlet__com_liferay_journal_web_portlet_JournalPortlet_descriptionMapAsXMLMenu']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>MAKE_DEFAULT</td>
 	<td>//button[contains(.,'Make Default') and contains(@data-value,'${key_language}')]</td>
 	<td></td>
@@ -479,11 +489,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>PLUS_IE</td>
-	<td>//a[contains(@class,'nav-btn-monospaced')] | //button[contains(@class,'nav-btn-monospaced')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>POST</td>
 	<td>//div[@class='button-holder']/button[contains(@id,'MicroblogsPortlet') and not (contains(@class,'disabled'))]/span[contains(.,'Post')]</td>
 	<td></td>
@@ -519,8 +524,13 @@
 	<td></td>
 </tr>
 <tr>
+	<td>REMOVE_BUTTON</td>
+	<td>//button[contains(@class, 'ddm-form-field-repeatable-delete-button p-0 btn btn-sm btn-primary')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>REMOVE_IMAGE</td>
-	<td>//button[@id='sdjj___removeImage']</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-trash')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -565,7 +575,7 @@
 </tr>
 <tr>
 	<td>RESET_CHANGES</td>
-	<td>//button[contains(.,'Reset Changes')]</td>
+	<td>//a[contains(@class,'btn')][contains(.,'Reset Changes')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -654,13 +664,18 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SELECT_FIELD_LAST</td>
+	<td>xpath=(//*[contains(@class,'btn btn-secondary') and contains(text(),'Select')])[last()]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SELECT_FILE</td>
 	<td>//button[contains(.,'Select File')] | //label[contains(.,'Select File')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SELECT_FILE_SMALL_IMAGE</td>
-	<td>//div[contains(@class,'blogs-small-image-selector')]//a[contains(.,'Select File')]</td>
+	<td>//div[contains(@class,'blogs-small-image-selector')]//div[contains(@class,'browse-image-controls')]//button[contains(.,'Select File')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -680,7 +695,7 @@
 </tr>
 <tr>
 	<td>TRANSLATIONS_LOCALIZATION</td>
-	<td>//div[contains(@class,'dropdown')]//button[contains(@class,'dropdown-toggle')]//span[*[name()='svg'][contains(@class,'lexicon-icon-${key_currentLocale}')]]</td>
+	<td>//div[contains(@class,'dropdown')]//button[contains(@class,'dropdown-toggle')]//*[name()='svg'][contains(@class,'lexicon-icon-${key_currentLocale}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -714,6 +729,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>STAGING_INDICATOR</td>
+	<td>//button[contains(@class,'staging-indicator-button')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>STAY</td>
 	<td>//button[contains(.,'Stay')]</td>
 	<td></td>
@@ -736,6 +756,11 @@
 <tr>
 	<td>TAB_SUBMIT_BTN</td>
 	<td>//button[contains(@type,'submit') and contains(.,'${key_tab}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>TWITCH_PLAY</td>
+	<td>//button[contains(@data-test-selector,'player-overlay-play-button') and contains(@aria-label,'Play')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -816,6 +841,11 @@
 <tr>
 	<td>WEB_CONTENT_CHOOSE</td>
 	<td>//tr[contains(.,'${key_webContentTitle}')]/td//button</td>
+	<td></td>
+</tr>
+<tr>
+	<td>YOUTUBE_PLAY</td>
+	<td>//button[contains(@class,'ytp-large-play-button')]</td>
 	<td></td>
 </tr>
 </tbody>

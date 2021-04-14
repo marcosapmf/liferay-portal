@@ -18,19 +18,19 @@ import {ClayActionsDropdown, ClayDropdownBase} from 'clay-dropdown';
 import {ClayIcon} from 'clay-icon';
 import ClayModal from 'clay-modal';
 import {
-	Form,
 	FormSupport,
 	PagesVisitor,
+	ReactFormAdapter,
 	generateInstanceId,
 	generateName,
 } from 'dynamic-data-mapping-form-renderer';
 import {makeFetch} from 'dynamic-data-mapping-form-renderer/js/util/fetch.es';
-import dom from 'metal-dom';
+import {EventHandler, openModal} from 'frontend-js-web';
 import {Drag, DragDrop} from 'metal-drag-drop';
-import {EventHandler} from 'metal-events';
 import Component, {Fragment} from 'metal-jsx';
 import {Config} from 'metal-state';
 
+import RulesSupport from '../../components/RuleBuilder/RulesSupport.es';
 import {focusedFieldStructure} from '../../util/config.es';
 import {selectText} from '../../util/dom.es';
 import {
@@ -47,8 +47,10 @@ class Sidebar extends Component {
 	attached() {
 		this._bindDragAndDrop();
 
-		this._eventHandler.add(
-			dom.on(document, 'mousedown', this._handleDocumentMouseDown, false)
+		document.addEventListener(
+			'mousedown',
+			this._handleDocumentMouseDown,
+			false
 		);
 	}
 
@@ -152,6 +154,12 @@ class Sidebar extends Component {
 	disposeInternal() {
 		super.disposeInternal();
 
+		document.removeEventListener(
+			'mousedown',
+			this._handleDocumentMouseDown,
+			false
+		);
+
 		this._eventHandler.removeAllListeners();
 		this.disposeDragAndDrop();
 	}
@@ -185,6 +193,7 @@ class Sidebar extends Component {
 							: false,
 					readOnly:
 						field.fieldName == 'name' ? readOnlyFieldName : false,
+					visible: field.fieldName !== 'name' ? field.visible : false,
 				};
 
 				return {
@@ -204,16 +213,23 @@ class Sidebar extends Component {
 			return;
 		}
 
-		dom.once(container, transitionEnd, () => {
-			if (this._isEditMode()) {
-				const firstInput = this.element.querySelector('input');
+		container.addEventListener(
+			transitionEnd,
+			() => {
+				if (this._isEditMode()) {
+					const firstInput = this.element.querySelector('input');
 
-				if (firstInput && !container.contains(document.activeElement)) {
-					firstInput.focus();
-					selectText(firstInput);
+					if (
+						firstInput &&
+						!container.contains(document.activeElement)
+					) {
+						firstInput.focus();
+						selectText(firstInput);
+					}
 				}
-			}
-		});
+			},
+			{once: true}
+		);
 
 		this.setState({
 			activeTab: 0,
@@ -522,7 +538,48 @@ class Sidebar extends Component {
 
 	_handleChangeFieldTypeItemClicked({data}) {
 		const newFieldType = data.item.name;
+		const {fieldName} = this.props.focusedField;
+		const {rules} = this.props;
 
+		if (rules && RulesSupport.findRuleByFieldName(fieldName, null, rules)) {
+			const dropdown = document.querySelector('.dropdown-menu.show');
+
+			dropdown.classList.remove('show');
+
+			openModal({
+				bodyHTML: Liferay.Language.get(
+					'a-rule-is-applied-to-this-field-by-changing-its-type'
+				),
+				buttons: [
+					{
+						displayType: 'secondary',
+						label: Liferay.Language.get('cancel'),
+						type: 'cancel',
+					},
+					{
+						displayType: 'danger',
+						label: Liferay.Language.get('change-field-type'),
+						onClick: () => {
+							this._handleChangeFieldTypeModalButtonClicked(
+								newFieldType
+							);
+						},
+						type: 'cancel',
+					},
+				],
+				id: 'ddm-change-field-type-with-rule-modal',
+				size: 'md',
+				title: Liferay.Language.get(
+					'change-field-type-with-rule-applied'
+				),
+			});
+		}
+		else {
+			this.changeFieldType(newFieldType);
+		}
+	}
+
+	_handleChangeFieldTypeModalButtonClicked(newFieldType) {
 		this.changeFieldType(newFieldType);
 	}
 
@@ -550,8 +607,10 @@ class Sidebar extends Component {
 		) {
 			this.close();
 
-			dom.once(this.refs.container, transitionEnd, () =>
-				this.dispatchFieldBlurred()
+			this.refs.container.addEventListener(
+				transitionEnd,
+				() => this.dispatchFieldBlurred(),
+				{once: true}
 			);
 
 			if (!this._isModalElement(target)) {
@@ -573,7 +632,7 @@ class Sidebar extends Component {
 
 		const {fieldTypes} = this.props;
 		const {fieldSetId} = data.source.dataset;
-		const columnNode = dom.closest(data.target, '.col-ddm');
+		const columnNode = data.target.closest('.col-ddm');
 		const indexes = FormSupport.getIndexes(columnNode);
 
 		if (fieldSetId) {
@@ -591,8 +650,7 @@ class Sidebar extends Component {
 				return name === data.source.dataset.fieldTypeName;
 			});
 			let parentFieldName;
-			const parentFieldNode = dom.closest(
-				data.target.parentElement,
+			const parentFieldNode = data.target.parentElement.closest(
 				'.ddm-field'
 			);
 
@@ -613,11 +671,8 @@ class Sidebar extends Component {
 				indexes,
 			};
 
-			if (dom.closest(data.target, '.col-empty')) {
-				const addedToPlaceholder = dom.closest(
-					data.target,
-					'.placeholder'
-				);
+			if (data.target && data.target.closest('.col-empty')) {
+				const addedToPlaceholder = data.target.closest('.placeholder');
 
 				dispatch('fieldAdded', {
 					...payload,
@@ -637,9 +692,8 @@ class Sidebar extends Component {
 	}
 
 	_handleDragTargetEnter({target}) {
-		const parentFieldNode = dom.closest(
-			target.parentElement,
-			`.ddm-field-container`
+		const parentFieldNode = target.parentElement.closest(
+			'.ddm-field-container'
 		);
 
 		if (parentFieldNode) {
@@ -648,9 +702,8 @@ class Sidebar extends Component {
 	}
 
 	_handleDragTargetLeave({target}) {
-		const parentFieldNode = dom.closest(
-			target.parentElement,
-			`.ddm-field-container`
+		const parentFieldNode = target.parentElement.closest(
+			'.ddm-field-container'
 		);
 
 		if (parentFieldNode) {
@@ -690,6 +743,19 @@ class Sidebar extends Component {
 				this._duplicateField(fieldName);
 			}
 			else if (settingsItem === 'delete-field') {
+				const {rules} = this.props;
+
+				if (
+					rules &&
+					RulesSupport.findRuleByFieldName(fieldName, null, rules)
+				) {
+					const dropdown = document.querySelector(
+						'.dropdown-menu.show'
+					);
+
+					dropdown.classList.remove('show');
+				}
+
 				this._deleteField(fieldName);
 			}
 			else if (settingsItem === 'cancel-field-changes') {
@@ -703,10 +769,14 @@ class Sidebar extends Component {
 
 		this.close();
 
-		dom.once(this.refs.container, transitionEnd, () => {
-			this.dispatchFieldBlurred();
-			this.open();
-		});
+		this.refs.container.addEventListener(
+			transitionEnd,
+			() => {
+				this.dispatchFieldBlurred();
+				this.open();
+			},
+			{once: true}
+		);
 	}
 
 	_handleSettingsFieldBlurred({fieldInstance, value}) {
@@ -748,7 +818,7 @@ class Sidebar extends Component {
 		const {target} = event;
 		const {
 			dataset: {index},
-		} = dom.closest(target, '.nav-item');
+		} = target.closest('.nav-item');
 
 		event.preventDefault();
 
@@ -764,7 +834,7 @@ class Sidebar extends Component {
 	}
 
 	_isControlProductMenuItem(node) {
-		return !!dom.closest(node, '.sidenav-toggler');
+		return node && !!node.closest('.sidenav-toggler');
 	}
 
 	_isEditMode() {
@@ -774,15 +844,15 @@ class Sidebar extends Component {
 	}
 
 	_isModalElement(node) {
-		return dom.closest(node, '.modal');
+		return node && node.closest('.modal');
 	}
 
 	_isProductMenuSidebarItem(node) {
-		return !!dom.closest(node, '.sidenav-menu');
+		return node && !!node.closest('.sidenav-menu');
 	}
 
 	_isOutsideModal(node) {
-		return !dom.closest(node, '.close-modal');
+		return node && !node.closest('.close-modal');
 	}
 
 	_isSettingsElement(target) {
@@ -801,9 +871,11 @@ class Sidebar extends Component {
 
 	_isSidebarElement(node) {
 		const {element} = this;
-		const alloyEditorToolbarNode = dom.closest(node, '.ae-ui');
-		const fieldColumnNode = dom.closest(node, '.col-ddm');
-		const fieldTypesDropdownNode = dom.closest(node, '.dropdown-menu');
+		const alloyEditorToolbarNode = node ? node.closest('.ae-ui') : null;
+		const fieldColumnNode = node ? node.closest('.col-ddm') : null;
+		const fieldTypesDropdownNode = node
+			? node.closest('.dropdown-menu')
+			: null;
 
 		return (
 			alloyEditorToolbarNode ||
@@ -815,7 +887,7 @@ class Sidebar extends Component {
 	}
 
 	_isTranslationItem(node) {
-		return !!dom.closest(node, '.lfr-translationmanager');
+		return node && !!node.closest('.lfr-translationmanager');
 	}
 
 	_mergeFieldTypeSettings(oldSettingsContext, newSettingsContext) {
@@ -1010,65 +1082,69 @@ class Sidebar extends Component {
 				id="accordion03"
 				role="tablist"
 			>
-				{group.map((key, index) => (
-					<div
-						class="panel panel-secondary"
-						key={`fields-group-${key}-${index}`}
-					>
-						<a
-							aria-controls="collapseTwo"
-							aria-expanded="true"
-							class="collapse-icon panel-header panel-header-link"
-							data-parent="#accordion03"
-							data-toggle="liferay-collapse"
-							href={`#ddm-field-types-${key}-body`}
-							id={`ddm-field-types-${key}-header`}
-							role="tab"
-						>
-							<span class="panel-title">
-								{fieldTypesGroup[key].label}
-							</span>
-							<span class="collapse-icon-closed">
-								<svg
-									aria-hidden="true"
-									class="lexicon-icon lexicon-icon-angle-right"
+				{group.map((key, index) => {
+					const fields = fieldTypesGroup[key].fields;
+
+					return (
+						!!fields.length && (
+							<div
+								class="panel panel-secondary"
+								key={`fields-group-${key}-${index}`}
+							>
+								<a
+									aria-controls="collapseTwo"
+									aria-expanded="true"
+									class="collapse-icon panel-header panel-header-link"
+									data-parent="#accordion03"
+									data-toggle="liferay-collapse"
+									href={`#ddm-field-types-${key}-body`}
+									id={`ddm-field-types-${key}-header`}
+									role="tab"
 								>
-									<use
-										xlink:href={`${spritemap}#angle-right`}
-									/>
-								</svg>
-							</span>
-							<span class="collapse-icon-open">
-								<svg
-									aria-hidden="true"
-									class="lexicon-icon lexicon-icon-angle-down"
+									<span class="panel-title">
+										{fieldTypesGroup[key].label}
+									</span>
+									<span class="collapse-icon-closed">
+										<svg
+											aria-hidden="true"
+											class="lexicon-icon lexicon-icon-angle-right"
+										>
+											<use
+												xlink:href={`${spritemap}#angle-right`}
+											/>
+										</svg>
+									</span>
+									<span class="collapse-icon-open">
+										<svg
+											aria-hidden="true"
+											class="lexicon-icon lexicon-icon-angle-down"
+										>
+											<use
+												xlink:href={`${spritemap}#angle-down`}
+											/>
+										</svg>
+									</span>
+								</a>
+								<div
+									aria-labelledby={`#ddm-field-types-${key}-header`}
+									class="panel-collapse show"
+									id={`ddm-field-types-${key}-body`}
+									role="tabpanel"
 								>
-									<use
-										xlink:href={`${spritemap}#angle-down`}
-									/>
-								</svg>
-							</span>
-						</a>
-						<div
-							aria-labelledby={`#ddm-field-types-${key}-header`}
-							class="panel-collapse show"
-							id={`ddm-field-types-${key}-body`}
-							role="tabpanel"
-						>
-							<div class="panel-body p-0 m-0 list-group">
-								{fieldTypesGroup[key].fields.map(
-									(fieldType) => (
-										<FieldTypeBox
-											fieldType={fieldType}
-											key={fieldType.name}
-											spritemap={spritemap}
-										/>
-									)
-								)}
+									<div class="panel-body p-0 m-0 list-group">
+										{fields.map((fieldType) => (
+											<FieldTypeBox
+												fieldType={fieldType}
+												key={fieldType.name}
+												spritemap={spritemap}
+											/>
+										))}
+									</div>
+								</div>
 							</div>
-						</div>
-					</div>
-				))}
+						)
+					);
+				})}
 			</div>
 		);
 	}
@@ -1121,7 +1197,7 @@ class Sidebar extends Component {
 		}
 
 		return (
-			<Form
+			<ReactFormAdapter
 				activePage={activeTab}
 				builderRules={builderRules}
 				defaultLanguageId={defaultLanguageId}

@@ -14,6 +14,7 @@
 
 package com.liferay.poshi.core.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Collections;
@@ -25,6 +26,12 @@ import java.util.Properties;
  * @author Brian Wing Shun Chan
  */
 public class PropsUtil {
+
+	public static void clear() {
+		_propsUtil._props.clear();
+
+		setProperties(_getClassProperties());
+	}
 
 	public static String get(String key) {
 		return _propsUtil._get(key);
@@ -38,30 +45,55 @@ public class PropsUtil {
 		_propsUtil._set(key, value);
 	}
 
-	private PropsUtil() {
-		try {
-			String[] propertiesFileNames = {
-				"poshi.properties", "poshi-ext.properties"
-			};
+	public static void setProperties(Properties properties) {
+		for (String propertyName : properties.stringPropertyNames()) {
+			String propertyValue = properties.getProperty(propertyName);
 
-			for (String propertiesFileName : propertiesFileNames) {
-				Class<?> clazz = getClass();
-
-				ClassLoader classLoader = clazz.getClassLoader();
-
-				InputStream inputStream = classLoader.getResourceAsStream(
-					propertiesFileName);
-
-				if (inputStream != null) {
-					_props.load(inputStream);
-				}
+			if (propertyValue == null) {
+				continue;
 			}
 
-			_printProperties(false);
+			set(propertyName, propertyValue);
 		}
-		catch (Exception exception) {
-			exception.printStackTrace();
+	}
+
+	private static Properties _getClassProperties() {
+		Properties classProperties = new Properties();
+
+		String[] propertiesFileNames = {
+			"poshi.properties", "poshi-ext.properties"
+		};
+
+		for (String propertiesFileName : propertiesFileNames) {
+			Class<?> clazz = PropsUtil.class;
+
+			ClassLoader classLoader = clazz.getClassLoader();
+
+			InputStream inputStream = classLoader.getResourceAsStream(
+				propertiesFileName);
+
+			if (inputStream != null) {
+				try {
+					classProperties.load(inputStream);
+				}
+				catch (IOException ioException) {
+					ioException.printStackTrace();
+				}
+			}
 		}
+
+		return classProperties;
+	}
+
+	private PropsUtil() {
+		Properties properties = _getClassProperties();
+
+		for (String propertyName : properties.stringPropertyNames()) {
+			_props.setProperty(
+				propertyName, properties.getProperty(propertyName));
+		}
+
+		_printProperties(false);
 	}
 
 	private String _get(String key) {

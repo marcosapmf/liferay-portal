@@ -20,7 +20,7 @@
 CPDataSourceResult cpDataSourceResult = (CPDataSourceResult)request.getAttribute(CPWebKeys.CP_DATA_SOURCE_RESULT);
 %>
 
-<div class="row">
+<div class="product-card-tiles">
 
 	<%
 	for (CPCatalogEntry cpCatalogEntry : cpDataSourceResult.getCPCatalogEntries()) {

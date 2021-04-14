@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
-import com.liferay.portal.kernel.service.ResourceActionLocalServiceUtil;
 import com.liferay.portal.kernel.util.BasePortalLifecycle;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -151,17 +150,12 @@ public class StartupAction extends SimpleAction {
 			_log.debug("Check resource actions");
 		}
 
+		StartupHelperUtil.initResourceActions();
+
 		if (StartupHelperUtil.isDBNew()) {
-			StartupHelperUtil.initResourceActions();
-
-			ResourceActionLocalServiceUtil.checkResourceActions();
-
 			DBUpgrader.verify();
 
 			DLFileEntryTypeLocalServiceUtil.getBasicDocumentDLFileEntryType();
-		}
-		else {
-			ResourceActionLocalServiceUtil.checkResourceActions();
 		}
 
 		if (PropsValues.DATABASE_INDEXES_UPDATE_ON_STARTUP) {

@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {isEqualObjects} from 'app-builder-web/js/utils/utils.es';
+import {isEqualObjects} from 'data-engine-js-components-web/js/utils/utils.es';
 
 export function canDeployApp(app, config) {
 	const isValidSteps = config.steps.every((step) => {
@@ -40,6 +40,34 @@ export function canDeployApp(app, config) {
 		app.appName?.trim().length &&
 		isValidSteps
 	);
+}
+
+export function checkRequiredFields(formViews = [], dataDefinition) {
+	const requiredFields = dataDefinition.dataDefinitionFields
+		.filter(({required}) => required)
+		.map(({customProperties: {nativeField}, name}) => ({
+			name,
+			nativeField,
+		}));
+
+	const isMissingRequiredFields = (formView) => {
+		const missingRequiredFields = {customField: false, nativeField: false};
+
+		requiredFields.forEach(({name, nativeField}) => {
+			if (!formView.fields.includes(name)) {
+				missingRequiredFields[
+					nativeField ? 'nativeField' : 'customField'
+				] = true;
+			}
+		});
+
+		return missingRequiredFields;
+	};
+
+	return formViews.map((formView) => ({
+		...formView,
+		missingRequiredFields: isMissingRequiredFields(formView),
+	}));
 }
 
 export function getFormViewFields({dataLayoutPages = []}) {

@@ -22,7 +22,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
 %>
 
-<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="updateWorkflowTask" var="updateURL" />
+<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/portal_workflow_task/update_task" var="updateURL" />
 
 <div class="task-action">
 	<aui:form action="<%= updateURL %>" method="post" name="updateFm">
@@ -60,7 +60,7 @@ WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
 	var done = A.one('#<portlet:namespace />done');
 
 	if (done) {
-		done.on('click', function (event) {
+		done.on('click', (event) => {
 			var data = new FormData(
 				document.querySelector('#<portlet:namespace />updateFm')
 			);
@@ -68,7 +68,7 @@ WorkflowTask workflowTask = workflowTaskDisplayContext.getWorkflowTask();
 			Liferay.Util.fetch('<%= updateURL.toString() %>', {
 				body: data,
 				method: 'POST',
-			}).then(function () {
+			}).then(() => {
 				Liferay.Util.getOpener().<portlet:namespace />refreshPortlet(
 					'<%= PortalUtil.escapeRedirect(redirect.toString()) %>'
 				);

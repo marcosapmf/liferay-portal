@@ -95,6 +95,12 @@
 </tr>
 
 <tr>
+    <td>HELP_TEXT_AT_APP_DEPLOYED</td>
+    <td>//span[contains(text(),'${fieldValue}')]</td>
+    <td></td>
+</tr>
+
+<tr>
 	<td>SIDEBAR_BASIC_PLACEHOLDER</td>
 	<td>//input[contains(@name,'placeholder')]</td>
 	<td></td>
@@ -150,7 +156,13 @@
 
 <tr>
 	<td>FIELD_LABEL_REQUIRED</td>
-	<td>//label[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')] | //legend[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')]</td>
+	<td>//label[contains(text(),'${fieldLabel}')] | //legend[contains(text(),'${fieldLabel}')] | //label[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')] | //legend[contains(text(),'${fieldLabel}')]/span[@class='reference-mark']/*[contains(@class,'lexicon-icon-asterisk')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>SIDEBAR_ADVANCED_FIELD_REFERENCE</td>
+	<td>//input[contains(@name,'fieldReference')]</td>
 	<td></td>
 </tr>
 
@@ -193,6 +205,12 @@
 <tr>
 	<td>PREDEFINED_VALUE_AT_FORM_SELECTLIST</td>
 	<td>//label[contains(text(),'${key_fieldName}')]/..//div[contains(@class,'option-selected') and contains(text(),'${key_fieldValue}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>PROPAGATE_CHANGES</td>
+	<td>//button[contains(@class,'btn-primary') and contains(text(),'Propagate')]</td>
 	<td></td>
 </tr>
 
@@ -351,6 +369,18 @@
 	<td></td>
 </tr>
 
+<tr>
+	<td>FIELD_ELLIPSIS_FIELDSET</td>
+	<td>//div[@class='modal-body']//button[@data-title='Actions']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_ELLIPSIS_ACTION_FIELDSET</td>
+	<td>//div[@class='dropdown-menu show']//button[@class='dropdown-item'][contains(text(),'${key_selectAction}')]</td>
+	<td></td>
+</tr>
+
 <!--OBJECT_SIDEBAR-->
 
 <tr>
@@ -453,20 +483,152 @@
 </tr>
 
 <tr>
-	<td>RULE_BUILDER_CANCEL_BUTTON</td>
-	<td>xpath=(//div[contains(@class, 'modal-item-last')]//button[contains(@class,'btn-secondary')][contains(text(),'Cancel')])[2]</td>
+	<td>RULE_BUILDER_SAVE_BUTTON_DISABLED</td>
+	<td>//div[@class='modal-content']//button[@disabled='' and contains(text(),'Save')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_OR_FIELD_SET_BUILDER_CANCEL_BUTTON</td>
+	<td>xpath=(//div[contains(@class, 'modal-item-last')]//button[contains(@class,'btn-secondary')][contains(text(),'Cancel')])</td>
 	<td></td>
 </tr>
 
 <tr>
 	<td>RULE_BUILDER_DEFAULT_EDIT</td>
-	<td>//div[contains(@class, 'collapse-icon-options')]//button[contains(@class, 'dropdown-toggle')]</td>
+	<td>//div[@class='rule-list__panel']//div[contains(@class,'dropdown-action')]</td>
 	<td></td>
 </tr>
 
 <tr>
 	<td>RULE_BUILDER_EDIT</td>
 	<td>//button[contains(text(),'Edit')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_FORM_VIEW_NAME</td>
+	<td>//input[contains(@placeholder,'Untitled Form View')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>ASSERT_FORM</td>
+	<td>//td[contains(@class,'table-cell-expand') and contains(.,'${key_formViewName}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>BUTTON_LOCALIZATION</td>
+	<td>//button[contains(@class, 'dropdown-toggle btn btn-monospaced btn-secondary') and contains(@symbol, '${key_symbolName}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>BUTTON_LOCALIZATION_FIELD_SET</td>
+	<td>//div[contains(@class, 'modal-header')]//button[contains(@class, 'dropdown-toggle btn btn-monospaced btn-secondary') and contains(@symbol, '${key_symbolName}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>LOCALIZATION_LIST</td>
+	<td>//span[contains(@class, 'autofit-section') and contains(., '${key_localizationList}')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>LOCALIZATION_LIST_FIELD_SET</td>
+	<td>xpath=(//span[contains(@class, 'autofit-section') and contains(., '${key_localizationList}')])[2]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>TRANSLATED_LIST_FIELD_SET</td>
+	<td>xpath=(//span[contains(@class,'autofit-col-expand') and contains (.,'${key_localizationName}')]/following-sibling::span[contains(@class,'autofit-col') and contains(.,'${key_statusName}')])[2]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>RULE_BUILDER_GO_BACK</td>
+	<td>//div[contains(@class, 'sidebar-header')]//button[contains(@class,'btn btn-secondary')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_FROM_FIELDSET</td>
+	<td>//div[@class='modal-body']//label[text()='${fieldLabel}'] | //div[@class='modal-body']//legend[text()='${fieldLabel}']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SETS_TAB</td>
+	<td>//button[contains(@class,'btn btn-unstyled') and contains(.,'Fieldsets')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>CREATE_NEW_FIELD_SETS</td>
+	<td>//button[contains(@class,'btn-secondary') and contains(.,'Create New Fieldset')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_NAME</td>
+	<td>//input[contains(@placeholder,'Untitled Fieldset')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_SAVE_BUTTON</td>
+	<td>//div[contains(@class, 'modal-footer')]//button[contains(@class,'btn-primary')][contains(text(),'Save')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_ELLIPSIS_ACTION</td>
+	<td>//div[contains(@class, 'field-type autofit-row autofit-row-center')]['${key_rowNumber}']//div[contains(@class, 'autofit-col pr-2')]//div[contains(@class, 'dropdown')]//button[contains(@class, 'btn btn-monospaced btn-unstyled')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_SET_DISABLED_ELLIPSIS_ACTION</td>
+	<td>//div[contains(@class, 'field-type disabled autofit-row autofit-row-center')]['${key_rowNumber}']//div[contains(@class, 'autofit-col pr-2')]//div[contains(@class, 'dropdown')]//button[contains(@class, 'btn btn-monospaced btn-unstyled')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>EMPTY_FORM_FIELD</td>
+	<td>//p[contains(text(),'Drag fields from the sidebar to compose your form.')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FORM_FIELD_FIRST_ROW</td>
+	<td>//div[contains(@class,"placeholder row")]//div[contains(@data-ddm-field-page, "0") and contains(@data-ddm-field-row, "0")]//div[contains(@class, "ddm-target")]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FORM_FIELD_FIRST_ITEM</td>
+	<td>//div[contains(@class,"form-group") and contains(.,'${key_fieldLabel}')]//label</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FORM_FIELD_REQUIRED_ITEM</td>
+	<td>//div[contains(@class, 'ddm-field')]//label[contains(., 'Rich Text')]//span[contains(@class, 'ddm-label-required')]</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>FIELD_IN_FORM_BUILDER</td>
+	<td>//legend[text()='${fieldLabel}']</td>
+	<td></td>
+</tr>
+
+<tr>
+	<td>OPTIONS_PLACED_IN_FORM_BUILDER</td>
+	<td>//div[@class='ddm-radio']//span[text()='${optionLabel}']</td>
 	<td></td>
 </tr>
 

@@ -54,6 +54,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
@@ -103,6 +104,27 @@ public class AssetCategoriesDisplayContext {
 						ASSET_CATEGORIES_ADMIN_CONFIGURATION);
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+	}
+
+	public String getAddCategoryRedirect() throws PortalException {
+		PortletURL addCategoryURL = _renderResponse.createRenderURL();
+
+		addCategoryURL.setParameter("mvcPath", "/edit_category.jsp");
+
+		long parentCategoryId = BeanParamUtil.getLong(
+			getCategory(), _httpServletRequest, "parentCategoryId");
+
+		if (parentCategoryId > 0) {
+			addCategoryURL.setParameter(
+				"parentCategoryId", String.valueOf(parentCategoryId));
+		}
+
+		if (getVocabularyId() > 0) {
+			addCategoryURL.setParameter(
+				"vocabularyId", String.valueOf(getVocabularyId()));
+		}
+
+		return addCategoryURL.toString();
 	}
 
 	public String getAssetType(AssetVocabulary vocabulary)
@@ -352,6 +374,9 @@ public class AssetCategoriesDisplayContext {
 			return portletURL.toString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
 
 		return null;
@@ -374,8 +399,9 @@ public class AssetCategoriesDisplayContext {
 			return _displayStyle;
 		}
 
-		_displayStyle = ParamUtil.getString(
-			_httpServletRequest, "displayStyle", "list");
+		_displayStyle = SearchDisplayStyleUtil.getDisplayStyle(
+			_httpServletRequest,
+			AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN, "list");
 
 		return _displayStyle;
 	}

@@ -81,6 +81,7 @@ public class AssignScopesDisplayContext
 			portletRequest, themeDisplay);
 
 		_applicationDescriptorLocator = applicationDescriptorLocator;
+
 		_companyId = themeDisplay.getCompanyId();
 		_locale = themeDisplay.getLocale();
 
@@ -595,12 +596,12 @@ public class AssignScopesDisplayContext
 	}
 
 	private final ApplicationDescriptorLocator _applicationDescriptorLocator;
-	private Map<AssignableScopes, Relations> _assignableScopesRelations =
+	private final Map<AssignableScopes, Relations> _assignableScopesRelations =
 		new HashMap<>();
 	private final long _companyId;
-	private Map<String, Set<AssignableScopes>>
+	private final Map<String, Set<AssignableScopes>>
 		_globalAssignableScopesByApplicationName = new HashMap<>();
-	private Map<String, Set<AssignableScopes>>
+	private final Map<String, Set<AssignableScopes>>
 		_localAssignableScopesByApplicationName = new HashMap<>();
 	private final Locale _locale;
 

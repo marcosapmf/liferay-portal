@@ -13,8 +13,6 @@
  */
 
 import {PortletBase, createPortletURL} from 'frontend-js-web';
-import dom from 'metal-dom';
-import {EventHandler} from 'metal-events';
 import {Config} from 'metal-state';
 
 /**
@@ -26,12 +24,9 @@ class UserNameFields extends PortletBase {
 	 * @inheritDoc
 	 */
 	attached() {
-		this._eventHandler.add(
-			dom.on(
-				this.languageIdSelectNode,
-				'change',
-				this._handleSelectChange.bind(this)
-			)
+		this.languageIdSelectNode.addEventListener(
+			'change',
+			this._handleSelectChange
 		);
 	}
 
@@ -39,7 +34,7 @@ class UserNameFields extends PortletBase {
 	 * @inheritDoc
 	 */
 	created() {
-		this._eventHandler = new EventHandler();
+		this._handleSelectChange = this._handleSelectChange.bind(this);
 
 		this._formDataCache = {};
 		this._maxLengthsCache = {};
@@ -53,7 +48,10 @@ class UserNameFields extends PortletBase {
 	detached() {
 		super.detached();
 
-		this._eventHandler.removeAllListeners();
+		this.languageIdSelectNode.removeEventListener(
+			'change',
+			this._handleSelectChange
+		);
 	}
 
 	/**
@@ -114,7 +112,7 @@ class UserNameFields extends PortletBase {
 			this._loadingAnimationMarkupText
 		);
 
-		dom.addClasses(this.userNameFieldsNode, 'hide');
+		this.userNameFieldsNode.classList.add('hide');
 	}
 
 	_cleanUp() {
@@ -216,9 +214,13 @@ class UserNameFields extends PortletBase {
 	 * @protected
 	 */
 	_removeLoadingIndicator() {
-		dom.exitDocument(this.one('#loadingUserNameFields'));
+		const loadingUserNameFields = this.one('#loadingUserNameFields');
 
-		dom.removeClasses(this.userNameFieldsNode, 'hide');
+		if (loadingUserNameFields) {
+			loadingUserNameFields.remove();
+		}
+
+		this.userNameFieldsNode.classList.remove('hide');
 	}
 
 	/**
@@ -250,7 +252,9 @@ UserNameFields.STATE = {
 	 * @memberof UserNameFields
 	 * @type {String}
 	 */
-	formNode: Config.required().setter(dom.toElement).writeOnce(),
+	formNode: Config.required()
+		.setter((selector) => document.querySelector(selector))
+		.writeOnce(),
 
 	/**
 	 * Language id select field.
@@ -258,7 +262,9 @@ UserNameFields.STATE = {
 	 * @memberof UserNameFields
 	 * @type {String}
 	 */
-	languageIdSelectNode: Config.required().setter(dom.toElement).writeOnce(),
+	languageIdSelectNode: Config.required()
+		.setter((selector) => document.querySelector(selector))
+		.writeOnce(),
 
 	/**
 	 * HTML element containing the user name fields.
@@ -266,7 +272,9 @@ UserNameFields.STATE = {
 	 * @memberof UserNameFields
 	 * @type {String}
 	 */
-	userNameFieldsNode: Config.required().setter(dom.toElement).writeOnce(),
+	userNameFieldsNode: Config.required()
+		.setter((selector) => document.querySelector(selector))
+		.writeOnce(),
 };
 
 export default UserNameFields;

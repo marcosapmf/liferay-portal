@@ -14,8 +14,10 @@
 
 package com.liferay.data.engine.taglib.servlet.taglib;
 
+import com.liferay.data.engine.taglib.internal.servlet.taglib.util.DataLayoutTaglibUtil;
 import com.liferay.data.engine.taglib.servlet.taglib.base.BaseDataLayoutBuilderTag;
-import com.liferay.data.engine.taglib.servlet.taglib.util.DataLayoutTaglibUtil;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -23,6 +25,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -33,6 +36,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.JspException;
@@ -105,11 +109,41 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 				getContentType(), tagHttpServletRequest.getLocale()));
 
 		setNamespacedAttribute(
+			httpServletRequest, "contentTypeConfig",
+			DataLayoutTaglibUtil.getContentTypeConfigJSONObject(
+				getContentType()));
+		setNamespacedAttribute(
 			httpServletRequest, "dataLayout",
 			DataLayoutTaglibUtil.getDataLayoutJSONObject(
 				availableLocales, getDataDefinitionId(), getDataLayoutId(),
 				httpServletRequest,
 				(HttpServletResponse)pageContext.getResponse()));
+		setNamespacedAttribute(
+			httpServletRequest, "defaultLanguageId", _getDefaultLanguageId());
+		setNamespacedAttribute(httpServletRequest, "module", _getModule());
+		setNamespacedAttribute(
+			httpServletRequest, "moduleServletContext",
+			_getModuleServletContext());
+	}
+
+	private String _getDefaultLanguageId() {
+		long dataDefinitionId = getDataDefinitionId();
+
+		String languageId = LocaleUtil.toLanguageId(
+			LocaleUtil.getSiteDefault());
+
+		if (dataDefinitionId <= 0) {
+			return languageId;
+		}
+
+		DDMStructure ddmStructure =
+			DDMStructureLocalServiceUtil.fetchDDMStructure(dataDefinitionId);
+
+		if (ddmStructure == null) {
+			return languageId;
+		}
+
+		return ddmStructure.getDefaultLanguageId();
 	}
 
 	private String[] _getLanguageIds(Set<Locale> locales) {
@@ -120,6 +154,22 @@ public class DataLayoutBuilderTag extends BaseDataLayoutBuilderTag {
 		).toArray(
 			String[]::new
 		);
+	}
+
+	private String _getModule() {
+		if (Validator.isBlank(getModule())) {
+			return "data_layout_builder/js/App.es";
+		}
+
+		return getModule();
+	}
+
+	private ServletContext _getModuleServletContext() {
+		if (getModuleServletContext() == null) {
+			return pageContext.getServletContext();
+		}
+
+		return getModuleServletContext();
 	}
 
 	private Map<String, Object> _getSidebarPanels() {

@@ -14,7 +14,11 @@
 
 import './FieldSet.scss';
 
-import {Layout, getRepeatedIndex} from 'dynamic-data-mapping-form-renderer';
+import {
+	Layout,
+	getRepeatedIndex,
+	usePage,
+} from 'dynamic-data-mapping-form-renderer';
 import React, {useMemo} from 'react';
 
 import {FieldBase} from '../FieldBase/ReactFieldBase.es';
@@ -51,6 +55,7 @@ const getRows = (rows, nestedFields) => {
 
 const FieldSet = ({
 	collapsible,
+	ddmStructureId,
 	label,
 	name,
 	nestedFields = [],
@@ -58,15 +63,37 @@ const FieldSet = ({
 	repeatable,
 	rows,
 	showLabel,
+	type,
 	...otherProps
 }) => {
+	let belongsToFieldSet = false;
+	let fieldInsidePage = null;
+
+	const isFieldsGroup = type === 'fieldset' && !ddmStructureId;
+	const {page} = usePage();
 	const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
-	const renderLayout = ({ddmStructureId, type}) => (
-		<Layout
-			editable={type === 'fieldset' && !ddmStructureId}
-			rows={getRows(rows, nestedFields)}
-		/>
-	);
+
+	const findFieldInsidePage = (fields) =>
+		fields?.find((field) => {
+			if (!belongsToFieldSet) {
+				belongsToFieldSet = !!field.ddmStructureId;
+			}
+
+			return field.name === name
+				? field
+				: findFieldInsidePage(field.nestedFields);
+		});
+
+	if (isFieldsGroup) {
+		page.rows.forEach((row) => {
+			row.columns.forEach((column) => {
+				if (!fieldInsidePage) {
+					belongsToFieldSet = false;
+					fieldInsidePage = findFieldInsidePage(column.fields);
+				}
+			});
+		});
+	}
 
 	return (
 		<FieldBase
@@ -76,6 +103,8 @@ const FieldSet = ({
 			repeatable={collapsible ? false : repeatable}
 			required={false}
 			showLabel={false}
+			tip={null}
+			type={type}
 		>
 			<div className="ddm-field-types-fieldset__nested">
 				{showLabel && !collapsible && (
@@ -98,10 +127,16 @@ const FieldSet = ({
 						}
 						title={label}
 					>
-						{renderLayout(otherProps)}
+						<Layout
+							editable={isFieldsGroup && !belongsToFieldSet}
+							rows={getRows(rows, nestedFields)}
+						/>
 					</Panel>
 				) : (
-					renderLayout(otherProps)
+					<Layout
+						editable={isFieldsGroup && !belongsToFieldSet}
+						rows={getRows(rows, nestedFields)}
+					/>
 				)}
 			</div>
 		</FieldBase>

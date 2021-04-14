@@ -84,7 +84,7 @@ public class GitHubDevSyncUtil {
 		return _createCacheLocalGitBranch(
 			localGitRepository, pullRequest.getReceiverUsername(),
 			pullRequest.getSenderBranchName(), pullRequest.getSenderUsername(),
-			pullRequest.getSenderSHA(), pullRequest.getLiferayRemoteBranchSHA(),
+			pullRequest.getSenderSHA(), pullRequest.getUpstreamBranchSHA(),
 			synchronize);
 	}
 
@@ -161,8 +161,7 @@ public class GitHubDevSyncUtil {
 	public static String getCacheBranchName(PullRequest pullRequest) {
 		return getCacheBranchName(
 			pullRequest.getReceiverUsername(), pullRequest.getSenderUsername(),
-			pullRequest.getSenderSHA(),
-			pullRequest.getLiferayRemoteBranchSHA());
+			pullRequest.getSenderSHA(), pullRequest.getUpstreamBranchSHA());
 	}
 
 	public static String getCacheBranchName(RemoteGitRef remoteGitRef) {
@@ -767,9 +766,7 @@ public class GitHubDevSyncUtil {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(
-			JenkinsResultsParserUtil.toDateString(
-				new Date(), "America/Los_Angeles"));
+		sb.append(JenkinsResultsParserUtil.toDateString(new Date()));
 		sb.append("\n\n");
 
 		JenkinsSlave jenkinsSlave = new JenkinsSlave();

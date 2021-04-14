@@ -22,7 +22,6 @@ import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceOrderNote;
-import com.liferay.commerce.model.CommerceRegion;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.notification.model.CommerceNotificationQueueEntry;
 import com.liferay.commerce.notification.service.CommerceNotificationQueueEntryLocalService;
@@ -30,7 +29,7 @@ import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
 import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
 import com.liferay.commerce.order.web.internal.display.context.util.CommerceOrderRequestHelper;
-import com.liferay.commerce.order.web.internal.servlet.taglib.ui.CommerceOrderScreenNavigationConstants;
+import com.liferay.commerce.order.web.internal.servlet.taglib.ui.constants.CommerceOrderScreenNavigationConstants;
 import com.liferay.commerce.payment.model.CommercePaymentMethodGroupRel;
 import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -46,6 +45,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -83,9 +83,9 @@ public class CommerceOrderEditDisplayContext {
 			CommerceNotificationQueueEntryLocalService
 				commerceNotificationQueueEntryLocalService,
 			CommerceOrderEngine commerceOrderEngine,
-			CommerceOrderService commerceOrderService,
 			CommerceOrderItemService commerceOrderItemService,
 			CommerceOrderNoteService commerceOrderNoteService,
+			CommerceOrderService commerceOrderService,
 			CommerceOrderStatusRegistry commerceOrderStatusRegistry,
 			CommercePaymentMethodGroupRelLocalService
 				commercePaymentMethodGroupRelLocalService,
@@ -97,9 +97,9 @@ public class CommerceOrderEditDisplayContext {
 		_commerceNotificationQueueEntryLocalService =
 			commerceNotificationQueueEntryLocalService;
 		_commerceOrderEngine = commerceOrderEngine;
-		_commerceOrderService = commerceOrderService;
 		_commerceOrderItemService = commerceOrderItemService;
 		_commerceOrderNoteService = commerceOrderNoteService;
+		_commerceOrderService = commerceOrderService;
 		_commerceOrderStatusRegistry = commerceOrderStatusRegistry;
 		_commercePaymentMethodGroupRelLocalService =
 			commercePaymentMethodGroupRelLocalService;
@@ -197,7 +197,8 @@ public class CommerceOrderEditDisplayContext {
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceOrder");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_order/edit_commerce_order");
 		portletURL.setParameter(
 			"commerceOrderId", String.valueOf(getCommerceOrderId()));
 		portletURL.setParameter(
@@ -273,7 +274,8 @@ public class CommerceOrderEditDisplayContext {
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceOrder");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_order/edit_commerce_order");
 		portletURL.setParameter(
 			"commerceOrderId", String.valueOf(getCommerceOrderId()));
 		portletURL.setParameter(
@@ -340,7 +342,8 @@ public class CommerceOrderEditDisplayContext {
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceOrder");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_order/edit_commerce_order");
 		portletURL.setParameter(
 			"commerceOrderId", String.valueOf(getCommerceOrderId()));
 		portletURL.setParameter(
@@ -389,7 +392,8 @@ public class CommerceOrderEditDisplayContext {
 
 		PortletURL portletURL = liferayPortletResponse.createRenderURL();
 
-		portletURL.setParameter("mvcRenderCommandName", "editCommerceOrder");
+		portletURL.setParameter(
+			"mvcRenderCommandName", "/commerce_order/edit_commerce_order");
 		portletURL.setParameter(
 			"commerceOrderId", String.valueOf(getCommerceOrderId()));
 		portletURL.setParameter(
@@ -414,17 +418,17 @@ public class CommerceOrderEditDisplayContext {
 			return StringPool.BLANK;
 		}
 
-		CommerceRegion commerceRegion = commerceAddress.getCommerceRegion();
+		Region region = commerceAddress.getRegion();
 
-		StringBundler sb = new StringBundler((commerceRegion == null) ? 5 : 7);
+		StringBundler sb = new StringBundler((region == null) ? 5 : 7);
 
 		sb.append(commerceAddress.getStreet1());
 		sb.append(StringPool.SPACE);
 		sb.append(commerceAddress.getCity());
 		sb.append(StringPool.NEW_LINE);
 
-		if (commerceRegion != null) {
-			sb.append(commerceRegion.getCode());
+		if (region != null) {
+			sb.append(region.getRegionCode());
 			sb.append(StringPool.SPACE);
 		}
 
@@ -536,9 +540,6 @@ public class CommerceOrderEditDisplayContext {
 			return steps;
 		}
 
-		List<CommerceOrderStatus> commerceOrderStatuses =
-			_commerceOrderStatusRegistry.getCommerceOrderStatuses();
-
 		if ((currentCommerceOrderStatus != null) &&
 			currentCommerceOrderStatus.isWorkflowEnabled(_commerceOrder)) {
 
@@ -551,6 +552,9 @@ public class CommerceOrderEditDisplayContext {
 
 			return steps;
 		}
+
+		List<CommerceOrderStatus> commerceOrderStatuses =
+			_commerceOrderStatusRegistry.getCommerceOrderStatuses();
 
 		for (CommerceOrderStatus commerceOrderStatus : commerceOrderStatuses) {
 			if (((commerceOrderStatus.getKey() ==
@@ -604,7 +608,8 @@ public class CommerceOrderEditDisplayContext {
 
 		PortletURL portletURL = liferayPortletResponse.createActionURL();
 
-		portletURL.setParameter(ActionRequest.ACTION_NAME, "editCommerceOrder");
+		portletURL.setParameter(
+			ActionRequest.ACTION_NAME, "/commerce_order/edit_commerce_order");
 		portletURL.setParameter(Constants.CMD, "transition");
 		portletURL.setParameter(
 			"commerceOrderId",

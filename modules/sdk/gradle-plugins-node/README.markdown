@@ -3,7 +3,7 @@
 The Node Gradle plugin lets you run [Node.js](https://nodejs.org/) and
 [NPM](https://www.npmjs.com/) as part of your build.
 
-The plugin has been successfully tested with Gradle 5.6.4.
+The plugin has been successfully tested with Gradle 5.6.4 and 6.6.1.
 
 ## Usage
 
@@ -12,7 +12,7 @@ To use the plugin, include it in your build script:
 ```gradle
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.node", version: "7.2.3"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.node", version: "7.2.5"
 	}
 
 	repositories {
@@ -98,6 +98,7 @@ Property Name | Type | Default Value | Description
 `nodeDir` | `File` | `null` | The directory where the Node.js distribution is unpacked.
 `nodeUrl` | `String` | `null` | The URL of the Node.js distribution to download.
 `npmUrl` | `String` | `null` | The URL of the NPM version to download.
+`yarnUrl` | `String` | `null` | The URL of the Yarn version to download.
 
 The properties of type `File` support any type that can be resolved by [`project.file`](https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#org.gradle.api.Project:file(java.css.Object)).
 Moreover, it is possible to use Closures and Callables as values for the

@@ -23,7 +23,7 @@ String containerId = randomNamespace + "modal-root";
 <div class="modal-root" id="<%= containerId %>"></div>
 
 <aui:script require="commerce-frontend-js/components/modal/entry as Modal">
-	new Modal.default('<%= id %>', '<%= containerId %>', {
+	Modal.default('<%= id %>', '<%= containerId %>', {
 		id: '<%= id %>',
 		onClose: <%= refreshPageOnClose %>
 			? function () {

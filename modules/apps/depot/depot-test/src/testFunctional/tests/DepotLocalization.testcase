@@ -18,6 +18,10 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			JSONDepot.deleteDepot(depotName = "Test Depot Name");
+
+			Site.tearDownCP();
+
 			DMDocument.tearDownCP();
 
 			DMFolder.tearDownCP();
@@ -130,7 +134,6 @@ definition {
 		Pause(locator1 = "3000");
 
 		for (var fieldName : list "Name,Description") {
-
 			Click(
 				key_fieldName = "${fieldName}",
 				locator1 = "Button#LOCALIZATION");

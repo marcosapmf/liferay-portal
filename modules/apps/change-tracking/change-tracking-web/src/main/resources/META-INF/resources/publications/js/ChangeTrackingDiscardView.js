@@ -12,96 +12,78 @@
  * details.
  */
 
-import ClayBreadcrumb from '@clayui/breadcrumb';
+import ClayModal, {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import ClayTable from '@clayui/table';
-import {fetch} from 'frontend-js-web';
-import React from 'react';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import React, {useState} from 'react';
 
-class ChangeTrackingDiscardView extends React.Component {
-	constructor(props) {
-		super(props);
+import ChangeTrackingRenderView from './ChangeTrackingRenderView';
 
-		const {ctEntries, renderURL, spritemap, typeNames, userInfo} = props;
+export default ({ctEntriesJSONArray, spritemap, typeNames, userInfo}) => {
+	const [delta, setDelta] = useState(20);
+	const [page, setPage] = useState(1);
+	const [viewEntry, setViewEntry] = useState(null);
 
-		this.ctEntries = ctEntries;
-		this.renderURL = renderURL;
-		this.spritemap = spritemap;
-		this.typeNames = typeNames;
-		this.userInfo = userInfo;
+	/* eslint-disable no-unused-vars */
+	const {observer, onClose} = useModal({
+		onClose: () => setViewEntry(null),
+	});
 
-		for (let i = 0; i < this.ctEntries.length; i++) {
-			const entry = this.ctEntries[i];
+	const ctEntries = ctEntriesJSONArray.slice(0);
 
-			const userInfo = this.userInfo[entry.userId.toString()];
+	for (let i = 0; i < ctEntries.length; i++) {
+		const entry = ctEntries[i];
 
-			entry.portraitURL = userInfo.portraitURL;
-			entry.userName = userInfo.userName;
+		const entryUserInfo = userInfo[entry.userId.toString()];
 
-			entry.typeName = this.typeNames[entry.modelClassNameId.toString()];
-		}
-
-		this.ctEntries.sort((a, b) => {
-			const titleA = a.title;
-			const titleB = b.title;
-			const typeNameA = a.typeName.toUpperCase();
-			const typeNameB = b.typeName.toUpperCase();
-
-			if (typeNameA < typeNameB) {
-				return -1;
-			}
-
-			if (typeNameA > typeNameB) {
-				return 1;
-			}
-
-			if (titleA < titleB) {
-				return -1;
-			}
-
-			if (titleA > titleB) {
-				return 1;
-			}
-
-			return 0;
-		});
-
-		this.state = {
-			ascending: true,
-			column: 'title',
-			delta: 20,
-			entry: null,
-			page: 1,
-			renderInnerHTML: null,
-			sortDirectionClass: 'order-arrow-down-active',
+		entry.userName = entryUserInfo.userName;
+		entry.userPortraitHTML = {
+			__html: entryUserInfo.userPortraitHTML,
 		};
+
+		entry.typeName = typeNames[entry.modelClassNameId.toString()];
 	}
 
-	_filterDisplayEntries(entries) {
+	ctEntries.sort((a, b) => {
+		const titleA = a.title.toLowerCase();
+		const titleB = b.title.toLowerCase();
+		const typeNameA = a.typeName.toLowerCase();
+		const typeNameB = b.typeName.toLowerCase();
+
+		if (typeNameA < typeNameB) {
+			return -1;
+		}
+
+		if (typeNameA > typeNameB) {
+			return 1;
+		}
+
+		if (titleA < titleB) {
+			return -1;
+		}
+
+		if (titleA > titleB) {
+			return 1;
+		}
+
+		return 0;
+	});
+
+	const filterDisplayEntries = (entries) => {
 		if (entries.length > 5) {
-			entries = entries.slice(
-				this.state.delta * (this.state.page - 1),
-				this.state.delta * this.state.page
-			);
+			return entries.slice(delta * (page - 1), delta * page);
 		}
 
 		return entries;
-	}
+	};
 
-	_getRenderURL(entry) {
-		const portletURL = Liferay.PortletURL.createURL(this.renderURL);
-
-		portletURL.setParameter('ctEntryId', entry.ctEntryId);
-
-		return portletURL.toString();
-	}
-
-	_getTableRows() {
+	const getTableRows = () => {
 		const rows = [];
 
 		let currentTypeName = '';
 
-		const entries = this._filterDisplayEntries(this.ctEntries);
+		const entries = filterDisplayEntries(ctEntries);
 
 		for (let i = 0; i < entries.length; i++) {
 			const entry = entries[i];
@@ -118,215 +100,101 @@ class ChangeTrackingDiscardView extends React.Component {
 				);
 			}
 
-			const cells = [];
-
-			if (entry.portraitURL) {
-				cells.push(
+			rows.push(
+				<ClayTable.Row
+					className="cursor-pointer"
+					onClick={() => setViewEntry(entry)}
+				>
 					<ClayTable.Cell>
-						<span
-							className="lfr-portal-tooltip"
+						<div
+							dangerouslySetInnerHTML={entry.userPortraitHTML}
+							data-tooltip-align="top"
 							title={entry.userName}
-						>
-							<span className="rounded-circle sticker sticker-primary">
-								<span className="sticker-overlay">
-									<img
-										alt="thumbnail"
-										className="img-fluid"
-										src={entry.portraitURL}
-									/>
-								</span>
-							</span>
-						</span>
+						/>
 					</ClayTable.Cell>
-				);
-			}
-			else {
-				let userPortraitCss =
-					'sticker sticker-circle sticker-light user-icon-color-';
-
-				userPortraitCss += entry.userId % 10;
-
-				cells.push(
 					<ClayTable.Cell>
-						<span
-							className="lfr-portal-tooltip"
-							title={entry.userName}
-						>
-							<span className={userPortraitCss}>
-								<span className="inline-item">
-									<svg className="lexicon-icon">
-										<use href={this.spritemap + '#user'} />
-									</svg>
-								</span>
-							</span>
-						</span>
-					</ClayTable.Cell>
-				);
-			}
-
-			cells.push(
-				<ClayTable.Cell>
-					<button
-						className="change-row-button"
-						onClick={() => this._handleNavigation(entry.ctEntryId)}
-					>
 						<div className="publication-name">{entry.title}</div>
 						<div className="publication-description">
 							{entry.description}
 						</div>
-					</button>
-				</ClayTable.Cell>
+					</ClayTable.Cell>
+				</ClayTable.Row>
 			);
-
-			rows.push(<ClayTable.Row>{cells}</ClayTable.Row>);
 		}
 
 		return rows;
-	}
+	};
 
-	_handleDeltaChange(delta) {
-		this.setState({
-			delta,
-			page: 1,
-		});
-	}
-
-	_handleNavigation(entryId) {
-		if (entryId === 0) {
-			this.setState({
-				entry: null,
-				renderInnerHTML: null,
-			});
-
-			return;
-		}
-
-		for (let i = 0; i < this.ctEntries.length; i++) {
-			const entry = this.ctEntries[i];
-
-			if (entry.ctEntryId === entryId) {
-				this.setState({
-					entry,
-				});
-
-				AUI().use('liferay-portlet-url', () => {
-					fetch(this._getRenderURL(entry))
-						.then((response) => response.text())
-						.then((text) => {
-							this.setState({
-								renderInnerHTML: {__html: text},
-							});
-						});
-				});
-
-				return;
-			}
-		}
-	}
-
-	_handlePageChange(page) {
-		this.setState({
-			page,
-		});
-	}
-
-	_handleSortColumnChange(column) {
-		this.setState({
-			column,
-		});
-	}
-
-	_handleSortDirectionChange() {
-		if (this.state.ascending) {
-			this.setState({
-				ascending: false,
-				sortDirectionClass: 'order-arrow-up-active',
-			});
-
-			return;
-		}
-
-		this.setState({
-			ascending: true,
-			sortDirectionClass: 'order-arrow-down-active',
-		});
-	}
-
-	_renderBreadcrumbs() {
-		let items = [
-			{
-				active: true,
-				label: Liferay.Language.get('home'),
-			},
-		];
-
-		if (this.state.entry !== null) {
-			items = [
-				{
-					label: Liferay.Language.get('home'),
-					onClick: () => this._handleNavigation(0),
-				},
-				{
-					active: true,
-					label: this.state.entry.title,
-				},
-			];
-		}
-
-		return (
-			<ClayBreadcrumb
-				ellipsisBuffer={1}
-				items={items}
-				spritemap={this.spritemap}
-			/>
-		);
-	}
-
-	_renderEntry() {
-		let content = '';
-
-		if (this.state.renderInnerHTML !== null) {
-			content = (
-				<div
-					className="sheet-section"
-					dangerouslySetInnerHTML={this.state.renderInnerHTML}
-				/>
-			);
-		}
-
-		return (
-			<div className="sheet">
-				<h2 className="sheet-title">{this.state.entry.description}</h2>
-
-				{content}
-			</div>
-		);
-	}
-
-	_renderPagination() {
-		if (this.ctEntries.length <= 5) {
+	const renderPagination = () => {
+		if (ctEntries.length <= 5) {
 			return '';
 		}
 
 		return (
 			<ClayPaginationBarWithBasicItems
-				activeDelta={this.state.delta}
-				activePage={this.state.page}
+				activeDelta={delta}
+				activePage={page}
 				deltas={[4, 8, 20, 40, 60].map((size) => ({
 					label: size,
 				}))}
 				ellipsisBuffer={3}
-				onDeltaChange={(delta) => this._handleDeltaChange(delta)}
-				onPageChange={(page) => this._handlePageChange(page)}
-				totalItems={this.ctEntries.length}
+				onDeltaChange={(newDelta) => {
+					setDelta(newDelta);
+					setPage(1);
+				}}
+				onPageChange={(newPage) => setPage(newPage)}
+				totalItems={ctEntries.length}
 			/>
 		);
-	}
+	};
 
-	_renderTable() {
+	const renderViewModal = () => {
+		if (!viewEntry) {
+			return '';
+		}
+
 		return (
-			<>
-				<ClayTable className="publications-table" hover={false}>
+			<ClayModal
+				className="publications-modal"
+				observer={observer}
+				size="full-screen"
+				spritemap={spritemap}
+			>
+				<ClayModal.Header>
+					<div className="autofit-row">
+						<div className="autofit-col publications-discard-user-portrait">
+							<div
+								dangerouslySetInnerHTML={
+									viewEntry.userPortraitHTML
+								}
+								data-tooltip-align="top"
+								title={viewEntry.userName}
+							/>
+						</div>
+						<div className="autofit-col">
+							<div className="modal-title">{viewEntry.title}</div>
+							<div className="modal-description">
+								{viewEntry.description}
+							</div>
+						</div>
+					</div>
+				</ClayModal.Header>
+				<div className="publications-modal-body">
+					<ChangeTrackingRenderView
+						dataURL={viewEntry.dataURL}
+						spritemap={spritemap}
+					/>
+				</div>
+			</ClayModal>
+		);
+	};
+
+	return (
+		<>
+			{renderViewModal()}
+
+			<ClayTooltipProvider>
+				<ClayTable className="publications-table" hover>
 					<ClayTable.Head>
 						<ClayTable.Row>
 							<ClayTable.Cell headingCell style={{width: '5%'}}>
@@ -338,33 +206,11 @@ class ChangeTrackingDiscardView extends React.Component {
 							</ClayTable.Cell>
 						</ClayTable.Row>
 					</ClayTable.Head>
-					<ClayTable.Body>{this._getTableRows()}</ClayTable.Body>
+					<ClayTable.Body>{getTableRows()}</ClayTable.Body>
 				</ClayTable>
+			</ClayTooltipProvider>
 
-				{this._renderPagination()}
-			</>
-		);
-	}
-
-	render() {
-		let content;
-
-		if (this.state.entry === null) {
-			content = this._renderTable();
-		}
-		else {
-			content = this._renderEntry();
-		}
-
-		return (
-			<>
-				{this._renderBreadcrumbs()}
-				{content}
-			</>
-		);
-	}
-}
-
-export default function (props) {
-	return <ChangeTrackingDiscardView {...props} />;
-}
+			{renderPagination()}
+		</>
+	);
+};

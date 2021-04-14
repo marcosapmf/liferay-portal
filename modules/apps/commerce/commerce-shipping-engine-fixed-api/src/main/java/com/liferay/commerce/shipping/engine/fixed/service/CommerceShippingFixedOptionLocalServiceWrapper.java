@@ -399,6 +399,17 @@ public class CommerceShippingFixedOptionLocalServiceWrapper
 	}
 
 	@Override
+	public long getCommerceShippingFixedOptionsCount(
+			long companyId, long groupId, long commerceShippingMethodId,
+			String keywords)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceShippingFixedOptionLocalService.
+			getCommerceShippingFixedOptionsCount(
+				companyId, groupId, commerceShippingMethodId, keywords);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 

@@ -105,6 +105,10 @@ definition {
 
 		Button.clickSave();
 
+		if (IsElementPresent(locator1 = "IFrame#CONFIRM_PASSWORD")) {
+			User.confirmPassword(password = "${password}");
+		}
+
 		Alert.viewSuccessMessage();
 	}
 
@@ -158,6 +162,13 @@ definition {
 				key_alertMessage = "${emailDomainName} is",
 				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE");
 		}
+	}
+
+	macro viewEntryAccounts {
+		AssertElementPresent(
+			key_rowEntry = "${accountUserName}",
+			key_rowEntryAccount = "${accountName}",
+			locator1 = "Account#ENTRY_CONTENT_ENTRY_ACCOUNTS");
 	}
 
 	macro viewValidDomains {

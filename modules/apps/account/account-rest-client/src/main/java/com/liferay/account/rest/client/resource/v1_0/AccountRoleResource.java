@@ -231,8 +231,13 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/by-external-reference-code/{accountExternalReferenceCode}/account-roles/{accountRoleId}/account-users/{accountUserExternalReferenceCode}",
-				accountExternalReferenceCode, accountRoleId,
+						"/o/account-rest/v1.0/accounts/by-external-reference-code/{accountExternalReferenceCode}/account-roles/{accountRoleId}/account-users/{accountUserExternalReferenceCode}");
+
+			httpInvoker.path(
+				"accountExternalReferenceCode", accountExternalReferenceCode);
+			httpInvoker.path("accountRoleId", accountRoleId);
+			httpInvoker.path(
+				"accountUserExternalReferenceCode",
 				accountUserExternalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
@@ -305,8 +310,13 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/by-external-reference-code/{accountExternalReferenceCode}/account-roles/{accountRoleId}/account-users/{accountUserExternalReferenceCode}",
-				accountExternalReferenceCode, accountRoleId,
+						"/o/account-rest/v1.0/accounts/by-external-reference-code/{accountExternalReferenceCode}/account-roles/{accountRoleId}/account-users/{accountUserExternalReferenceCode}");
+
+			httpInvoker.path(
+				"accountExternalReferenceCode", accountExternalReferenceCode);
+			httpInvoker.path("accountRoleId", accountRoleId);
+			httpInvoker.path(
+				"accountUserExternalReferenceCode",
 				accountUserExternalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
@@ -389,8 +399,9 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/by-external-reference-code/{externalReferenceCode}/account-roles",
-				externalReferenceCode);
+						"/o/account-rest/v1.0/accounts/by-external-reference-code/{externalReferenceCode}/account-roles");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -457,8 +468,9 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/by-external-reference-code/{externalReferenceCode}/account-roles",
-				externalReferenceCode);
+						"/o/account-rest/v1.0/accounts/by-external-reference-code/{externalReferenceCode}/account-roles");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -539,8 +551,9 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/{accountId}/account-roles",
-				accountId);
+						"/o/account-rest/v1.0/accounts/{accountId}/account-roles");
+
+			httpInvoker.path("accountId", accountId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -605,8 +618,9 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/{accountId}/account-roles",
-				accountId);
+						"/o/account-rest/v1.0/accounts/{accountId}/account-roles");
+
+			httpInvoker.path("accountId", accountId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -671,8 +685,11 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/{accountId}/account-roles/{accountRoleId}/account-users/{accountUserId}",
-				accountId, accountRoleId, accountUserId);
+						"/o/account-rest/v1.0/accounts/{accountId}/account-roles/{accountRoleId}/account-users/{accountUserId}");
+
+			httpInvoker.path("accountId", accountId);
+			httpInvoker.path("accountRoleId", accountRoleId);
+			httpInvoker.path("accountUserId", accountUserId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -739,8 +756,11 @@ public interface AccountRoleResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/account-rest/v1.0/accounts/{accountId}/account-roles/{accountRoleId}/account-users/{accountUserId}",
-				accountId, accountRoleId, accountUserId);
+						"/o/account-rest/v1.0/accounts/{accountId}/account-roles/{accountRoleId}/account-users/{accountUserId}");
+
+			httpInvoker.path("accountId", accountId);
+			httpInvoker.path("accountRoleId", accountRoleId);
+			httpInvoker.path("accountUserId", accountUserId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
