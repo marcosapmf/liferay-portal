@@ -15,13 +15,33 @@
 package com.liferay.analytics.dxp.entities.exporter.internal.dto.v1_0.converter;
 
 import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.DXPEntity;
+import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.ExpandoField;
+import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.Field;
+import com.liferay.analytics.message.sender.util.AnalyticsExpandoBridgeUtil;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
+import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.ShardedModel;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
+import java.io.Serializable;
+
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,6 +72,36 @@ public class DXPEntityDTOConverter
 			return null;
 		}
 
+		if (StringUtil.equals(
+				baseModel.getModelClassName(), Contact.class.getName())) {
+
+			Contact contact = (Contact)baseModel;
+
+			User user = _userLocalService.fetchUser(contact.getClassPK());
+
+			if (_isExcluded(user)) {
+				return null;
+			}
+
+			return _toDXPEntity(
+				null, _toFields(baseModel),
+				String.valueOf(contact.getContactId()),
+				Contact.class.getName());
+		}
+		else if (StringUtil.equals(
+					baseModel.getModelClassName(), User.class.getName())) {
+
+			User user = (User)baseModel;
+
+			if (_isExcluded(user)) {
+				return null;
+			}
+
+			return _toDXPEntity(
+				_toExpandoFields(baseModel), _toFields(baseModel),
+				String.valueOf(user.getUserId()), User.class.getName());
+		}
+
 		return null;
 	}
 
@@ -69,7 +119,143 @@ public class DXPEntityDTOConverter
 		return false;
 	}
 
+	private boolean _isExcluded(User user) {
+		if ((user == null) ||
+			Objects.equals(
+				user.getScreenName(),
+				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN) ||
+			Objects.equals(
+				user.getStatus(), WorkflowConstants.STATUS_INACTIVE)) {
+
+			return true;
+		}
+
+		AnalyticsConfiguration analyticsConfiguration =
+			_analyticsConfigurationTracker.getAnalyticsConfiguration(
+				user.getCompanyId());
+
+		if (analyticsConfiguration.syncAllContacts()) {
+			return false;
+		}
+
+		long[] organizationIds = null;
+
+		try {
+			organizationIds = user.getOrganizationIds();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return true;
+		}
+
+		for (long organizationId : organizationIds) {
+			if (ArrayUtil.contains(
+					analyticsConfiguration.syncedOrganizationIds(),
+					String.valueOf(organizationId))) {
+
+				return false;
+			}
+		}
+
+		for (long userGroupId : user.getUserGroupIds()) {
+			if (ArrayUtil.contains(
+					analyticsConfiguration.syncedUserGroupIds(),
+					String.valueOf(userGroupId))) {
+
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private DXPEntity _toDXPEntity(
+		ExpandoField[] expandoFields, Field[] fields, String id, String type) {
+
+		DXPEntity dxpEntity = new DXPEntity();
+
+		if (ArrayUtil.isNotEmpty(expandoFields)) {
+			dxpEntity.setExpandoFields(expandoFields);
+		}
+
+		if (ArrayUtil.isNotEmpty(fields)) {
+			dxpEntity.setFields(fields);
+		}
+
+		dxpEntity.setId(id);
+		dxpEntity.setType(type);
+
+		return dxpEntity;
+	}
+
+	private ExpandoField[] _toExpandoFields(BaseModel<?> baseModel) {
+		List<String> includeAttributeNames = new ArrayList<>();
+
+		if (StringUtil.equals(
+				baseModel.getModelClassName(), User.class.getName())) {
+
+			ShardedModel shardedModel = (ShardedModel)baseModel;
+
+			AnalyticsConfiguration analyticsConfiguration =
+				_analyticsConfigurationTracker.getAnalyticsConfiguration(
+					shardedModel.getCompanyId());
+
+			includeAttributeNames = ListUtil.fromArray(
+				analyticsConfiguration.syncedUserFieldNames());
+		}
+
+		Map<String, Serializable> attributes =
+			AnalyticsExpandoBridgeUtil.getAttributes(
+				baseModel.getExpandoBridge(), includeAttributeNames);
+
+		ExpandoField[] attributeFields = new ExpandoField[attributes.size()];
+
+		for (Map.Entry<String, Serializable> entry : attributes.entrySet()) {
+			String key = entry.getKey();
+
+			ExpandoField expandoField = new ExpandoField() {
+				{
+					fieldType = key.substring(key.indexOf("-") + 1);
+					name = key;
+					value = String.valueOf(entry.getValue());
+				}
+			};
+
+			attributeFields = ArrayUtil.append(attributeFields, expandoField);
+		}
+
+		return attributeFields;
+	}
+
+	private Field[] _toFields(BaseModel<?> baseModel) {
+		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
+
+		Field[] attributeFields = new Field[modelAttributes.size()];
+
+		for (Map.Entry<String, Object> entry : modelAttributes.entrySet()) {
+			Field field = new Field() {
+				{
+					name = entry.getKey();
+					value = entry.getValue();
+				}
+			};
+
+			attributeFields = ArrayUtil.append(attributeFields, field);
+		}
+
+		return attributeFields;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DXPEntityDTOConverter.class);
+
 	@Reference
 	private AnalyticsConfigurationTracker _analyticsConfigurationTracker;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }
