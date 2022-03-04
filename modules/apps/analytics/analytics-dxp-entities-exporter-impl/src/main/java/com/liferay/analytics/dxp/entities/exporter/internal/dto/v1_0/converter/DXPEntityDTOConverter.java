@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -151,6 +152,16 @@ public class DXPEntityDTOConverter
 			return _toDXPEntity(
 				_toExpandoFields(baseModel), _toFields(baseModel),
 				String.valueOf(user.getUserId()), User.class.getName());
+		}
+		else if (StringUtil.equals(
+					baseModel.getModelClassName(), UserGroup.class.getName())) {
+
+			UserGroup userGroup = (UserGroup)baseModel;
+
+			return _toDXPEntity(
+				null, _toFields(baseModel),
+				String.valueOf(userGroup.getUserGroupId()),
+				UserGroup.class.getName());
 		}
 
 		return null;
