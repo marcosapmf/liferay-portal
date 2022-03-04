@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -89,6 +90,19 @@ public class DXPEntityDTOConverter
 				Contact.class.getName());
 		}
 		else if (StringUtil.equals(
+					baseModel.getModelClassName(), Group.class.getName())) {
+
+			Group group = (Group)baseModel;
+
+			if (_isExcluded(group)) {
+				return null;
+			}
+
+			return _toDXPEntity(
+				null, _toFields(baseModel), String.valueOf(group.getGroupId()),
+				Group.class.getName());
+		}
+		else if (StringUtil.equals(
 					baseModel.getModelClassName(), User.class.getName())) {
 
 			User user = (User)baseModel;
@@ -113,6 +127,14 @@ public class DXPEntityDTOConverter
 				shardedModel.getCompanyId());
 
 		if (analyticsConfigurationProperties == null) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isExcluded(Group group) {
+		if (!group.isSite()) {
 			return true;
 		}
 
