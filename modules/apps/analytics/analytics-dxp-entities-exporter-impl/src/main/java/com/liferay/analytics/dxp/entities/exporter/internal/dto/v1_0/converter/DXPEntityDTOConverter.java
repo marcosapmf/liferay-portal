@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -101,6 +102,17 @@ public class DXPEntityDTOConverter
 			return _toDXPEntity(
 				null, _toFields(baseModel), String.valueOf(group.getGroupId()),
 				Group.class.getName());
+		}
+		else if (StringUtil.equals(
+					baseModel.getModelClassName(),
+					Organization.class.getName())) {
+
+			Organization organization = (Organization)baseModel;
+
+			return _toDXPEntity(
+				_toExpandoFields(baseModel), _toFields(baseModel),
+				String.valueOf(organization.getOrganizationId()),
+				Organization.class.getName());
 		}
 		else if (StringUtil.equals(
 					baseModel.getModelClassName(), User.class.getName())) {
