@@ -15,11 +15,16 @@
 package com.liferay.analytics.dxp.entities.exporter.internal.dto.v1_0.converter;
 
 import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.DXPEntity;
+import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
+import java.util.Dictionary;
+
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rachael Koestartyo
@@ -41,7 +46,30 @@ public class DXPEntityDTOConverter
 			DTOConverterContext dtoConverterContext, BaseModel<?> baseModel)
 		throws Exception {
 
+		if (!_analyticsConfigurationTracker.isActive() || (baseModel == null) ||
+			_isExcluded(baseModel)) {
+
+			return null;
+		}
+
 		return null;
 	}
+
+	private boolean _isExcluded(BaseModel<?> baseModel) {
+		ShardedModel shardedModel = (ShardedModel)baseModel;
+
+		Dictionary<String, Object> analyticsConfigurationProperties =
+			_analyticsConfigurationTracker.getAnalyticsConfigurationProperties(
+				shardedModel.getCompanyId());
+
+		if (analyticsConfigurationProperties == null) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Reference
+	private AnalyticsConfigurationTracker _analyticsConfigurationTracker;
 
 }
