@@ -27,8 +27,10 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -115,6 +117,19 @@ public class DXPEntityDTOConverter
 				Organization.class.getName());
 		}
 		else if (StringUtil.equals(
+					baseModel.getModelClassName(), Role.class.getName())) {
+
+			Role role = (Role)baseModel;
+
+			if (_isExcluded(role)) {
+				return null;
+			}
+
+			return _toDXPEntity(
+				null, _toFields(baseModel), String.valueOf(role.getRoleId()),
+				Role.class.getName());
+		}
+		else if (StringUtil.equals(
 					baseModel.getModelClassName(), User.class.getName())) {
 
 			User user = (User)baseModel;
@@ -151,6 +166,14 @@ public class DXPEntityDTOConverter
 		}
 
 		return false;
+	}
+
+	private boolean _isExcluded(Role role) {
+		if (role.getType() == RoleConstants.TYPE_REGULAR) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private boolean _isExcluded(User user) {
