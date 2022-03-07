@@ -54,7 +54,7 @@ public class DXPEntityBatchEngineTaskItemDelegateHelper {
 
 		com.liferay.portal.vulcan.pagination.Page<DXPEntity> dxpEntitiesPage =
 			dxpEntityPageRetriever.getDXPEntitiesPage(
-				companyId, vulcanPagination,
+				companyId, filter, vulcanPagination,
 				baseModel -> _dxpEntityDTOConverter.toDTO(baseModel));
 
 		return Page.of(
