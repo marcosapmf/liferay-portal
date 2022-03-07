@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = DXPEntityRetriever.class
 )
 public class RoleRetriever
-	extends NoIndexedDXPEntityPageRetriever implements DXPEntityRetriever {
+	extends NonIndexedDXPEntityRetriever implements DXPEntityRetriever {
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
@@ -59,7 +59,7 @@ public class RoleRetriever
 			RestrictionsFactoryUtil.eq("type", RoleConstants.TYPE_REGULAR));
 
 		List<Role> roles = _roleLocalService.dynamicQuery(
-			updateDynamicQuery(companyId, dynamicQuery, filter),
+			buildDynamicQuery(companyId, dynamicQuery, filter),
 			pagination.getStartPosition(), pagination.getEndPosition());
 
 		for (Role role : roles) {

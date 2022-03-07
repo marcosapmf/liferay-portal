@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = DXPEntityRetriever.class
 )
 public class TeamRetriever
-	extends NoIndexedDXPEntityPageRetriever implements DXPEntityRetriever {
+	extends NonIndexedDXPEntityRetriever implements DXPEntityRetriever {
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
@@ -51,7 +51,7 @@ public class TeamRetriever
 		List<DXPEntity> dxpEntities = new ArrayList<>();
 
 		List<Team> teams = _teamLocalService.dynamicQuery(
-			updateDynamicQuery(
+			buildDynamicQuery(
 				companyId, _teamLocalService.dynamicQuery(), filter),
 			pagination.getStartPosition(), pagination.getEndPosition());
 

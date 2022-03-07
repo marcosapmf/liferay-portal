@@ -29,9 +29,9 @@ import java.util.Date;
 /**
  * @author Marcos Martins
  */
-public abstract class NoIndexedDXPEntityPageRetriever {
+public abstract class NonIndexedDXPEntityRetriever {
 
-	protected DynamicQuery updateDynamicQuery(
+	protected DynamicQuery buildDynamicQuery(
 		long companyId, DynamicQuery dynamicQuery, Filter filter) {
 
 		dynamicQuery.add(RestrictionsFactoryUtil.eq("companyId", companyId));
