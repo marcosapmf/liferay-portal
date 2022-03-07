@@ -126,9 +126,9 @@ public class AnalyticsUploadDXPEntityDispatchTaskExecutor
 
 	private static final String[]
 		_BATCH_ENGINE_EXPORT_TASK_ITEM_DELEGATE_NAMES = {
-			"group-dxp-entities", "organization-dxp-entities",
-			"role-dxp-entities", "team-dxp-entities", "user-dxp-entities",
-			"user-group-dxp-entities"
+			"expando-column-dxp-entities", "group-dxp-entities",
+			"organization-dxp-entities", "role-dxp-entities",
+			"team-dxp-entities", "user-dxp-entities", "user-group-dxp-entities"
 		};
 
 	private static final DateFormat _dateFormat = new SimpleDateFormat(
