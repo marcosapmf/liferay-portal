@@ -21,14 +21,9 @@ import com.liferay.analytics.message.sender.util.AnalyticsExpandoBridgeUtil;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.model.Contact;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
-import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.ShardedModel;
-import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -65,97 +60,21 @@ public class DXPEntityDTOConverter
 			DTOConverterContext dtoConverterContext, BaseModel<?> baseModel)
 		throws Exception {
 
-		if (StringUtil.equals(
-				baseModel.getModelClassName(), Contact.class.getName())) {
-
-			Contact contact = (Contact)baseModel;
-
-			return _toDXPEntity(
-				null, _toFields(baseModel),
-				String.valueOf(contact.getContactId()),
-				Contact.class.getName());
-		}
-		else if (StringUtil.equals(
-					baseModel.getModelClassName(), Group.class.getName())) {
-
-			Group group = (Group)baseModel;
-
-			return _toDXPEntity(
-				null, _toFields(baseModel), String.valueOf(group.getGroupId()),
-				Group.class.getName());
-		}
-		else if (StringUtil.equals(
-					baseModel.getModelClassName(),
-					Organization.class.getName())) {
-
-			Organization organization = (Organization)baseModel;
-
-			return _toDXPEntity(
-				_toExpandoFields(baseModel), _toFields(baseModel),
-				String.valueOf(organization.getOrganizationId()),
-				Organization.class.getName());
-		}
-		else if (StringUtil.equals(
-					baseModel.getModelClassName(), Role.class.getName())) {
-
-			Role role = (Role)baseModel;
-
-			return _toDXPEntity(
-				null, _toFields(baseModel), String.valueOf(role.getRoleId()),
-				Role.class.getName());
-		}
-		else if (StringUtil.equals(
-					baseModel.getModelClassName(), Team.class.getName())) {
-
-			Team team = (Team)baseModel;
-
-			return _toDXPEntity(
-				null, _toFields(baseModel), String.valueOf(team.getTeamId()),
-				Team.class.getName());
-		}
-		else if (StringUtil.equals(
-					baseModel.getModelClassName(), User.class.getName())) {
-
-			User user = (User)baseModel;
-
-			return _toDXPEntity(
-				_toExpandoFields(baseModel), _toFields(baseModel),
-				String.valueOf(user.getUserId()), User.class.getName());
-		}
-		else if (StringUtil.equals(
-					baseModel.getModelClassName(), UserGroup.class.getName())) {
-
-			UserGroup userGroup = (UserGroup)baseModel;
-
-			return _toDXPEntity(
-				null, _toFields(baseModel),
-				String.valueOf(userGroup.getUserGroupId()),
-				UserGroup.class.getName());
-		}
-
-		return null;
+		return _toDXPEntity(
+			_getExpandoFields(baseModel), _getFields(baseModel),
+			(String)baseModel.getPrimaryKeyObj(),
+			baseModel.getModelClassName());
 	}
 
-	private DXPEntity _toDXPEntity(
-		ExpandoField[] expandoFields, Field[] fields, String id, String type) {
+	private ExpandoField[] _getExpandoFields(BaseModel<?> baseModel) {
+		if (!StringUtil.equals(
+				baseModel.getModelClassName(), Organization.class.getName()) &&
+			!StringUtil.equals(
+				baseModel.getModelClassName(), User.class.getName())) {
 
-		DXPEntity dxpEntity = new DXPEntity();
-
-		if (ArrayUtil.isNotEmpty(expandoFields)) {
-			dxpEntity.setExpandoFields(expandoFields);
+			return new ExpandoField[0];
 		}
 
-		if (ArrayUtil.isNotEmpty(fields)) {
-			dxpEntity.setFields(fields);
-		}
-
-		dxpEntity.setId(id);
-		dxpEntity.setType(type);
-
-		return dxpEntity;
-	}
-
-	private ExpandoField[] _toExpandoFields(BaseModel<?> baseModel) {
 		List<ExpandoField> expandoFields = new ArrayList<>();
 
 		List<String> includeAttributeNames = new ArrayList<>();
@@ -194,7 +113,7 @@ public class DXPEntityDTOConverter
 		return expandoFields.toArray(new ExpandoField[0]);
 	}
 
-	private Field[] _toFields(BaseModel<?> baseModel) {
+	private Field[] _getFields(BaseModel<?> baseModel) {
 		List<Field> fields = new ArrayList<>();
 
 		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
@@ -211,6 +130,25 @@ public class DXPEntityDTOConverter
 		}
 
 		return fields.toArray(new Field[0]);
+	}
+
+	private DXPEntity _toDXPEntity(
+		ExpandoField[] expandoFields, Field[] fields, String id, String type) {
+
+		DXPEntity dxpEntity = new DXPEntity();
+
+		if (ArrayUtil.isNotEmpty(expandoFields)) {
+			dxpEntity.setExpandoFields(expandoFields);
+		}
+
+		if (ArrayUtil.isNotEmpty(fields)) {
+			dxpEntity.setFields(fields);
+		}
+
+		dxpEntity.setId(id);
+		dxpEntity.setType(type);
+
+		return dxpEntity;
 	}
 
 	@Reference
