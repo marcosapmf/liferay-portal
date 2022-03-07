@@ -16,8 +16,8 @@ package com.liferay.analytics.dxp.entities.exporter.internal.helper;
 
 import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.DXPEntity;
 import com.liferay.analytics.dxp.entities.exporter.internal.dto.v1_0.converter.DXPEntityDTOConverter;
-import com.liferay.analytics.dxp.entities.exporter.retriever.DXPEntityPageRetriever;
-import com.liferay.analytics.dxp.entities.exporter.retriever.DXPEntityPageRetrieverTracker;
+import com.liferay.analytics.dxp.entities.exporter.retriever.DXPEntityRetriever;
+import com.liferay.analytics.dxp.entities.exporter.retriever.DXPEntityRetrieverTracker;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
 import com.liferay.portal.kernel.search.Sort;
@@ -44,17 +44,16 @@ public class DXPEntityBatchEngineTaskItemDelegateHelper {
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		DXPEntityPageRetriever dxpEntityPageRetriever =
-			_dxpEntityPageRetrieverTracker.getDXPEntityPageRetriever(
-				entryClassName);
+		DXPEntityRetriever dxpEntityRetriever =
+			_dxpEntityRetrieverTracker.getDXPEntityRetriever(entryClassName);
 
 		com.liferay.portal.vulcan.pagination.Pagination vulcanPagination =
 			com.liferay.portal.vulcan.pagination.Pagination.of(
 				pagination.getPage(), pagination.getPageSize());
 
 		com.liferay.portal.vulcan.pagination.Page<DXPEntity> dxpEntitiesPage =
-			dxpEntityPageRetriever.getDXPEntitiesPage(
-				companyId, vulcanPagination,
+			dxpEntityRetriever.getDXPEntitiesPage(
+				companyId, filter, vulcanPagination,
 				baseModel -> _dxpEntityDTOConverter.toDTO(baseModel));
 
 		return Page.of(
@@ -67,6 +66,6 @@ public class DXPEntityBatchEngineTaskItemDelegateHelper {
 	private DXPEntityDTOConverter _dxpEntityDTOConverter;
 
 	@Reference
-	private DXPEntityPageRetrieverTracker _dxpEntityPageRetrieverTracker;
+	private DXPEntityRetrieverTracker _dxpEntityRetrieverTracker;
 
 }

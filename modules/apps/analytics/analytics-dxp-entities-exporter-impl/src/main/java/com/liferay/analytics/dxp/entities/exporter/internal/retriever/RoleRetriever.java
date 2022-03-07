@@ -17,9 +17,12 @@ package com.liferay.analytics.dxp.entities.exporter.internal.retriever;
 import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.DXPEntity;
 import com.liferay.analytics.dxp.entities.exporter.retriever.DXPEntityRetriever;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -38,20 +41,26 @@ import org.osgi.service.component.annotations.Reference;
 	property = "analytics.dxp.entity.retriever.class.name=com.liferay.portal.kernel.model.Role",
 	service = DXPEntityRetriever.class
 )
-public class RoleRetriever implements DXPEntityRetriever {
+public class RoleRetriever
+	extends NoIndexedDXPEntityPageRetriever implements DXPEntityRetriever {
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
-			long companyId, Pagination pagination,
+			long companyId, Filter filter, Pagination pagination,
 			UnsafeFunction<BaseModel<?>, DXPEntity, Exception>
 				transformUnsafeFunction)
 		throws Exception {
 
 		List<DXPEntity> dxpEntities = new ArrayList<>();
 
-		List<Role> roles = _roleLocalService.search(
-			companyId, null, new Integer[] {RoleConstants.TYPE_REGULAR},
-			pagination.getStartPosition(), pagination.getEndPosition(), null);
+		DynamicQuery dynamicQuery = _roleLocalService.dynamicQuery();
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("type", RoleConstants.TYPE_REGULAR));
+
+		List<Role> roles = _roleLocalService.dynamicQuery(
+			updateDynamicQuery(companyId, dynamicQuery, filter),
+			pagination.getStartPosition(), pagination.getEndPosition());
 
 		for (Role role : roles) {
 			dxpEntities.add(transformUnsafeFunction.apply(role));

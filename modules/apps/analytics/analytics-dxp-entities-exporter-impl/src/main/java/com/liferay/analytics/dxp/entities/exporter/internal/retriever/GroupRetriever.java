@@ -19,6 +19,7 @@ import com.liferay.analytics.dxp.entities.exporter.retriever.DXPEntityRetriever;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -38,11 +39,12 @@ import org.osgi.service.component.annotations.Reference;
 	property = "analytics.dxp.entity.retriever.class.name=com.liferay.portal.kernel.model.Group",
 	service = DXPEntityRetriever.class
 )
-public class GroupRetriever implements DXPEntityRetriever {
+public class GroupRetriever
+	extends NoIndexedDXPEntityPageRetriever implements DXPEntityRetriever {
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
-			long companyId, Pagination pagination,
+			long companyId, Filter filter, Pagination pagination,
 			UnsafeFunction<BaseModel<?>, DXPEntity, Exception>
 				transformUnsafeFunction)
 		throws Exception {
