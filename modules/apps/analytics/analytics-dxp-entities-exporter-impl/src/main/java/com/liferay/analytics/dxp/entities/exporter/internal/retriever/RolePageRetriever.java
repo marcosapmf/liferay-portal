@@ -42,7 +42,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = DXPEntityPageRetriever.class
 )
 public class RolePageRetriever
-	extends NoIndexedDXPEntityPageRetriever implements DXPEntityPageRetriever {
+	extends NonIndexedDXPEntityPageRetriever implements DXPEntityPageRetriever {
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
