@@ -20,9 +20,6 @@ import com.liferay.analytics.dxp.entities.exporter.dto.v1_0.Field;
 import com.liferay.analytics.message.sender.util.AnalyticsExpandoBridgeUtil;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
-import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Group;
@@ -32,22 +29,18 @@ import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.Team;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
-import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -72,22 +65,10 @@ public class DXPEntityDTOConverter
 			DTOConverterContext dtoConverterContext, BaseModel<?> baseModel)
 		throws Exception {
 
-		if (!_analyticsConfigurationTracker.isActive() || (baseModel == null) ||
-			_isExcluded(baseModel)) {
-
-			return null;
-		}
-
 		if (StringUtil.equals(
 				baseModel.getModelClassName(), Contact.class.getName())) {
 
 			Contact contact = (Contact)baseModel;
-
-			User user = _userLocalService.fetchUser(contact.getClassPK());
-
-			if (_isExcluded(user)) {
-				return null;
-			}
 
 			return _toDXPEntity(
 				null, _toFields(baseModel),
@@ -98,10 +79,6 @@ public class DXPEntityDTOConverter
 					baseModel.getModelClassName(), Group.class.getName())) {
 
 			Group group = (Group)baseModel;
-
-			if (_isExcluded(group)) {
-				return null;
-			}
 
 			return _toDXPEntity(
 				null, _toFields(baseModel), String.valueOf(group.getGroupId()),
@@ -123,10 +100,6 @@ public class DXPEntityDTOConverter
 
 			Role role = (Role)baseModel;
 
-			if (_isExcluded(role)) {
-				return null;
-			}
-
 			return _toDXPEntity(
 				null, _toFields(baseModel), String.valueOf(role.getRoleId()),
 				Role.class.getName());
@@ -145,10 +118,6 @@ public class DXPEntityDTOConverter
 
 			User user = (User)baseModel;
 
-			if (_isExcluded(user)) {
-				return null;
-			}
-
 			return _toDXPEntity(
 				_toExpandoFields(baseModel), _toFields(baseModel),
 				String.valueOf(user.getUserId()), User.class.getName());
@@ -165,89 +134,6 @@ public class DXPEntityDTOConverter
 		}
 
 		return null;
-	}
-
-	private boolean _isExcluded(BaseModel<?> baseModel) {
-		ShardedModel shardedModel = (ShardedModel)baseModel;
-
-		Dictionary<String, Object> analyticsConfigurationProperties =
-			_analyticsConfigurationTracker.getAnalyticsConfigurationProperties(
-				shardedModel.getCompanyId());
-
-		if (analyticsConfigurationProperties == null) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private boolean _isExcluded(Group group) {
-		if (!group.isSite()) {
-			return true;
-		}
-
-		return false;
-	}
-
-	private boolean _isExcluded(Role role) {
-		if (role.getType() == RoleConstants.TYPE_REGULAR) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean _isExcluded(User user) {
-		if ((user == null) ||
-			Objects.equals(
-				user.getScreenName(),
-				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN) ||
-			Objects.equals(
-				user.getStatus(), WorkflowConstants.STATUS_INACTIVE)) {
-
-			return true;
-		}
-
-		AnalyticsConfiguration analyticsConfiguration =
-			_analyticsConfigurationTracker.getAnalyticsConfiguration(
-				user.getCompanyId());
-
-		if (analyticsConfiguration.syncAllContacts()) {
-			return false;
-		}
-
-		long[] organizationIds = null;
-
-		try {
-			organizationIds = user.getOrganizationIds();
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			return true;
-		}
-
-		for (long organizationId : organizationIds) {
-			if (ArrayUtil.contains(
-					analyticsConfiguration.syncedOrganizationIds(),
-					String.valueOf(organizationId))) {
-
-				return false;
-			}
-		}
-
-		for (long userGroupId : user.getUserGroupIds()) {
-			if (ArrayUtil.contains(
-					analyticsConfiguration.syncedUserGroupIds(),
-					String.valueOf(userGroupId))) {
-
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	private DXPEntity _toDXPEntity(
@@ -270,6 +156,8 @@ public class DXPEntityDTOConverter
 	}
 
 	private ExpandoField[] _toExpandoFields(BaseModel<?> baseModel) {
+		List<ExpandoField> expandoFields = new ArrayList<>();
+
 		List<String> includeAttributeNames = new ArrayList<>();
 
 		if (StringUtil.equals(
@@ -289,8 +177,6 @@ public class DXPEntityDTOConverter
 			AnalyticsExpandoBridgeUtil.getAttributes(
 				baseModel.getExpandoBridge(), includeAttributeNames);
 
-		ExpandoField[] attributeFields = new ExpandoField[attributes.size()];
-
 		for (Map.Entry<String, Serializable> entry : attributes.entrySet()) {
 			String key = entry.getKey();
 
@@ -302,16 +188,16 @@ public class DXPEntityDTOConverter
 				}
 			};
 
-			attributeFields = ArrayUtil.append(attributeFields, expandoField);
+			expandoFields.add(expandoField);
 		}
 
-		return attributeFields;
+		return expandoFields.toArray(new ExpandoField[0]);
 	}
 
 	private Field[] _toFields(BaseModel<?> baseModel) {
-		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
+		List<Field> fields = new ArrayList<>();
 
-		Field[] attributeFields = new Field[modelAttributes.size()];
+		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
 
 		for (Map.Entry<String, Object> entry : modelAttributes.entrySet()) {
 			Field field = new Field() {
@@ -321,14 +207,11 @@ public class DXPEntityDTOConverter
 				}
 			};
 
-			attributeFields = ArrayUtil.append(attributeFields, field);
+			fields.add(field);
 		}
 
-		return attributeFields;
+		return fields.toArray(new Field[0]);
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		DXPEntityDTOConverter.class);
 
 	@Reference
 	private AnalyticsConfigurationTracker _analyticsConfigurationTracker;
