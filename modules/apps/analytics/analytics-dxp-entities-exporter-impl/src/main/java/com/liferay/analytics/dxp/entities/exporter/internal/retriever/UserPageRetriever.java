@@ -68,32 +68,31 @@ public class UserPageRetriever implements DXPEntityPageRetriever {
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
-	private BooleanFilter _createBooleanFilter(long companyId, Filter filter)
-		throws Exception {
+	private BooleanFilter _createBooleanFilter(long companyId, Filter filter) {
+		BooleanFilter booleanFilter = new BooleanFilter();
 
-		BooleanFilter booleanFilter1 = new BooleanFilter();
+		if (filter != null) {
+			booleanFilter.add(filter, BooleanClauseOccur.MUST);
+		}
 
-		booleanFilter1.add(filter);
-
-		booleanFilter1.add(
-			new TermFilter(
-				"status", String.valueOf(WorkflowConstants.STATUS_INACTIVE)),
-			BooleanClauseOccur.MUST_NOT);
-
-		booleanFilter1.add(
+		booleanFilter.add(
 			new TermFilter(
 				"screenName",
 				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN),
+			BooleanClauseOccur.MUST_NOT);
+		booleanFilter.add(
+			new TermFilter(
+				"status", String.valueOf(WorkflowConstants.STATUS_INACTIVE)),
 			BooleanClauseOccur.MUST_NOT);
 
 		AnalyticsConfiguration analyticsConfiguration =
 			_analyticsConfigurationTracker.getAnalyticsConfiguration(companyId);
 
 		if (analyticsConfiguration.syncAllContacts()) {
-			return booleanFilter1;
+			return booleanFilter;
 		}
 
-		BooleanFilter booleanFilter2 = new BooleanFilter();
+		BooleanFilter innerBooleanFilter = new BooleanFilter();
 
 		String[] syncedOrganizationIds =
 			analyticsConfiguration.syncedOrganizationIds();
@@ -103,7 +102,7 @@ public class UserPageRetriever implements DXPEntityPageRetriever {
 
 			termsFilter.addValues(syncedOrganizationIds);
 
-			booleanFilter2.add(termsFilter, BooleanClauseOccur.SHOULD);
+			innerBooleanFilter.add(termsFilter);
 		}
 
 		String[] syncedGroupIds = analyticsConfiguration.syncedUserGroupIds();
@@ -113,12 +112,12 @@ public class UserPageRetriever implements DXPEntityPageRetriever {
 
 			termsFilter.addValues(syncedGroupIds);
 
-			booleanFilter2.add(termsFilter, BooleanClauseOccur.SHOULD);
+			innerBooleanFilter.add(termsFilter);
 		}
 
-		booleanFilter1.add(booleanFilter2);
+		booleanFilter.add(innerBooleanFilter, BooleanClauseOccur.MUST);
 
-		return booleanFilter1;
+		return booleanFilter;
 	}
 
 	@Reference
