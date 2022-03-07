@@ -72,7 +72,7 @@ public class UserRetriever implements DXPEntityRetriever {
 		BooleanFilter booleanFilter = new BooleanFilter();
 
 		if (filter != null) {
-			booleanFilter.add(filter);
+			booleanFilter.add(filter, BooleanClauseOccur.MUST);
 		}
 
 		booleanFilter.add(
