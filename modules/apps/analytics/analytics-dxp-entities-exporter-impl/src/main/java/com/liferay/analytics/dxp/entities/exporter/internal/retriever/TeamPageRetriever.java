@@ -51,7 +51,7 @@ public class TeamPageRetriever
 		List<DXPEntity> dxpEntities = new ArrayList<>();
 
 		List<Team> teams = _teamLocalService.dynamicQuery(
-			updateDynamicQuery(
+			buildDynamicQuery(
 				companyId, _teamLocalService.dynamicQuery(), filter),
 			pagination.getStartPosition(), pagination.getEndPosition());
 

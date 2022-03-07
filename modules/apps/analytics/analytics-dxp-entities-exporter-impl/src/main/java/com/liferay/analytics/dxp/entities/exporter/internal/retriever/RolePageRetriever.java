@@ -59,7 +59,7 @@ public class RolePageRetriever
 			RestrictionsFactoryUtil.eq("type", RoleConstants.TYPE_REGULAR));
 
 		List<Role> roles = _roleLocalService.dynamicQuery(
-			updateDynamicQuery(companyId, dynamicQuery, filter),
+			buildDynamicQuery(companyId, dynamicQuery, filter),
 			pagination.getStartPosition(), pagination.getEndPosition());
 
 		for (Role role : roles) {

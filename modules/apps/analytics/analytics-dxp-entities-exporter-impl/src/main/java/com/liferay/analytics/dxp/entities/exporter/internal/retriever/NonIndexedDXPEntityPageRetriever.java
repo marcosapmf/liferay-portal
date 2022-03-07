@@ -31,7 +31,7 @@ import java.util.Date;
  */
 public abstract class NonIndexedDXPEntityPageRetriever {
 
-	protected DynamicQuery updateDynamicQuery(
+	protected DynamicQuery buildDynamicQuery(
 		long companyId, DynamicQuery dynamicQuery, Filter filter) {
 
 		dynamicQuery.add(RestrictionsFactoryUtil.eq("companyId", companyId));
