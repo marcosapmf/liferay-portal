@@ -53,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = DXPEntityPageRetriever.class
 )
 public class ExpandoColumnPageRetriever
-	extends NoIndexedDXPEntityPageRetriever implements DXPEntityPageRetriever {
+	extends NonIndexedDXPEntityPageRetriever implements DXPEntityPageRetriever {
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
@@ -125,7 +125,7 @@ public class ExpandoColumnPageRetriever
 					nameProperty.in(_getUserExpandoColumnNames(companyId))));
 		}
 
-		return updateDynamicQuery(companyId, dynamicQuery, filter);
+		return buildDynamicQuery(companyId, dynamicQuery, filter);
 	}
 
 	private List<String> _getUserExpandoColumnNames(long companyId) {
