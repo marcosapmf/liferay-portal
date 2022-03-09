@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcos Martins
  */
 @Component(
-	enabled = true, immediate = true,
+	immediate = true,
 	property = "batch.engine.task.item.delegate.name=role-dxp-entities",
 	service = BatchEngineTaskItemDelegate.class
 )

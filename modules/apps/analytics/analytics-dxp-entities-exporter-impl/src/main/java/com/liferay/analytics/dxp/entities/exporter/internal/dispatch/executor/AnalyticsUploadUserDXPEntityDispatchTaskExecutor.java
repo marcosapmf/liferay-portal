@@ -30,7 +30,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Marcos Martins
  */
 @Component(
-	enabled = true, immediate = true,
+	immediate = true,
 	property = {
 		"dispatch.task.executor.name=" + AnalyticsUploadUserDXPEntityDispatchTaskExecutor.KEY,
 		"dispatch.task.executor.type=" + AnalyticsUploadUserDXPEntityDispatchTaskExecutor.KEY
