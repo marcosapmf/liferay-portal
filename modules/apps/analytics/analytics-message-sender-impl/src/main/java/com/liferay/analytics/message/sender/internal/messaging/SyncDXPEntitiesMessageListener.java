@@ -39,16 +39,15 @@ public class SyncDXPEntitiesMessageListener extends BaseMessageListener {
 
 	@Override
 	protected void doReceive(Message message) throws Exception {
-		Object object = message.get("command");
-
 		if (!_analyticsConfigurationTracker.isActive() ||
 			!Objects.equals(
-				object, DXPEntitiesDispatchTriggerProcessorCommand.SYNC)) {
+				message.get("command"),
+				DXPEntitiesDispatchTriggerProcessorCommand.SYNC)) {
 
 			return;
 		}
 
-		_dxpEntityDispatchTriggerHelper.syncNow(message.getLong("companyId"));
+		_dxpEntityDispatchTriggerHelper.sync(message.getLong("companyId"));
 	}
 
 	@Reference
