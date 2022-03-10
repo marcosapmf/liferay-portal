@@ -64,6 +64,27 @@ public class DXPEntityDispatchTriggerHelperImpl
 	}
 
 	@Override
+	public void deleteDispatchTriggers(long companyId) throws Exception {
+		for (String dispatchTriggerName : _DISPATCH_TRIGGER_NAMES) {
+			DispatchTrigger dispatchTrigger =
+				_dispatchTriggerLocalService.fetchDispatchTrigger(
+					companyId, dispatchTriggerName);
+
+			if (dispatchTrigger == null) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(
+						"Unable to find dispatch trigger with name " +
+							dispatchTriggerName);
+				}
+
+				continue;
+			}
+
+			_dispatchTriggerLocalService.deleteDispatchTrigger(dispatchTrigger);
+		}
+	}
+
+	@Override
 	public void sync(long companyId) throws Exception {
 		for (String dispatchTriggerName : _DISPATCH_TRIGGER_NAMES) {
 			DispatchTrigger dispatchTrigger =
