@@ -22,6 +22,8 @@ public interface DXPEntityDispatchTriggerHelper {
 	public void createDispatchTriggersIfNotExist(long companyId)
 		throws Exception;
 
+	public void deleteDispatchTriggers(long companyId) throws Exception;
+
 	public void syncNow(long companyId) throws Exception;
 
 }
