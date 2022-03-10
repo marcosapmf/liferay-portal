@@ -57,8 +57,8 @@ public class ExpandoColumnPageRetriever
 
 	@Override
 	public Page<DXPEntity> getDXPEntitiesPage(
-		long companyId, Filter filter, Pagination pagination,
-		UnsafeFunction<BaseModel<?>, DXPEntity, Exception>
+			long companyId, Filter filter, Pagination pagination,
+			UnsafeFunction<BaseModel<?>, DXPEntity, Exception>
 				transformUnsafeFunction)
 		throws Exception {
 
