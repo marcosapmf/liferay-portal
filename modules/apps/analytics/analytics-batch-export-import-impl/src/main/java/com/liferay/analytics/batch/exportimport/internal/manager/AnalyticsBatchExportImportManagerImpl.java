@@ -15,7 +15,7 @@
 package com.liferay.analytics.batch.exportimport.internal.manager;
 
 import com.liferay.analytics.batch.exportimport.manager.AnalyticsBatchExportImportManager;
-import com.liferay.analytics.message.storage.service.AnalyticsMessageLocalService;
+import com.liferay.analytics.storage.service.AnalyticsMessageLocalService;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationTracker;
 import com.liferay.batch.engine.BatchEngineExportTaskExecutor;
