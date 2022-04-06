@@ -217,10 +217,10 @@ public interface AnalyticsModelRemoveLoggerLocalService
 		long analyticsModelRemoveLoggerId);
 
 	public List<AnalyticsModelRemoveLogger> findGtAnalyticsModelRemoveLoggers(
-		long companyId, Date gtModifiedDate);
+		long companyId, Date gtModifiedDate, int start, int end);
 
 	public List<AnalyticsModelRemoveLogger> findLteAnalyticsModelRemoveLoggers(
-		long companyId, Date lteModifiedDate);
+		long companyId, Date lteModifiedDate, int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();

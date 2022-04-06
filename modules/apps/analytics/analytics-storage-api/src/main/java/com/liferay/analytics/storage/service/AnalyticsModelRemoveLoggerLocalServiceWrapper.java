@@ -281,20 +281,24 @@ public class AnalyticsModelRemoveLoggerLocalServiceWrapper
 	public java.util.List
 		<com.liferay.analytics.storage.model.AnalyticsModelRemoveLogger>
 			findGtAnalyticsModelRemoveLoggers(
-				long companyId, java.util.Date gtModifiedDate) {
+				long companyId, java.util.Date gtModifiedDate, int start,
+				int end) {
 
 		return _analyticsModelRemoveLoggerLocalService.
-			findGtAnalyticsModelRemoveLoggers(companyId, gtModifiedDate);
+			findGtAnalyticsModelRemoveLoggers(
+				companyId, gtModifiedDate, start, end);
 	}
 
 	@Override
 	public java.util.List
 		<com.liferay.analytics.storage.model.AnalyticsModelRemoveLogger>
 			findLteAnalyticsModelRemoveLoggers(
-				long companyId, java.util.Date lteModifiedDate) {
+				long companyId, java.util.Date lteModifiedDate, int start,
+				int end) {
 
 		return _analyticsModelRemoveLoggerLocalService.
-			findLteAnalyticsModelRemoveLoggers(companyId, lteModifiedDate);
+			findLteAnalyticsModelRemoveLoggers(
+				companyId, lteModifiedDate, start, end);
 	}
 
 	@Override

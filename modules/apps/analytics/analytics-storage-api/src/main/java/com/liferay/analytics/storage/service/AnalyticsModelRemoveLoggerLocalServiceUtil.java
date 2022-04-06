@@ -247,18 +247,19 @@ public class AnalyticsModelRemoveLoggerLocalServiceUtil {
 
 	public static List<AnalyticsModelRemoveLogger>
 		findGtAnalyticsModelRemoveLoggers(
-			long companyId, java.util.Date gtModifiedDate) {
+			long companyId, java.util.Date gtModifiedDate, int start, int end) {
 
 		return getService().findGtAnalyticsModelRemoveLoggers(
-			companyId, gtModifiedDate);
+			companyId, gtModifiedDate, start, end);
 	}
 
 	public static List<AnalyticsModelRemoveLogger>
 		findLteAnalyticsModelRemoveLoggers(
-			long companyId, java.util.Date lteModifiedDate) {
+			long companyId, java.util.Date lteModifiedDate, int start,
+			int end) {
 
 		return getService().findLteAnalyticsModelRemoveLoggers(
-			companyId, lteModifiedDate);
+			companyId, lteModifiedDate, start, end);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
