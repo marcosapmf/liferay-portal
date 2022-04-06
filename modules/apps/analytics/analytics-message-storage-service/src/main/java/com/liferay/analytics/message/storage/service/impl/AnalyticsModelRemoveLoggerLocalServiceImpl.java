@@ -14,8 +14,12 @@
 
 package com.liferay.analytics.message.storage.service.impl;
 
+import com.liferay.analytics.message.storage.model.AnalyticsModelRemoveLogger;
 import com.liferay.analytics.message.storage.service.base.AnalyticsModelRemoveLoggerLocalServiceBaseImpl;
 import com.liferay.portal.aop.AopService;
+
+import java.util.Date;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -28,4 +32,57 @@ import org.osgi.service.component.annotations.Component;
 )
 public class AnalyticsModelRemoveLoggerLocalServiceImpl
 	extends AnalyticsModelRemoveLoggerLocalServiceBaseImpl {
+
+	@Override
+	public AnalyticsModelRemoveLogger addAnalyticsModelRemoveLogger(
+		long companyId, Date createDate, String className, long classPK,
+		long userId) {
+
+		AnalyticsModelRemoveLogger analyticsModelRemoveLogger =
+			analyticsModelRemoveLoggerPersistence.create(
+				counterLocalService.increment());
+
+		analyticsModelRemoveLogger.setCompanyId(companyId);
+		analyticsModelRemoveLogger.setUserId(userId);
+		analyticsModelRemoveLogger.setCreateDate(createDate);
+		analyticsModelRemoveLogger.setModifiedDate(createDate);
+		analyticsModelRemoveLogger.setClassName(className);
+		analyticsModelRemoveLogger.setClassPK(classPK);
+
+		return analyticsModelRemoveLoggerPersistence.update(
+			analyticsModelRemoveLogger);
+	}
+
+	@Override
+	public void deleteGtAnalyticsModelRemoveLoggers(
+		long companyId, Date gtModifiedDate) {
+
+		analyticsModelRemoveLoggerPersistence.removeByGtM_C(
+			companyId, gtModifiedDate);
+	}
+
+	@Override
+	public void deleteLteAnalyticsModelRemoveLoggers(
+		long companyId, Date lteModifiedDate) {
+
+		analyticsModelRemoveLoggerPersistence.removeByLteM_C(
+			companyId, lteModifiedDate);
+	}
+
+	@Override
+	public List<AnalyticsModelRemoveLogger> findGtAnalyticsModelRemoveLoggers(
+		long companyId, Date gtModifiedDate) {
+
+		return analyticsModelRemoveLoggerPersistence.findByGtM_C(
+			companyId, gtModifiedDate);
+	}
+
+	@Override
+	public List<AnalyticsModelRemoveLogger> findLteAnalyticsModelRemoveLoggers(
+		long companyId, Date lteModifiedDate) {
+
+		return analyticsModelRemoveLoggerPersistence.findByLteM_C(
+			companyId, lteModifiedDate);
+	}
+
 }
