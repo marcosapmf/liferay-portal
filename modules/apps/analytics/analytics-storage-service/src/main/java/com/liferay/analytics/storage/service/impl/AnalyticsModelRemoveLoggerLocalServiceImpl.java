@@ -71,18 +71,18 @@ public class AnalyticsModelRemoveLoggerLocalServiceImpl
 
 	@Override
 	public List<AnalyticsModelRemoveLogger> findGtAnalyticsModelRemoveLoggers(
-		long companyId, Date gtModifiedDate) {
+		long companyId, Date gtModifiedDate, int start, int end) {
 
 		return analyticsModelRemoveLoggerPersistence.findByGtM_C(
-			companyId, gtModifiedDate);
+			companyId, gtModifiedDate, start, end);
 	}
 
 	@Override
 	public List<AnalyticsModelRemoveLogger> findLteAnalyticsModelRemoveLoggers(
-		long companyId, Date lteModifiedDate) {
+		long companyId, Date lteModifiedDate, int start, int end) {
 
 		return analyticsModelRemoveLoggerPersistence.findByLteM_C(
-			companyId, lteModifiedDate);
+			companyId, lteModifiedDate, start, end);
 	}
 
 }
