@@ -62,6 +62,14 @@ public class AnalyticsModelRemoveLoggerLocalServiceUtil {
 			analyticsModelRemoveLogger);
 	}
 
+	public static AnalyticsModelRemoveLogger addAnalyticsModelRemoveLogger(
+		long companyId, java.util.Date createDate, String className,
+		long classPK, long userId) {
+
+		return getService().addAnalyticsModelRemoveLogger(
+			companyId, createDate, className, classPK, userId);
+	}
+
 	/**
 	 * Creates a new analytics model remove logger with the primary key. Does not add the analytics model remove logger to the database.
 	 *
@@ -119,6 +127,20 @@ public class AnalyticsModelRemoveLoggerLocalServiceUtil {
 
 		return getService().deleteAnalyticsModelRemoveLogger(
 			analyticsModelRemoveLoggerId);
+	}
+
+	public static void deleteGtAnalyticsModelRemoveLoggers(
+		long companyId, java.util.Date gtModifiedDate) {
+
+		getService().deleteGtAnalyticsModelRemoveLoggers(
+			companyId, gtModifiedDate);
+	}
+
+	public static void deleteLteAnalyticsModelRemoveLoggers(
+		long companyId, java.util.Date lteModifiedDate) {
+
+		getService().deleteLteAnalyticsModelRemoveLoggers(
+			companyId, lteModifiedDate);
 	}
 
 	/**
@@ -221,6 +243,22 @@ public class AnalyticsModelRemoveLoggerLocalServiceUtil {
 
 		return getService().fetchAnalyticsModelRemoveLogger(
 			analyticsModelRemoveLoggerId);
+	}
+
+	public static List<AnalyticsModelRemoveLogger>
+		findGtAnalyticsModelRemoveLoggers(
+			long companyId, java.util.Date gtModifiedDate) {
+
+		return getService().findGtAnalyticsModelRemoveLoggers(
+			companyId, gtModifiedDate);
+	}
+
+	public static List<AnalyticsModelRemoveLogger>
+		findLteAnalyticsModelRemoveLoggers(
+			long companyId, java.util.Date lteModifiedDate) {
+
+		return getService().findLteAnalyticsModelRemoveLoggers(
+			companyId, lteModifiedDate);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery

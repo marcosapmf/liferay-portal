@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -75,6 +76,10 @@ public interface AnalyticsModelRemoveLoggerLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public AnalyticsModelRemoveLogger addAnalyticsModelRemoveLogger(
 		AnalyticsModelRemoveLogger analyticsModelRemoveLogger);
+
+	public AnalyticsModelRemoveLogger addAnalyticsModelRemoveLogger(
+		long companyId, Date createDate, String className, long classPK,
+		long userId);
 
 	/**
 	 * Creates a new analytics model remove logger with the primary key. Does not add the analytics model remove logger to the database.
@@ -121,6 +126,12 @@ public interface AnalyticsModelRemoveLoggerLocalService
 	public AnalyticsModelRemoveLogger deleteAnalyticsModelRemoveLogger(
 			long analyticsModelRemoveLoggerId)
 		throws PortalException;
+
+	public void deleteGtAnalyticsModelRemoveLoggers(
+		long companyId, Date gtModifiedDate);
+
+	public void deleteLteAnalyticsModelRemoveLoggers(
+		long companyId, Date lteModifiedDate);
 
 	/**
 	 * @throws PortalException
@@ -204,6 +215,12 @@ public interface AnalyticsModelRemoveLoggerLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AnalyticsModelRemoveLogger fetchAnalyticsModelRemoveLogger(
 		long analyticsModelRemoveLoggerId);
+
+	public List<AnalyticsModelRemoveLogger> findGtAnalyticsModelRemoveLoggers(
+		long companyId, Date gtModifiedDate);
+
+	public List<AnalyticsModelRemoveLogger> findLteAnalyticsModelRemoveLoggers(
+		long companyId, Date lteModifiedDate);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();

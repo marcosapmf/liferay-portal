@@ -60,6 +60,18 @@ public class AnalyticsModelRemoveLoggerLocalServiceWrapper
 			addAnalyticsModelRemoveLogger(analyticsModelRemoveLogger);
 	}
 
+	@Override
+	public
+		com.liferay.analytics.message.storage.model.AnalyticsModelRemoveLogger
+			addAnalyticsModelRemoveLogger(
+				long companyId, java.util.Date createDate, String className,
+				long classPK, long userId) {
+
+		return _analyticsModelRemoveLoggerLocalService.
+			addAnalyticsModelRemoveLogger(
+				companyId, createDate, className, classPK, userId);
+	}
+
 	/**
 	 * Creates a new analytics model remove logger with the primary key. Does not add the analytics model remove logger to the database.
 	 *
@@ -129,6 +141,22 @@ public class AnalyticsModelRemoveLoggerLocalServiceWrapper
 
 		return _analyticsModelRemoveLoggerLocalService.
 			deleteAnalyticsModelRemoveLogger(analyticsModelRemoveLoggerId);
+	}
+
+	@Override
+	public void deleteGtAnalyticsModelRemoveLoggers(
+		long companyId, java.util.Date gtModifiedDate) {
+
+		_analyticsModelRemoveLoggerLocalService.
+			deleteGtAnalyticsModelRemoveLoggers(companyId, gtModifiedDate);
+	}
+
+	@Override
+	public void deleteLteAnalyticsModelRemoveLoggers(
+		long companyId, java.util.Date lteModifiedDate) {
+
+		_analyticsModelRemoveLoggerLocalService.
+			deleteLteAnalyticsModelRemoveLoggers(companyId, lteModifiedDate);
 	}
 
 	/**
@@ -255,6 +283,26 @@ public class AnalyticsModelRemoveLoggerLocalServiceWrapper
 
 		return _analyticsModelRemoveLoggerLocalService.
 			fetchAnalyticsModelRemoveLogger(analyticsModelRemoveLoggerId);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.analytics.message.storage.model.AnalyticsModelRemoveLogger>
+			findGtAnalyticsModelRemoveLoggers(
+				long companyId, java.util.Date gtModifiedDate) {
+
+		return _analyticsModelRemoveLoggerLocalService.
+			findGtAnalyticsModelRemoveLoggers(companyId, gtModifiedDate);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.analytics.message.storage.model.AnalyticsModelRemoveLogger>
+			findLteAnalyticsModelRemoveLoggers(
+				long companyId, java.util.Date lteModifiedDate) {
+
+		return _analyticsModelRemoveLoggerLocalService.
+			findLteAnalyticsModelRemoveLoggers(companyId, lteModifiedDate);
 	}
 
 	@Override
