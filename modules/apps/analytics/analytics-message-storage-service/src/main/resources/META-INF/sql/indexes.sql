@@ -1,1 +1,0 @@
-create index IX_3A69CC81 on AnalyticsMessage (companyId);

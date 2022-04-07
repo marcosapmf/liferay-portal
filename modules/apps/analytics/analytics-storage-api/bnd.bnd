@@ -1,0 +1,12 @@
+Bundle-Name: Liferay Analytics Storage API
+Bundle-SymbolicName: com.liferay.analytics.storage.api
+Bundle-Version: 1.0.0
+Export-Package:\
+	com.liferay.analytics.storage.exception,\
+	com.liferay.analytics.storage.model,\
+	com.liferay.analytics.storage.service,\
+	com.liferay.analytics.storage.service.persistence
+Import-Package:\
+	org.hibernate.proxy,\
+	\
+	*
