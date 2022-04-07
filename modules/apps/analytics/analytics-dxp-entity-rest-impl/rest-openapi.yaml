@@ -15,6 +15,15 @@ components:
                 type:
                     type: string
             type: object
+        DXPEntityRemoveLogger:
+            properties:
+                className:
+                    type: string
+                classPK:
+                    type: object
+                removeDate:
+                    type: string
+            type: object
         ExpandoField:
             properties:
                 columnId:
