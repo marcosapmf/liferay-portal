@@ -14,41 +14,82 @@
 
 package com.liferay.analytics.message.sender.internal.model.listener;
 
-import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
-import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
+import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
  * @author Rachael Koestartyo
  */
-@Component(
-	immediate = true, service = {EntityModelListener.class, ModelListener.class}
-)
-public class UserModelListener extends BaseEntityModelListener<User> {
+@Component(immediate = true, service = ModelListener.class)
+public class UserModelListener
+	extends BaseAnalyticsDXPEntityModelListener<User> {
 
 	@Override
-	public List<String> getAttributeNames(long companyId) {
-		return getUserAttributeNames(companyId);
+	protected boolean isTrack(User user) {
+		if ((user == null) ||
+			Objects.equals(
+				user.getScreenName(),
+				AnalyticsSecurityConstants.SCREEN_NAME_ANALYTICS_ADMIN) ||
+			Objects.equals(
+				user.getStatus(), WorkflowConstants.STATUS_INACTIVE)) {
+
+			return false;
+		}
+
+		AnalyticsConfiguration analyticsConfiguration =
+			analyticsConfigurationTracker.getAnalyticsConfiguration(
+				user.getCompanyId());
+
+		if (analyticsConfiguration.syncAllContacts()) {
+			return true;
+		}
+
+		long[] organizationIds = null;
+
+		try {
+			organizationIds = user.getOrganizationIds();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+
+		for (long organizationId : organizationIds) {
+			if (ArrayUtil.contains(
+					analyticsConfiguration.syncedOrganizationIds(),
+					String.valueOf(organizationId))) {
+
+				return true;
+			}
+		}
+
+		for (long userGroupId : user.getUserGroupIds()) {
+			if (ArrayUtil.contains(
+					analyticsConfiguration.syncedUserGroupIds(),
+					String.valueOf(userGroupId))) {
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
-	@Override
-	protected User getModel(long id) throws Exception {
-		return userLocalService.getUser(id);
-	}
-
-	@Override
-	protected String getPrimaryKeyName() {
-		return "userId";
-	}
-
-	@Override
-	protected boolean isExcluded(User user) {
-		return isUserExcluded(user);
-	}
+	private static final Log _log = LogFactoryUtil.getLog(
+		UserModelListener.class);
 
 }

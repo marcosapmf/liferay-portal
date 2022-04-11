@@ -14,50 +14,26 @@
 
 package com.liferay.analytics.message.sender.internal.model.listener;
 
-import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
-import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.Organization;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.OrganizationLocalService;
-
-import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rachael Koestartyo
  */
-@Component(
-	immediate = true, service = {EntityModelListener.class, ModelListener.class}
-)
+@Component(immediate = true, service = ModelListener.class)
 public class OrganizationModelListener
-	extends BaseEntityModelListener<Organization> {
-
-	@Override
-	public List<String> getAttributeNames(long companyId) {
-		return getOrganizationAttributeNames();
-	}
-
-	@Override
-	public long[] getMembershipIds(User user) throws Exception {
-		return user.getOrganizationIds();
-	}
-
-	@Override
-	public String getModelClassName() {
-		return Organization.class.getName();
-	}
+	extends BaseAnalyticsDXPEntityModelListener<Organization> {
 
 	@Override
 	public void onAfterRemove(Organization organization)
 		throws ModelListenerException {
 
 		if (!analyticsConfigurationTracker.isActive() ||
-			isExcluded(organization)) {
+			!isTrack(organization)) {
 
 			return;
 		}
@@ -66,23 +42,5 @@ public class OrganizationModelListener
 			organization.getCompanyId(), "syncedOrganizationIds",
 			String.valueOf(organization.getOrganizationId()), null);
 	}
-
-	@Override
-	protected ActionableDynamicQuery getActionableDynamicQuery() {
-		return _organizationLocalService.getActionableDynamicQuery();
-	}
-
-	@Override
-	protected Organization getModel(long id) throws Exception {
-		return _organizationLocalService.getOrganization(id);
-	}
-
-	@Override
-	protected String getPrimaryKeyName() {
-		return "organizationId";
-	}
-
-	@Reference
-	private OrganizationLocalService _organizationLocalService;
 
 }
