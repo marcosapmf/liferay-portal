@@ -12,12 +12,12 @@
  * details.
  */
 
-package com.liferay.analytics.message.sender.internal.model.listener;
+package com.liferay.analytics.settings.internal.model.listener;
 
 import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
 import com.liferay.portal.kernel.exception.ModelListenerException;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.model.UserGroup;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -25,27 +25,20 @@ import org.osgi.service.component.annotations.Component;
  * @author Rachael Koestartyo
  */
 @Component(immediate = true, service = ModelListener.class)
-public class GroupModelListener
-	extends BaseAnalyticsDXPEntityModelListener<Group> {
+public class UserGroupModelListener
+	extends BaseAnalyticsDXPEntityModelListener<UserGroup> {
 
 	@Override
-	public void onAfterRemove(Group group) throws ModelListenerException {
-		if (!analyticsConfigurationTracker.isActive() || !isTrack(group)) {
+	public void onAfterRemove(UserGroup userGroup)
+		throws ModelListenerException {
+
+		if (!analyticsConfigurationTracker.isActive() || !isTrack(userGroup)) {
 			return;
 		}
 
 		updateConfigurationProperties(
-			group.getCompanyId(), "syncedGroupIds",
-			String.valueOf(group.getGroupId()), "liferayAnalyticsGroupIds");
-	}
-
-	@Override
-	protected boolean isTrack(Group group) {
-		if (group.isSite()) {
-			return true;
-		}
-
-		return false;
+			userGroup.getCompanyId(), "syncedUserGroupIds",
+			String.valueOf(userGroup.getUserGroupId()), null);
 	}
 
 }

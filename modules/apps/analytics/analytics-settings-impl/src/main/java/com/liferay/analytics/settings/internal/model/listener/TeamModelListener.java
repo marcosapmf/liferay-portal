@@ -12,35 +12,18 @@
  * details.
  */
 
-package com.liferay.analytics.message.sender.internal.model.listener;
+package com.liferay.analytics.settings.internal.model.listener;
 
 import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
-import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.Team;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Rachael Koestartyo
+ * @author Shinn Lok
  */
 @Component(immediate = true, service = ModelListener.class)
-public class OrganizationModelListener
-	extends BaseAnalyticsDXPEntityModelListener<Organization> {
-
-	@Override
-	public void onAfterRemove(Organization organization)
-		throws ModelListenerException {
-
-		if (!analyticsConfigurationTracker.isActive() ||
-			!isTrack(organization)) {
-
-			return;
-		}
-
-		updateConfigurationProperties(
-			organization.getCompanyId(), "syncedOrganizationIds",
-			String.valueOf(organization.getOrganizationId()), null);
-	}
-
+public class TeamModelListener
+	extends BaseAnalyticsDXPEntityModelListener<Team> {
 }

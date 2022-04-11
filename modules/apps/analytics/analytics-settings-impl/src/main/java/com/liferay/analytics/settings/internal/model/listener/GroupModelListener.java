@@ -12,25 +12,36 @@
  * details.
  */
 
-package com.liferay.analytics.message.sender.internal.model.listener;
+package com.liferay.analytics.settings.internal.model.listener;
 
 import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
+import com.liferay.portal.kernel.exception.ModelListenerException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.kernel.model.Role;
-import com.liferay.portal.kernel.model.role.RoleConstants;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Shinn Lok
+ * @author Rachael Koestartyo
  */
 @Component(immediate = true, service = ModelListener.class)
-public class RoleModelListener
-	extends BaseAnalyticsDXPEntityModelListener<Role> {
+public class GroupModelListener
+	extends BaseAnalyticsDXPEntityModelListener<Group> {
 
 	@Override
-	protected boolean isTrack(Role role) {
-		if (role.getType() == RoleConstants.TYPE_REGULAR) {
+	public void onAfterRemove(Group group) throws ModelListenerException {
+		if (!analyticsConfigurationTracker.isActive() || !isTrack(group)) {
+			return;
+		}
+
+		updateConfigurationProperties(
+			group.getCompanyId(), "syncedGroupIds",
+			String.valueOf(group.getGroupId()), "liferayAnalyticsGroupIds");
+	}
+
+	@Override
+	protected boolean isTrack(Group group) {
+		if (group.isSite()) {
 			return true;
 		}
 

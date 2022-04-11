@@ -12,11 +12,12 @@
  * details.
  */
 
-package com.liferay.analytics.message.sender.internal.model.listener;
+package com.liferay.analytics.settings.internal.model.listener;
 
 import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.kernel.model.Team;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -24,6 +25,16 @@ import org.osgi.service.component.annotations.Component;
  * @author Shinn Lok
  */
 @Component(immediate = true, service = ModelListener.class)
-public class TeamModelListener
-	extends BaseAnalyticsDXPEntityModelListener<Team> {
+public class RoleModelListener
+	extends BaseAnalyticsDXPEntityModelListener<Role> {
+
+	@Override
+	protected boolean isTrack(Role role) {
+		if (role.getType() == RoleConstants.TYPE_REGULAR) {
+			return true;
+		}
+
+		return false;
+	}
+
 }
