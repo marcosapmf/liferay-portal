@@ -12,12 +12,12 @@
  * details.
  */
 
-package com.liferay.analytics.message.sender.internal.model.listener;
+package com.liferay.analytics.settings.internal.model.listener;
 
 import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.model.Organization;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -25,20 +25,22 @@ import org.osgi.service.component.annotations.Component;
  * @author Rachael Koestartyo
  */
 @Component(immediate = true, service = ModelListener.class)
-public class UserGroupModelListener
-	extends BaseAnalyticsDXPEntityModelListener<UserGroup> {
+public class OrganizationModelListener
+	extends BaseAnalyticsDXPEntityModelListener<Organization> {
 
 	@Override
-	public void onAfterRemove(UserGroup userGroup)
+	public void onAfterRemove(Organization organization)
 		throws ModelListenerException {
 
-		if (!analyticsConfigurationTracker.isActive() || !isTrack(userGroup)) {
+		if (!analyticsConfigurationTracker.isActive() ||
+			!isTrack(organization)) {
+
 			return;
 		}
 
 		updateConfigurationProperties(
-			userGroup.getCompanyId(), "syncedUserGroupIds",
-			String.valueOf(userGroup.getUserGroupId()), null);
+			organization.getCompanyId(), "syncedOrganizationIds",
+			String.valueOf(organization.getOrganizationId()), null);
 	}
 
 }

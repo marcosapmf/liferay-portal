@@ -12,7 +12,7 @@
  * details.
  */
 
-package com.liferay.analytics.message.sender.internal.model.listener;
+package com.liferay.analytics.settings.internal.model.listener;
 
 import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
 import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
