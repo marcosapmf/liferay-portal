@@ -45,6 +45,10 @@ public abstract class BaseAnalyticsDXPEntityExportDispatchTaskExecutor
 			DispatchTaskExecutorOutput dispatchTaskExecutorOutput)
 		throws Exception {
 
+		if (!shouldExport(dispatchTrigger.getCompanyId())) {
+			return;
+		}
+
 		DispatchLog dispatchLog =
 			dispatchLogLocalService.fetchLatestDispatchLog(
 				dispatchTrigger.getDispatchTriggerId(),
@@ -82,6 +86,10 @@ public abstract class BaseAnalyticsDXPEntityExportDispatchTaskExecutor
 	}
 
 	protected void postExecute(DispatchTrigger dispatchTrigger) {
+	}
+
+	protected boolean shouldExport(long companyId) {
+		return true;
 	}
 
 	@Reference
