@@ -14,62 +14,16 @@
 
 package com.liferay.analytics.message.sender.internal.model.listener;
 
-import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
-import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
-import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.analytics.batch.exportimport.model.listener.BaseAnalyticsDXPEntityModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.Team;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.TeamLocalService;
-
-import java.util.Arrays;
-import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Shinn Lok
  */
-@Component(
-	immediate = true, service = {EntityModelListener.class, ModelListener.class}
-)
-public class TeamModelListener extends BaseEntityModelListener<Team> {
-
-	@Override
-	public List<String> getAttributeNames(long companyId) {
-		return _attributeNames;
-	}
-
-	@Override
-	public long[] getMembershipIds(User user) {
-		return user.getTeamIds();
-	}
-
-	@Override
-	public String getModelClassName() {
-		return Team.class.getName();
-	}
-
-	@Override
-	protected ActionableDynamicQuery getActionableDynamicQuery() {
-		return _teamLocalService.getActionableDynamicQuery();
-	}
-
-	@Override
-	protected Team getModel(long id) throws Exception {
-		return _teamLocalService.getTeam(id);
-	}
-
-	@Override
-	protected String getPrimaryKeyName() {
-		return "teamId";
-	}
-
-	private static final List<String> _attributeNames = Arrays.asList(
-		"groupId", "name");
-
-	@Reference
-	private TeamLocalService _teamLocalService;
-
+@Component(immediate = true, service = ModelListener.class)
+public class TeamModelListener
+	extends BaseAnalyticsDXPEntityModelListener<Team> {
 }
