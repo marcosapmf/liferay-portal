@@ -27,7 +27,10 @@ import com.liferay.portal.kernel.messaging.Destination;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.service.UserLocalService;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import java.util.Date;
 
@@ -70,6 +73,30 @@ public class AnalyticsDXPEntityBatchExporterImpl
 	}
 
 	@Override
+	public void refreshExportTrigger(long companyId, String dispatchTriggerName)
+		throws Exception {
+
+		DispatchTrigger dispatchTrigger =
+			_dispatchTriggerLocalService.fetchDispatchTrigger(
+				companyId, dispatchTriggerName);
+
+		if (dispatchTrigger == null) {
+			return;
+		}
+
+		Date nextFireDate = dispatchTrigger.getNextFireDate();
+
+		Instant instant = nextFireDate.toInstant();
+
+		ZonedDateTime atZone = instant.atZone(ZoneId.of("UTC"));
+
+		_dispatchTriggerLocalService.deleteDispatchTrigger(dispatchTrigger);
+
+		_addDispatchTrigger(
+			companyId, dispatchTriggerName, atZone.toLocalDateTime());
+	}
+
+	@Override
 	public void scheduleExportTriggers(long companyId) throws Exception {
 		for (String dispatchTriggerName : _DISPATCH_TRIGGER_NAMES) {
 			DispatchTrigger dispatchTrigger =
@@ -80,18 +107,8 @@ public class AnalyticsDXPEntityBatchExporterImpl
 				continue;
 			}
 
-			dispatchTrigger = _dispatchTriggerLocalService.addDispatchTrigger(
-				null, _userLocalService.getDefaultUserId(companyId),
-				dispatchTriggerName, null, dispatchTriggerName, false);
-
-			LocalDateTime localDateTime = LocalDateTime.now();
-
-			_dispatchTriggerLocalService.updateDispatchTrigger(
-				dispatchTrigger.getDispatchTriggerId(), true, _CRON_EXPRESSION,
-				DispatchTaskClusterMode.NOT_APPLICABLE, 0, 0, 0, 0, 0, true,
-				false, localDateTime.getMonthValue() - 1,
-				localDateTime.getDayOfMonth(), localDateTime.getYear(),
-				localDateTime.getHour(), localDateTime.getMinute());
+			_addDispatchTrigger(
+				companyId, dispatchTriggerName, LocalDateTime.now());
 		}
 	}
 
@@ -117,6 +134,24 @@ public class AnalyticsDXPEntityBatchExporterImpl
 
 		_analyticsModelRemoveLoggerLocalService.
 			deleteLteAnalyticsModelRemoveLoggers(companyId, new Date());
+	}
+
+	private DispatchTrigger _addDispatchTrigger(
+			long companyId, String dispatchTriggerName,
+			LocalDateTime localDateTime)
+		throws Exception {
+
+		DispatchTrigger dispatchTrigger =
+			_dispatchTriggerLocalService.addDispatchTrigger(
+				null, _userLocalService.getDefaultUserId(companyId),
+				dispatchTriggerName, null, dispatchTriggerName, false);
+
+		return _dispatchTriggerLocalService.updateDispatchTrigger(
+			dispatchTrigger.getDispatchTriggerId(), true, _CRON_EXPRESSION,
+			DispatchTaskClusterMode.NOT_APPLICABLE, 0, 0, 0, 0, 0, true, false,
+			localDateTime.getMonthValue() - 1, localDateTime.getDayOfMonth(),
+			localDateTime.getYear(), localDateTime.getHour(),
+			localDateTime.getMinute());
 	}
 
 	private static final String _CRON_EXPRESSION = "0 0 * * * ?";
