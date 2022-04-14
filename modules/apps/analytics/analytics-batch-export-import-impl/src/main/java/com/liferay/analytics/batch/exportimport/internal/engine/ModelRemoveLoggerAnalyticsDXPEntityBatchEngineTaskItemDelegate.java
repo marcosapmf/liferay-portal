@@ -110,8 +110,7 @@ public class ModelRemoveLoggerAnalyticsDXPEntityBatchEngineTaskItemDelegate
 				analyticsModelRemoveLoggers) {
 
 			dxpEntityRemoveLoggers.add(
-				_dxpEntityRemoveLoggerDTOConverter.toDTO(
-					analyticsModelRemoveLogger));
+				_dxpEntityDTOConverter.toDTO(analyticsModelRemoveLogger));
 		}
 
 		return Page.of(dxpEntityRemoveLoggers, pagination, totalCount);
@@ -144,6 +143,6 @@ public class ModelRemoveLoggerAnalyticsDXPEntityBatchEngineTaskItemDelegate
 		_analyticsModelRemoveLoggerLocalService;
 
 	@Reference
-	private DXPEntityDTOConverter _dxpEntityRemoveLoggerDTOConverter;
+	private DXPEntityDTOConverter _dxpEntityDTOConverter;
 
 }
