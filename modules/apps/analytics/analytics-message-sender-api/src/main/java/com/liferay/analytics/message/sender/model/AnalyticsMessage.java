@@ -21,7 +21,9 @@ import java.io.Serializable;
 
 /**
  * @author Rachael Koestartyo
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 public final class AnalyticsMessage implements Serializable {
 
 	public static AnalyticsMessage.Builder builder(

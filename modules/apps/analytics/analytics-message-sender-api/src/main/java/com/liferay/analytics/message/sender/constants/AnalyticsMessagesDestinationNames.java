@@ -16,7 +16,9 @@ package com.liferay.analytics.message.sender.constants;
 
 /**
  * @author Rachael Koestartyo
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 public class AnalyticsMessagesDestinationNames {
 
 	public static final String ANALYTICS_MESSAGES_PROCESSOR =

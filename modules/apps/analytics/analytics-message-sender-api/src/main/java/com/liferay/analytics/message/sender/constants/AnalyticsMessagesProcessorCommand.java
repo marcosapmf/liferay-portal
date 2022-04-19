@@ -16,7 +16,9 @@ package com.liferay.analytics.message.sender.constants;
 
 /**
  * @author Shinn lok
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 public enum AnalyticsMessagesProcessorCommand {
 
 	ADD, SEND

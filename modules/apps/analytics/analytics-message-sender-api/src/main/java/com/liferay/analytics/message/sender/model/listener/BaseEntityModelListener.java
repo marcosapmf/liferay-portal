@@ -77,7 +77,9 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Rachael Koestartyo
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 @ProviderType
 public abstract class BaseEntityModelListener<T extends BaseModel<T>>
 	extends BaseModelListener<T> implements EntityModelListener<T> {

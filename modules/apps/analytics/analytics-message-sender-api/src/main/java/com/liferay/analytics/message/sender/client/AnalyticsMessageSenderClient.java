@@ -18,7 +18,9 @@ import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Rachael Koestartyo
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 @ProviderType
 public interface AnalyticsMessageSenderClient {
 

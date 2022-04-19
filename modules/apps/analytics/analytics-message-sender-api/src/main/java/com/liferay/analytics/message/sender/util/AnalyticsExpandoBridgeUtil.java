@@ -27,7 +27,9 @@ import java.util.Map;
 
 /**
  * @author Rachael Koestartyo
+ * @deprecated As of Cavanaugh (7.4.x)
  */
+@Deprecated
 public class AnalyticsExpandoBridgeUtil {
 
 	/**
