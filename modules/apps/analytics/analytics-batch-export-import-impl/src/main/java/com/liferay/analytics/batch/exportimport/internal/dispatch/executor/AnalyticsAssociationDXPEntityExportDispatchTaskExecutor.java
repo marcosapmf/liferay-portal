@@ -33,7 +33,7 @@ public class AnalyticsAssociationDXPEntityExportDispatchTaskExecutor
 	extends BaseAnalyticsDXPEntityExportDispatchTaskExecutor {
 
 	public static final String KEY =
-		"export-analytics-association-change-analytics-dxp-entities";
+		"export-analytics-association-analytics-dxp-entities";
 
 	@Override
 	public String getName() {
@@ -42,7 +42,7 @@ public class AnalyticsAssociationDXPEntityExportDispatchTaskExecutor
 
 	@Override
 	protected String getBatchEngineExportTaskItemDelegateName() {
-		return "analytics-association-change-analytics-dxp-entities";
+		return "analytics-association-analytics-dxp-entities";
 	}
 
 }
