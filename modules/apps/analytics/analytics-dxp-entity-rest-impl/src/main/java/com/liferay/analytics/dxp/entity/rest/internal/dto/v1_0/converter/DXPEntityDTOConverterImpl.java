@@ -103,6 +103,10 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 
 					value = entry.getValue();
 
+					Class<?> valueClass = value.getClass();
+
+					setDataType(valueClass.getSimpleName());
+
 					if (value instanceof Date) {
 						Date date = (Date)value;
 
@@ -184,6 +188,18 @@ public class DXPEntityDTOConverterImpl implements DXPEntityDTOConverter {
 						{
 							name = "dataType";
 							value = dataType;
+						}
+					});
+				add(
+					new Field() {
+						{
+							name = "displayType";
+							value =
+								ExpandoColumnConstants.
+									getDefaultDisplayTypeProperty(
+										expandoColumn.getType(),
+										expandoColumn.
+											getTypeSettingsProperties());
 						}
 					});
 				add(

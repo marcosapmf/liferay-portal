@@ -60,6 +60,34 @@ public class Field implements Serializable {
 	}
 
 	@Schema
+	public String getDataType() {
+		return dataType;
+	}
+
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
+	}
+
+	@JsonIgnore
+	public void setDataType(
+		UnsafeSupplier<String, Exception> dataTypeUnsafeSupplier) {
+
+		try {
+			dataType = dataTypeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String dataType;
+
+	@Schema
 	public String getName() {
 		return name;
 	}
@@ -140,6 +168,20 @@ public class Field implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (dataType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dataType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(dataType));
+
+			sb.append("\"");
+		}
 
 		if (name != null) {
 			if (sb.length() > 1) {
