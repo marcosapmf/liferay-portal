@@ -319,9 +319,13 @@ definition {
 
 			LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
+			SelectWindow.selectPopUp(locator1 = "null");
+
 			PortletEntry.inputName(name = "Test Page Name Edited");
 
 			PortletEntry.save();
+
+			Close.closeWindow();
 		}
 
 		task ("Then the page designer can see new page name in pages admin") {
@@ -636,9 +640,7 @@ definition {
 		}
 
 		task ("Open the Preview modal") {
-			PageEditor.openPreviewMode();
-
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+			PageEditor.previewInANewTab();
 		}
 
 		task ("Assert only html fragment is shown") {
@@ -665,9 +667,7 @@ definition {
 		}
 
 		task ("Publish and enter view mode") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = "Test Site Name");
+			Close.closeWindow();
 
 			PageEditor.publish();
 
@@ -1004,9 +1004,7 @@ definition {
 		}
 
 		task ("Open the Preview modal") {
-			PageEditor.openPreviewMode();
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+			PageEditor.previewInANewTab();
 		}
 
 		task ("Assert both Heading Example 1 and Heading Example 2 are shown") {
@@ -1016,6 +1014,44 @@ definition {
 					id = "element-text",
 					position = "${n}",
 					text = "Heading Example ${n}");
+			}
+		}
+	}
+
+	@description = "This is a test for LPS-148426. The page creator can successfully publish a content page with commerce widgets."
+	@priority = "4"
+	test PublishPageWithCommerceWidgets {
+		task ("Given a page creator has a content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("When the page creator adds commerce widgets to page") {
+			PageEditor.addWidget(portletName = "Checkout");
+
+			for (var widgetName : list "Open Carts,Placed Orders,Wish List Content,Wish Lists") {
+				PageEditor.addWidget(
+					portletName = "${widgetName}",
+					targetFragmentName = "Checkout");
+			}
+		}
+
+		task ("The the page creator could publish the content page") {
+			task ("Publish the page") {
+				PageEditor.publish();
+			}
+
+			task ("View commerce widgets are shown at view mode") {
+				ContentPagesNavigator.openViewContentPage(
+					pageName = "Test Content Page Name",
+					siteName = "Test Site Name");
+
+				for (var widgetName : list "Checkout,WishLists,WishListContent,OrderContent,OpenOrderContent") {
+					AssertElementPresent(
+						key_portletName = "${widgetName}",
+						locator1 = "Portlet#SPECIFIC_FRAGMENTS_AND_WIDGETS");
+				}
 			}
 		}
 	}
@@ -1614,9 +1650,7 @@ definition {
 
 			Click(locator1 = "Icon#CLOSE");
 
-			Button.click(button = "Publish Master");
-
-			Alert.viewSuccessMessage();
+			MastersPageTemplates.publishMaster();
 		}
 
 		task ("Apply the master page template to page") {

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.4.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_4_0.dtd">
 
-<service-builder auto-namespace-tables="false" mvcc-enabled="true" package-path="com.liferay.commerce">
+<service-builder auto-import-default-references="false" auto-namespace-tables="false" mvcc-enabled="true" package-path="com.liferay.commerce">
 	<author>Alessio Antonio Rendina</author>
 	<namespace>Commerce</namespace>
 	<entity external-reference-code="true" local-service="true" name="CommerceAddress" persistence="false" remote-service="true">
@@ -341,6 +341,7 @@
 		<column db-name="deliverySubTypeSettings" name="deliverySubscriptionTypeSettings" type="String" />
 		<column name="depth" type="double" />
 		<column name="discountAmount" type="BigDecimal" />
+		<column name="discountManuallyAdjusted" type="boolean" />
 		<column name="discountPercentageLevel1" type="BigDecimal" />
 		<column name="discountPercentageLevel2" type="BigDecimal" />
 		<column name="discountPercentageLevel3" type="BigDecimal" />
@@ -358,6 +359,7 @@
 		<column name="manuallyAdjusted" type="boolean" />
 		<column name="maxSubscriptionCycles" type="long" />
 		<column localized="true" name="name" type="String" />
+		<column name="priceManuallyAdjusted" type="boolean" />
 		<column name="printedNote" type="String" />
 		<column name="promoPrice" type="BigDecimal" />
 		<column name="promoPriceWithTaxAmount" type="BigDecimal" />

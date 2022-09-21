@@ -35,11 +35,12 @@ import InfoItemService from '../../../../../../../app/services/InfoItemService';
 import updateCollectionDisplayCollection from '../../../../../../../app/thunks/updateCollectionDisplayCollection';
 import updateItemConfig from '../../../../../../../app/thunks/updateItemConfig';
 import {getResponsiveConfig} from '../../../../../../../app/utils/getResponsiveConfig';
-import {useId} from '../../../../../../../app/utils/useId';
 import Collapse from '../../../../../../../common/components/Collapse';
 import CollectionSelector from '../../../../../../../common/components/CollectionSelector';
+import {useId} from '../../../../../../../core/hooks/useId';
 import CollectionFilterConfigurationModal from '../../CollectionFilterConfigurationModal';
 import {CommonStyles} from '../CommonStyles';
+import {EmptyCollectionOptions} from './EmptyCollectionOptions';
 import {LayoutSelector} from './LayoutSelector';
 import {ListItemStyleSelector} from './ListItemStyleSelector';
 import {NoPaginationOptions} from './NoPaginationOptions';
@@ -56,6 +57,7 @@ export function CollectionGeneralPanel({item}) {
 		collection,
 		displayAllItems,
 		displayAllPages,
+		emptyCollectionOptions,
 		listStyle,
 		numberOfColumns,
 		numberOfItems: initialNumberOfItems,
@@ -68,6 +70,7 @@ export function CollectionGeneralPanel({item}) {
 	const [collectionConfiguration, setCollectionConfiguration] = useState(
 		null
 	);
+	const collectionEmptyCollectionMessageId = useId();
 	const collectionItemType = collection?.itemType || null;
 	const collectionLayoutId = useId();
 	const collectionListItemStyleId = useId();
@@ -317,6 +320,18 @@ export function CollectionGeneralPanel({item}) {
 												item={item}
 											/>
 										)}
+
+									<EmptyCollectionOptions
+										collectionEmptyCollectionMessageId={
+											collectionEmptyCollectionMessageId
+										}
+										emptyCollectionOptions={
+											emptyCollectionOptions
+										}
+										handleConfigurationChanged={
+											handleConfigurationChanged
+										}
+									/>
 
 									<PaginationSelector
 										collectionPaginationTypeId={

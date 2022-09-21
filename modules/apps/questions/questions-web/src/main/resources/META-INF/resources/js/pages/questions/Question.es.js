@@ -36,6 +36,7 @@ import Breadcrumb from '../../components/Breadcrumb.es';
 import CreatorRow from '../../components/CreatorRow.es';
 import DefaultQuestionsEditor from '../../components/DefaultQuestionsEditor.es';
 import DeleteQuestion from '../../components/DeleteQuestion.es';
+import EditedTimestamp from '../../components/EditedTimestamp.es';
 import Link from '../../components/Link.es';
 import PaginatedList from '../../components/PaginatedList.es';
 import Rating from '../../components/Rating.es';
@@ -48,6 +49,7 @@ import {
 	getMessages,
 	getSubscriptionsQuery,
 	getThread,
+	getUserActivityQuery,
 	markAsAnswerMessageBoardMessageQuery,
 	subscribeQuery,
 	unsubscribeQuery,
@@ -55,13 +57,13 @@ import {
 import {ALL_SECTIONS_ID} from '../../utils/contants.es';
 import lang from '../../utils/lang.es';
 import {
-	dateToInternationalHuman,
 	deleteCacheKey,
 	getContextLink,
 	getErrorObject,
 	getFullPath,
 	historyPushWithSlug,
 } from '../../utils/utils.es';
+import FlagsContainer from './components/FlagsContainer';
 
 export default withRouter(
 	({
@@ -218,6 +220,13 @@ export default withRouter(
 				await onSubscription();
 
 				fetchMessages();
+
+				deleteCacheKey(getUserActivityQuery, {
+					filter: `creatorId eq ${context.userId}`,
+					page: 1,
+					pageSize: 20,
+					siteKey: context.siteKey,
+				});
 			}
 			catch (error) {}
 		};
@@ -378,22 +387,20 @@ export default withRouter(
 										</h1>
 
 										<p className="c-mb-0 small text-secondary">
-											{`${Liferay.Language.get(
-												'asked'
-											)} - ${dateToInternationalHuman(
-												question.dateCreated,
-												Liferay.ThemeDisplay.getBCP47LanguageId()
-											)} / ${Liferay.Language.get(
-												'active'
-											)} - ${dateToInternationalHuman(
-												question.dateModified,
-												Liferay.ThemeDisplay.getBCP47LanguageId()
-											)} - ${lang.sub(
-												Liferay.Language.get(
-													'viewed-x-times'
-												),
-												[question.viewCount]
-											)}`}
+											<EditedTimestamp
+												dateCreated={
+													question.dateCreated
+												}
+												dateModified={
+													question.dateModified
+												}
+												operationText={Liferay.Language.get(
+													'asked'
+												)}
+											/>
+
+											{`
+											/ ${lang.sub(Liferay.Language.get('viewed-x-times'), [question.viewCount])}`}
 										</p>
 									</div>
 
@@ -469,6 +476,11 @@ export default withRouter(
 														</ClayButton>
 													</>
 												)}
+
+												<FlagsContainer
+													content={question}
+													context={context}
+												/>
 
 												{question.actions.replace && (
 													<Link to={`${url}/edit`}>

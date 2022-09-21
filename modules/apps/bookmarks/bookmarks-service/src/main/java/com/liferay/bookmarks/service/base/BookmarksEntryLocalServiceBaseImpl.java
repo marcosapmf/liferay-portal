@@ -18,8 +18,6 @@ import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
 import com.liferay.bookmarks.service.BookmarksEntryLocalServiceUtil;
 import com.liferay.bookmarks.service.persistence.BookmarksEntryPersistence;
-import com.liferay.bookmarks.service.persistence.BookmarksFolderFinder;
-import com.liferay.bookmarks.service.persistence.BookmarksFolderPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -48,6 +46,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -475,6 +475,11 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement BookmarksEntryLocalServiceImpl#deleteBookmarksEntry(BookmarksEntry) to avoid orphaned data");
+		}
+
 		return bookmarksEntryLocalService.deleteBookmarksEntry(
 			(BookmarksEntry)persistedModel);
 	}
@@ -669,25 +674,10 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	protected BookmarksEntryPersistence bookmarksEntryPersistence;
 
 	@Reference
-	protected BookmarksFolderPersistence bookmarksFolderPersistence;
-
-	@Reference
-	protected BookmarksFolderFinder bookmarksFolderFinder;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		BookmarksEntryLocalServiceBaseImpl.class);
 
 }

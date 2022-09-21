@@ -71,9 +71,8 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		_siteContentReviewerRole = _roleLocalService.getRole(
-			testGroup.getCompanyId(), RoleConstants.SITE_CONTENT_REVIEWER);
-
+		_administratorRole = _roleLocalService.getRole(
+			testGroup.getCompanyId(), RoleConstants.ADMINISTRATOR);
 		_workflowInstance = WorkflowInstanceTestUtil.addWorkflowInstance(
 			testGroup.getGroupId(), ObjectReviewedTestUtil.addObjectReviewed(),
 			_workflowDefinition);
@@ -117,6 +116,7 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 								TestPropsValues.getUserId(), StringPool.BLANK),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -128,10 +128,11 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 						description = _language.format(
 							LocaleUtil.getDefault(),
 							"task-initially-assigned-to-the-x-role",
-							_siteContentReviewerRole.getTitle(
+							_administratorRole.getTitle(
 								LocaleUtil.getDefault()),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -176,6 +177,7 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 								TestPropsValues.getUserId(), StringPool.BLANK),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -203,10 +205,11 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 						description = _language.format(
 							LocaleUtil.getDefault(),
 							"task-initially-assigned-to-the-x-role",
-							_siteContentReviewerRole.getTitle(
+							_administratorRole.getTitle(
 								LocaleUtil.getDefault()),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -237,10 +240,11 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 						description = _language.format(
 							LocaleUtil.getDefault(),
 							"task-initially-assigned-to-the-x-role",
-							_siteContentReviewerRole.getTitle(
+							_administratorRole.getTitle(
 								LocaleUtil.getDefault()),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -285,6 +289,7 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 								TestPropsValues.getUserId(), StringPool.BLANK),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -312,10 +317,11 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 						description = _language.format(
 							LocaleUtil.getDefault(),
 							"task-initially-assigned-to-the-x-role",
-							_siteContentReviewerRole.getTitle(
+							_administratorRole.getTitle(
 								LocaleUtil.getDefault()),
 							false);
 						state = "review";
+						stateLabel = "Review";
 						type = Type.TASK_ASSIGN;
 						workflowTaskId = workflowTask.getId();
 					}
@@ -326,7 +332,8 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
-			"commentLog", "description", "state", "type", "workflowTaskId"
+			"commentLog", "description", "state", "stateLabel", "type",
+			"workflowTaskId"
 		};
 	}
 
@@ -353,6 +360,8 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 	private static WorkflowDefinition _workflowDefinition;
 	private static WorkflowInstance _workflowInstance;
 
+	private Role _administratorRole;
+
 	@Inject
 	private Language _language;
 
@@ -361,8 +370,6 @@ public class WorkflowLogResourceTest extends BaseWorkflowLogResourceTestCase {
 
 	@Inject
 	private RoleLocalService _roleLocalService;
-
-	private Role _siteContentReviewerRole;
 
 	@Inject
 	private WorkflowTaskManager _workflowTaskManager;

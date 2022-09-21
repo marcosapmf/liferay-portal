@@ -38,9 +38,27 @@ SearchContainer<Region> regionSearchContainer = RegionSearchContainerFactory.cre
 				keyProperty="regionId"
 				modelVar="region"
 			>
+
+				<%
+				List<String> availableActions = new ArrayList<>();
+
+				availableActions.add("deleteRegions");
+
+				if (region.getActive()) {
+					availableActions.add("deactivateRegions");
+				}
+				else {
+					availableActions.add("activateRegions");
+				}
+
+				row.setData(
+					HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(availableActions)
+					).build());
+				%>
+
 				<portlet:renderURL var="rowURL">
 					<portlet:param name="mvcRenderCommandName" value="/address/edit_region" />
-					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="backURL" value="<%= currentURL %>" />
 					<portlet:param name="countryId" value="<%= String.valueOf(region.getCountryId()) %>" />
 					<portlet:param name="regionId" value="<%= String.valueOf(region.getRegionId()) %>" />

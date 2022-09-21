@@ -40,13 +40,13 @@ import com.liferay.asset.util.comparator.AssetRendererFactoryTypeNameComparator;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.AssetEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.GroupItemSelectorReturnType;
 import com.liferay.item.selector.criteria.asset.criterion.AssetEntryItemSelectorCriterion;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -68,6 +68,7 @@ import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -119,12 +120,14 @@ public class EditAssetListDisplayContext {
 
 	public EditAssetListDisplayContext(
 		AssetRendererFactoryClassProvider assetRendererFactoryClassProvider,
+		InfoSearchClassMapperTracker infoSearchClassMapperTracker,
 		ItemSelector itemSelector, PortletRequest portletRequest,
 		PortletResponse portletResponse,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		UnicodeProperties unicodeProperties) {
 
 		_assetRendererFactoryClassProvider = assetRendererFactoryClassProvider;
+		_infoSearchClassMapperTracker = infoSearchClassMapperTracker;
 		_itemSelector = itemSelector;
 		_portletRequest = portletRequest;
 		_portletResponse = portletResponse;
@@ -1020,9 +1023,23 @@ public class EditAssetListDisplayContext {
 						return true;
 					}
 
+					String className =
+						_infoSearchClassMapperTracker.getSearchClassName(
+							PortalUtil.getClassName(classNameId));
+
 					AssetRendererFactory<?> assetRendererFactory =
 						AssetRendererFactoryRegistryUtil.
-							getAssetRendererFactoryByClassNameId(classNameId);
+							getAssetRendererFactoryByClassName(className);
+
+					if (assetRendererFactory == null) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(
+								"Unable to get asset renderer factory for " +
+									"class name ID " + classNameId);
+						}
+
+						continue;
+					}
 
 					if (assetRendererFactory.isSelectable()) {
 						return true;
@@ -1419,6 +1436,7 @@ public class EditAssetListDisplayContext {
 	private String _ddmStructureFieldName;
 	private String _ddmStructureFieldValue;
 	private final HttpServletRequest _httpServletRequest;
+	private final InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
 	private final ItemSelector _itemSelector;
 	private Boolean _liveGroup;
 	private String _orderByColumn1;

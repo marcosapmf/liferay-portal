@@ -27,6 +27,7 @@ import com.liferay.commerce.product.exception.NoSuchCatalogException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryService;
@@ -38,6 +39,7 @@ import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValue
 import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.commerce.product.service.CPOptionService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
+import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.service.CommerceChannelService;
@@ -197,6 +199,40 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 	}
 
 	@Override
+	public void deleteProductByExternalReferenceCodeByVersion(
+			String externalReferenceCode, Integer version)
+		throws Exception {
+
+		CProduct cProduct =
+			_cProductLocalService.fetchCProductByExternalReferenceCode(
+				contextCompany.getCompanyId(), externalReferenceCode);
+
+		if (cProduct == null) {
+			throw new NoSuchCPDefinitionException(
+				"Unable to find product with external reference code " +
+					externalReferenceCode);
+		}
+
+		CPDefinition cpDefinition =
+			_cpDefinitionService.getCProductCPDefinition(
+				cProduct.getCProductId(), version);
+
+		_cpDefinitionService.deleteCPDefinition(
+			cpDefinition.getCPDefinitionId());
+	}
+
+	@Override
+	public void deleteProductByVersion(Long id, Integer version)
+		throws Exception {
+
+		CPDefinition cpDefinition =
+			_cpDefinitionService.getCProductCPDefinition(id, version);
+
+		_cpDefinitionService.deleteCPDefinition(
+			cpDefinition.getCPDefinitionId());
+	}
+
+	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
 		throws Exception {
 
@@ -235,6 +271,38 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				"Unable to find product with external reference code " +
 					externalReferenceCode);
 		}
+
+		return _toProduct(cpDefinition.getCPDefinitionId());
+	}
+
+	@Override
+	public Product getProductByExternalReferenceCodeByVersion(
+			String externalReferenceCode, Integer version)
+		throws Exception {
+
+		CProduct cProduct =
+			_cProductLocalService.fetchCProductByExternalReferenceCode(
+				contextCompany.getCompanyId(), externalReferenceCode);
+
+		if (cProduct == null) {
+			throw new NoSuchCPDefinitionException(
+				"Unable to find product with external reference code " +
+					externalReferenceCode);
+		}
+
+		CPDefinition cpDefinition =
+			_cpDefinitionService.getCProductCPDefinition(
+				cProduct.getCProductId(), version);
+
+		return _toProduct(cpDefinition.getCPDefinitionId());
+	}
+
+	@Override
+	public Product getProductByVersion(Long id, Integer version)
+		throws Exception {
+
+		CPDefinition cpDefinition =
+			_cpDefinitionService.getCProductCPDefinition(id, version);
 
 		return _toProduct(cpDefinition.getCPDefinitionId());
 	}
@@ -366,9 +434,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				catalogId);
 		}
 
-		cpDefinition = _cpDefinitionService.copyCPDefinition(
+		cpDefinition = _cpDefinitionService.cloneCPDefinition(
 			cpDefinition.getCPDefinitionId(), commerceCatalog.getGroupId(),
-			WorkflowConstants.STATUS_DRAFT);
+			_serviceContextHelper.getServiceContext(
+				commerceCatalog.getGroupId()));
 
 		return _toProduct(cpDefinition.getCPDefinitionId());
 	}
@@ -472,6 +541,27 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				cpDefinition.getUrlTitleMap());
 		}
 
+		Map<String, String> metaTitleMap = product.getMetaTitle();
+
+		if ((cpDefinition != null) && (metaTitleMap == null)) {
+			metaTitleMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getMetaTitleMap());
+		}
+
+		Map<String, String> metaDescriptionMap = product.getMetaDescription();
+
+		if ((cpDefinition != null) && (metaDescriptionMap == null)) {
+			metaDescriptionMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getMetaDescriptionMap());
+		}
+
+		Map<String, String> metaKeywordsMap = product.getMetaKeyword();
+
+		if ((cpDefinition != null) && (metaKeywordsMap == null)) {
+			metaKeywordsMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getMetaKeywordsMap());
+		}
+
 		boolean ignoreSKUCombinations = true;
 
 		if (cpDefinition != null) {
@@ -491,9 +581,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			LanguageUtils.getLocalizedMap(shortDescriptionMap),
 			LanguageUtils.getLocalizedMap(descriptionMap),
 			LanguageUtils.getLocalizedMap(urlTitleMap),
-			LanguageUtils.getLocalizedMap(product.getMetaTitle()),
-			LanguageUtils.getLocalizedMap(product.getMetaDescription()),
-			LanguageUtils.getLocalizedMap(product.getMetaKeyword()),
+			LanguageUtils.getLocalizedMap(metaTitleMap),
+			LanguageUtils.getLocalizedMap(metaDescriptionMap),
+			LanguageUtils.getLocalizedMap(metaKeywordsMap),
 			product.getProductType(), ignoreSKUCombinations,
 			GetterUtil.getBoolean(shippingConfiguration.getShippable(), true),
 			GetterUtil.getBoolean(
@@ -1127,14 +1217,43 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 				cpDefinition.getDescriptionMap());
 		}
 
+		Map<String, String> urlTitleMap = product.getUrls();
+
+		if ((cpDefinition != null) && (urlTitleMap == null)) {
+			urlTitleMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getUrlTitleMap());
+		}
+
+		Map<String, String> metaTitleMap = product.getMetaTitle();
+
+		if ((cpDefinition != null) && (metaTitleMap == null)) {
+			metaTitleMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getMetaTitleMap());
+		}
+
+		Map<String, String> metaDescriptionMap = product.getMetaDescription();
+
+		if ((cpDefinition != null) && (metaDescriptionMap == null)) {
+			metaDescriptionMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getMetaDescriptionMap());
+		}
+
+		Map<String, String> metaKeywordsMap = product.getMetaKeyword();
+
+		if ((cpDefinition != null) && (metaKeywordsMap == null)) {
+			metaKeywordsMap = LanguageUtils.getLanguageIdMap(
+				cpDefinition.getMetaKeywordsMap());
+		}
+
 		cpDefinition = _cpDefinitionService.updateCPDefinition(
 			cpDefinition.getCPDefinitionId(),
 			LanguageUtils.getLocalizedMap(nameMap),
 			LanguageUtils.getLocalizedMap(shortDescriptionMap),
 			LanguageUtils.getLocalizedMap(descriptionMap),
-			cpDefinition.getUrlTitleMap(), cpDefinition.getMetaTitleMap(),
-			cpDefinition.getMetaDescriptionMap(),
-			cpDefinition.getMetaKeywordsMap(),
+			LanguageUtils.getLocalizedMap(urlTitleMap),
+			LanguageUtils.getLocalizedMap(metaTitleMap),
+			LanguageUtils.getLocalizedMap(metaDescriptionMap),
+			LanguageUtils.getLocalizedMap(metaKeywordsMap),
 			cpDefinition.isIgnoreSKUCombinations(),
 			cpDefinition.getDDMStructureKey(), true,
 			displayDateConfig.getMonth(), displayDateConfig.getDay(),
@@ -1229,6 +1348,9 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private CPOptionService _cpOptionService;
+
+	@Reference
+	private CProductLocalService _cProductLocalService;
 
 	@Reference
 	private CPSpecificationOptionService _cpSpecificationOptionService;

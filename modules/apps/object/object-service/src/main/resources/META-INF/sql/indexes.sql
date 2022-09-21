@@ -4,6 +4,7 @@ create index IX_BA9B4A2F on ObjectAction (uuid_[$COLUMN_LENGTH:75$], companyId);
 create index IX_384C6F1F on ObjectDefinition (companyId, active_, status);
 create index IX_5C293E0D on ObjectDefinition (companyId, active_, system_, status);
 create index IX_2A008543 on ObjectDefinition (companyId, className[$COLUMN_LENGTH:75$]);
+create unique index IX_F861636D on ObjectDefinition (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 create index IX_3E56F38F on ObjectDefinition (companyId, name[$COLUMN_LENGTH:75$]);
 create index IX_55C39BCE on ObjectDefinition (system_, status);
 create index IX_B929D94C on ObjectDefinition (uuid_[$COLUMN_LENGTH:75$], companyId);
@@ -47,6 +48,7 @@ create index IX_F01F1EEA on ObjectLayoutTab (objectLayoutId);
 create index IX_4CC508B8 on ObjectLayoutTab (objectRelationshipId);
 create index IX_94D361A6 on ObjectLayoutTab (uuid_[$COLUMN_LENGTH:75$], companyId);
 
+create index IX_8CFBF7DF on ObjectRelationship (objectDefinitionId1, deletionType[$COLUMN_LENGTH:75$], reverse);
 create index IX_A71785B6 on ObjectRelationship (objectDefinitionId1, name[$COLUMN_LENGTH:75$]);
 create index IX_59059880 on ObjectRelationship (objectDefinitionId1, objectDefinitionId2, name[$COLUMN_LENGTH:75$], reverse, type_[$COLUMN_LENGTH:75$]);
 create index IX_F6F370B8 on ObjectRelationship (objectDefinitionId1, objectDefinitionId2, name[$COLUMN_LENGTH:75$], type_[$COLUMN_LENGTH:75$]);

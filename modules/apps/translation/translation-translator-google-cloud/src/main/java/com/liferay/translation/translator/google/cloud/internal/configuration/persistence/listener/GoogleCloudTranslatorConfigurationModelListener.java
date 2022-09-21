@@ -18,7 +18,9 @@ import com.liferay.portal.configuration.persistence.listener.ConfigurationModelL
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.translation.translator.google.cloud.internal.configuration.GoogleCloudTranslatorConfiguration;
@@ -26,6 +28,7 @@ import com.liferay.translation.translator.google.cloud.internal.configuration.Go
 import java.util.Dictionary;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Adolfo Pérez
@@ -48,7 +51,7 @@ public class GoogleCloudTranslatorConfigurationModelListener
 
 		if (enabled && !_isValid(serviceAccountPrivateKey)) {
 			throw new ConfigurationModelListenerException(
-				LanguageUtil.get(
+				_language.get(
 					LocaleThreadLocal.getThemeDisplayLocale(),
 					"the-service-account-private-key-must-be-in-json-format"),
 				GoogleCloudTranslatorConfiguration.class, getClass(),
@@ -68,8 +71,18 @@ public class GoogleCloudTranslatorConfigurationModelListener
 			return false;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return false;
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		GoogleCloudTranslatorConfigurationModelListener.class);
+
+	@Reference
+	private Language _language;
 
 }

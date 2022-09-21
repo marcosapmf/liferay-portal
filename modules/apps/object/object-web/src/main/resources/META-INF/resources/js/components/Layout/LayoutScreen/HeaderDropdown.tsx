@@ -14,21 +14,24 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
-import React, {FC, MouseEventHandler, useContext, useState} from 'react';
+import React, {FC, MouseEventHandler, useState} from 'react';
 
-import LayoutContext from '../context';
+import {useLayoutContext} from '../objectLayoutContext';
 
 const HeaderDropdown: FC<IHeaderDropdown> = ({
 	addCategorization,
+	addComments,
 	deleteElement,
+	disabled,
 }) => {
 	const [active, setActive] = useState<boolean>(false);
 	const [
 		{
 			isViewOnly,
+			objectDefinition,
 			objectLayout: {objectLayoutTabs},
 		},
-	] = useContext(LayoutContext);
+	] = useLayoutContext();
 
 	const handleOnClick = (handler: Function) => {
 		handler();
@@ -50,6 +53,7 @@ const HeaderDropdown: FC<IHeaderDropdown> = ({
 			onActiveChange={setActive}
 			trigger={
 				<ClayButtonWithIcon
+					disabled={disabled}
 					displayType="unstyled"
 					symbol="ellipsis-v"
 				/>
@@ -58,10 +62,26 @@ const HeaderDropdown: FC<IHeaderDropdown> = ({
 			<ClayDropDown.ItemList>
 				{addCategorization && (
 					<ClayDropDown.Item
-						disabled={isThereFramework('categorization')}
+						disabled={
+							isThereFramework('categorization') ||
+							(Liferay.FeatureFlags['LPS-158672'] &&
+								!objectDefinition.enableCategorization)
+						}
 						onClick={() => handleOnClick(addCategorization)}
 					>
 						{Liferay.Language.get('add-categorization')}
+					</ClayDropDown.Item>
+				)}
+
+				{Liferay.FeatureFlags['LPS-158672'] && addComments && (
+					<ClayDropDown.Item
+						disabled={
+							isThereFramework('comments') ||
+							!objectDefinition.enableComments
+						}
+						onClick={() => handleOnClick(addComments)}
+					>
+						{Liferay.Language.get('add-comments')}
 					</ClayDropDown.Item>
 				)}
 
@@ -78,7 +98,9 @@ const HeaderDropdown: FC<IHeaderDropdown> = ({
 
 interface IHeaderDropdown {
 	addCategorization?: MouseEventHandler;
+	addComments?: MouseEventHandler;
 	deleteElement: MouseEventHandler;
+	disabled?: boolean;
 }
 
 export default HeaderDropdown;

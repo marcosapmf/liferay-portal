@@ -249,6 +249,16 @@ public class CPDefinitionLocalServiceWrapper
 	}
 
 	@Override
+	public CPDefinition cloneCPDefinition(
+			long userId, long cpDefinitionId, long groupId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionLocalService.cloneCPDefinition(
+			userId, cpDefinitionId, groupId, serviceContext);
+	}
+
+	@Override
 	public CPDefinition copyCPDefinition(long cpDefinitionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -732,11 +742,29 @@ public class CPDefinitionLocalServiceWrapper
 	}
 
 	@Override
+	public CPDefinition getCProductCPDefinition(long cProductId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionLocalService.getCProductCPDefinition(
+			cProductId, version);
+	}
+
+	@Override
 	public java.util.List<CPDefinition> getCProductCPDefinitions(
 		long cProductId, int status, int start, int end) {
 
 		return _cpDefinitionLocalService.getCProductCPDefinitions(
 			cProductId, status, start, end);
+	}
+
+	@Override
+	public java.util.List<CPDefinition> getCProductCPDefinitions(
+		long cProductId, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CPDefinition>
+			orderByComparator) {
+
+		return _cpDefinitionLocalService.getCProductCPDefinitions(
+			cProductId, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -1116,26 +1144,6 @@ public class CPDefinitionLocalServiceWrapper
 			deliverySubscriptionLength, deliverySubscriptionType,
 			deliverySubscriptionTypeSettingsUnicodeProperties,
 			deliveryMaxSubscriptionCycles);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public CPDefinition updateSubscriptionInfo(
-			long cpDefinitionId, boolean subscriptionEnabled,
-			int subscriptionLength, String subscriptionType,
-			com.liferay.portal.kernel.util.UnicodeProperties
-				subscriptionTypeSettingsUnicodeProperties,
-			long maxSubscriptionCycles,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _cpDefinitionLocalService.updateSubscriptionInfo(
-			cpDefinitionId, subscriptionEnabled, subscriptionLength,
-			subscriptionType, subscriptionTypeSettingsUnicodeProperties,
-			maxSubscriptionCycles, serviceContext);
 	}
 
 	@Override

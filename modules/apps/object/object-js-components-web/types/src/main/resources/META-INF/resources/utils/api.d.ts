@@ -63,7 +63,13 @@ export declare function getNotificationTemplate(
 export declare function getNotificationTemplates(): Promise<
 	NotificationTemplate[]
 >;
-export declare function getObjectDefinitions(): Promise<ObjectDefinition[]>;
+export declare function getObjectDefinition(
+	objectDefinitionId: number
+): Promise<ObjectDefinition>;
+export declare function getAllObjectDefinitions(): Promise<ObjectDefinition[]>;
+export declare function getObjectDefinitions(
+	parameters?: string
+): Promise<ObjectDefinition[]>;
 export declare function getObjectFields(
 	objectDefinitionId: number
 ): Promise<ObjectField[]>;
@@ -83,4 +89,5 @@ export declare function updateRelationship({
 	objectRelationshipId,
 	...others
 }: ObjectRelationship): Promise<void>;
+export declare function getRelationship<T>(relationshipId: number): Promise<T>;
 export {};

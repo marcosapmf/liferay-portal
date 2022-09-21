@@ -45,7 +45,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 		const {
 			closeCaption,
 			editImageURL,
-			ffItemSelectorSingleFileUploaderEnabled = false,
+			itemSelectorSingleFileUploaderEnabled = false,
 			maxFileSize = Liferay.PropsValues
 				.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE,
 			rootNode,
@@ -56,7 +56,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 
 		this.closeCaption = closeCaption;
 		this.editImageURL = editImageURL;
-		this.ffItemSelectorSingleFileUploaderEnabled = ffItemSelectorSingleFileUploaderEnabled;
+		this.itemSelectorSingleFileUploaderEnabled = itemSelectorSingleFileUploaderEnabled;
 		this.maxFileSize = this._convertMaxFileSize(maxFileSize);
 		this.rootNode = rootNode;
 		this.validExtensions = validExtensions;
@@ -86,11 +86,11 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 
 		const items = itemsNodes.map((node) => node.dataset);
 
-		const clicableItems = Array.from(this.all('.icon-view'));
+		const clickableItems = Array.from(this.all('.icon-view'));
 
-		if (items.length === clicableItems.length) {
-			clicableItems.forEach((clicableItem, index) => {
-				clicableItem.addEventListener('click', (event) => {
+		if (items.length === clickableItems.length) {
+			clickableItems.forEach((clickableItem, index) => {
+				clickableItem.addEventListener('click', (event) => {
 					event.preventDefault();
 					event.stopPropagation();
 
@@ -147,7 +147,7 @@ class ItemSelectorRepositoryEntryBrowser extends PortletBase {
 			)
 		);
 
-		if (!this.ffItemSelectorSingleFileUploaderEnabled) {
+		if (!this.itemSelectorSingleFileUploaderEnabled) {
 			const inputFileNode = this.one('input[type="file"]');
 
 			if (inputFileNode) {

@@ -12,10 +12,207 @@
  * details.
  */
 
+export const mockedAudioDocumentProps = {
+	subType: 'Basic Document (Audio)',
+};
+export const mockedCodeDocumentProps = {
+	subType: 'Basic Document (Code)',
+};
+export const mockedCompressDocumentProps = {
+	subType: 'Basic Document (Compressed)',
+};
+export const mockedContentWithPreview = {
+	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
+	clipboard: {
+		name: 'demo.jpg',
+		url: 'mocked/view/url/in/portal',
+	},
+	description: 'Mocked description',
+	preview: {
+		imageURL: 'mocked/preview/url/demo.jpg',
+		url: 'mocked/vuew/url/',
+	},
+	specificFields: {
+		'extension': {
+			title: 'Extension',
+			type: 'string',
+			value: 'jpg',
+		},
+		'latest-version-url': {
+			title: 'Latest Version URL',
+			type: 'URL',
+			value: 'http://localhost:8080/documents/d/guest/tree-png',
+		},
+		'size': {
+			title: 'Size',
+			type: 'string',
+			value: '200 KB',
+		},
+		'web-dav-url': {
+			title: 'WebDAV URL',
+			type: 'URL',
+			value:
+				'http://localhost:8080/webdav/guest/document_library/tree.png',
+		},
+	},
+	subType: 'Basic Document (Image)',
+	type: 'Document',
+	viewURLs: [],
+};
+export const mockedContentWithPreviewWithoutLink = {
+	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
+	clipboard: {
+		name: 'demo.jpg',
+		url: 'mocked/view/url/in/portal',
+	},
+	description: 'Mocked description',
+	preview: {
+		imageURL: 'mocked/preview/url/demo.jpg',
+	},
+	specificFields: {
+		'extension': {
+			title: 'Extension',
+			type: 'string',
+			value: 'jpg',
+		},
+		'latest-version-url': {
+			title: 'Latest Version URL',
+			type: 'URL',
+			value: 'http://localhost:8080/documents/d/guest/tree-png',
+		},
+		'size': {
+			title: 'Size',
+			type: 'string',
+			value: '200 KB',
+		},
+		'web-dav-url': {
+			title: 'WebDAV URL',
+			type: 'URL',
+			value:
+				'http://localhost:8080/webdav/guest/document_library/tree.png',
+		},
+	},
+	subType: 'Basic Document',
+	type: 'Document',
+	viewURLs: [],
+};
+export const mockedCustomDocumentProps = {
+	subType: 'Custom Document',
+};
+export const mockedFileDocumentProps = {
+	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
+	clipboard: {
+		name: 'script.sh',
+		url: 'mocked/view/url/in/portal',
+	},
+	description: 'Mocked description',
+	downloadURL: 'mocked/download/url/demo.jpg&download=true',
+	preview: {
+		imageURL: '',
+		url: 'mocked/vuew/url/',
+	},
+	specificFields: {
+		extension: {
+			title: 'Extension',
+			type: 'string',
+			value: 'sh',
+		},
+		latestVersionUrl: {
+			title: 'Latest Version URL',
+			type: 'URL',
+			value: 'mockedURLValue',
+		},
+		size: {
+			title: 'Size',
+			type: 'string',
+			value: '9 KB',
+		},
+		webDavUrl: {
+			title: 'WebDAV URL',
+			type: 'URL',
+			value: 'mockedURLValue2',
+		},
+	},
+	subType: 'Basic Document (Other)',
+	type: 'Document',
+	viewURLs: [],
+};
+export const mockedImageDocumentProps = {
+	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
+	clipboard: {
+		name: 'demo.jpg',
+		url: 'mocked/view/url/in/portal',
+	},
+	description: 'Mocked description',
+	downloadURL: 'mocked/download/url/demo.jpg&download=true',
+	preview: {
+		imageURL: 'mocked/preview/url/demo.jpg',
+		url: 'mocked/vuew/url/',
+	},
+	specificFields: {
+		extension: {
+			title: 'Extension',
+			type: 'string',
+			value: 'jpg',
+		},
+		size: {
+			title: 'Size',
+			type: 'string',
+			value: '200 KB',
+		},
+	},
+	subType: 'Basic Document (Image)',
+	type: 'Document',
+	viewURLs: [],
+};
+export const mockedNoTaxonomies = {
+	tags: [],
+	vocabularies: {},
+};
+export const mockedPresentationDocumentProps = {
+	subType: 'Basic Document (Presentation)',
+};
+
 export const mockedProps = {
+	allVersions: [
+		{
+			changeLog: '',
+			createDate: 'Tue Aug 30 06:58:03 GMT 2022',
+			statusLabel: 'Approved',
+			statusStyle: 'success',
+			userName: 'Test Test',
+			version: '1.1',
+		},
+		{
+			changeLog: '',
+			createDate: 'Tue Aug 30 06:56:16 GMT 2022',
+			statusLabel: 'Approved',
+			statusStyle: 'success',
+			userName: 'Test Test',
+			version: '1.0',
+		},
+	],
 	classPK: '38070',
 	createDate: '2020-07-27T10:50:55.19',
 	languageTag: 'en',
+	latestVersions: [
+		{
+			changeLog: '',
+			createDate: 'Tue Aug 30 06:58:03 GMT 2022',
+			statusLabel: 'Approved',
+			statusStyle: 'success',
+			userName: 'Test Test',
+			version: '1.6',
+		},
+		{
+			changeLog: '',
+			createDate: 'Tue Aug 30 06:58:03 GMT 2022',
+			statusLabel: 'Draft',
+			statusStyle: 'secondary',
+			userName: 'Test Test',
+			version: '1.7',
+		},
+	],
 	modifiedDate: '2020-07-27T10:56:56.027',
 	specificFields: {
 		'display-date': {
@@ -48,18 +245,6 @@ export const mockedProps = {
 		url: '',
 		userId: 20126,
 	},
-	versions: [
-		{
-			statusLabel: 'Approved',
-			statusStyle: 'success',
-			version: 1.6,
-		},
-		{
-			statusLabel: 'Draft',
-			statusStyle: 'secondary',
-			version: 1.7,
-		},
-	],
 	viewURLs: [
 		{
 			default: false,
@@ -236,12 +421,12 @@ export const mockedProps = {
 		},
 	},
 };
-
-export const mockedNoTaxonomies = {
-	tags: [],
-	vocabularies: {},
+export const mockedSpreadsheetDocumentProps = {
+	subType: 'Basic Document (Spreadsheet)',
 };
-
+export const mockedTextDocumentProps = {
+	subType: 'Basic Document (Text)',
+};
 export const mockedUser = {
 	user: {
 		name: 'Kate Williams',
@@ -249,36 +434,12 @@ export const mockedUser = {
 		userId: 20126,
 	},
 };
-
-export const mockedImageDocumentProps = {
-	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
-	clipboard: {
-		name: 'demo.jpg',
-		url: 'mocked/view/url/in/portal',
-	},
-	description: 'Mocked description',
-	downloadURL: 'mocked/download/url/demo.jpg&download=true',
-	preview: {
-		imageURL: 'mocked/preview/url/demo.jpg',
-		url: 'mocked/vuew/url/',
-	},
-	specificFields: {
-		extension: {
-			title: 'Extension',
-			type: 'string',
-			value: 'jpg',
-		},
-		size: {
-			title: 'Size',
-			type: 'string',
-			value: '200 KB',
-		},
-	},
-	subType: 'Basic Document',
-	type: 'Document',
-	viewURLs: [],
+export const mockedVectorialDocumentProps = {
+	subType: 'Basic Document (Vectorial)',
 };
-
+export const mockedVideoDocumentProps = {
+	subType: 'Basic Document (Video)',
+};
 export const mockedVideoShortcutDocumentProps = {
 	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
 	clipboard: {
@@ -303,90 +464,6 @@ export const mockedVideoShortcutDocumentProps = {
 		},
 	},
 	subType: 'External Video Shortcut',
-	type: 'Document',
-	viewURLs: [],
-};
-
-export const mockedFileDocumentProps = {
-	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
-	clipboard: {
-		name: 'script.sh',
-		url: 'mocked/view/url/in/portal',
-	},
-	description: 'Mocked description',
-	downloadURL: 'mocked/download/url/demo.jpg&download=true',
-	preview: {
-		imageURL: '',
-		url: 'mocked/vuew/url/',
-	},
-	specificFields: {
-		extension: {
-			title: 'Extension',
-			type: 'string',
-			value: 'sh',
-		},
-		size: {
-			title: 'Size',
-			type: 'string',
-			value: '9 KB',
-		},
-	},
-	subType: 'Basic Document',
-	type: 'Document',
-	viewURLs: [],
-};
-
-export const mockedContentWithPreview = {
-	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
-	clipboard: {
-		name: 'demo.jpg',
-		url: 'mocked/view/url/in/portal',
-	},
-	description: 'Mocked description',
-	preview: {
-		imageURL: 'mocked/preview/url/demo.jpg',
-		url: 'mocked/vuew/url/',
-	},
-	specificFields: {
-		extension: {
-			title: 'Extension',
-			type: 'string',
-			value: 'jpg',
-		},
-		size: {
-			title: 'Size',
-			type: 'string',
-			value: '200 KB',
-		},
-	},
-	subType: 'Basic Document',
-	type: 'Document',
-	viewURLs: [],
-};
-
-export const mockedContentWithPreviewWithoutLink = {
-	className: 'com.liferay.portal.kernel.repository.model.FileEntry',
-	clipboard: {
-		name: 'demo.jpg',
-		url: 'mocked/view/url/in/portal',
-	},
-	description: 'Mocked description',
-	preview: {
-		imageURL: 'mocked/preview/url/demo.jpg',
-	},
-	specificFields: {
-		extension: {
-			title: 'Extension',
-			type: 'string',
-			value: 'zip',
-		},
-		size: {
-			title: 'Size',
-			type: 'string',
-			value: '200 KB',
-		},
-	},
-	subType: 'Basic Document',
 	type: 'Document',
 	viewURLs: [],
 };

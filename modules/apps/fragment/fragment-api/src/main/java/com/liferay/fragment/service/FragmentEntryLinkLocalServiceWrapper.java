@@ -646,6 +646,15 @@ public class FragmentEntryLinkLocalServiceWrapper
 		_fragmentEntryLinkLocalService.updateClassedModel(plid);
 	}
 
+	@Override
+	public FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _fragmentEntryLinkLocalService.updateDeleted(
+			fragmentEntryLinkId, deleted);
+	}
+
 	/**
 	 * Updates the fragment entry link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *

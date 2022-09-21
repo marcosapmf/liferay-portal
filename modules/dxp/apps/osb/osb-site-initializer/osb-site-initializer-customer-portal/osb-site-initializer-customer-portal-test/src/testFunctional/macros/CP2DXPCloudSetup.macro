@@ -6,7 +6,7 @@ definition {
 			panel = "Control Panel",
 			portlet = "Account Subscriptions");
 
-		CustomerPortal.viewCPObjectCustomInfo(index = "4");
+		CustomerPortal.viewCPObjectCustomInfo(index = "6");
 
 		Click(locator1 = "CP2DXPCloudSetup#HAS_DISASTER_DATA_CENTER_REGION");
 
@@ -15,102 +15,32 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro activeStatus {
-		ApplicationsMenu.gotoPortlet(
-			category = "Object",
-			panel = "Control Panel",
-			portlet = "Account Subscription Groups");
-
-		CustomerPortal.viewCPObjectInfo();
-
-		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "activationStatus",
-			value = "Active");
-
-		Click(locator1 = "Button#SAVE");
-
-		Alert.viewSuccessMessage();
-	}
-
-	macro addCPDXPCloudObject {
-		ApplicationsMenu.gotoPortlet(
-			category = "Object",
-			panel = "Control Panel",
-			portlet = "Objects");
-
-		CustomerPortal.viewCPObjectCustomInfo(index = "14");
-
-		CreateObject.checkToggleActive();
-
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Site Administration > Content & Data");
-
-		CustomerPortal.checkToggleHideWidget();
-
-		CreateObject.saveObject();
-	}
-
-	macro addObjectsForDXPCloud {
-		CustomerPortal.showCPObject(title = "Account Subscription");
-
-		CP2DXPCloudSetup.activeDisasterRecoveryDataCenter();
-	}
-
 	macro assertCardStatusChanged {
-		AssertTextEquals(
+		AssertElementPresent(
 			key_status = "${status}",
-			locator1 = "CP2DXPCloudSetup#STATUS_CARD",
-			value1 = "${value}");
+			locator1 = "CustomerPortalSite#STATUS_CARD");
 	}
 
-	macro clearActivationStatus {
-		ApplicationsMenu.gotoPortlet(
-			category = "Object",
-			panel = "Control Panel",
-			portlet = "Account Subscription Groups");
-
-		var key_status = "${status}";
-
-		if (IsElementPresent(locator1 = "CP2DXPCloudSetup#DND_TABLE_ELEMENT")) {
-			CustomerPortal.viewCPObjectInfo();
-
-			CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-				label = "activationStatus",
-				value = "");
-
-			Click(locator1 = "Button#SAVE");
-
-			Alert.viewSuccessMessage();
-		}
-	}
-
-	macro clearDXPCloudInfo {
-		CP2DXPCloudSetup.clearActivationStatus(status = "${status}");
+	macro clearAndDeleteDXPCloudEntries {
+		CustomerPortal.clearActivationStatus(status = "${status}");
 
 		ApplicationsMenu.gotoSite(key_site = "Customer Portal Site");
 
-		CP2DXPCloudSetup.deleteEntryDXPCloudEnvironments(entry = "ERC-001");
+		CP2DXPCloudSetup.deleteEntryCloudEnvironments(
+			entry = "ERC-001",
+			portlet = "DXP Cloud Environments");
 	}
 
 	macro clickOnAddAnotherAdminButton {
 		Click(locator1 = "CP2DXPCloudSetup#ADD_ANOTHER_ADMIN");
 	}
 
-	macro clickOnFinishActivationButton {
-		Click(locator1 = "CP2DXPCloudSetup#FINISH_ACTIVATION");
-	}
-
 	macro clickOnProductConsoleLink {
-		Click(locator1 = "CP2DXPCloudSetup#PRODUCT_CONSOLE");
+		Click(locator1 = "CustomerPortalSite#PRODUCT_CONSOLE");
 	}
 
 	macro clickOnRemoveThisAdminButton {
 		Click(locator1 = "CP2DXPCloudSetup#REMOVE_THIS_ADMIN_DXP_CLOUD");
-	}
-
-	macro createDXPCloudObjects {
-		CustomerPortal.showCPObject(title = "Account Subscription Group");
-
-		CP2DXPCloudSetup.addCPDXPCloudObject();
 	}
 
 	macro deactivateDisasterRecoveryDataCenter {
@@ -119,7 +49,7 @@ definition {
 			panel = "Control Panel",
 			portlet = "Account Subscriptions");
 
-		CustomerPortal.viewCPObjectCustomInfo(index = "4");
+		CustomerPortal.viewCPObjectCustomInfo(index = "${index}");
 
 		Click(locator1 = "CP2DXPCloudSetup#HAS_DISASTER_DATA_CENTER_REGION");
 
@@ -145,51 +75,43 @@ definition {
 		CreateObject.saveObject();
 	}
 
-	macro deleteDXPCloudObject {
-		CP2DXPCloudSetup.deleteDXPCloudEnvironments();
-
-		CustomerPortal.deleteCPObject(title = "Account Subscription Group");
-	}
-
-	macro deleteEntryDXPCloudEnvironments {
+	macro deleteEntryCloudEnvironments {
 		var key_status = "${entry}";
 
-		if (IsElementPresent(locator1 = "CP2DXPCloudSetup#DND_TABLE_ELEMENT")) {
+		if (IsElementPresent(locator1 = "CustomerPortalSite#DND_TABLE_ELEMENT")) {
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",
-				portlet = "DXP Cloud Environments");
+				portlet = "${portlet}");
 
 			ObjectPortlet.deleteEntry(entry = "${entry}");
 		}
 	}
 
-	macro deleteObjectsForDXPCloud {
-		CP2DXPCloudSetup.deactivateDisasterRecoveryDataCenter();
-
-		CustomerPortal.deleteCPObject(title = "Account Subscription");
-	}
-
 	macro notViewSetupDXPCloufEXtraInfo {
 		AssertElementNotPresent(
-			label = "dxp.admins[1].email",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE");
+			key_index = "2",
+			label = "email",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 
 		AssertElementNotPresent(
-			label = "dxp.admins[1].firstName",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE");
+			key_index = "2",
+			label = "firstName",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 
 		AssertElementNotPresent(
-			label = "dxp.admins[1].lastName",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE");
+			key_index = "2",
+			label = "lastName",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 
 		AssertElementNotPresent(
-			label = "dxp.admins[1].github",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE");
+			key_index = "2",
+			label = "github",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 	}
 
 	macro typeAllSetupDXPCloudInfoFields {
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.projectId",
+			label = "projectId",
 			value = "001");
 
 		Select(
@@ -197,66 +119,54 @@ definition {
 			value1 = "Iowa, USA");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[0].email",
+			label = "email",
 			value = "test@liferay.com");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[0].firstName",
+			label = "firstName",
 			value = "FirstName");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[0].lastName",
+			label = "lastName",
 			value = "LastName");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[0].github",
+			label = "github",
 			value = "GitHubUser");
 	}
 
 	macro typeAllSetupDXPCloufEXtraInfo {
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[1].email",
+			label = "email",
+			position = "2",
 			value = "test@liferay.com");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[1].firstName",
+			label = "firstName",
+			position = "2",
 			value = "FirstName");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[1].lastName",
+			label = "lastName",
+			position = "2",
 			value = "LastName");
 
 		CP2DXPCloudSetup.typeSetupDXPCloudInfoFields(
-			label = "dxp.admins[1].github",
+			label = "github",
+			position = "2",
 			value = "GitHubUser");
 	}
 
 	macro typeSetupDXPCloudInfoFields {
+		if (!(isSet(position))) {
+			var position = "1";
+		}
+
+		var key_index = "${position}";
+
 		Type(
-			locator1 = "CP2DXPCloudSetup#SETUP_FIELDS",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS",
 			value1 = "${value}");
-	}
-
-	macro viewActivationStatusCardValue {
-		AssertElementPresent(
-			locator1 = "CP2DXPCloudSetup#CARD_SUBSCRIPTION",
-			title = "Almost there! Setup DXP Cloud by finishing the activation form.");
-
-		AssertElementPresent(
-			locator1 = "CP2DXPCloudSetup#CARD_LOGO",
-			product = "dxp_icon");
-
-		AssertElementPresent(
-			locator1 = "CP2DXPCloudSetup#CARD_TITLE",
-			project = "Test Account 01");
-
-		AssertElementPresent(
-			date = "Invalid Date - Invalid Date",
-			locator1 = "CP2DXPCloudSetup#CARD_DATES");
-
-		AssertElementPresent(
-			key_status = "Not Activated",
-			locator1 = "CP2DXPCloudSetup#STATUS_CARD");
 	}
 
 	macro viewDisasterRegionList {
@@ -279,50 +189,58 @@ definition {
 		}
 	}
 
-	macro viewSetupDXPCloufEXtraFields {
+	macro viewSetupDXPCloudExtraFields {
 		AssertElementPresent(
-			label = "dxp.admins[1].email",
-			locator1 = "CP2DXPCloudSetup#SETUP_FIELDS");
+			key_index = "2",
+			label = "email",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 
 		AssertElementPresent(
-			label = "dxp.admins[1].firstName",
-			locator1 = "CP2DXPCloudSetup#SETUP_FIELDS");
+			key_index = "2",
+			label = "firstName",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 
 		AssertElementPresent(
-			label = "dxp.admins[1].lastName",
-			locator1 = "CP2DXPCloudSetup#SETUP_FIELDS");
+			key_index = "2",
+			label = "lastName",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 
 		AssertElementPresent(
-			label = "dxp.admins[1].github",
-			locator1 = "CP2DXPCloudSetup#SETUP_FIELDS");
+			key_index = "2",
+			label = "github",
+			locator1 = "CustomerPortalSite#SETUP_FIELDS");
 	}
 
-	macro viewSetupDXPCloufEXtraInfo {
+	macro viewSetupDXPCloudExtraInfo {
 		AssertElementPresent(
-			label = "dxp.admins[1].email",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			key_index = "2",
+			label = "email",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "test@liferay.com");
 
 		AssertElementPresent(
-			label = "dxp.admins[1].firstName",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			key_index = "2",
+			label = "firstName",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "FirstName");
 
 		AssertElementPresent(
-			label = "dxp.admins[1].lastName",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			key_index = "2",
+			label = "lastName",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "LastName");
 
 		AssertElementPresent(
-			label = "dxp.admins[1].github",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			key_index = "2",
+			label = "github",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "GitHubUser");
 	}
 
 	macro viewSetupDXPCloufInfo {
 		AssertElementPresent(
-			label = "dxp.projectId",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			label = "projectId",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "001");
 
 		AssertElementPresent(
@@ -330,23 +248,23 @@ definition {
 			value1 = "Iowa, USA");
 
 		AssertElementPresent(
-			label = "dxp.admins[0].email",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			label = "email",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "test@liferay.com");
 
 		AssertElementPresent(
-			label = "dxp.admins[0].firstName",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			label = "firstName",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "FirstName");
 
 		AssertElementPresent(
-			label = "dxp.admins[0].lastName",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			label = "lastName",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "LastName");
 
 		AssertElementPresent(
-			label = "dxp.admins[0].github",
-			locator1 = "CP2DXPCloudSetup#SETUP_VALUE",
+			label = "github",
+			locator1 = "CustomerPortalSite#SETUP_VALUE",
 			value = "GitHubUser");
 	}
 

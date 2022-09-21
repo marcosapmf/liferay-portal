@@ -9,9 +9,17 @@ definition {
 			var layoutName = "AC Page";
 		}
 
-		JSONLayout.addPublicLayout(
-			groupName = "${siteName}",
-			layoutName = "${layoutName}");
+		if (!(isSet(type))) {
+			JSONLayout.addPublicLayout(
+				groupName = "${siteName}",
+				layoutName = "${layoutName}");
+		}
+		else {
+			JSONLayout.addPublicLayout(
+				groupName = "${siteName}",
+				layoutName = "${layoutName}",
+				type = "${type}");
+		}
 	}
 
 	macro addSiteAndPage {
@@ -25,9 +33,17 @@ definition {
 			var layoutName = "AC Page";
 		}
 
-		ACUtils.addPage(
-			layoutName = "${layoutName}",
-			siteName = "${siteName}");
+		if (!(isSet(type))) {
+			ACUtils.addPage(
+				layoutName = "${layoutName}",
+				siteName = "${siteName}");
+		}
+		else {
+			ACUtils.addPage(
+				layoutName = "${layoutName}",
+				siteName = "${siteName}",
+				type = "${type}");
+		}
 	}
 
 	macro addWidgetToPage {
@@ -53,7 +69,7 @@ definition {
 
 			MouseOver(locator1 = "ACIndividualsDashboard#VISITORS_LEGEND");
 
-			while (IsElementNotPresent(locator1 = "ACIndividualsDashboard#ACTIVE_INDIVIDUAL_CHART") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACIndividualsDashboard#ACTIVE_INDIVIDUAL_CHART")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
 
 				if ("${timeFilter}" != "Custom Range") {
@@ -106,7 +122,7 @@ definition {
 			}
 		}
 		else {
-			while (IsElementNotPresent(locator1 = "ACIndividualsDashboard#ACTIVE_INDIVIDUAL_CHART") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACIndividualsDashboard#ACTIVE_INDIVIDUAL_CHART")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
 
 				if ("${timeFilter}" != "Custom Range") {
@@ -166,7 +182,7 @@ definition {
 		for (var percentage : list "${percentageList}") {
 			var key_percentage = "${percentage}";
 
-			while (IsElementNotPresent(locator1 = "ACUtils#METRIC_VALUE_PERCENTAGE") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#METRIC_VALUE_PERCENTAGE")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
 			}
 
@@ -424,6 +440,22 @@ definition {
 		Click(locator1 = "ACSegments#SEGMENT_ELLIPSIS");
 	}
 
+	macro clickOnDistributionBar {
+		if (!(isSet(index))) {
+			var index = "1";
+		}
+
+		while (IsElementNotPresent(index = "${index}", locator1 = "ACIndividualsDashboard#INDIVIDUALS_ACTIVITIES_CHART_RECHARTS_BAR")) {
+			TestUtils.hardRefresh();
+
+			ACUtils.waitForChartLoad();
+		}
+
+		Click(
+			index = "${index}",
+			locator1 = "ACIndividualsDashboard#INDIVIDUALS_ACTIVITIES_CHART_RECHARTS_BAR");
+	}
+
 	macro closeAllSessions {
 		AntCommand(
 			locator1 = "build-test.xml",
@@ -616,6 +648,26 @@ definition {
 		var value = JSONUtil.getWithJSONPath("[${postDataText}]", "$..[?(@['applicationId'] == '${applicationId}' && @['eventId'] == '${eventId}')]..${property}");
 
 		return "${value}";
+	}
+
+	macro getGroupId {
+		var currentURL = Navigator.getCurrentURL();
+
+		var groupId = StringUtil.extractLast("${currentURL}", "workspace/");
+
+		var groupId = StringUtil.extractFirst("${groupId}", "/");
+
+		return "${groupId}";
+	}
+
+	macro getIPAddress {
+		var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
+
+		var extractedIPAddress = StringUtil.extractFirst("${analyticsCloudURL}", ":8080");
+
+		var extractedIPAddress = StringUtil.extractLast("${extractedIPAddress}", "/");
+
+		return "${extractedIPAddress}";
 	}
 
 	macro getIPCountry {
@@ -879,6 +931,12 @@ definition {
 		}
 	}
 
+	macro selectGenericOption {
+		Select(
+			locator1 = "Select#SELECT",
+			value1 = "${optionValue}");
+	}
+
 	macro setItemName {
 		WaitForPageLoad();
 
@@ -889,6 +947,14 @@ definition {
 		Type.sendKeys(
 			locator1 = "ACUtils#NAME_FIELD",
 			value1 = "${itemName}");
+	}
+
+	macro setLocalStorageValue {
+		var javaScript = '''
+		localStorage.setItem('${keyName}', '${keyValue}');
+		''';
+
+		var localStorageItem = selenium.getEval("${javaScript}");
 	}
 
 	macro tearDownAC {
@@ -929,7 +995,7 @@ definition {
 
 			WaitForPageLoad();
 
-			while (IsElementNotPresent(locator1 = "ACUtils#GENERIC_TEXT") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#GENERIC_TEXT")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
 			}
 
@@ -947,7 +1013,7 @@ definition {
 
 			WaitForPageLoad();
 
-			while (IsElementNotPresent(locator1 = "ACUtils#GENERIC_TEXT_ORDER") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#GENERIC_TEXT_ORDER")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
 			}
 
@@ -961,7 +1027,7 @@ definition {
 
 			WaitForPageLoad();
 
-			while (IsElementNotPresent(locator1 = "ACUtils#NAME_LIST") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#NAME_LIST")) && (maxIterations = "50")) {
 				ACSegments.searchSegment(findSegment = "${name}");
 
 				ACUtils.clearSearchBar();
@@ -979,7 +1045,7 @@ definition {
 
 		WaitForPageLoad();
 
-		while (IsElementNotPresent(locator1 = "ACSegments#ADD_MEMBERS_INDEX_TABLE") && (maxIterations = "50")) {
+		while ((IsElementNotPresent(locator1 = "ACSegments#ADD_MEMBERS_INDEX_TABLE")) && (maxIterations = "50")) {
 			Refresh();
 		}
 
@@ -994,7 +1060,7 @@ definition {
 
 			WaitForPageLoad();
 
-			while (IsElementPresent(locator1 = "ACUtils#NAME_LIST") && (maxIterations = "50")) {
+			while ((IsElementPresent(locator1 = "ACUtils#NAME_LIST")) && (maxIterations = "50")) {
 				ACSegments.searchSegment(findSegment = "${name}");
 
 				ACUtils.clearSearchBar();
@@ -1009,7 +1075,7 @@ definition {
 
 		WaitForPageLoad();
 
-		while (IsElementNotPresent(locator1 = "ACAssets#NO_RESULTS_CONTENT_MESSAGE") && (maxIterations = "50")) {
+		while ((IsElementNotPresent(locator1 = "ACAssets#NO_RESULTS_CONTENT_MESSAGE")) && (maxIterations = "50")) {
 			TestUtils.hardRefresh();
 		}
 
@@ -1036,7 +1102,7 @@ definition {
 
 			WaitForPageLoad();
 
-			while (IsElementNotPresent(locator1 = "ACUtils#NAME_LIST") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#NAME_LIST")) && (maxIterations = "50")) {
 				ACSegments.searchSegment(findSegment = "${name}");
 
 				ACUtils.clearSearchBar();
@@ -1080,7 +1146,7 @@ definition {
 
 			WaitForPageLoad();
 
-			while (IsElementNotPresent(locator1 = "ACUtils#TABLE_CELL_INFORMATION") && (maxIterations = "50")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#TABLE_CELL_INFORMATION")) && (maxIterations = "50")) {
 				TestUtils.hardRefresh();
 			}
 
@@ -1090,6 +1156,13 @@ definition {
 
 			var i = StringUtil.valueOf("${i}");
 		}
+	}
+
+	macro waitForChartLoad {
+
+		// The pause is necessary because the bar takes a while to load into the chart. For more information about pause see LRAC-9517
+
+		Pause(locator1 = "2000");
 	}
 
 	macro waitForClearProperty {

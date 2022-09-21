@@ -30,6 +30,11 @@ interface AppendFunction {
 }
 
 /**
+ * Add URLSearchParams recursively to a given string representing an URL
+ */
+export function addParams(params: String | Object, baseUrl: String): string;
+
+/**
  * Aligns the element with the best region around alignElement. The best
  * region is defined by clockwise rotation starting from the specified
  * `position`. The element is always aligned in the middle of alignElement
@@ -198,6 +203,13 @@ export function minimizePortlet(
 	trigger: HTMLElement,
 	options?: object
 ): void;
+
+/**
+ * Performs navigation to the given url. If SPA is enabled, it will route the
+ * request through the SPA engine. If not, it will simple change the document
+ * location.
+ */
+export function navigate(url: string | URL, listeners?: Object): void;
 
 export function openAlertModal({message}: {message: string}): void;
 
@@ -817,7 +829,7 @@ export function setCookie(
 export function removeCookie(name: string): void;
 
 /**
- * Object with cookie consent types as keys, for use with {@link setCookie}
+ * Object with consent types as keys and corresponding cookie names as values
  */
 export const TYPES: {[key: string]: TYPE_VALUES};
 
@@ -826,3 +838,35 @@ export type TYPE_VALUES =
 	| 'CONSENT_TYPE_NECESSARY'
 	| 'CONSENT_TYPE_PERFORMANCE'
 	| 'CONSENT_TYPE_PERSONALIZATION';
+
+type Storage = {
+	clear(): void;
+
+	getItem(key: string, type: TYPE_VALUES): string | undefined;
+
+	key(index: number, type: TYPE_VALUES): string | undefined;
+
+	removeItem(key: string): void;
+
+	setItem(
+		key: string,
+		value: string,
+		type: TYPE_VALUES,
+		options?: {
+			'domain'?: string;
+			'expires'?: string;
+			'max-age'?: string;
+			'path'?: string;
+			'samesite'?: string;
+			'secure'?: boolean;
+		}
+	): boolean;
+
+	TYPES: typeof TYPES;
+
+	length: number;
+};
+
+export const localStorage: Storage;
+
+export const sessionStorage: Storage;

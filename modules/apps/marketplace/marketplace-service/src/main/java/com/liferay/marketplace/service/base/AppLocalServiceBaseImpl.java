@@ -23,7 +23,6 @@ import com.liferay.marketplace.model.App;
 import com.liferay.marketplace.service.AppLocalService;
 import com.liferay.marketplace.service.AppLocalServiceUtil;
 import com.liferay.marketplace.service.persistence.AppPersistence;
-import com.liferay.marketplace.service.persistence.ModulePersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -39,6 +38,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -392,6 +393,11 @@ public abstract class AppLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement AppLocalServiceImpl#deleteApp(App) to avoid orphaned data");
+		}
+
 		return appLocalService.deleteApp((App)persistedModel);
 	}
 
@@ -549,22 +555,10 @@ public abstract class AppLocalServiceBaseImpl
 	protected AppPersistence appPersistence;
 
 	@Reference
-	protected ModulePersistence modulePersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AppLocalServiceBaseImpl.class);
 
 }

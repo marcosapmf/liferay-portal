@@ -23,7 +23,6 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -115,6 +114,7 @@ import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.UserAttributes;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.redirect.RedirectURLSettingsUtil;
 import com.liferay.portal.kernel.security.auth.AlwaysAllowDoAsUser;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -196,6 +196,7 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.ServerDetector;
 import com.liferay.portal.kernel.util.StringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.URLCodec;
@@ -318,14 +319,14 @@ public class PortalImpl implements Portal {
 
 		// Computer name
 
-		String computerName = System.getProperty("env.COMPUTERNAME");
+		String computerName = SystemProperties.get("env.COMPUTERNAME");
 
 		if (Validator.isNull(computerName)) {
-			computerName = System.getProperty("env.HOST");
+			computerName = SystemProperties.get("env.HOST");
 		}
 
 		if (Validator.isNull(computerName)) {
-			computerName = System.getProperty("env.HOSTNAME");
+			computerName = SystemProperties.get("env.HOSTNAME");
 		}
 
 		if (Validator.isNull(computerName)) {
@@ -877,12 +878,19 @@ public class PortalImpl implements Portal {
 		Enumeration<String> enumeration = actionRequest.getParameterNames();
 
 		while (enumeration.hasMoreElements()) {
-			String param = enumeration.nextElement();
+			String actionParameterName = enumeration.nextElement();
 
-			if (renderParameters.get(actionResponse.getNamespace() + param) ==
-					null) {
+			if (actionParameterName.equals("password1") ||
+				actionParameterName.equals("password2")) {
 
-				String[] values = actionRequest.getParameterValues(param);
+				continue;
+			}
+
+			String[] values = renderParameters.get(
+				actionResponse.getNamespace() + actionParameterName);
+
+			if (values == null) {
+				values = actionRequest.getParameterValues(actionParameterName);
 
 				if (values == null) {
 					values = new String[0];
@@ -899,7 +907,7 @@ public class PortalImpl implements Portal {
 						});
 				}
 
-				actionResponse.setRenderParameter(param, values);
+				actionResponse.setRenderParameter(actionParameterName, values);
 			}
 		}
 	}

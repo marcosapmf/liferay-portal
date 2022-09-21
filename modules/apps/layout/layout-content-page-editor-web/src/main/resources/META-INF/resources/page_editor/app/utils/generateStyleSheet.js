@@ -56,7 +56,7 @@ const TOPPER_STYLES = [
 ];
 
 export default function generateStyleSheet(styles, {itemsWithTopper} = {}) {
-	let css = '';
+	let css = '.lfr-layout-structure-item-row { overflow: hidden; }';
 
 	Object.entries(styles).forEach(([itemId, {customCSS, styles}]) => {
 		let itemCSS = '';
@@ -115,7 +115,9 @@ function getValue(itemId, styleName, styleValue) {
 	// the CSS variable --spacer-x which is used by the mx-x and px-x clay classes
 
 	if (SPACING_OPTIONS.includes(styleName)) {
-		return `var(--spacer-${styleValue}, ${DEFAULT_SPACING_VALUES[styleValue]}rem)`;
+		return isNaN(styleValue)
+			? styleValue
+			: `var(--spacer-${styleValue}, ${DEFAULT_SPACING_VALUES[styleValue]}rem)`;
 	}
 
 	// Instead of trying to calculate the backgroundImage here, we rely on the item

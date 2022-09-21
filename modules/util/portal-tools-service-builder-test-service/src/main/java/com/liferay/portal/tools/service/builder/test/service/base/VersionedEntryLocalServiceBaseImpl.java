@@ -28,6 +28,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -345,6 +347,11 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement VersionedEntryLocalServiceImpl#deleteVersionedEntry(VersionedEntry) to avoid orphaned data");
+		}
+
 		return versionedEntryLocalService.deleteVersionedEntry(
 			(VersionedEntry)persistedModel);
 	}
@@ -397,7 +404,7 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 	 * <strong>Important:</strong> Inspect VersionedEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param versionedEntry the versioned entry
+	 * @param draftVersionedEntry the versioned entry
 	 * @return the versioned entry that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
@@ -974,6 +981,9 @@ public abstract class VersionedEntryLocalServiceBaseImpl
 
 	@BeanReference(type = VersionedEntryVersionPersistence.class)
 	protected VersionedEntryVersionPersistence versionedEntryVersionPersistence;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		VersionedEntryLocalServiceBaseImpl.class);
 
 	@ServiceReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

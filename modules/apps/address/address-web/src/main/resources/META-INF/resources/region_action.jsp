@@ -34,7 +34,6 @@ Region region = (Region)row.getObject();
 	<c:if test="<%= PortalPermissionUtil.contains(permissionChecker, ActionKeys.MANAGE_COUNTRIES) %>">
 		<portlet:renderURL var="editURL">
 			<portlet:param name="mvcRenderCommandName" value="/address/edit_region" />
-			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="backURL" value="<%= currentURL %>" />
 			<portlet:param name="countryId" value="<%= String.valueOf(region.getCountryId()) %>" />
 			<portlet:param name="regionId" value="<%= String.valueOf(region.getRegionId()) %>" />
@@ -51,7 +50,7 @@ Region region = (Region)row.getObject();
 					<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DEACTIVATE %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="navigation" value="<%= navigation %>" />
-					<portlet:param name="regionId" value="<%= String.valueOf(region.getRegionId()) %>" />
+					<portlet:param name="regionIds" value="<%= String.valueOf(region.getRegionId()) %>" />
 				</portlet:actionURL>
 
 				<liferay-ui:icon-deactivate
@@ -63,7 +62,7 @@ Region region = (Region)row.getObject();
 					<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.RESTORE %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="navigation" value="<%= navigation %>" />
-					<portlet:param name="regionId" value="<%= String.valueOf(region.getRegionId()) %>" />
+					<portlet:param name="regionIds" value="<%= String.valueOf(region.getRegionId()) %>" />
 				</portlet:actionURL>
 
 				<liferay-ui:icon

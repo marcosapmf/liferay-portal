@@ -1,6 +1,7 @@
 {
 	"dependencies": {
-		"codemirror": "^5.59.0"
+		"codemirror": "^5.59.0",
+		"uuid": "^3.3.2"
 	},
 	"jest": {
 		"setupFiles": [
@@ -18,5 +19,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "3.0.114"
+	"version": "3.0.122"
 }

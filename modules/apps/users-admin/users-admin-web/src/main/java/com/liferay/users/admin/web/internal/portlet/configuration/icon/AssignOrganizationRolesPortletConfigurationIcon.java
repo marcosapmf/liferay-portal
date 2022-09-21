@@ -14,9 +14,8 @@
 
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
 
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.permission.OrganizationPermission;
@@ -63,7 +63,7 @@ public class AssignOrganizationRolesPortletConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "assign-organization-roles");
+		return _language.get(resourceBundle, "assign-organization-roles");
 	}
 
 	@Override
@@ -141,6 +141,9 @@ public class AssignOrganizationRolesPortletConfigurationIcon
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssignOrganizationRolesPortletConfigurationIcon.class);
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private OrganizationPermission _organizationPermission;

@@ -15,15 +15,18 @@
 package com.liferay.address.web.internal.portlet.action;
 
 import com.liferay.address.web.internal.constants.AddressPortletKeys;
+import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.RegionService;
+import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,24 +40,36 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + AddressPortletKeys.COUNTRIES_MANAGEMENT_ADMIN,
 		"mvc.command.name=/address/update_region_status"
 	},
-	service = MVCActionCommand.class
+	service = AopService.class
 )
-public class UpdateRegionStatusMVCActionCommand extends BaseMVCActionCommand {
+public class UpdateRegionStatusMVCActionCommand
+	extends BaseMVCActionCommand implements AopService, MVCActionCommand {
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean processAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws PortletException {
+
+		return super.processAction(actionRequest, actionResponse);
+	}
 
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long regionId = ParamUtil.getLong(actionRequest, "regionId");
-
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
-		if (cmd.equals(Constants.DEACTIVATE)) {
-			_regionService.updateActive(regionId, false);
-		}
-		else if (cmd.equals(Constants.RESTORE)) {
-			_regionService.updateActive(regionId, true);
+		long[] regionIds = ParamUtil.getLongValues(actionRequest, "regionIds");
+
+		for (long regionId : regionIds) {
+			if (cmd.equals(Constants.DEACTIVATE)) {
+				_regionService.updateActive(regionId, false);
+			}
+			else if (cmd.equals(Constants.RESTORE)) {
+				_regionService.updateActive(regionId, true);
+			}
 		}
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");

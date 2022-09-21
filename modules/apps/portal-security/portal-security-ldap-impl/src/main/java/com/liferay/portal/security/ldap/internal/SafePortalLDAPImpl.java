@@ -64,6 +64,7 @@ import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -321,7 +322,7 @@ public class SafePortalLDAPImpl implements SafePortalLDAP {
 			}
 		}
 
-		if (!ListUtil.isEmpty(ldapServerConfigurations)) {
+		if (ListUtil.isNotEmpty(ldapServerConfigurations)) {
 			LDAPServerConfiguration ldapServerConfiguration =
 				ldapServerConfigurations.get(0);
 
@@ -959,37 +960,10 @@ public class SafePortalLDAPImpl implements SafePortalLDAP {
 		return null;
 	}
 
-	@Reference(
-		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration)",
-		unbind = "-"
-	)
-	protected void setLDAPServerConfigurationProvider(
-		ConfigurationProvider<LDAPServerConfiguration>
-			ldapServerConfigurationProvider) {
-
-		_ldapServerConfigurationProvider = ldapServerConfigurationProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLdapSettings(LDAPSettings ldapSettings) {
-		_ldapSettings = ldapSettings;
-	}
-
-	@Reference(unbind = "-")
-	protected void setProps(Props props) {
+	@Activate
+	protected void activate() {
 		_companySecurityAuthType = GetterUtil.getString(
-			props.get(PropsKeys.COMPANY_SECURITY_AUTH_TYPE));
-	}
-
-	@Reference(
-		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.SystemLDAPConfiguration)",
-		unbind = "-"
-	)
-	protected void setSystemLDAPConfigurationProvider(
-		ConfigurationProvider<SystemLDAPConfiguration>
-			systemLDAPConfigurationProvider) {
-
-		_systemLDAPConfigurationProvider = systemLDAPConfigurationProvider;
+			_props.get(PropsKeys.COMPANY_SECURITY_AUTH_TYPE));
 	}
 
 	private Attributes _getAttributes(
@@ -1108,9 +1082,21 @@ public class SafePortalLDAPImpl implements SafePortalLDAP {
 	)
 	private volatile LDAPFilterValidator _ldapFilterValidator;
 
+	@Reference(
+		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.LDAPServerConfiguration)"
+	)
 	private ConfigurationProvider<LDAPServerConfiguration>
 		_ldapServerConfigurationProvider;
+
+	@Reference
 	private LDAPSettings _ldapSettings;
+
+	@Reference
+	private Props _props;
+
+	@Reference(
+		target = "(factoryPid=com.liferay.portal.security.ldap.configuration.SystemLDAPConfiguration)"
+	)
 	private ConfigurationProvider<SystemLDAPConfiguration>
 		_systemLDAPConfigurationProvider;
 

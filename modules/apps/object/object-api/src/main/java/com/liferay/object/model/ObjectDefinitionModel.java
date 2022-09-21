@@ -98,6 +98,21 @@ public interface ObjectDefinitionModel
 	public void setUuid(String uuid);
 
 	/**
+	 * Returns the external reference code of this object definition.
+	 *
+	 * @return the external reference code of this object definition
+	 */
+	@AutoEscape
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this object definition.
+	 *
+	 * @param externalReferenceCode the external reference code of this object definition
+	 */
+	public void setExternalReferenceCode(String externalReferenceCode);
+
+	/**
 	 * Returns the object definition ID of this object definition.
 	 *
 	 * @return the object definition ID of this object definition
@@ -421,6 +436,48 @@ public interface ObjectDefinitionModel
 	 * @param className the class name of this object definition
 	 */
 	public void setClassName(String className);
+
+	/**
+	 * Returns the enable categorization of this object definition.
+	 *
+	 * @return the enable categorization of this object definition
+	 */
+	public boolean getEnableCategorization();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable categorization.
+	 *
+	 * @return <code>true</code> if this object definition is enable categorization; <code>false</code> otherwise
+	 */
+	public boolean isEnableCategorization();
+
+	/**
+	 * Sets whether this object definition is enable categorization.
+	 *
+	 * @param enableCategorization the enable categorization of this object definition
+	 */
+	public void setEnableCategorization(boolean enableCategorization);
+
+	/**
+	 * Returns the enable comments of this object definition.
+	 *
+	 * @return the enable comments of this object definition
+	 */
+	public boolean getEnableComments();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable comments.
+	 *
+	 * @return <code>true</code> if this object definition is enable comments; <code>false</code> otherwise
+	 */
+	public boolean isEnableComments();
+
+	/**
+	 * Sets whether this object definition is enable comments.
+	 *
+	 * @param enableComments the enable comments of this object definition
+	 */
+	public void setEnableComments(boolean enableComments);
 
 	/**
 	 * Returns the name of this object definition.

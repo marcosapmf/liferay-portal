@@ -27,6 +27,7 @@ import com.liferay.object.internal.info.collection.provider.ObjectEntrySingleFor
 import com.liferay.object.internal.language.ObjectResourceBundle;
 import com.liferay.object.internal.notification.term.contributor.ObjectDefinitionNotificationTermContributor;
 import com.liferay.object.internal.notification.type.ObjectDefinitionNotificationType;
+import com.liferay.object.internal.persistence.ObjectDefinitionTableArgumentsResolver;
 import com.liferay.object.internal.related.models.ObjectEntry1to1ObjectRelatedModelsProviderImpl;
 import com.liferay.object.internal.related.models.ObjectEntry1toMObjectRelatedModelsProviderImpl;
 import com.liferay.object.internal.related.models.ObjectEntryMtoMObjectRelatedModelsProviderImpl;
@@ -50,6 +51,7 @@ import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectViewLocalService;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -72,6 +74,7 @@ import com.liferay.portal.search.spi.model.query.contributor.KeywordQueryContrib
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchRegistrarHelper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -134,6 +137,10 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 	public List<ServiceRegistration<?>> deploy(
 		ObjectDefinition objectDefinition) {
 
+		if (objectDefinition.isSystem()) {
+			return Collections.emptyList();
+		}
+
 		_persistedModelLocalServiceRegistry.register(
 			objectDefinition.getClassName(), _objectEntryLocalService);
 
@@ -158,6 +165,16 @@ public class ObjectDefinitionDeployerImpl implements ObjectDefinitionDeployer {
 				new ObjectEntryPortletResourcePermissionLogic());
 
 		List<ServiceRegistration<?>> serviceRegistrations = ListUtil.fromArray(
+			_bundleContext.registerService(
+				ArgumentsResolver.class,
+				new ObjectDefinitionTableArgumentsResolver(
+					objectDefinition.getDBTableName()),
+				null),
+			_bundleContext.registerService(
+				ArgumentsResolver.class,
+				new ObjectDefinitionTableArgumentsResolver(
+					objectDefinition.getExtensionDBTableName()),
+				null),
 			_bundleContext.registerService(
 				KeywordQueryContributor.class,
 				new ObjectEntryKeywordQueryContributor(

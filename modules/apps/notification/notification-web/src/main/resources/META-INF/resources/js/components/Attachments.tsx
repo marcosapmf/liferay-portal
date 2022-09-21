@@ -17,7 +17,8 @@ import {
 	API,
 	AutoComplete,
 	CustomItem,
-	FormCustomSelect,
+	MultipleSelect,
+	stringIncludesQuery,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
@@ -41,11 +42,12 @@ export function Attachments({setValues, values}: IProps) {
 
 	const filteredObjectDefinitions = useMemo(() => {
 		if (objectDefinitions?.length) {
-			return objectDefinitions.filter(({label}) => {
-				return label[defaultLanguageId]
-					?.toLowerCase()
-					?.includes(query.toLowerCase());
-			});
+			return objectDefinitions.filter(({label, name}) =>
+				stringIncludesQuery(
+					(label[defaultLanguageId] as string) ?? name,
+					query
+				)
+			);
 		}
 	}, [objectDefinitions, query]);
 
@@ -101,7 +103,7 @@ export function Attachments({setValues, values}: IProps) {
 	}, [values.objectDefinitionId]);
 
 	useEffect(() => {
-		API.getObjectDefinitions().then((items) => {
+		API.getAllObjectDefinitions().then((items) => {
 			const objectDefinitions = items.filter(({system}) => !system);
 
 			setObjectDefinitions(objectDefinitions);
@@ -156,25 +158,25 @@ export function Attachments({setValues, values}: IProps) {
 								'select-a-data-source'
 							)}
 							query={query}
-							value={selectedEntity?.label[defaultLanguageId]}
+							value={
+								selectedEntity?.label[defaultLanguageId] ??
+								selectedEntity?.name
+							}
 						>
-							{({label}) => (
+							{({label, name}) => (
 								<div className="d-flex justify-content-between">
-									{label[defaultLanguageId] ? (
-										<div>{label[defaultLanguageId]}</div>
-									) : (
-										<div>{label}</div>
-									)}
+									<div>
+										{label[defaultLanguageId] ?? name}
+									</div>
 								</div>
 							)}
 						</AutoComplete>
 					</div>
 
 					<div className="lfr__notification-template-attachments-fields">
-						<FormCustomSelect
+						<MultipleSelect
 							disabled={!selectedEntity}
 							label={Liferay.Language.get('field')}
-							multipleChoice
 							options={attachmentsFields}
 							placeholder={Liferay.Language.get('select-a-field')}
 							setOptions={setAttachmentsFields}

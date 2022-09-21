@@ -15,7 +15,7 @@
 package com.liferay.users.admin.web.internal.portlet.configuration.icon;
 
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BaseJSPPortletConfigurationIcon;
@@ -60,7 +60,7 @@ public class ExportUsersPortletConfigurationIcon
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			"content.Language", getLocale(portletRequest), getClass());
 
-		return LanguageUtil.get(resourceBundle, "export-users");
+		return _language.get(resourceBundle, "export-users");
 	}
 
 	@Override
@@ -107,18 +107,20 @@ public class ExportUsersPortletConfigurationIcon
 	}
 
 	@Override
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.users.admin.web)",
-		unbind = "-"
-	)
-	public void setServletContext(ServletContext servletContext) {
-		super.setServletContext(servletContext);
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ExportUsersPortletConfigurationIcon.class);
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private PortalPermission _portalPermission;
+
+	@Reference(target = "(osgi.web.symbolicname=com.liferay.users.admin.web)")
+	private ServletContext _servletContext;
 
 }

@@ -17,7 +17,6 @@ package com.liferay.bookmarks.service.base;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksFolderService;
 import com.liferay.bookmarks.service.BookmarksFolderServiceUtil;
-import com.liferay.bookmarks.service.persistence.BookmarksEntryPersistence;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderFinder;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderPersistence;
 import com.liferay.portal.aop.AopService;
@@ -26,6 +25,8 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -135,9 +136,6 @@ public abstract class BookmarksFolderServiceBaseImpl
 	}
 
 	@Reference
-	protected BookmarksEntryPersistence bookmarksEntryPersistence;
-
-	@Reference
 	protected com.liferay.bookmarks.service.BookmarksFolderLocalService
 		bookmarksFolderLocalService;
 
@@ -153,23 +151,7 @@ public abstract class BookmarksFolderServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		BookmarksFolderServiceBaseImpl.class);
 
 }

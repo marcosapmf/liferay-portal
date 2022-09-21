@@ -25,6 +25,7 @@ import {navigate} from 'frontend-js-web';
 import React, {useRef, useState} from 'react';
 
 export default function SearchBar({
+	destinationFriendlyURL,
 	emptySearchEnabled,
 	keywords = '',
 	keywordsParameterName = 'q',
@@ -84,8 +85,8 @@ export default function SearchBar({
 		},
 		variables: {
 			currentURL: window.location.href,
-			destinationFriendlyURL: !searchURL.trim().length
-				? searchURL
+			destinationFriendlyURL: destinationFriendlyURL.trim().length
+				? destinationFriendlyURL
 				: '/search',
 			groupId: Liferay.ThemeDisplay.getScopeGroupId(),
 			plid: Liferay.ThemeDisplay.getPlid(),
@@ -96,10 +97,7 @@ export default function SearchBar({
 
 	const _handleKeyDown = (event) => {
 		if (event.key === 'Enter') {
-			event.preventDefault();
-			event.stopPropagation();
-
-			_handleSubmit();
+			_handleSubmit(event);
 		}
 	};
 
@@ -107,7 +105,10 @@ export default function SearchBar({
 		setScope(event.target.value);
 	};
 
-	const _handleSubmit = () => {
+	const _handleSubmit = (event) => {
+		event.preventDefault();
+		event.stopPropagation();
+
 		if (!!inputValue.trim().length || emptySearchEnabled) {
 			const queryString = _updateQueryString(document.location.search);
 

@@ -18,7 +18,6 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import {AdvancedSelectField} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-configuration-fields/AdvancedSelectField';
-import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
 
 const FIELD = {
 	cssProperty: 'font-size',
@@ -75,32 +74,55 @@ const TOKEN_VALUES = {
 	},
 };
 
+const ITEM = {
+	config: {
+		landscapeMobile: {
+			styles: {
+				fontSize: 'fontSizeLg',
+			},
+		},
+		styles: {
+			fontSize: 'fontSizeDesktop',
+		},
+		tablet: {
+			styles: {
+				fontSize: 'fontSizeBase',
+			},
+		},
+	},
+};
+
 const renderAdvancedSelectField = ({
 	field = FIELD,
 	onValueSelect = () => {},
-	state = {
-		permissions: {UPDATE: true},
-	},
+	selectedViewportSize = 'desktop',
 	value = '',
-} = {}) => {
-	const mockDispatch = jest.fn((a) => {
-		if (typeof a === 'function') {
-			return a(mockDispatch, () => state);
-		}
-	});
-
-	return render(
-		<StoreAPIContextProvider dispatch={mockDispatch} getState={() => state}>
-			<AdvancedSelectField
-				field={field}
-				onValueSelect={onValueSelect}
-				options={OPTIONS}
-				tokenValues={TOKEN_VALUES}
-				value={value}
-			/>
-		</StoreAPIContextProvider>
+	canDetachTokenValues = true,
+} = {}) =>
+	render(
+		<AdvancedSelectField
+			canDetachTokenValues={canDetachTokenValues}
+			field={field}
+			item={ITEM}
+			onValueSelect={onValueSelect}
+			options={OPTIONS}
+			selectedViewportSize={selectedViewportSize}
+			tokenValues={TOKEN_VALUES}
+			value={value}
+		/>
 	);
-};
+
+jest.mock(
+	'../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
+	() => ({
+		config: {
+			availableViewportSizes: {
+				desktop: {label: 'Desktop'},
+				tablet: {label: 'tablet'},
+			},
+		},
+	})
+);
 
 describe('AdvancedSelectField', () => {
 	it('renders AdvancedSelectField', () => {
@@ -204,16 +226,48 @@ describe('AdvancedSelectField', () => {
 
 	it('does not render the Detach button when user does not have update permission', () => {
 		renderAdvancedSelectField({
-			state: {
-				permissions: {
-					UPDATE: false,
-					UPDATE_LAYOUT_BASIC: true,
-					UPDATE_LAYOUT_LIMITED: true,
-				},
-			},
+			canDetachTokenValues: false,
 			value: 'fontSizeLg',
 		});
 
 		expect(screen.queryByTitle('detach-token')).not.toBeInTheDocument();
+	});
+
+	it('does not render the Value from Stylebook button when user does not have update permission', () => {
+		renderAdvancedSelectField({
+			canDetachTokenValues: false,
+			value: 'my size',
+		});
+
+		expect(
+			screen.queryByTitle('value-from-stylebook')
+		).not.toBeInTheDocument();
+	});
+
+	it('clears the value when the "Reset" button is clicked and the viewport is Desktop', () => {
+		renderAdvancedSelectField({
+			value: 'fontSizeLg',
+		});
+
+		userEvent.click(screen.getByTitle('reset-to-initial-value'));
+
+		const select = screen.getByLabelText('font-size');
+
+		expect(select.tagName).toBe('SELECT');
+		expect(select.nextSibling.textContent).toBe('Inherited');
+	});
+
+	it('sets the value of the previous viewport when the "Reset" button is clicked', () => {
+		renderAdvancedSelectField({
+			selectedViewportSize: 'landscapeMobile',
+			value: 'fontSizeSm',
+		});
+
+		userEvent.click(screen.getByTitle('reset-to-tablet-value'));
+
+		const select = screen.getByLabelText('font-size');
+
+		expect(select.tagName).toBe('SELECT');
+		expect(select.nextSibling.textContent).toBe('Font Size Base');
 	});
 });

@@ -12,13 +12,12 @@ definition {
 	}
 
 	tearDown {
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
-		}
-		else {
-			ObjectAdmin.deleteAllCustomObjectsViaAPI();
 		}
 	}
 
@@ -150,6 +149,320 @@ definition {
 			fieldType = "LongText");
 	}
 
+	@description = "LPS-149625 - Verify that it's possible to create an object entry with aggregation field"
+	@ignore = "true"
+	@priority = "5"
+	test CanCreateEntryWithAggregationField {
+		property portal.acceptance = "true";
+
+		task ("Create Custom Object and Custom Relationship itself (via API)") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 161890",
+				objectName = "CustomObject161890",
+				pluralLabelName = "Custom Objects 161890");
+
+			ObjectAdmin.addObjectRelationshipViaAPI(
+				objectName_1 = "CustomObject161890",
+				objectName_2 = "CustomObject161890",
+				relationshipLabel = "Relationship",
+				relationshipName = "relationship",
+				relationshipType = "oneToMany");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161890");
+		}
+
+		task ("Go to Custom Object > Fields tab and add Custom Aggregation Field (via UI)") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 161890");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				field = "ID",
+				fieldLabel = "Custom Aggregation",
+				fieldType = "Aggregation",
+				function = "Max",
+				relationship = "Relationship");
+		}
+
+		task ("Assert that there is Custom Aggregation Field") {
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Aggregation",
+				fieldType = "Aggregation");
+		}
+	}
+
+	@description = "LPS-135549 - Verify that it's possible to create an object entry with every field"
+	@priority = "5"
+	test CanCreateObjectEntryWithEveryField {
+		property portal.acceptance = "true";
+
+		task ("Go to Picklist and create new Picklist and item") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Object",
+				panel = "Control Panel",
+				portlet = "Picklists");
+
+			Picklist.addPicklistViaUI(picklistName = "Picklist Test");
+
+			for (var numbers : list "1,2") {
+				Picklist.gotoPicklistView(picklistName = "Picklist Test");
+
+				Picklist.addPicklistItemViaUI(picklistItemName = "Picklist Item Test ${numbers}");
+
+				Picklist.clickSaveButton();
+
+				Refresh();
+			}
+
+			Navigator.openURL();
+		}
+
+		task ("Go to Objects and create Custom Object") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Object",
+				panel = "Control Panel",
+				portlet = "Objects");
+
+			ObjectAdmin.addNewObject(
+				fieldLabelName = "Custom Object 162140",
+				pluralLabelName = "Custom Objects 162140");
+
+			ObjectAdmin.saveCustomObject();
+		}
+
+		task ("Go to Custom Object > Fields") {
+			ObjectPortlet.selectCustomObject(label = "Custom Object 162140");
+
+			ObjectAdmin.goToFieldsTab();
+		}
+
+		task ("Add long integer field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Long Integer",
+				fieldName = "customLongInteger",
+				fieldType = "Long Integer");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Long Integer",
+				fieldType = "LongInteger");
+		}
+
+		task ("Add attachment field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldAttachment = "Upload Directly from the User's Computer",
+				fieldLabel = "Custom Attachment",
+				fieldType = "Attachment");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Attachment",
+				fieldType = "Attachment");
+		}
+
+		task ("Add text field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Simple Text",
+				fieldName = "customSimpleText",
+				fieldType = "Text");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Simple Text",
+				fieldType = "Text");
+		}
+
+		task ("Add picklist field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Picklist",
+				fieldPicklist = "Picklist Test",
+				fieldType = "Picklist");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Picklist",
+				fieldType = "Picklist");
+		}
+
+		task ("Add date field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Date",
+				fieldName = "customDate",
+				fieldType = "Date");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Date",
+				fieldType = "Date");
+		}
+
+		task ("Add integer field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Integer",
+				fieldName = "customInteger",
+				fieldType = "Integer");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Integer",
+				fieldType = "Integer");
+		}
+
+		task ("Add precision decimal field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Precision Decimal",
+				fieldName = "customPrecisionDecimal",
+				fieldType = "Precision Decimal");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Precision Decimal",
+				fieldType = "PrecisionDecimal");
+		}
+
+		task ("Add decimal field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Decimal",
+				fieldName = "customDecimal",
+				fieldType = "Decimal");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Decimal",
+				fieldType = "Decimal");
+		}
+
+		task ("Add rich text field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Rich Text",
+				fieldName = "customRichText",
+				fieldType = "Rich Text");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Rich Text",
+				fieldType = "RichText");
+		}
+
+		task ("Add boolean field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Boolean",
+				fieldName = "customBoolean",
+				fieldType = "Boolean");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Boolean",
+				fieldType = "Boolean");
+		}
+
+		task ("Add long text field") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Long Text",
+				fieldName = "customLongText",
+				fieldType = "Long Text");
+
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Long Text",
+				fieldType = "LongText");
+		}
+
+		task ("Publish Custom Object") {
+			ObjectAdmin.goToDetailsTab();
+
+			CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+
+			ObjectAdmin.publishObjectViaUI();
+		}
+
+		task ("Go to Custom Object entries and add an entry") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Object",
+				panel = "Control Panel",
+				portlet = "Custom Objects 162140");
+		}
+
+		task ("Create an entry (fill all fields)") {
+			LexiconEntry.gotoAdd();
+
+			WaitForPageLoad();
+
+			Click.clickAtNotVisible(locator1 = "ObjectAdmin#ENTRY_BOOLEAN_CHECKBOX");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Decimal",
+				entry = "12.34");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Integer",
+				entry = "1234");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Custom Long Integer",
+				entry = "1122334455");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Precision Decimal",
+				entry = "1.5");
+
+			FormViewBuilder.editClobText(fieldLong = "Text written on long text");
+
+			ObjectPortlet.typeCustomField(
+				customField = "Simple Text",
+				entry = "Text written on simple text");
+
+			ObjectAutoGenerated.typeAndSelectTextOnRichText(text = "Text written on rich text");
+
+			Type(
+				locator1 = "ObjectPortlet#VIEW_EMPTY_LABEL_IN_DATE_ENTRY",
+				value1 = "01/01/2022");
+
+			Click(locator1 = "ObjectAdmin#ENTRY_CHOOSE_OPTION");
+
+			Click(
+				key_picklistOption = "Picklist Item Test 1",
+				locator1 = "ObjectAdmin#ENTRY_PICKLIST_OPTION");
+
+			WaitForPageLoad();
+
+			ObjectAutoGenerated.clickSelectFile();
+
+			var filePath = TestCase.getDependenciesDirPath(fileName = "LiferayLogo.png");
+
+			UploadFile(
+				locator1 = "TextInput#FILE",
+				value1 = "${filePath}");
+
+			Button.clickSave();
+		}
+
+		task ("Assert entry") {
+			ObjectAdmin.goToCustomObject(objectName = "CustomObject162140");
+
+			for (var asserts : list "Yes,12.34,1234,1122334455,1.5,Text written on long text,Text written on simple text,Text written on rich text,Picklist Item Test 1,LiferayLogo") {
+				ObjectPortlet.viewEntry(entry = "${asserts}");
+			}
+
+			ObjectPortlet.viewEntry(entry = "Jan 1, 2022");
+		}
+	}
+
 	@description = "LPS-148112 - Verify that File Size and Format defined by admin are working correctly when using the 'Show Files' option"
 	@priority = "4"
 	test CanDefineMaximumFileSizeOnShowFilesOption {
@@ -215,6 +528,47 @@ definition {
 		}
 	}
 
+	@description = "LPS-149625 - Verify that it's possible to delete an aggregation field"
+	@ignore = "true"
+	@priority = "4"
+	test CanDeleteAggregationField {
+		task ("Create Custom Object and Custom Relationship itself (via API)") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 161892",
+				objectName = "CustomObject161892",
+				pluralLabelName = "Custom Objects 161892");
+
+			ObjectAdmin.addObjectRelationshipViaAPI(
+				objectName_1 = "CustomObject161892",
+				objectName_2 = "CustomObject161892",
+				relationshipLabel = "Relationship",
+				relationshipName = "relationship",
+				relationshipType = "oneToMany");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161892");
+		}
+
+		task ("Go to Custom Object > Fields tab and add Custom Aggregation Field (via UI)") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 161892");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Aggregation",
+				fieldType = "Aggregation",
+				function = "Count",
+				relationship = "Relationship");
+		}
+
+		task ("Assert that is possible to delete Custom Aggregation Field") {
+			ObjectAdmin.deleteObjectField(fieldName = "Custom Aggregation");
+
+			ObjectAdmin.assertObjectFieldNotPresent(fieldLabel = "Custom Aggregation");
+		}
+	}
+
 	@description = "LPS-148112 - Verify if turn off the 'Show files' option on field settings"
 	@priority = "4"
 	test CanDisableShowFilesOptionOnFieldSettings {
@@ -242,6 +596,89 @@ definition {
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 
 		ObjectField.save();
+	}
+
+	@description = "LPS-149625 - Verify that it's possible to edit an aggregation field"
+	@ignore = "true"
+	@priority = "4"
+	test CanEditAggregationField {
+		task ("Create Custom Object and Custom Relationship itself (via API)") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 161891",
+				objectName = "CustomObject161891",
+				pluralLabelName = "Custom Objects 161891");
+
+			ObjectAdmin.addObjectRelationshipViaAPI(
+				objectName_1 = "CustomObject161891",
+				objectName_2 = "CustomObject161891",
+				relationshipLabel = "Relationship",
+				relationshipName = "relationship",
+				relationshipType = "oneToMany");
+
+			ObjectAdmin.addObjectRelationshipViaAPI(
+				objectName_1 = "CustomObject161891",
+				objectName_2 = "CommerceOrder",
+				relationshipLabel = "RelationshipCommerce",
+				relationshipName = "relationshipCommerce",
+				relationshipType = "oneToMany");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161891");
+		}
+
+		task ("Go to Custom Object > Fields tab and add Custom Aggregation Field (via UI)") {
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 161891");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectAdmin.addObjectFieldViaUI(
+				field = "Order Status",
+				fieldLabel = "Custom Aggregation",
+				fieldType = "Aggregation",
+				function = "Max",
+				relationship = "RelationshipCommerce");
+		}
+
+		task ("Edit Custom Aggregation Field") {
+			ObjectAdmin.goToFieldsDetails(label = "Custom Aggregation");
+
+			ObjectField.typeLabel(content = "Custom Aggregation Update");
+
+			ObjectField.assertNameDisabled();
+
+			ObjectField.assertTypeDisabled();
+
+			Click(locator1 = "ObjectField#LABEL_RELATIONSHIP");
+
+			Click(
+				key_dropdownItem = "RelationshipCommerce",
+				locator1 = "ObjectAdmin#SELECT_DROPDOWN_ITEM_DEFAULT_VALUE");
+
+			Click(
+				key_filterLabel = "Function",
+				locator1 = "ObjectCustomViews#SELECT_FILTER_GENERIC");
+
+			Click(
+				key_fieldType = "Min",
+				locator1 = "ObjectField#TYPE_OPTION");
+
+			Click(locator1 = "ObjectField#LABEL_FIELD");
+
+			Click(
+				key_dropdownItem = "ID",
+				locator1 = "ObjectAdmin#SELECT_DROPDOWN_ITEM_DEFAULT_VALUE");
+
+			ObjectField.save();
+		}
+
+		task ("Assert that Custom Aggregation Field is updated") {
+			Refresh();
+
+			ObjectAdmin.assertObjectField(
+				fieldLabel = "Custom Aggregation Update",
+				fieldType = "Aggregation");
+		}
 	}
 
 	@description = "LPS-148112 - Verify that admin can edit the Storage Folder path in Published objects"
@@ -309,6 +746,31 @@ definition {
 				dmDocumentStatus = "Approved",
 				dmDocumentTitle = "LiferayLogo");
 		}
+	}
+
+	@description = "LPS-161887 - Verify that it's not possible to create an Object without adding a field."
+	@priority = "5"
+	test CannotCreateEmptyObject {
+		ObjectAdmin.addObjectViaAPI(
+			labelName = "Custom Object",
+			objectName = "CustomObject",
+			pluralLabelName = "Custom Objects");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+		ObjectAdmin.publishObjectViaUI();
+
+		AssertTextPresent(
+			locator1 = "Message#ALERT_DISMISSIBLE",
+			value1 = "At least one custom field must be added.");
+
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectAdmin.assertObjectStatus(
+			label = "Custom Object",
+			status = "Draft");
 	}
 
 	@description = "LPS-146889 - Verify that when turn on the 'Set the Maximum Number of Characters' the user is not allowed to type any value outside the informed range on the help text"
@@ -388,6 +850,40 @@ definition {
 		AssertElementNotPresent(
 			key_dmFolderName = "CustomObject153414",
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE");
+	}
+
+	@description = "Verify that it's possible to see the custom field label and system field label"
+	@priority = "5"
+	test CanSeeFieldLabel {
+		property custom.properties = "feature.flag.LPS-158456=true";
+		property portal.acceptance = "true";
+
+		task ("Add an object, go to the fields tab and state whether the system fields have the label System") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object",
+				objectName = "CustomObject",
+				pluralLabelName = "Custom Objects");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object");
+
+			ObjectAdmin.goToFieldsTab();
+
+			ObjectField.assertSource(
+				fieldLabel = "Create Date",
+				fieldSource = "System");
+		}
+
+		task ("Add a new field and state that custom fields have the label Custom") {
+			ObjectAdmin.addObjectFieldViaUI(
+				fieldLabel = "Custom Field",
+				fieldType = "Text");
+
+			ObjectField.assertSource(
+				fieldLabel = "Custom Field",
+				fieldSource = "Custom");
+		}
 	}
 
 	@description = "LPS-148112 - Verify if on the side panel the 'Show files' path can be edited"
@@ -902,15 +1398,13 @@ definition {
 		ObjectAutoGenerated.clickSelectFile();
 
 		ObjectField.assertDocumentsAndMediaHomeFolderByCompany(
-			infoText = "There are no documents or media files in this folder.",
+			infoText = "Drag & Drop Your Files or Click Here to Upload",
 			viewHomeFolder = "Global");
 	}
 
 	@description = "LPS-143065 - Change the Maximum File Size to 0 (zero) and verify if the Maximum File Size is now set by the System configurations"
 	@priority = "4"
 	test MaximumFileSizeIsSetBySystemConfigurationsWhenZero {
-		property portal.upstream = "quarantine";
-
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 151561",
 			objectName = "CustomObject151561",

@@ -30,7 +30,6 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeCon
 import com.liferay.layout.page.template.item.selector.criterion.LayoutPageTemplateCollectionItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -39,6 +38,7 @@ import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalServiceUtil;
@@ -380,8 +380,18 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 
 	private String _getItemSelectorURL() {
 		ItemSelectorCriterion itemSelectorCriterion =
-			new UploadItemSelectorCriterion(
-				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
+			UploadItemSelectorCriterion.builder(
+			).desiredItemSelectorReturnTypes(
+				new FileEntryItemSelectorReturnType()
+			).extensions(
+				_layoutPageTemplateAdminWebConfiguration.thumbnailExtensions()
+			).maxFileSize(
+				UploadServletRequestConfigurationHelperUtil.getMaxSize()
+			).portletId(
+				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES
+			).repositoryName(
+				LanguageUtil.get(_themeDisplay.getLocale(), "page-template")
+			).url(
 				PortletURLBuilder.createActionURL(
 					_renderResponse
 				).setActionName(
@@ -390,13 +400,8 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 				).setParameter(
 					"layoutPageTemplateEntryId",
 					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-				).buildString(),
-				LanguageUtil.get(_themeDisplay.getLocale(), "page-template"),
-				UploadServletRequestConfigurationHelperUtil.getMaxSize(),
-				_layoutPageTemplateAdminWebConfiguration.thumbnailExtensions());
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new FileEntryItemSelectorReturnType());
+				).buildString()
+			).build();
 
 		return String.valueOf(
 			_itemSelector.getItemSelectorURL(

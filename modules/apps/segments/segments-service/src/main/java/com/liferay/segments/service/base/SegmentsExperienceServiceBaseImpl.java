@@ -20,19 +20,15 @@ import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
 import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.BaseServiceImpl;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceService;
 import com.liferay.segments.service.SegmentsExperienceServiceUtil;
-import com.liferay.segments.service.persistence.SegmentsEntryPersistence;
-import com.liferay.segments.service.persistence.SegmentsEntryRelPersistence;
-import com.liferay.segments.service.persistence.SegmentsEntryRolePersistence;
 import com.liferay.segments.service.persistence.SegmentsExperiencePersistence;
-import com.liferay.segments.service.persistence.SegmentsExperimentFinder;
-import com.liferay.segments.service.persistence.SegmentsExperimentPersistence;
-import com.liferay.segments.service.persistence.SegmentsExperimentRelPersistence;
 
 import java.lang.reflect.Field;
 
@@ -140,15 +136,6 @@ public abstract class SegmentsExperienceServiceBaseImpl
 	}
 
 	@Reference
-	protected SegmentsEntryPersistence segmentsEntryPersistence;
-
-	@Reference
-	protected SegmentsEntryRelPersistence segmentsEntryRelPersistence;
-
-	@Reference
-	protected SegmentsEntryRolePersistence segmentsEntryRolePersistence;
-
-	@Reference
 	protected com.liferay.segments.service.SegmentsExperienceLocalService
 		segmentsExperienceLocalService;
 
@@ -158,35 +145,10 @@ public abstract class SegmentsExperienceServiceBaseImpl
 	protected SegmentsExperiencePersistence segmentsExperiencePersistence;
 
 	@Reference
-	protected SegmentsExperimentPersistence segmentsExperimentPersistence;
-
-	@Reference
-	protected SegmentsExperimentFinder segmentsExperimentFinder;
-
-	@Reference
-	protected SegmentsExperimentRelPersistence segmentsExperimentRelPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameService
-		classNameService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserService userService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsExperienceServiceBaseImpl.class);
 
 }

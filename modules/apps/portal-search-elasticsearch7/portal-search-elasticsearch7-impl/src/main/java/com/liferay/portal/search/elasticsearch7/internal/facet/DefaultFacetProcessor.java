@@ -23,6 +23,7 @@ import java.util.Optional;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.BucketOrder;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 
 import org.osgi.service.component.annotations.Component;
@@ -53,6 +54,15 @@ public class DefaultFacetProcessor
 
 		if (minDocCount > 0) {
 			termsAggregationBuilder.minDocCount(minDocCount);
+		}
+
+		String order = facetConfiguration.getOrder();
+
+		if (order.equals("count:asc")) {
+			termsAggregationBuilder.order(BucketOrder.count(true));
+		}
+		else if (order.equals("count:desc")) {
+			termsAggregationBuilder.order(BucketOrder.count(false));
 		}
 
 		int size = dataJSONObject.getInt("maxTerms");

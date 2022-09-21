@@ -29,6 +29,7 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.util.NumericDDMFormFieldUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
@@ -40,7 +41,6 @@ import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
-import com.liferay.object.constants.ObjectLayoutBoxConstants;
 import com.liferay.object.exception.NoSuchObjectLayoutException;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeTracker;
@@ -68,7 +68,6 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
 import com.liferay.object.web.internal.util.ObjectDefinitionPermissionUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -82,6 +81,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -97,6 +97,8 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.taglib.servlet.PipingServletResponseFactory;
+
+import java.text.DecimalFormat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -145,38 +147,6 @@ public class ObjectEntryDisplayContext {
 		_objectRequestHelper = new ObjectRequestHelper(httpServletRequest);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-	}
-
-	public ObjectLayoutBox getCategorizationObjectLayoutBox()
-		throws PortalException {
-
-		ObjectDefinition objectDefinition = getObjectDefinition();
-
-		if (!StringUtil.equals(
-				objectDefinition.getStorageType(),
-				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT)) {
-
-			return null;
-		}
-
-		ObjectLayoutTab objectLayoutTab = getObjectLayoutTab();
-
-		if (objectLayoutTab == null) {
-			return null;
-		}
-
-		for (ObjectLayoutBox objectLayoutBox :
-				objectLayoutTab.getObjectLayoutBoxes()) {
-
-			if (StringUtil.equals(
-					objectLayoutBox.getType(),
-					ObjectLayoutBoxConstants.TYPE_CATEGORIZATION)) {
-
-				return objectLayoutBox;
-			}
-		}
-
-		return null;
 	}
 
 	public List<NavigationItem> getNavigationItems() throws PortalException {
@@ -238,6 +208,17 @@ public class ObjectEntryDisplayContext {
 			ObjectWebKeys.OBJECT_DEFINITION);
 	}
 
+	public ObjectDefinition getObjectDefinition2() throws PortalException {
+		ObjectLayoutTab objectLayoutTab = getObjectLayoutTab();
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.getObjectRelationship(
+				objectLayoutTab.getObjectRelationshipId());
+
+		return _objectDefinitionLocalService.getObjectDefinition(
+			objectRelationship.getObjectDefinitionId2());
+	}
+
 	public ObjectEntry getObjectEntry() throws PortalException {
 		if (_objectEntry != null) {
 			return _objectEntry;
@@ -289,6 +270,35 @@ public class ObjectEntryDisplayContext {
 
 			return null;
 		}
+	}
+
+	public ObjectLayoutBox getObjectLayoutBox(String type)
+		throws PortalException {
+
+		ObjectDefinition objectDefinition = getObjectDefinition();
+
+		if (!StringUtil.equals(
+				objectDefinition.getStorageType(),
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT)) {
+
+			return null;
+		}
+
+		ObjectLayoutTab objectLayoutTab = getObjectLayoutTab();
+
+		if (objectLayoutTab == null) {
+			return null;
+		}
+
+		for (ObjectLayoutBox objectLayoutBox :
+				objectLayoutTab.getObjectLayoutBoxes()) {
+
+			if (StringUtil.equals(objectLayoutBox.getType(), type)) {
+				return objectLayoutBox;
+			}
+		}
+
+		return null;
 	}
 
 	public ObjectLayoutTab getObjectLayoutTab() throws PortalException {
@@ -375,6 +385,8 @@ public class ObjectEntryDisplayContext {
 					"selectRelatedModalEntry",
 				infoItemItemSelectorCriterion)
 		).setParameter(
+			"groupId", _getGroupId()
+		).setParameter(
 			"objectDefinitionId",
 			() -> {
 				ObjectDefinition objectDefinition1 =
@@ -428,6 +440,14 @@ public class ObjectEntryDisplayContext {
 		return user.isDefaultUser();
 	}
 
+	public boolean isEnableComments(ObjectDefinition objectDefinition) {
+		if (_readOnly) {
+			return false;
+		}
+
+		return objectDefinition.isEnableComments();
+	}
+
 	public boolean isReadOnly() {
 		if (_readOnly) {
 			return true;
@@ -468,6 +488,9 @@ public class ObjectEntryDisplayContext {
 		ObjectEntry objectEntry = getObjectEntry();
 
 		if (objectEntry != null) {
+			ddmFormRenderingContext.addProperty(
+				"objectEntryId", objectEntry.getId());
+
 			DDMFormValues ddmFormValues = _getDDMFormValues(
 				ddmForm, objectEntry);
 
@@ -605,8 +628,17 @@ public class ObjectEntryDisplayContext {
 					continue;
 				}
 
-				ddmForm.addDDMFormField(
-					_getDDMFormField(objectField, readOnly));
+				if (Objects.equals(
+						objectField.getBusinessType(),
+						ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION)) {
+
+					ddmForm.addDDMFormField(
+						_getDDMFormField(objectField, true));
+				}
+				else {
+					ddmForm.addDDMFormField(
+						_getDDMFormField(objectField, readOnly));
+				}
 			}
 		}
 		else {
@@ -910,8 +942,18 @@ public class ObjectEntryDisplayContext {
 					_objectFieldNames.put(
 						objectLayoutColumn.getObjectFieldId(),
 						objectField.getName());
-					nestedDDMFormFields.add(
-						_getDDMFormField(objectField, readOnly));
+
+					if (Objects.equals(
+							objectField.getBusinessType(),
+							ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION)) {
+
+						nestedDDMFormFields.add(
+							_getDDMFormField(objectField, true));
+					}
+					else {
+						nestedDDMFormFields.add(
+							_getDDMFormField(objectField, readOnly));
+					}
 				}
 			}
 		}
@@ -1035,6 +1077,14 @@ public class ObjectEntryDisplayContext {
 				new UnlocalizedValue(listEntry.getKey()));
 		}
 		else {
+			if (value instanceof Double) {
+				DecimalFormat decimalFormat =
+					NumericDDMFormFieldUtil.getDecimalFormat(
+						_objectRequestHelper.getLocale());
+
+				value = decimalFormat.format(value);
+			}
+
 			ddmFormFieldValue.setValue(
 				new UnlocalizedValue(String.valueOf(value)));
 		}

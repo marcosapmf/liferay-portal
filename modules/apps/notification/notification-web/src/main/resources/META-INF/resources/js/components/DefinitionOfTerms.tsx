@@ -13,21 +13,15 @@
  */
 
 import ClayPanel from '@clayui/panel';
-
-// @ts-ignore
-
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
-
-// @ts-ignore
-
-import {render} from '@liferay/frontend-js-react-web';
 import {
 	API,
 	AutoComplete,
 	onActionDropdownItemClick,
+	stringIncludesQuery,
 } from '@liferay/object-js-components-web';
 import {createResourceURL, fetch} from 'frontend-js-web';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
@@ -38,82 +32,29 @@ export function DefinitionOfTerms({baseResourceURL}: IProps) {
 	const [selectedEntity, setSelectedEntity] = useState<ObjectDefinition>();
 	const [query, setQuery] = useState<string>('');
 
-	const dataSetProps: IDataSetProps = {
-		id: 'tableTest',
-		items: [],
-		itemsActions: [
-			{
-				href: 'copyObjectFieldTerm',
-				id: 'copyObjectFieldTerm',
-				label: 'copy',
-				target: 'event',
-			} as any,
-		],
-		namespace: '',
+	const [entityFields, setEntityFields] = useState<Item[]>([]);
 
-		onActionDropdownItemClick,
-		pageSize: 5,
-		pagination: {
-			deltas: [
-				{
-					label: 5,
-				},
-				{
-					label: 10,
-				},
-				{
-					label: 20,
-				},
-				{
-					label: 30,
-				},
-				{
-					label: 50,
-				},
-				{
-					href: '',
-					label: 75,
-				},
-			],
-			initialDelta: 10,
-		},
-		selectedItemsKey: 'id',
-		showManagementBar: false,
-		showPagination: true,
-		showSearch: false,
-		views: [
-			{
-				contentRenderer: 'table',
-				label: 'Table',
-				name: 'table',
-				schema: {
-					fields: [
-						{
-							fieldName: 'name',
-							label: 'name',
-						} as any,
-						{
-							fieldName: 'term',
-							label: 'term',
-						} as any,
-					],
-				},
-				thumbnail: 'table',
-			},
-		],
-	};
-
-	const [frontEndDataSetProps, setFrontEndDataSetProps] = useState(
-		dataSetProps
-	);
+	const filteredObjectDefinitions = useMemo(() => {
+		return objectDefinitions?.filter(({label, name}) =>
+			stringIncludesQuery(
+				(label[defaultLanguageId] as string) ?? name,
+				query
+			)
+		);
+	}, [objectDefinitions, query]);
 
 	useEffect(() => {
-		API.getObjectDefinitions().then((items) => {
-			const objectDefinitions = items.filter(
-				({system}: ObjectDefinition) => !system
-			);
+		API.getAllObjectDefinitions().then((items) => {
+			if (!Liferay.FeatureFlags['LPS-158482']) {
+				const objectDefinitions = items.filter(
+					({system}: ObjectDefinition) => !system
+				);
 
-			setObjectDefinitions(objectDefinitions);
+				setObjectDefinitions(objectDefinitions);
+			}
+			else {
+				setObjectDefinitions(items);
+			}
 		});
 	}, []);
 
@@ -128,26 +69,10 @@ export function DefinitionOfTerms({baseResourceURL}: IProps) {
 
 		const responseJSON: [] = await response.json();
 
-		setFrontEndDataSetProps({
-			...frontEndDataSetProps,
-			items: responseJSON,
-		});
+		setEntityFields(responseJSON);
 	};
 
-	const datasetDisplayLauncher = (...frontEndDataSetProps: any[]) =>
-		render(FrontendDataSet, ...frontEndDataSetProps);
-
-	useEffect(() => {
-		datasetDisplayLauncher(
-			frontEndDataSetProps,
-			document.getElementById(
-				'lfr-notification-web__definition-of-terms-render-fds'
-			)
-		);
-	}, [selectedEntity, frontEndDataSetProps]);
-
-	const copyObjectFieldTerm = (event: any) => {
-		const {itemData} = event;
+	const copyObjectFieldTerm = ({itemData}: {itemData: Item}) => {
 		navigator.clipboard.writeText(itemData.term);
 	};
 
@@ -157,14 +82,13 @@ export function DefinitionOfTerms({baseResourceURL}: IProps) {
 		return () => {
 			Liferay.detach('copyObjectFieldTerm');
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (
 		<ClayPanel
 			collapsable
 			defaultExpanded
-			displayTitle="Definition of terms"
+			displayTitle={Liferay.Language.get('definition-of-terms')}
 			displayType="secondary"
 			showCollapseIcon={true}
 		>
@@ -173,7 +97,7 @@ export function DefinitionOfTerms({baseResourceURL}: IProps) {
 					emptyStateMessage={Liferay.Language.get(
 						'no-entities-were-found'
 					)}
-					items={objectDefinitions ?? []}
+					items={filteredObjectDefinitions ?? []}
 					label={Liferay.Language.get('entity')}
 					onChangeQuery={setQuery}
 					onSelectItem={(item: ObjectDefinition) => {
@@ -183,14 +107,52 @@ export function DefinitionOfTerms({baseResourceURL}: IProps) {
 					query={query}
 					value={selectedEntity?.label[defaultLanguageId]}
 				>
-					{({label}) => (
+					{({label, name}) => (
 						<div className="d-flex justify-content-between">
-							<div>{label[defaultLanguageId]}</div>
+							<div>{label[defaultLanguageId] ?? name}</div>
 						</div>
 					)}
 				</AutoComplete>
 
-				<div id="lfr-notification-web__definition-of-terms-render-fds" />
+				<div id="lfr-notification-web__definition-of-terms-table">
+					<FrontendDataSet
+						id="DefinitionOfTermsTable"
+						items={entityFields}
+						itemsActions={[
+							{
+								href: 'copyObjectFieldTerm',
+								id: 'copyObjectFieldTerm',
+								label: Liferay.Language.get('copy'),
+								target: 'event',
+							},
+						]}
+						onActionDropdownItemClick={onActionDropdownItemClick}
+						selectedItemsKey="id"
+						showManagementBar={false}
+						showPagination={false}
+						showSearch={false}
+						views={[
+							{
+								contentRenderer: 'table',
+								label: 'Table',
+								name: 'table',
+								schema: {
+									fields: [
+										{
+											fieldName: 'name',
+											label: Liferay.Language.get('name'),
+										},
+										{
+											fieldName: 'term',
+											label: Liferay.Language.get('term'),
+										},
+									],
+								},
+								thumbnail: 'table',
+							},
+						]}
+					/>
+				</div>
 			</ClayPanel.Body>
 		</ClayPanel>
 	);
@@ -200,60 +162,7 @@ interface IProps {
 	baseResourceURL: string;
 }
 
-interface IDataSetProps {
-	apiURL?: string;
-	appURL?: string;
-	batchTasksStatusApiURL?: string;
-	id: string;
-	items: any[];
-	itemsActions: [
-		{
-			href: string;
-			icon: string;
-			id: string;
-			label: string;
-		}
-	];
-	namespace: string;
-	onActionDropdownItemClick: (params: any) => void;
-	pageSize: number;
-	pagination: {
-		deltas: [
-			{
-				label: number;
-			},
-			{
-				label: number;
-			},
-			{
-				label: number;
-			},
-			{
-				label: number;
-			},
-			{
-				label: number;
-			},
-			{
-				href?: string;
-				label: number;
-			}
-		];
-		initialDelta: number;
-	};
-	selectedItemsKey: string;
-	showManagementBar: boolean;
-	showPagination: boolean;
-	showSearch: boolean;
-	views: [
-		{
-			contentRenderer: string;
-			label: string;
-			name: string;
-			schema: {
-				fields: ObjectField[];
-			};
-			thumbnail: string;
-		}
-	];
+interface Item {
+	name: string;
+	term: string;
 }

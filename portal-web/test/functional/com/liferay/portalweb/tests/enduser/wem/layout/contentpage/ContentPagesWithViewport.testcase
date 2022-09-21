@@ -361,14 +361,8 @@ definition {
 			SelectFrame(value1 = "relative=top");
 		}
 
-		task ("View the Text Align of Heading in different viewports at preview mode") {
-			PageEditor.openPreviewMode();
-
-			PageEditor.switchViewport(
-				deviceType = "Desktop",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+		task ("View the Text Align of Heading at preview mode") {
+			PageEditor.previewInANewTab();
 
 			AssertCssValue(
 				fragmentName = "heading",
@@ -376,51 +370,6 @@ definition {
 				locator1 = "Fragment#FRAGMENT_BODY",
 				locator2 = "text-align",
 				value1 = "start");
-
-			SelectFrame(value1 = "relative=top");
-
-			PageEditor.switchViewport(
-				deviceType = "Tablet",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			AssertCssValue(
-				fragmentName = "heading",
-				index = "1",
-				locator1 = "Fragment#FRAGMENT_BODY",
-				locator2 = "text-align",
-				value1 = "center");
-
-			SelectFrame(value1 = "relative=top");
-
-			PageEditor.switchViewport(
-				deviceType = "Landscape Phone",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			AssertCssValue(
-				fragmentName = "heading",
-				index = "1",
-				locator1 = "Fragment#FRAGMENT_BODY",
-				locator2 = "text-align",
-				value1 = "right");
-
-			SelectFrame(value1 = "relative=top");
-
-			PageEditor.switchViewport(
-				deviceType = "Portrait Phone",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			AssertCssValue(
-				fragmentName = "heading",
-				index = "1",
-				locator1 = "Fragment#FRAGMENT_BODY",
-				locator2 = "text-align",
-				value1 = "justify");
 		}
 	}
 
@@ -497,28 +446,24 @@ definition {
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
-			AssertNotVisible(
-				fragmentName = "heading",
-				id = "element-text",
-				index = "1",
-				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
+			PageEditor.viewFragmentNotVisible(fragmentName = "Heading");
 
 			SelectFrame(value1 = "relative=top");
 		}
 
-		task ("Click restore default for Heading Example 2 and assert  is NOT shown") {
+		task ("Click restore default for Heading Example 2 and assert is NOT shown") {
 			PageEditor.restoreDefaultHidePropertyForFragment(
 				fragmentName = "Heading",
 				index = "2");
 
 			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#PAGE_EDITOR_GLOBAL_CONTEXT_IFRAME");
 
-			PageEditor.viewFragmentNotPresent(fragmentName = "Heading");
+			PageEditor.viewFragmentNotVisible(fragmentName = "Heading");
 
 			SelectFrame(value1 = "relative=top");
 		}
 
-		task ("Click restore default for Heading Example 3 and assert  is shown") {
+		task ("Click restore default for Heading Example 3 and assert is shown") {
 			PageEditor.restoreDefaultHidePropertyForFragment(
 				fragmentName = "Heading",
 				index = "3");
@@ -598,16 +543,10 @@ definition {
 		}
 
 		task ("Open the Preview modal") {
-			PageEditor.openPreviewMode();
+			PageEditor.previewInANewTab();
 		}
 
-		task ("Assert that Heading from 1 to 4 are shown for desktop view on preview") {
-			PageEditor.switchViewport(
-				deviceType = "Desktop",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
+		task ("Assert that Heading from 1 to 4 are shown on preview") {
 			for (var n : list "1,2,3,4") {
 				ContentPages.viewFragmentText(
 					fragmentName = "heading",
@@ -621,81 +560,6 @@ definition {
 				id = "element-text",
 				index = "5",
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
-		}
-
-		task ("Assert that Heading from 1 to 3 are shown for tablet view on preview") {
-			SelectFrameTop();
-
-			PageEditor.switchViewport(
-				deviceType = "Tablet",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			for (var n : list "1,2,3") {
-				ContentPages.viewFragmentText(
-					fragmentName = "heading",
-					id = "element-text",
-					position = "${n}",
-					text = "Heading Example ${n}");
-			}
-
-			for (var n : list "4,5") {
-				AssertNotVisible(
-					fragmentName = "heading",
-					id = "element-text",
-					index = "${n}",
-					locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
-			}
-		}
-
-		task ("Assert that Heading from 1 to 2 are shown for landscape phone view on preview") {
-			SelectFrameTop();
-
-			PageEditor.switchViewport(
-				deviceType = "Landscape Phone",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			for (var n : list "1,2") {
-				ContentPages.viewFragmentText(
-					fragmentName = "heading",
-					id = "element-text",
-					position = "${n}",
-					text = "Heading Example ${n}");
-			}
-
-			for (var n : list "3,4,5") {
-				AssertNotVisible(
-					fragmentName = "heading",
-					id = "element-text",
-					index = "${n}",
-					locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
-			}
-		}
-
-		task ("Assert that only Heading 1 is shown for portail phone view on preview") {
-			SelectFrameTop();
-
-			PageEditor.switchViewport(
-				deviceType = "Portrait Phone",
-				modal = "true");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
-			ContentPages.viewFragmentText(
-				fragmentName = "heading",
-				id = "element-text",
-				text = "Heading Example 1");
-
-			for (var n : list "2,3,4,5") {
-				AssertNotVisible(
-					fragmentName = "heading",
-					id = "element-text",
-					index = "${n}",
-					locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
-			}
 		}
 	}
 
@@ -826,6 +690,63 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-153383. The page creator can resize editor sidebar on non desktop Viewport."
+	@priority = "4"
+	test ResizeLeftSidebarPanelInNonDesktopViewport {
+		property custom.properties = "feature.flag.LPS-153452=true";
+
+		task ("Given a page creator accesses to the page editor") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("When the page creator resizes the left sidebar panel in the Desktop viewport") {
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "100,0");
+		}
+
+		task ("Then the page creator see the left sidebar panel resized in the Tablet viewport") {
+			PageEditor.switchViewport(deviceType = "Tablet");
+
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "380px");
+		}
+
+		task ("When the page creator resizes the left sidebar panel in the Tablet viewport") {
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "100,0");
+		}
+
+		task ("Then the page creator see the left sidebar panel resized in the Landscape Phone viewport") {
+			PageEditor.switchViewport(deviceType = "Landscape Phone");
+
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "480px");
+		}
+
+		task ("When the page creator resizes the left sidebar panel in the Landscape Phone viewport") {
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "-180,0");
+		}
+
+		task ("Then the page creator see the left sidebar panel resized in the Portrait Phone viewport") {
+			PageEditor.switchViewport(deviceType = "Portrait Phone");
+
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "300px");
+		}
+	}
+
 	@description = "This is a test for LPS-110707. Can resize the width of non-desktop viewports when edit content page."
 	@priority = "5"
 	@uitest
@@ -833,6 +754,8 @@ definition {
 		property portal.acceptance = "true";
 
 		task ("View the viewport resizer not shown in Desktop viewport") {
+			TestUtils.maximizeWindow();
+
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
 				siteName = "Test Site Name");

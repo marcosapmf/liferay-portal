@@ -96,6 +96,7 @@ const CoverageInfoForm = () => {
 			},
 			type: ACTIONS.SET_COVERAGE_FORM,
 		});
+		dispatch({payload: true, type: ACTIONS.SET_HAS_FORM_CHANGE});
 	};
 
 	const [hasError, setHasError] = useState(hasRequiredError);
@@ -137,13 +138,7 @@ const CoverageInfoForm = () => {
 
 			const isAbleToNextStep =
 				isAbleToSave &&
-				!hasError.bodilyInjury &&
-				!hasError.collision &&
-				!hasError.comprehensive &&
-				!hasError.medical &&
-				!hasError.propertyDamage &&
-				!hasError.uninsuredOrUnderinsuredMBI &&
-				!hasError.uninsuredOrUnderinsuredMPD;
+				Object.values(hasError).every((value) => value === false);
 
 			const hasAllRequiredFieldsToNextStep =
 				hasSomeField &&
@@ -198,28 +193,37 @@ const CoverageInfoForm = () => {
 							id="comprehensive"
 							name="comprehensive"
 							onBlur={(event) => {
-								let value = event.target.value;
-								value =
-									value === 'CHOOSE AN OPTION' ? '' : value;
+								let comprehensiveValue = event.target.value;
+								comprehensiveValue =
+									comprehensiveValue === 'CHOOSE AN OPTION'
+										? ''
+										: comprehensiveValue;
 								setHasError({
 									...hasError,
-									comprehensive: value === '' ? true : false,
+									comprehensive:
+										comprehensiveValue === ''
+											? true
+											: false,
 								});
 							}}
 							onChange={(event) => {
-								let value = event.target.value;
-								value =
-									value === 'CHOOSE AN OPTION' ? '' : value;
+								let comprehensiveValue = event.target.value;
+								comprehensiveValue =
+									comprehensiveValue === 'CHOOSE AN OPTION'
+										? ''
+										: comprehensiveValue;
 								handleChangeVehicleInfo(
 									formIndex,
 									'comprehensive',
-									value
+									comprehensiveValue
 								);
 
 								setHasError({
 									...hasError,
 									[`comprehensive.${formIndex}`]:
-										value === '' ? true : false,
+										comprehensiveValue === ''
+											? true
+											: false,
 								});
 							}}
 							value={form.vehicles[formIndex].comprehensive}
@@ -261,18 +265,24 @@ const CoverageInfoForm = () => {
 							aria-label="Select Label"
 							id="collision"
 							onBlur={(event) => {
-								const collisionValue = event.target.value;
+								let collisionValue = event.target.value;
+								collisionValue =
+									collisionValue === 'CHOOSE AN OPTION'
+										? ''
+										: collisionValue;
+
 								setHasError({
 									...hasError,
 									collision:
-										collisionValue === '' ||
-										collisionValue === 'CHOOSE AN OPTION'
-											? true
-											: false,
+										collisionValue === '' ? true : false,
 								});
 							}}
 							onChange={(event) => {
-								const collisionValue = event.target.value;
+								let collisionValue = event.target.value;
+								collisionValue =
+									collisionValue === 'CHOOSE AN OPTION'
+										? ''
+										: collisionValue;
 								handleChangeVehicleInfo(
 									formIndex,
 									'collision',
@@ -282,10 +292,7 @@ const CoverageInfoForm = () => {
 								setHasError({
 									...hasError,
 									[`collision.${formIndex}`]:
-										collisionValue === '' ||
-										collisionValue === 'CHOOSE AN OPTION'
-											? true
-											: false,
+										collisionValue === '' ? true : false,
 								});
 							}}
 							value={form.vehicles[formIndex].collision}
@@ -343,7 +350,11 @@ const CoverageInfoForm = () => {
 						className="text-left"
 						id="mySelectId"
 						onBlur={(event) => {
-							const bodilyInjuryValue = event.target.value;
+							let bodilyInjuryValue = event.target.value;
+							bodilyInjuryValue =
+								bodilyInjuryValue === 'CHOOSE AN OPTION'
+									? ''
+									: bodilyInjuryValue;
 							setHasError({
 								...hasError,
 								bodilyInjury:
@@ -354,7 +365,11 @@ const CoverageInfoForm = () => {
 							});
 						}}
 						onChange={(event) => {
-							const bodilyInjuryValue = event.target.value;
+							let bodilyInjuryValue = event.target.value;
+							bodilyInjuryValue =
+								bodilyInjuryValue === 'CHOOSE AN OPTION'
+									? ''
+									: bodilyInjuryValue;
 							handleChangeField(
 								'bodilyInjury',
 								bodilyInjuryValue
@@ -404,7 +419,11 @@ const CoverageInfoForm = () => {
 						aria-label="Select Label"
 						id="propertyDamage"
 						onBlur={(event) => {
-							const propertyDamageValue = event.target.value;
+							let propertyDamageValue = event.target.value;
+							propertyDamageValue =
+								propertyDamageValue === 'CHOOSE AN OPTION'
+									? ''
+									: propertyDamageValue;
 							setHasError({
 								...hasError,
 								propertyDamage:
@@ -415,7 +434,11 @@ const CoverageInfoForm = () => {
 							});
 						}}
 						onChange={(event) => {
-							const propertyDamageValue = event.target.value;
+							let propertyDamageValue = event.target.value;
+							propertyDamageValue =
+								propertyDamageValue === 'CHOOSE AN OPTION'
+									? ''
+									: propertyDamageValue;
 							handleChangeField(
 								'propertyDamage',
 								propertyDamageValue
@@ -467,8 +490,13 @@ const CoverageInfoForm = () => {
 						aria-label="Select Label"
 						id="uninsuredOrUnderinsuredMBI"
 						onBlur={(event) => {
-							const uninsuredOrUnderinsuredMBIOptionValue =
+							let uninsuredOrUnderinsuredMBIOptionValue =
 								event.target.value;
+							uninsuredOrUnderinsuredMBIOptionValue =
+								uninsuredOrUnderinsuredMBIOptionValue ===
+								'CHOOSE AN OPTION'
+									? ''
+									: uninsuredOrUnderinsuredMBIOptionValue;
 							setHasError({
 								...hasError,
 								uninsuredOrUnderinsuredMBI:
@@ -481,8 +509,13 @@ const CoverageInfoForm = () => {
 							});
 						}}
 						onChange={(event) => {
-							const uninsuredOrUnderinsuredMBIOptionValue =
+							let uninsuredOrUnderinsuredMBIOptionValue =
 								event.target.value;
+							uninsuredOrUnderinsuredMBIOptionValue =
+								uninsuredOrUnderinsuredMBIOptionValue ===
+								'CHOOSE AN OPTION'
+									? ''
+									: uninsuredOrUnderinsuredMBIOptionValue;
 							handleChangeField(
 								'uninsuredOrUnderinsuredMBI',
 								uninsuredOrUnderinsuredMBIOptionValue
@@ -541,8 +574,13 @@ const CoverageInfoForm = () => {
 						aria-label="Select Label"
 						id="uninsuredOrUnderinsuredMPD"
 						onBlur={(event) => {
-							const uninsuredOrUnderinsuredMPDValue =
+							let uninsuredOrUnderinsuredMPDValue =
 								event.target.value;
+							uninsuredOrUnderinsuredMPDValue =
+								uninsuredOrUnderinsuredMPDValue ===
+								'CHOOSE AN OPTION'
+									? ''
+									: uninsuredOrUnderinsuredMPDValue;
 							setHasError({
 								...hasError,
 								uninsuredOrUnderinsuredMPD:
@@ -554,8 +592,13 @@ const CoverageInfoForm = () => {
 							});
 						}}
 						onChange={(event) => {
-							const uninsuredOrUnderinsuredMPDValue =
+							let uninsuredOrUnderinsuredMPDValue =
 								event.target.value;
+							uninsuredOrUnderinsuredMPDValue =
+								uninsuredOrUnderinsuredMPDValue ===
+								'CHOOSE AN OPTION'
+									? ''
+									: uninsuredOrUnderinsuredMPDValue;
 							handleChangeField(
 								'uninsuredOrUnderinsuredMPD',
 								uninsuredOrUnderinsuredMPDValue
@@ -615,7 +658,11 @@ const CoverageInfoForm = () => {
 						aria-label="Select Label"
 						id="Medical"
 						onBlur={(event) => {
-							const medicalValue = event.target.value;
+							let medicalValue = event.target.value;
+							medicalValue =
+								medicalValue === 'CHOOSE AN OPTION'
+									? ''
+									: medicalValue;
 							setHasError({
 								...hasError,
 								medical:
@@ -626,7 +673,11 @@ const CoverageInfoForm = () => {
 							});
 						}}
 						onChange={(event) => {
-							const medicalValue = event.target.value;
+							let medicalValue = event.target.value;
+							medicalValue =
+								medicalValue === 'CHOOSE AN OPTION'
+									? ''
+									: medicalValue;
 							handleChangeField('medical', medicalValue);
 
 							setHasError({

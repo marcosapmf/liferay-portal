@@ -252,12 +252,10 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanAddPDFAfterEnablingTextExtraction {
-		property custom.properties = "text.extraction.fork.process.enabled=true${line.separator}text.extraction.fork.process.mime.types=application/x-tika-ooxml,application/pdf";
+		property custom.properties = "text.extraction.fork.process.enabled=true${line.separator}text.extraction.fork.process.mime.types=application/x-tika-ooxml,application/pdf${line.separator}dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -404,6 +402,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanCancelCheckout {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -414,8 +413,6 @@ definition {
 			sourceFileName = "Document_1.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -612,17 +609,21 @@ definition {
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
 		DMDocument.checkoutCP(dmDocumentTitle = "Check in as major version");
 
-		Refresh();
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		DMDocument.viewStatus(
+			dmDocumentStatus = "Draft",
+			dmDocumentTitle = "Check in as major version");
 
 		DMDocument.checkinCP(
 			dmDocumentTitle = "Check in as major version",
 			revision = "Major");
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		AssertElementNotPresent(
 			key_dmDocumentTitle = "Check in as major version",
@@ -741,6 +742,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanDeleteDocumentInSitePage {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONGroup.addGroup(groupName = "Site Name");
@@ -765,8 +767,6 @@ definition {
 			pageName = "Documents and Media Page",
 			siteName = "Site Name");
 
-		DMDocument.enableActionsMenuOnPortlet();
-
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		DMDocument.deletePG(dmDocumentTitle = "/D/M/Document Title");
@@ -778,6 +778,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanDeleteMultipleDocumentsViaActionsButton {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONGroup.addGroup(groupName = "Site Name");
@@ -791,12 +792,6 @@ definition {
 			groupName = "Site Name",
 			layoutName = "Documents and Media Page",
 			widgetName = "Documents and Media");
-
-		Navigator.openSitePage(
-			pageName = "Documents and Media Page",
-			siteName = "Site Name");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		for (var entryCount : list "1,2") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1042,6 +1037,7 @@ definition {
 	@priority = "5"
 	@refactordone
 	test CanDownloadWithSpecialCharactersInTitle {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -1052,8 +1048,6 @@ definition {
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
-		DMDocument.enableActionsMenuOnPortlet();
-
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		DMDocument.downloadPG(dmDocumentTitle = "/D/M/@!# Title");
@@ -1062,9 +1056,9 @@ definition {
 	}
 
 	@description = "This test edits the title and description of a document. It asserts minor version increment because only its metadata was updated."
+	@e2etest
 	@priority = "5"
 	@refactordone
-	@uitest
 	test CanEditDocument {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
@@ -1139,6 +1133,8 @@ definition {
 	@description = "This test covers LPS-136334. This test ensures that users can filter documents by Recent and order by Downloads."
 	@priority = "4"
 	test CanFilterByRecentAndOrderByDownloads {
+		property custom.properties = "dl.actions.visible=true";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentTitle = "Document_2.doc",
 			groupName = "Guest",
@@ -1152,8 +1148,6 @@ definition {
 			sourceFileName = "Document_3.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		DMDocument.downloadPG(dmDocumentTitle = "Document_3.doc");
 
@@ -1284,10 +1278,49 @@ definition {
 			dmDocumentTitle = "DM Document Title");
 	}
 
+	@description = "This ensures that the entry can be moved to another folder via drag and drop."
+	@priority = "4"
+	test CanMoveEntryToFolderViaDragAndDrop {
+		JSONFolder.addFolder(
+			dmFolderDescription = "DM Folder1 Description",
+			dmFolderName = "DM Folder Name",
+			groupName = "Guest");
+
+		JSONDocument.addFileWithUploadedFile(
+			dmDocumentDescription = "DM Document Description",
+			dmDocumentTitle = "DM Document Title",
+			groupName = "Guest",
+			mimeType = "application/msword",
+			sourceFileName = "Document_1.doc");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
+
+		LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+		DragAndDrop.dragAndDropToObject(
+			key_listEntry = "DM Document Title",
+			key_rowEntry = "DM Folder Name",
+			locator1 = "LexiconList#ANY_LIST",
+			locator2 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
+			value1 = "DM Document Title");
+
+		Alert.viewSuccessMessage();
+
+		DMNavigator.openToFolderInAdmin(
+			dmFolderName = "DM Folder Name",
+			groupName = "Guest",
+			siteURLKey = "guest");
+
+		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
+
+		DMDocument.viewCP(dmDocumentTitle = "DM Document Title");
+	}
+
 	@description = "This validates that the location of the document accurately displays after it is moved from one folder to another."
 	@priority = "4"
 	@refactordone
 	test CanMoveFromOneFolderToAnother {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONFolder.addFolder(
@@ -1309,8 +1342,6 @@ definition {
 			sourceFileName = "Document_1.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -1334,6 +1365,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanMoveWithSlashesInTitle {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -1349,8 +1381,6 @@ definition {
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
-		DMDocument.enableActionsMenuOnPortlet();
-
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 		DMDocument.moveToFolderPG(
@@ -1365,6 +1395,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CannotAddDocumentWithDuplicateName {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -1374,8 +1405,6 @@ definition {
 			sourceFileName = "Document_1.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -1389,6 +1418,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CannotAddSpecialCharacterToName {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONGroup.addGroup(groupName = "Site Name");
@@ -1407,8 +1437,6 @@ definition {
 			pageName = "Documents and Media Page",
 			siteName = "Site Name");
 
-		DMDocument.enableActionsMenuOnPortlet();
-
 		DMFolder.addPG(
 			dmFolder = "Invalid",
 			dmFolderDescription = "DM Folder Description",
@@ -1425,7 +1453,7 @@ definition {
 	@priority = "5"
 	@refactordone
 	test CannotEditCheckedOutDocument {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONUser.addUser(
@@ -1457,8 +1485,6 @@ definition {
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		DMDocument.checkoutPG(dmDocumentTitle = "DM Document Title");
 
@@ -1500,6 +1526,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CannotMoveToFolderWithDuplicateTitle {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONFolder.addFolder(
@@ -1529,8 +1556,6 @@ definition {
 			sourceFileName = "Document_1.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -1914,11 +1939,10 @@ definition {
 	@priority = "5"
 	@refactordone
 	test CanPublishTitleWithSpecialCharacters {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -1964,13 +1988,16 @@ definition {
 
 		Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = "3000");
 
-		Notifications.gotoNotifications();
-
-		Notifications.navigateToContent(contentBody = "Document_5.txt");
+		DMNavigator.openToEditEntryInSite(
+			dmDocumentTitle = "Document_5.txt",
+			groupName = "Guest",
+			siteURLKey = "guest");
 
 		DMDocument.publishExpiredDocument(
 			disableExpirationDate = "true",
 			dmDocumentTitle = "Document_5.txt");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
 		DMDocument.viewStatus(
 			dmDocumentStatus = "Approved",
@@ -2059,7 +2086,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanRevertToOriginal {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -2070,8 +2097,6 @@ definition {
 			sourceFileName = "Document_1.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -2405,6 +2430,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanViewDocumentWithTopics {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONCategory.addCategory(
@@ -2418,8 +2444,6 @@ definition {
 			vocabularyName = "Topic");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -2463,12 +2487,12 @@ definition {
 			groupName = "Guest",
 			siteURLKey = "guest");
 
+		WaitForPageLoad();
+
 		DMDocument.editDocument(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentFile = "Document_1.txt",
 			dmDocumentTitle = "Document_1.txt");
-
-		WaitForPageLoad();
 
 		DMDocument.setExpirationDate(
 			enableExpirationDate = "true",
@@ -2520,6 +2544,8 @@ definition {
 			groupName = "Guest",
 			siteURLKey = "guest");
 
+		WaitForPageLoad();
+
 		DMDocument.editDocument(
 			dmDocumentFile = "Document_5.txt",
 			dmDocumentTitle = "Document_5.txt");
@@ -2547,6 +2573,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanViewImageFromInfoPanel {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -2557,8 +2584,6 @@ definition {
 			sourceFileName = "Document_2.jpg");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -2606,6 +2631,7 @@ definition {
 	@priority = "4"
 	@refactordone
 	test CanViewOlderVersion {
+		property custom.properties = "dl.actions.visible=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -2616,8 +2642,6 @@ definition {
 			sourceFileName = "Document_1.doc");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -2641,6 +2665,8 @@ definition {
 	@priority = "3"
 	@refactordone
 	test CanViewRelatedDocument {
+		property custom.properties = "dl.actions.visible=true";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_1.doc",
@@ -2667,8 +2693,6 @@ definition {
 		Button.clickPublish();
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
@@ -2979,6 +3003,8 @@ definition {
 	@priority = "5"
 	@refactorneeded
 	test ViewFileCategoryAndTags {
+		property custom.properties = "dl.actions.visible=true";
+
 		JSONCategory.addVocabulary(
 			groupName = "Guest",
 			title = "Vocabulary Name");
@@ -3003,10 +3029,6 @@ definition {
 		for (var tagName : list "${tagNameList}") {
 			Tag.addCP(tagName = "${tagName}");
 		}
-
-		Navigator.gotoPage(pageName = "Documents and Media Page");
-
-		DMDocument.enableActionsMenuOnPortlet();
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
 

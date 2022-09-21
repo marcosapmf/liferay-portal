@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 
 import org.dom4j.Element;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -362,6 +363,37 @@ public class BatchBuild extends BaseBuild {
 		else {
 			batchName = null;
 		}
+	}
+
+	@Override
+	protected void findDownstreamBuilds() {
+		List<String> downstreamBuildURLs = new ArrayList<>();
+
+		JSONObject buildJSONObject = getBuildJSONObject("runs[number,url]");
+
+		if ((buildJSONObject != null) && buildJSONObject.has("runs")) {
+			JSONArray runsJSONArray = buildJSONObject.getJSONArray("runs");
+
+			if (runsJSONArray != null) {
+				for (int i = 0; i < runsJSONArray.length(); i++) {
+					JSONObject runJSONObject = runsJSONArray.getJSONObject(i);
+
+					if (runJSONObject.getInt("number") != getBuildNumber()) {
+						continue;
+					}
+
+					String url = runJSONObject.getString("url");
+
+					if (hasBuildURL(url) || downstreamBuildURLs.contains(url)) {
+						continue;
+					}
+
+					downstreamBuildURLs.add(url);
+				}
+			}
+		}
+
+		addDownstreamBuilds(downstreamBuildURLs.toArray(new String[0]));
 	}
 
 	protected AxisBuild getAxisBuild(String axisVariable) {

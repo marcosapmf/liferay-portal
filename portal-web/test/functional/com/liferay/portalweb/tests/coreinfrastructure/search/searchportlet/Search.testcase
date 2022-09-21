@@ -213,6 +213,8 @@ definition {
 
 	@priority = "4"
 	test AssertNonAdminsCannotAddCertainWidgets {
+		property app.server.types = "tomcat";
+
 		JSONRole.addRegularRole(
 			roleKey = "Can Add Widgets",
 			roleTitle = "Can Add Widgets");
@@ -537,17 +539,11 @@ definition {
 		property custom.properties = "enterprise.product.enterprise.search.enabled=false${line.separator}enterprise.product.notification.enabled=true";
 		property test.run.environment = "EE";
 
-		SelectFrame(value1 = "relative=top");
+		AssertElementNotPresent(locator1 = "Modal#MODAL");
 
-		AssertTextEquals(
-			locator1 = "Modal#HEADER",
-			value1 = "Terms of Use");
-
-		AssertTextNotEquals.assertNotPartialText(
-			locator1 = "Modal#BODY",
-			value1 = "Use of Liferay Enterprise Search (LES) apps and features is not covered by Liferay Support and other subscription benefits without an active LES add-on subscription. If you do not want to use or have access to LES, access can be disabled completely by following these steps");
-
-		Click(locator1 = "Button#DONE");
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
 
 		AssertElementNotPresent(locator1 = "Modal#MODAL");
 	}
@@ -568,6 +564,12 @@ definition {
 			value1 = "Use of Liferay Enterprise Search (LES) apps and features is not covered by Liferay Support and other subscription benefits without an active LES add-on subscription. If you do not want to use or have access to LES, access can be disabled completely by following these steps");
 
 		Click(locator1 = "Button#DONE");
+
+		AssertElementNotPresent(locator1 = "Modal#MODAL");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "Test Test");
 
 		AssertElementNotPresent(locator1 = "Modal#MODAL");
 	}
@@ -829,7 +831,7 @@ definition {
 	@priority = "4"
 	test ModifyPaginationPortalProperties {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property custom.properties = "search.container.page.default.delta=2";
+		property custom.properties = "search.container.page.default.delta=1";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property environment.acceptance = "true";
 		property portal.acceptance = "true";
@@ -1449,7 +1451,30 @@ definition {
 	}
 
 	@priority = "4"
+	test SearchByClickingMagnifyingGlassIcon {
+		property test.assert.warning.exceptions = "true";
+
+		SearchPortlets.searchEmbedded(
+			clickMagnifyingGlassIcon = "true",
+			searchTerm = "test");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "Test Test",
+			searchAssetType = "User");
+
+		SearchPortlets.searchWidget(
+			clickMagnifyingGlassIcon = "true",
+			searchTerm = "test");
+
+		SearchResultPortlet.viewSearchResults(
+			searchAssetTitle = "Test Test",
+			searchAssetType = "User");
+	}
+
+	@priority = "4"
 	test SearchCompanyScopedObject {
+		property search.environment.suite.exclude = "true";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 500",
 			objectName = "CustomObject500",
@@ -2613,6 +2638,8 @@ definition {
 
 	@description = "This is a use case for LPS-152937."
 	test SortAccentedWords {
+		property app.server.types = "tomcat,weblogic";
+
 		var digit = "1";
 
 		for (var content : list "Alicante,Barcelona,Álava,Alava") {
@@ -3247,6 +3274,7 @@ definition {
 
 	@priority = "5"
 	test ViewSearchResultDetails {
+		property app.server.types = "tomcat";
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "Search#ViewSearchResultDetails";
 

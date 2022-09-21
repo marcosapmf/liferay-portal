@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.SummaryFactory;
 import com.liferay.portal.kernel.search.result.SearchResultContributor;
 import com.liferay.portal.kernel.search.result.SearchResultTranslator;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.search.internal.result.SearchResultManagerImpl;
@@ -354,7 +355,8 @@ public class SearchResultUtilDLFileEntryTest
 		SearchResultTranslatorImpl searchResultTranslatorImpl =
 			new SearchResultTranslatorImpl();
 
-		searchResultTranslatorImpl.setSearchResultManager(
+		ReflectionTestUtil.setFieldValue(
+			searchResultTranslatorImpl, "_searchResultManager",
 			_createSearchResultManager());
 
 		return searchResultTranslatorImpl;
@@ -364,11 +366,14 @@ public class SearchResultUtilDLFileEntryTest
 		DLFileEntrySearchResultContributor dlFileEntrySearchResultContributor =
 			new DLFileEntrySearchResultContributor();
 
-		dlFileEntrySearchResultContributor.setClassNameLocalService(
+		ReflectionTestUtil.setFieldValue(
+			dlFileEntrySearchResultContributor, "_classNameLocalService",
 			classNameLocalService);
-		dlFileEntrySearchResultContributor.setDLAppLocalService(
+		ReflectionTestUtil.setFieldValue(
+			dlFileEntrySearchResultContributor, "_dlAppLocalService",
 			_dlAppLocalService);
-		dlFileEntrySearchResultContributor.setSummaryFactory(
+		ReflectionTestUtil.setFieldValue(
+			dlFileEntrySearchResultContributor, "_summaryFactory",
 			_createSummaryFactory());
 
 		return dlFileEntrySearchResultContributor;
@@ -389,7 +394,8 @@ public class SearchResultUtilDLFileEntryTest
 	private SummaryFactory _createSummaryFactory() {
 		SummaryFactoryImpl summaryFactoryImpl = new SummaryFactoryImpl();
 
-		summaryFactoryImpl.setIndexerRegistry(_indexerRegistry);
+		ReflectionTestUtil.setFieldValue(
+			summaryFactoryImpl, "_indexerRegistry", _indexerRegistry);
 
 		return summaryFactoryImpl;
 	}

@@ -12,16 +12,24 @@
  * details.
  */
 
+import {HierarchyDataRenderer} from './HierarchyDataRenderer';
 export default function propsTransformer({
 	...otherProps
 }: {
 	[x: string]: any;
 }): {
+	customDataRenderers: {
+		hierarchyDataRenderer: typeof HierarchyDataRenderer;
+	};
 	onActionDropdownItemClick({
 		action,
 		itemData,
 	}: {
-		action: any;
-		itemData: any;
+		action: {
+			data: {
+				id: string;
+			};
+		};
+		itemData: ObjectRelationship;
 	}): void;
 };

@@ -206,6 +206,12 @@ public interface CPDefinitionLocalService
 
 	public void checkCPDefinitions() throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public CPDefinition cloneCPDefinition(
+			long userId, long cpDefinitionId, long groupId,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	public CPDefinition copyCPDefinition(long cpDefinitionId)
 		throws PortalException;
 
@@ -511,8 +517,17 @@ public interface CPDefinitionLocalService
 		long cpDefinitionId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPDefinition getCProductCPDefinition(long cProductId, int version)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CPDefinition> getCProductCPDefinitions(
 		long cProductId, int status, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPDefinition> getCProductCPDefinitions(
+		long cProductId, int status, int start, int end,
+		OrderByComparator<CPDefinition> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPAttachmentFileEntry getDefaultImageCPAttachmentFileEntry(
@@ -717,17 +732,6 @@ public interface CPDefinitionLocalService
 			int deliverySubscriptionLength, String deliverySubscriptionType,
 			UnicodeProperties deliverySubscriptionTypeSettingsUnicodeProperties,
 			long deliveryMaxSubscriptionCycles)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	public CPDefinition updateSubscriptionInfo(
-			long cpDefinitionId, boolean subscriptionEnabled,
-			int subscriptionLength, String subscriptionType,
-			UnicodeProperties subscriptionTypeSettingsUnicodeProperties,
-			long maxSubscriptionCycles, ServiceContext serviceContext)
 		throws PortalException;
 
 	public CPDefinition updateTaxCategoryInfo(

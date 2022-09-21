@@ -12,13 +12,12 @@ definition {
 	}
 
 	tearDown {
+		ObjectAdmin.deleteAllCustomObjectsViaAPI();
+
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
-		}
-		else {
-			ObjectAdmin.deleteAllCustomObjectsViaAPI();
 		}
 	}
 
@@ -607,8 +606,6 @@ definition {
 	@description = "LPS-133867|LPS-135004 - Verify it is possible to display a specific entry of String type for a specific Object"
 	@priority = "5"
 	test DisplaySpecificEntryString {
-		property portal.acceptance = "true";
-
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 324",
 			objectName = "CustomObject324",
@@ -815,7 +812,10 @@ definition {
 			locator1 = "Select#GENERIC_SELECT_FIELD",
 			value1 = "Mapped URL");
 
-		VisualizeObjectCollectionDisplay.mapFragment(fieldLabel = "Display Page URL");
+		Select(
+			key_fieldLabel = "Field",
+			locator1 = "Select#GENERIC_SELECT_FIELD",
+			value1 = "Display Page URL");
 
 		PageEditor.publish();
 

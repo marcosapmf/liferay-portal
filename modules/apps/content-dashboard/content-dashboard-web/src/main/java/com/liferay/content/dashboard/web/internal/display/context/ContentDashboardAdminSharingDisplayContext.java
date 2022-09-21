@@ -18,7 +18,7 @@ import com.liferay.content.dashboard.item.action.ContentDashboardItemAction;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItem;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
-import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardItemSearchClassMapperTracker;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -37,19 +37,17 @@ public class ContentDashboardAdminSharingDisplayContext {
 
 	public ContentDashboardAdminSharingDisplayContext(
 		ContentDashboardItemFactoryTracker contentDashboardItemFactoryTracker,
-		ContentDashboardItemSearchClassMapperTracker
-			contentDashboardItemSearchClassMapperTracker,
-		HttpServletRequest httpServletRequest) {
+		HttpServletRequest httpServletRequest,
+		InfoSearchClassMapperTracker infoSearchClassMapperTracker) {
 
 		_contentDashboardItemFactoryTracker =
 			contentDashboardItemFactoryTracker;
-		_contentDashboardItemSearchClassMapperTracker =
-			contentDashboardItemSearchClassMapperTracker;
 		_httpServletRequest = httpServletRequest;
+		_infoSearchClassMapperTracker = infoSearchClassMapperTracker;
 	}
 
 	public String getClassName() {
-		return _contentDashboardItemSearchClassMapperTracker.getSearchClassName(
+		return _infoSearchClassMapperTracker.getSearchClassName(
 			_getClassName());
 	}
 
@@ -123,7 +121,7 @@ public class ContentDashboardAdminSharingDisplayContext {
 				_httpServletRequest,
 				ContentDashboardItemAction.Type.SHARING_COLLABORATORS);
 
-		if (!ListUtil.isEmpty(contentDashboardItemActions)) {
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
 			return contentDashboardItemActions.get(0);
 		}
 
@@ -138,7 +136,7 @@ public class ContentDashboardAdminSharingDisplayContext {
 				_httpServletRequest,
 				ContentDashboardItemAction.Type.SHARING_BUTTON);
 
-		if (!ListUtil.isEmpty(contentDashboardItemActions)) {
+		if (ListUtil.isNotEmpty(contentDashboardItemActions)) {
 			return contentDashboardItemActions.get(0);
 		}
 
@@ -165,8 +163,7 @@ public class ContentDashboardAdminSharingDisplayContext {
 
 	private final ContentDashboardItemFactoryTracker
 		_contentDashboardItemFactoryTracker;
-	private final ContentDashboardItemSearchClassMapperTracker
-		_contentDashboardItemSearchClassMapperTracker;
 	private final HttpServletRequest _httpServletRequest;
+	private final InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
 
 }

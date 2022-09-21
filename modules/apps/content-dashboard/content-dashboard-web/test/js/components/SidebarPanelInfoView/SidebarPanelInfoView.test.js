@@ -21,13 +21,22 @@ import {fetch, openToast} from 'frontend-js-web';
 import Sidebar from '../../../../src/main/resources/META-INF/resources/js/components/Sidebar';
 import SidebarPanelInfoView from '../../../../src/main/resources/META-INF/resources/js/components/SidebarPanelInfoView/SidebarPanelInfoView';
 import {
+	mockedAudioDocumentProps,
+	mockedCodeDocumentProps,
+	mockedCompressDocumentProps,
 	mockedContentWithPreview,
 	mockedContentWithPreviewWithoutLink,
+	mockedCustomDocumentProps,
 	mockedFileDocumentProps,
 	mockedImageDocumentProps,
 	mockedNoTaxonomies,
+	mockedPresentationDocumentProps,
 	mockedProps,
+	mockedSpreadsheetDocumentProps,
+	mockedTextDocumentProps,
 	mockedUser,
+	mockedVectorialDocumentProps,
+	mockedVideoDocumentProps,
 	mockedVideoShortcutDocumentProps,
 } from '../../mocks/props';
 
@@ -37,6 +46,7 @@ jest.mock('frontend-js-web', () => ({
 	}),
 
 	openToast: jest.fn(),
+	sub: jest.fn(),
 }));
 
 const _getSidebarComponent = (props) => {
@@ -52,6 +62,10 @@ describe('SidebarPanelInfoView', () => {
 		jest.clearAllMocks();
 	});
 
+	beforeEach(() => {
+		Liferay.FeatureFlags['LPS-161013'] = true;
+	});
+
 	it('renders', () => {
 		const {asFragment} = render(_getSidebarComponent(mockedProps));
 
@@ -59,7 +73,7 @@ describe('SidebarPanelInfoView', () => {
 	});
 
 	it('renders sidebar panel with proper info for a basic web content', () => {
-		const {container, getByText} = render(
+		const {container, getByLabelText, getByText} = render(
 			_getSidebarComponent(mockedProps)
 		);
 
@@ -80,7 +94,7 @@ describe('SidebarPanelInfoView', () => {
 		expect(getByText('38070')).toBeInTheDocument();
 
 		expect(getByText('categorization')).toBeInTheDocument();
-		expect(getByText('details')).toBeInTheDocument();
+		expect(getByLabelText(/^(view Details)$/i)).toBeInTheDocument();
 	});
 
 	it('renders sidebar panel with proper dates for a basic web content', () => {
@@ -238,7 +252,9 @@ describe('SidebarPanelInfoView', () => {
 			})
 		);
 
-		expect(getByText('Document - Basic Document')).toBeInTheDocument();
+		expect(
+			getByText(/^(Document - Basic Document \(Image\))$/)
+		).toBeInTheDocument();
 		expect(getByText('Mocked description')).toBeInTheDocument();
 		expect(getByText('download')).toBeInTheDocument();
 		expect(getByText('Size')).toBeInTheDocument();
@@ -280,14 +296,140 @@ describe('SidebarPanelInfoView', () => {
 
 		expect(
 			container.getElementsByClassName('lexicon-icon-copy').length
-		).toBe(1);
+		).toBe(2);
 
-		expect(getByText('Document - Basic Document')).toBeInTheDocument();
+		expect(
+			getByText(/^(Document - Basic Document \(Other\))$/)
+		).toBeInTheDocument();
 		expect(getByText('download')).toBeInTheDocument();
 
 		expect(
 			queryByText('languages-translated-into')
 		).not.toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a compressed file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedCompressDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Compressed\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a code file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedCodeDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Code\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for an audio file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedAudioDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Audio\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a video file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedVideoDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Video\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a presentation file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedPresentationDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Presentation\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a spreadsheet file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedSpreadsheetDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Spreadsheet\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a text file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedTextDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Text\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a vectorial file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedVectorialDocumentProps,
+			})
+		);
+
+		expect(
+			getByText(/^(Document - Basic Document \(Vectorial\))$/)
+		).toBeInTheDocument();
+	});
+
+	it('renders sidebar panel with proper subtype for a custom file', () => {
+		const {getByText} = render(
+			_getSidebarComponent({
+				...mockedProps,
+				...mockedFileDocumentProps,
+				...mockedCustomDocumentProps,
+			})
+		);
+
+		expect(getByText(/^(Document - Custom Document)$/)).toBeInTheDocument();
 	});
 
 	it('renders sidebar panel with proper info if author has avatar', () => {

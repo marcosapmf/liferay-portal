@@ -23,8 +23,9 @@ import Applications from './routes/applications/pages/Applications';
 import ApplicationsTable from './routes/applications/pages/ApplicationsTable';
 import NewApplication from './routes/applications/pages/NewApplication';
 import Claims from './routes/claims/pages/Claims';
-import ProductPerformance from './routes/dashboard/pages/ProductPerformance';
+import ProductPerformance from './routes/dashboard/ProductPerfomance';
 import RecentApplications from './routes/dashboard/pages/RecentApplications';
+import WhatsNewModal from './routes/dashboard/pages/SettingsModals';
 import Policies from './routes/policies/pages/Policies';
 import Reports from './routes/reports/pages/Reports';
 
@@ -71,6 +72,10 @@ const DirectToCustomer: React.FC<Props> = ({route}) => {
 				<NewApplication />
 			</NewApplicationAutoContextProvider>
 		);
+	}
+
+	if (routeEntry === 'whats-new-modal') {
+		return <WhatsNewModal />;
 	}
 
 	return <></>;

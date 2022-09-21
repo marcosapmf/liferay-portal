@@ -14,11 +14,10 @@
 
 package com.liferay.wiki.web.internal.portlet.toolbar.item;
 
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
@@ -26,6 +25,7 @@ import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.toolbar.contributor.BasePortletToolbarContributor;
 import com.liferay.portal.kernel.portlet.toolbar.contributor.PortletToolbarContributor;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.servlet.taglib.ui.MenuItem;
@@ -93,11 +93,6 @@ public class WikiPortletToolbarContributor
 		return menuItems;
 	}
 
-	@Reference(unbind = "-")
-	protected void setWikiNodeService(WikiNodeService wikiNodeService) {
-		_wikiNodeService = wikiNodeService;
-	}
-
 	private void _addPortletTitleMenuItem(
 			List<MenuItem> menuItems, WikiNode node, ThemeDisplay themeDisplay,
 			PortletRequest portletRequest)
@@ -114,7 +109,7 @@ public class WikiPortletToolbarContributor
 
 		urlMenuItem.setIcon("icon-plus-sign-2");
 		urlMenuItem.setLabel(
-			LanguageUtil.get(
+			_language.get(
 				_portal.getHttpServletRequest(portletRequest), "add-page"));
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
@@ -197,11 +192,15 @@ public class WikiPortletToolbarContributor
 		WikiPortletToolbarContributor.class);
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiNode)")
 	private ModelResourcePermission<WikiNode> _wikiNodeModelResourcePermission;
 
+	@Reference
 	private WikiNodeService _wikiNodeService;
 
 }

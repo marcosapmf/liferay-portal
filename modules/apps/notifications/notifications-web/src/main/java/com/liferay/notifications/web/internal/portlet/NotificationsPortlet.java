@@ -15,7 +15,7 @@
 package com.liferay.notifications.web.internal.portlet;
 
 import com.liferay.notifications.web.internal.constants.NotificationsPortletKeys;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.model.UserNotificationDelivery;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
@@ -311,13 +311,6 @@ public class NotificationsPortlet extends MVCPortlet {
 		_sendRedirect(actionRequest, actionResponse);
 	}
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.notifications.web)(&(release.schema.version>=2.1.0)(!(release.schema.version>=3.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
 	private void _addSuccessMessage(
 		ActionRequest actionRequest, String message) {
 
@@ -326,7 +319,7 @@ public class NotificationsPortlet extends MVCPortlet {
 
 		SessionMessages.add(
 			actionRequest, "requestProcessed",
-			LanguageUtil.get(themeDisplay.getLocale(), message));
+			_language.get(themeDisplay.getLocale(), message));
 	}
 
 	private void _deleteSubscription(long userId, long subscriptionId)
@@ -434,7 +427,15 @@ public class NotificationsPortlet extends MVCPortlet {
 	}
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.notifications.web)(&(release.schema.version>=2.1.0)(!(release.schema.version>=3.0.0))))"
+	)
+	private Release _release;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;

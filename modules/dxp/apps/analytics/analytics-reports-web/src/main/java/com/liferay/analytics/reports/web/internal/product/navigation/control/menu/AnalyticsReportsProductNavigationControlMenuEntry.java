@@ -25,13 +25,13 @@ import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Html;
@@ -370,7 +370,9 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 
 			IconTag iconTag = new IconTag();
 
-			iconTag.setCssClass("sidenav-close text-secondary");
+			iconTag.setCssClass(
+				"btn btn-monospaced btn-unstyled component-action " +
+					"sidenav-close text-secondary");
 			iconTag.setImage("times");
 			iconTag.setUrl("javascript:void(0);");
 

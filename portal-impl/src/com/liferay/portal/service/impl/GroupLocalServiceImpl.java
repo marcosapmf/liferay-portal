@@ -69,7 +69,6 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutPrototype;
-import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Organization;
@@ -122,6 +121,7 @@ import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
 import com.liferay.portal.kernel.service.http.TunnelUtil;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
+import com.liferay.portal.kernel.service.persistence.LayoutPersistence;
 import com.liferay.portal.kernel.service.persistence.OrganizationPersistence;
 import com.liferay.portal.kernel.service.persistence.ResourcePermissionPersistence;
 import com.liferay.portal.kernel.service.persistence.RolePersistence;
@@ -733,23 +733,21 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 	public void checkSystemGroups(long companyId) throws PortalException {
 		String companyIdHexString = StringUtil.toHexString(companyId);
 
-		for (Group group : groupFinder.findBySystem(companyId)) {
+		String[] systemGroups = PortalUtil.getSystemGroups();
+
+		for (Group group :
+				groupPersistence.findByC_GK(companyId, systemGroups)) {
+
 			_systemGroupsMap.put(
 				companyIdHexString.concat(group.getGroupKey()), group);
 		}
 
 		long defaultUserId = _userLocalService.getDefaultUserId(companyId);
 
-		String[] systemGroups = PortalUtil.getSystemGroups();
-
 		for (String groupKey : systemGroups) {
 			String groupCacheKey = companyIdHexString.concat(groupKey);
 
 			Group group = _systemGroupsMap.get(groupCacheKey);
-
-			if (group == null) {
-				group = groupPersistence.fetchByC_GK(companyId, groupKey);
-			}
 
 			if (group == null) {
 				String className = null;
@@ -792,22 +790,18 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				}
 			}
 
-			if (group.isControlPanel()) {
-				LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
-					group.getGroupId(), true);
+			if (group.isControlPanel() &&
+				(_layoutPersistence.countByG_P(group.getGroupId(), true) ==
+					0)) {
 
-				if (layoutSet.getPageCount() == 0) {
-					addControlPanelLayouts(group);
-				}
+				addControlPanelLayouts(group);
 			}
 
-			if (group.isGuest()) {
-				LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
-					group.getGroupId(), false);
+			if (group.isGuest() &&
+				(_layoutPersistence.countByG_P(group.getGroupId(), false) ==
+					0)) {
 
-				if (layoutSet.getPageCount() == 0) {
-					addDefaultGuestPublicLayouts(group);
-				}
+				addDefaultGuestPublicLayouts(group);
 			}
 
 			_systemGroupsMap.put(groupCacheKey, group);
@@ -4826,9 +4820,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 			String friendlyURL)
 		throws PortalException {
 
-		Company company = _companyPersistence.findByPrimaryKey(companyId);
-
-		if (company.isSystem() || Validator.isNull(friendlyURL)) {
+		if (Validator.isNull(friendlyURL)) {
 			return;
 		}
 
@@ -5371,6 +5363,9 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 	@BeanReference(type = LayoutLocalService.class)
 	private LayoutLocalService _layoutLocalService;
+
+	@BeanReference(type = LayoutPersistence.class)
+	private LayoutPersistence _layoutPersistence;
 
 	@BeanReference(type = LayoutSetBranchLocalService.class)
 	private LayoutSetBranchLocalService _layoutSetBranchLocalService;

@@ -20,11 +20,11 @@ import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -154,18 +154,6 @@ public class GroupURLProvider {
 		return getGroupAdministrationURL(group, portletRequest);
 	}
 
-	@Reference(unbind = "-")
-	protected void setPanelAppRegistry(PanelAppRegistry panelAppRegistry) {
-		_panelAppRegistry = panelAppRegistry;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPanelCategoryRegistry(
-		PanelCategoryRegistry panelCategoryRegistry) {
-
-		_panelCategoryRegistry = panelCategoryRegistry;
-	}
-
 	private String _getDepotDashboardGroupURL(
 		Group group, PortletRequest portletRequest) {
 
@@ -213,7 +201,10 @@ public class GroupURLProvider {
 	@Reference
 	private GroupPermission _groupPermission;
 
+	@Reference
 	private PanelAppRegistry _panelAppRegistry;
+
+	@Reference
 	private PanelCategoryRegistry _panelCategoryRegistry;
 
 	@Reference

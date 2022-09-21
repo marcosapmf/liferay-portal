@@ -35,10 +35,13 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
@@ -46,7 +49,11 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -103,6 +110,40 @@ public class FileEntryContentDashboardItem
 	}
 
 	@Override
+	public List<Version> getAllVersions(ThemeDisplay themeDisplay) {
+		int status = WorkflowConstants.STATUS_APPROVED;
+
+		PermissionChecker permissionChecker =
+			themeDisplay.getPermissionChecker();
+
+		User user = themeDisplay.getUser();
+
+		if ((user.getUserId() == _fileEntry.getUserId()) ||
+			permissionChecker.isContentReviewer(
+				user.getCompanyId(), themeDisplay.getScopeGroupId())) {
+
+			status = WorkflowConstants.STATUS_ANY;
+		}
+
+		Stream<FileVersion> stream = _fileEntry.getFileVersions(
+			status
+		).stream();
+
+		return stream.map(
+			fileVersion -> new Version(
+				_language.get(
+					themeDisplay.getLocale(),
+					WorkflowConstants.getStatusLabel(fileVersion.getStatus())),
+				WorkflowConstants.getStatusStyle(fileVersion.getStatus()),
+				String.valueOf(fileVersion.getVersion()),
+				fileVersion.getChangeLog(), fileVersion.getUserName(),
+				fileVersion.getCreateDate())
+		).collect(
+			Collectors.toList()
+		);
+	}
+
+	@Override
 	public List<AssetCategory> getAssetCategories() {
 		return _assetCategories;
 	}
@@ -131,7 +172,7 @@ public class FileEntryContentDashboardItem
 
 	@Override
 	public Clipboard getClipboard() {
-		return new Clipboard(_getFileName(), _getClipboardURL());
+		return Clipboard.EMPTY;
 	}
 
 	@Override
@@ -273,60 +314,7 @@ public class FileEntryContentDashboardItem
 	}
 
 	@Override
-	public Date getModifiedDate() {
-		return _fileEntry.getModifiedDate();
-	}
-
-	@Override
-	public Preview getPreview() {
-		return new Preview(_getPreviewImageURL(), _getViewURL());
-	}
-
-	@Override
-	public String getScopeName(Locale locale) {
-		return Optional.ofNullable(
-			_group
-		).map(
-			group -> ContentDashboardGroupUtil.getGroupName(group, locale)
-		).orElse(
-			StringPool.BLANK
-		);
-	}
-
-	@Override
-	public Map<String, Object> getSpecificInformation(Locale locale) {
-		return HashMapBuilder.<String, Object>put(
-			"extension", _getExtension()
-		).put(
-			"size", _getSize(locale)
-		).build();
-	}
-
-	@Override
-	public String getTitle(Locale locale) {
-		return _fileEntry.getTitle();
-	}
-
-	@Override
-	public String getTypeLabel(Locale locale) {
-		InfoItemClassDetails infoItemClassDetails = new InfoItemClassDetails(
-			FileEntry.class.getName());
-
-		return infoItemClassDetails.getLabel(locale);
-	}
-
-	@Override
-	public long getUserId() {
-		return _fileEntry.getUserId();
-	}
-
-	@Override
-	public String getUserName() {
-		return _fileEntry.getUserName();
-	}
-
-	@Override
-	public List<Version> getVersions(Locale locale) {
+	public List<Version> getLatestVersions(Locale locale) {
 		try {
 			FileVersion latestFileVersion = _fileEntry.getLatestFileVersion();
 			FileVersion latestTrustedFileVersion =
@@ -362,6 +350,63 @@ public class FileEntryContentDashboardItem
 	}
 
 	@Override
+	public Date getModifiedDate() {
+		return _fileEntry.getModifiedDate();
+	}
+
+	@Override
+	public Preview getPreview() {
+		return new Preview(_getPreviewImageURL(), _getViewURL());
+	}
+
+	@Override
+	public String getScopeName(Locale locale) {
+		return Optional.ofNullable(
+			_group
+		).map(
+			group -> ContentDashboardGroupUtil.getGroupName(group, locale)
+		).orElse(
+			StringPool.BLANK
+		);
+	}
+
+	@Override
+	public Map<String, Object> getSpecificInformation(Locale locale) {
+		return HashMapBuilder.<String, Object>put(
+			"extension", _getExtension()
+		).put(
+			"latest-version-url", _getLatestVersionURL()
+		).put(
+			"size", _getSize(locale)
+		).put(
+			"web-dav-url", _getWebDAVURL()
+		).build();
+	}
+
+	@Override
+	public String getTitle(Locale locale) {
+		return _fileEntry.getTitle();
+	}
+
+	@Override
+	public String getTypeLabel(Locale locale) {
+		InfoItemClassDetails infoItemClassDetails = new InfoItemClassDetails(
+			FileEntry.class.getName());
+
+		return infoItemClassDetails.getLabel(locale);
+	}
+
+	@Override
+	public long getUserId() {
+		return _fileEntry.getUserId();
+	}
+
+	@Override
+	public String getUserName() {
+		return _fileEntry.getUserName();
+	}
+
+	@Override
 	public boolean isViewable(HttpServletRequest httpServletRequest) {
 		if (ListUtil.isEmpty(
 				_fileEntry.getFileVersions(
@@ -386,7 +431,19 @@ public class FileEntryContentDashboardItem
 		);
 	}
 
-	private String _getClipboardURL() {
+	private String _getExtension() {
+		return FileUtil.getExtension(
+			InfoItemFieldValuesProviderUtil.getStringValue(
+				_fileEntry, _infoItemFieldValuesProvider, "fileName"));
+	}
+
+	private Version _getLastVersion(Locale locale) {
+		List<Version> versions = getLatestVersions(locale);
+
+		return versions.get(versions.size() - 1);
+	}
+
+	private URL _getLatestVersionURL() {
 		return Optional.ofNullable(
 			ServiceContextThreadLocal.getServiceContext()
 		).map(
@@ -402,7 +459,14 @@ public class FileEntryContentDashboardItem
 					ContentDashboardItemAction contentDashboardItemAction =
 						contentDashboardItemActions.get(0);
 
-					return contentDashboardItemAction.getURL();
+					try {
+						return new URL(contentDashboardItemAction.getURL());
+					}
+					catch (MalformedURLException malformedURLException) {
+						_log.error(malformedURLException);
+
+						return null;
+					}
 				}
 
 				return null;
@@ -410,22 +474,6 @@ public class FileEntryContentDashboardItem
 		).orElse(
 			null
 		);
-	}
-
-	private String _getExtension() {
-		return FileUtil.getExtension(
-			InfoItemFieldValuesProviderUtil.getStringValue(
-				_fileEntry, _infoItemFieldValuesProvider, "fileName"));
-	}
-
-	private String _getFileName() {
-		return _fileEntry.getFileName();
-	}
-
-	private Version _getLastVersion(Locale locale) {
-		List<Version> versions = getVersions(locale);
-
-		return versions.get(versions.size() - 1);
 	}
 
 	private String _getPreviewImageURL() {
@@ -489,6 +537,31 @@ public class FileEntryContentDashboardItem
 		);
 	}
 
+	private URL _getWebDAVURL() {
+		return Optional.ofNullable(
+			ServiceContextThreadLocal.getServiceContext()
+		).map(
+			ServiceContext::getLiferayPortletRequest
+		).map(
+			portletRequest -> {
+				try {
+					return new URL(
+						_dlURLHelper.getWebDavURL(
+							(ThemeDisplay)portletRequest.getAttribute(
+								WebKeys.THEME_DISPLAY),
+							_fileEntry.getFolder(), _fileEntry));
+				}
+				catch (Exception exception) {
+					_log.error(exception);
+
+					return null;
+				}
+			}
+		).orElse(
+			null
+		);
+	}
+
 	private ContentDashboardItemAction _toContentDashboardItemAction(
 		ContentDashboardItemActionProvider contentDashboardItemActionProvider,
 		HttpServletRequest httpServletRequest) {
@@ -518,7 +591,8 @@ public class FileEntryContentDashboardItem
 					WorkflowConstants.getStatusLabel(
 						curFileVersion.getStatus())),
 				WorkflowConstants.getStatusStyle(curFileVersion.getStatus()),
-				curFileVersion.getVersion())
+				curFileVersion.getVersion(), curFileVersion.getChangeLog(),
+				curFileVersion.getUserName(), curFileVersion.getCreateDate())
 		);
 	}
 

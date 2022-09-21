@@ -444,6 +444,19 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
+	public FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws PortalException {
+
+		FragmentEntryLink fragmentEntryLink =
+			fragmentEntryLinkPersistence.findByPrimaryKey(fragmentEntryLinkId);
+
+		fragmentEntryLink.setDeleted(deleted);
+
+		return fragmentEntryLinkPersistence.update(fragmentEntryLink);
+	}
+
+	@Override
 	public FragmentEntryLink updateFragmentEntryLink(
 			long fragmentEntryLinkId, int position)
 		throws PortalException {

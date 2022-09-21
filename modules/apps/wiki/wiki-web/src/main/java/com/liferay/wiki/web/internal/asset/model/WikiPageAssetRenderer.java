@@ -17,7 +17,6 @@ package com.liferay.wiki.web.internal.asset.model;
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinder;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinderRegistryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -297,13 +297,21 @@ public class WikiPageAssetRenderer
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			String noSuchEntryRedirect)
-		throws Exception {
+		throws PortalException {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		return getURLViewInContext(themeDisplay, noSuchEntryRedirect);
+	}
+
+	@Override
+	public String getURLViewInContext(
+			ThemeDisplay themeDisplay, String noSuchEntryRedirect)
+		throws PortalException {
 
 		if (_assetDisplayPageFriendlyURLProvider != null) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)liferayPortletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
-
 			String friendlyURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
 					getClassName(), getClassPK(), themeDisplay);
@@ -313,16 +321,12 @@ public class WikiPageAssetRenderer
 			}
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)liferayPortletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		if (!_hasViewInContextGroupLayout(_page.getGroupId(), themeDisplay)) {
 			return null;
 		}
 
 		return getURLViewInContext(
-			liferayPortletRequest, noSuchEntryRedirect, "/wiki/find_page",
+			themeDisplay, noSuchEntryRedirect, "/wiki/find_page",
 			"pageResourcePrimKey", _page.getResourcePrimKey());
 	}
 

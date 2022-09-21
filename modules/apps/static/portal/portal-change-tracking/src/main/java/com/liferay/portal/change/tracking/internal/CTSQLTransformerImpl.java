@@ -14,15 +14,14 @@
 
 package com.liferay.portal.change.tracking.internal;
 
+import com.liferay.petra.io.Deserializer;
+import com.liferay.petra.io.Serializer;
 import com.liferay.petra.io.unsync.UnsyncStringReader;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.change.tracking.registry.CTModelRegistration;
 import com.liferay.portal.change.tracking.registry.CTModelRegistry;
 import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.change.tracking.sql.CTSQLTransformer;
-import com.liferay.portal.kernel.cache.PortalCache;
-import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
-import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,11 +29,22 @@ import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.LRUMap;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.util.PropsValues;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import java.nio.ByteBuffer;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -171,6 +181,7 @@ import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.upsert.Upsert;
 import net.sf.jsqlparser.statement.values.ValuesStatement;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
@@ -183,19 +194,22 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 
 	@SuppressWarnings("unchecked")
 	public void activate(BundleContext bundleContext) throws Exception {
-		_portalCache = PortalCacheHelperUtil.getPortalCache(
-			PortalCacheManagerNames.SINGLE_VM,
-			CTSQLTransformerImpl.class.getName());
+		_bundleContext = bundleContext;
+
+		_transformedSQLs = new LRUMap<>(
+			PropsValues.CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE);
+
+		_readTransformedSQLsFile();
 
 		_ctServiceServiceTracker = new ServiceTracker<>(
-			bundleContext, (Class<CTService<?>>)(Class<?>)CTService.class,
-			new CTServiceTrackerCustomizer(bundleContext));
+			_bundleContext, (Class<CTService<?>>)(Class<?>)CTService.class,
+			new CTServiceTrackerCustomizer(_bundleContext));
 
 		_ctServiceServiceTracker.open();
 
 		_releaseServiceTracker = new ServiceTracker<>(
-			bundleContext,
-			bundleContext.createFilter(
+			_bundleContext,
+			_bundleContext.createFilter(
 				StringBundler.concat(
 					"(&(objectClass=", Release.class.getName(),
 					")(release.bundle.symbolic.name=",
@@ -207,7 +221,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 	}
 
 	public void deactivate() {
-		_portalCache.removeAll();
+		_writeTransformedSQLsFile();
 
 		_ctServiceServiceTracker.close();
 
@@ -219,7 +233,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		long ctCollectionId = CTCollectionThreadLocal.getCTCollectionId();
 
 		if (ctCollectionId == 0) {
-			String transformedSQL = _portalCache.get(sql);
+			String transformedSQL = _transformedSQLs.get(sql);
 
 			if (transformedSQL != null) {
 				return transformedSQL;
@@ -237,7 +251,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 		}
 
 		if (!foundTable) {
-			_portalCache.put(sql, sql);
+			_transformedSQLs.put(sql, sql);
 
 			return sql;
 		}
@@ -265,7 +279,7 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			}
 
 			if (ctCollectionId == 0) {
-				_portalCache.put(sql, transformedSQL);
+				_transformedSQLs.put(sql, transformedSQL);
 			}
 
 			return transformedSQL;
@@ -284,6 +298,40 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			sql, "LIKE ? ESCAPE '\\'", "LIKE '[$LFR_LIKE_ESCAPE_STRING$]'");
 	}
 
+	private void _readTransformedSQLsFile() {
+		File transformedSQLsFile = _bundleContext.getDataFile(
+			_TRANSFORMED_SQLS_FILE_NAME);
+
+		if (!transformedSQLsFile.exists()) {
+			return;
+		}
+
+		try {
+			Deserializer deserializer = new Deserializer(
+				ByteBuffer.wrap(FileUtil.getBytes(transformedSQLsFile)));
+
+			Bundle bundle = _bundleContext.getBundle();
+
+			if (deserializer.readLong() != bundle.getLastModified()) {
+				return;
+			}
+
+			int size = deserializer.readInt();
+
+			for (int i = 0; i < size; i++) {
+				_transformedSQLs.put(
+					deserializer.readString(), deserializer.readString());
+			}
+		}
+		catch (IOException ioException) {
+			_log.error(
+				"Unable to load " + _TRANSFORMED_SQLS_FILE_NAME, ioException);
+		}
+		finally {
+			transformedSQLsFile.delete();
+		}
+	}
+
 	/**
 	 * See https://github.com/JSQLParser/JSqlParser/issues/832
 	 */
@@ -292,16 +340,60 @@ public class CTSQLTransformerImpl implements CTSQLTransformer {
 			sql, "LIKE '[$LFR_LIKE_ESCAPE_STRING$]'", "LIKE ? ESCAPE '\\'");
 	}
 
+	private void _writeTransformedSQLsFile() {
+		if (_transformedSQLs.isEmpty()) {
+			return;
+		}
+
+		Bundle bundle = _bundleContext.getBundle();
+
+		Serializer serializer = new Serializer();
+
+		serializer.writeLong(bundle.getLastModified());
+
+		Map<String, String> snapshotTransformedSQLs = new HashMap<>(
+			_transformedSQLs);
+
+		serializer.writeInt(snapshotTransformedSQLs.size());
+
+		for (Map.Entry<String, String> entry :
+				snapshotTransformedSQLs.entrySet()) {
+
+			serializer.writeString(entry.getKey());
+
+			serializer.writeString(entry.getValue());
+		}
+
+		File transformedSQLsFile = _bundleContext.getDataFile(
+			_TRANSFORMED_SQLS_FILE_NAME);
+
+		try (OutputStream outputStream = new FileOutputStream(
+				transformedSQLsFile)) {
+
+			serializer.writeTo(outputStream);
+		}
+		catch (IOException ioException) {
+			_log.error(
+				"Unable to write " + _TRANSFORMED_SQLS_FILE_NAME, ioException);
+
+			transformedSQLsFile.delete();
+		}
+	}
+
+	private static final String _TRANSFORMED_SQLS_FILE_NAME =
+		"transformedSQLsFile";
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CTSQLTransformerImpl.class);
 
 	private static final JSqlParser _jSqlParser = new CCJSqlParserManager();
 
+	private BundleContext _bundleContext;
 	private final Map<Class<?>, CTService<?>> _ctServiceMap =
 		new ConcurrentHashMap<>();
 	private ServiceTracker<?, ?> _ctServiceServiceTracker;
-	private PortalCache<String, String> _portalCache;
 	private ServiceTracker<?, ?> _releaseServiceTracker;
+	private LRUMap<String, String> _transformedSQLs;
 
 	private abstract static class BaseStatementVisitor
 		implements ExpressionVisitor, FromItemVisitor, ItemsListVisitor,

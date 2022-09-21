@@ -42,8 +42,18 @@
 <!-- SOURCE_VIEW_PATHS -->
 
 <tr>
+	<td>BUTTON_ADD_SOURCE_CODE</td>
+	<td>//button[contains(@class,'btn btn-secondary')][contains(.,'ADD SOURCE CODE')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SOURCE_EDITOR</td>
 	<td>//div[@class='CodeMirror-lines']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>GROOVY_SOURCE_EDITOR</td>
+	<td>//div[contains(@class,'CodeMirror cm-s-default')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -243,7 +253,7 @@
 </tr>
 <tr>
 	<td>SIDEBAR_PROPERTY</td>
-	<td>//span[contains(., '${key_propertyName}')]/../..//div[@class='panel-body']/..//span[contains(.,'${key_propertyValue}')]</td>
+	<td>//span[contains(., '${key_propertyName}')]/../..//div[@class='panel-body']/..//span[contains(.,'${key_propertyValue}')] | //span[contains(., '${key_propertyName}')]/../..//div[@class='panel-body']//*[contains(@class,'d-flex') and contains(., '${key_propertyValue}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -367,14 +377,33 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ROLE_NAME_FIELD</td>
+	<td>//input[contains(@id,'role-name')]/..//input[@type='text' and @value ='${key_roleName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ROLE_ID_FIELD_DISABLED</td>
+	<td>//input[contains(@id,'role-id') and @disabled]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>NOTIFICATIONS_TYPE_DROPDOWN</td>
 	<td>//label[contains(., 'Notification Types')]</td>
 	<td></td>
 </tr>
 <tr>
+	<td>REVISION_HISTORY_VERSION</td>
+	<td>//div[contains(@class,'version-row')and contains(.,'Version ${key_number}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>CURRENT_VERSION_FIELD</td>
+	<td>//div[@class='info-group']//label[contains(text() ,'Current Version') and contains(.,'${key_number}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>NOTIFICATIONS_TYPE_DROPDOWN_BY_POSITION</td>
-	<td>//div[contains(@class,'panel-group panel-group-flush') and contains(@role,'tablist')][${key_sectionOption}]//input[contains(@value,'Select')]
-</td>
+	<td>//div[contains(@class,'panel-group panel-group-flush') and contains(@role,'tablist')][${key_sectionOption}]//input[contains(@value,'Select')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -465,6 +494,31 @@
 <tr>
 	<td>ICON_TRASH_TOP_RIGHT_SIDEBAR</td>
 	<td>//span[contains(., '${key_propertyName}')]/../../div[@class='spaced-items']/..//button[contains(@class, 'trash-button')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PROPERTIES_INPUT_ACTIONS_BY_POSITION</td>
+	<td>//div[@class='panel']/../../div[@class='panel-group panel-group-flush'][${key_sectionOption}]//label[contains(., '${key_inputOption}')]/..//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PROPERTIES_SELECTORS_ACTIONS_BY_POSITION</td>
+	<td>//div[@class='panel']/../..//div[@class='panel-group panel-group-flush'][${key_sectionOption}]//label[contains(., '${key_selectorField}')]/..//select</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PROPERTIES_TEMPLATE_TEXTAREA_ACTIONS_BY_POSITION</td>
+	<td>//div[@class='panel']/../..//div[@class='panel-group panel-group-flush'][${key_sectionOption}]//label[contains(., 'Script')]/..//textarea</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ROLE_NAME_FIELD_ASSIGNMENTS_BY_POSITON</td>
+	<td>//div[@class='panel']/../../div[@class='panel-group panel-group-flush'][${key_positonOption}]//label[contains(., '${key_inputOption}') and not(contains(., '*'))]/..//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACTIONS_NAME_ON_TIMERS_FIELD</td>
+	<td>//div[@class='sidebar']//span[contains(text(),'Action')]/../..//input[contains(@value,'${key_actionName}')]</td>
 	<td></td>
 </tr>
 </tbody>

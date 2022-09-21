@@ -17,11 +17,8 @@ package com.liferay.layout.content.page.editor.web.internal.display.context;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
-import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
-import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
 import com.liferay.info.item.InfoItemClassDetails;
@@ -37,6 +34,8 @@ import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
+import com.liferay.layout.content.page.editor.web.internal.info.search.InfoSearchClassMapperTrackerUtil;
+import com.liferay.layout.content.page.editor.web.internal.util.FragmentCollectionManager;
 import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
 import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -46,7 +45,6 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
-import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -58,7 +56,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -74,10 +71,8 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 
 	public ContentPageEditorLayoutPageTemplateDisplayContext(
 		List<ContentPageEditorSidebarPanel> contentPageEditorSidebarPanels,
-		FragmentCollectionContributorTracker
-			fragmentCollectionContributorTracker,
+		FragmentCollectionManager fragmentCollectionManager,
 		FragmentEntryLinkManager fragmentEntryLinkManager,
-		FragmentRendererTracker fragmentRendererTracker,
 		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
 		InfoItemServiceTracker infoItemServiceTracker,
@@ -90,9 +85,8 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		StagingGroupHelper stagingGroupHelper) {
 
 		super(
-			contentPageEditorSidebarPanels,
-			fragmentCollectionContributorTracker, fragmentEntryLinkManager,
-			fragmentRendererTracker, frontendTokenDefinitionRegistry,
+			contentPageEditorSidebarPanels, fragmentCollectionManager,
+			fragmentEntryLinkManager, frontendTokenDefinitionRegistry,
 			httpServletRequest, infoItemServiceTracker, itemSelector,
 			pageEditorConfiguration, portletRequest, renderResponse,
 			segmentsConfigurationProvider, segmentsExperienceManager,
@@ -172,16 +166,9 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 
 		sourceItemTypes.add(className);
 
-		if (Objects.equals(className, FileEntry.class.getName())) {
-
-			// LPS-111037
-
-			className = DLFileEntry.class.getName();
-		}
-
 		AssetRendererFactory<?> assetRendererFactory =
 			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				className);
+				InfoSearchClassMapperTrackerUtil.getSearchClassName(className));
 
 		if (assetRendererFactory != null) {
 			sourceItemTypes.add(AssetEntry.class.getName());

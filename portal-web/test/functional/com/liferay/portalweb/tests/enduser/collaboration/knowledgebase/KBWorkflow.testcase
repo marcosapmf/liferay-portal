@@ -84,6 +84,40 @@ definition {
 		WorkflowComment.add(workflowComment = "Workflow Comment");
 	}
 
+	@e2etest
+	@priority = "4"
+	@refactordone
+	test CanViewPendingContent {
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "KBWorkflow#CanViewPendingContent";
+
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			portlet = "Workflow");
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver",
+			workflowResourceValue = "Knowledge Base Article");
+
+		KBAdmin.openKBAdmin(siteURLKey = "guest");
+
+		KBArticle.addCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbWorkflowAction = "Submit for Publication");
+
+		KBArticle.viewCP(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title",
+			kbWorkflowStatus = "Pending");
+
+		KBArticle.viewInfoPanel(
+			kbArticleTitle = "Knowledge Base Article Title",
+			workflowStatus = "PENDING");
+	}
+
 	@priority = "4"
 	@refactorneeded
 	test ViewKBArticleSuggestionsWorkflow {
@@ -126,9 +160,8 @@ definition {
 			roleTitle = "Administrator",
 			userScreenName = "usersn");
 
-		KBAdmin.openKBAdmin(siteURLKey = "guest");
-
-		KBArticle.addCP(
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
 			kbArticleTitle = "Knowledge Base Article Title");
 

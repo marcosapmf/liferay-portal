@@ -26,8 +26,7 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
-<%@ page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
-page import="com.liferay.petra.string.StringPool" %><%@
+<%@ page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.search.ResultRow" %><%@
 page import="com.liferay.portal.kernel.exception.DuplicateTeamException" %><%@
 page import="com.liferay.portal.kernel.exception.TeamNameException" %><%@
@@ -37,6 +36,7 @@ page import="com.liferay.portal.kernel.model.Team" %><%@
 page import="com.liferay.portal.kernel.model.UserGroup" %><%@
 page import="com.liferay.portal.kernel.model.role.RoleConstants" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
+page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.service.GroupLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.service.TeamLocalServiceUtil" %><%@
@@ -65,8 +65,8 @@ page import="com.liferay.site.teams.web.internal.display.context.SelectUsersDisp
 page import="com.liferay.site.teams.web.internal.display.context.SelectUsersManagementToolbarDisplayContext" %><%@
 page import="com.liferay.site.teams.web.internal.display.context.SiteTeamsDisplayContext" %><%@
 page import="com.liferay.site.teams.web.internal.display.context.SiteTeamsManagementToolbarDisplayContext" %><%@
-page import="com.liferay.site.teams.web.internal.servlet.taglib.clay.SelectUserUserCard" %><%@
-page import="com.liferay.site.teams.web.internal.servlet.taglib.clay.UserUserCard" %><%@
+page import="com.liferay.site.teams.web.internal.frontend.taglib.clay.servlet.taglib.SelectUserUserCard" %><%@
+page import="com.liferay.site.teams.web.internal.frontend.taglib.clay.servlet.taglib.UserUserCard" %><%@
 page import="com.liferay.site.teams.web.internal.servlet.taglib.util.UserActionDropdownItemsProvider" %>
 
 <%@ page import="java.util.Map" %><%@

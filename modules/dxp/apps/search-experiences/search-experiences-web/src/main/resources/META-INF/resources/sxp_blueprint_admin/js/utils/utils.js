@@ -13,7 +13,7 @@ import moment from 'moment';
 
 import {CONFIG_PREFIX, DEFAULT_ERROR} from './constants';
 import {INPUT_TYPES} from './inputTypes';
-import {renameKeys} from './language';
+import {formatLocaleWithUnderscores, renameKeys} from './language';
 
 /**
  * Function to get valid classNames and return them sorted.
@@ -133,33 +133,15 @@ export function removeBrackets(value) {
 }
 
 /**
- * Removes any duplicate items in an array. If 'property' is provided,
- * it removes duplicate object items with the same property.
+ * Function to remove duplicates in an array.
  *
- * @param {Array} array An array of items
- * @param {string=} property Name of the property to compare
- * @returns {Array}
+ * @param {Array} items Array of items with repeated values
+ * @return {Array}
  */
-export function removeDuplicates(array, property) {
-	if (!property) {
-		return array.filter(
-			(item, position, self) => self.indexOf(item) === position
-		);
-	}
-
-	const uniqueArray = [];
-
-	array.forEach((item1) => {
-		if (
-			uniqueArray.findIndex(
-				(item2) => item2[property] === item1[property]
-			) === -1
-		) {
-			uniqueArray.push(item1);
-		}
-	});
-
-	return uniqueArray;
+export function removeDuplicates(items) {
+	return items.filter(
+		(item, position, self) => self.indexOf(item) === position
+	);
 }
 
 /**
@@ -339,14 +321,6 @@ export function getConfigurationEntry({sxpElement, uiConfigurationValues}) {
 						initialConfigValue.map((item) => item.value)
 					);
 				}
-				else if (config.type === INPUT_TYPES.CATEGORY_SELECTOR) {
-					configValue =
-						config.typeOptions?.format === 'array'
-							? JSON.stringify(
-									initialConfigValue.map((item) => item.id)
-							  )
-							: initialConfigValue[0]?.id || '';
-				}
 				else if (config.type === INPUT_TYPES.FIELD_MAPPING) {
 					const {
 						boost,
@@ -459,8 +433,6 @@ export function getConfigurationEntry({sxpElement, uiConfigurationValues}) {
 				const key =
 					typeof configValue === 'number' ||
 					config.type === INPUT_TYPES.ITEM_SELECTOR ||
-					(config.type === INPUT_TYPES.CATEGORY_SELECTOR &&
-						config.typeOptions?.format === 'array') ||
 					config.type === INPUT_TYPES.FIELD_MAPPING_LIST ||
 					config.type === INPUT_TYPES.JSON ||
 					config.type === INPUT_TYPES.MULTISELECT
@@ -540,10 +512,6 @@ export function getDefaultValue(item) {
 			return Array.isArray(itemValue)
 				? itemValue.filter((item) => item.label && item.value)
 				: [];
-		case INPUT_TYPES.CATEGORY_SELECTOR:
-			return Array.isArray(itemValue)
-				? itemValue.filter((item) => item.name && item.id)
-				: [];
 		case INPUT_TYPES.JSON:
 			return typeof itemValue === 'object'
 				? JSON.stringify(itemValue, null, '\t')
@@ -590,8 +558,9 @@ export function getSXPElementJSON(sxpElement, uiConfigurationValues) {
 	const {category, configuration, icon} = elementDefinition;
 
 	return {
-		description_i18n: renameKeys(description_i18n, (str) =>
-			str.replace('-', '_')
+		description_i18n: renameKeys(
+			description_i18n,
+			formatLocaleWithUnderscores
 		),
 		elementDefinition: {
 			category,
@@ -603,7 +572,7 @@ export function getSXPElementJSON(sxpElement, uiConfigurationValues) {
 				: configuration,
 			icon,
 		},
-		title_i18n: renameKeys(title_i18n, (str) => str.replace('-', '_')),
+		title_i18n: renameKeys(title_i18n, formatLocaleWithUnderscores),
 	};
 }
 

@@ -20,22 +20,29 @@ import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
 import useControlledState from '../../../core/hooks/useControlledState';
+import {useId} from '../../../core/hooks/useId';
 import {useStyleBook} from '../../../plugins/page-design-options/hooks/useStyleBook';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
+import {useSelector} from '../../contexts/StoreContext';
+import selectCanDetachTokenValues from '../../selectors/selectCanDetachTokenValues';
 import isNullOrUndefined from '../../utils/isNullOrUndefined';
-import {useId} from '../../utils/useId';
 import {AdvancedSelectField} from './AdvancedSelectField';
 
 export function SelectField({
 	className,
 	disabled,
 	field,
+	item,
 	onValueSelect,
 	value,
 }) {
+	const canDetachTokenValues = useSelector(selectCanDetachTokenValues);
 	const {tokenValues} = useStyleBook();
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 
-	const validValues = field.typeOptions?.validValues || field.validValues;
+	const validValues = field.typeOptions?.validValues || [];
 
 	const multiSelect = field.typeOptions?.multiSelect ?? false;
 
@@ -78,10 +85,13 @@ export function SelectField({
 				/>
 			) : field.icon && Liferay.FeatureFlags['LPS-143206'] ? (
 				<AdvancedSelectField
+					canDetachTokenValues={canDetachTokenValues}
 					disabled={disabled}
 					field={field}
+					item={item}
 					onValueSelect={onValueSelect}
 					options={getOptions(validValues)}
+					selectedViewportSize={selectedViewportSize}
 					tokenValues={tokenValues}
 					value={
 						isNullOrUndefined(value) ? field.defaultValue : value
@@ -251,14 +261,8 @@ SelectField.propTypes = {
 					label: PropTypes.string.isRequired,
 					value: PropTypes.string.isRequired,
 				})
-			).isRequired,
+			),
 		}),
-		validValues: PropTypes.arrayOf(
-			PropTypes.shape({
-				label: PropTypes.string.isRequired,
-				value: PropTypes.string.isRequired,
-			})
-		),
 	}),
 
 	onValueSelect: PropTypes.func.isRequired,

@@ -490,8 +490,8 @@
 		<field name="classNameId" type="long" />
 		<field name="classPK" type="long" />
 		<field name="countryId" type="long" />
+		<field name="listTypeId" type="long" />
 		<field name="regionId" type="long" />
-		<field name="typeId" type="long" />
 		<field name="city" type="String" />
 		<field name="description" type="String">
 			<hint-collection name="TEXTAREA" />
@@ -551,7 +551,6 @@
 			<hint-collection name="URL" />
 		</field>
 		<field name="logoId" type="long" />
-		<field name="system" type="boolean" />
 		<field name="maxUsers" type="int" />
 		<field name="active" type="boolean" />
 		<field name="name" type="String" />
@@ -623,14 +622,22 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
-		<field name="a2" type="String" />
-		<field name="a3" type="String" />
+		<field name="a2" type="String">
+			<validator name="required" />
+		</field>
+		<field name="a3" type="String">
+			<validator name="required" />
+		</field>
 		<field name="active" type="boolean" />
 		<field name="billingAllowed" type="boolean" />
 		<field name="groupFilterEnabled" type="boolean" />
 		<field name="idd" type="String" />
-		<field name="name" type="String" />
-		<field name="number" type="String" />
+		<field name="name" type="String">
+			<validator name="required" />
+		</field>
+		<field name="number" type="String">
+			<validator name="required" />
+		</field>
 		<field name="position" type="double">
 			<validator name="number" />
 		</field>

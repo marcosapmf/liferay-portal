@@ -15,6 +15,11 @@
 import {fetch} from 'frontend-js-web';
 
 import {ERRORS} from './errors';
+import {stringToURLParameterFormat} from './string';
+
+interface ErrorDetails extends Error {
+	detail?: string;
+}
 
 interface NotificationTemplate {
 	attachmentObjectFieldIds: string[] | number[];
@@ -46,7 +51,6 @@ interface ObjectRelationship {
 	reverse?: boolean;
 	type: ObjectRelationshipType;
 }
-
 interface PickListItem {
 	id: number;
 	key: string;
@@ -110,9 +114,29 @@ export async function getNotificationTemplates() {
 	);
 }
 
-export async function getObjectDefinitions() {
+export async function getObjectDefinition(objectDefinitionId: number) {
+	return await fetchJSON<ObjectDefinition>(
+		`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}`
+	);
+}
+
+export async function getAllObjectDefinitions() {
 	return await getList<ObjectDefinition>(
 		'/o/object-admin/v1.0/object-definitions?page=-1'
+	);
+}
+
+export async function getObjectDefinitions(parameters?: string) {
+	if (!parameters) {
+		return await getList<ObjectDefinition>(
+			'/o/object-admin/v1.0/object-definitions'
+		);
+	}
+
+	return await getList<ObjectDefinition>(
+		`/o/object-admin/v1.0/object-definitions?${stringToURLParameterFormat(
+			parameters
+		)}`
 	);
 }
 
@@ -156,9 +180,11 @@ export async function save(
 	}
 	else if (!response.ok) {
 		const {
+			detail,
 			title,
 			type,
 		}: {
+			detail?: string;
 			title?: string;
 			type?: string;
 		} = await response.json();
@@ -168,7 +194,14 @@ export async function save(
 			title ??
 			Liferay.Language.get('an-error-occurred');
 
-		throw new Error(errorMessage);
+		const ErrorDetails = () => {
+			return {
+				detail,
+				message: errorMessage,
+				name: '',
+			} as ErrorDetails;
+		};
+		throw ErrorDetails();
 	}
 }
 
@@ -179,5 +212,11 @@ export async function updateRelationship({
 	return await save(
 		`/o/object-admin/v1.0/object-relationships/${objectRelationshipId}`,
 		others
+	);
+}
+
+export async function getRelationship<T>(relationshipId: number) {
+	return fetchJSON<T>(
+		`/o/object-admin/v1.0/object-relationships/${relationshipId}`
 	);
 }

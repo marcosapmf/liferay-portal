@@ -17,6 +17,7 @@ package com.liferay.portal.service.impl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.NoSuchWorkflowInstanceLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -30,11 +31,13 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.workflow.DefaultWorkflowNode;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
+import com.liferay.portal.kernel.workflow.WorkflowNode;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
 import com.liferay.portal.service.base.WorkflowInstanceLinkLocalServiceBaseImpl;
 
@@ -156,10 +159,14 @@ public class WorkflowInstanceLinkLocalServiceImpl
 			WorkflowInstanceManagerUtil.getWorkflowInstance(
 				companyId, workflowInstanceLink.getWorkflowInstanceId());
 
-		List<String> currentNodeNames = workflowInstance.getCurrentNodeNames();
+		List<WorkflowNode> currentWorkflowNodes =
+			workflowInstance.getCurrentWorkflowNodes();
 
-		if (ListUtil.isNotEmpty(currentNodeNames)) {
-			return currentNodeNames.get(0);
+		if (ListUtil.isNotEmpty(currentWorkflowNodes)) {
+			DefaultWorkflowNode defaultWorkflowNode =
+				(DefaultWorkflowNode)currentWorkflowNodes.get(0);
+
+			return defaultWorkflowNode.getLabel(LocaleUtil.getDefault());
 		}
 
 		return StringPool.BLANK;
@@ -279,6 +286,9 @@ public class WorkflowInstanceLinkLocalServiceImpl
 
 		workflowContext.put(
 			WorkflowConstants.CONTEXT_COMPANY_ID, String.valueOf(companyId));
+		workflowContext.put(
+			WorkflowConstants.CONTEXT_CT_COLLECTION_ID,
+			String.valueOf(CTCollectionThreadLocal.getCTCollectionId()));
 		workflowContext.put(
 			WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME, className);
 		workflowContext.put(

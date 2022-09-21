@@ -34,7 +34,7 @@ public class NotificationsWebUpgradeStepRegistrator
 
 	@Override
 	public void register(Registry registry) {
-		registry.register("0.0.0", "2.1.0", new DummyUpgradeStep());
+		registry.registerInitialization();
 
 		registry.register(
 			"0.0.1", "1.0.0",
@@ -76,13 +76,7 @@ public class NotificationsWebUpgradeStepRegistrator
 			upgradePortletId);
 	}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(
-		UserNotificationEventLocalService userNotificationEventLocalService) {
-
-		_userNotificationEventLocalService = userNotificationEventLocalService;
-	}
-
+	@Reference
 	private UserNotificationEventLocalService
 		_userNotificationEventLocalService;
 

@@ -17,7 +17,6 @@ package com.liferay.dispatch.service.base;
 import com.liferay.dispatch.model.DispatchTrigger;
 import com.liferay.dispatch.service.DispatchTriggerLocalService;
 import com.liferay.dispatch.service.DispatchTriggerLocalServiceUtil;
-import com.liferay.dispatch.service.persistence.DispatchLogPersistence;
 import com.liferay.dispatch.service.persistence.DispatchTriggerPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -39,6 +38,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -455,6 +456,11 @@ public abstract class DispatchTriggerLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement DispatchTriggerLocalServiceImpl#deleteDispatchTrigger(DispatchTrigger) to avoid orphaned data");
+		}
+
 		return dispatchTriggerLocalService.deleteDispatchTrigger(
 			(DispatchTrigger)persistedModel);
 	}
@@ -614,9 +620,6 @@ public abstract class DispatchTriggerLocalServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected DispatchLogPersistence dispatchLogPersistence;
-
 	protected DispatchTriggerLocalService dispatchTriggerLocalService;
 
 	@Reference
@@ -626,16 +629,7 @@ public abstract class DispatchTriggerLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		DispatchTriggerLocalServiceBaseImpl.class);
 
 }

@@ -25,6 +25,7 @@ import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.journal.service.JournalArticleService;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -98,10 +99,11 @@ public class JournalArticleContentDashboardItemFactory
 			assetEntry.getCategories(), assetEntry.getTags(),
 			_contentDashboardItemActionProviderTracker,
 			contentDashboardItemSubtypeFactory.create(
-				ddmStructure.getStructureId()),
+				ddmStructure.getStructureId(),
+				journalArticle.getResourcePrimKey()),
 			_groupLocalService.fetchGroup(journalArticle.getGroupId()),
-			infoItemFieldValuesProvider, journalArticle, _language,
-			latestApprovedJournalArticle, _portal);
+			infoItemFieldValuesProvider, journalArticle, _journalArticleService,
+			_language, latestApprovedJournalArticle, _portal);
 	}
 
 	@Override
@@ -132,6 +134,9 @@ public class JournalArticleContentDashboardItemFactory
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
+	private JournalArticleService _journalArticleService;
 
 	@Reference
 	private Language _language;

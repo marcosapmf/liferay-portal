@@ -17,7 +17,6 @@ package com.liferay.bookmarks.service.base;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksFolderLocalService;
 import com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil;
-import com.liferay.bookmarks.service.persistence.BookmarksEntryPersistence;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderFinder;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
@@ -48,6 +47,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -478,6 +479,11 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement BookmarksFolderLocalServiceImpl#deleteBookmarksFolder(BookmarksFolder) to avoid orphaned data");
+		}
+
 		return bookmarksFolderLocalService.deleteBookmarksFolder(
 			(BookmarksFolder)persistedModel);
 	}
@@ -669,9 +675,6 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 		}
 	}
 
-	@Reference
-	protected BookmarksEntryPersistence bookmarksEntryPersistence;
-
 	protected BookmarksFolderLocalService bookmarksFolderLocalService;
 
 	@Reference
@@ -684,16 +687,7 @@ public abstract class BookmarksFolderLocalServiceBaseImpl
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		BookmarksFolderLocalServiceBaseImpl.class);
 
 }

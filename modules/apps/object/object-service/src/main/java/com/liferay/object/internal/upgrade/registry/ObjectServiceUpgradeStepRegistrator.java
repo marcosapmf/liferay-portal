@@ -24,6 +24,7 @@ import com.liferay.object.internal.upgrade.v3_17_0.util.ObjectStateFlowTable;
 import com.liferay.object.internal.upgrade.v3_17_0.util.ObjectStateTable;
 import com.liferay.object.internal.upgrade.v3_17_0.util.ObjectStateTransitionTable;
 import com.liferay.object.internal.upgrade.v3_19_0.util.ObjectFilterTable;
+import com.liferay.object.internal.upgrade.v3_22_0.ObjectFieldUpgradeProcess;
 import com.liferay.object.internal.upgrade.v3_3_0.util.ObjectViewFilterColumnTable;
 import com.liferay.object.internal.upgrade.v3_9_0.ObjectLayoutBoxUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
@@ -192,6 +193,32 @@ public class ObjectServiceUpgradeStepRegistrator
 			"3.19.3", "3.20.0",
 			UpgradeProcessFactory.alterColumnType(
 				"ObjectViewFilterColumn", "json", "TEXT"));
+
+		registry.register(
+			"3.20.0", "3.21.0",
+			new com.liferay.object.internal.upgrade.v3_21_0.
+				ObjectDefinitionUpgradeProcess());
+
+		registry.register(
+			"3.21.0", "3.22.0", new ObjectFieldUpgradeProcess(_portalUUID));
+
+		registry.register(
+			"3.22.0", "3.23.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"ObjectDefinition", "objectDefinitionId"}
+					};
+				}
+
+			});
+
+		registry.register(
+			"3.23.0", "3.23.1",
+			new com.liferay.object.internal.upgrade.v3_23_1.
+				ObjectFieldUpgradeProcess());
 	}
 
 	@Reference

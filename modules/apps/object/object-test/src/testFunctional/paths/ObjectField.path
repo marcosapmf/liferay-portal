@@ -109,7 +109,7 @@
 	</tr>
 	<tr>
 		<td>TYPE_FIELD</td>
-		<td>//input[@placeholder='Choose an Option']</td>
+		<td>//input[(@placeholder='Choose an Option' or @placeholder='Escolha uma Opção')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -119,7 +119,7 @@
 	</tr>
 	<tr>
 		<td>TYPE_OPTION</td>
-		<td>//button[@class='dropdown-item']//div[contains(text(),"${key_fieldType}")]</td>
+		<td>//button[@class='dropdown-item']//div[(text()="${key_fieldType}")]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -150,6 +150,26 @@
 	<tr>
 		<td>VIEW_COUNT_CHARACTERS_ON_ENTRIES</td>
 		<td>//div[contains(@data-field-name,'${key_fieldName}')]//span[contains(@class,'form-text') and contains(text(),'${key_viewCountCharacters}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>MARK_AS_STATE_TOGGLE</td>
+		<td>//input[@name="state"]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>SOURCE_FIELD</td>
+		<td>//div[contains(@class, 'dnd-tr') and contains(., '${key_label}') and contains(., '${key_source}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_RELATIONSHIP</td>
+		<td>//label[contains(.,'Relationship')]//..//div[contains(@aria-controls,'clay-dropdown-menu')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>LABEL_FIELD</td>
+		<td>//label[contains(.,'Field')]//..//div[contains(@aria-controls,'clay-dropdown-menu')]</td>
 		<td></td>
 	</tr>
 </tbody>

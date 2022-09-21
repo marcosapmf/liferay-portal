@@ -54,7 +54,7 @@ definition {
 		DMDocument.addCP(
 			dmDocumentFile = "Document_1.jpeg",
 			dmDocumentTitle = "Document_1.jpeg",
-			validationError = "Please enter a file with a valid file size no larger than 10 KB");
+			warningForSizeLimits = "Please enter a file with a valid file size no larger than 10 KB");
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
@@ -114,7 +114,7 @@ definition {
 		DMDocument.addCP(
 			dmDocumentFile = "Document_1.png",
 			dmDocumentTitle = "Document_1.png",
-			validationError = "Please enter a file with a valid file size no larger than 20 KB");
+			warningForSizeLimits = "Please enter a file with a valid file size no larger than 20 KB");
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
@@ -140,8 +140,8 @@ definition {
 	}
 
 	@description = "This test ensures that when setting the Mime Type Size Limit at different levels (Asset Library and System Settings), the lower limit will take effect."
+	@e2etest
 	@priority = "4"
-	@uitest
 	test SystemTakesEffectOverALLimit {
 		property custom.properties = "feature.flag.LPS-114786=true";
 		property test.name.skip.portal.instance = "DepotMimeTypeLimits#SystemTakesEffectOverALLimit";

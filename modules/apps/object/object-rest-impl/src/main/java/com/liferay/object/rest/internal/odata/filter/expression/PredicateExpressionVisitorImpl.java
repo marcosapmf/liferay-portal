@@ -17,15 +17,20 @@ package com.liferay.object.rest.internal.odata.filter.expression;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.sql.dsl.spi.expression.DefaultPredicate;
+import com.liferay.petra.sql.dsl.spi.expression.Operand;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.filter.expression.BinaryExpression;
+import com.liferay.portal.odata.filter.expression.CollectionPropertyExpression;
 import com.liferay.portal.odata.filter.expression.Expression;
 import com.liferay.portal.odata.filter.expression.ExpressionVisitException;
 import com.liferay.portal.odata.filter.expression.ExpressionVisitor;
+import com.liferay.portal.odata.filter.expression.LambdaFunctionExpression;
+import com.liferay.portal.odata.filter.expression.LambdaVariableExpression;
 import com.liferay.portal.odata.filter.expression.ListExpression;
 import com.liferay.portal.odata.filter.expression.LiteralExpression;
 import com.liferay.portal.odata.filter.expression.MemberExpression;
@@ -33,7 +38,10 @@ import com.liferay.portal.odata.filter.expression.MethodExpression;
 import com.liferay.portal.odata.filter.expression.PrimitivePropertyExpression;
 import com.liferay.portal.odata.filter.expression.UnaryExpression;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -47,8 +55,7 @@ public class PredicateExpressionVisitorImpl
 		long objectDefinitionId,
 		ObjectFieldLocalService objectFieldLocalService) {
 
-		_objectDefinitionId = objectDefinitionId;
-		_objectFieldLocalService = objectFieldLocalService;
+		this(new HashMap<>(), objectDefinitionId, objectFieldLocalService);
 	}
 
 	@Override
@@ -62,6 +69,39 @@ public class PredicateExpressionVisitorImpl
 			() -> new UnsupportedOperationException(
 				"Unsupported method visitBinaryExpressionOperation with " +
 					"operation " + operation));
+	}
+
+	@Override
+	public Predicate visitCollectionPropertyExpression(
+			CollectionPropertyExpression collectionPropertyExpression)
+		throws ExpressionVisitException {
+
+		LambdaFunctionExpression lambdaFunctionExpression =
+			collectionPropertyExpression.getLambdaFunctionExpression();
+
+		return (Predicate)lambdaFunctionExpression.accept(
+			new PredicateExpressionVisitorImpl(
+				Collections.singletonMap(
+					lambdaFunctionExpression.getVariableName(),
+					collectionPropertyExpression.getName()),
+				_objectDefinitionId, _objectFieldLocalService));
+	}
+
+	@Override
+	public Object visitLambdaFunctionExpression(
+			LambdaFunctionExpression.Type type, String variableName,
+			Expression expression)
+		throws ExpressionVisitException {
+
+		return expression.accept(this);
+	}
+
+	@Override
+	public Object visitLambdaVariableExpression(
+		LambdaVariableExpression lambdaVariableExpression) {
+
+		return _lambdaVariableExpressionFieldNames.get(
+			lambdaVariableExpression.getVariableName());
 	}
 
 	@Override
@@ -174,13 +214,32 @@ public class PredicateExpressionVisitorImpl
 	public Predicate visitUnaryExpressionOperation(
 		UnaryExpression.Operation operation, Object operand) {
 
-		if (Objects.equals(UnaryExpression.Operation.NOT, operation)) {
-			return Predicate.not((Predicate)operand);
+		if (!Objects.equals(UnaryExpression.Operation.NOT, operation)) {
+			throw new UnsupportedOperationException(
+				"Unsupported method visitUnaryExpressionOperation with " +
+					"operation " + operation);
 		}
 
-		throw new UnsupportedOperationException(
-			"Unsupported method visitUnaryExpressionOperation with operation " +
-				operation);
+		DefaultPredicate defaultPredicate = (DefaultPredicate)operand;
+
+		if (Objects.equals(Operand.IN, defaultPredicate.getOperand())) {
+			return new DefaultPredicate(
+				defaultPredicate.getLeftExpression(), Operand.NOT_IN,
+				defaultPredicate.getRightExpression());
+		}
+
+		return Predicate.not(defaultPredicate);
+	}
+
+	private PredicateExpressionVisitorImpl(
+		Map<String, String> lambdaVariableExpressionFieldNames,
+		long objectDefinitionId,
+		ObjectFieldLocalService objectFieldLocalService) {
+
+		_lambdaVariableExpressionFieldNames =
+			lambdaVariableExpressionFieldNames;
+		_objectDefinitionId = objectDefinitionId;
+		_objectFieldLocalService = objectFieldLocalService;
 	}
 
 	private Predicate _contains(Object fieldName, Object fieldValue) {
@@ -243,6 +302,7 @@ public class PredicateExpressionVisitorImpl
 		return column.like(fieldValue + StringPool.PERCENT);
 	}
 
+	private Map<String, String> _lambdaVariableExpressionFieldNames;
 	private final long _objectDefinitionId;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 

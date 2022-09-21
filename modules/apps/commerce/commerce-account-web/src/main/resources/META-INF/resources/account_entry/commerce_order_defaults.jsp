@@ -33,11 +33,19 @@ renderResponse.setTitle((commerceAccountDisplayContext.getAccountEntryId() == 0)
 		</h2>
 
 		<liferay-frontend:fieldset-group>
+			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#commerce_addresses" />
+
 			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#terms" />
 
-			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#payment_methods" />
-
 			<%@ include file="/account_entry/commerce_shipping_options/default_commerce_shipping_options.jspf" %>
+
+			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#price_lists" />
+
+			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#discounts" />
+
+			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#currencies" />
+
+			<liferay-util:dynamic-include key="com.liferay.commerce.account.web#/account_entry/order_defaults.jsp#payment_methods" />
 		</liferay-frontend:fieldset-group>
 	</liferay-frontend:edit-form-body>
 </liferay-frontend:edit-form>

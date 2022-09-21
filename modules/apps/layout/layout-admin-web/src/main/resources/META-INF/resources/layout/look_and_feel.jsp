@@ -59,9 +59,7 @@ LayoutLookAndFeelDisplayContext layoutLookAndFeelDisplayContext = new LayoutLook
 			cssClass="mr-4"
 		>
 			<clay:button
-				additionalProps="<%=
-					layoutLookAndFeelDisplayContext.getChangeFaviconButtonAdditionalProps()
-				%>"
+				additionalProps="<%= layoutLookAndFeelDisplayContext.getChangeFaviconButtonAdditionalProps() %>"
 				displayType="secondary"
 				id='<%= liferayPortletResponse.getNamespace() + "changeFaviconButton" %>'
 				label="change-favicon"
@@ -72,9 +70,7 @@ LayoutLookAndFeelDisplayContext layoutLookAndFeelDisplayContext = new LayoutLook
 
 		<clay:content-col>
 			<clay:button
-				additionalProps="<%=
-					layoutLookAndFeelDisplayContext.getClearFaviconButtonAdditionalProps()
-				%>"
+				additionalProps="<%= layoutLookAndFeelDisplayContext.getClearFaviconButtonAdditionalProps() %>"
 				disabled="<%= !layoutLookAndFeelDisplayContext.isClearFaviconButtonEnabled() %>"
 				displayType="secondary"
 				id='<%= liferayPortletResponse.getNamespace() + "clearFaviconButton" %>'
@@ -151,18 +147,20 @@ else {
 	</div>
 </clay:sheet-section>
 
-<c:if test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-153457")) %>'>
+<div class="mt-5">
 	<liferay-util:include page="/look_and_feel_theme_css.jsp" servletContext="<%= application %>" />
+</div>
 
-	<clay:sheet-section>
-		<div>
-			<react:component
-				module="js/layout/look_and_feel/GlobalCSSCETsConfiguration"
-				props="<%= layoutLookAndFeelDisplayContext.getGlobalCSSCETsConfigurationProps(Layout.class.getName(), selLayout.getPlid()) %>"
-			/>
-		</div>
-	</clay:sheet-section>
-</c:if>
+<clay:sheet-section
+	cssClass="mt-5"
+>
+	<div>
+		<react:component
+			module="js/layout/look_and_feel/GlobalCSSCETsConfiguration"
+			props="<%= layoutLookAndFeelDisplayContext.getGlobalCSSCETsConfigurationProps(Layout.class.getName(), selLayout.getPlid()) %>"
+		/>
+	</div>
+</clay:sheet-section>
 
 <aui:script>
 	Liferay.Util.toggleRadio(

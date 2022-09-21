@@ -18,10 +18,10 @@ import ClayManagementToolbar from '@clayui/management-toolbar';
 import {
 	API,
 	Card,
-	FormCustomSelect,
 	Input,
 	InputLocalized,
 	RichTextLocalized,
+	SingleSelect,
 	openToast,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -142,6 +142,8 @@ export default function EditNotificationTemplate({
 		validate,
 	});
 
+	const [templateTitle, setTemplateTitle] = useState<string>();
+
 	useEffect(() => {
 		if (notificationTemplateId !== 0) {
 			API.getNotificationTemplate(notificationTemplateId).then(
@@ -157,7 +159,7 @@ export default function EditNotificationTemplate({
 					objectDefinitionId,
 					subject,
 					to,
-				}) =>
+				}) => {
 					setValues({
 						...values,
 						attachmentObjectFieldIds,
@@ -171,7 +173,15 @@ export default function EditNotificationTemplate({
 						objectDefinitionId,
 						subject,
 						to,
-					})
+					});
+
+					setTemplateTitle(name);
+				}
+			);
+		}
+		else {
+			setTemplateTitle(
+				Liferay.Language.get('untitled-notification-template')
 			);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,7 +191,7 @@ export default function EditNotificationTemplate({
 		<ClayForm onSubmit={handleSubmit}>
 			<ClayManagementToolbar className="lfr__notification-template-management-tollbar">
 				<ClayManagementToolbar.ItemList>
-					<h2>{Liferay.Language.get('notification-templates')}</h2>
+					<h2>{templateTitle}</h2>
 				</ClayManagementToolbar.ItemList>
 
 				<ClayManagementToolbar.ItemList>
@@ -231,7 +241,7 @@ export default function EditNotificationTemplate({
 									value={values.description}
 								/>
 
-								<FormCustomSelect
+								<SingleSelect
 									disabled
 									label={Liferay.Language.get('type')}
 									options={[]}
@@ -251,6 +261,7 @@ export default function EditNotificationTemplate({
 											to: translation,
 										});
 									}}
+									placeholder=""
 									selectedLocale={selectedLocale}
 									translations={values.to}
 								/>
@@ -317,6 +328,7 @@ export default function EditNotificationTemplate({
 													fromName: translation,
 												});
 											}}
+											placeholder=""
 											required
 											selectedLocale={selectedLocale}
 											translations={values.fromName}
@@ -337,6 +349,7 @@ export default function EditNotificationTemplate({
 									subject: translation,
 								});
 							}}
+							placeholder=""
 							selectedLocale={selectedLocale}
 							translations={values.subject}
 						/>
@@ -370,7 +383,7 @@ export default function EditNotificationTemplate({
 
 interface IProps {
 	baseResourceURL: string;
-	editorConfig: string;
+	editorConfig: object;
 	notificationTemplateId: number;
 }
 

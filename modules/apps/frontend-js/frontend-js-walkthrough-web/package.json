@@ -2,12 +2,18 @@
 	"dependencies": {
 		"dom-align": "1.12.2"
 	},
+	"jest": {
+		"setupFiles": [
+			"<rootDir>/jest-setup.config.js"
+		]
+	},
 	"main": "index.js",
 	"name": "@liferay/frontend-js-walkthrough-web",
 	"scripts": {
 		"build": "liferay-npm-scripts build",
 		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"format": "liferay-npm-scripts fix",
+		"test": "liferay-npm-scripts test"
 	},
-	"version": "1.0.6"
+	"version": "1.0.9"
 }

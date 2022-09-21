@@ -12,15 +12,20 @@
  * details.
  */
 
+import {HierarchyDataRenderer} from './HierarchyDataRenderer';
+
 export default function propsTransformer({...otherProps}) {
 	return {
 		...otherProps,
+		customDataRenderers: {
+			hierarchyDataRenderer: HierarchyDataRenderer,
+		},
 		onActionDropdownItemClick({
 			action,
 			itemData,
 		}: {
-			action: any;
-			itemData: any;
+			action: {data: {id: string}};
+			itemData: ObjectRelationship;
 		}) {
 			if (action.data.id === 'deleteObjectRelationship') {
 				Liferay.fire('deleteObjectRelationship', {itemData});

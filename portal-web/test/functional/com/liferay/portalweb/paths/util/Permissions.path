@@ -160,6 +160,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INLINE_PERMISSIONS_ASSIGN_MEMBERS_CHECKBOX</td>
+	<td>//input[@id='${key_roleTitle}_ACTION_ASSIGN_MEMBERS']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INLINE_PERMISSIONS_PERMISSIONS_CHECKBOX</td>
 	<td>//input[@id='${key_roleTitle}_ACTION_PERMISSIONS']</td>
 	<td></td>
@@ -192,6 +197,24 @@
 <tr>
 	<td>INLINE_PERMISSIONS_ADD_WEB_CONTENT_CHECKBOX</td>
 	<td>//input[@id='${key_roleTitle}_ACTION_ADD_ARTICLE']</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
+
+<!--INLINE_PERMISSIONS_INDETERMINATE-->
+
+<tr>
+	<td>INLINE_PERMISSIONS_ADD_DISCUSSION_CHECKBOX_INDETERMINATE</td>
+	<td>//input[@id='${key_roleTitle}_ACTION_ADD_DISCUSSION' and @value='indeterminate']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>INLINE_PERMISSIONS_VIEW_CHECKBOX_INDETERMINATE</td>
+	<td>//input[@id='${key_roleTitle}_ACTION_VIEW' and @value='indeterminate']</td>
 	<td></td>
 </tr>
 <tr>

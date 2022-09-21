@@ -13,7 +13,8 @@ definition {
 	macro addApp {
 		RemoteAppsEntry.addEntry(
 			entryName = "${entryName}",
-			entryURL = "${entryURL}");
+			entryURL = "${entryURL}",
+			mainURL = "${mainURL}");
 
 		PortletEntry.publish();
 	}
@@ -217,6 +218,13 @@ definition {
 		var externalReferenceCodeValue = StringUtil.replace("${externalReferenceCodeValue}", "-", "_");
 
 		return "${externalReferenceCodeValue}";
+	}
+
+	macro getRemoteAppEntryId {
+		var companyId = JSONCompany.getCompanyId();
+		var externalReferenceCodeValue = RemoteApps.getExternalReferenceCodeValue();
+
+		return "${companyId}_${externalReferenceCodeValue}";
 	}
 
 	macro getRemoteAppEntryName {

@@ -41,8 +41,10 @@ import com.liferay.portal.kernel.service.PortletPreferenceValueLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.CopyLayoutThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -59,6 +61,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -80,10 +83,22 @@ public class SegmentsExperienceUtil {
 			long userId)
 		throws PortalException {
 
-		_copyLayoutData(
-			plid, commentManager, groupId, portletRegistry,
-			sourceSegmentsExperienceId, targetSegmentsExperienceId,
-			serviceContextFunction, userId);
+		boolean copyLayout = CopyLayoutThreadLocal.isCopyLayout();
+
+		try {
+			CopyLayoutThreadLocal.setCopyLayout(true);
+
+			_copyLayoutData(
+				plid, commentManager, groupId, portletRegistry,
+				sourceSegmentsExperienceId, targetSegmentsExperienceId,
+				serviceContextFunction, userId);
+		}
+		catch (Throwable throwable) {
+			throw new PortalException(throwable);
+		}
+		finally {
+			CopyLayoutThreadLocal.setCopyLayout(copyLayout);
+		}
 	}
 
 	public static Map<String, Object> getAvailableSegmentsExperiences(
@@ -366,7 +381,12 @@ public class SegmentsExperienceUtil {
 				layoutStructure.getLayoutStructureItems()) {
 
 			if (!(layoutStructureItem instanceof
-					FragmentStyledLayoutStructureItem)) {
+					FragmentStyledLayoutStructureItem) ||
+				ListUtil.exists(
+					layoutStructure.getDeletedLayoutStructureItems(),
+					deletedLayoutStructureItem -> Objects.equals(
+						deletedLayoutStructureItem.getItemId(),
+						layoutStructureItem.getItemId()))) {
 
 				continue;
 			}

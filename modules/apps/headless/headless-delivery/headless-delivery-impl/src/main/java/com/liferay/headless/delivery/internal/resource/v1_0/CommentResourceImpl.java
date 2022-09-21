@@ -57,7 +57,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -90,8 +89,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode)
 		throws Exception {
 
-		BlogsEntry blogsEntry = _getBlogsEntry(
-			blogPostingExternalReferenceCode, siteId);
+		BlogsEntry blogsEntry =
+			_blogsEntryService.getBlogsEntryByExternalReferenceCode(
+				siteId, blogPostingExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment comment = _getComment(
 			externalReferenceCode, siteId, BlogsEntry.class.getName(),
@@ -120,8 +120,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode)
 		throws Exception {
 
-		DLFileEntry dlFileEntry = _getDLFileEntry(
-			documentExternalReferenceCode, siteId);
+		DLFileEntry dlFileEntry =
+			_dlFileEntryService.getFileEntryByExternalReferenceCode(
+				siteId, documentExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment comment = _getComment(
 			externalReferenceCode, siteId, DLFileEntry.class.getName(),
@@ -137,8 +138,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode)
 		throws Exception {
 
-		JournalArticle journalArticle = _getLatestJournalArticle(
-			structuredContentExternalReferenceCode, siteId);
+		JournalArticle journalArticle =
+			_journalArticleService.getLatestArticleByExternalReferenceCode(
+				siteId, structuredContentExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment comment = _getComment(
 			externalReferenceCode, siteId, JournalArticle.class.getName(),
@@ -169,6 +171,12 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				addAction(
 					ActionKeys.ADD_DISCUSSION, blogPostingId,
 					"postBlogPostingComment", blogsEntry.getUserId(),
+					BlogsEntry.class.getName(), blogsEntry.getGroupId())
+			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.ADD_DISCUSSION, blogPostingId,
+					"postBlogPostingCommentBatch", blogsEntry.getUserId(),
 					BlogsEntry.class.getName(), blogsEntry.getGroupId())
 			).put(
 				"get",
@@ -207,8 +215,18 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 		throws Exception {
 
 		return _getComments(
-			Collections.emptyMap(), parentCommentId, search, aggregation,
-			filter, pagination, sorts);
+			HashMapBuilder.put(
+				"deleteBatch",
+				addAction(
+					ActionKeys.DELETE, "deleteCommentBatch",
+					Comment.class.getName(), null)
+			).put(
+				"updateBatch",
+				addAction(
+					ActionKeys.UPDATE, "putCommentBatch",
+					Comment.class.getName(), null)
+			).build(),
+			parentCommentId, search, aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -235,6 +253,12 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 					"postDocumentComment", dlFileEntry.getUserId(),
 					DLFileEntry.class.getName(), dlFileEntry.getGroupId())
 			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.ADD_DISCUSSION, documentId,
+					"postDocumentCommentBatch", dlFileEntry.getUserId(),
+					DLFileEntry.class.getName(), dlFileEntry.getGroupId())
+			).put(
 				"get",
 				addAction(
 					ActionKeys.VIEW, documentId, "getDocumentCommentsPage",
@@ -257,8 +281,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode)
 		throws Exception {
 
-		BlogsEntry blogsEntry = _getBlogsEntry(
-			blogPostingExternalReferenceCode, siteId);
+		BlogsEntry blogsEntry =
+			_blogsEntryService.getBlogsEntryByExternalReferenceCode(
+				siteId, blogPostingExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment comment = _getComment(
 			externalReferenceCode, siteId, BlogsEntry.class.getName(),
@@ -299,8 +324,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode)
 		throws Exception {
 
-		DLFileEntry dlFileEntry = _getDLFileEntry(
-			documentExternalReferenceCode, siteId);
+		DLFileEntry dlFileEntry =
+			_dlFileEntryService.getFileEntryByExternalReferenceCode(
+				siteId, documentExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment comment = _getComment(
 			externalReferenceCode, siteId, DLFileEntry.class.getName(),
@@ -322,8 +348,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode)
 		throws Exception {
 
-		JournalArticle journalArticle = _getLatestJournalArticle(
-			structuredContentExternalReferenceCode, siteId);
+		JournalArticle journalArticle =
+			_journalArticleService.getLatestArticleByExternalReferenceCode(
+				siteId, structuredContentExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment comment = _getComment(
 			externalReferenceCode, siteId, JournalArticle.class.getName(),
@@ -362,6 +389,13 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 					ActionKeys.ADD_DISCUSSION, structuredContentId,
 					"postStructuredContentComment", journalArticle.getUserId(),
 					JournalArticle.class.getName(), journalArticle.getGroupId())
+			).put(
+				"createBatch",
+				addAction(
+					ActionKeys.ADD_DISCUSSION, structuredContentId,
+					"postStructuredContentCommentBatch",
+					journalArticle.getUserId(), JournalArticle.class.getName(),
+					journalArticle.getGroupId())
 			).put(
 				"get",
 				addAction(
@@ -443,8 +477,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode, Comment comment)
 		throws Exception {
 
-		BlogsEntry blogsEntry = _getBlogsEntry(
-			blogPostingExternalReferenceCode, siteId);
+		BlogsEntry blogsEntry =
+			_blogsEntryService.getBlogsEntryByExternalReferenceCode(
+				siteId, blogPostingExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment existingComment =
 			_fetchComment(
@@ -500,8 +535,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode, Comment comment)
 		throws Exception {
 
-		DLFileEntry dlFileEntry = _getDLFileEntry(
-			documentExternalReferenceCode, siteId);
+		DLFileEntry dlFileEntry =
+			_dlFileEntryService.getFileEntryByExternalReferenceCode(
+				siteId, documentExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment existingComment =
 			_fetchComment(
@@ -527,8 +563,9 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 				String externalReferenceCode, Comment comment)
 		throws Exception {
 
-		JournalArticle journalArticle = _getLatestJournalArticle(
-			structuredContentExternalReferenceCode, siteId);
+		JournalArticle journalArticle =
+			_journalArticleService.getLatestArticleByExternalReferenceCode(
+				siteId, structuredContentExternalReferenceCode);
 
 		com.liferay.portal.kernel.comment.Comment existingComment =
 			_fetchComment(
@@ -580,27 +617,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 		return null;
 	}
 
-	private BlogsEntry _getBlogsEntry(String externalReferenceCode, Long siteId)
-		throws Exception {
-
-		BlogsEntry blogsEntry =
-			_blogsEntryService.fetchBlogsEntryByExternalReferenceCode(
-				siteId, externalReferenceCode);
-
-		if (blogsEntry == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("No blog posting exists with external reference code ");
-			sb.append(externalReferenceCode);
-			sb.append(" and site ID ");
-			sb.append(siteId);
-
-			throw new NotFoundException(sb.toString());
-		}
-
-		return blogsEntry;
-	}
-
 	private com.liferay.portal.kernel.comment.Comment _getComment(
 			String externalReferenceCode, long siteId, String className,
 			long classPK)
@@ -629,18 +645,7 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 		throws Exception {
 
 		com.liferay.portal.kernel.comment.Comment comment =
-			_commentManager.fetchComment(siteId, externalReferenceCode);
-
-		if (comment == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("No comment exists with external reference code ");
-			sb.append(externalReferenceCode);
-			sb.append(" and site ID ");
-			sb.append(siteId);
-
-			throw new NotFoundException(sb.toString());
-		}
+			_commentManager.getComment(siteId, externalReferenceCode);
 
 		DiscussionPermission discussionPermission = _getDiscussionPermission();
 
@@ -717,51 +722,6 @@ public class CommentResourceImpl extends BaseCommentResourceImpl {
 	private DiscussionPermission _getDiscussionPermission() {
 		return _commentManager.getDiscussionPermission(
 			PermissionThreadLocal.getPermissionChecker());
-	}
-
-	private DLFileEntry _getDLFileEntry(
-			String externalReferenceCode, Long siteId)
-		throws Exception {
-
-		DLFileEntry dlFileEntry =
-			_dlFileEntryService.fetchFileEntryByExternalReferenceCode(
-				siteId, externalReferenceCode);
-
-		if (dlFileEntry == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append("No document exists with external reference code ");
-			sb.append(externalReferenceCode);
-			sb.append(" and site ID ");
-			sb.append(siteId);
-
-			throw new NotFoundException(sb.toString());
-		}
-
-		return dlFileEntry;
-	}
-
-	private JournalArticle _getLatestJournalArticle(
-			String externalReferenceCode, Long siteId)
-		throws Exception {
-
-		JournalArticle journalArticle =
-			_journalArticleService.fetchLatestArticleByExternalReferenceCode(
-				siteId, externalReferenceCode);
-
-		if (journalArticle == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(
-				"No structured content exists with external reference code ");
-			sb.append(externalReferenceCode);
-			sb.append(" and site ID ");
-			sb.append(siteId);
-
-			throw new NotFoundException(sb.toString());
-		}
-
-		return journalArticle;
 	}
 
 	private long _getUserId() {

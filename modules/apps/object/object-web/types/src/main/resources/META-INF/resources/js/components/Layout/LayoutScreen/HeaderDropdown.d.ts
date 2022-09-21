@@ -16,6 +16,8 @@ import {FC, MouseEventHandler} from 'react';
 declare const HeaderDropdown: FC<IHeaderDropdown>;
 interface IHeaderDropdown {
 	addCategorization?: MouseEventHandler;
+	addComments?: MouseEventHandler;
 	deleteElement: MouseEventHandler;
+	disabled?: boolean;
 }
 export default HeaderDropdown;

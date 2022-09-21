@@ -222,6 +222,16 @@ public class CPDefinitionServiceWrapper
 	}
 
 	@Override
+	public CPDefinition cloneCPDefinition(
+			long cpDefinitionId, long groupId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionService.cloneCPDefinition(
+			cpDefinitionId, groupId, serviceContext);
+	}
+
+	@Override
 	public CPDefinition copyCPDefinition(
 			long cpDefinitionId, long groupId, int status)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -297,6 +307,14 @@ public class CPDefinitionServiceWrapper
 	}
 
 	@Override
+	public CPDefinition getCProductCPDefinition(long cProductId, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpDefinitionService.getCProductCPDefinition(
+			cProductId, version);
+	}
+
+	@Override
 	public java.util.List<CPDefinition> getCProductCPDefinitions(
 			long cProductId, int status, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -312,17 +330,6 @@ public class CPDefinitionServiceWrapper
 
 		return _cpDefinitionService.getDefaultImageCPAttachmentFileEntry(
 			cpDefinitionId);
-	}
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public String getLayoutUuid(long cpDefinitionId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _cpDefinitionService.getLayoutUuid(cpDefinitionId);
 	}
 
 	/**
@@ -443,20 +450,6 @@ public class CPDefinitionServiceWrapper
 			cpDefinitionId, enable);
 	}
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void updateCPDisplayLayout(
-			long cpDefinitionId, String layoutUuid,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_cpDefinitionService.updateCPDisplayLayout(
-			cpDefinitionId, layoutUuid, serviceContext);
-	}
-
 	@Override
 	public CPDefinition updateExternalReferenceCode(
 			String externalReferenceCode, long cpDefinitionId)
@@ -510,26 +503,6 @@ public class CPDefinitionServiceWrapper
 			deliverySubscriptionLength, deliverySubscriptionType,
 			deliverySubscriptionTypeSettingsUnicodeProperties,
 			deliveryMaxSubscriptionCycles);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public CPDefinition updateSubscriptionInfo(
-			long cpDefinitionId, boolean subscriptionEnabled,
-			int subscriptionLength, String subscriptionType,
-			com.liferay.portal.kernel.util.UnicodeProperties
-				subscriptionTypeSettingsUnicodeProperties,
-			long maxSubscriptionCycles,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _cpDefinitionService.updateSubscriptionInfo(
-			cpDefinitionId, subscriptionEnabled, subscriptionLength,
-			subscriptionType, subscriptionTypeSettingsUnicodeProperties,
-			maxSubscriptionCycles, serviceContext);
 	}
 
 	@Override

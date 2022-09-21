@@ -35,12 +35,13 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 	fdsActionDropdownItems="<%= objectDefinitionsFieldsDisplayContext.getFDSActionDropdownItems() %>"
 	formName="fm"
 	id="<%= ObjectDefinitionsFDSNames.OBJECT_FIELDS %>"
+	propsTransformer="js/ObjectFieldsFDSPropsTransformer"
 	style="fluid"
 />
 
 <div id="<portlet:namespace />AddObjectField">
 	<react:component
-		module="js/components/ModalAddObjectField"
+		module="js/components/ObjectField/AddObjectField"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"apiURL", objectDefinitionsFieldsDisplayContext.getAPIURL()

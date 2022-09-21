@@ -150,6 +150,24 @@ public class CTCollectionLocalServiceUtil {
 		return getService().deletePersistedModel(persistedModel);
 	}
 
+	public static void discardCTEntries(
+			long ctCollectionId, long modelClassNameId, long modelClassPK,
+			boolean force)
+		throws PortalException {
+
+		getService().discardCTEntries(
+			ctCollectionId, modelClassNameId, modelClassPK, force);
+	}
+
+	public static void discardCTEntry(
+			long ctCollectionId, long modelClassNameId, long modelClassPK,
+			boolean force)
+		throws PortalException {
+
+		getService().discardCTEntry(
+			ctCollectionId, modelClassNameId, modelClassPK, force);
+	}
+
 	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
@@ -327,6 +345,12 @@ public class CTCollectionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
+	}
+
+	public static boolean hasUnapprovedChanges(long ctCollectionId)
+		throws java.sql.SQLException {
+
+		return getService().hasUnapprovedChanges(ctCollectionId);
 	}
 
 	public static boolean isCTEntryEnclosed(

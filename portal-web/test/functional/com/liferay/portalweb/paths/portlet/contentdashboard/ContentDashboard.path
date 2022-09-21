@@ -285,6 +285,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>INFO_PANEL</td>
+	<td>//*[contains(@class,'content-dashboard') and contains(@class,'sidebar')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>INFO_PANEL_SECTION_TITLE</td>
 	<td>//*[contains(@class,'panel-title') and contains(text(),'${sectionName}')]</td>
 	<td></td>
@@ -447,6 +452,11 @@
 <tr>
 	<td>TYPE_COLUMN_VALUE</td>
 	<td>//td[contains(@class,'lfr-type-column') and contains(text(),'${assetType}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>URL_LABEL</td>
+	<td>//*[contains(@class, 'sidebar-dl') and descendant::input] //h5</td>
 	<td></td>
 </tr>
 <tr>

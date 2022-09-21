@@ -19,8 +19,8 @@ import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardConstants;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryTracker;
-import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardItemSearchClassMapperTracker;
 import com.liferay.content.dashboard.web.internal.util.AssetVocabularyUtil;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
@@ -34,14 +34,12 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,18 +57,16 @@ public class AddDefaultAssetVocabulariesPortalInstanceLifecycleListener
 			company, PropsValues.ASSET_VOCABULARY_DEFAULT,
 			AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC);
 
-		Collection<Long> classNameIds =
-			_contentDashboardItemFactoryTracker.getClassNameIds();
+		Set<Long> searchClassNameIds = new HashSet<>();
 
-		Stream<Long> stream = classNameIds.stream();
+		for (String className :
+				_contentDashboardItemFactoryTracker.getClassNames()) {
 
-		Set<Long> searchClassNameIds = stream.map(
-			classNameId -> _portal.getClassNameId(
-				_contentDashboardItemSearchClassMapperTracker.
-					getSearchClassName(_portal.getClassName(classNameId)))
-		).collect(
-			Collectors.toSet()
-		);
+			searchClassNameIds.add(
+				_portal.getClassNameId(
+					_infoSearchClassMapperTracker.getSearchClassName(
+						className)));
+		}
 
 		for (ContentDashboardConstants.DefaultInternalAssetVocabularyName
 				defaultInternalAssetVocabularyName :
@@ -131,8 +127,7 @@ public class AddDefaultAssetVocabulariesPortalInstanceLifecycleListener
 		_contentDashboardItemFactoryTracker;
 
 	@Reference
-	private ContentDashboardItemSearchClassMapperTracker
-		_contentDashboardItemSearchClassMapperTracker;
+	private InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
 
 	@Reference
 	private Language _language;

@@ -146,7 +146,7 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 
 			List<Individual> items = individualResults.getItems();
 
-			if (!ListUtil.isEmpty(items)) {
+			if (ListUtil.isNotEmpty(items)) {
 				return items.get(0);
 			}
 
@@ -189,9 +189,6 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 
 		FilterBuilder filterBuilder = new FilterBuilder();
 
-		filterBuilder.addFilter(
-			"individualCount",
-			FilterConstants.COMPARISON_OPERATOR_GREATER_THAN_OR_EQUAL, 1);
 		filterBuilder.addFilter(
 			"status", FilterConstants.COMPARISON_OPERATOR_EQUALS,
 			IndividualSegment.Status.ACTIVE.name());

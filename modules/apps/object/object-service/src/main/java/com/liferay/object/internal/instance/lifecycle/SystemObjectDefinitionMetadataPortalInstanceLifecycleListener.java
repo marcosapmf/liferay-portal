@@ -19,6 +19,7 @@ import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.object.constants.ObjectSAPConstants;
 import com.liferay.object.internal.item.selector.SystemObjectEntryItemSelectorView;
+import com.liferay.object.internal.persistence.ObjectDefinitionTableArgumentsResolver;
 import com.liferay.object.internal.related.models.SystemObject1toMObjectRelatedModelsProviderImpl;
 import com.liferay.object.internal.related.models.SystemObjectMtoMObjectRelatedModelsProviderImpl;
 import com.liferay.object.internal.rest.context.path.RESTContextPathResolverImpl;
@@ -37,6 +38,7 @@ import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFacto
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
+import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -153,13 +155,6 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		_serviceTrackerList.close();
 	}
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.object.service)(release.schema.version>=1.0.0))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
 	private void _addSAPEntry(long companyId) throws PortalException {
 		SAPEntry sapEntry = _sapEntryLocalService.fetchSAPEntry(
 			companyId, ObjectSAPConstants.SAP_ENTRY_NAME);
@@ -191,9 +186,24 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 
 		try {
 			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.addOrUpdateSystemObjectDefinition(
-					companyId, systemObjectDefinitionMetadata);
+				_objectDefinitionLocalService.fetchObjectDefinition(
+					companyId, systemObjectDefinitionMetadata.getName());
 
+			if ((objectDefinition == null) ||
+				(objectDefinition.getVersion() !=
+					systemObjectDefinitionMetadata.getVersion())) {
+
+				objectDefinition =
+					_objectDefinitionLocalService.
+						addOrUpdateSystemObjectDefinition(
+							companyId, systemObjectDefinitionMetadata);
+			}
+
+			_bundleContext.registerService(
+				ArgumentsResolver.class,
+				new ObjectDefinitionTableArgumentsResolver(
+					objectDefinition.getExtensionDBTableName()),
+				null);
 			_bundleContext.registerService(
 				ItemSelectorView.class,
 				new SystemObjectEntryItemSelectorView(
@@ -273,6 +283,11 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.object.service)(release.schema.version>=1.0.0))"
+	)
+	private Release _release;
 
 	@Reference
 	private SAPEntryLocalService _sapEntryLocalService;

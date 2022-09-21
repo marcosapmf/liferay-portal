@@ -265,6 +265,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SIDEBAR_RESIZER</td>
+	<td>//div[contains(@class,'page-editor__sidebar__resizer')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>VIEWPORT</td>
 	<td>//div[contains(@class,'layout-viewport')][contains(@class,'${key_deviceType}')]</td>
 	<td></td>
@@ -477,6 +482,19 @@
 	<td></td>
 </tr>
 
+<!--ITEM_CONFIGURATION_SIDEBAR-->
+
+<tr>
+	<td>ITEM_CONFIGURATION_SIDEBAR</td>
+	<td>//div[contains(@class,'page-editor__item-configuration-sidebar')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ITEM_CONFIGURATION_SIDEBAR_OPEN</td>
+	<td>//div[contains(@class,'page-editor__item-configuration-sidebar--open')]</td>
+	<td></td>
+</tr>
+
 <!--COMMENTS_PANEL-->
 
 <tr>
@@ -571,7 +589,7 @@
 </tr>
 <tr>
 	<td>FRAGMENT_SIDEBAR_SECONDARY_TEXT</td>
-	<td>//*[contains(@class,'text-secondary')]</td>
+	<td>//*[contains(@class,'text-secondary')][not(contains(@class,'lexicon-icon'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -809,11 +827,6 @@
 	<td></td>
 </tr>
 <tr>
-	<td>PREVIEW</td>
-	<td>//div[contains(@class,'management-bar')]//button[@*='Preview']</td>
-	<td></td>
-</tr>
-<tr>
 	<td>PREVIEW_WITH_DROPDOWN_MENU</td>
 	<td>//span[(text())='-- None --']</td>
 	<td></td>
@@ -871,7 +884,7 @@
 
 <tr>
 	<td>MORE_LINK</td>
-	<td>//*[contains(@class,'page-editor__sidebar__panel-header') and contains(.,'Page Design Options')]//a[normalize-space(text())='More']</td>
+	<td>//*[contains(@class,'page-editor__sidebar__panel-header') and contains(.,'Page Design Options')]//a[normalize-space(text())='More'] | //*[contains(@class,'page-editor__sidebar__panel-header') and contains(.,'Page Design Options')]//*[name()='svg'][contains(@class,'lexicon-icon-cog')]</td>
 	<td></td>
 </tr>
 

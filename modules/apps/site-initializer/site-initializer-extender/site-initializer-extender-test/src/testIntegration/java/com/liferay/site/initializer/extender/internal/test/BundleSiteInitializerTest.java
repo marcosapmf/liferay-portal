@@ -138,6 +138,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
@@ -222,6 +223,8 @@ public class BundleSiteInitializerTest {
 		MockHttpServletRequest mockHttpServletRequest =
 			new MockHttpServletRequest();
 
+		mockHttpServletRequest.setAttribute(
+			WebKeys.USER, TestPropsValues.getUser());
 		mockHttpServletRequest.setParameter(
 			"currentURL", "http://www.liferay.com");
 
@@ -791,6 +794,8 @@ public class BundleSiteInitializerTest {
 			group.getGroupId(), KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			"test-kb-folder-name");
 
+		Assert.assertEquals(
+			"TESTKBFOLDER1", kbFolder.getExternalReferenceCode());
 		Assert.assertEquals("Test KB Folder Name", kbFolder.getName());
 
 		List<KBArticle> kbFolderKBArticles =
@@ -804,6 +809,8 @@ public class BundleSiteInitializerTest {
 
 		KBArticle kbArticle1 = kbFolderKBArticles.get(0);
 
+		Assert.assertEquals(
+			"TESTKBARTICLE1", kbArticle1.getExternalReferenceCode());
 		Assert.assertEquals("Test KB Article 1 Title", kbArticle1.getTitle());
 		Assert.assertEquals(
 			"This is the body for Test KB Article 1.", kbArticle1.getContent());
@@ -819,12 +826,16 @@ public class BundleSiteInitializerTest {
 
 		KBArticle kbArticle2 = kbArticleKBArticles.get(0);
 
+		Assert.assertEquals(
+			"TESTKBARTICLE2", kbArticle2.getExternalReferenceCode());
 		Assert.assertEquals("Test KB Article 2 Title", kbArticle2.getTitle());
 		Assert.assertEquals(
 			"This is the body for Test KB Article 2.", kbArticle2.getContent());
 
 		KBArticle kbArticle3 = kbArticleKBArticles.get(1);
 
+		Assert.assertEquals(
+			"TESTKBARTICLE3", kbArticle3.getExternalReferenceCode());
 		Assert.assertEquals("Test KB Article 3 Title", kbArticle3.getTitle());
 		Assert.assertEquals(
 			"This is the body for Test KB Article 3.", kbArticle3.getContent());
@@ -1138,7 +1149,8 @@ public class BundleSiteInitializerTest {
 		Organization organization2 = organizationsPage2.fetchFirstItem();
 
 		Assert.assertNotNull(organization2);
-		Assert.assertTrue(organization2.getNumberOfOrganizations() == 1);
+
+		Assert.assertEquals(1, organizationsPage2.getTotalCount());
 
 		_assertUserOrganizations(organization2.getId(), 1, userAccountResource);
 
@@ -1207,7 +1219,7 @@ public class BundleSiteInitializerTest {
 		int publicLayoutsCount = _layoutLocalService.getLayoutsCount(
 			group, false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
 
-		Assert.assertTrue(publicLayoutsCount == 4);
+		Assert.assertEquals(4, publicLayoutsCount);
 
 		Layout publicLayout = _layoutLocalService.getLayoutByFriendlyURL(
 			group.getGroupId(), false, "/test-public-layout");
@@ -1387,19 +1399,33 @@ public class BundleSiteInitializerTest {
 	}
 
 	private void _assertSegmentsEntries(Long groupId) {
-		List<SegmentsEntry> segmentsEntries =
-			_segmentsEntryLocalService.getSegmentsEntries(
-				groupId, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-		SegmentsEntry segmentsEntry = segmentsEntries.get(0);
-
-		Assert.assertNotNull(segmentsEntry);
-		Assert.assertTrue(segmentsEntry.isActive());
 		Assert.assertEquals(
-			"Test Segments Entry",
-			segmentsEntry.getName(LocaleUtil.getSiteDefault()));
+			2,
+			_segmentsEntryLocalService.getSegmentsEntriesCount(groupId, true));
+
+		SegmentsEntry segmentsEntry1 =
+			_segmentsEntryLocalService.fetchSegmentsEntry(
+				groupId, "TEST-SEGMENTS-ENTRY-1", true);
+
+		Assert.assertNotNull(segmentsEntry1);
+		Assert.assertTrue(segmentsEntry1.isActive());
 		Assert.assertEquals(
-			"com.liferay.portal.kernel.model.User", segmentsEntry.getType());
+			"Test Segments Entry 1",
+			segmentsEntry1.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertEquals(
+			"com.liferay.portal.kernel.model.User", segmentsEntry1.getType());
+
+		SegmentsEntry segmentsEntry2 =
+			_segmentsEntryLocalService.fetchSegmentsEntry(
+				groupId, "TEST-SEGMENTS-ENTRY-2", true);
+
+		Assert.assertNotNull(segmentsEntry2);
+		Assert.assertFalse(segmentsEntry2.isActive());
+		Assert.assertEquals(
+			"Test Segments Entry 2",
+			segmentsEntry2.getName(LocaleUtil.getSiteDefault()));
+		Assert.assertEquals(
+			"com.liferay.portal.kernel.model.User", segmentsEntry2.getType());
 	}
 
 	private void _assertSiteConfiguration(Long groupId) {

@@ -188,15 +188,42 @@ public class ObjectDefinitionResourceImpl
 					objectDefinition.getTitleObjectFieldId()));
 		}
 
+		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158672"))) {
+			return _toObjectDefinition(
+				_objectDefinitionService.updateCustomObjectDefinition(
+					objectDefinition.getExternalReferenceCode(),
+					objectDefinitionId,
+					GetterUtil.getLong(
+						objectDefinition.
+							getAccountEntryRestrictedObjectFieldId()),
+					0,
+					GetterUtil.get(objectDefinition.getTitleObjectFieldId(), 0),
+					GetterUtil.getBoolean(
+						objectDefinition.getAccountEntryRestricted()),
+					GetterUtil.getBoolean(objectDefinition.getActive(), true),
+					true, false,
+					LocalizedMapUtil.getLocalizedMap(
+						objectDefinition.getLabel()),
+					objectDefinition.getName(),
+					objectDefinition.getPanelAppOrder(),
+					objectDefinition.getPanelCategoryKey(),
+					objectDefinition.getPortlet(),
+					LocalizedMapUtil.getLocalizedMap(
+						objectDefinition.getPluralLabel()),
+					objectDefinition.getScope()));
+		}
+
 		return _toObjectDefinition(
 			_objectDefinitionService.updateCustomObjectDefinition(
-				objectDefinitionId,
+				objectDefinition.getExternalReferenceCode(), objectDefinitionId,
 				GetterUtil.getLong(
 					objectDefinition.getAccountEntryRestrictedObjectFieldId()),
 				0, GetterUtil.get(objectDefinition.getTitleObjectFieldId(), 0),
 				GetterUtil.getBoolean(
 					objectDefinition.getAccountEntryRestricted()),
 				GetterUtil.getBoolean(objectDefinition.getActive(), true),
+				objectDefinition.getEnableCategorization(),
+				objectDefinition.getEnableComments(),
 				LocalizedMapUtil.getLocalizedMap(objectDefinition.getLabel()),
 				objectDefinition.getName(), objectDefinition.getPanelAppOrder(),
 				objectDefinition.getPanelCategoryKey(),
@@ -269,6 +296,17 @@ public class ObjectDefinitionResourceImpl
 				active = objectDefinition.isActive();
 				dateCreated = objectDefinition.getCreateDate();
 				dateModified = objectDefinition.getModifiedDate();
+
+				if (GetterUtil.getBoolean(
+						PropsUtil.get("feature.flag.LPS-158672"))) {
+
+					enableCategorization =
+						objectDefinition.getEnableCategorization();
+					enableComments = objectDefinition.getEnableComments();
+				}
+
+				externalReferenceCode =
+					objectDefinition.getExternalReferenceCode();
 				id = objectDefinition.getObjectDefinitionId();
 				label = LocalizedMapUtil.getLanguageIdMap(
 					objectDefinition.getLabelMap());

@@ -115,6 +115,8 @@ definition {
 
 		FormFields.enableSwitch(fieldName = "Validation");
 
+		ScrollBy(value1 = "0, 2000");
+
 		FormFields.setValidationAcceptedDate(acceptedDateOption = "Past Dates");
 
 		Form.publishForm();

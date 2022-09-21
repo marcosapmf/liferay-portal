@@ -1327,6 +1327,15 @@ definition {
 			PageEditor.waitForAutoSave();
 		}
 
+		if (isSet(fontSize)) {
+			Select(
+				key_text = "font-size",
+				locator1 = "Select#GENERIC_SELECT_FIELD_WITH_ICON",
+				value1 = "${fontSize}");
+
+			PageEditor.waitForAutoSave();
+		}
+
 		if (isSet(headingLevel)) {
 			Select(
 				key_fieldLabel = "Heading Level",
@@ -2513,7 +2522,7 @@ definition {
 							locator1 = "Breadcrumb#BREADCRUMB_ENTRY",
 							value1 = "Sites and Libraries");
 
-						LexiconCard.clickCardTitleLink(card = "${siteName}");
+						LexiconCard.clickCardTitle(card = "${siteName}");
 					}
 
 					Portlet.expandTree();
@@ -2630,8 +2639,6 @@ definition {
 		}
 		else {
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
-
-			AssertElementPresent.assertVisible(locator1 = "Button#SELECT_FILE");
 
 			WaitForEditable(locator1 = "TextInput#FILE");
 
@@ -3725,9 +3732,7 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 	}
 
 	macro gotoEllipsisMenuItemInPageContentPanel {
-		PageEditor.gotoTab(tabName = "Browser");
-
-		Navigator.gotoNavTab(navTab = "Page Content");
+		PageEditor.gotoTab(tabName = "Page Content");
 
 		LexiconEntry.gotoFragmentPageContentEllipsisMenuItem(
 			menuItem = "${menuItem}",
@@ -3740,8 +3745,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 		}
 
 		PageEditor.gotoTab(tabName = "Browser");
-
-		Navigator.gotoNavTab(navTab = "Page Elements");
 
 		if (IsElementNotPresent(key_nodeName = "${fragmentName}", locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_ACTIVE")) {
 			Click(
@@ -3815,15 +3818,12 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 	}
 
 	macro gotoTab {
-		if (IsElementPresent(locator1 = "ProductMenu#PRODUCT_MENU_OPENED")) {
+		if ((IsElementPresent(locator1 = "ProductMenu#PRODUCT_MENU_OPENED")) && (IsElementNotPresent(key_tabName = "${tabName}", locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON_ACTIVE"))) {
 			Click(
 				key_tabName = "${tabName}",
 				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
-		}
-		else if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			Click(
-				key_tabName = "${tabName}",
-				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
+
+			WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 		}
 		else {
 			WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
@@ -3864,8 +3864,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 		}
 
 		PageEditor.gotoTab(tabName = "Browser");
-
-		Navigator.gotoNavTab(navTab = "Page Elements");
 
 		if (IsElementNotPresent(key_index = "${index}", key_nodeName = "${fragmentName}", locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_INDEX")) {
 			Click(
@@ -3919,8 +3917,10 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 			locator1 = "Button#ANY");
 	}
 
-	macro openPreviewMode {
-		Click(locator1 = "PageEditor#PREVIEW");
+	macro previewInANewTab {
+		LexiconEntry.gotoHeaderMenuItem(menuItem = "Preview in a New Tab");
+
+		SelectWindow.selectPopUp(locator1 = "null");
 	}
 
 	macro prioritizeExperience {
@@ -3934,15 +3934,10 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 	macro publish {
 		Button.click(button = "Publish");
 
-		if ((IsElementPresent(locator1 = "Modal#BODY")) && (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Style Errors Detected"))) {
+		if ((IsElementPresent(locator1 = "Modal#BODY")) && (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Form Errors"))) {
 			Modal.publish(
 				action = "${action}",
-				warningMessage = "Some of the fields have invalid values. If you continue publishing, the latest valid values will display.");
-		}
-		else if ((IsElementPresent(locator1 = "Modal#BODY")) && (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Form Errors"))) {
-			Modal.publish(
-				action = "${action}",
-				warningMessage = "The following errors have been found in the page forms. Publishing without fixing these errors may affect form performance. Are you sure you want to publish?");
+				warningMessage = "The following errors have been found with the forms on the page. Publishing without fixing these errors may affect form performance. Are you sure you want to publish?");
 		}
 		else if ((IsElementPresent(locator1 = "Modal#BODY")) && (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Submit Button Missing"))) {
 			Modal.publish(
@@ -3953,6 +3948,11 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 			Modal.publish(
 				action = "${action}",
 				warningMessage = "${objectName} form has some fragments not mapped to object fields. Unmapped fragments data will not be stored. Are you sure you want to publish?");
+		}
+		else if ((IsElementPresent(locator1 = "Modal#BODY")) && (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Required Fields Missing"))) {
+			Modal.publish(
+				action = "${action}",
+				warningMessage = "${objectName} form has one or more required fields not mapped from the form. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
 		}
 		else if ((IsElementPresent(locator1 = "Modal#BODY")) && (IsTextEqual(locator1 = "Modal#HEADER", value1 = "Required Fields Hidden"))) {
 			Modal.publish(
@@ -4057,8 +4057,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 		PageEditor.gotoTab(tabName = "Browser");
 
-		Navigator.gotoNavTab(navTab = "Page Elements");
-
 		Click(
 			key_index = "${index}",
 			key_nodeName = "${fragmentName}",
@@ -4074,8 +4072,8 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 	macro searchFragmentViaSidebar {
 		WaitForPageLoad();
 
-		if (IsElementPresent(locator1 = "Icon#TIMES")) {
-			Click(locator1 = "Icon#TIMES");
+		if (IsElementPresent(locator1 = "Icon#TIMES_2")) {
+			Click(locator1 = "Icon#TIMES_2");
 		}
 
 		Navigator.gotoNavTab(navTab = "Fragments");
@@ -4086,7 +4084,7 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 	}
 
 	macro searchInPageContentPanel {
-		Navigator.gotoNavTab(navTab = "Page Content");
+		PageEditor.gotoTab(tabName = "Page Content");
 
 		Type(
 			locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_FIELD",
@@ -4105,7 +4103,7 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 	macro selectContentFilter {
 		AssertVisible(
-			key_sidebarButton = "Browser",
+			key_sidebarButton = "Page Content",
 			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
 
 		Click(locator1 = "PageEditor#PAGE_CONTENTS_CONTENT_FILTER_TOGGLE");
@@ -4140,16 +4138,9 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 	}
 
 	macro switchViewport {
-		if (isSet(modal)) {
-			Click(
-				key_deviceType = "${deviceType}",
-				locator1 = "Modal#DEVICE_TYPE");
-		}
-		else {
-			Click(
-				key_deviceType = "${deviceType}",
-				locator1 = "PageEditor#DEVICE_TYPE");
-		}
+		Click(
+			key_deviceType = "${deviceType}",
+			locator1 = "PageEditor#DEVICE_TYPE");
 
 		if ("${deviceType}" == "Desktop") {
 			var viewport = "desktop";
@@ -4164,11 +4155,15 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 			var viewport = "portraitMobile";
 		}
 
-		if (!(isSet(modal))) {
-			WaitForVisible(
-				key_deviceType = "${viewport}",
-				locator1 = "PageEditor#VIEWPORT");
-		}
+		WaitForVisible(
+			key_deviceType = "${viewport}",
+			locator1 = "PageEditor#VIEWPORT");
+	}
+
+	macro togglePreview {
+		Click(
+			key_text = "view",
+			locator1 = "Icon#ANY");
 	}
 
 	macro unhideFragmentViaPageStructure {
@@ -4177,8 +4172,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 		}
 
 		PageEditor.gotoTab(tabName = "Browser");
-
-		Navigator.gotoNavTab(navTab = "Page Elements");
 
 		Click.clickNoWaitForVisible(
 			key_index = "${index}",
@@ -4190,8 +4183,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 	macro unhideFragmentViaPageStyles {
 		PageEditor.gotoTab(tabName = "Browser");
-
-		Navigator.gotoNavTab(navTab = "Page Elements");
 
 		if (IsElementNotPresent(key_nodeName = "${fragmentName}", locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_ACTIVE")) {
 			Click(

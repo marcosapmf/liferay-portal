@@ -22,7 +22,6 @@ import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.web.internal.security.permission.resource.BlogsEntryPermission;
 import com.liferay.blogs.web.internal.util.BlogsEntryUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -31,6 +30,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinder;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinderRegistryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -227,11 +227,18 @@ public class BlogsEntryAssetRenderer
 			String noSuchEntryRedirect)
 		throws PortalException {
 
-		if (_assetDisplayPageFriendlyURLProvider != null) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)liferayPortletRequest.getAttribute(
-					WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
+		return getURLViewInContext(themeDisplay, noSuchEntryRedirect);
+	}
+
+	public String getURLViewInContext(
+			ThemeDisplay themeDisplay, String noSuchEntryRedirect)
+		throws PortalException {
+
+		if (_assetDisplayPageFriendlyURLProvider != null) {
 			String friendlyURL =
 				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
 					getClassName(), getClassPK(), themeDisplay);
@@ -241,17 +248,13 @@ public class BlogsEntryAssetRenderer
 			}
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)liferayPortletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		if (!_hasViewInContextGroupLayout(_entry.getGroupId(), themeDisplay)) {
 			return null;
 		}
 
 		return getURLViewInContext(
-			liferayPortletRequest, noSuchEntryRedirect, "/blogs/find_entry",
-			"entryId", _entry.getEntryId());
+			themeDisplay, noSuchEntryRedirect, "/blogs/find_entry", "entryId",
+			_entry.getEntryId());
 	}
 
 	@Override

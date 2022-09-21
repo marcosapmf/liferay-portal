@@ -21,13 +21,16 @@ import com.liferay.knowledge.base.constants.KBActionKeys;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBFolder;
+import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.service.KBArticleServiceUtil;
 import com.liferay.knowledge.base.service.KBFolderServiceUtil;
+import com.liferay.knowledge.base.service.KBTemplateServiceUtil;
 import com.liferay.knowledge.base.util.comparator.KBArticleTitleComparator;
 import com.liferay.knowledge.base.util.comparator.KBObjectsPriorityComparator;
+import com.liferay.knowledge.base.util.comparator.KBTemplateTitleComparator;
 import com.liferay.knowledge.base.web.internal.display.context.helper.KBArticleURLHelper;
 import com.liferay.knowledge.base.web.internal.security.permission.resource.AdminPermission;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.knowledge.base.web.internal.util.KBDropdownItemsProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -35,10 +38,13 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -51,6 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.portlet.PortletRequest;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -69,10 +76,16 @@ public class KBAdminNavigationDisplayContext {
 
 		_kbArticleURLHelper = new KBArticleURLHelper(
 			renderRequest, renderResponse);
+		_liferayPortletRequest = PortalUtil.getLiferayPortletRequest(
+			(PortletRequest)_httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST));
 		_liferayPortletResponse = LiferayPortletUtil.getLiferayPortletResponse(
 			renderResponse);
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+
+		_kbDropdownItemsProvider = new KBDropdownItemsProvider(
+			_liferayPortletRequest, _liferayPortletResponse);
 	}
 
 	public List<NavigationItem> getInfoPanelNavigationItems() {
@@ -180,7 +193,7 @@ public class KBAdminNavigationDisplayContext {
 				!mvcPath.equals("/admin/view_kb_templates.jsp")) {
 
 				active = true;
-				navigationItemsJSONArray = _getKBArticleNavigationJSONArray();
+				navigationItemsJSONArray = _getChildrenJSONArray();
 			}
 
 			verticalNavigationItems.add(
@@ -199,6 +212,11 @@ public class KBAdminNavigationDisplayContext {
 					"key", "article"
 				).put(
 					"navigationItems", navigationItemsJSONArray
+				).put(
+					"selectedItemId",
+					ParamUtil.getLong(
+						_httpServletRequest, "parentResourcePrimKey",
+						KBFolderConstants.DEFAULT_PARENT_FOLDER_ID)
 				).put(
 					"title",
 					LanguageUtil.get(
@@ -231,6 +249,8 @@ public class KBAdminNavigationDisplayContext {
 					"icon", "page-template"
 				).put(
 					"key", "template"
+				).put(
+					"navigationItems", _getNavigationItemsJSONArray()
 				).put(
 					"title", LanguageUtil.get(_httpServletRequest, "templates")
 				));
@@ -282,8 +302,7 @@ public class KBAdminNavigationDisplayContext {
 	private JSONArray _getChildKBArticlesJSONArray(KBArticle parentKBArticle)
 		throws PortalException {
 
-		JSONArray articleNavigationJSONArray =
-			JSONFactoryUtil.createJSONArray();
+		JSONArray childrenJSONArray = JSONFactoryUtil.createJSONArray();
 
 		List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticles(
 			parentKBArticle.getGroupId(), parentKBArticle.getResourcePrimKey(),
@@ -291,8 +310,12 @@ public class KBAdminNavigationDisplayContext {
 			new KBArticleTitleComparator(true));
 
 		for (KBArticle kbArticle : kbArticles) {
-			articleNavigationJSONArray.put(
+			childrenJSONArray.put(
 				JSONUtil.put(
+					"actions",
+					_kbDropdownItemsProvider.getKBArticleDropdownItems(
+						kbArticle)
+				).put(
 					"children", _getChildKBArticlesJSONArray(kbArticle)
 				).put(
 					"href",
@@ -308,16 +331,17 @@ public class KBAdminNavigationDisplayContext {
 				));
 		}
 
-		return articleNavigationJSONArray;
+		return childrenJSONArray;
 	}
 
-	private JSONArray _getKBArticleNavigationJSONArray()
-		throws PortalException {
-
+	private JSONArray _getChildrenJSONArray() throws PortalException {
 		return JSONUtil.put(
 			JSONUtil.put(
+				"actions",
+				_kbDropdownItemsProvider.getKBFolderDropdownItems(null)
+			).put(
 				"children",
-				_getKBArticleNavigationJSONArray(
+				_getChildrenJSONArray(
 					KBFolderConstants.DEFAULT_PARENT_FOLDER_ID)
 			).put(
 				"href",
@@ -335,11 +359,10 @@ public class KBAdminNavigationDisplayContext {
 			));
 	}
 
-	private JSONArray _getKBArticleNavigationJSONArray(long parentFolderId)
+	private JSONArray _getChildrenJSONArray(long parentFolderId)
 		throws PortalException {
 
-		JSONArray articleNavigationJSONArray =
-			JSONFactoryUtil.createJSONArray();
+		JSONArray childrenJSONArray = JSONFactoryUtil.createJSONArray();
 
 		List<Object> kbObjects = KBFolderServiceUtil.getKBFoldersAndKBArticles(
 			_themeDisplay.getScopeGroupId(), parentFolderId,
@@ -347,15 +370,16 @@ public class KBAdminNavigationDisplayContext {
 			new KBObjectsPriorityComparator<>(true));
 
 		for (Object kbObject : kbObjects) {
-			JSONObject articleNavigationJSONObject =
-				JSONFactoryUtil.createJSONObject();
+			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
 			if (kbObject instanceof KBFolder) {
 				KBFolder kbFolder = (KBFolder)kbObject;
 
-				articleNavigationJSONObject.put(
-					"children",
-					_getKBArticleNavigationJSONArray(kbFolder.getKbFolderId())
+				jsonObject.put(
+					"actions",
+					_kbDropdownItemsProvider.getKBFolderDropdownItems(kbFolder)
+				).put(
+					"children", _getChildrenJSONArray(kbFolder.getKbFolderId())
 				).put(
 					"href",
 					PortletURLBuilder.createRenderURL(
@@ -378,7 +402,11 @@ public class KBAdminNavigationDisplayContext {
 			else {
 				KBArticle kbArticle = (KBArticle)kbObject;
 
-				articleNavigationJSONObject.put(
+				jsonObject.put(
+					"actions",
+					_kbDropdownItemsProvider.getKBArticleDropdownItems(
+						kbArticle)
+				).put(
 					"children", _getChildKBArticlesJSONArray(kbArticle)
 				).put(
 					"href",
@@ -394,14 +422,50 @@ public class KBAdminNavigationDisplayContext {
 				);
 			}
 
-			articleNavigationJSONArray.put(articleNavigationJSONObject);
+			childrenJSONArray.put(jsonObject);
 		}
 
-		return articleNavigationJSONArray;
+		return childrenJSONArray;
+	}
+
+	private JSONArray _getNavigationItemsJSONArray() {
+		JSONArray navigationItemsJSONArray = JSONFactoryUtil.createJSONArray();
+
+		List<KBTemplate> kbTemplates =
+			KBTemplateServiceUtil.getGroupKBTemplates(
+				_themeDisplay.getScopeGroupId(), QueryUtil.ALL_POS,
+				WorkflowConstants.STATUS_ANY,
+				new KBTemplateTitleComparator(true));
+
+		for (KBTemplate kbTemplate : kbTemplates) {
+			navigationItemsJSONArray.put(
+				JSONUtil.put(
+					"actions",
+					_kbDropdownItemsProvider.getKBTemplateDropdownItems(
+						kbTemplate)
+				).put(
+					"href",
+					PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setMVCPath(
+						"/admin/common/edit_kb_template.jsp"
+					).setRedirect(
+						PortalUtil.getCurrentURL(_httpServletRequest)
+					).setParameter(
+						"kbTemplateId", kbTemplate.getKbTemplateId()
+					).buildString()
+				).put(
+					"name", kbTemplate.getTitle()
+				));
+		}
+
+		return navigationItemsJSONArray;
 	}
 
 	private final HttpServletRequest _httpServletRequest;
 	private final KBArticleURLHelper _kbArticleURLHelper;
+	private final KBDropdownItemsProvider _kbDropdownItemsProvider;
+	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final ThemeDisplay _themeDisplay;
 

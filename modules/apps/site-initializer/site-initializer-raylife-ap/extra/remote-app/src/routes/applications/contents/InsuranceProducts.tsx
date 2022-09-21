@@ -31,14 +31,22 @@ type NewApplicationStorageTypes = {
 	productName: string;
 };
 
+enum CARD {
+	PERSONAL = 'Personal',
+	BUSINESS = 'Business',
+}
+
 const InsuranceProducts: React.FC<InsuranceProductsProps> = ({
 	selectedCard,
 }) => {
 	const [products, setProducts] = useState([]);
 
-	const [cardPersonalSelected, setCardPersonalSelected] = useState<string>(
-		'Auto'
-	);
+	const cardNameSelected =
+		selectedCard[0].name === CARD.PERSONAL
+			? 'Auto'
+			: 'Business Owners Policy';
+
+	const [cardSelected, setCardSelected] = useState<string>(cardNameSelected);
 
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -55,6 +63,15 @@ const InsuranceProducts: React.FC<InsuranceProductsProps> = ({
 	};
 
 	useEffect(() => {
+		const newApplicationStorage: NewApplicationStorageTypes = {
+			productName: cardSelected,
+		};
+
+		localStorage.setItem(
+			'raylife-ap-storage',
+			JSON.stringify(newApplicationStorage)
+		);
+
 		getChannelId(selectedCard[0].channelName).then((response) => {
 			getProducts(response.data.items[0].id, selectedCard[0].id);
 		});
@@ -63,7 +80,7 @@ const InsuranceProducts: React.FC<InsuranceProductsProps> = ({
 	}, []);
 
 	const onClickCard = (name: string) => {
-		setCardPersonalSelected(name);
+		setCardSelected(name);
 
 		const newApplicationStorage: NewApplicationStorageTypes = {
 			productName: name,
@@ -95,8 +112,10 @@ const InsuranceProducts: React.FC<InsuranceProductsProps> = ({
 													'application-card card-hover border border-secondary',
 													{
 														active:
-															cardPersonalSelected ===
-															cardPersonal.name,
+															cardSelected ===
+																cardPersonal.name ||
+															(index === 0 &&
+																!cardSelected),
 													}
 												)}
 												onClick={() =>

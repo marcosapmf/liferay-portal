@@ -15,10 +15,10 @@
 import ClayButton from '@clayui/button';
 import {ClayToggle} from '@clayui/form';
 import {useModal} from '@clayui/modal';
-import React, {useContext, useState} from 'react';
+import React, {useState} from 'react';
 
 import Panel from '../../Panel/Panel';
-import LayoutContext, {TYPES} from '../context';
+import {TYPES, useLayoutContext} from '../objectLayoutContext';
 import {BoxType, TObjectLayoutRow} from '../types';
 import HeaderDropdown from './HeaderDropdown';
 import ModalAddObjectLayoutField from './ModalAddObjectLayoutField';
@@ -41,11 +41,18 @@ const ObjectLayoutBox: React.FC<IObjectLayoutBoxProps> = ({
 	tabIndex,
 	type,
 }) => {
-	const [{isViewOnly}, dispatch] = useContext(LayoutContext);
+	const [{isViewOnly, objectDefinition}, dispatch] = useLayoutContext();
 	const [visibleModal, setVisibleModal] = useState(false);
 	const {observer, onClose} = useModal({
 		onClose: () => setVisibleModal(false),
 	});
+
+	const disabled =
+		(Liferay.FeatureFlags['LPS-158672'] &&
+			((type === 'comments' && !objectDefinition.enableComments) ||
+				(type === 'categorization' &&
+					!objectDefinition.enableCategorization))) ||
+		isViewOnly;
 
 	return (
 		<>
@@ -55,7 +62,7 @@ const ObjectLayoutBox: React.FC<IObjectLayoutBoxProps> = ({
 						<>
 							<ClayToggle
 								aria-label={Liferay.Language.get('collapsible')}
-								disabled={isViewOnly}
+								disabled={disabled}
 								label={Liferay.Language.get('collapsible')}
 								onToggle={(value) => {
 									dispatch({
@@ -96,9 +103,11 @@ const ObjectLayoutBox: React.FC<IObjectLayoutBoxProps> = ({
 										type: TYPES.DELETE_OBJECT_LAYOUT_BOX,
 									});
 								}}
+								disabled={disabled}
 							/>
 						</>
 					}
+					disabled={disabled}
 					title={label}
 					type={type}
 				/>

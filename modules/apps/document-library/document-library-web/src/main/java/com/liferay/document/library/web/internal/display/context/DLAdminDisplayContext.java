@@ -40,7 +40,6 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.FolderItemSelectorReturnType;
 import com.liferay.item.selector.criteria.folder.criterion.FolderItemSelectorCriterion;
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
@@ -57,6 +56,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.capabilities.TrashCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -112,15 +112,15 @@ public class DLAdminDisplayContext {
 		AssetAutoTaggerConfiguration assetAutoTaggerConfiguration,
 		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		VersioningStrategy versioningStrategy, TrashHelper trashHelper) {
+		LiferayPortletResponse liferayPortletResponse, TrashHelper trashHelper,
+		VersioningStrategy versioningStrategy) {
 
 		_assetAutoTaggerConfiguration = assetAutoTaggerConfiguration;
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_versioningStrategy = versioningStrategy;
 		_trashHelper = trashHelper;
+		_versioningStrategy = versioningStrategy;
 
 		_dlRequestHelper = new DLRequestHelper(_httpServletRequest);
 

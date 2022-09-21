@@ -34,8 +34,6 @@ import com.liferay.portal.security.ldap.exportimport.LDAPUserImporter;
 import com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration;
 import com.liferay.portal.security.ldap.internal.constants.LDAPDestinationNames;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Dictionary;
 
 import org.osgi.service.component.annotations.Activate;
@@ -99,49 +97,6 @@ public class UserImportConfigurationModelListener
 		_importUsers(companyId, _getLastImportTime());
 	}
 
-	@Reference(unbind = "-")
-	protected void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(
-		target = "(destination.name=" + LDAPDestinationNames.SCHEDULED_USER_LDAP_IMPORT + ")",
-		unbind = "-"
-	)
-	protected void setDestination(Destination destination) {
-	}
-
-	@Reference(
-		target = "(factoryPid=com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration)",
-		unbind = "-"
-	)
-	protected void setLDAPImportConfigurationProvider(
-		ConfigurationProvider<LDAPImportConfiguration>
-			ldapImportConfigurationProvider) {
-
-		_ldapImportConfigurationProvider = ldapImportConfigurationProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSchedulerEngineHelper(
-		SchedulerEngineHelper schedulerEngineHelper) {
-
-		_schedulerEngineHelper = schedulerEngineHelper;
-	}
-
-	private Date _getFutureDate(int interval) {
-		Calendar calendar = Calendar.getInstance();
-
-		calendar.setLenient(true);
-		calendar.setTime(new Date());
-
-		calendar.add(Calendar.MINUTE, interval);
-
-		return calendar.getTime();
-	}
-
 	private long _getLastImportTime() throws Exception {
 		long time =
 			System.currentTimeMillis() - _ldapUserImporter.getLastImportTime();
@@ -200,8 +155,7 @@ public class UserImportConfigurationModelListener
 		String className = clazz.getName();
 
 		Trigger trigger = _triggerFactory.createTrigger(
-			className, className, _getFutureDate(interval), null, interval,
-			TimeUnit.MINUTE);
+			className, className, null, null, interval, TimeUnit.MINUTE);
 
 		SchedulerEntry schedulerEntry = new SchedulerEntryImpl(
 			className, trigger);
@@ -214,7 +168,17 @@ public class UserImportConfigurationModelListener
 	private static final Log _log = LogFactoryUtil.getLog(
 		UserImportConfigurationModelListener.class);
 
+	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference(
+		target = "(destination.name=" + LDAPDestinationNames.SCHEDULED_USER_LDAP_IMPORT + ")"
+	)
+	private Destination _destination;
+
+	@Reference(
+		target = "(factoryPid=com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration)"
+	)
 	private ConfigurationProvider<LDAPImportConfiguration>
 		_ldapImportConfigurationProvider;
 
@@ -224,6 +188,7 @@ public class UserImportConfigurationModelListener
 	)
 	private volatile LDAPUserImporter _ldapUserImporter;
 
+	@Reference
 	private SchedulerEngineHelper _schedulerEngineHelper;
 
 	@Reference

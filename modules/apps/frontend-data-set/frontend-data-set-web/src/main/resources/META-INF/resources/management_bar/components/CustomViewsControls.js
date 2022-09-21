@@ -17,21 +17,40 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import {ManagementToolbar} from 'frontend-js-components-web';
-import {openModal} from 'frontend-js-web';
-import React, {useContext, useState} from 'react';
+import {fetch, openModal, openToast} from 'frontend-js-web';
+import React, {useContext, useRef, useState} from 'react';
 
-import FrontendDataSetContext from './../../FrontendDataSetContext';
+import FrontendDataSetContext from '../../FrontendDataSetContext';
+import ViewsContext from '../../views/ViewsContext';
+import {VIEWS_ACTION_TYPES} from '../../views/viewsReducer';
 
 const CustomViewsControls = () => {
 	const [viewsDropdownActive, setViewsDropdownActive] = useState(false);
 	const [actionsDropdownActive, setActionsDropdownActive] = useState(false);
 
-	const {namespace} = useContext(FrontendDataSetContext);
+	const {appURL, id: fdsName, namespace, portletId} = useContext(
+		FrontendDataSetContext
+	);
+	const [
+		{
+			activeCustomViewId,
+			activeView,
+			customViews,
+			filters,
+			paginationDelta,
+			sorting,
+			viewUpdated,
+			visibleFieldNames,
+		},
+		viewsDispatch,
+	] = useContext(ViewsContext);
+
+	const customViewLabelInputRef = useRef();
 
 	const SaveCustomViewModalBody = () => {
 		return (
 			<ClayForm.Group>
-				<label htmlFor={`${namespace}customViewNameInput`}>
+				<label htmlFor={`${namespace}customViewLabelInput`}>
 					{Liferay.Language.get('name')}
 
 					<RequiredMark />
@@ -39,11 +58,89 @@ const CustomViewsControls = () => {
 
 				<ClayInput
 					autoFocus={true}
-					id={`${namespace}customViewNameInput`}
+					id={`${namespace}customViewLabelInput`}
+					ref={customViewLabelInputRef}
 					type="text"
 				/>
 			</ClayForm.Group>
 		);
+	};
+
+	const getNextCustomViewId = () => {
+		const ids = Object.keys(customViews);
+
+		let nextId = 1;
+
+		if (ids.length) {
+			nextId = Math.max(...ids.map((item) => Number(item))) + 1;
+		}
+
+		return String(nextId);
+	};
+
+	const saveCustomView = ({id, label, processClose}) => {
+		const url = new URL(`${appURL}/fds/${fdsName}/custom-views`);
+
+		url.searchParams.append('portletId', portletId);
+
+		const viewState = {
+			baseView: activeView,
+			customViewLabel: label ?? customViews[id].customViewLabel,
+			filters,
+			paginationDelta,
+			sorting,
+			visibleFieldNames,
+		};
+
+		fetch(url, {
+			body: JSON.stringify({
+				customViewId: id,
+				viewState,
+			}),
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+			},
+			method: 'POST',
+		})
+			.then((response) => {
+				if (response.ok) {
+					if (processClose) {
+						processClose();
+					}
+
+					openToast({
+						message: Liferay.Language.get(
+							'view-was-saved-successfully'
+						),
+						type: 'success',
+					});
+
+					viewsDispatch({
+						type: VIEWS_ACTION_TYPES.ADD_OR_UPDATE_CUSTOM_VIEW,
+						value: {
+							id,
+							viewState,
+						},
+					});
+				}
+				else {
+					openToast({
+						message: Liferay.Language.get(
+							'an-unexpected-error-occurred'
+						),
+						type: 'danger',
+					});
+				}
+			})
+			.catch(() => {
+				openToast({
+					message: Liferay.Language.get(
+						'an-unexpected-error-occurred'
+					),
+					type: 'danger',
+				});
+			});
 	};
 
 	const openSaveCustomViewModal = () => {
@@ -58,11 +155,15 @@ const CustomViewsControls = () => {
 				{
 					label: Liferay.Language.get('save'),
 					onClick: ({processClose}) => {
-						processClose();
+						saveCustomView({
+							id: getNextCustomViewId(),
+							label: customViewLabelInputRef.current.value,
+							processClose,
+						});
 					},
 				},
 			],
-			title: Liferay.Language.get('save-new-view'),
+			title: Liferay.Language.get('save-new-view-as'),
 		});
 	};
 
@@ -71,15 +172,24 @@ const CustomViewsControls = () => {
 			<ManagementToolbar.Item>
 				<ClayDropDown
 					active={viewsDropdownActive}
-					className="custom-views-dropdown"
+					className="custom-views-selection"
 					onActiveChange={setViewsDropdownActive}
 					trigger={
 						<ClayButton displayType="unstyled">
 							<span className="navbar-text-truncate">
-								{Liferay.Language.get('default-view')}
+								{activeCustomViewId
+									? customViews[activeCustomViewId]
+											.customViewLabel
+									: Liferay.Language.get('default-view')}
 							</span>
 
-							<ClayIcon className="ml-2" symbol="caret-double" />
+							{viewUpdated && (
+								<span className="inline-item-after reference-mark view-updated-mark">
+									<ClayIcon symbol="asterisk" />
+								</span>
+							)}
+
+							<ClayIcon className="ml-2" symbol="caret-bottom" />
 						</ClayButton>
 					}
 				>
@@ -87,6 +197,12 @@ const CustomViewsControls = () => {
 						<ClayDropDown.Item>
 							{Liferay.Language.get('default-view')}
 						</ClayDropDown.Item>
+
+						{Object.keys(customViews).map((id) => (
+							<ClayDropDown.Item key={id}>
+								{customViews[id].customViewLabel}
+							</ClayDropDown.Item>
+						))}
 					</ClayDropDown.ItemList>
 				</ClayDropDown>
 			</ManagementToolbar.Item>
@@ -94,6 +210,8 @@ const CustomViewsControls = () => {
 			<ManagementToolbar.Item>
 				<ClayDropDown
 					active={actionsDropdownActive}
+					className="custom-views-actions"
+					hasLeftSymbols
 					onActiveChange={setActionsDropdownActive}
 					trigger={
 						<ClayButton displayType="unstyled">
@@ -102,8 +220,26 @@ const CustomViewsControls = () => {
 					}
 				>
 					<ClayDropDown.ItemList>
-						<ClayDropDown.Item onClick={openSaveCustomViewModal}>
-							{Liferay.Language.get('save')}
+						{activeCustomViewId && (
+							<ClayDropDown.Item
+								onClick={() => {
+									saveCustomView({
+										id: activeCustomViewId,
+									});
+
+									setActionsDropdownActive(false);
+								}}
+								symbolLeft="disk"
+							>
+								{Liferay.Language.get('save-view')}
+							</ClayDropDown.Item>
+						)}
+
+						<ClayDropDown.Item
+							onClick={openSaveCustomViewModal}
+							symbolLeft="disk"
+						>
+							{Liferay.Language.get('save-view-as')}
 						</ClayDropDown.Item>
 					</ClayDropDown.ItemList>
 				</ClayDropDown>

@@ -172,6 +172,31 @@ module.framework.properties.osgi.console=11312</echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="create-custom-element-client-extension">
+		<sequential>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.client.extension.type.configuration.CETConfiguration~customElement.config">
+baseURL=&quot;&quot;
+description=&quot;Custom Element Description&quot;
+name=&quot;Vanilla Counter&quot;
+properties=&#91;&quot;test-data-user=QAuser&quot;&#93;
+type=&quot;customElement&quot;
+typeSettings=&#91;&quot;friendlyURLMapping=vanilla&quot;,&quot;instanceable=true&quot;,&quot;portletCategoryName=category.remote-apps&quot;,&quot;urls=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;vanilla-counter&#47;index.js&quot;,&quot;htmlElementName=vanilla-counter&quot;,&quot;cssURLs=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;index.css&quot;,&quot;useESM=true&quot;&#93;</echo>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="create-iframe-client-extension">
+		<sequential>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.client.extension.type.configuration.CETConfiguration~iframe.config">
+baseURL=&quot;&quot;
+description=&quot;IFrame Description&quot;
+name=&quot;My Pretty IFrame&quot;
+properties=&#91;&quot;a=1&quot;,&quot;b=2&quot;&#93;
+sourceCodeURL=&quot;&quot;
+type=&quot;iframe&quot;
+typeSettings=&#91;&quot;friendlyURLMapping=perico&quot;,&quot;instanceable=false&quot;,&quot;portletCategoryName=category.remote-apps&quot;,&quot;url=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;index.html&quot;&#93;</echo>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="decompress">
 		<attribute name="dest" />
 		<attribute name="src" />
@@ -1066,13 +1091,13 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 								</then>
 							</elseif>
 							<else>
-								<fail message="${network.interface} must be set if running get-mac-address locally" />
+								<fail message="${network.interface} must be set if running get-mac-address locally." />
 							</else>
 						</if>
 					</then>
 				</elseif>
 				<else>
-					<fail message="Support for running get-mac-address on Windows not yet added" />
+					<fail message="Support for running get-mac-address on Windows not yet added." />
 				</else>
 			</if>
 		</sequential>
@@ -2454,6 +2479,25 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 				<elseif>
 					<equals arg1="${app.server.type}" arg2="wildfly" />
 					<then>
+						<propertycopy from="jdbc.${database.type}.driver" name="jdbc.driver" />
+
+						<copy
+							file="${test.app.server.lib.portal.dir}/${jdbc.driver}"
+							tofile="${app.server.lib.global.dir}/${jdbc.driver}"
+						/>
+
+						<echo file="${app.server.lib.global.dir}/module.xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<module name="com.liferay.portal" xmlns="urn:jboss:module:1.5">
+	<resources>
+		<resource-root path="${jdbc.driver}" />
+	</resources>
+	<dependencies>
+		<module name="javax.api" />
+		<module name="javax.servlet.api" optional="true" />
+		<module name="javax.transaction.api" />
+	</dependencies>
+</module>]]></echo>
+
 						<if>
 							<not>
 								<resourcecontains
@@ -2862,6 +2906,13 @@ include-and-override=portal-liferay-online-limit.properties</echo>
 				token="${database.mysql.driver}"
 				value="${database.mariadb.driver}"
 			/>
+
+			<replace
+				file="${app.server.tomcat.classes.portal.dir}/portal-liferay-online-config.properties"
+			>
+				<replacetoken>configuration.override.com.liferay.portal.security.configuration.BasicAuthHeaderSupportConfiguration_enabled=B"false"</replacetoken>
+				<replacevalue>configuration.override.com.liferay.portal.security.configuration.BasicAuthHeaderSupportConfiguration_enabled=B"true"</replacevalue>
+			</replace>
 		</sequential>
 	</macrodef>
 
@@ -2990,18 +3041,11 @@ include-and-override=portal-liferay-online-limit.properties</echo>
 						<replacevalue>jdbc.write</replacevalue>
 					</replace>
 
-					<replace
-						file="${test.app.server.classes.portal.dir}/portal-ext.properties"
-					>
-						<replacetoken>lportal</replacetoken>
-						<replacevalue>lportal1</replacevalue>
-					</replace>
-
 					<echo append="true" file="${test.app.server.classes.portal.dir}/portal-ext.properties">
 jdbc.read.driverClassName=${database.driver}
 jdbc.read.url=${database.url}
-jdbc.read.username=${database.username}
-jdbc.read.password=${database.password}</echo>
+jdbc.read.username=read_only_user
+jdbc.read.password=password</echo>
 				</then>
 				<elseif>
 					<equals arg1="${configure.read.write.database}" arg2="jndi" />
@@ -3015,7 +3059,7 @@ jdbc.read.password=${database.password}</echo>
 							<replacevalue>
 								<![CDATA[
 									<Context>
-										<ResourceLink name="jdbc/LiferayWritePool" global="jdbc/LiferayWritePool" type="javax.sql.DataSource" />
+										<ResourceLink name="jdbc/LiferayReadPool" global="jdbc/LiferayReadPool" type="javax.sql.DataSource" />
 								]]>
 							</replacevalue>
 						</replace>
@@ -3034,11 +3078,11 @@ jdbc.read.password=${database.password}</echo>
 											maxActive="40"
 											maxIdle="20"
 											maxWait="1000"
-											name="jdbc/LiferayWritePool"
-											password="${database.password}"
+											name="jdbc/LiferayReadPool"
+											password="password"
 											type="javax.sql.DataSource"
-											url="jdbc:mysql://${database.host}/lportal1?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true"
-											username="${database.username}"
+											url="jdbc:mysql://${database.host}/lportal?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true"
+											username="read_only_user"
 										/>
 								]]>
 							</replacevalue>
@@ -3048,11 +3092,11 @@ jdbc.read.password=${database.password}</echo>
 							file="${test.app.server.classes.portal.dir}/portal-ext.properties"
 						>
 							<replacetoken>jdbc.default.jndi.name=</replacetoken>
-							<replacevalue>jdbc.read.jndi.name=jdbc/LiferayPool</replacevalue>
+							<replacevalue>jdbc.write.jndi.name=jdbc/LiferayPool</replacevalue>
 						</replace>
 
 						<echo append="true" file="${test.app.server.classes.portal.dir}/portal-ext.properties">
-jdbc.write.jndi.name=jdbc/LiferayWritePool</echo>
+jdbc.read.jndi.name=jdbc/LiferayReadPool</echo>
 					</then>
 				</elseif>
 			</if>
@@ -4127,6 +4171,24 @@ tell application "Safari" to quit
 				<then>
 					<echo append="true" file="${test.ext.properties.file}">
 						openid.provider.auth0.test.account.password=${openid.provider.auth0.test.account.password}
+					</echo>
+				</then>
+			</if>
+
+			<if>
+				<isset property="openid.provider.azure.test.account.email.address" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						openid.provider.azure.test.account.email.address=${openid.provider.azure.test.account.email.address}
+					</echo>
+				</then>
+			</if>
+
+			<if>
+				<isset property="openid.provider.azure.test.account.password" />
+				<then>
+					<echo append="true" file="${test.ext.properties.file}">
+						openid.provider.azure.test.account.password=${openid.provider.azure.test.account.password}
 					</echo>
 				</then>
 			</if>
@@ -8121,6 +8183,10 @@ war.path=${app.server.portal.dir}/</echo>
 		</sequential>
 	</macrodef>
 
+	<target name="build-service">
+		<gradle-execute dir="${project.dir}/${gradle.file.path}" task="buildService" />
+	</target>
+
 	<target name="build-sql-file">
 		<if>
 			<not>
@@ -8221,6 +8287,21 @@ create database lportal${databases.size} encoding = 'UNICODE';</echo>
 							tofile="create.sql"
 						/>
 					</else>
+				</if>
+
+				<get-testcase-property property.name="configure.read.write.database" />
+
+				<if>
+					<isset property="configure.read.write.database" />
+					<then>
+						<echo append="true" file="create.sql">
+							<![CDATA[
+								create user 'read_only_user'@'%' identified BY 'password';
+								grant select ON *.* TO 'read_only_user'@'%';
+								flush privileges;
+							]]>
+						</echo>
+					</then>
 				</if>
 
 				<get-database-property property.name="database.device.name" />
@@ -8970,6 +9051,13 @@ org.apache.catalina.tribes.level = FINE]]>
 	</target>
 
 	<target name="delete-dependency-file">
+		<if>
+			<isset property="liferay.dependency.config" />
+			<then>
+				<delete file="${liferay.home}/osgi/configs/${liferay.dependency.config}" verbose="true" />
+			</then>
+		</if>
+
 		<if>
 			<isset property="liferay.dependency.war" />
 			<then>
@@ -10696,6 +10784,23 @@ ${update.properties}</echo>
 	</target>
 
 	<target name="prepare-osgi-module-configurations">
+		<get-testcase-property property.name="custom.element.client.extension.created" />
+
+		<if>
+			<equals arg1="${custom.element.client.extension.created}" arg2="true" />
+			<then>
+				<create-custom-element-client-extension />
+			</then>
+		</if>
+
+		<get-testcase-property property.name="iframe.client.extension.created" />
+
+		<if>
+			<equals arg1="${iframe.client.extension.created}" arg2="true" />
+			<then>
+				<create-iframe-client-extension />
+			</then>
+		</if>
 		<get-testcase-property property.name="osgi.module.configurations" />
 
 		<if>
@@ -11170,6 +11275,15 @@ include-and-override=${liferay.home}/portal-setup-wizard.properties</echo>
 						</echo>
 					</then>
 				</if>
+			</then>
+		</if>
+
+		<if>
+			<isset property="test.company.default.locale" />
+			<then>
+				<echo append="true" file="portal-impl/src/portal-ext.properties">
+					company.default.locale=${test.company.default.locale}
+				</echo>
 			</then>
 		</if>
 
@@ -12024,6 +12138,15 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 			</then>
 		</if>
 
+		<if>
+			<isset property="test.company.default.locale" />
+			<then>
+				<echo append="true" file="${test.ext.properties.file}">
+					test.company.default.locale=${test.company.default.locale}
+				</echo>
+			</then>
+		</if>
+
 		<get-testcase-property property.name="test.skip.tear.down" />
 
 		<if>
@@ -12133,6 +12256,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 
 	<target name="prepare-system-ext-properties">
 		<echo file="${app.server.classes.portal.dir}/system-ext.properties">com.liferay.portal.kernel.util.ServiceProxyFactory.timeout=300000
+jdbc.data.source.anti.time.drift=true
 log.sanitizer.enabled=false</echo>
 
 		<get-testcase-property property.name="custom.system.properties" />
@@ -12706,6 +12830,22 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			<param name="test.build.license.xml.zip.url" value="${test.license.xml.url}" />
 		</antcall>
 
+		<if>
+			<equals arg1="${downgrade.from.original.bundle}" arg2="true" />
+			<then>
+				<delete dir="${test.release.bundle.parent.dir}/bundles/data" />
+
+				<move
+					file="${test.release.bundle.parent.dir}/bundles-original/data"
+					tofile="${test.release.bundle.parent.dir}/bundles/data"
+				/>
+
+				<delete dir="${test.release.bundle.parent.dir}/bundles/data/elasticsearch7" />
+
+				<delete dir="${test.release.bundle.parent.dir}/bundles-original" />
+			</then>
+		</if>
+
 		<get-test-app-server-lib-portal-dir />
 
 		<antcall inheritAll="false" target="copy-optional-jars">
@@ -12886,9 +13026,9 @@ database.partition.enabled=true</echo>
 							<![CDATA[
 								#!/bin/bash
 
-								echo "db2 restore database lportal user ${database.username} using ${database.password} from /sqllib/bin/db2 replace existing"
+								echo "su - db2inst1 -c '/database/config/db2inst1/sqllib/bin/db2 restore database lportal user ${database.username} using ${database.password} from /opt/ibm/db2 ON /database/config/db2inst1 replace existing'"
 
-								output=$(db2 restore database lportal user ${database.username} using ${database.password} from /sqllib/bin/db2 replace existing)
+								output=$(su - db2inst1 -c '/database/config/db2inst1/sqllib/bin/db2 restore database lportal user ${database.username} using ${database.password} from /opt/ibm/db2 ON /database/config/db2inst1 replace existing')
 
 								exit_code=$?
 
@@ -12903,7 +13043,7 @@ database.partition.enabled=true</echo>
 							]]>
 						</echo>
 
-						<property name="docker.database.dest.path" value="/sqllib/bin/db2" />
+						<property name="docker.database.dest.path" value="/opt/ibm/db2" />
 						<property name="import.database.src.path" value="${liferay.home}/." />
 					</then>
 					<elseif>
@@ -13788,6 +13928,15 @@ if (ppstate.equals("normal")) {
 		</delete>
 	</target>
 
+	<target name="rename-finder-column">
+		<replaceregexp
+			file="${project.dir}/modules/util/portal-tools-service-builder-test-service/service.xml"
+			flags="g"
+			match="columnToRename"
+			replace="renamedColumn"
+		/>
+	</target>
+
 	<target name="replace-file">
 		<fail message="Please set the property ${file}." unless="file" />
 		<fail message="Please set the property ${token}." unless="token" />
@@ -13984,7 +14133,9 @@ jdbc.default.password=${database.mysql.password}</echo>
 
 				<echo append="true" file="${app.server.classes.portal.dir}/portal-ext.properties">
 
-module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.profile.names}</echo>
+module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.profile.names}
+
+mail.send.blacklist=</echo>
 
 				<delete failonerror="false" file="${app.server.classes.portal.dir}/system-ext.properties" />
 			</then>
@@ -14978,6 +15129,133 @@ url=${short.hostname}:8080</echo>
 		<start-docker-database />
 	</target>
 
+	<target name="start-docker-database-mariadb">
+		<if>
+			<not>
+				<isset property="database.version" />
+			</not>
+			<then>
+				<var name="database.version" value="10.6" />
+			</then>
+		</if>
+
+		<if>
+			<equals arg1="${database.version}" arg2="10.2" />
+
+			<then>
+				<var name="database.version" value="10.2.25" />
+			</then>
+
+			<elseif>
+				<equals arg1="${database.version}" arg2="10.4" />
+
+				<then>
+					<var name="database.version" value="10.4.14" />
+				</then>
+			</elseif>
+		</if>
+
+		<get-database-property property.name="database.host" />
+
+		<antcall target="stop-docker-database">
+			<param name="database.mariadb.host" value="${database.host}_mariadb" />
+			<param name="database.type" value="mariadb" />
+		</antcall>
+
+		<antcall inheritAll="false" target="start-docker-database">
+			<param name="database.mariadb.docker.image" value="mariadb:${database.version}" />
+			<param name="database.mariadb.docker.run.options" value="--env=MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3308:3306" />
+			<param name="database.mariadb.host" value="${database.host}_mariadb" />
+			<param name="database.mariadb.name" value="MariaDB" />
+			<param name="database.mariadb.version" value="${database.version}" />
+			<param name="database.type" value="mariadb" />
+		</antcall>
+
+		<if>
+			<not>
+				<isset property="skip.prepare.portal.ext.properties" />
+			</not>
+			<then>
+				<antcall inheritAll="false" target="prepare-portal-ext-properties">
+					<param name="database.mariadb.host" value="${database.host}_mariadb" />
+					<param name="database.mariadb.schema" value="lportal" />
+					<param name="database.mariadb.url" value="jdbc:mariadb://${database.host}:3308/${database.mariadb.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false" />
+					<param name="database.type" value="mariadb" />
+				</antcall>
+			</then>
+		</if>
+
+		<if>
+			<not>
+				<isset property="skip.rebuild.database" />
+			</not>
+			<then>
+				<antcall target="rebuild-database">
+					<param name="database.mariadb.docker.image" value="mariadb:${database.version}" />
+					<param name="database.mariadb.host" value="${database.host}_mariadb" />
+					<param name="database.type" value="mariadb" />
+					<param name="sql.dir" value="sql/create-bare/" />
+					<param name="sql.file" value="create-bare-mariadb.sql" />
+				</antcall>
+			</then>
+		</if>
+	</target>
+
+	<target name="start-docker-database-mysql">
+		<if>
+			<not>
+				<isset property="database.version" />
+			</not>
+			<then>
+				<var name="database.version" value="8.0" />
+			</then>
+		</if>
+
+		<get-database-property property.name="database.host" />
+
+		<antcall target="stop-docker-database">
+			<param name="database.mysql.host" value="${database.host}_mysql" />
+			<param name="database.type" value="mysql" />
+		</antcall>
+
+		<antcall inheritAll="false" target="start-docker-database">
+			<param name="database.mysql.docker.image" value="mysql:${database.version}" />
+			<param name="database.mysql.docker.run.options" value="--env=MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3307:3306" />
+			<param name="database.mysql.host" value="${database.host}_mysql" />
+			<param name="database.mysql.name" value="MySQL" />
+			<param name="database.mysql.version" value="${database.version}" />
+			<param name="database.type" value="mysql" />
+		</antcall>
+
+		<if>
+			<not>
+				<isset property="skip.prepare.portal.ext.properties" />
+			</not>
+			<then>
+				<antcall inheritAll="false" target="prepare-portal-ext-properties">
+					<param name="database.mysql.schema" value="lportal" />
+					<param name="database.mysql.url" value="jdbc:mysql://${database.host}:3307/${database.mysql.schema}?characterEncoding=UTF-8&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true&amp;serverTimezone=GMT&amp;useFastDateParsing=false&amp;useUnicode=true" />
+					<param name="database.type" value="mysql" />
+				</antcall>
+			</then>
+		</if>
+
+		<if>
+			<not>
+				<isset property="skip.rebuild.database" />
+			</not>
+			<then>
+				<antcall target="rebuild-database">
+					<param name="database.mysql.docker.image" value="mysql:${database.version}" />
+					<param name="database.mysql.host" value="${database.host}_mysql" />
+					<param name="database.type" value="mysql" />
+					<param name="sql.dir" value="sql/create-bare/" />
+					<param name="sql.file" value="create-bare-mysql.sql" />
+				</antcall>
+			</then>
+		</if>
+	</target>
+
 	<target name="start-docker-database-postgresql">
 		<if>
 			<not>
@@ -14997,11 +15275,11 @@ url=${short.hostname}:8080</echo>
 
 		<antcall inheritAll="false" target="start-docker-database">
 			<param name="database.postgresql.docker.image" value="postgres:${database.version}" />
-			<param name="database.postgresql.docker.run.options" value="--env=POSTGRES_USER=root --expose=5432 -p 5432:5432 --env=POSTGRES_HOST_AUTH_METHOD=trust" />
+			<param name="database.postgresql.docker.run.options" value="--env=POSTGRES_USER=root -p 5433:5432 --env=POSTGRES_HOST_AUTH_METHOD=trust" />
 			<param name="database.postgresql.host" value="${database.host}_postgresql" />
 			<param name="database.postgresql.name" value="PostgreSQL" />
+			<param name="database.postgresql.version" value="${database.version}" />
 			<param name="database.type" value="postgresql" />
-			<param name="database.version" value="${database.version}" />
 		</antcall>
 
 		<if>
@@ -15011,7 +15289,7 @@ url=${short.hostname}:8080</echo>
 			<then>
 				<antcall inheritAll="false" target="prepare-portal-ext-properties">
 					<param name="database.postgresql.schema" value="lportal" />
-					<param name="database.postgresql.url" value="jdbc:postgresql://localhost:5432/${database.postgresql.schema}" />
+					<param name="database.postgresql.url" value="jdbc:postgresql://localhost:5433/${database.postgresql.schema}" />
 					<param name="database.type" value="postgresql" />
 				</antcall>
 			</then>
@@ -15028,6 +15306,100 @@ url=${short.hostname}:8080</echo>
 					<param name="database.type" value="postgresql" />
 					<param name="sql.dir" value="sql/create-bare/" />
 					<param name="sql.file" value="create-bare-postgresql.sql" />
+				</antcall>
+			</then>
+		</if>
+	</target>
+
+	<target name="start-docker-database-sqlserver">
+		<if>
+			<not>
+				<isset property="database.version" />
+			</not>
+			<then>
+				<var name="database.version" value="2019" />
+			</then>
+		</if>
+
+		<if>
+			<equals arg1="${database.version}" arg2="2017" />
+
+			<then>
+				<var name="database.sqlserver.docker.image" value="mcr.microsoft.com/mssql/server:2017-CU19-ubuntu-16.04" />
+			</then>
+
+			<elseif>
+				<equals arg1="${database.version}" arg2="2019" />
+
+				<then>
+					<var name="database.sqlserver.docker.image" value="mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04" />
+				</then>
+			</elseif>
+		</if>
+
+		<get-database-property property.name="database.host" />
+
+		<antcall target="stop-docker-database">
+			<param name="database.sqlserver.host" value="${database.host}_sqlserver" />
+			<param name="database.type" value="sqlserver" />
+		</antcall>
+
+		<antcall inheritAll="false" target="start-docker-database">
+			<param name="database.sqlserver.docker.image" value="${database.sqlserver.docker.image}" />
+			<param name="database.sqlserver.docker.run.options" value="--env=ACCEPT_EULA=Y --env=SA_PASSWORD=Liferay123 -p 1434:1433" />
+			<param name="database.sqlserver.host" value="${database.host}_sqlserver" />
+			<param name="database.sqlserver.name" value="SQL Server" />
+			<param name="database.sqlserver.password" value="Liferay123" />
+			<param name="database.sqlserver.username" value="sa" />
+			<param name="database.sqlserver.version" value="${database.version}" />
+			<param name="database.type" value="sqlserver" />
+		</antcall>
+
+		<if>
+			<not>
+				<isset property="skip.prepare.portal.ext.properties" />
+			</not>
+			<then>
+				<antcall inheritAll="false" target="prepare-portal-ext-properties">
+					<param name="database.sqlserver.host" value="${database.host}_sqlserver" />
+					<param name="database.sqlserver.password" value="Liferay123" />
+					<param name="database.sqlserver.schema" value="lportal" />
+					<param name="database.sqlserver.url" value="jdbc:sqlserver://${database.host}:1434;databaseName=${database.sqlserver.schema}" />
+					<param name="database.sqlserver.username" value="sa" />
+					<param name="database.type" value="sqlserver" />
+				</antcall>
+			</then>
+		</if>
+
+		<if>
+			<not>
+				<isset property="skip.rebuild.database" />
+			</not>
+			<then>
+				<antcall target="rebuild-database">
+					<param name="database.sqlserver.docker.image" value="${database.sqlserver.docker.image}" />
+					<param name="database.sqlserver.host" value="${database.host}_sqlserver" />
+					<param name="database.sqlserver.password" value="Liferay123" />
+					<param name="database.sqlserver.username" value="sa" />
+					<param name="database.type" value="sqlserver" />
+					<param name="sql.dir" value="sql/create-bare/" />
+					<param name="sql.file" value="create-bare-sql-server.sql" />
+				</antcall>
+			</then>
+		</if>
+
+		<if>
+			<not>
+				<isset property="skip.copy.optional.jars" />
+			</not>
+			<then>
+				<get-test-app-server-lib-portal-dir />
+
+				<antcall target="copy-optional-jars">
+					<param name="database.sqlserver.version" value="${database.version}" />
+					<param name="database.type" value="sqlserver" />
+					<param name="test.jdbc.drivers.url" value="http://mirrors.lax.liferay.com/files.liferay.com/private/jdbc" />
+					<param name="todir" value="${test.app.server.lib.portal.dir}" />
 				</antcall>
 			</then>
 		</if>
@@ -15147,6 +15519,26 @@ url=${short.hostname}:8080</echo>
 		/>
 
 		<print-file file.name="${osgi.configs.dir}/${osgi.module.configuration.file.names}" />
+	</target>
+
+	<target name="update-service-builder-spring-sample-to-ds">
+		<replaceregexp
+			file="${project.dir}/modules/util/portal-tools-service-builder-spring-sample-service/service.xml"
+			match="dependency-injector=&quot;spring&quot;"
+			replace="dependency-injector=&quot;ds&quot;"
+		/>
+
+		<replaceregexp
+			file="${project.dir}/modules/util/portal-tools-service-builder-spring-sample-service/bnd.bnd"
+			match="(Liferay-Service: true)"
+			replace="\1${line.separator}-dsannotations-options: inherit;"
+		/>
+
+		<replaceregexp
+			file="${project.dir}/modules/util/portal-tools-service-builder-spring-sample-service/build.gradle"
+			match="(compileOnly project\(&quot;:apps:portal:portal-spring-extender-api&quot;\))"
+			replace="\1${line.separator}compileOnly project(&quot;:apps:portal:portal-aop-api&quot;)"
+		/>
 	</target>
 
 	<target name="upgrade-legacy-database">
@@ -15376,5 +15768,38 @@ diff -y -B -W250 upgraded.sql fresh.sql | expand | grep -E -C40 '^.{123} [|>]( |
 				<isset property="app.server.shutdown.timeout" />
 			</condition>
 		</fail>
+
+		<if>
+			<or>
+				<equals arg1="${app.server.type}" arg2="weblogic" />
+				<equals arg1="${app.server.type}" arg2="websphere" />
+			</or>
+			<then>
+				<if>
+					<equals arg1="${app.server.type}" arg2="weblogic" />
+					<then>
+						<var name="admin.server.path" value="8080/console" />
+					</then>
+					<elseif>
+						<equals arg1="${app.server.type}" arg2="websphere" />
+						<then>
+							<var name="admin.server.path" value="9060" />
+						</then>
+					</elseif>
+				</if>
+
+				<waitfor checkevery="5" checkeveryunit="second" maxwait="5" maxwaitunit="minute" timeoutproperty="admin.server.shutdown.timeout">
+					<not>
+						<http url="http://localhost:${admin.server.path}" />
+					</not>
+				</waitfor>
+
+				<fail message="Admin Server is still available at localhost:${admin.server.path}.">
+					<condition>
+						<isset property="admin.server.shutdown.timeout" />
+					</condition>
+				</fail>
+			</then>
+		</if>
 	</target>
 </project>

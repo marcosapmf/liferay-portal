@@ -17,6 +17,7 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useMemo} from 'react';
 
+import {useId} from '../../../core/hooks/useId';
 import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
 import {useGetFieldValue} from '../../contexts/CollectionItemContext';
@@ -26,7 +27,6 @@ import getLayoutDataItemCssClasses from '../../utils/getLayoutDataItemCssClasses
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import useBackgroundImageValue from '../../utils/useBackgroundImageValue';
-import {useId} from '../../utils/useId';
 
 const Row = React.forwardRef(({children, className, item}, ref) => {
 	const selectedViewportSize = useSelector(
@@ -60,30 +60,36 @@ const Row = React.forwardRef(({children, className, item}, ref) => {
 	}
 
 	const rowContent = (
-		<ClayLayout.Row
+		<div
 			className={classNames(
-				className,
 				getLayoutDataItemClassName(item.type),
 				getLayoutDataItemCssClasses(item),
-				getLayoutDataItemUniqueClassName(item.itemId),
-				{
-					'flex-column-reverse':
-						item.config.numberOfColumns === 2 &&
-						modulesPerRow === 1 &&
-						reverseOrder,
-					'no-gutters': !item.config.gutters,
-				}
+				getLayoutDataItemUniqueClassName(item.itemId)
 			)}
-			id={elementId}
-			ref={ref}
-			style={style}
 		>
-			{backgroundImageValue.mediaQueries ? (
-				<style>{backgroundImageValue.mediaQueries}</style>
-			) : null}
+			<ClayLayout.Row
+				className={classNames(
+					className,
 
-			{children}
-		</ClayLayout.Row>
+					{
+						'flex-column-reverse':
+							item.config.numberOfColumns === 2 &&
+							modulesPerRow === 1 &&
+							reverseOrder,
+						'no-gutters': !item.config.gutters,
+					}
+				)}
+				id={elementId}
+				ref={ref}
+				style={style}
+			>
+				{backgroundImageValue.mediaQueries ? (
+					<style>{backgroundImageValue.mediaQueries}</style>
+				) : null}
+
+				{children}
+			</ClayLayout.Row>
+		</div>
 	);
 
 	const masterLayoutData = useSelector(

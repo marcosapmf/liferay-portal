@@ -322,6 +322,7 @@ export const getThreadQuery = `
 			friendlyUrlPath
 			headline
 			id
+			messageBoardRootMessageId
 			keywords
 			locked
 			messageBoardSection {
@@ -470,6 +471,7 @@ export const getSectionThreadsQuery = `
 					image
 					name
 				}
+				dateCreated
 				dateModified
 				friendlyUrlPath
 				hasValidAnswer

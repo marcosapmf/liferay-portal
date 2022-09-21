@@ -16,6 +16,7 @@ package com.liferay.object.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.DuplicateObjectRelationshipException;
 import com.liferay.object.exception.ObjectRelationshipParameterObjectFieldIdException;
@@ -88,8 +89,9 @@ public class ObjectRelationshipLocalServiceTest {
 				ObjectDefinitionConstants.SCOPE_COMPANY, 1,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
-						"Text", "String", RandomTestUtil.randomString(),
-						StringUtil.randomId())));
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), StringUtil.randomId())));
 
 		Bundle bundle = FrameworkUtil.getBundle(
 			ObjectRelationshipLocalServiceTest.class);
@@ -99,6 +101,7 @@ public class ObjectRelationshipLocalServiceTest {
 		bundleContext.registerService(
 			SystemObjectDefinitionMetadata.class,
 			new TestSystemObjectDefinitionMetadata(
+				_systemObjectDefinition1.getModelClass(),
 				_systemObjectDefinition1.getName()),
 			new HashMapDictionary<>());
 	}
@@ -115,8 +118,9 @@ public class ObjectRelationshipLocalServiceTest {
 			_objectDefinitionLocalService,
 			Arrays.asList(
 				ObjectFieldUtil.createObjectField(
-					"Text", "String", RandomTestUtil.randomString(),
-					StringUtil.randomId())));
+					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+					ObjectFieldConstants.DB_TYPE_STRING,
+					RandomTestUtil.randomString(), StringUtil.randomId())));
 
 		_objectDefinition1 =
 			_objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -127,8 +131,9 @@ public class ObjectRelationshipLocalServiceTest {
 			_objectDefinitionLocalService,
 			Arrays.asList(
 				ObjectFieldUtil.createObjectField(
-					"Text", "String", RandomTestUtil.randomString(),
-					StringUtil.randomId())));
+					ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+					ObjectFieldConstants.DB_TYPE_STRING,
+					RandomTestUtil.randomString(), StringUtil.randomId())));
 
 		_objectDefinition2 =
 			_objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -145,8 +150,9 @@ public class ObjectRelationshipLocalServiceTest {
 				ObjectDefinitionConstants.SCOPE_COMPANY, 1,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
-						"Text", "String", RandomTestUtil.randomString(),
-						StringUtil.randomId())));
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), StringUtil.randomId())));
 	}
 
 	@Test
@@ -424,24 +430,6 @@ public class ObjectRelationshipLocalServiceTest {
 		try {
 			_objectRelationshipLocalService.addObjectRelationship(
 				TestPropsValues.getUserId(),
-				_objectDefinition1.getObjectDefinitionId(),
-				_objectDefinition1.getObjectDefinitionId(), 0,
-				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				StringUtil.randomId(),
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
-		}
-		catch (ObjectRelationshipTypeException
-					objectRelationshipTypeException) {
-
-			Assert.assertEquals(
-				"Many to many self relationships are not allowed",
-				objectRelationshipTypeException.getMessage());
-		}
-
-		try {
-			_objectRelationshipLocalService.addObjectRelationship(
-				TestPropsValues.getUserId(),
 				_systemObjectDefinition2.getObjectDefinitionId(),
 				_systemObjectDefinition2.getObjectDefinitionId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
@@ -453,7 +441,7 @@ public class ObjectRelationshipLocalServiceTest {
 					objectRelationshipTypeException) {
 
 			Assert.assertEquals(
-				"Many to many self relationships are not allowed",
+				"Relationships are not allowed between system objects",
 				objectRelationshipTypeException.getMessage());
 		}
 
@@ -647,8 +635,16 @@ public class ObjectRelationshipLocalServiceTest {
 	private static class TestSystemObjectDefinitionMetadata
 		extends BaseSystemObjectDefinitionMetadata {
 
-		public TestSystemObjectDefinitionMetadata(String name) {
+		public TestSystemObjectDefinitionMetadata(
+			Class<?> modelClass, String name) {
+
+			_modelClass = modelClass;
 			_name = name;
+		}
+
+		@Override
+		public String getJaxRsApplicationName() {
+			return "";
 		}
 
 		@Override
@@ -658,7 +654,7 @@ public class ObjectRelationshipLocalServiceTest {
 
 		@Override
 		public Class<?> getModelClass() {
-			return null;
+			return _modelClass;
 		}
 
 		@Override
@@ -706,6 +702,7 @@ public class ObjectRelationshipLocalServiceTest {
 			return 1;
 		}
 
+		private final Class<?> _modelClass;
 		private final String _name;
 
 	}

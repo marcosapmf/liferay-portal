@@ -1121,22 +1121,18 @@ definition {
 	test CheckDisplayPageIconofApprovedWebContent {
 		property portal.acceptance = "true";
 
-		task ("Create and Publish a Display Page Template with Fragment") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a Web Content and set a Display Page") {
@@ -1191,28 +1187,22 @@ definition {
 	test CheckDisplayPageIconofPendingWebContent {
 		property portal.acceptance = "true";
 
-		task ("Create and Publish a Display Page Template with Fragment") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Configure Web Content Article workflow to Single Approver") {
-			ProductMenu.gotoPortlet(
-				category = "Configuration",
-				portlet = "Workflow");
+			Workflow.openWorkflowAdmin(siteURLKey = "test-site-name");
 
 			Workflow.configureWorkflow(
 				workflowDefinition = "Single Approver",
@@ -1237,6 +1227,36 @@ definition {
 				value1 = "Webcontent Title");
 
 			AssertElementNotPresent(locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED_DISPLAY_PAGE");
+		}
+	}
+
+	@description = "LPS-160210: Add WebDAV URL to Info Panel"
+	@priority = "3"
+	test CheckDocumentURLLabel {
+		task ("Given a Document Asset at Content Dashboard") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "DM Document Title",
+				groupName = "Test Site Name",
+				mimeType = "text/plain",
+				sourceFileName = "Document_1.txt");
+		}
+
+		task ("When the user accesses the information panel") {
+			ContentDashboard.goToContentDashboard();
+
+			ContentDashboard.openInfoPanelByDropdownMenu();
+
+			Panel.expandPanel(panel = "Details");
+		}
+
+		task ("Then the field labels should be added to distinguish between the two URLs ") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#URL_LABEL",
+				value1 = "WebDAV URL");
+
+			AssertTextPresent(
+				locator1 = "ContentDashboard#URL_LABEL",
+				value1 = "Latest Version URL");
 		}
 	}
 
@@ -1289,15 +1309,13 @@ definition {
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a pending Web Content") {
@@ -1308,9 +1326,7 @@ definition {
 		}
 
 		task ("Configure Web Content Article workflow to Single Approver") {
-			ProductMenu.gotoPortlet(
-				category = "Configuration",
-				portlet = "Workflow");
+			Workflow.openWorkflowAdmin(siteURLKey = "test-site-name");
 
 			Workflow.configureWorkflow(
 				workflowDefinition = "Single Approver",
@@ -1690,28 +1706,22 @@ definition {
 	test CheckViewOptionNotDisplayedNotApprovedWCAssiciatedDPT {
 		property portal.acceptance = "true";
 
-		task ("Create and Publish a Display Page Template with Fragment") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Configure Web Content Article workflow to Single Approver") {
-			ProductMenu.gotoPortlet(
-				category = "Configuration",
-				portlet = "Workflow");
+			Workflow.openWorkflowAdmin(siteURLKey = "test-site-name");
 
 			Workflow.configureWorkflow(
 				workflowDefinition = "Single Approver",
@@ -1841,36 +1851,18 @@ definition {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ContentDashboard#ClickTitleApprovedDPTWithNoPermissions";
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
-		task ("Create a DPT and set as Default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a Web Content") {
@@ -1953,36 +1945,18 @@ definition {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ContentDashboard#ClickTitleApprovedDPTWithPermissions";
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
-		task ("Create a DPT and set as Default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a Web Content") {
@@ -2063,7 +2037,7 @@ definition {
 
 			AssertTextPresent(
 				locator1 = "ContentDashboard#DISPLAY_PAGE_TITLE",
-				value1 = "Display Page Name");
+				value1 = "WC Title");
 		}
 
 		task ("Delete Role and User created") {
@@ -2115,21 +2089,17 @@ definition {
 		property osgi.module.configurations = "blogsEntryEnabled=B&quot;true&quot;";
 		property portal.acceptance = "true";
 
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Blogs Entry",
 				displayPageTemplateEntryName = "Display Page Name",
-				groupName = "Test Site Name");
+				groupName = "Test Site Name",
+				statusKey = "APPROVED");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a blog in the first site") {
@@ -2214,21 +2184,17 @@ definition {
 		property osgi.module.configurations = "blogsEntryEnabled=B&quot;true&quot;";
 		property portal.acceptance = "true";
 
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Blogs Entry",
 				displayPageTemplateEntryName = "Display Page Name",
-				groupName = "Test Site Name");
+				groupName = "Test Site Name",
+				statusKey = "APPROVED");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a blog") {
@@ -2249,7 +2215,7 @@ definition {
 
 			AssertTextPresent(
 				locator1 = "ContentDashboard#DISPLAY_PAGE_TITLE",
-				value1 = "Display Page Name");
+				value1 = "Blogs Entry Title");
 		}
 	}
 
@@ -2370,36 +2336,18 @@ definition {
 		property osgi.module.configurations = "enabled=B&quot;true&quot;";
 		property portal.acceptance = "true";
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Document",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Document");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.addWidget(portletName = "Documents and Media");
-
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Add a document") {
@@ -2484,22 +2432,18 @@ definition {
 		property osgi.module.configurations = "enabled=B&quot;true&quot;";
 		property portal.acceptance = "true";
 
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Document",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Document");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.addWidget(portletName = "Documents and Media");
-
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Add a document") {
@@ -2521,7 +2465,7 @@ definition {
 
 			AssertTextPresent(
 				locator1 = "ContentDashboard#DISPLAY_PAGE_TITLE",
-				value1 = "Display Page Name");
+				value1 = "DM Document Title");
 		}
 	}
 
@@ -2560,6 +2504,14 @@ definition {
 	test ClickTitlePendingNoDPT {
 		property test.name.skip.portal.instance = "ContentDashboard#ClickTitlePendingNoDPT";
 
+		task ("Configure Web Content Article workflow to Single Approver") {
+			Workflow.openWorkflowAdmin(siteURLKey = "test-site-name");
+
+			Workflow.configureWorkflow(
+				workflowDefinition = "Single Approver",
+				workflowResourceValue = "Web Content Article");
+		}
+
 		task ("Create a Web Content") {
 			JSONWebcontent.addWebContent(
 				content = "WC Content",
@@ -2567,33 +2519,8 @@ definition {
 				title = "WC Title");
 		}
 
-		task ("Configure Web Content Article workflow to Single Approver") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			ProductMenu.gotoPortlet(
-				category = "Configuration",
-				portlet = "Workflow");
-
-			Workflow.configureWorkflow(
-				workflowDefinition = "Single Approver",
-				workflowResourceValue = "Web Content Article");
-		}
-
-		task ("Edit the Web Content article and submit it for publication") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "WC Title");
-
-			Button.clickSubmitForPublication();
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-		}
-
 		task ("Go to Content Dashboard and click on the title") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Content",
-				panel = "Applications",
-				portlet = "Content Dashboard");
+			ContentDashboard.goToContentDashboard();
 
 			LexiconTable.clickTableEntryColumnLink(
 				columnName = "title",
@@ -2696,22 +2623,18 @@ definition {
 		property osgi.module.configurations = "enabled=B&quot;true&quot;";
 		property portal.acceptance = "true";
 
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Document",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Document");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.addWidget(portletName = "Documents and Media");
-
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Add a document") {
@@ -3181,6 +3104,119 @@ definition {
 		}
 	}
 
+	@description = "LPS-150553: Add Filtering by Status in Content Dashboard for Blogs"
+	@priority = "4"
+	test FilterBlogByStatusAndAuthor {
+		task ("Given the Filter and Order dropdown") {
+			task ("Create a blog with the tag") {
+				JSONBlog.addEntry(
+					entryContent = "Blogs Entry Content",
+					entryTitle = "Blogs Entry Title",
+					groupName = "Test Site Name");
+			}
+
+			task ("Go to Content Dashboard") {
+				ContentDashboard.goToContentDashboard();
+			}
+		}
+
+		task ("When the user selects the option Filter by Status and another filter") {
+			ContentDashboard.filterByStatus(filterOption = "Approved");
+
+			ContentDashboard.filterByAuthorMe(filterOption = "Me");
+		}
+
+		task ("Then the list is filtered displaying only contents included in both filters, including Blogs") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "Blogs Entry Title");
+		}
+	}
+
+	@description = "LPS-150553: Add Filtering by Status in Content Dashboard for Blogs"
+	@priority = "5"
+	test FilterBlogByStatusApproved {
+		task ("Given The Filter and Order dropdown") {
+			task ("Create an approved blog") {
+				JSONBlog.addEntry(
+					entryContent = "Blogs Entry Content",
+					entryTitle = "Blogs Entry Title",
+					groupName = "Test Site Name");
+			}
+
+			task ("Go to Content Dashboard") {
+				ContentDashboard.goToContentDashboard();
+			}
+		}
+
+		task ("When the user selects the option Filter by Status: Approved") {
+			ContentDashboard.filterByStatus(filterOption = "Approved");
+		}
+
+		task ("Then the list is filtered displaying only contents labeled as Approved, including Blogs") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "Blogs Entry Title");
+		}
+	}
+
+	@description = "LPS-150553: Add Filtering by Status in Content Dashboard for Blogs"
+	@priority = "5"
+	test FilterBlogByStatusDraft {
+		task ("Given The Filter and Order dropdown") {
+			task ("Create an approved blog") {
+				JSONBlog.addEntry(
+					entryContent = "Blogs Entry Content",
+					entryTitle = "Blogs Entry Title",
+					groupName = "Test Site Name",
+					workflowAction = "DRAFT");
+			}
+
+			task ("Go to Content Dashboard") {
+				ContentDashboard.goToContentDashboard();
+			}
+		}
+
+		task ("When the user selects the option Filter by Status: Draft") {
+			ContentDashboard.filterByStatus(filterOption = "Draft");
+		}
+
+		task ("Then the list is filtered displaying only contents labeled as Draft, including Blogs") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "Blogs Entry Title");
+		}
+	}
+
+	@description = "LPS-150553: Add Filtering by Status in Content Dashboard for Blogs"
+	@priority = "5"
+	test FilterBlogByStatusScheduled {
+		task ("Given The Filter and Order dropdown") {
+			task ("Create an approved blog") {
+				JSONBlog.addEntry(
+					displayDate = "true",
+					entryContent = "Blogs Entry Content",
+					entryTitle = "Blogs Entry Title",
+					groupName = "Test Site Name",
+					increaseYears = "1");
+			}
+
+			task ("Go to Content Dashboard") {
+				ContentDashboard.goToContentDashboard();
+			}
+		}
+
+		task ("When the user selects the option Filter by Status: Scheduled'") {
+			ContentDashboard.filterByStatus(filterOption = "Scheduled");
+		}
+
+		task ("Then the list is filtered displaying only contents labeled as Scheduled, including Blogs") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "Blogs Entry Title");
+		}
+	}
+
 	@description = "LPS-150558 Given The Filter by... > Tags
 	When the user clicks on several tags and clicks Save
 	Then the content list in the Content Dashboard filters accordingly, including Blogs"
@@ -3293,20 +3329,6 @@ definition {
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "Web Content Title 1");
-		}
-
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			PortalSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
 		}
 
 		task ("Create a web content with created user via JSONWS") {
@@ -3428,20 +3450,6 @@ definition {
 				title = "Web Content Title 1");
 		}
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			PortalSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
 		task ("Create a web content with created user via JSONWS") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "userea@liferay.com",
@@ -3516,20 +3524,6 @@ definition {
 				content = "Web Content Content",
 				groupName = "Test Site Name",
 				title = "Web Content Title 1");
-		}
-
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			PortalSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
 		}
 
 		task ("Create a web content with created user via JSONWS") {
@@ -3768,7 +3762,7 @@ definition {
 		task ("Filter asset by Any status in Content Dashboard") {
 			ContentDashboard.goToContentDashboard();
 
-			ContentDashboard.filterByStatusAny(filterOption = "Any");
+			ContentDashboard.filterByStatus(filterOption = "Any");
 
 			ContentDashboard.searchValue(webContentTitle = "WC Title Approved");
 
@@ -3799,7 +3793,7 @@ definition {
 		task ("Filter asset by Aproved status in Content Dashboard") {
 			ContentDashboard.goToContentDashboard();
 
-			ContentDashboard.filterByStatusApproved(filterOption = "Approved");
+			ContentDashboard.filterByStatus(filterOption = "Approved");
 
 			AssertTextPresent(
 				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
@@ -3823,11 +3817,168 @@ definition {
 		task ("Filter asset by Draft status in Content Dashboard") {
 			ContentDashboard.goToContentDashboard();
 
-			ContentDashboard.filterByStatusDraft(filterOption = "Draft");
+			ContentDashboard.filterByStatus(filterOption = "Draft");
 
 			AssertTextPresent(
 				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
 				value1 = "WC Title Draft");
+		}
+	}
+
+	@description = "LPS-161330: Add Filtering by Expired Status to the Content Dashboard"
+	@priority = "5"
+	test FilterByStatusExpiredDocument {
+		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property portal.acceptance = "true";
+
+		task ("Given an expired Document asset") {
+			task ("Set update interval") {
+				DMDocument.updateCheckInterval(fieldValue = "1");
+			}
+
+			task ("Create a Document") {
+				JSONDocument.addFileWithUploadedFile(
+					dmDocumentDescription = "DM Document Description",
+					dmDocumentTitle = "Document_1.txt",
+					groupName = "Test Site Name",
+					mimeType = "text/plain",
+					sourceFileName = "Document_1.txt");
+			}
+
+			task ("Expire the Document") {
+				DMNavigator.openToEditEntryInSite(
+					dmDocumentTitle = "Document_1.txt",
+					groupName = "Test Site Name",
+					siteURLKey = "test-site-name");
+
+				DMDocument.setExpirationDate(
+					enableExpirationDate = "true",
+					increaseMinutes = "1");
+			}
+
+			task ("Wait for document to expire") {
+				Navigator.openURL();
+
+				Notifications.waitForNotificationFlexibly(flexibleRefreshingTime = "3000");
+
+				Notifications.viewBadgeCount(notificationCount = "1");
+			}
+		}
+
+		task ("When the user filters by Expired status") {
+			ContentDashboard.goToContentDashboard();
+
+			ContentDashboard.filterByStatus(filterOption = "Expired");
+		}
+
+		task ("Then the asset is exhibited") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "");
+		}
+	}
+
+	@description = "LPS-161330: Add Filtering by Expired Status to the Content Dashboard"
+	@priority = "5"
+	test FilterByStatusExpiredWebContent {
+		property portal.acceptance = "true";
+
+		task ("Given an expired Web Content asset") {
+			task ("Create a Web Content") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+			}
+
+			task ("Expire the WC") {
+				JSONWebcontent.updateStatus(
+					groupName = "Test Site Name",
+					statusKey = "EXPIRE",
+					title = "Web Content Title");
+			}
+		}
+
+		task ("When the user filters by Expired status") {
+			ContentDashboard.goToContentDashboard();
+
+			ContentDashboard.filterByStatus(filterOption = "Expired");
+		}
+
+		task ("Then the asset is exhibited") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "");
+		}
+	}
+
+	@description = "LPS-155386: Add Filtering by Pending Status to the Content Dashboard"
+	@priority = "4"
+	test FilterByStatusPendingBlog {
+		property portal.acceptance = "true";
+
+		task ("Given a pending Blog") {
+			task ("Configure Blogs Entry workflow to Single Approver") {
+				Workflow.openWorkflowAdmin(siteURLKey = "test-site-name");
+
+				Workflow.configureWorkflow(
+					workflowDefinition = "Single Approver",
+					workflowResourceValue = "Blogs Entry");
+			}
+
+			task ("Create a Blog Entry") {
+				JSONBlog.addEntry(
+					entryContent = "Blogs Entry Content",
+					entryTitle = "Blogs Entry Title",
+					groupName = "Test Site Name");
+			}
+		}
+
+		task ("When user filters by 'Pending' status") {
+			ContentDashboard.goToContentDashboard();
+
+			ContentDashboard.filterByStatus(filterOption = "Pending");
+		}
+
+		task ("Then the asset is filtered") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "Blogs Entry Title");
+		}
+	}
+
+	@description = "LPS-155386: Add Filtering by Pending Status to the Content Dashboard"
+	@priority = "4"
+	test FilterByStatusPendingWebContent {
+		property portal.acceptance = "true";
+
+		task ("Given a pending Web Content") {
+			task ("Configure Web Content Article workflow to Single Approver") {
+				Workflow.openWorkflowAdmin(siteURLKey = "test-site-name");
+
+				Workflow.configureWorkflow(
+					workflowDefinition = "Single Approver",
+					workflowResourceValue = "Web Content Article");
+			}
+
+			task ("Create a Web Content") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+			}
+		}
+
+		task ("When user filters by 'Pending' status") {
+			ContentDashboard.goToContentDashboard();
+
+			ContentDashboard.filterByStatus(filterOption = "Pending");
+		}
+
+		task ("Then the asset is filtered") {
+			AssertTextPresent(
+				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
+				value1 = "Web Content Title");
 		}
 	}
 
@@ -3872,7 +4023,7 @@ definition {
 		task ("Filter asset at Content Dashboard using status") {
 			ContentDashboard.goToContentDashboard();
 
-			ContentDashboard.filterByStatusScheduled(filterOption = "Scheduled");
+			ContentDashboard.filterByStatus(filterOption = "Scheduled");
 
 			AssertTextPresent(
 				locator1 = "ContentDashboard#FIRST_ELEMENT_LISTED",
@@ -4200,22 +4351,18 @@ definition {
 	test IconInfo {
 		property portal.acceptance = "true";
 
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Add Web Content and check it in its display page and access the info") {
@@ -4339,6 +4486,70 @@ definition {
 		}
 	}
 
+	@description = "LPS-160218: Make the Info Panel Remain Open After a Page Refresh"
+	@priority = "3"
+	test InfoPanelNotOpenAfterNavigation {
+		task ("Given the info panel is open") {
+			task ("Crete an Asset") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+			}
+
+			task ("Navigate to Content Dashboard") {
+				ContentDashboard.goToContentDashboard();
+			}
+
+			task ("Open info panel") {
+				ContentDashboard.openInfoPanelByDropdownMenu();
+			}
+		}
+
+		task ("When navigates away from the page") {
+			ApplicationsMenu.gotoSite(site = "Test Site Name");
+		}
+
+		task ("And returns to content dashboard") {
+			ContentDashboard.goToContentDashboard();
+		}
+
+		task ("Then the info panel is closed") {
+			AssertElementNotPresent(locator1 = "ContentDashboard#INFO_PANEL");
+		}
+	}
+
+	@description = "LPS-160218: Make the Info Panel Remain Open After a Page Refresh"
+	@priority = "3"
+	test InfoPanelOpenAfterRefresh {
+		task ("Given the info panel is open") {
+			task ("Crete an Asset") {
+				JSONWebcontent.addWebContent(
+					content = "Web Content Content",
+					groupName = "Test Site Name",
+					title = "Web Content Title");
+			}
+
+			task ("Navigate to Content Dashboard") {
+				ContentDashboard.goToContentDashboard();
+			}
+
+			task ("Open info panel") {
+				ContentDashboard.openInfoPanelByDropdownMenu();
+			}
+		}
+
+		task ("When the page is refreshed") {
+			Refresh();
+		}
+
+		task ("Then the info panel still remains open") {
+			WaitForElementPresent(locator1 = "ContentDashboard#INFO_PANEL");
+
+			AssertVisible(locator1 = "ContentDashboard#INFO_PANEL");
+		}
+	}
+
 	@description = "LPS-122873 When the user add filters need to have only one vocabulary, the relative ordering of the categories remain the same"
 	@priority = "3"
 	test JustAddingAVocabularyThroughTheFilters {
@@ -4407,12 +4618,18 @@ definition {
 	test LanguageVersion {
 		property portal.acceptance = "true";
 
-		task ("Add Display Page") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
+
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Add mapped heading to Display Page") {
@@ -4435,8 +4652,6 @@ definition {
 			PageEditor.waitForAutoSave();
 
 			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
 		}
 
 		task ("Add Web Content and change the language") {
@@ -5063,20 +5278,6 @@ definition {
 	test PermissionsForContentDashboard {
 		property portal.acceptance = "true";
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
 		task ("Create a new user") {
 			JSONUser.addUser(
 				userEmailAddress = "userea@liferay.com",
@@ -5288,22 +5489,18 @@ definition {
 	test ShouldExhibitWebContentAssociatedWithDisplayPage {
 		property portal.acceptance = "true";
 
-		task ("Create and Publish a Display Page Template with Fragment") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Create a Web Content and set a Display Page") {
@@ -5357,20 +5554,6 @@ definition {
 	@priority = "5"
 	test ShowAllContentCreatorUsers {
 		property portal.acceptance = "true";
-
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
 
 		task ("Create and configure second user") {
 			JSONUser.addUser(
@@ -5790,22 +5973,18 @@ definition {
 	test WebContentIconView {
 		property portal.acceptance = "true";
 
-		task ("Add Display Page and mark it as default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			Button.clickPublish();
-
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Add Web Content and check it in its display page and access the view") {

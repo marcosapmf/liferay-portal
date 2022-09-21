@@ -13,22 +13,21 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import {debounce} from 'frontend-js-web';
-import React, {
-	useEffect,
-	useLayoutEffect,
-	useMemo,
-	useRef,
-	useState,
-} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
+import {ReorderSetsModal} from '../../../app/components/ReorderSetsModal';
 import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
+import {HIGHLIGHTED_COLLECTION_ID} from '../../../app/config/constants/highlightedCollectionId';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {config} from '../../../app/config/index';
-import {useSelector} from '../../../app/contexts/StoreContext';
-import {useWidgets} from '../../../app/contexts/WidgetsContext';
+import {
+	useDispatch,
+	useSelector,
+	useSelectorRef,
+} from '../../../app/contexts/StoreContext';
+import selectWidgetFragmentEntryLinks from '../../../app/selectors/selectWidgetFragmentEntryLinks';
+import loadWidgets from '../../../app/thunks/loadWidgets';
 import SearchForm from '../../../common/components/SearchForm';
-import SidebarPanelContent from '../../../common/components/SidebarPanelContent';
 import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
 import {useSessionState} from '../../../core/hooks/useSessionState';
 import SearchResultsPanel from './SearchResultsPanel';
@@ -55,6 +54,10 @@ const collectionFilter = (collections, searchValue) => {
 
 	return collections
 		.reduce((acc, collection) => {
+			if (collection.collectionId === HIGHLIGHTED_COLLECTION_ID) {
+				return acc;
+			}
+
 			if (itemFilter(collection)) {
 				return [...acc, collection];
 			}
@@ -101,7 +104,7 @@ const normalizeWidget = (widget) => {
 	};
 };
 
-const normalizeCollections = (collection) => {
+const normalizeCollection = (collection) => {
 	const normalizedElement = {
 		children: collection.portlets.map(normalizeWidget),
 		collectionId: collection.path,
@@ -110,7 +113,7 @@ const normalizeCollections = (collection) => {
 
 	if (collection.categories?.length) {
 		normalizedElement.collections = collection.categories.map(
-			normalizeCollections
+			normalizeCollection
 		);
 	}
 
@@ -133,16 +136,17 @@ const normalizeFragmentEntry = (fragmentEntry) => ({
 
 export default function FragmentsSidebar() {
 	const fragments = useSelector((state) => state.fragments);
-	const widgets = useWidgets();
-	const wrapperElementRef = useRef(null);
+	const widgets = useSelector((state) => state.widgets);
 
-	const [
-		activeTabId,
-		setActiveTabId,
-	] = useSessionState(
+	const dispatch = useDispatch();
+	const widgetFragmentEntryLinksRef = useSelectorRef(
+		selectWidgetFragmentEntryLinks
+	);
+	const [loadingWidgets, setLoadingWidgets] = useState(false);
+
+	const [activeTabId, setActiveTabId] = useSessionState(
 		`${config.portletNamespace}_fragments-sidebar_active-tab-id`,
-		COLLECTION_IDS.fragments,
-		{persistEnabled: Liferay.FeatureFlags['LPS-153452']}
+		COLLECTION_IDS.fragments
 	);
 
 	const [displayStyle, setDisplayStyle] = useSessionState(
@@ -152,17 +156,7 @@ export default function FragmentsSidebar() {
 
 	const [searchValue, setSearchValue] = useState('');
 
-	const [
-		scrollPosition,
-		setScrollPosition,
-	] = useSessionState(
-		`${config.portletNamespace}_fragments-sidebar_tab_${activeTabId}_scroll-position`,
-		0,
-		{persistEnabled: Liferay.FeatureFlags['LPS-153452']}
-	);
-
-	const scrollPositionRef = useRef(scrollPosition);
-	scrollPositionRef.current = scrollPosition;
+	const [showReorderModal, setShowReorderModal] = useState(false);
 
 	const tabs = useMemo(
 		() => [
@@ -178,9 +172,11 @@ export default function FragmentsSidebar() {
 				label: Liferay.Language.get('fragments'),
 			},
 			{
-				collections: widgets.map((collection) =>
-					normalizeCollections(collection)
-				),
+				collections: widgets
+					? widgets.map((collection) =>
+							normalizeCollection(collection)
+					  )
+					: [],
 				id: COLLECTION_IDS.widgets,
 				label: Liferay.Language.get('widgets'),
 			},
@@ -207,53 +203,43 @@ export default function FragmentsSidebar() {
 	const displayStyleButtonDisabled =
 		searchValue || activeTabId === COLLECTION_IDS.widgets;
 
-	useLayoutEffect(() => {
-		const wrapperElement = wrapperElementRef.current;
-		const initialScrollPosition = scrollPositionRef.current;
-
-		if (!wrapperElement || !initialScrollPosition) {
-			return;
-		}
-
-		wrapperElement.scrollBy({
-			behavior: 'auto',
-			left: 0,
-			top: initialScrollPosition,
-		});
-	}, []);
-
 	useEffect(() => {
-		const wrapperElement = wrapperElementRef.current;
+		if (searchValue && !widgets) {
+			setLoadingWidgets(true);
 
-		if (!wrapperElement) {
-			return;
+			dispatch(
+				loadWidgets({
+					fragmentEntryLinks: widgetFragmentEntryLinksRef.current,
+				})
+			).then(() => setLoadingWidgets(false));
 		}
-
-		const handleScroll = debounce(() => {
-			setScrollPosition(wrapperElement.scrollTop);
-		}, 300);
-
-		wrapperElement.addEventListener('scroll', handleScroll, {
-			passive: true,
-		});
-
-		return () => {
-			wrapperElement.removeEventListener('scroll', handleScroll);
-		};
-	}, [setScrollPosition]);
+	}, [dispatch, searchValue, widgetFragmentEntryLinksRef, widgets]);
 
 	return (
-		<div className="h-100 overflow-auto" ref={wrapperElementRef}>
+		<>
 			<SidebarPanelHeader>
 				{Liferay.Language.get('fragments-and-widgets')}
 			</SidebarPanelHeader>
 
-			<SidebarPanelContent className="page-editor__sidebar__fragments-widgets-panel">
-				<div className="align-items-center d-flex justify-content-between mb-3">
+			<div className="d-flex flex-column page-editor__sidebar__fragments-widgets-panel">
+				<div className="align-items-center d-flex flex-shrink-0 justify-content-between mb-3 px-3">
 					<SearchForm
 						className="flex-grow-1 mb-0"
 						onChange={setSearchValue}
 					/>
+
+					{Liferay.FeatureFlags['LPS-158737'] && (
+						<ClayButtonWithIcon
+							borderless
+							className="lfr-portal-tooltip ml-2 mt-0"
+							data-tooltip-align="bottom-right"
+							displayType="secondary"
+							onClick={() => setShowReorderModal(true)}
+							small
+							symbol="order-arrow"
+							title={Liferay.Language.get('reorder-sets')}
+						/>
+					)}
 
 					<ClayButtonWithIcon
 						borderless
@@ -285,7 +271,10 @@ export default function FragmentsSidebar() {
 				</div>
 
 				{searchValue ? (
-					<SearchResultsPanel filteredTabs={filteredTabs} />
+					<SearchResultsPanel
+						filteredTabs={filteredTabs}
+						loading={loadingWidgets}
+					/>
 				) : (
 					<TabsPanel
 						activeTabId={activeTabId}
@@ -294,7 +283,13 @@ export default function FragmentsSidebar() {
 						tabs={tabs}
 					/>
 				)}
-			</SidebarPanelContent>
-		</div>
+			</div>
+
+			{showReorderModal && (
+				<ReorderSetsModal
+					onCloseModal={() => setShowReorderModal(false)}
+				/>
+			)}
+		</>
 	);
 }

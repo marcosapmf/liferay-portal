@@ -388,6 +388,9 @@ public interface PropsKeys {
 
 	public static final String CDN_HOST_HTTPS = "cdn.host.https";
 
+	public static final String CHANGE_TRACKING_SQL_TRANSFORMER_CACHE_SIZE =
+		"change.tracking.sql.transformer.cache.size";
+
 	public static final String CLUSTER_LINK_AUTODETECT_ADDRESS =
 		"cluster.link.autodetect.address";
 
@@ -1055,6 +1058,9 @@ public interface PropsKeys {
 
 	public static final String HIBERNATE_GENERATE_STATISTICS =
 		"hibernate.generate_statistics";
+
+	public static final String HIBERNATE_HBM_JAXB_CACHE =
+		"hibernate.hbm.jaxb.cache";
 
 	public static final String HIBERNATE_JDBC_BATCH_SIZE =
 		"hibernate.jdbc.batch_size";

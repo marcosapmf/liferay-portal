@@ -38,6 +38,25 @@ SearchContainer<Country> countrySearchContainer = CountrySearchContainerFactory.
 				keyProperty="countryId"
 				modelVar="country"
 			>
+
+				<%
+				List<String> availableActions = new ArrayList<>();
+
+				availableActions.add("deleteCountries");
+
+				if (country.getActive()) {
+					availableActions.add("deactivateCountries");
+				}
+				else {
+					availableActions.add("activateCountries");
+				}
+
+				row.setData(
+					HashMapBuilder.<String, Object>put(
+						"actions", StringUtil.merge(availableActions)
+					).build());
+				%>
+
 				<portlet:renderURL var="rowURL">
 					<portlet:param name="mvcRenderCommandName" value="/address/edit_country" />
 					<portlet:param name="countryId" value="<%= String.valueOf(country.getCountryId()) %>" />

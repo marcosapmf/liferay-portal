@@ -17,6 +17,8 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
 
+import {useId} from '../../../core/hooks/useId';
+import {TEXT_EDITABLE_TYPES} from '../../config/constants/textEditableTypes';
 import {
 	useGetContent,
 	useGetFieldValue,
@@ -39,7 +41,6 @@ import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqu
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import hasInnerCommonStyles from '../../utils/hasInnerCustomStyles';
 import useBackgroundImageValue from '../../utils/useBackgroundImageValue';
-import {useId} from '../../utils/useId';
 import UnsafeHTML from '../UnsafeHTML';
 import FragmentContentInteractionsFilter from './FragmentContentInteractionsFilter';
 import FragmentContentProcessor from './FragmentContentProcessor';
@@ -185,6 +186,13 @@ const FragmentContent = ({
 						);
 
 						editable.element.classList.add('page-editor__editable');
+
+						if (TEXT_EDITABLE_TYPES.has(editable.type)) {
+							editable.element.setAttribute(
+								'data-tooltip-floating',
+								true
+							);
+						}
 					});
 				})
 			).then(() => {

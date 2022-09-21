@@ -59,6 +59,8 @@ public class EditObjectDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		String externalReferenceCode = ParamUtil.getString(
+			actionRequest, "externalReferenceCode");
 		long objectDefinitionId = ParamUtil.getLong(
 			actionRequest, "objectDefinitionId");
 
@@ -71,6 +73,10 @@ public class EditObjectDefinitionMVCActionCommand extends BaseMVCActionCommand {
 		boolean accountEntryRestricted = ParamUtil.getBoolean(
 			actionRequest, "accountEntryRestricted");
 		boolean active = ParamUtil.getBoolean(actionRequest, "active");
+		boolean enableCategorization = ParamUtil.getBoolean(
+			actionRequest, "enableCategorization");
+		boolean enableComments = ParamUtil.getBoolean(
+			actionRequest, "enableComments");
 		Map<Locale, String> labelMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "label");
 		String name = ParamUtil.getString(actionRequest, "shortName");
@@ -96,9 +102,10 @@ public class EditObjectDefinitionMVCActionCommand extends BaseMVCActionCommand {
 			}
 
 			_objectDefinitionService.updateCustomObjectDefinition(
-				objectDefinitionId, accountEntryRestrictedObjectFieldId,
-				descriptionObjectFieldId, titleObjectFieldId,
-				accountEntryRestricted, active, labelMap, name,
+				externalReferenceCode, objectDefinitionId,
+				accountEntryRestrictedObjectFieldId, descriptionObjectFieldId,
+				titleObjectFieldId, accountEntryRestricted, active,
+				enableCategorization, enableComments, labelMap, name,
 				panelCategoryOrder, panelCategoryKey, portlet, pluralLabelMap,
 				scope);
 

@@ -36,8 +36,10 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.vulcan.extension.PropertyDefinition;
 import com.liferay.portal.vulcan.util.TransformUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -109,6 +111,11 @@ public class PicklistObjectFieldBusinessType
 			_getDDMFormFieldPredefinedValue(
 				objectField, objectFieldRenderingContext)
 		).build();
+	}
+
+	@Override
+	public PropertyDefinition.PropertyType getPropertyType() {
+		return PropertyDefinition.PropertyType.TEXT;
 	}
 
 	@Override
@@ -193,6 +200,10 @@ public class PicklistObjectFieldBusinessType
 		ListTypeEntry listTypeEntry =
 			_listTypeEntryLocalService.fetchListTypeEntry(
 				objectField.getListTypeDefinitionId(), listEntryKey);
+
+		if (listTypeEntry == null) {
+			return Collections.emptyList();
+		}
 
 		ObjectStateFlow objectStateFlow =
 			_objectStateFlowLocalService.fetchObjectFieldObjectStateFlow(

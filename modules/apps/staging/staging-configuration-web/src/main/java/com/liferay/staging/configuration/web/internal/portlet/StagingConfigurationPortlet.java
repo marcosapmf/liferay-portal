@@ -18,7 +18,6 @@ import com.liferay.change.tracking.configuration.CTSettingsConfiguration;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
@@ -31,6 +30,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -316,33 +316,6 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 		return super.isSessionErrorException(throwable);
 	}
 
-	@Reference
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setStaging(Staging staging) {
-		_staging = staging;
-	}
-
-	@Reference
-	protected void setStagingLocalService(
-		StagingLocalService stagingLocalService) {
-
-		_stagingLocalService = stagingLocalService;
-	}
-
-	protected void unsetGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = null;
-	}
-
-	protected void unsetStagingLocalService(
-		StagingLocalService stagingLocalService) {
-
-		_stagingLocalService = null;
-	}
-
 	private CTSettingsConfiguration _getCTSettingsConfiguration(
 		long companyId) {
 
@@ -367,12 +340,17 @@ public class StagingConfigurationPortlet extends MVCPortlet {
 	private ConfigurationProvider _configurationProvider;
 
 	private volatile CTSettingsConfiguration _defaultCTSettingsConfiguration;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private Staging _staging;
+
+	@Reference
 	private StagingLocalService _stagingLocalService;
 
 }

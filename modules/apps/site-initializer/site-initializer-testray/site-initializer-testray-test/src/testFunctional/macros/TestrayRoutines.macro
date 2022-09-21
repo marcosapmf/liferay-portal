@@ -12,10 +12,39 @@ definition {
 			locator1 = "TestrayRoutines#STATUS_BUILD_HISTORY");
 	}
 
+	macro createRoutine {
+		Click(locator1 = "Testray#ADD_PROJECT");
+
+		Type(
+			locator1 = "TestrayManage#NEW_OPTION_NAME",
+			value1 = "${key_name}");
+
+		Click(locator1 = "TestrayManage#SAVE_BUTTON");
+	}
+
+	macro deleteRoutine {
+		Testray.deleteComponent(itemName = "${itemName}");
+	}
+
+	macro editRoutine {
+		TestrayManage.editProductVersion(
+			caseName = "${newNameRoutine}",
+			itemManage = "Edit",
+			valueName = "${routineName}");
+	}
+
 	macro goToRoutine {
 		Click(
 			key_projectName = "${routineName}",
-			locator1 = "Testray#PROJECT_NAME");
+			locator1 = "Testray#ITEM_NAME");
+	}
+
+	macro selectOptionDropdownRoutine {
+		Click(locator1 = "TestrayRoutines#DROPDOWN_ROUTINE");
+
+		MenuItem.clickNoError(menuItem = "${menuItem}");
+
+		Alert.viewSuccessMessage();
 	}
 
 	macro typeRoutineField {

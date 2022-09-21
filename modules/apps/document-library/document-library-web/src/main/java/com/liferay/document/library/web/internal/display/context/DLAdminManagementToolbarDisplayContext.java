@@ -41,7 +41,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -51,6 +50,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.toolbar.contributor.PortletToolbarContributor;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
@@ -84,21 +84,20 @@ public class DLAdminManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public DLAdminManagementToolbarDisplayContext(
-		HttpServletRequest httpServletRequest,
-		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
 		DLAdminDisplayContext dlAdminDisplayContext,
-		DLTrashHelper dlTrashHelper) {
+		DLTrashHelper dlTrashHelper, HttpServletRequest httpServletRequest,
+		LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			dlAdminDisplayContext.getSearchContainer());
 
+		_dlAdminDisplayContext = dlAdminDisplayContext;
+		_dlTrashHelper = dlTrashHelper;
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
-		_dlAdminDisplayContext = dlAdminDisplayContext;
-		_dlTrashHelper = dlTrashHelper;
 
 		_currentURLObj = PortletURLUtil.getCurrent(
 			liferayPortletRequest, liferayPortletResponse);

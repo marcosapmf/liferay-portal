@@ -17,14 +17,15 @@ package com.liferay.object.rest.internal.resource.v1_0;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
-import com.liferay.object.rest.internal.odata.entity.v1_0.ObjectEntryEntityModel;
-import com.liferay.object.rest.internal.petra.sql.dsl.expression.PredicateUtil;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerTracker;
+import com.liferay.object.rest.odata.entity.v1_0.ObjectEntryEntityModel;
+import com.liferay.object.rest.petra.sql.dsl.expression.FilterPredicateFactory;
 import com.liferay.object.rest.resource.v1_0.ObjectEntryResource;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -34,7 +35,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -222,11 +222,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		return objectEntryManager.getObjectEntries(
 			contextCompany.getCompanyId(), _objectDefinition, null, aggregation,
 			_getDTOConverterContext(null), pagination,
-			PredicateUtil.toPredicate(
-				_filterParserProvider,
+			_filterPredicateFactory.create(
 				ParamUtil.getString(contextHttpServletRequest, "filter"),
-				_objectDefinition.getObjectDefinitionId(),
-				_objectFieldLocalService),
+				_objectDefinition.getObjectDefinitionId()),
 			search, sorts);
 	}
 
@@ -269,11 +267,9 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		return objectEntryManager.getObjectEntries(
 			contextCompany.getCompanyId(), _objectDefinition, scopeKey,
 			aggregation, _getDTOConverterContext(null), pagination,
-			PredicateUtil.toPredicate(
-				_filterParserProvider,
+			_filterPredicateFactory.create(
 				ParamUtil.getString(contextHttpServletRequest, "filter"),
-				_objectDefinition.getObjectDefinitionId(),
-				_objectFieldLocalService),
+				_objectDefinition.getObjectDefinitionId()),
 			search, sorts);
 	}
 
@@ -406,6 +402,22 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 		super.update(objectEntries, parameters);
 	}
 
+	@Override
+	protected Long getPermissionCheckerGroupId(Object id) throws Exception {
+		com.liferay.object.model.ObjectEntry objectEntry =
+			_objectEntryLocalService.getObjectEntry(GetterUtil.getLong(id));
+
+		return objectEntry.getGroupId();
+	}
+
+	@Override
+	protected String getPermissionCheckerResourceName(Object id)
+		throws Exception {
+
+		return ObjectDefinition.class.getName() + "#" +
+			_objectDefinition.getObjectDefinitionId();
+	}
+
 	private DefaultDTOConverterContext _getDTOConverterContext(
 		Long objectEntryId) {
 
@@ -478,13 +490,16 @@ public class ObjectEntryResourceImpl extends BaseObjectEntryResourceImpl {
 	}
 
 	@Reference
-	private FilterParserProvider _filterParserProvider;
+	private FilterPredicateFactory _filterPredicateFactory;
 
 	@Context
 	private ObjectDefinition _objectDefinition;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
+	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@Reference
 	private ObjectEntryManagerTracker _objectEntryManagerTracker;

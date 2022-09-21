@@ -14,7 +14,6 @@
 
 package com.liferay.search.experiences.service.impl;
 
-import com.liferay.petra.string.CharPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -27,9 +26,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.search.experiences.exception.DuplicateSXPElementExternalReferenceCodeException;
 import com.liferay.search.experiences.exception.SXPElementElementDefinitionJSONException;
 import com.liferay.search.experiences.exception.SXPElementTitleException;
 import com.liferay.search.experiences.model.SXPElement;
@@ -56,30 +54,27 @@ public class SXPElementLocalServiceImpl extends SXPElementLocalServiceBaseImpl {
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public SXPElement addSXPElement(
-			long userId, Map<Locale, String> descriptionMap,
-			String elementDefinitionJSON, boolean readOnly,
-			String schemaVersion, Map<Locale, String> titleMap, int type,
+			String externalReferenceCode, long userId,
+			Map<Locale, String> descriptionMap, String elementDefinitionJSON,
+			boolean readOnly, String schemaVersion,
+			Map<Locale, String> titleMap, int type,
 			ServiceContext serviceContext)
 		throws PortalException {
+
+		User user = _userLocalService.getUser(userId);
+
+		_validateExternalReferenceCode(
+			user.getCompanyId(), externalReferenceCode);
 
 		_validate(elementDefinitionJSON, titleMap, type, serviceContext);
 
 		SXPElement sxpElement = createSXPElement(
 			counterLocalService.increment(SXPElement.class.getName()));
 
-		if (readOnly) {
-			sxpElement.setExternalReferenceCode(
-				StringUtil.replace(
-					StringUtil.toUpperCase(titleMap.get(LocaleUtil.US)),
-					CharPool.SPACE, CharPool.UNDERLINE));
-		}
-
-		User user = _userLocalService.getUser(userId);
-
+		sxpElement.setExternalReferenceCode(externalReferenceCode);
 		sxpElement.setCompanyId(user.getCompanyId());
 		sxpElement.setUserId(user.getUserId());
 		sxpElement.setUserName(user.getFullName());
-
 		sxpElement.setDescriptionMap(descriptionMap);
 		sxpElement.setElementDefinitionJSON(elementDefinitionJSON);
 		sxpElement.setHidden(false);
@@ -198,6 +193,18 @@ public class SXPElementLocalServiceImpl extends SXPElementLocalServiceBaseImpl {
 
 			_sxpElementValidator.validate(
 				elementDefinitionJSON, titleMap, type);
+		}
+	}
+
+	private void _validateExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		SXPElement sxpElement = fetchSXPElementByExternalReferenceCode(
+			companyId, externalReferenceCode);
+
+		if (sxpElement != null) {
+			throw new DuplicateSXPElementExternalReferenceCodeException();
 		}
 	}
 

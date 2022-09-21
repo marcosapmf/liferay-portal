@@ -68,10 +68,6 @@ const COLLECTION_KEY = 'COLLECTION_KEY';
 const handleConfigurationChanged = jest.fn();
 
 const renderComponent = () => {
-	Liferay.Util.sub.mockImplementation((langKey, ...args) =>
-		[langKey, ...args].join('-')
-	);
-
 	const result = render(
 		<StoreContextProvider
 			initialState={{
@@ -82,6 +78,7 @@ const renderComponent = () => {
 						subtype: 'Web Content Article - Basic Web Content',
 					},
 				],
+				permissions: {UPDATE: true},
 				selectedViewportSize: VIEWPORT_SIZES.desktop,
 			}}
 		>
@@ -170,7 +167,7 @@ describe('CollectionFilterConfigurationModal', () => {
 		});
 
 		expect(
-			getByText('there-are-x-results-for-x-4-This is a test')
+			getByText('there-are-4-results-for-This is a test')
 		).toBeInTheDocument();
 	});
 

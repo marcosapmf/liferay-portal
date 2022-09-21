@@ -136,11 +136,13 @@ Property Name | Type | Default Value | Description
 `environmentOperatingSystemName` | `String` | CentOS 7 | The operating system name and version used in the test environment
 `projectDir` | `File` | `.` | The location of the project directory
 `testrayBuildName` | `String` | DXP Cloud Client Build - $(start.time) | The Testray build name
+`testrayBuildSHA` | `String` | | The Testray build SHA
 `testrayCasePriority` | `Integer` | `1` | The priority of the test case result(s)
 `testrayComponentName` | `String` | DXP Cloud Client Component | The Testray component name
 `testrayProductVersion` | `String` | 1.x | The Testray product version
 `testrayProjectName` | `String` | DXP Cloud Client | The Testray product name
 `testrayRoutineName` | `String` | DXP Cloud Client Routine | The Testray routine name
+`testrayS3BucketName` | `String` | testray-results | The name of the Testray S3 Bucket
 `testrayServerURL` | `String` | https://testray.liferay.com | The URL of the Testray server
 `testrayTeamName` | `String` | DXP Cloud Client Team | The Testray team name
 
@@ -154,4 +156,4 @@ export GOOGLE_APPLICATION_CREDENTIALS=/home/user/Downloads/service-account-file.
 
 See this [article](https://cloud.google.com/docs/authentication/getting-started) for more details on how to setup google cloud.
 
-The specific bucket that your google account needs read/write access to is the [testray-results](https://console.cloud.google.com/storage/browser/testray-results) bucket. In order to get access please contact IT for access.
+Your Google account needs read/write access to the bucket selected by `testrayS3BucketName`. By default the [testray-results](https://console.cloud.google.com/storage/browser/testray-results) bucket will be used. Contact IT for access.

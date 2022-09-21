@@ -22,8 +22,8 @@
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
 		<column name="countryId" type="long" />
+		<column name="listTypeId" type="long" />
 		<column name="regionId" type="long" />
-		<column name="typeId" type="long" />
 		<column name="city" type="String" />
 		<column name="description" type="String" />
 		<column name="latitude" type="double" />
@@ -67,11 +67,11 @@
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
-		<finder name="C_C_C_T" return-type="Collection">
+		<finder name="C_C_C_L" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
-			<finder-column arrayable-operator="true" name="typeId" />
+			<finder-column arrayable-operator="true" name="listTypeId" />
 		</finder>
 		<finder name="C_C_C_M" return-type="Collection">
 			<finder-column name="companyId" />
@@ -142,7 +142,6 @@
 		<column name="mx" type="String" />
 		<column name="homeURL" type="String" />
 		<column name="logoId" type="long" />
-		<column name="system" type="boolean" />
 		<column name="maxUsers" type="int" />
 		<column name="active" type="boolean" />
 		<column name="name" type="String" />
@@ -165,9 +164,6 @@
 		</finder>
 		<finder name="LogoId" return-type="Company">
 			<finder-column name="logoId" />
-		</finder>
-		<finder name="System" return-type="Collection">
-			<finder-column name="system" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="CompanyInfo" remote-service="false">
@@ -438,9 +434,9 @@
 			<finder-column name="companyId" />
 			<finder-column name="parentGroupId" />
 		</finder>
-		<finder name="C_GK" return-type="Group" unique="true">
+		<finder name="C_GK" return-type="Collection" unique="true">
 			<finder-column name="companyId" />
-			<finder-column name="groupKey" />
+			<finder-column arrayable-operator="OR" name="groupKey" />
 		</finder>
 		<finder name="C_F" return-type="Group" unique="true">
 			<finder-column name="companyId" />

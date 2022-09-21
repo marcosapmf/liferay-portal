@@ -320,7 +320,7 @@ definition {
 	@description = "This is a test for LPS-157739. The page creator could map new field to new input fragment after mapping Form Container to object."
 	@priority = "4"
 	test MapNewFieldToNewInputFragmentInMappedFormContainer {
-		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-150277=true";
+		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-157738=true";
 		property test.name.skip.portal.instance = "FormContainer#MapNewFieldToNewInputFragmentInMappedFormContainer";
 
 		task ("Given a page creator has a mapped Form Container on a content page") {
@@ -376,7 +376,7 @@ definition {
 	@description = "This is a test for LPS-157739. The page creator could remove automatically added input fragments and change mapping fields."
 	@priority = "4"
 	test RemoveAutomaticallyAddedInputFragmentsThenChangeMappingField {
-		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-150277=true";
+		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-157738=true";
 		property test.name.skip.portal.instance = "FormContainer#RemoveAutomaticallyAddedInputFragmentsThenChangeMappingField";
 
 		task ("Given a page creator has a Form Container on a content page") {
@@ -803,7 +803,7 @@ definition {
 	test SubmitFormContainerWithTranslatedSuccessText {
 		property test.name.skip.portal.instance = "FormContainer#SubmitFormContainerWithTranslatedSuccessText";
 
-		task ("Given a page designer has a mapped Form Container  and Language Selector on content page") {
+		task ("Given a page designer has a mapped Form Container and Language Selector on content page") {
 			task ("Add Form Container and Language Selector to content page") {
 				JSONLayout.addPublicLayout(
 					groupName = "Test Site Name",
@@ -1014,6 +1014,582 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-157739. The page creator could receive an object entry after submitting form."
+	@priority = "5"
+	test ViewCreatedObjectEntryAfterSubmitForm {
+		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-157738=true";
+		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "FormContainer#ViewCreatedObjectEntryAfterSubmitForm";
+
+		task ("Given a page creator has a Form Container on a content page") {
+			task ("Add a picklist with two items") {
+				Picklist.addPicklistViaAPI(picklistName = "Ticket Type");
+
+				Picklist.addPicklistItemViaAPI(
+					itemKey = "firstClass",
+					itemName = "First Class",
+					picklistName = "Ticket Type");
+
+				Picklist.addPicklistItemViaAPI(
+					itemKey = "businessClass",
+					itemName = "Business Class",
+					picklistName = "Ticket Type");
+			}
+
+			task ("Add the second object then add relationship with the first object") {
+				ObjectAdmin.addObjectViaAPI(
+					labelName = "Preference",
+					objectName = "Preference",
+					pluralLabelName = "Preferences");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Text",
+					fieldLabelName = "Food Preferences",
+					fieldName = "foodPreferences",
+					fieldType = "String",
+					isRequired = "false",
+					objectName = "Preference");
+
+				ObjectAdmin.publishObjectViaAPI(objectName = "Preference");
+
+				ObjectAdmin.addObjectRelationshipViaAPI(
+					objectName_1 = "Preference",
+					objectName_2 = "PurchaseOrder",
+					relationshipLabel = "Favorite Food",
+					relationshipName = "favoriteFood",
+					relationshipType = "oneToMany");
+
+				ObjectAdmin.openObjectAdmin();
+
+				ObjectPortlet.selectCustomObject(label = "Preference");
+
+				CreateObject.selectTitleField(fieldLabel = "Food Preferences");
+
+				CreateObject.saveObject();
+
+				for (var entryName : list "Fish,Salad,Rice") {
+					ObjectAdmin.addObjectSingleFieldEntryViaAPI(
+						fieldName = "foodPreferences",
+						objectName = "Preference",
+						value = "${entryName}");
+				}
+			}
+
+			task ("Add fields to the first object") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Picklist",
+					fieldLabelName = "Type",
+					fieldName = "type",
+					fieldType = "String",
+					isRequired = "false",
+					objectName = "PurchaseOrder",
+					picklistName = "Ticket Type");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "LongInteger",
+					fieldLabelName = "Amount",
+					fieldName = "amount",
+					fieldType = "Long",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Integer",
+					fieldLabelName = "Age",
+					fieldName = "age",
+					fieldType = "Integer",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "PrecisionDecimal",
+					fieldLabelName = "Price",
+					fieldName = "price",
+					fieldType = "BigDecimal",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Decimal",
+					fieldLabelName = "Tax",
+					fieldName = "tax",
+					fieldType = "Double",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Date",
+					fieldLabelName = "Purchase Date",
+					fieldName = "purchaseDate",
+					fieldType = "Date",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Attachment",
+					fieldLabelName = "Custom Attachment From Computer",
+					fieldName = "customAttachmentFromComputer",
+					fieldType = "Long",
+					fileSource = "userComputer",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Attachment",
+					fieldLabelName = "Custom Attachment From DM",
+					fieldName = "customAttachmentFromDM",
+					fieldType = "Long",
+					fileSource = "documentsAndMedia",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Boolean",
+					fieldLabelName = "I accept the terms of use and Privacy Policy",
+					fieldName = "iAcceptTheTermsOfUseAndPrivacyPolicy",
+					fieldType = "Boolean",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "LongText",
+					fieldLabelName = "Address",
+					fieldName = "address",
+					fieldType = "Clob",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+			}
+
+			task ("Add a Form Container to a content page then map to the first object") {
+				JSONLayout.addPublicLayout(
+					groupName = "Test Site Name",
+					layoutName = "Test Page Name",
+					type = "content");
+
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Test Page Name",
+					siteName = "Test Site Name");
+
+				PageEditor.addFragment(
+					collectionName = "Form Components",
+					fragmentName = "Form Container");
+
+				PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+				PageEditor.waitForAutoSave();
+
+				PageEditor.publish();
+			}
+		}
+
+		task ("When the page creator submits the form with data at view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			Type(
+				key_text = "Address",
+				locator1 = "TextInput#ANY",
+				value1 = "Dalian");
+
+			Type(
+				key_text = "Age",
+				locator1 = "TextInput#ANY",
+				value1 = "30");
+
+			Type(
+				key_text = "Amount",
+				locator1 = "TextInput#ANY",
+				value1 = "100");
+
+			UploadDependencyFile.uploadFile(fileName = "Document_1.jpg");
+
+			Click(locator1 = "xpath=(//label[contains(.,'Select File')])[2]");
+
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+			UploadDependencyFile.uploadFile(fileName = "Document_2.jpg");
+
+			WaitForElementPresent(
+				key_text = "Add",
+				locator1 = "Button#ANY_ENABLED");
+
+			Button.clickAdd();
+
+			Check.checkNotVisible(
+				index = "1",
+				locator1 = "Fragment#INPUT_FIELD",
+				type = "checkbox");
+
+			Type(
+				key_text = "Price",
+				locator1 = "TextInput#ANY",
+				value1 = "3000");
+
+			Type.sendKeys(
+				key_text = "Purchase Date",
+				locator1 = "TextInput#ANY",
+				value1 = "08082020");
+
+			Click(
+				index = "1",
+				locator1 = "Fragment#INPUT_TOGGLE",
+				type = "select-from-list");
+
+			MenuItem.click(menuItem = "Fish");
+
+			Type(
+				key_text = "Region",
+				locator1 = "TextInput#ANY",
+				value1 = "China");
+
+			Type(
+				key_text = "Tax",
+				locator1 = "TextInput#ANY",
+				value1 = "3");
+
+			Click(
+				index = "2",
+				locator1 = "Fragment#INPUT_TOGGLE",
+				type = "select-from-list");
+
+			MenuItem.click(menuItem = "First Class");
+
+			Button.clickSubmitButton();
+
+			AssertTextPresent(value1 = "Thank you. Your information was successfully received.");
+		}
+
+		task ("Then the page creator could see the created object entry") {
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "30",
+				fieldName = "age",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "100",
+				fieldName = "amount",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "Document_1.jpg",
+				fieldName = "customAttachmentFromComputer",
+				objectName = "PurchaseOrder",
+				type = "Attachment");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "Document_2.jpg",
+				fieldName = "customAttachmentFromDM",
+				objectName = "PurchaseOrder",
+				type = "Attachment");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "true",
+				fieldName = "iAcceptTheTermsOfUseAndPrivacyPolicy",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "3000.0000000000000000",
+				fieldName = "price",
+				objectName = "PurchaseOrder");
+
+			var favoriteFoodPreferenceId = JSONObject.getObjectEntryId(
+				entryValue = "Fish",
+				fieldName = "foodPreferences",
+				objectName = "Preference");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "${favoriteFoodPreferenceId}",
+				fieldName = "r_favoriteFood_c_preferenceId",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "2020-08-08T00:00:00Z",
+				fieldName = "purchaseDate",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "China",
+				fieldName = "region",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "3.0",
+				fieldName = "tax",
+				objectName = "PurchaseOrder");
+
+			ObjectAdmin.assertObjectEntryFieldValueViaAPI(
+				attribute = "address",
+				attributeValue = "Dalian",
+				expectedValue = "First Class",
+				fieldName = "type",
+				objectName = "PurchaseOrder",
+				type = "Picklist");
+		}
+	}
+
+	@description = "This is a test for LPS-158143. The page creator could see error message after mapping the Form Container to object when multiple OOTB input fragments are unavailable. The page creator could see error message after mapping the Form Container to object when some OOTB input fragments are disabled from master page."
+	@priority = "4"
+	test ViewErrorMessageAfterMappingFormContainerToEntityWhenMultipleInputFragmentsDisabledFromMasterPage {
+		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-157738=true";
+		property test.name.skip.portal.instance = "FormContainer#ViewErrorMessageAfterMappingFormContainerToEntityWhenMultipleInputFragmentsDisabledFromMasterPage";
+
+		task ("Given a page creator has a Form Container on a content page based on a master page") {
+			task ("Add Date and Integer fields to the object") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Integer",
+					fieldLabelName = "Age",
+					fieldName = "age",
+					fieldType = "Integer",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Date",
+					fieldLabelName = "Purchase Date",
+					fieldName = "purchaseDate",
+					fieldType = "Date",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+			}
+
+			task ("Add a master page then remove Text Input, Numeric Input, Date and Submit Button fragments from allowed fragments") {
+				JSONLayoutpagetemplate.addMasterPageTemplateEntry(
+					groupName = "Test Site Name",
+					masterPageTemplateEntryName = "Custom Masters Page Template");
+
+				MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+
+				MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+				Click(locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS");
+
+				MastersPageTemplates.deselectAllowedFragments(fragmentNameList = "Date,Numeric Input,Submit Button,Text Input");
+
+				MastersPageTemplates.publishMaster();
+			}
+
+			task ("Add a Form Container to a content page based on master page") {
+				PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+				ContentPages.addPage(
+					masterLayoutName = "Custom Masters Page Template",
+					pageName = "Test Page Name");
+
+				PageEditor.addFragment(
+					collectionName = "Form Components",
+					fragmentName = "Form Container");
+			}
+		}
+
+		task ("When the page creator maps the Form Container to object") {
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Then the page creator sees the following error message") {
+			Alert.viewErrorMessage(errorMessage = "Some fragments are missing. Date, Number, Submit Button and Text fields cannot have an associated fragment or cannot be available in master.");
+
+			AssertVisible(
+				key_fragmentName = "Form Container",
+				key_messageInfo = "Place fragments here.",
+				key_position = "1",
+				locator1 = "Fragment#NO_FRAGMENTS_MESSAGE");
+
+			PageEditor.gotoConfiguration(fragmentName = "Form Container");
+
+			AssertSelectedLabel(
+				key_fieldLabel = "Content Type",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Purchase Order");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. No warning message shown when hide a layout element with whole form and required input fragments or when publish a content page where a hidden layout element contains a whole form with required input fragments."
+	@priority = "4"
+	test ViewNoWarningMessageShownWhenHideFormOrPublishHiddenFormWithRequiredInputFragments {
+		property test.name.skip.portal.instance = "FormContainer#ViewNoWarningMessageShownWhenHideFormOrPublishHiddenFormWithRequiredInputFragments";
+
+		task ("Given a page designer has a Form Container with an input fragment mapped to a required field inside a Container") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Date",
+				fieldLabelName = "Purchase Date",
+				fieldName = "purchaseDate",
+				fieldType = "Date",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 1",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 1",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
+				fragmentName = "Form Container",
+				navTab = "Fragments");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Date");
+
+			PageEditor.editInput(
+				field = "Purchase Date*",
+				fragmentName = "Date");
+		}
+
+		task ("When the page designer hides the Container") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("Then the page designer cannot see a warning message") {
+			AssertElementNotPresent(
+				key_warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.",
+				locator1 = "Message#WARNING_SPECIFIC");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer cannot see a warning message") {
+			AssertElementNotPresent(locator1 = "Modal#BODY");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Given a page designer has a Form Container with an input fragment mapped to a required field inside a Grid") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 2",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 2",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Form Components",
+				columnNumber = "1",
+				fragmentName = "Form Container",
+				navTab = "Fragments");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Date");
+
+			PageEditor.editInput(
+				field = "Purchase Date*",
+				fragmentName = "Date");
+		}
+
+		task ("When the page designer hides the Grid") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
+		}
+
+		task ("Then the page designer cannot see a warning message") {
+			AssertElementNotPresent(
+				key_warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.",
+				locator1 = "Message#WARNING_SPECIFIC");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer cannot see a warning message") {
+			AssertElementNotPresent(locator1 = "Modal#BODY");
+
+			Alert.viewSuccessMessage();
+		}
+	}
+
+	@description = "This is a test for LPS-157998. When publish a form content page with multiple warning messages, the page creator should see them in one modal."
+	@priority = "4"
+	test ViewOnlyOneModalShownWhenPublishContentPageWithMultipleWarningMessages {
+		property test.name.skip.portal.instance = "FormContainer#ViewOnlyOneModalShownWhenPublishContentPageWithMultipleWarningMessages";
+
+		task ("Given a page designer has a Form Container with an unmapped Text Input fragment on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer could see all warning messages shown in one modal") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Form Errors");
+
+			Alert.viewWarningSpecific(warningMessage = "Submit button is hidden or missing. Your users may not be able to submit the form.");
+
+			Alert.viewWarningSpecific(warningMessage = "Some fragments are not mapped to object fields. Unmapped fragments data will not be stored.");
+
+			Modal.publish(warningMessage = "The following errors have been found with the forms on the page. Publishing without fixing these errors may affect form performance. Are you sure you want to publish?");
+		}
+	}
+
 	@description = "This is a test for LPS-151402. The user could only see the first error message when multiple validation issues happen on submitting a form."
 	@priority = "4"
 	test ViewOnlyTheFirstErrorMessageShownWhenMultipleValidationIssuesHappen {
@@ -1201,6 +1777,716 @@ definition {
 				key_text = "Purchase Date",
 				locator1 = "TextInput#ANY",
 				value1 = "");
+		}
+	}
+
+	@description = "This is a test for LPS-158143. The page creator could see success message after mapping the Form Container to object when all OOTB input fragments are available."
+	@priority = "4"
+	test ViewSuccessMessageAfterMappingFormContainerToEntity {
+		property custom.properties = "feature.flag.LPS-150277=true${line.separator}feature.flag.LPS-157738=true";
+		property test.name.skip.portal.instance = "FormContainer#ViewSuccessMessageAfterMappingFormContainerToEntity";
+
+		task ("Given a page creator has a Form Container on a content page") {
+			task ("Add Date and Integer fields to the object") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Integer",
+					fieldLabelName = "Age",
+					fieldName = "age",
+					fieldType = "Integer",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Date",
+					fieldLabelName = "Purchase Date",
+					fieldName = "purchaseDate",
+					fieldType = "Date",
+					isRequired = "false",
+					objectName = "PurchaseOrder");
+			}
+
+			task ("Add a Form Container to a content page") {
+				JSONLayout.addPublicLayout(
+					groupName = "Test Site Name",
+					layoutName = "Test Page Name",
+					type = "content");
+
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Test Page Name",
+					siteName = "Test Site Name");
+
+				PageEditor.addFragment(
+					collectionName = "Form Components",
+					fragmentName = "Form Container");
+			}
+		}
+
+		task ("When the page creator maps the Form Container to object") {
+			PageEditor.mapFormContainerToObject(contentType = "Purchase Order");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Then the page creator sees the following success message") {
+			Alert.viewSuccessMessageText(successMessage = "Your form has been successfully loaded.");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. The page creator should see warning message when delete a required input fragment."
+	@priority = "4"
+	test ViewWarningMessageWhenDeleteRequiredInputFragments {
+		property test.name.skip.portal.instance = "FormContainer#ViewWarningMessageWhenDeleteRequiredInputFragments";
+
+		task ("Given a page designer has a Form Container with a required input fragment on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Date",
+				fieldLabelName = "Purchase Date",
+				fieldName = "purchaseDate",
+				fieldType = "Date",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
+		}
+
+		task ("When the page designer removes the Text Input fragment") {
+			PageEditor.removeFragment(fragmentName = "Text Input");
+		}
+
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The deleted fragment was marked as required. A form with missing required fields may not generate a valid entry.");
+		}
+
+		task ("Given a page designer has a Form Container with an input fragment mapped to a required field on content page") {
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Date");
+
+			PageEditor.editInput(
+				field = "Purchase Date*",
+				fragmentName = "Date");
+		}
+
+		task ("When the page designer removes the Date fragment") {
+			PageEditor.removeFragment(fragmentName = "Date");
+		}
+
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The deleted fragment was marked as required. A form with missing required fields may not generate a valid entry.");
+		}
+	}
+
+	@description = "This is a test for LPS-150278 and LPS-157998. The page creator should see warning message when hide a layout element that doesn't contain the whole form and with required input fragment."
+	@priority = "4"
+	test ViewWarningMessageWhenHideLayoutElementWithPartialFormAndRequiredInputFragments {
+		property test.name.skip.portal.instance = "FormContainer#ViewWarningMessageWhenHideLayoutElementWithPartialFormAndRequiredInputFragments";
+
+		task ("Given a page designer has a Form Container with a Container containing a required input fragment on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 1",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 1",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
+		}
+
+		task ("When the page designer hides the Container") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
+		}
+
+		task ("Given a page designer has a Form Container with a Container containing an input fragment mapped to a required field on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Date",
+				fieldLabelName = "Purchase Date",
+				fieldName = "purchaseDate",
+				fieldType = "Date",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 2",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 2",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
+				fragmentName = "Date",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Purchase Date*",
+				fragmentName = "Date");
+		}
+
+		task ("When the page designer hides the Container") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
+		}
+
+		task ("Given a page designer has a Form Container with a Grid containing a required input fragment on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 3",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 3",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Form Components",
+				columnNumber = "1",
+				fragmentName = "Text Input",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
+		}
+
+		task ("When the page designer hides the Grid") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
+		}
+
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
+		}
+
+		task ("Given a page designer has a Form Container with a Grid containing an input fragment mapped to a required field on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 4",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 4",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Form Components",
+				columnNumber = "1",
+				fragmentName = "Date",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Purchase Date*",
+				fragmentName = "Date");
+		}
+
+		task ("When the page designer hides the Grid") {
+			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
+		}
+
+		task ("Then the page designer could see a warning message") {
+			Alert.viewWarningSpecific(warningMessage = "The hidden fragment contained required fields. A form with missing required fields will not generate a valid entry.");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with hidden required input fragment."
+	@priority = "4"
+	test ViewWarningMessageWhenPublishContentPageWithHiddenRequiredInputFragments {
+		property test.name.skip.portal.instance = "FormContainer#ViewWarningMessageWhenPublishContentPageWithHiddenRequiredInputFragments";
+
+		task ("Given a page designer has a Form Container with a hidden Container containing a required input fragment on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 1",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 1",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				height = "Tall",
+				targetFragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
+
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer could see Required Fields Hidden warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Required Fields Hidden");
+
+			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
+		}
+
+		task ("Given a page designer has a Form Container with a hidden Container containing an input fragment mapped to a required field on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Text",
+				fieldLabelName = "Name",
+				fieldName = "name",
+				fieldType = "String",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 2",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 2",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				height = "Tall",
+				targetFragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Name*",
+				fragmentName = "Text Input");
+
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer could see Required Fields Hidden warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Required Fields Hidden");
+
+			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
+		}
+
+		task ("Given a page designer has a Form Container with a hidden Grid containing a required input fragment on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 3",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 3",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input",
+				height = "Tall",
+				targetFragmentName = "Grid");
+
+			PageEditor.editInput(
+				field = "Name*",
+				fragmentName = "Text Input");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				targetFragmentName = "Text Input");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Form Components",
+				columnNumber = "1",
+				fragmentName = "Text Input",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input",
+				markAsRequired = "true");
+
+			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer could see Required Fields Hidden warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Required Fields Hidden");
+
+			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
+		}
+
+		task ("Given a page designer has a Form Container with a hidden Grid containing an input fragment mapped to a required field on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name 4",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 4",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				height = "Tall",
+				targetFragmentName = "Grid");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Form Components",
+				columnNumber = "1",
+				fragmentName = "Text Input",
+				navTab = "Fragments");
+
+			PageEditor.editInput(
+				field = "Name*",
+				fragmentName = "Text Input");
+
+			PageEditor.hideFragmentViaHeader(fragmentName = "Grid");
+		}
+
+		task ("When the page designer publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page designer could see Required Fields Hidden warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Required Fields Hidden");
+
+			Modal.publish(warningMessage = "Purchase Order form contains one or more hidden fragments mapped to required fields. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page without the Submit Button fragment or with a hidden Submit Button fragment."
+	@priority = "4"
+	test ViewWarningMessageWhenPublishContentPageWithoutSubmitButtonOrWithHiddenSubmitButton {
+		property test.name.skip.portal.instance = "FormContainer#ViewWarningMessageWhenPublishContentPageWithoutSubmitButtonOrWithHiddenSubmitButton";
+
+		task ("Given a page creator has a Form Container without Submit Button on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input");
+		}
+
+		task ("When the page creator publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page creator could see Submit Button Missing warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Submit Button Missing");
+
+			Modal.publish(
+				action = "Cancel",
+				warningMessage = "Purchase Order form has a hidden or missing submit button. If you continue, your users may not be able to submit the form. Are you sure you want to publish it?");
+		}
+
+		task ("Given a page creator has a Form Container with a hidden Submit Button on content page") {
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Container",
+				targetFragmentName = "Text Input");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				navTab = "Fragments");
+
+			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+		}
+
+		task ("When the page creator publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page creator could see Submit Button Missing warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Submit Button Missing");
+
+			Modal.publish(warningMessage = "Purchase Order form has a hidden or missing submit button. If you continue, your users may not be able to submit the form. Are you sure you want to publish it?");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with unmapped input fragments."
+	@priority = "4"
+	test ViewWarningMessageWhenPublishContentPageWithUnmappedInputFragments {
+		property test.name.skip.portal.instance = "FormContainer#ViewWarningMessageWhenPublishContentPageWithUnmappedInputFragments";
+
+		task ("Given a page creator has a Form Container with unmapped input fragment on content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				targetFragmentName = "Text Input");
+		}
+
+		task ("When the page creator publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page creator could see Fragment Mapping Missing warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Fragment Mapping Missing");
+
+			Modal.publish(warningMessage = "Purchase Order form has some fragments not mapped to object fields. Unmapped fragments data will not be stored. Are you sure you want to publish?");
+		}
+	}
+
+	@description = "This is a test for LPS-157998. The page creator should see warning message when publish the content page with unmapped required fields."
+	@priority = "4"
+	test ViewWarningMessageWhenPublishContentPageWithUnmappedRequiredFields {
+		property test.name.skip.portal.instance = "FormContainer#ViewWarningMessageWhenPublishContentPageWithUnmappedRequiredFields";
+
+		task ("Given a page creator has a Form Container with unmapped required fields on content page") {
+			ObjectAdmin.addObjectFieldViaAPI(
+				fieldBusinessType = "Date",
+				fieldLabelName = "Purchase Date",
+				fieldName = "purchaseDate",
+				fieldType = "Date",
+				isRequired = "true",
+				objectName = "PurchaseOrder");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Form Components",
+				fragmentName = "Form Container");
+
+			PageEditor.editFormContainer(
+				contentType = "Purchase Order",
+				panel = "General");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Text Input");
+
+			PageEditor.editInput(
+				field = "Region",
+				fragmentName = "Text Input");
+
+			PageEditor.addFragmentToFormContainer(
+				collectionName = "Form Components",
+				fragmentName = "Submit Button",
+				targetFragmentName = "Text Input");
+		}
+
+		task ("When the page creator publishes the content page") {
+			Button.click(button = "Publish");
+		}
+
+		task ("Then the page creator could see Required Fields Missing warning message") {
+			AssertTextEquals(
+				locator1 = "Modal#HEADER",
+				value1 = "Required Fields Missing");
+
+			Modal.publish(warningMessage = "Purchase Order form has one or more required fields not mapped from the form. A form with missing required fields will not generate a valid entry. Are you sure you want to publish it?");
 		}
 	}
 

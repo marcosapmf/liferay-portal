@@ -23,10 +23,10 @@ import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPort
 import com.liferay.asset.list.constants.AssetListPortletKeys;
 import com.liferay.asset.tags.constants.AssetTagsAdminPortletKeys;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
-import com.liferay.depot.web.internal.servlet.taglib.clay.DepotDashboardApplicationNavigationCard;
+import com.liferay.depot.web.internal.frontend.taglib.clay.servlet.taglib.DepotDashboardApplicationNavigationCard;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
-import com.liferay.frontend.taglib.clay.servlet.taglib.soy.NavigationCard;
+import com.liferay.frontend.taglib.clay.servlet.taglib.NavigationCard;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;

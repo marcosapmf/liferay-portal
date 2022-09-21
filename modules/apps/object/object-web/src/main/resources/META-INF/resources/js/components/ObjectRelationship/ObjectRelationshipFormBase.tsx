@@ -12,13 +12,15 @@
  * details.
  */
 
+import ClayLabel from '@clayui/label';
 import {
 	API,
-	FormCustomSelect,
+	AutoComplete,
 	FormError,
 	Input,
-	Select,
+	SingleSelect,
 	invalidateRequired,
+	stringIncludesQuery,
 	useForm,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
@@ -52,6 +54,8 @@ const ONE_TO_ONE = {
 };
 
 const REQUIRED_MSG = Liferay.Language.get('required');
+
+const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 export function useObjectRelationshipForm({
 	initialValues,
@@ -111,6 +115,7 @@ export function ObjectRelationshipFormBase({
 	const [objectDefinitions, setObjectDefinitions] = useState<
 		ObjectDefinition[]
 	>([]);
+	const [query, setQuery] = useState<string>('');
 
 	const [types, selectedType] = useMemo(() => {
 		const types = [ONE_TO_MANY, MANY_TO_MANY];
@@ -123,7 +128,7 @@ export function ObjectRelationshipFormBase({
 
 	useEffect(() => {
 		const fetchObjectDefinitions = async () => {
-			const items = await API.getObjectDefinitions();
+			const items = await API.getAllObjectDefinitions();
 
 			const currentObjectDefinition = items.find(
 				({id}) => values.objectDefinitionId1 === id
@@ -144,6 +149,7 @@ export function ObjectRelationshipFormBase({
 			setObjectDefinitions([
 				{
 					id: values.objectDefinitionId2 as number,
+					label: values.label as LocalizedValue<string>,
 					name: values.objectDefinitionName2 as string,
 					system: false,
 				},
@@ -165,6 +171,21 @@ export function ObjectRelationshipFormBase({
 		[objectDefinitions, values.objectDefinitionId1, values.type]
 	);
 
+	const filteredRelationships = useMemo(() => {
+		if (Liferay.FeatureFlags['LPS-158478']) {
+			return objectDefinitions.filter(({label}) =>
+				stringIncludesQuery(label[defaultLanguageId] as string, query)
+			);
+		}
+		else {
+			return filteredObjectDefinitions.filter(({label}) => {
+				return label[defaultLanguageId]
+					?.toLocaleLowerCase()
+					.includes(query.toLowerCase());
+			});
+		}
+	}, [filteredObjectDefinitions, objectDefinitions, query]);
+
 	return (
 		<>
 			<Input
@@ -177,7 +198,7 @@ export function ObjectRelationshipFormBase({
 				value={values.name}
 			/>
 
-			<FormCustomSelect
+			<SingleSelect
 				disabled={readonly}
 				error={errors.type}
 				label={Liferay.Language.get('type')}
@@ -187,21 +208,37 @@ export function ObjectRelationshipFormBase({
 				value={selectedType}
 			/>
 
-			<Select
+			<AutoComplete
 				disabled={readonly}
+				emptyStateMessage={Liferay.Language.get(
+					'no-objects-were-found'
+				)}
 				error={errors.objectDefinitionId2}
+				items={filteredRelationships}
 				label={Liferay.Language.get('object')}
-				onChange={({target: {value}}) => {
-					const {id, name} = filteredObjectDefinitions[Number(value)];
+				onChangeQuery={setQuery}
+				onSelectItem={(item: ObjectDefinition) => {
 					setValues({
-						objectDefinitionId2: id,
-						objectDefinitionName2: name,
+						objectDefinitionId2: item.id,
+						objectDefinitionName2: item.name,
 					});
 				}}
-				options={filteredObjectDefinitions.map(({name}) => name)}
+				query={query}
 				required
 				value={values.objectDefinitionName2}
-			/>
+			>
+				{({label, name, system}) => (
+					<div className="d-flex justify-content-between">
+						<div>{label[defaultLanguageId] ?? name}</div>
+
+						<ClayLabel displayType={system ? 'info' : 'warning'}>
+							{system
+								? Liferay.Language.get('system')
+								: Liferay.Language.get('custom')}
+						</ClayLabel>
+					</div>
+				)}
+			</AutoComplete>
 		</>
 	);
 }
@@ -223,6 +260,7 @@ interface IPros {
 
 type ObjectDefinition = {
 	id: number;
+	label: LocalizedValue<string>;
 	name: string;
 	system: boolean;
 };

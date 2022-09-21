@@ -28,13 +28,13 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeCon
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -354,8 +354,16 @@ public class MasterLayoutActionDropdownItemsProvider {
 
 	private String _getItemSelectorURL() {
 		ItemSelectorCriterion itemSelectorCriterion =
-			new UploadItemSelectorCriterion(
-				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
+			UploadItemSelectorCriterion.builder(
+			).desiredItemSelectorReturnTypes(
+				new FileEntryItemSelectorReturnType()
+			).maxFileSize(
+				UploadServletRequestConfigurationHelperUtil.getMaxSize()
+			).portletId(
+				LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES
+			).repositoryName(
+				LanguageUtil.get(_themeDisplay.getLocale(), "master-page")
+			).url(
 				PortletURLBuilder.createActionURL(
 					_renderResponse
 				).setActionName(
@@ -364,12 +372,8 @@ public class MasterLayoutActionDropdownItemsProvider {
 				).setParameter(
 					"layoutPageTemplateEntryId",
 					_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-				).buildString(),
-				LanguageUtil.get(_themeDisplay.getLocale(), "master-page"),
-				UploadServletRequestConfigurationHelperUtil.getMaxSize());
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new FileEntryItemSelectorReturnType());
+				).buildString()
+			).build();
 
 		return String.valueOf(
 			_itemSelector.getItemSelectorURL(

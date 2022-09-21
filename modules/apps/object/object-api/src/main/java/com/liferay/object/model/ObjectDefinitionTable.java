@@ -37,6 +37,10 @@ public class ObjectDefinitionTable extends BaseTable<ObjectDefinitionTable> {
 		"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
 	public final Column<ObjectDefinitionTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, String> externalReferenceCode =
+		createColumn(
+			"externalReferenceCode", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, Long> objectDefinitionId =
 		createColumn(
 			"objectDefinitionId", Long.class, Types.BIGINT,
@@ -77,6 +81,14 @@ public class ObjectDefinitionTable extends BaseTable<ObjectDefinitionTable> {
 		"label", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, String> className = createColumn(
 		"className", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, Boolean> enableCategorization =
+		createColumn(
+			"enableCategorization", Boolean.class, Types.BOOLEAN,
+			Column.FLAG_DEFAULT);
+	public final Column<ObjectDefinitionTable, Boolean> enableComments =
+		createColumn(
+			"enableComments", Boolean.class, Types.BOOLEAN,
+			Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<ObjectDefinitionTable, String> panelAppOrder =

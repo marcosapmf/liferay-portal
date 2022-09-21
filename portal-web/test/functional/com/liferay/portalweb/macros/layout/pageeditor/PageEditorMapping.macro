@@ -73,8 +73,6 @@ definition {
 		NavItem.click(navItem = "${navItem}");
 
 		if (isSet(uploadFileName)) {
-			AssertElementPresent(locator1 = "ItemSelector#SELECT_FILE_UPLOAD_IMAGE");
-
 			WaitForEditable(locator1 = "TextInput#FILE");
 
 			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
@@ -95,6 +93,12 @@ definition {
 			Click(
 				key_card = "${entryTitle}",
 				locator1 = "Card#CARD_TITLE");
+		}
+		else if ("${navItem}" == "Knowledge Base Articles") {
+			AssertClick.assertPartialTextClickAt(
+				key_listEntry = "${entryTitle}",
+				locator1 = "LexiconList#LIST_ENTRY",
+				value1 = "${entryTitle}");
 		}
 		else {
 			Click(

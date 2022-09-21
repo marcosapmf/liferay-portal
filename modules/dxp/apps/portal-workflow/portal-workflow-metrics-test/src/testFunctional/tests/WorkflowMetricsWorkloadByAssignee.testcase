@@ -44,6 +44,8 @@ definition {
 	@description = "LPS-98518 - Verify that there is an image besides the assignee name that is retrieved from the global user profile picture (add, delete, update)"
 	@priority = "3"
 	test AssigneeImagesRetrievedFromGlobalUserProfile {
+		property portal.upstream = "quarantine";
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
@@ -729,6 +731,12 @@ definition {
 	@description = "LPS-97669 - Verify that the sum of items Overdue and On time of 'Workload by Assignee' page are never bigger than the Total items"
 	@priority = "3"
 	test SumOfOverdueAndOnTimeAreNeverBiggerThanTotalItems {
+		property test.name.skip.portal.instance = "WorkflowMetricsWorkloadByAssignee#SumOfOverdueAndOnTimeAreNeverBiggerThanTotalItems";
+
+		WorkflowMetrics.setSLADefinitionsJobInterval(
+			definitionsJobInterval = "1",
+			slaJobInterval = "1");
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
@@ -915,6 +923,7 @@ definition {
 	@priority = "4"
 	test WorkloadByAssigneeCardDisplaysUpTo10Users {
 		property portal.acceptance = "true";
+		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "WorkflowMetricsWorkloadByAssignee#WorkloadByAssigneeCardDisplaysUpTo10Users";
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");

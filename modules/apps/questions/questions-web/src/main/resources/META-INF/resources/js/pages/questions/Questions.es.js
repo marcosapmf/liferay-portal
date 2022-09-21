@@ -139,7 +139,9 @@ export default withRouter(
 		);
 
 		const [getRankedThreads] = useManualQuery(getRankedThreadsQuery);
-		const [getSectionThreads] = useManualQuery(getSectionThreadsQuery);
+		const [getSectionThreads] = useManualQuery(getSectionThreadsQuery, {
+			useCache: false,
+		});
 		const [getThreads] = useManualQuery(getThreadsQuery);
 
 		useEffect(() => {
@@ -419,7 +421,7 @@ export default withRouter(
 
 		const [debounceCallback] = useDebounceCallback(
 			(search) => changePage(search, 1, 20),
-			500
+			1000
 		);
 
 		useEffect(() => {
@@ -489,7 +491,7 @@ export default withRouter(
 				window.location.replace(
 					`/c/portal/login?redirect=${baseURL}${
 						context.historyRouterBasePath
-							? context.historyRouterBasePath.replace('/', '')
+							? context.historyRouterBasePath
 							: '#'
 					}/questions/${sectionTitle}/new`
 				);
@@ -759,7 +761,7 @@ export default withRouter(
 												<ClayButtonWithIcon
 													displayType="unstyled"
 													onClick={() => {
-														debounceCallback('');
+														setSearch('');
 													}}
 													symbol="times-circle"
 													type="submit"

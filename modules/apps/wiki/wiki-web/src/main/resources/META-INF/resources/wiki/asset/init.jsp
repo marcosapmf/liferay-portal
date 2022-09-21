@@ -23,10 +23,10 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.asset.util.AssetHelper" %><%@
-page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.reflect.ReflectionUtil" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.portal.kernel.portlet.PortletURLFactoryUtil" %><%@
+page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.repository.model.FileEntry" %><%@
 page import="com.liferay.portal.kernel.service.ServiceContextFactory" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
@@ -39,7 +39,7 @@ page import="com.liferay.wiki.constants.WikiWebKeys" %><%@
 page import="com.liferay.wiki.model.WikiPage" %><%@
 page import="com.liferay.wiki.model.WikiPageDisplay" %><%@
 page import="com.liferay.wiki.service.WikiPageLocalServiceUtil" %><%@
-page import="com.liferay.wiki.web.internal.servlet.taglib.clay.WikiPageAttachmentHorizontalCard" %>
+page import="com.liferay.wiki.web.internal.frontend.taglib.clay.servlet.taglib.WikiPageAttachmentHorizontalCard" %>
 
 <%@ page import="java.util.function.Supplier" %>
 

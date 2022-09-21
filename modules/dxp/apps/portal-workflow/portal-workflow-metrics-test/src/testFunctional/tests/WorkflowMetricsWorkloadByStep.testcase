@@ -149,7 +149,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		while (IsTextNotEqual(locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_OVERDUE_ITEMS_VALUE", value1 = "1") && (maxIterations = "45")) {
+		while ((IsTextNotEqual(locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_OVERDUE_ITEMS_VALUE", value1 = "1")) && (maxIterations = "45")) {
 			Refresh();
 		}
 
@@ -175,6 +175,12 @@ definition {
 	@description = "LPS-86642 - Verify that the On Time is the total number of pending instances that didn't breach any SLAs target times"
 	@priority = "4"
 	test PendingItemsThatDoNotBreachSlaIsOnTime {
+		property test.name.skip.portal.instance = "WorkflowMetricsWorkloadByStep#PendingItemsThatDoNotBreachSlaIsOnTime";
+
+		WorkflowMetrics.setSLADefinitionsJobInterval(
+			definitionsJobInterval = "1",
+			slaJobInterval = "1");
+
 		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
@@ -206,7 +212,7 @@ definition {
 
 		WorkflowMetrics.goToWorkflowProcessMetrics(workflowProcessName = "Single Approver");
 
-		while (IsTextNotEqual(locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_ONTIME_ITEMS_VALUE", value1 = "1") && (maxIterations = "45")) {
+		while ((IsTextNotEqual(locator1 = "WorkflowMetrics#DASHBOARD_TOTAL_ONTIME_ITEMS_VALUE", value1 = "1")) && (maxIterations = "45")) {
 			Refresh();
 		}
 

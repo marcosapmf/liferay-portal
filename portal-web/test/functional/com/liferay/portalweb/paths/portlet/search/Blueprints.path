@@ -91,6 +91,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>BLUEPRINTS_ADDED_ELEMENT_NTH_ELEMENT</td>
+	<td>xpath=(//div[contains(@id,'querySXPElement')])[${index}]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>BLUEPRINTS_ADDED_ELEMENT_VERTICAL_ELLIPSIS</td>
 	<td>//div[contains(@id,'querySXPElement')][.//*[contains(.,'${element}')]]//*[contains(@class,'icon-ellipsis')]</td>
 	<td></td>
@@ -142,7 +147,7 @@
 </tr>
 <tr>
 	<td>BLUEPRINTS_ADMIN_FIELDS_MENU</td>
-	<td>//button[contains(@class,'dropdown-toggle') and contains(.,'Open Fields Menu')]</td>
+	<td>//button[contains(@class,'dropdown-toggle') and contains(@aria-label,'Open Fields Menu')]</td>
 	<td></td>
 </tr>
 <tr>

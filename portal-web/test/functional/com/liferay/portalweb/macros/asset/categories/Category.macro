@@ -71,7 +71,9 @@ definition {
 		PortletEntry.inputTitle(title = "${categoryName}");
 
 		if (isSet(categoryDescription)) {
-			PortletEntry.inputDescription(description = "${categoryDescription}");
+			CKEditor.addContentInWebContent(
+				content = "${categoryDescription}",
+				fieldLabel = "Description");
 		}
 
 		if (isSet(displayPageTemplateType)) {
@@ -386,32 +388,6 @@ definition {
 			urlAppend = "group/${siteURLKey}/~/control_panel/manage/-/categories_admin/");
 	}
 
-	macro removeLinkToDocumentationURL {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
-
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "Assets",
-			configurationName = "Categorization",
-			configurationScope = "Virtual Instance Scope");
-
-		Type(
-			key_text = "linkToDocumentation",
-			locator1 = "TextArea#ANY",
-			value1 = " ");
-
-		if (IsElementPresent(key_text = "Save", locator1 = "Button#ANY")) {
-			Button.clickSave();
-		}
-		else {
-			Button.clickUpdate();
-		}
-
-		Alert.viewSuccessMessage();
-	}
-
 	macro searchCP {
 		Navigator.gotoNavNested(navNested = "${vocabularyName}");
 
@@ -506,16 +482,6 @@ definition {
 		}
 	}
 
-	macro viewCategoryToVocabularyCP {
-		var key_categoryName = "${categoryName}";
-
-		Navigator.gotoNavNested(navNested = "${vocabularyName}");
-
-		AssertClick(
-			locator1 = "Categories#VOCABULARY_CATEGORY",
-			value1 = "${categoryName}");
-	}
-
 	macro viewCategoryViewableByCP {
 		Navigator.gotoNavNested(navNested = "${vocabularyName}");
 
@@ -544,9 +510,7 @@ definition {
 
 		Navigator.gotoNavNested(navNested = "${vocabularyName}");
 
-		AssertTextEquals(
-			locator1 = "Categories#VOCABULARY_CATEGORY",
-			value1 = "${categoryName}");
+		LexiconTable.viewTableEntryTitle(tableEntry = "${categoryName}");
 	}
 
 	macro viewFilterViaCategoriesNavigationPG {

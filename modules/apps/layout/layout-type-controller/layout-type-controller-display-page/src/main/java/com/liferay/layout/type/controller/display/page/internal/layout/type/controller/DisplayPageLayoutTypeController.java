@@ -18,6 +18,7 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvide
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.info.display.request.attributes.contributor.InfoDisplayRequestAttributesContributor;
 import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.search.InfoSearchClassMapperTracker;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
@@ -149,7 +150,8 @@ public class DisplayPageLayoutTypeController
 		DisplayPageLayoutTypeControllerDisplayContext
 			displayPageLayoutTypeControllerDisplayContext =
 				new DisplayPageLayoutTypeControllerDisplayContext(
-					httpServletRequest, _infoItemServiceTracker);
+					httpServletRequest, _infoItemServiceTracker,
+					_infoSearchClassMapperTracker);
 
 		httpServletRequest.setAttribute(
 			DisplayPageLayoutTypeControllerWebKeys.
@@ -164,7 +166,7 @@ public class DisplayPageLayoutTypeController
 
 		RequestDispatcher requestDispatcher =
 			_transferHeadersHelper.getTransferHeadersRequestDispatcher(
-				servletContext.getRequestDispatcher(page));
+				_servletContext.getRequestDispatcher(page));
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
@@ -282,16 +284,13 @@ public class DisplayPageLayoutTypeController
 	}
 
 	@Override
-	protected String getViewPage() {
-		return _VIEW_PAGE;
+	protected ServletContext getServletContext() {
+		return _servletContext;
 	}
 
-	@Reference(
-		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.display.page)",
-		unbind = "-"
-	)
-	protected void setServletContext(ServletContext servletContext) {
-		this.servletContext = servletContext;
+	@Override
+	protected String getViewPage() {
+		return _VIEW_PAGE;
 	}
 
 	private LayoutPageTemplateEntry _fetchLayoutPageTemplateEntry(
@@ -358,6 +357,9 @@ public class DisplayPageLayoutTypeController
 	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
+	private InfoSearchClassMapperTracker _infoSearchClassMapperTracker;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
@@ -366,6 +368,11 @@ public class DisplayPageLayoutTypeController
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(osgi.web.symbolicname=com.liferay.layout.type.controller.display.page)"
+	)
+	private ServletContext _servletContext;
 
 	@Reference
 	private TransferHeadersHelper _transferHeadersHelper;

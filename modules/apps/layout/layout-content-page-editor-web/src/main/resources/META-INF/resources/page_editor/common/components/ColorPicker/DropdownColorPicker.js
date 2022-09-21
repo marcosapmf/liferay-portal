@@ -115,16 +115,19 @@ export function DropdownColorPicker({
 		const ref = React.createRef();
 
 		ref.current = document.querySelector(
-			Liferay.FeatureFlags['LPS-153452']
-				? 'page-editor__item-configuration-sidebar'
-				: '.page-editor__sidebar'
+			'page-editor__item-configuration-sidebar'
 		);
 
 		return ref;
 	}, []);
 
 	return (
-		<div className="page-editor__dropdown-color-picker w-100">
+		<div
+			className={classNames(
+				'flex-grow-1 flex-shrink-0 page-editor__dropdown-color-picker',
+				{'ml-2': !showSelector}
+			)}
+		>
 			{showSelector ? (
 				<ClayButton
 					aria-label={label}
@@ -156,7 +159,7 @@ export function DropdownColorPicker({
 				</ClayButton>
 			) : (
 				<ClayButtonWithIcon
-					className="border-0"
+					className="border-0 flex-shrink-0"
 					displayType="secondary"
 					onClick={() => onSetActive(!active)}
 					ref={triggerElementRef}

@@ -14,6 +14,11 @@
 
 package com.liferay.product.navigation.control.menu.web.internal;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.info.constants.InfoDisplayWebKeys;
+import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -22,10 +27,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -89,10 +94,14 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 		sb.append("control-menu-level-1-heading d-flex mr-1\" ");
 		sb.append("data-qa-id=\"headerTitle\"><span class=\"");
 		sb.append("lfr-portal-tooltip text-truncate\" title=\"");
-		sb.append(
-			HtmlUtil.escapeAttribute(_getHeaderTitle(httpServletRequest)));
+
+		String headerTitle = HtmlUtil.escapeAttribute(
+			_getHeaderTitle(httpServletRequest));
+
+		sb.append(headerTitle);
+
 		sb.append("\">");
-		sb.append(_getHeaderTitle(httpServletRequest));
+		sb.append(headerTitle);
 		sb.append("</span>");
 
 		if (_hasDraftLayout(httpServletRequest) &&
@@ -179,6 +188,49 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 			return _portal.getPortletTitle(portletId, themeDisplay.getLocale());
 		}
 
+		if (layout.isTypeAssetDisplay()) {
+			Object infoItem = httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_ITEM);
+
+			InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
+				(InfoItemFieldValuesProvider)httpServletRequest.getAttribute(
+					InfoDisplayWebKeys.INFO_ITEM_FIELD_VALUES_PROVIDER);
+
+			if ((infoItem != null) && (infoItemFieldValuesProvider != null)) {
+				InfoItemFieldValues infoItemFieldValues =
+					infoItemFieldValuesProvider.getInfoItemFieldValues(
+						infoItem);
+
+				InfoFieldValue<Object> titleInfoFieldValue =
+					infoItemFieldValues.getInfoFieldValue("title");
+
+				if (titleInfoFieldValue != null) {
+					return HtmlUtil.escape(
+						String.valueOf(
+							titleInfoFieldValue.getValue(
+								themeDisplay.getLocale())));
+				}
+
+				InfoFieldValue<Object> nameInfoFieldValue =
+					infoItemFieldValues.getInfoFieldValue("name");
+
+				if (nameInfoFieldValue != null) {
+					return HtmlUtil.escape(
+						String.valueOf(
+							nameInfoFieldValue.getValue(
+								themeDisplay.getLocale())));
+				}
+			}
+
+			AssetEntry assetEntry = (AssetEntry)httpServletRequest.getAttribute(
+				WebKeys.LAYOUT_ASSET_ENTRY);
+
+			if (assetEntry != null) {
+				return HtmlUtil.escape(
+					assetEntry.getTitle(themeDisplay.getLanguageId()));
+			}
+		}
+
 		return HtmlUtil.escape(layout.getName(themeDisplay.getLocale()));
 	}
 
@@ -193,17 +245,24 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 			return false;
 		}
 
-		Layout draftLayout = layout.fetchDraftLayout();
+		Layout draftLayout = null;
 
-		if (draftLayout != null) {
-			layout = draftLayout;
+		if (layout.isDraftLayout()) {
+			draftLayout = layout;
+
+			layout = _layoutLocalService.fetchLayout(draftLayout.getClassPK());
+		}
+		else {
+			draftLayout = layout.fetchDraftLayout();
 		}
 
-		if (!layout.isDraft() && _isLayoutPublished(layout)) {
-			return false;
+		if (((draftLayout != null) && draftLayout.isDraft()) ||
+			!layout.isPublished()) {
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	private boolean _hasEditPermission(HttpServletRequest httpServletRequest) {
@@ -241,30 +300,13 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 			return false;
 		}
 
-		if ((layout.fetchDraftLayout() != null) ||
-			(!layout.isDraft() && _isLayoutPublished(layout))) {
-
-			return false;
-		}
-
 		String mode = ParamUtil.getString(httpServletRequest, "p_l_mode");
 
-		if (Objects.equals(mode, Constants.EDIT)) {
+		if (Objects.equals(mode, Constants.EDIT) || !layout.isDraftLayout()) {
 			return false;
 		}
 
 		return true;
-	}
-
-	private boolean _isLayoutPublished(Layout layout) {
-		boolean published = GetterUtil.getBoolean(
-			layout.getTypeSettingsProperty("published"));
-
-		if (published) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -276,6 +318,9 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 	@Reference
 	private LayoutContentModelResourcePermission
 		_layoutContentModelResourcePermission;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutPermission _layoutPermission;

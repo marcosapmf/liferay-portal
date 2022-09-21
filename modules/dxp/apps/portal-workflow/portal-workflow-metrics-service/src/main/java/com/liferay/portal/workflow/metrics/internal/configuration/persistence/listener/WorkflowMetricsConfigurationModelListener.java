@@ -43,16 +43,21 @@ public class WorkflowMetricsConfigurationModelListener
 	public void onBeforeSave(String pid, Dictionary<String, Object> properties)
 		throws ConfigurationModelListenerException {
 
-		WorkflowMetricsConfiguration ddmFormWebConfiguration =
+		WorkflowMetricsConfiguration workflowMetricsConfiguration =
 			ConfigurableUtil.createConfigurable(
 				WorkflowMetricsConfiguration.class, new HashMapDictionary<>());
 
 		try {
-			int checkSLAJobInterval = GetterUtil.getInteger(
-				properties.get("checkSLAJobInterval"),
-				ddmFormWebConfiguration.checkSLAJobInterval());
+			_validateJobInterval(
+				GetterUtil.getInteger(
+					properties.get("checkSLAJobInterval"),
+					workflowMetricsConfiguration.checkSLAJobInterval()));
 
-			_validateCheckSLAJobInterval(checkSLAJobInterval);
+			_validateJobInterval(
+				GetterUtil.getInteger(
+					properties.get("checkSLADefinitionsJobInterval"),
+					workflowMetricsConfiguration.
+						checkSLADefinitionsJobInterval()));
 		}
 		catch (Exception exception) {
 			throw new ConfigurationModelListenerException(
@@ -61,18 +66,15 @@ public class WorkflowMetricsConfigurationModelListener
 		}
 	}
 
-	private void _validateCheckSLAJobInterval(int checkSLAJobInterval)
-		throws Exception {
-
-		if (checkSLAJobInterval <= 0) {
+	private void _validateJobInterval(int jobInterval) throws Exception {
+		if (jobInterval <= 0) {
 			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 				"content.Language", LocaleThreadLocal.getThemeDisplayLocale(),
 				getClass());
 
-			String message = ResourceBundleUtil.getString(
-				resourceBundle, "the-job-interval-must-be-greater-than-0");
-
-			throw new Exception(message);
+			throw new Exception(
+				ResourceBundleUtil.getString(
+					resourceBundle, "the-job-interval-must-be-greater-than-0"));
 		}
 	}
 

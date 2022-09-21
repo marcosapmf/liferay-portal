@@ -28,7 +28,6 @@ import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeUtil;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -44,7 +43,7 @@ import com.liferay.portal.kernel.increment.BufferedIncrement;
 import com.liferay.portal.kernel.increment.DateOverrideIncrement;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -54,6 +53,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -352,7 +352,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 			page.getGroupId(), folder.getFolderId(), fileName);
 
 		FileEntry fileEntry = _portletFileRepository.addPortletFileEntry(
-			page.getGroupId(), userId, WikiPage.class.getName(),
+			null, page.getGroupId(), userId, WikiPage.class.getName(),
 			page.getResourcePrimKey(), WikiConstants.SERVICE_NAME,
 			folder.getFolderId(), file, fileName, mimeType, true);
 
@@ -391,7 +391,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 			page.getGroupId(), folder.getFolderId(), fileName);
 
 		FileEntry fileEntry = _portletFileRepository.addPortletFileEntry(
-			page.getGroupId(), userId, WikiPage.class.getName(),
+			null, page.getGroupId(), userId, WikiPage.class.getName(),
 			page.getResourcePrimKey(), WikiConstants.SERVICE_NAME,
 			folder.getFolderId(), inputStream, fileName, mimeType, true);
 
@@ -3200,7 +3200,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 		// Create stub page at the old location
 
 		double version = WikiPageConstants.VERSION_DEFAULT;
-		String summary = LanguageUtil.format(
+		String summary = _language.format(
 			serviceContext.getLocale(), "renamed-as-x", newTitle);
 		String format = page.getFormat();
 		boolean head = true;
@@ -3223,9 +3223,17 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		serviceContext.setCommand(Constants.ADD);
 
-		addPage(
+		WikiPage newPage = addPage(
 			userId, nodeId, title, version, content, summary, false, format,
 			head, parentTitle, redirectTitle, serviceContext);
+
+		_resourceLocalService.deleteResource(
+			page.getCompanyId(), WikiPage.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL, newPage.getResourcePrimKey());
+
+		_resourceLocalService.copyModelResources(
+			page.getCompanyId(), WikiPage.class.getName(),
+			page.getResourcePrimKey(), newPage.getResourcePrimKey());
 
 		WorkflowThreadLocal.setEnabled(workflowEnabled);
 
@@ -3472,6 +3480,9 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 	@Reference
 	private IndexerRegistry _indexerRegistry;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private MimeTypes _mimeTypes;

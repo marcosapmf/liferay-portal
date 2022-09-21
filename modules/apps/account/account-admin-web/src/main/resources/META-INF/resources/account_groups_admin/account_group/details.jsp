@@ -27,6 +27,8 @@ portletDisplay.setURLBack(backURL);
 renderResponse.setTitle((accountGroupDisplay.getAccountGroupId() == 0) ? LanguageUtil.get(request, "add-account-group") : LanguageUtil.format(request, "edit-x", accountGroupDisplay.getName(), false));
 %>
 
+<aui:model-context bean="<%= accountGroupDisplay.getAccountGroup() %>" model="<%= AccountGroup.class %>" />
+
 <portlet:actionURL name="/account_admin/edit_account_group" var="editAccountGroupURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 	<portlet:param name="accountGroupId" value="<%= String.valueOf(accountGroupDisplay.getAccountGroupId()) %>" />
@@ -43,13 +45,11 @@ renderResponse.setTitle((accountGroupDisplay.getAccountGroupId() == 0) ? Languag
 			<%= LanguageUtil.get(request, "information") %>
 		</h2>
 
-		<aui:input label="account-group-name" name="name" required="<%= true %>" type="text" value="<%= accountGroupDisplay.getName() %>">
-			<aui:validator name="maxLength"><%= ModelHintsUtil.getMaxLength(AccountGroup.class.getName(), "name") %></aui:validator>
-		</aui:input>
+		<aui:input label="account-group-name" name="name" />
 
 		<liferay-ui:error embed="<%= false %>" key="<%= DuplicateAccountGroupExternalReferenceCodeException.class.getName() %>" message="the-given-external-reference-code-belongs-to-another-account-group" />
 
-		<aui:input label="external-reference-code" name="externalReferenceCode" type="text" value="<%= accountGroupDisplay.getExternalReferenceCode() %>" />
+		<aui:input label="external-reference-code" name="externalReferenceCode" />
 
 		<aui:field-wrapper cssClass="form-group lfr-input-text-container">
 			<aui:input name="description" type="textarea" value="<%= accountGroupDisplay.getDescription() %>" />

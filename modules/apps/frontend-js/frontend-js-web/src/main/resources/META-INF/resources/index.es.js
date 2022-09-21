@@ -29,7 +29,7 @@ export {
 	getCookie,
 	setCookie,
 	removeCookie,
-} from './liferay/util/cookie';
+} from './liferay/util/cookie/cookie';
 
 // Debounce API
 
@@ -87,6 +87,11 @@ export {
 // Session API
 
 export {getSessionValue, setSessionValue} from './liferay/util/session.es';
+
+// Storage APIs
+
+export {default as localStorage} from './liferay/util/local_storage';
+export {default as sessionStorage} from './liferay/util/session_storage';
 
 // Toast API
 

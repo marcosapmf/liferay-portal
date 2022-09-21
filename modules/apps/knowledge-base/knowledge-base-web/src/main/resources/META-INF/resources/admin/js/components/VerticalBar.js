@@ -19,6 +19,8 @@ import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
 import NavigationPanel from './NavigationPanel';
+import SuggestionsPanel from './SuggestionsPanel';
+import TemplatesPanel from './TemplatesPanel';
 
 const CSS_EXPANDED = 'expanded';
 
@@ -57,7 +59,6 @@ const VerticalNavigationBar = ({
 				'closedStart.lexicon.sidenav',
 				() => {
 					setProductMenuOpen(false);
-					setVerticalBarOpen(true);
 				}
 			);
 
@@ -115,8 +116,8 @@ const VerticalNavigationBar = ({
 
 	const VerticalBarPanels = {
 		article: NavigationPanel,
-		suggestion: NavigationPanel,
-		template: NavigationPanel,
+		suggestion: SuggestionsPanel,
+		template: TemplatesPanel,
 	};
 
 	return (
@@ -145,18 +146,18 @@ const VerticalNavigationBar = ({
 
 					return (
 						<VerticalBar.Panel key={item.key}>
-							<>
-								<div className="sidebar-header">
-									<div className="component-title">
-										{item.title}
-									</div>
+							<div className="sidebar-header">
+								<div className="component-title">
+									{item.title}
 								</div>
-								<div className="sidebar-body">
-									<PanelComponent
-										items={item.navigationItems}
-									/>
-								</div>
-							</>
+							</div>
+
+							<div className="sidebar-body">
+								<PanelComponent
+									items={item.navigationItems}
+									selectedItemId={item.selectedItemId}
+								/>
+							</div>
 						</VerticalBar.Panel>
 					);
 				}}
@@ -176,6 +177,7 @@ const itemShape = {
 VerticalNavigationBar.propTypes = {
 	items: PropTypes.arrayOf(PropTypes.shape(itemShape)),
 	parentContainerId: PropTypes.string.isRequired,
+	productMenuOpen: PropTypes.bool,
 };
 
 export default VerticalNavigationBar;

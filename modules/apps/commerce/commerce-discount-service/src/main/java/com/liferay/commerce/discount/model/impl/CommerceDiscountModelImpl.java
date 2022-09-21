@@ -155,24 +155,6 @@ public class CommerceDiscountModelImpl
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean ENTITY_CACHE_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean FINDER_CACHE_ENABLED = true;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static final boolean COLUMN_BITMASK_ENABLED = true;
-
-	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
@@ -212,24 +194,40 @@ public class CommerceDiscountModelImpl
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long STATUS_COLUMN_BITMASK = 64L;
+	public static final long LEVEL_COLUMN_BITMASK = 64L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long UUID_COLUMN_BITMASK = 128L;
+	public static final long STATUS_COLUMN_BITMASK = 128L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 256L;
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
 	 *		#getColumnBitmask(String)}
 	 */
 	@Deprecated
-	public static final long CREATEDATE_COLUMN_BITMASK = 256L;
+	public static final long CREATEDATE_COLUMN_BITMASK = 512L;
 
-	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
-		com.liferay.commerce.discount.service.util.ServiceProps.get(
-			"lock.expiration.time.com.liferay.commerce.discount.model.CommerceDiscount"));
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
+	}
 
 	public CommerceDiscountModelImpl() {
 	}
@@ -861,6 +859,15 @@ public class CommerceDiscountModelImpl
 		}
 
 		_level = level;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalLevel() {
+		return getColumnOriginalValue("levelType");
 	}
 
 	@JSON
@@ -1501,7 +1508,7 @@ public class CommerceDiscountModelImpl
 	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return ENTITY_CACHE_ENABLED;
+		return true;
 	}
 
 	/**
@@ -1510,7 +1517,7 @@ public class CommerceDiscountModelImpl
 	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return FINDER_CACHE_ENABLED;
+		return true;
 	}
 
 	@Override

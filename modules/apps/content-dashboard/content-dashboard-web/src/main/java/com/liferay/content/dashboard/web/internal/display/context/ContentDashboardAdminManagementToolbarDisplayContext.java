@@ -33,7 +33,6 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.info.item.InfoItemReference;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -47,6 +46,7 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -120,8 +120,6 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				"authorIds", (String)null
 			).setParameter(
 				"contentDashboardItemSubtypePayload", (String)null
-			).setParameter(
-				"fileExtension", (String)null
 			).setParameter(
 				"scopeId", (String)null
 			).setParameter(
@@ -250,31 +248,6 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				_contentDashboardAdminDisplayContext.
 					getContentDashboardItemSubtypes();
 
-		List<String> fileExtensions =
-			_contentDashboardAdminDisplayContext.getFileExtensions();
-
-		for (String fileExtension : fileExtensions) {
-			labelItemListWrapper.add(
-				labelItem -> {
-					labelItem.putData(
-						"removeLabelURL",
-						_getRemoveLabelURL(
-							"fileExtension",
-							() -> {
-								Stream<String> stream = fileExtensions.stream();
-
-								return stream.filter(
-									curFileExtension -> !Objects.equals(
-										curFileExtension, fileExtension)
-								).toArray(
-									String[]::new
-								);
-							}));
-					labelItem.setCloseable(true);
-					labelItem.setLabel(_getLabel("extension", fileExtension));
-				});
-		}
-
 		for (ContentDashboardItemSubtype contentDashboardItemSubtype :
 				contentDashboardItemSubtypes) {
 
@@ -391,7 +364,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		List<Long> assetCategoryIds =
 			_contentDashboardAdminDisplayContext.getAssetCategoryIds();
 
-		if (!ListUtil.isEmpty(assetCategoryIds)) {
+		if (ListUtil.isNotEmpty(assetCategoryIds)) {
 			Stream<Long> stream = assetCategoryIds.stream();
 
 			portletURL.setParameter(
@@ -406,7 +379,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		Set<String> assetTagIds =
 			_contentDashboardAdminDisplayContext.getAssetTagIds();
 
-		if (!SetUtil.isEmpty(assetTagIds)) {
+		if (SetUtil.isNotEmpty(assetTagIds)) {
 			Stream<String> stream = assetTagIds.stream();
 
 			portletURL.setParameter(
@@ -416,7 +389,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		List<Long> authorIds =
 			_contentDashboardAdminDisplayContext.getAuthorIds();
 
-		if (!ListUtil.isEmpty(authorIds)) {
+		if (ListUtil.isNotEmpty(authorIds)) {
 			Stream<Long> stream = authorIds.stream();
 
 			portletURL.setParameter(
@@ -433,7 +406,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				_contentDashboardAdminDisplayContext.
 					getContentDashboardItemSubtypes();
 
-		if (!ListUtil.isEmpty(contentDashboardItemSubtypes)) {
+		if (ListUtil.isNotEmpty(contentDashboardItemSubtypes)) {
 			Stream<? extends ContentDashboardItemSubtype> stream =
 				contentDashboardItemSubtypes.stream();
 
@@ -661,26 +634,8 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		).filter(
 			Objects::nonNull
 		).map(
-			contentDashboardItemFilter -> DropdownItemBuilder.putData(
-				"action", "selectFileExtension"
-			).putData(
-				"dialogTitle", contentDashboardItemFilter.getLabel(_locale)
-			).putData(
-				"redirectURL",
-				PortletURLBuilder.create(
-					getPortletURL()
-				).setParameter(
-					contentDashboardItemFilter.getParameterName(), (String)null
-				).buildString()
-			).putData(
-				"selectFileExtensionURL", contentDashboardItemFilter.getURL()
-			).setActive(
-				!ListUtil.isEmpty(
-					contentDashboardItemFilter.getParameterValues())
-			).setLabel(
-				_language.get(httpServletRequest, "extension") +
-					StringPool.TRIPLE_PERIOD
-			).build()
+			contentDashboardItemFilter ->
+				contentDashboardItemFilter.getDropdownItem()
 		).collect(
 			Collectors.toList()
 		);
@@ -773,7 +728,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				"selectAssetCategoryURL",
 				String.valueOf(_getAssetCategorySelectorURL())
 			).setActive(
-				!ListUtil.isEmpty(
+				ListUtil.isNotEmpty(
 					_contentDashboardAdminDisplayContext.getAssetCategoryIds())
 			).setLabel(
 				_language.get(httpServletRequest, "categories") +
@@ -825,7 +780,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 					_contentDashboardAdminDisplayContext.
 						getContentDashboardItemSubtypeItemSelectorURL())
 			).setActive(
-				!ListUtil.isEmpty(
+				ListUtil.isNotEmpty(
 					_contentDashboardAdminDisplayContext.
 						getContentDashboardItemSubtypes())
 			).setLabel(
@@ -846,8 +801,8 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 			).putData(
 				"selectTagURL", String.valueOf(_getAssetTagSelectorURL())
 			).setActive(
-				!ListUtil.isEmpty(
-					_contentDashboardAdminDisplayContext.getAssetCategoryIds())
+				SetUtil.isNotEmpty(
+					_contentDashboardAdminDisplayContext.getAssetTagIds())
 			).setLabel(
 				_language.get(httpServletRequest, "tags") +
 					StringPool.TRIPLE_PERIOD
@@ -957,9 +912,10 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 
 	private List<Integer> _getStatuses() {
 		return Arrays.asList(
-			WorkflowConstants.STATUS_ANY, WorkflowConstants.STATUS_DRAFT,
-			WorkflowConstants.STATUS_SCHEDULED,
-			WorkflowConstants.STATUS_APPROVED);
+			WorkflowConstants.STATUS_ANY, WorkflowConstants.STATUS_APPROVED,
+			WorkflowConstants.STATUS_DRAFT, WorkflowConstants.STATUS_EXPIRED,
+			WorkflowConstants.STATUS_PENDING,
+			WorkflowConstants.STATUS_SCHEDULED);
 	}
 
 	private String _getStatusLabel(int status) {

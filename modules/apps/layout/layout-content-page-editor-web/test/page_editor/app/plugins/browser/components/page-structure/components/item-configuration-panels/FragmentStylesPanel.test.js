@@ -159,16 +159,18 @@ jest.mock(
 							responsive: true,
 							responsiveTemplate: 'mt{viewport}{value}',
 							type: 'select',
-							validValues: [
-								{
-									label: '0',
-									value: '0',
-								},
-								{
-									label: '1',
-									value: '1',
-								},
-							],
+							typeOptions: {
+								validValues: [
+									{
+										label: '0',
+										value: '0',
+									},
+									{
+										label: '1',
+										value: '1',
+									},
+								],
+							},
 						},
 					],
 				},
@@ -211,10 +213,6 @@ describe('FragmentStylesPanel', () => {
 	});
 
 	it('allows changing custom styles for a given viewport', async () => {
-		Liferay.Util.sub.mockImplementation((key, args) =>
-			args.reduce((key, arg) => key.replace('x', arg), key)
-		);
-
 		renderComponent({
 			selectedViewportSize: VIEWPORT_SIZES.tablet,
 		});

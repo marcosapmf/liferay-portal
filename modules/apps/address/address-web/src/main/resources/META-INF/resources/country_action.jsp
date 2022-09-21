@@ -34,7 +34,6 @@ Country country = (Country)row.getObject();
 	<c:if test="<%= PortalPermissionUtil.contains(permissionChecker, ActionKeys.MANAGE_COUNTRIES) %>">
 		<portlet:renderURL var="editURL">
 			<portlet:param name="mvcRenderCommandName" value="/address/edit_country" />
-			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="backURL" value='<%= ParamUtil.getString(request, "backURL") %>' />
 			<portlet:param name="countryId" value="<%= String.valueOf(country.getCountryId()) %>" />
 		</portlet:renderURL>
@@ -50,7 +49,7 @@ Country country = (Country)row.getObject();
 					<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DEACTIVATE %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="navigation" value="<%= navigation %>" />
-					<portlet:param name="countryId" value="<%= String.valueOf(country.getCountryId()) %>" />
+					<portlet:param name="countryIds" value="<%= String.valueOf(country.getCountryId()) %>" />
 				</portlet:actionURL>
 
 				<liferay-ui:icon-deactivate
@@ -62,7 +61,7 @@ Country country = (Country)row.getObject();
 					<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.RESTORE %>" />
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="navigation" value="<%= navigation %>" />
-					<portlet:param name="countryId" value="<%= String.valueOf(country.getCountryId()) %>" />
+					<portlet:param name="countryIds" value="<%= String.valueOf(country.getCountryId()) %>" />
 				</portlet:actionURL>
 
 				<liferay-ui:icon

@@ -16,10 +16,10 @@ import ClayAlert from '@clayui/alert';
 import {
 	API,
 	Card,
-	FormCustomSelect,
 	Input,
 	InputLocalized,
 	SidePanelForm,
+	SingleSelect,
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
@@ -72,6 +72,16 @@ export default function EditRelationship({
 
 	return (
 		<SidePanelForm
+			customLabel={
+				Liferay.FeatureFlags['LPS-158478']
+					? {
+							displayType: values.reverse ? 'info' : 'success',
+							message: values.reverse
+								? Liferay.Language.get('child')
+								: Liferay.Language.get('parent'),
+					  }
+					: undefined
+			}
 			onSubmit={handleSubmit}
 			readOnly={readOnly}
 			title={Liferay.Language.get('relationship')}
@@ -105,7 +115,7 @@ export default function EditRelationship({
 					values={values}
 				/>
 
-				<FormCustomSelect
+				<SingleSelect
 					disabled={readOnly}
 					label={Liferay.Language.get('deletion-type')}
 					onChange={(deletionType) =>

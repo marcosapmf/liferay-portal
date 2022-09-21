@@ -8,6 +8,10 @@ definition {
 		CreateObject.saveObject();
 	}
 
+	macro activeToogleAccountRestriction {
+		Check.checkToggleSwitch(locator1 = "CreateObject#TOGGLE_ACCOUNT_RESTRICTION");
+	}
+
 	macro addRelationshipAndSelectEntry {
 		LexiconEntry.gotoAdd();
 
@@ -20,6 +24,10 @@ definition {
 		WaitForSPARefresh();
 
 		WaitForPageLoad();
+	}
+
+	macro assertAccountRestrictedFieldDisabled {
+		AssertElementPresent(locator1 = "CreateObject#ACCOUNT_RESTRICTED_FIELD_DISABLED");
 	}
 
 	macro assertAddedEntryRelationshipIsDisplayed {
@@ -297,9 +305,13 @@ definition {
 	macro deleteEntryInRelationshipTab {
 		ObjectAdmin.gotoRelationshipsTab();
 
-		Click(locator1 = "CreateObject#DELETE_ENTRY_IN_RELATIONSHIP_TAB");
+		Click.clickNoMouseOver(
+			key_entryName = "${entryName}",
+			locator1 = "ObjectPortlet#DELETE_RELATIONSHIP_ENTRY");
 
-		AssertElementNotPresent(locator1 = "CreateObject#KEBAB_MENU_BLOCK_FIELD_OPTION_DELETE");
+		WaitForSPARefresh();
+
+		WaitForPageLoad();
 	}
 
 	macro deleteFieldOnBlock {
@@ -314,6 +326,10 @@ definition {
 			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
 
 		MenuItem.clickNoError(menuItem = "Delete");
+	}
+
+	macro desactiveToogleAccountRestriction {
+		Uncheck.uncheckToggleSwitch(locator1 = "CreateObject#TOGGLE_ACCOUNT_RESTRICTION");
 	}
 
 	macro editLabel {
@@ -344,6 +360,12 @@ definition {
 		WaitForPageLoad();
 	}
 
+	macro selectAccountRestrictedField {
+		Select(
+			locator1 = "CreateObject#ACCOUNT_RESTRICTED_FIELD",
+			value1 = "${accountRestrictedField}");
+	}
+
 	macro selectDeletionType {
 		ObjectAdmin.gotoRelationshipsTab();
 
@@ -372,6 +394,14 @@ definition {
 			value1 = "${fieldLabel}");
 	}
 
+	macro viewAccountRestrictedFieldIsRequiredOnEntries {
+		FormFields.viewRequiredAsteriskDataField(fieldFieldLabel = "${relationshipName}");
+
+		Button.clickSave();
+
+		Alert.viewRequiredField();
+	}
+
 	macro viewEmptyFieldTable {
 		AssertElementPresent(locator1 = "RemoteApps#EMPTY_REMOTE_TABLE_MESSAGE");
 	}
@@ -387,6 +417,10 @@ definition {
 		Click(
 			key_labelName = "${labelName}",
 			locator1 = "CreateObject#VIEW_OBJECT");
+	}
+
+	macro viewToogleAccountRestrictionDisabled {
+		AssertElementPresent(locator1 = "CreateObject#TOGGLE_ACCOUNT_RESTRICTION_DISABLED");
 	}
 
 	macro withdrawObjectTask {

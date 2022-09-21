@@ -434,6 +434,16 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testMissingReferencePolicyDynamic() throws Exception {
+		test(
+			"MissingReferencePolicyDynamic.testjava",
+			"When using 'cardinality = ReferenceCardinality.OPTIONAL' and "+
+				"'policyOption = ReferencePolicyOption.GREEDY', always use "+
+					"'policy = ReferencePolicy.DYNAMIC' as well",
+			30);
+	}
+
+	@Test
 	public void testMissingSerialVersionUID() throws Exception {
 		test(
 			"MissingSerialVersionUID.testjava",
@@ -520,16 +530,26 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 			new String[] {
 				"Use braces around if-statement clause",
 				"Use braces around while-statement clause",
-				"Use braces around for-statement clause"
+				"Use braces around for-statement clause",
+				"Use braces around if-statement clause"
 			},
-			new Integer[] {23, 28, 31});
+			new Integer[] {23, 28, 31, 34});
+	}
+
+	@Test
+	public void testSimplifyListUtilCalls() throws Exception {
+		test("SimplifyListUtilCalls.testjava");
 	}
 
 	@Test
 	public void testSizeIsZeroCheck() throws Exception {
-		test("SizeIsZero.testjava",
-			 "Use method '_testList.isEmpty()' instead",
-			 26);
+		test(
+			"SizeIsZero.testjava",
+			new String[] {
+				"Use method '_testList.isEmpty()' instead",
+				"Use method 'myList.isEmpty()' instead",
+			},
+			new Integer[] {28, 33});
 	}
 
 	@Test

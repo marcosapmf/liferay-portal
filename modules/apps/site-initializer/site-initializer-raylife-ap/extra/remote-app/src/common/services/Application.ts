@@ -12,27 +12,18 @@
  * details.
  */
 
+import {Parameters, parametersFormater} from '.';
 import {axios} from './liferay/api';
 
 const DeliveryAPI = 'o/c/raylifeapplications';
-
-type Parameters = {
-	[key: string]: string;
-};
 
 export function getApplications(parameters: Parameters = {}) {
 	const parametersList = Object.keys(parameters);
 
 	if (parametersList.length) {
-		const parametersContainer: String[] = [];
-
-		parametersList.forEach((item) => {
-			parametersContainer.push(`${item}=${parameters[item]}`);
-		});
-
-		const parametersString = '?' + parametersContainer.join('&');
-
-		return axios.get(`${DeliveryAPI}/${parametersString}`);
+		return axios.get(
+			`${DeliveryAPI}/${parametersFormater(parametersList, parameters)}`
+		);
 	}
 
 	return axios.get(`${DeliveryAPI}/`);
@@ -45,6 +36,7 @@ export function deleteApplicationByExternalReferenceCode(
 		`${DeliveryAPI}/by-external-reference-code/${externalReferenceCode}`
 	);
 }
+const products: any = localStorage.getItem('raylife-ap-storage');
 
 const adaptToFormApplicationRequest = (state: any, status: any) => ({
 	address: state?.contactInfo?.form?.streetAddress,
@@ -70,8 +62,7 @@ const adaptToFormApplicationRequest = (state: any, status: any) => ({
 	firstName: state?.contactInfo?.form?.firstName,
 	lastName: state?.contactInfo?.form?.lastName,
 	phone: state?.contactInfo?.form?.phone,
-	productName: JSON.parse(localStorage.getItem('raylife-ap-storage') || '')
-		.productName,
+	productName: JSON.parse(products)?.productName,
 	state: state?.contactInfo?.form?.state,
 	zip: state?.contactInfo?.form?.zipCode,
 });

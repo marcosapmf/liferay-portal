@@ -14,6 +14,7 @@
 
 package com.liferay.batch.engine.internal.writer;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ListUtil;
 
@@ -38,12 +39,14 @@ import org.apache.commons.csv.CSVPrinter;
 
 /**
  * @author Ivica Cardic
+ * @author Igor Beslic
+ * @author Matija Petanjek
  */
 public class CSVBatchEngineExportTaskItemWriterImpl
 	implements BatchEngineExportTaskItemWriter {
 
 	public CSVBatchEngineExportTaskItemWriterImpl(
-			String delimiter, Map<String, Field> fieldMap,
+			String delimiter, Map<String, Field> fieldsMap,
 			List<String> fieldNames, OutputStream outputStream,
 			Map<String, Serializable> parameters)
 		throws IOException {
@@ -60,13 +63,13 @@ public class CSVBatchEngineExportTaskItemWriterImpl
 			fieldNames, (value1, value2) -> value1.compareToIgnoreCase(value2));
 
 		_columnValuesExtractor = new ColumnValuesExtractor(
-			fieldMap, fieldNames);
+			fieldsMap, fieldNames);
 
 		if (Boolean.valueOf(
 				(String)parameters.getOrDefault(
 					"containsHeaders", StringPool.TRUE))) {
 
-			_csvPrinter.printRecord(fieldNames);
+			_csvPrinter.printRecord(_columnValuesExtractor.getHeaders());
 		}
 	}
 
@@ -81,7 +84,9 @@ public class CSVBatchEngineExportTaskItemWriterImpl
 			"yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
 		for (Object item : items) {
-			_write(dateFormat, _columnValuesExtractor.extractValues(item));
+			for (Object[] values : _columnValuesExtractor.extractValues(item)) {
+				_write(dateFormat, values);
+			}
 		}
 	}
 
@@ -93,12 +98,26 @@ public class CSVBatchEngineExportTaskItemWriterImpl
 		return builder.build();
 	}
 
-	private void _write(DateFormat dateFormat, Collection<?> values)
+	private void _write(DateFormat dateFormat, Object[] values)
 		throws Exception {
 
 		for (Object value : values) {
 			if (value instanceof Date) {
 				value = dateFormat.format((Date)value);
+			}
+			else if (value instanceof Map) {
+				Map<String, Object> map = (Map<String, Object>)value;
+
+				StringBundler sb = new StringBundler();
+
+				for (Map.Entry<String, Object> entry : map.entrySet()) {
+					sb.append(entry.getKey());
+					sb.append(StringPool.COLON);
+					sb.append(entry.getValue());
+					sb.append(StringPool.RETURN_NEW_LINE);
+				}
+
+				value = sb.toString();
 			}
 
 			_csvPrinter.print(value);

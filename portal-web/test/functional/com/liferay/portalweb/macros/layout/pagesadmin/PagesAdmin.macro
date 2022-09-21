@@ -20,7 +20,7 @@ definition {
 				vocabularyName = "${vocabularyName}");
 		}
 
-		Button.clickAdd();
+		Button.click(button = "Add");
 
 		SelectFrame.selectFrameTop();
 
@@ -52,6 +52,26 @@ definition {
 			}
 		}
 		else if ("${sitePageType}" == "Link to URL") {
+			if (isSet(targetType)) {
+				Navigator.gotoNavTab(navTab = "Advanced");
+
+				Select(
+					key_fieldLabel = "Target type",
+					locator1 = "Select#GENERIC_SELECT_FIELD",
+					value1 = "${targetType}");
+			}
+
+			if (isSet(target)) {
+				Navigator.gotoNavTab(navTab = "Advanced");
+
+				Type(
+					key_text = "Target",
+					locator1 = "TextInput#ANY",
+					value1 = "${target}");
+			}
+
+			Navigator.gotoNavUnderline(navUnderline = "General");
+
 			Type(
 				locator1 = "TextInput#URL",
 				value1 = "${pageTypeURL}");
@@ -425,6 +445,8 @@ definition {
 			pageTypeURL = "${pageTypeURL}",
 			portlet = "${portlet}",
 			sitePageType = "${sitePageType}",
+			target = "${target}",
+			targetType = "${targetType}",
 			vocabularyName = "${vocabularyName}");
 	}
 
@@ -442,7 +464,7 @@ definition {
 
 		PortletEntry.inputName(name = "${pageName}");
 
-		Button.clickAdd();
+		Button.click(button = "Add");
 
 		SelectFrame.selectFrameTop();
 
@@ -573,7 +595,7 @@ definition {
 
 		PortletEntry.inputName(name = "${pageName}");
 
-		Button.clickAdd();
+		Button.click(button = "Add");
 
 		SelectFrame.selectFrameTop();
 
@@ -1047,6 +1069,33 @@ definition {
 		Navigator.openWithAppendToBaseURL(
 			baseURL = "${baseURL}",
 			urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet");
+	}
+
+	@summary = "You can use this navigation when you need to access the configuration quickly without checking the UI"
+	macro openToConfigurePublicPage {
+		var baseURL = "${baseURL}";
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		var plid = JSONLayout.getPlid(
+			groupName = "${groupName}",
+			layoutName = "${layoutName}",
+			privateLayout = "${privateLayout}",
+			site = "${site}");
+
+		if (!(isSet(site))) {
+			var site = "true";
+		}
+
+		var groupId = JSONLayoutSetter.setGroupId(
+			groupName = "${groupName}",
+			site = "${site}");
+
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_mvcRenderCommandName=%2Flayout_admin%2Fedit_layout&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_portletResource=com_liferay_layout_admin_web_portlet_GroupPagesPortlet&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_groupId=${groupId}&_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_privateLayout=false&p_r_p_selPlid=${plid}");
 	}
 
 	macro removeOldFriendlyURL {

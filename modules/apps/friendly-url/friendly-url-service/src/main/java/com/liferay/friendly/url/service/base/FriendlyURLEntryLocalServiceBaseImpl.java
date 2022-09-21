@@ -24,7 +24,6 @@ import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryLocalizationPersistence;
-import com.liferay.friendly.url.service.persistence.FriendlyURLEntryMappingPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -44,6 +43,8 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -448,6 +449,11 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement FriendlyURLEntryLocalServiceImpl#deleteFriendlyURLEntry(FriendlyURLEntry) to avoid orphaned data");
+		}
+
 		return friendlyURLEntryLocalService.deleteFriendlyURLEntry(
 			(FriendlyURLEntry)persistedModel);
 	}
@@ -841,27 +847,14 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	protected FriendlyURLEntryPersistence friendlyURLEntryPersistence;
 
 	@Reference
-	protected FriendlyURLEntryLocalizationPersistence
-		friendlyURLEntryLocalizationPersistence;
-
-	@Reference
-	protected FriendlyURLEntryMappingPersistence
-		friendlyURLEntryMappingPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
+	protected FriendlyURLEntryLocalizationPersistence
+		friendlyURLEntryLocalizationPersistence;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		FriendlyURLEntryLocalServiceBaseImpl.class);
 
 }

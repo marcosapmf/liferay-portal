@@ -1,4 +1,4 @@
-@component-name = "portal-upgrades"
+@component-name = "portal-database-upgrade-framework"
 definition {
 
 	property app.server.types = "tomcat";
@@ -7,7 +7,7 @@ definition {
 	property portal.release = "true";
 	property portal.upgrades = "false";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Upgrades Core";
+	property testray.main.component.name = "Database Upgrade Framework";
 
 	@priority = "4"
 	test AutoUpgradeFromLatest7413Update {
@@ -42,9 +42,11 @@ definition {
 
 		WebContentNavigator.gotoAddCP();
 
-		WebContent.addCP(
-			webContentContent = "WC WebContent Content",
-			webContentTitle = "WC WebContent Title");
+		PortletEntry.inputTitle(title = "WC WebContent Title");
+
+		CKEditor.addContentInWebContent(
+			content = "WC WebContent Content",
+			fieldLabel = "Content");
 
 		PortletEntry.publish();
 

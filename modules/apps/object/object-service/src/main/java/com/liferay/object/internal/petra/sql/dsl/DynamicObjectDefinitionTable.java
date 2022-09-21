@@ -14,11 +14,11 @@
 
 package com.liferay.object.internal.petra.sql.dsl;
 
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.base.BaseTable;
-import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
@@ -28,13 +28,12 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import java.math.BigDecimal;
 
 import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Marco Leo
@@ -76,12 +75,33 @@ public class DynamicObjectDefinitionTable
 		return sql;
 	}
 
+	public static Class<?> getJavaClass(String type) {
+		Class<?> javaClass = _javaClasses.get(type);
+
+		if (javaClass == null) {
+			throw new IllegalArgumentException("Invalid type " + type);
+		}
+
+		return javaClass;
+	}
+
+	public static Integer getSQLType(String type) {
+		Integer sqlType = _sqlTypes.get(type);
+
+		if (sqlType == null) {
+			throw new IllegalArgumentException("Invalid type " + type);
+		}
+
+		return sqlType;
+	}
+
 	public DynamicObjectDefinitionTable(
 		ObjectDefinition objectDefinition, List<ObjectField> objectFields,
 		String tableName) {
 
 		super(tableName, () -> null);
 
+		_objectDefinition = objectDefinition;
 		_objectFields = objectFields;
 		_tableName = tableName;
 
@@ -92,19 +112,18 @@ public class DynamicObjectDefinitionTable
 			Column.FLAG_PRIMARY);
 
 		for (ObjectField objectField : objectFields) {
+			if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION)) {
+
+				continue;
+			}
+
 			createColumn(
 				objectField.getDBColumnName(),
-				_javaClasses.get(objectField.getDBType()),
-				_sqlTypes.get(objectField.getDBType()), Column.FLAG_DEFAULT);
+				getJavaClass(objectField.getDBType()),
+				getSQLType(objectField.getDBType()), Column.FLAG_DEFAULT);
 		}
-
-		List<Expression<?>> selectExpressions = new ArrayList<>();
-
-		for (Column<DynamicObjectDefinitionTable, ?> column : getColumns()) {
-			selectExpressions.add(column);
-		}
-
-		_selectExpressions = selectExpressions.toArray(new Expression<?>[0]);
 	}
 
 	/**
@@ -121,6 +140,13 @@ public class DynamicObjectDefinitionTable
 		sb.append(" LONG not null primary key");
 
 		for (ObjectField objectField : _objectFields) {
+			if (Objects.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION)) {
+
+				continue;
+			}
+
 			sb.append(", ");
 			sb.append(objectField.getDBColumnName());
 			sb.append(" ");
@@ -139,6 +165,10 @@ public class DynamicObjectDefinitionTable
 		return sql;
 	}
 
+	public ObjectDefinition getObjectDefinition() {
+		return _objectDefinition;
+	}
+
 	public List<ObjectField> getObjectFields() {
 		return _objectFields;
 	}
@@ -152,8 +182,11 @@ public class DynamicObjectDefinitionTable
 		return _primaryKeyColumnName;
 	}
 
-	public Expression<?>[] getSelectExpressions() {
-		return _selectExpressions;
+	@Override
+	protected <C> Column<DynamicObjectDefinitionTable, C> createColumn(
+		String name, Class<C> javaClass, int sqlType, int flags) {
+
+		return super.createColumn(name, javaClass, sqlType, flags);
 	}
 
 	private static String _getDataType(String type) {
@@ -212,7 +245,7 @@ public class DynamicObjectDefinitionTable
 		).put(
 			"Boolean", Boolean.class
 		).put(
-			"Clob", Clob.class
+			"Clob", String.class
 		).put(
 			"Date", Date.class
 		).put(
@@ -244,9 +277,9 @@ public class DynamicObjectDefinitionTable
 		"String", Types.VARCHAR
 	).build();
 
+	private final ObjectDefinition _objectDefinition;
 	private final List<ObjectField> _objectFields;
 	private final String _primaryKeyColumnName;
-	private final Expression<?>[] _selectExpressions;
 	private final String _tableName;
 
 }

@@ -31,7 +31,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.patcher.PatcherUtil;
+import com.liferay.portal.kernel.patcher.Patcher;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -88,7 +88,8 @@ import org.scribe.model.Verb;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + MarketplaceStorePortletKeys.MARKETPLACE_STORE,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator"
+		"javax.portlet.security-role-ref=administrator",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -494,7 +495,7 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 				new String[] {String.valueOf(ReleaseInfo.getBuildNumber())});
 		}
 
-		parameterMap.put("installedPatches", PatcherUtil.getInstalledPatches());
+		parameterMap.put("installedPatches", patcher.getInstalledPatches());
 		parameterMap.put(
 			"supportsHotDeploy", new String[] {Boolean.TRUE.toString()});
 	}
@@ -514,6 +515,9 @@ public class MarketplaceStorePortlet extends RemoteMVCPortlet {
 	protected void setOAuthManager(OAuthManager oAuthManager) {
 		super.setOAuthManager(oAuthManager);
 	}
+
+	@Reference
+	protected Patcher patcher;
 
 	private JSONObject _getAppJSONObject(App app) throws Exception {
 		return JSONUtil.put(

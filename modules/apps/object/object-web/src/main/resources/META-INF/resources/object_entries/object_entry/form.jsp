@@ -64,6 +64,8 @@ portletDisplay.setURLBack(backURL);
 	</c:if>
 </liferay-frontend:edit-form>
 
+<%@ include file="/object_entries/object_entry/discussion.jspf" %>
+
 <c:if test="<%= !objectEntryDisplayContext.isReadOnly() %>">
 	<aui:script>
 		function <portlet:namespace />getExternalReferenceCode() {
@@ -101,7 +103,7 @@ portletDisplay.setURLBack(backURL);
 			return fields.reduce((obj, field) => {
 				let value = field.value;
 				if (field.type === 'select' && !field.multiple) {
-					value = {key: field.value[0]};
+					value = {key: value.length ? field.value[0] : ''};
 				}
 
 				return Object.assign(obj, {[field.fieldName]: value});
@@ -187,7 +189,7 @@ portletDisplay.setURLBack(backURL);
 									else if (response.ok) {
 										Liferay.Util.openToast({
 											message:
-												'<%= LanguageUtil.get(request, "your-request-completed-successfully") %>',
+												'<%= HtmlUtil.escapeJS(LanguageUtil.get(request, "your-request-completed-successfully")) %>',
 											type: 'success',
 										});
 

@@ -8,17 +8,11 @@ definition {
 
 	setUp {
 		task ("Open Analytics Cloud") {
-			var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
-
-			Navigator.openURL(baseURL = "${analyticsCloudURL}");
+			ACUtils.launchAC();
 		}
 
 		task ("Take token from Analytics Cloud") {
-			AnalyticsCloud.loginAnalyticsCloud(
-				emailAddress = "test@liferay.com",
-				password = "test");
-
-			AnalyticsCloud.takeTokenFromAnalyticsCloud();
+			ACSettings.takeTokenFromAnalyticsCloud();
 		}
 
 		task ("Go to DXP portal, login and create site") {
@@ -32,7 +26,7 @@ definition {
 		}
 
 		task ("Connect and synchronyze with Analytics Cloud") {
-			AnalyticsCloud.syncAnalyticsCloud(siteName = "Test Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Test Site Name");
 		}
 
 		task ("Create content page") {
@@ -92,7 +86,7 @@ definition {
 			ABTest.runTest();
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -136,20 +130,6 @@ definition {
 			JSONRole.assignRoleToUser(
 				roleTitle = "Roles Regrole Name",
 				userEmailAddress = "userea@liferay.com");
-		}
-
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
 		}
 
 		task ("Login with new user") {
@@ -201,20 +181,6 @@ definition {
 			JSONRole.assignRoleToUser(
 				roleTitle = "Roles Regrole Name",
 				userEmailAddress = "userea@liferay.com");
-		}
-
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
 		}
 
 		task ("Login with new user") {
@@ -669,9 +635,7 @@ definition {
 		}
 
 		task ("Assert 'empty state' image appears") {
-			AssertElementPresent.pauseAssertVisible(
-				key_image = "/o/segments-experiment-web/images/no_experiment.svg",
-				locator1 = "ABTest#IMAGE_SOURCE");
+			AssertVisible(locator1 = "ABTest#IMAGE_EMPTY_STATE");
 		}
 	}
 
@@ -691,9 +655,7 @@ definition {
 
 			ClickNoError(locator1 = "ABTest#RUN_TEST_BUTTON");
 
-			AssertElementPresent.pauseAssertVisible(
-				key_image = "/o/segments-experiment-web/images/success.gif",
-				locator1 = "ABTest#IMAGE_SOURCE");
+			AssertVisible(locator1 = "ABTest#IMAGE_SUCCESS");
 
 			Click(locator1 = "ABTest#OK_BUTTON");
 		}
@@ -1540,7 +1502,7 @@ definition {
 			ABTest.createVariant(variantName = "Variant name");
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -1596,7 +1558,7 @@ definition {
 			ABTest.createVariant(variantName = "Variant name");
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -1661,11 +1623,11 @@ definition {
 				testTitle = "AB test title");
 		}
 
-		task ("Select the  first button as click element") {
+		task ("Select the first button as click element") {
 			ABTest.selectElementID();
 		}
 
-		task ("Select the  second button as click element") {
+		task ("Select the second button as click element") {
 			Click(
 				key_value = "Change Clickable Element",
 				locator1 = "ABTest#SECONDARY_BUTTON");
@@ -1734,7 +1696,7 @@ definition {
 			ABTest.terminateTest();
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -1790,7 +1752,7 @@ definition {
 			ABTest.createVariant(variantName = "Variant name");
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -2287,20 +2249,6 @@ definition {
 			ABTest.runTest();
 		}
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
 		task ("Login with new user") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "userea@liferay.com",
@@ -2377,20 +2325,6 @@ definition {
 			ABTest.runTest();
 		}
 
-		task ("Disable option to strangers to verify email") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "User Authentication",
-				configurationName = "General",
-				configurationScope = "Virtual Instance Scope");
-
-			PortalSettings.uncheckStrangersVerifyEmailCheckbox();
-		}
-
 		task ("Login with new user") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "userea@liferay.com",
@@ -2463,7 +2397,7 @@ definition {
 			ABTest.runTest();
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -2523,7 +2457,7 @@ definition {
 			ABTest.createVariant(variantName = "Variant name");
 		}
 
-		task ("Go to  edit the content page.") {
+		task ("Go to edit the content page.") {
 			ContentPages.gotoPageEditor();
 		}
 
@@ -2627,7 +2561,7 @@ definition {
 			var idbutton = ABTest.takeElementID(key_index = "2");
 		}
 
-		task ("Select the  first button as click element") {
+		task ("Select the first button as click element") {
 			ABTest.selectElementID();
 		}
 
@@ -3133,7 +3067,7 @@ definition {
 			var idbutton2 = ABTest.takeElementID(key_index = "2");
 		}
 
-		task ("Select the  first button as click element") {
+		task ("Select the first button as click element") {
 			ABTest.selectElementID();
 		}
 

@@ -75,7 +75,21 @@ renderResponse.setTitle(title);
 					<aui:validator name="required" />
 				</aui:input>
 
-				<aui:input name="description" placeholder="description" />
+				<div>
+					<label for="<portlet:namespace />description"><liferay-ui:message key="description" /></label>
+
+					<liferay-ui:input-localized
+						availableLocales="<%= assetCategoriesDisplayContext.getAvailableLocales() %>"
+						cssClass="form-control"
+						defaultLanguageId="<%= assetCategoriesDisplayContext.getDefaultLanguageId(category) %>"
+						editorName="ckeditor"
+						formName="fm"
+						name="description"
+						selectedLanguageId="<%= assetCategoriesDisplayContext.getSelectedLanguageId(category) %>"
+						type="editor"
+						xml="<%= (category == null) ? StringPool.BLANK : category.getDescription() %>"
+					/>
+				</div>
 
 				<c:choose>
 					<c:when test="<%= assetCategoriesDisplayContext.isFlattenedNavigationAllowed() %>">
@@ -88,7 +102,7 @@ renderResponse.setTitle(title);
 							<div>
 								<div id="<portlet:namespace />parentCategoryContainer">
 									<div class="field-content">
-										<div class="form-group" id="<%= "namespace_assetCategoriesSelector_" + vocabularyId %>">
+										<div class="form-group" id="namespace_assetCategoriesSelector_<%= vocabularyId %>">
 											<div class="input-group">
 												<div class="input-group-item">
 													<div class="form-control form-control-tag-group input-group">

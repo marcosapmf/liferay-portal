@@ -24,13 +24,14 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -216,6 +217,10 @@ public class InputTag extends IncludeTag {
 				languageId, "UrlTitle");
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 	}
@@ -247,14 +252,17 @@ public class InputTag extends IncludeTag {
 					getClassPK());
 
 			if (isLocalizable()) {
-				return HtmlUtil.escapeURL(
-					mainFriendlyURLEntry.getUrlTitleMapAsXML());
+				return mainFriendlyURLEntry.getUrlTitleMapAsXML();
 			}
 
-			return HtmlUtil.escapeURL(mainFriendlyURLEntry.getUrlTitle());
+			return mainFriendlyURLEntry.getUrlTitle();
 		}
 		catch (NoSuchFriendlyURLEntryMappingException
 					noSuchFriendlyURLEntryMappingException) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFriendlyURLEntryMappingException);
+			}
 
 			return _getFallbackValue();
 		}
@@ -276,6 +284,8 @@ public class InputTag extends IncludeTag {
 	private static final int _FRIENDLY_URL_MAX_LENGTH = 255;
 
 	private static final String _PAGE = "/input/page.jsp";
+
+	private static final Log _log = LogFactoryUtil.getLog(InputTag.class);
 
 	private String _className;
 	private long _classPK;

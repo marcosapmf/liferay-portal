@@ -20,12 +20,16 @@ import {
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {TabsVisitor} from '../../utils/visitor';
 import InfoScreen from './InfoScreen/InfoScreen';
 import LayoutScreen from './LayoutScreen/LayoutScreen';
-import LayoutContext, {LayoutContextProvider, TYPES} from './context';
+import {
+	LayoutContextProvider,
+	TYPES,
+	useLayoutContext,
+} from './objectLayoutContext';
 import {
 	TObjectField,
 	TObjectLayout,
@@ -107,7 +111,7 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 	const [
 		{isViewOnly, objectFields, objectLayout, objectLayoutId},
 		dispatch,
-	] = useContext(LayoutContext);
+	] = useLayoutContext();
 	const [activeIndex, setActiveIndex] = useState<number>(0);
 	const [loading, setLoading] = useState<boolean>(true);
 
@@ -120,6 +124,10 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 				objectLayoutTabs,
 			} = await API.fetchJSON<TObjectLayout>(
 				`/o/object-admin/v1.0/object-layouts/${objectLayoutId}`
+			);
+
+			const objectDefinition = await API.getObjectDefinition(
+				objectDefinitionId
 			);
 
 			const objectFields = await API.getObjectFields(objectDefinitionId);
@@ -145,6 +153,11 @@ const Layout: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 			const filteredObjectFields = objectFields.filter(
 				({system}) => !system
 			);
+
+			dispatch({
+				payload: {objectDefinition},
+				type: TYPES.ADD_OBJECT_DEFINITION,
+			});
 
 			dispatch({
 				payload: {

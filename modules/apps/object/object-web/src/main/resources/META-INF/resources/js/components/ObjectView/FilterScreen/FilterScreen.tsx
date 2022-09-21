@@ -14,16 +14,22 @@
 
 import {useModal} from '@clayui/modal';
 import {BuilderScreen} from '@liferay/object-js-components-web';
-import React, {useContext, useState} from 'react';
+import React, {useState} from 'react';
 
-import {ModalAddFilter} from '../../ModalAddFilter';
-import ViewContext, {TYPES} from '../context';
+import {
+	FilterErrors,
+	FilterValidation,
+	ModalAddFilter,
+} from '../../ModalAddFilter';
+import {TYPES, useViewContext} from '../objectViewContext';
+
+const REQUIRED_MSG = Liferay.Language.get('required');
 
 export function FilterScreen() {
 	const [
 		{filterOperators, objectFields, objectView, workflowStatusJSONArray},
 		dispatch,
-	] = useContext(ViewContext);
+	] = useViewContext();
 
 	const {objectViewFilterColumns} = objectView;
 
@@ -47,11 +53,11 @@ export function FilterScreen() {
 	};
 
 	const saveFilterColumn = (
+		objectFieldName: string,
 		filterBy?: string,
 		fieldLabel?: LocalizedValue<string>,
 		objectFieldBusinessType?: string,
 		filterType?: string,
-		objectFieldName?: string,
 		valueList?: IItem[]
 	) => {
 		if (editingFilter) {
@@ -74,6 +80,43 @@ export function FilterScreen() {
 				type: TYPES.ADD_OBJECT_VIEW_FILTER_COLUMN,
 			});
 		}
+	};
+
+	const validateFilters = ({
+		checkedItems,
+		disableDateValues,
+		selectedFilterBy,
+		selectedFilterType,
+		setErrors,
+	}: FilterValidation) => {
+		setErrors({});
+		const currentErrors: FilterErrors = {};
+
+		if (!selectedFilterBy) {
+			currentErrors.selectedFilterBy = REQUIRED_MSG;
+		}
+
+		if (
+			!selectedFilterType &&
+			!disableDateValues &&
+			(selectedFilterBy?.name !== 'status' ||
+				selectedFilterBy?.businessType !== 'Picklist')
+		) {
+			currentErrors.selectedFilterType = REQUIRED_MSG;
+		}
+
+		if (
+			selectedFilterType &&
+			(selectedFilterBy?.name === 'status' ||
+				selectedFilterBy?.businessType === 'Picklist') &&
+			!checkedItems.length
+		) {
+			currentErrors.items = REQUIRED_MSG;
+		}
+
+		setErrors(currentErrors);
+
+		return currentErrors;
 	};
 
 	return (
@@ -130,6 +173,11 @@ export function FilterScreen() {
 										if (
 											objectField.businessType ===
 												'Picklist' ||
+											(Liferay.FeatureFlags[
+												'LPS-152650'
+											] &&
+												objectField.businessType ===
+													'Relationship') ||
 											objectField.name === 'createDate' ||
 											objectField.name ===
 												'modifiedDate' ||
@@ -144,6 +192,7 @@ export function FilterScreen() {
 					observer={observer}
 					onClose={onClose}
 					onSave={saveFilterColumn}
+					validate={validateFilters}
 					workflowStatusJSONArray={workflowStatusJSONArray}
 				/>
 			)}

@@ -59,7 +59,7 @@ export function FormValidationModal({onCloseModal, onPublish}) {
 			<ClayModal.Body>
 				<p className="mb-4">
 					{Liferay.Language.get(
-						'the-following-errors-have-been-found-on-the-page'
+						'the-following-errors-have-been-found-with-the-forms-on-the-page'
 					)}
 				</p>
 

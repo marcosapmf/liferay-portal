@@ -21,9 +21,9 @@ import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
 import com.liferay.petra.function.UnsafeConsumer;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -251,20 +251,24 @@ public class StyleBookEntryActionDropdownItemsProvider {
 
 	private String _getItemSelectorURL() {
 		ItemSelectorCriterion itemSelectorCriterion =
-			new UploadItemSelectorCriterion(
-				StyleBookPortletKeys.STYLE_BOOK,
+			UploadItemSelectorCriterion.builder(
+			).desiredItemSelectorReturnTypes(
+				new FileEntryItemSelectorReturnType()
+			).maxFileSize(
+				UploadServletRequestConfigurationHelperUtil.getMaxSize()
+			).portletId(
+				StyleBookPortletKeys.STYLE_BOOK
+			).repositoryName(
+				LanguageUtil.get(_httpServletRequest, "style-book")
+			).url(
 				PortletURLBuilder.createActionURL(
 					_renderResponse
 				).setActionName(
 					"/style_book/upload_style_book_entry_preview"
 				).setParameter(
 					"styleBookEntryId", _styleBookEntry.getStyleBookEntryId()
-				).buildString(),
-				LanguageUtil.get(_httpServletRequest, "style-book"),
-				UploadServletRequestConfigurationHelperUtil.getMaxSize());
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new FileEntryItemSelectorReturnType());
+				).buildString()
+			).build();
 
 		return String.valueOf(
 			_itemSelector.getItemSelectorURL(

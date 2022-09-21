@@ -439,6 +439,29 @@ definition {
 			searchAssetType = "Web Content Article");
 	}
 
+	@description = "This is a use case for LPS-151209."
+	test AssertBlueprintsPreviewResultsPresentWithSkippedElement {
+		Blueprints.openBlueprintsAdmin();
+
+		Blueprints.createBlueprint(title = "Test Blueprint");
+
+		Blueprints.addElement(element = "Boost Proximity");
+
+		Type(
+			elementName = "Boost Proximity",
+			fieldLabel = "Field",
+			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
+			value1 = "accountEntryId");
+
+		Blueprints.searchBlueprintsPreview(searchTerm = "test");
+
+		Alert.viewWarningSpecific(key_warningMessage = "Element skippedInvalid element instance at: 0");
+
+		AssertElementPresent(
+			locator1 = "Blueprints#BLUEPRINTS_PREVIEW_SEARCH_RESULT_TITLE",
+			resultTitle = "Test Test");
+	}
+
 	test AssertBlueprintStillAppliedAfterRename {
 		JSONWebcontent.addWebContent(
 			content = "apple apple apple",
@@ -772,6 +795,8 @@ definition {
 	}
 
 	test BoostCustomLiferayObjectType {
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 501",
 			objectName = "CustomObject501",
@@ -1826,6 +1851,10 @@ definition {
 		Click(locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELDS_MENU");
 
 		for (var field : list "Description,ID,Author,Created,Modified") {
+			AssertElementPresent(
+				fieldName = "${field}",
+				locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELD");
+
 			Click(
 				fieldName = "${field}",
 				locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELDS_MENU_ITEM");
@@ -1841,11 +1870,9 @@ definition {
 			fieldName = "Title",
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELDS_MENU_ITEM");
 
-		for (var field : list "Title,Description,ID,Author,Created,Modified") {
-			AssertElementPresent(
-				fieldName = "${field}",
-				locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELD");
-		}
+		AssertElementPresent(
+			fieldName = "Title",
+			locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELD");
 
 		Click(
 			fieldName = "Description",
@@ -1854,6 +1881,10 @@ definition {
 		AssertElementPresent(
 			fieldName = "Description",
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELD");
+
+		Click(
+			fieldName = "Title",
+			locator1 = "Blueprints#BLUEPRINTS_ADMIN_FIELDS_MENU_ITEM");
 
 		for (var field : list "Title,ID,Author,Created,Modified") {
 			AssertElementNotPresent(
@@ -2366,7 +2397,7 @@ definition {
 
 		Type(
 			elementName = "Boost Contents in a Category for User Segments",
-			fieldLabel = "Asset Category Name (ID)",
+			fieldLabel = "Asset Category ID",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
 			value1 = "${categoryId}");
 
@@ -2930,7 +2961,6 @@ definition {
 			resultTitle = "Título");
 	}
 
-	@ignore = "true"
 	test ViewBlueprintsPreviewValidationForInvalidJSONProperty {
 		Blueprints.openBlueprintsAdmin();
 
@@ -3811,6 +3841,8 @@ definition {
 
 	@description = "This is a use case for LPS-147066."
 	test ViewLinksToLiferayDocumentation {
+		property search.environment.suite.exclude = "true";
+
 		Blueprints.openBlueprintsAdmin();
 
 		Blueprints.createBlueprint(title = "Test Blueprint");

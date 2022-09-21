@@ -89,6 +89,11 @@ public interface ObjectEntryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public ObjectEntry addObjectEntry(ObjectEntry objectEntry);
 
+	public void addOrUpdateExtensionDynamicObjectDefinitionTableValues(
+			long userId, ObjectDefinition objectDefinition, long primaryKey,
+			Map<String, Serializable> values, ServiceContext serviceContext)
+		throws PortalException;
+
 	public ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long userId, long groupId,
 			long objectDefinitionId, Map<String, Serializable> values,
@@ -108,6 +113,10 @@ public interface ObjectEntryLocalService
 	 * @throws PortalException
 	 */
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
+		throws PortalException;
+
+	public void deleteExtensionDynamicObjectDefinitionTableValues(
+			ObjectDefinition objectDefinition, long primaryKey)
 		throws PortalException;
 
 	/**
@@ -256,18 +265,24 @@ public interface ObjectEntryLocalService
 		PortletDataContext portletDataContext);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<ObjectEntry> getManyToManyRelatedObjectEntries(
-			long groupId, long objectRelationshipId, long primaryKey,
-			boolean reverse, int start, int end)
+	public Map<String, Serializable>
+			getExtensionDynamicObjectDefinitionTableValues(
+				ObjectDefinition objectDefinition, long primaryKey)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getManyToManyRelatedObjectEntriesCount(
+	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectEntry> getManyToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean reverse)
+			boolean related, boolean reverse, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getManyToManyObjectEntriesCount(
+			long groupId, long objectRelationshipId, long primaryKey,
+			boolean related, boolean reverse)
 		throws PortalException;
 
 	/**
@@ -361,14 +376,15 @@ public interface ObjectEntryLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<ObjectEntry> getOneToManyRelatedObjectEntries(
-			long groupId, long objectRelationshipId, long primaryKey, int start,
-			int end)
+	public List<ObjectEntry> getOneToManyObjectEntries(
+			long groupId, long objectRelationshipId, long primaryKey,
+			boolean related, int start, int end)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getOneToManyRelatedObjectEntriesCount(
-			long groupId, long objectRelationshipId, long primaryKey)
+	public int getOneToManyObjectEntriesCount(
+			long groupId, long objectRelationshipId, long primaryKey,
+			boolean related)
 		throws PortalException;
 
 	/**
@@ -388,7 +404,7 @@ public interface ObjectEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Map<String, Object> getSystemModelAttributes(
-			ObjectDefinition objectDefinition, long objectEntryId)
+			ObjectDefinition objectDefinition, long primaryKey)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)

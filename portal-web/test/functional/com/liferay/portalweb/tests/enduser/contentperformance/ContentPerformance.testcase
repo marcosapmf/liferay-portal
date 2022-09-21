@@ -8,17 +8,11 @@ definition {
 
 	setUp {
 		task ("Open Analytics Cloud") {
-			var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
-
-			Navigator.openURL(baseURL = "${analyticsCloudURL}");
+			ACUtils.launchAC();
 		}
 
 		task ("Take token from Analytics Cloud") {
-			AnalyticsCloud.loginAnalyticsCloud(
-				emailAddress = "test@liferay.com",
-				password = "test");
-
-			AnalyticsCloud.takeTokenFromAnalyticsCloud();
+			ACSettings.takeTokenFromAnalyticsCloud();
 		}
 
 		task ("Go to DXP portal, login and create site") {
@@ -32,7 +26,7 @@ definition {
 		}
 
 		task ("Connect and synchronyze with Analytics Cloud") {
-			AnalyticsCloud.syncAnalyticsCloud(siteName = "Test Site Name");
+			ACDXPSettings.connectDXPtoAnalyticsCloud(siteName = "Test Site Name");
 		}
 
 		task ("Create content page") {
@@ -434,10 +428,6 @@ definition {
 		task ("Open Content Performance and Assert if element is not present") {
 			ContentPerformance.openContentPerformance();
 
-			AssertElementNotPresent(
-				key_text = "Start Free Trial",
-				locator1 = "Button#ANY");
-
 			AssertElementNotPresent(locator1 = "ContentPerformance#CONTENT_PERFORMANCE_DO_NOT_SHOW_AGAIN");
 		}
 	}
@@ -622,7 +612,7 @@ definition {
 			Click(locator1 = "ContentPerformance#LANGUAGE_DROPDOWN_BUTTON");
 		}
 
-		task ("Check that there is not any  Translated/Unstraslated label") {
+		task ("Check that there is not any Translated/Unstraslated label") {
 			AssertTextEquals(
 				locator1 = "ContentPerformance#LANGUAGE_LABEL",
 				value1 = "Default");
@@ -770,15 +760,13 @@ definition {
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Navigate to Content Dashboard") {
@@ -855,16 +843,17 @@ definition {
 		}
 
 		task ("Create a default Display Page Template") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.addDisplayPage(
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
-				displayPageName = "Display Page Name",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Login with user created") {
@@ -966,17 +955,18 @@ definition {
 				userEmailAddress = "userea@liferay.com");
 		}
 
-		task ("Create a DPT and set as Default") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.addDisplayPage(
+		task ("Create a default Display Page Template") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
-				displayPageName = "Display Page Name",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Logout and login with created user") {
@@ -1058,17 +1048,18 @@ definition {
 				userEmailAddress = "userea@liferay.com");
 		}
 
-		task ("Create a DPT and set as Default") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.addDisplayPage(
+		task ("Create a default Display Page Template") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
-				displayPageName = "Display Page Name",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Logout and login with created user") {
@@ -1138,20 +1129,18 @@ definition {
 				userEmailAddress = "userea@liferay.com");
 		}
 
-		task ("Create a DPT and set as Default") {
+		task ("Create a default Display Page Template") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
 				displayPageTemplateEntryName = "Display Page Name",
 				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
-
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Logout and login with created user") {
@@ -1228,17 +1217,18 @@ definition {
 				userEmailAddress = "userea@liferay.com");
 		}
 
-		task ("Create a DPT and set as Default") {
-			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
-
-			DisplayPageTemplatesAdmin.addDisplayPage(
+		task ("Create a default Display Page Template") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
-				displayPageName = "Display Page Name",
+				displayPageTemplateEntryName = "Display Page Name",
+				groupName = "Test Site Name",
+				statusKey = "APPROVED",
 				subType = "Basic Web Content");
 
-			PageEditor.publish();
-
-			DisplayPageTemplatesAdmin.markDisplayPageAsDefault(displayPageName = "Display Page Name");
+			JSONLayoutpagetemplate.setLayoutPageTemplateEntryAsDefault(
+				groupName = "Test Site Name",
+				layoutPageTemplateEntryName = "Display Page Name",
+				type = "Display Page Template");
 		}
 
 		task ("Logout and login with created user") {

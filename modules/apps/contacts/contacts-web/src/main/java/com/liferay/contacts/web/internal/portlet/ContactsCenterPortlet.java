@@ -25,7 +25,6 @@ import com.liferay.contacts.service.EntryLocalService;
 import com.liferay.contacts.util.ContactsUtil;
 import com.liferay.contacts.web.internal.constants.ContactsPortletKeys;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
@@ -59,13 +58,16 @@ import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
+import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.notifications.UserNotificationManagerUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -701,6 +703,14 @@ public class ContactsCenterPortlet extends MVCPortlet {
 					socialRequest.getReceiverUserId(), socialRequest.getType());
 			}
 
+			long userNotificationEventId = ParamUtil.getLong(
+				actionRequest, "userNotificationEventId");
+
+			if (userNotificationEventId != 0) {
+				_updateArchived(
+					themeDisplay.getUserId(), userNotificationEventId);
+			}
+
 			jsonObject.put("success", Boolean.TRUE);
 		}
 		catch (Exception exception) {
@@ -733,13 +743,6 @@ public class ContactsCenterPortlet extends MVCPortlet {
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.contacts.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
 	@Reference
 	protected AnnouncementsDeliveryLocalService
 		announcementsDeliveryLocalService;
@@ -752,6 +755,11 @@ public class ContactsCenterPortlet extends MVCPortlet {
 
 	@Reference
 	protected Portal portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.contacts.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	protected Release release;
 
 	@Reference
 	protected RoleLocalService roleLocalService;
@@ -1190,6 +1198,27 @@ public class ContactsCenterPortlet extends MVCPortlet {
 		usersAdmin.updateAddresses(
 			Contact.class.getName(), user.getContactId(),
 			usersAdmin.getAddresses(actionRequest));
+	}
+
+	private void _updateArchived(long userId, long userNotificationEventId)
+		throws Exception {
+
+		UserNotificationEvent userNotificationEvent =
+			userNotificationEventLocalService.fetchUserNotificationEvent(
+				userNotificationEventId);
+
+		if (userNotificationEvent == null) {
+			return;
+		}
+
+		if (userNotificationEvent.getUserId() != userId) {
+			throw new PrincipalException();
+		}
+
+		userNotificationEvent.setArchived(true);
+
+		userNotificationEventLocalService.updateUserNotificationEvent(
+			userNotificationEvent);
 	}
 
 	private void _updateAsset(ActionRequest actionRequest) throws Exception {

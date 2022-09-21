@@ -18,7 +18,6 @@ import com.liferay.dispatch.model.DispatchLog;
 import com.liferay.dispatch.service.DispatchLogLocalService;
 import com.liferay.dispatch.service.DispatchLogLocalServiceUtil;
 import com.liferay.dispatch.service.persistence.DispatchLogPersistence;
-import com.liferay.dispatch.service.persistence.DispatchTriggerPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -33,6 +32,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -318,6 +319,11 @@ public abstract class DispatchLogLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement DispatchLogLocalServiceImpl#deleteDispatchLog(DispatchLog) to avoid orphaned data");
+		}
+
 		return dispatchLogLocalService.deleteDispatchLog(
 			(DispatchLog)persistedModel);
 	}
@@ -463,22 +469,10 @@ public abstract class DispatchLogLocalServiceBaseImpl
 	protected DispatchLogPersistence dispatchLogPersistence;
 
 	@Reference
-	protected DispatchTriggerPersistence dispatchTriggerPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
 
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
+	private static final Log _log = LogFactoryUtil.getLog(
+		DispatchLogLocalServiceBaseImpl.class);
 
 }

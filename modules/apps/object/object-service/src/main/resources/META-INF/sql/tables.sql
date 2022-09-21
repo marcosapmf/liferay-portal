@@ -21,6 +21,7 @@ create table ObjectAction (
 create table ObjectDefinition (
 	mvccVersion LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
 	objectDefinitionId LONG not null primary key,
 	companyId LONG,
 	userId LONG,
@@ -35,6 +36,8 @@ create table ObjectDefinition (
 	dbTableName VARCHAR(75) null,
 	label STRING null,
 	className VARCHAR(75) null,
+	enableCategorization BOOLEAN,
+	enableComments BOOLEAN,
 	name VARCHAR(75) null,
 	panelAppOrder VARCHAR(75) null,
 	panelCategoryKey VARCHAR(75) null,

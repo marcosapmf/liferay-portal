@@ -22,10 +22,10 @@ import {
 	CodeEditor,
 	CustomItem,
 	ExpressionBuilder,
-	FormCustomSelect,
 	Input,
 	SelectWithOption,
 	SidebarCategory,
+	SingleSelect,
 	invalidateRequired,
 } from '@liferay/object-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
@@ -52,7 +52,6 @@ export default function ActionBuilder({
 	objectActionTriggers,
 	objectDefinitionsRelationshipsURL,
 	setValues,
-	setWarningAlert,
 	validateExpressionURL,
 	values,
 }: IProps) {
@@ -78,6 +77,11 @@ export default function ActionBuilder({
 	] = useState<ObjectField[]>([]);
 
 	const [infoAlert, setInfoAlert] = useState(true);
+
+	const [warningAlerts, setWarningAlerts] = useState<WarningStates>({
+		mandatoryRelationships: false,
+		requiredFields: false,
+	});
 
 	const fetchObjectDefinitions = async () => {
 		const relationships = await API.fetchJSON<
@@ -264,6 +268,15 @@ export default function ActionBuilder({
 				...parameters,
 			},
 		});
+
+		setWarningAlerts((previousWarnings) => ({
+			...previousWarnings,
+			mandatoryRelationships: items.some(
+				(field) =>
+					field.businessType === 'Relationship' &&
+					field.required === true
+			),
+		}));
 	};
 
 	useEffect(() => {
@@ -287,8 +300,22 @@ export default function ActionBuilder({
 			invalidateRequired(item.value)
 		);
 
-		setWarningAlert(hasEmptyValues);
-	}, [values.parameters?.predefinedValues, objectFieldsMap, setWarningAlert]);
+		setWarningAlerts((previousWarnings) => ({
+			...previousWarnings,
+			requiredFields: hasEmptyValues,
+		}));
+	}, [
+		values.parameters?.predefinedValues,
+		objectFieldsMap,
+		setWarningAlerts,
+	]);
+
+	const closeWarningAlert = (warning: string) => {
+		setWarningAlerts((previousWarnings) => ({
+			...previousWarnings,
+			[warning]: false,
+		}));
+	};
 
 	return (
 		<>
@@ -318,7 +345,7 @@ export default function ActionBuilder({
 					title={Liferay.Language.get('when[object]')}
 					viewMode="inline"
 				>
-					<FormCustomSelect
+					<SingleSelect
 						error={errors.objectActionTriggerKey}
 						onChange={({value}) =>
 							setValues({
@@ -335,58 +362,76 @@ export default function ActionBuilder({
 				</Card>
 			</Card>
 
-			{['onAfterAdd', 'onAfterDelete', 'onAfterUpdate'].some(
-				(key) => key === values.objectActionTriggerKey
-			) && (
-				<Card title={Liferay.Language.get('condition')}>
-					<ClayForm.Group>
-						<ClayToggle
-							label={Liferay.Language.get('enable-condition')}
-							name="condition"
-							onToggle={(enable) =>
-								setValues({
-									conditionExpression: enable
-										? ''
-										: undefined,
-								})
-							}
-							toggled={
-								!(values.conditionExpression === undefined)
-							}
-						/>
-					</ClayForm.Group>
+			<Card title={Liferay.Language.get('condition')}>
+				<ClayForm.Group>
+					<ClayToggle
+						label={Liferay.Language.get('enable-condition')}
+						name="condition"
+						onToggle={(enable) =>
+							setValues({
+								conditionExpression: enable ? '' : undefined,
+							})
+						}
+						toggled={!(values.conditionExpression === undefined)}
+					/>
+				</ClayForm.Group>
 
-					{values.conditionExpression !== undefined && (
-						<ExpressionBuilder
-							error={errors.conditionExpression}
-							feedbackMessage={Liferay.Language.get(
-								'use-expressions-to-create-a-condition'
-							)}
-							label={Liferay.Language.get('expression-builder')}
-							name="conditionExpression"
-							onChange={({target: {value}}: any) =>
-								setValues({conditionExpression: value})
-							}
-							onOpenModal={() => {
-								const parentWindow = Liferay.Util.getOpener();
+				{values.conditionExpression !== undefined && (
+					<ExpressionBuilder
+						error={errors.conditionExpression}
+						feedbackMessage={Liferay.Language.get(
+							'use-expressions-to-create-a-condition'
+						)}
+						label={Liferay.Language.get('expression-builder')}
+						name="conditionExpression"
+						onChange={({target: {value}}) =>
+							setValues({conditionExpression: value})
+						}
+						onOpenModal={() => {
+							const parentWindow = Liferay.Util.getOpener();
 
-								parentWindow.Liferay.fire(
-									'openExpressionBuilderModal',
-									{
-										onSave: handleSave,
-										required: true,
-										source: values.conditionExpression,
-										validateExpressionURL,
-									}
-								);
-							}}
-							placeholder={Liferay.Language.get(
-								'create-an-expression'
-							)}
-							value={values.conditionExpression as string}
-						/>
+							parentWindow.Liferay.fire(
+								'openExpressionBuilderModal',
+								{
+									onSave: handleSave,
+									required: true,
+									source: values.conditionExpression,
+									validateExpressionURL,
+								}
+							);
+						}}
+						placeholder={Liferay.Language.get(
+							'create-an-expression'
+						)}
+						value={values.conditionExpression as string}
+					/>
+				)}
+			</Card>
+
+			{warningAlerts.requiredFields && (
+				<ClayAlert
+					className="lfr-objects__side-panel-content-container"
+					displayType="warning"
+					onClose={() => closeWarningAlert('requiredFields')}
+					title={`${Liferay.Language.get('warning')}:`}
+				>
+					{Liferay.Language.get(
+						'required-fields-must-have-predefined-values'
 					)}
-				</Card>
+				</ClayAlert>
+			)}
+
+			{warningAlerts.mandatoryRelationships && (
+				<ClayAlert
+					className="lfr-objects__side-panel-content-container"
+					displayType="warning"
+					onClose={() => closeWarningAlert('mandatoryRelationships')}
+					title={`${Liferay.Language.get('warning')}:`}
+				>
+					{Liferay.Language.get(
+						'the-selected-object-definition-has-mandatory-relationship-fields'
+					)}
+				</ClayAlert>
 			)}
 
 			<Card title={Liferay.Language.get('action')}>
@@ -395,7 +440,7 @@ export default function ActionBuilder({
 					viewMode="inline"
 				>
 					<div className="lfr-object__action-builder-then">
-						<FormCustomSelect
+						<SingleSelect
 							error={errors.objectActionExecutorKey}
 							onChange={({value}) => {
 								if (value === 'add-object-entry') {
@@ -471,7 +516,7 @@ export default function ActionBuilder({
 						)}
 
 						{values.objectActionExecutorKey === 'notification' && (
-							<FormCustomSelect<CustomItem<number>>
+							<SingleSelect<CustomItem<number>>
 								className="lfr-object__action-builder-notification-then"
 								error={errors.objectActionExecutorKey}
 								label={Liferay.Language.get('notification')}
@@ -497,7 +542,11 @@ export default function ActionBuilder({
 							currentObjectDefinitionFields={
 								currentObjectDefinitionFields
 							}
-							errors={errors.predefinedValues as any}
+							errors={
+								errors.predefinedValues as {
+									[key: string]: string;
+								}
+							}
 							objectFieldsMap={objectFieldsMap}
 							setValues={setValues}
 							validateExpressionURL={validateExpressionURL}
@@ -570,7 +619,6 @@ interface IProps {
 	objectActionTriggers: CustomItem[];
 	objectDefinitionsRelationshipsURL: string;
 	setValues: (values: Partial<ObjectAction>) => void;
-	setWarningAlert: (value: boolean) => void;
 	validateExpressionURL: string;
 	values: Partial<ObjectAction>;
 }
@@ -578,4 +626,9 @@ interface IProps {
 interface SelectItem {
 	label: string;
 	value: number;
+}
+
+interface WarningStates {
+	mandatoryRelationships: boolean;
+	requiredFields: boolean;
 }

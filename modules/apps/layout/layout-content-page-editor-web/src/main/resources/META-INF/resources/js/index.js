@@ -15,9 +15,9 @@
 export {ColorPicker} from '../page_editor/common/components/ColorPicker/ColorPicker';
 export {LengthField} from '../page_editor/common/components/LengthField';
 export {default as useControlledState} from '../page_editor/core/hooks/useControlledState';
-export {StyleErrorsModal} from '../page_editor/app/components/StyleErrorsModal';
 export {default as Collapse} from '../page_editor/common/components/Collapse';
 export {
 	useHasStyleErrors,
 	StyleErrorsContextProvider,
 } from '../page_editor/app/contexts/StyleErrorsContext';
+export {useId} from '../page_editor/core/hooks/useId';

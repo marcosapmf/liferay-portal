@@ -34,7 +34,13 @@ const SidebarPanelInfoCollapsibleSection = ({
 								className="align-self-center panel-title"
 								expand
 							>
-								{title}
+								<span
+									aria-label={`${Liferay.Language.get(
+										'view'
+									)} ${title}`}
+								>
+									{title}
+								</span>
 							</ClayLayout.ContentCol>
 						</ClayLayout.ContentRow>
 					</ClayPanel.Title>

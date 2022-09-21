@@ -13,30 +13,36 @@
  */
 
 import ClayEmptyState from '@clayui/empty-state';
+import ClayLoadingIndicator from '@clayui/loading-indicator';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
 import TabCollection from './TabCollection';
 
-export default function SearchResultsPanel({filteredTabs}) {
-	return filteredTabs.length ? (
-		filteredTabs.map((tab, index) => (
-			<div key={index}>
-				<div className="font-weight-semi-bold page-editor__fragments-widgets__search-results-panel__filter-subtitle py-2">
-					{tab.label}
-				</div>
+export default function SearchResultsPanel({filteredTabs, loading = false}) {
+	if (loading) {
+		return <ClayLoadingIndicator className="mt-3" small />;
+	}
 
-				{tab.collections.map((collection, index) => (
-					<TabCollection
-						collection={collection}
-						initialOpen
-						isSearchResult
-						key={index}
-					/>
-				))}
-			</div>
-		))
+	return filteredTabs.length ? (
+		<div className="overflow-auto px-3">
+			{filteredTabs.map((tab, index) => (
+				<div key={index}>
+					<div className="font-weight-semi-bold page-editor__fragments-widgets__search-results-panel__filter-subtitle py-2">
+						{tab.label}
+					</div>
+
+					{tab.collections.map((collection, index) => (
+						<TabCollection
+							collection={collection}
+							initialOpen
+							isSearchResult
+							key={index}
+						/>
+					))}
+				</div>
+			))}
+		</div>
 	) : (
 		<ClayEmptyState
 			description={Liferay.Language.get(
@@ -50,6 +56,6 @@ export default function SearchResultsPanel({filteredTabs}) {
 }
 
 SearchResultsPanel.proptypes = {
-	displayStyle: PropTypes.oneOf(Object.values(FRAGMENTS_DISPLAY_STYLES)),
 	filteredTabs: PropTypes.object.isRequired,
+	loading: PropTypes.bool,
 };

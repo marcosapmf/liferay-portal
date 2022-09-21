@@ -67,7 +67,15 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 				<div class="autofit-col">
 					<ul class="autofit-padded-no-gutters autofit-row">
 						<li class="autofit-col">
-							<liferay-util:include page="/admin/kb_folder_action.jsp" servletContext="<%= application %>" />
+
+							<%
+							KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
+							%>
+
+							<clay:dropdown-actions
+								dropdownItems="<%= kbDropdownItemsProvider.getKBFolderDropdownItems(kbFolder) %>"
+								propsTransformer="admin/js/KBDropdownPropsTransformer"
+							/>
 						</li>
 					</ul>
 				</div>
@@ -131,7 +139,7 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 
 						<clay:label
 							displayType="info"
-							label='<%= LanguageUtil.get(request, "version") + StringPool.SPACE + kbArticle.getPriority() %>'
+							label='<%= LanguageUtil.get(request, "version") + StringPool.SPACE + kbArticle.getVersion() %>'
 						/>
 
 						<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= kbArticle.getStatus() %>" />
@@ -145,7 +153,15 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 								<liferay-util:include page="/admin/subscribe.jsp" servletContext="<%= application %>" />
 							</li>
 							<li class="autofit-col">
-								<liferay-util:include page="/admin/kb_article_action.jsp" servletContext="<%= application %>" />
+
+								<%
+								KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
+								%>
+
+								<clay:dropdown-actions
+									dropdownItems="<%= kbDropdownItemsProvider.getKBArticleDropdownItems(kbArticle) %>"
+									propsTransformer="admin/js/KBDropdownPropsTransformer"
+								/>
 							</li>
 						</ul>
 					</c:if>

@@ -149,6 +149,18 @@ $h4 liferay.workspace.bundle.dist.include.metadata
 Set this to true to append metadata for the current environment settings and
 timestamp. The default value is `false`.
 
+$h4 liferay.workspace.docker.local.registry.address
+Set this to the host and port of the local Docker registry. This will enable the user to interact with a Docker registry other than DockerHub (e.g. myregistryaddress.org:5000).
+
+$h4 liferay.workspace.docker.pull.policy
+Set this to false to pull the user's local Docker cache first. The default value is true.
+
+$h4 liferay.workspace.docker.username
+Set this property to the registered user name on DockerHub to avoid conflicts with DockerHub.
+
+$h4 liferay.workspace.docker.user.access.token
+See https://docs.docker.com/docker-hub/access-tokens on how to generate a Docker access token.
+
 $h4 liferay.workspace.ext.dir
 Set the folder that contains all Ext OSGi modules and Ext plugins. The default
 value is `ext`.
@@ -170,8 +182,8 @@ Set this to true to compile the JSP files in OSGi modules and have them added
 to the distributable Zip/Tar. The default value is `false`.
 
 $h4 liferay.workspace.node.package.manager
-Set this property to `yarn` to build Node.js-style projects using Yarn. The
-default value is `npm`.
+Set this property to `npm` to build Node.js-style projects using NPM. The
+default value is `yarn`.
 
 $h4 liferay.workspace.plugins.sdk.dir
 Set the folder that contains the Plugins SDK environment. The default value is

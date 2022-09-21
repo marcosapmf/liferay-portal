@@ -51,7 +51,7 @@ renderResponse.setTitle((accountEntryAddressId == 0) ? LanguageUtil.get(request,
 
 		<aui:input name="description" type="textarea" />
 
-		<aui:select label="type" name="addressTypeId">
+		<aui:select label="type" name="addressListTypeId">
 
 			<%
 			String[] types = null;
@@ -66,7 +66,7 @@ renderResponse.setTitle((accountEntryAddressId == 0) ? LanguageUtil.get(request,
 			ListType addressListType = null;
 
 			if (address != null) {
-				addressListType = address.getType();
+				addressListType = address.getListType();
 			}
 
 			for (String type : types) {

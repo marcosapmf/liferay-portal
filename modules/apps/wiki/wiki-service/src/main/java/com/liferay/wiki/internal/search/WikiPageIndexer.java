@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.capabilities.RelatedModelCapability;
@@ -274,7 +274,7 @@ public class WikiPageIndexer
 		document.addText(Field.TITLE, title);
 
 		for (Locale locale :
-				LanguageUtil.getAvailableLocales(wikiPage.getGroupId())) {
+				_language.getAvailableLocales(wikiPage.getGroupId())) {
 
 			String languageId = LocaleUtil.toLanguageId(locale);
 
@@ -351,32 +351,6 @@ public class WikiPageIndexer
 			isCommitImmediately());
 
 		_reindexAttachments(wikiPage);
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiEngineRenderer(
-		WikiEngineRenderer wikiEngineRenderer) {
-
-		_wikiEngineRenderer = wikiEngineRenderer;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiNodeLocalService(
-		WikiNodeLocalService wikiNodeLocalService) {
-
-		_wikiNodeLocalService = wikiNodeLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiNodeService(WikiNodeService wikiNodeService) {
-		_wikiNodeService = wikiNodeService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageLocalService(
-		WikiPageLocalService wikiPageLocalService) {
-
-		_wikiPageLocalService = wikiPageLocalService;
 	}
 
 	@Reference
@@ -486,15 +460,25 @@ public class WikiPageIndexer
 	@Reference
 	private IndexWriterHelper _indexWriterHelper;
 
+	@Reference
+	private Language _language;
+
 	private final RelatedEntryIndexer _relatedEntryIndexer =
 		new BaseRelatedEntryIndexer();
 
 	@Reference
 	private TrashHelper _trashHelper;
 
+	@Reference
 	private WikiEngineRenderer _wikiEngineRenderer;
+
+	@Reference
 	private WikiNodeLocalService _wikiNodeLocalService;
+
+	@Reference
 	private WikiNodeService _wikiNodeService;
+
+	@Reference
 	private WikiPageLocalService _wikiPageLocalService;
 
 	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiPage)")

@@ -25,7 +25,7 @@ definition {
 
 		ACEventAnalysis.searchEventAnalysis(searchItem = "${customEventName}");
 
-		while (IsElementNotPresent(locator1 = "ACUtils#GENERIC_BUTTON") && (maxIterations = "50")) {
+		while ((IsElementNotPresent(locator1 = "ACUtils#GENERIC_BUTTON")) && (maxIterations = "50")) {
 			TestUtils.hardRefresh();
 
 			ACEventAnalysis.clickToAddEventButton();
@@ -45,9 +45,7 @@ definition {
 			key_filterName = "${filterName}",
 			locator1 = "ACEventAnalysis#CHOOSE_FILTER");
 
-		Select(
-			locator1 = "Select#SELECT",
-			value1 = "${optionValue}");
+		ACUtils.selectGenericOption(optionValue = "${optionValue}");
 
 		if ((IsElementNotPresent(key_text = "calendar", locator1 = "Icon#ANY")) && ("${optionValue}" != "True") && ("${optionValue}" != "False")) {
 			Type(
@@ -278,7 +276,7 @@ definition {
 		for (var name : list "${eventList}") {
 			var key_buttonName = "${name}";
 
-			while (IsElementNotPresent(locator1 = "ACUtils#GENERIC_BUTTON") && (maxIterations = "100")) {
+			while ((IsElementNotPresent(locator1 = "ACUtils#GENERIC_BUTTON")) && (maxIterations = "100")) {
 				ACEventAnalysis.searchEventAnalysis(searchItem = "${name}");
 			}
 

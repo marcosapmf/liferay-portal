@@ -34,7 +34,6 @@ import com.liferay.knowledge.base.web.internal.security.permission.resource.Admi
 import com.liferay.knowledge.base.web.internal.security.permission.resource.KBArticlePermission;
 import com.liferay.knowledge.base.web.internal.security.permission.resource.KBFolderPermission;
 import com.liferay.knowledge.base.web.internal.util.comparator.KBOrderByComparatorAdapter;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -42,6 +41,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -98,7 +98,7 @@ public class KBAdminManagementToolbarDisplayContext {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteEntries");
-				dropdownItem.setIcon("times-circle");
+				dropdownItem.setIcon("trash");
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
@@ -166,7 +166,7 @@ public class KBAdminManagementToolbarDisplayContext {
 						).setParameter(
 							"parentResourcePrimKey", parentResourcePrimKey
 						).buildPortletURL());
-
+					dropdownItem.setIcon("folder");
 					dropdownItem.setLabel(
 						LanguageUtil.get(_httpServletRequest, "folder"));
 				});
@@ -188,7 +188,7 @@ public class KBAdminManagementToolbarDisplayContext {
 						).setParameter(
 							"parentResourcePrimKey", parentResourcePrimKey
 						).buildPortletURL());
-
+					dropdownItem.setIcon("document-text");
 					dropdownItem.setLabel(
 						LanguageUtil.get(_httpServletRequest, "basic-article"));
 				});
@@ -221,7 +221,7 @@ public class KBAdminManagementToolbarDisplayContext {
 									"parentResourcePrimKey",
 									parentResourcePrimKey
 								).buildPortletURL());
-
+							dropdownItem.setIcon("document-text");
 							dropdownItem.setLabel(
 								LanguageUtil.get(
 									_httpServletRequest,
@@ -248,7 +248,7 @@ public class KBAdminManagementToolbarDisplayContext {
 						).setParameter(
 							"parentKBFolderId", parentResourcePrimKey
 						).buildPortletURL());
-
+					dropdownItem.setIcon("import");
 					dropdownItem.setLabel(
 						LanguageUtil.get(_httpServletRequest, "import"));
 				});
@@ -259,6 +259,83 @@ public class KBAdminManagementToolbarDisplayContext {
 		}
 
 		return creationMenu;
+	}
+
+	public List<DropdownItem> getEmptyStateActionDropdownItems() {
+		long kbFolderClassNameId = PortalUtil.getClassNameId(
+			KBFolderConstants.getClassName());
+
+		long parentResourceClassNameId = ParamUtil.getLong(
+			_httpServletRequest, "parentResourceClassNameId",
+			kbFolderClassNameId);
+
+		long parentResourcePrimKey = ParamUtil.getLong(
+			_httpServletRequest, "parentResourcePrimKey",
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		return DropdownItemListBuilder.add(
+			() -> _hasAddKBFolderPermission(),
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setMVCPath(
+						"/admin/common/edit_kb_folder.jsp"
+					).setRedirect(
+						PortalUtil.getCurrentURL(_httpServletRequest)
+					).setParameter(
+						"parentResourceClassNameId",
+						PortalUtil.getClassNameId(
+							KBFolderConstants.getClassName())
+					).setParameter(
+						"parentResourcePrimKey", parentResourcePrimKey
+					).buildPortletURL());
+				dropdownItem.setIcon("folder");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "folder"));
+			}
+		).add(
+			() -> _hasAddKBArticlePermission(),
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setMVCPath(
+						"/admin/common/edit_kb_article.jsp"
+					).setRedirect(
+						PortalUtil.getCurrentURL(_httpServletRequest)
+					).setParameter(
+						"parentResourceClassNameId", parentResourceClassNameId
+					).setParameter(
+						"parentResourcePrimKey", parentResourcePrimKey
+					).buildPortletURL());
+				dropdownItem.setIcon("document-text");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "basic-article"));
+			}
+		).add(
+			() ->
+				(parentResourceClassNameId == kbFolderClassNameId) &&
+				AdminPermission.contains(
+					_themeDisplay.getPermissionChecker(),
+					_themeDisplay.getScopeGroupId(),
+					KBActionKeys.ADD_KB_ARTICLE),
+			dropdownItem -> {
+				dropdownItem.setHref(
+					PortletURLBuilder.createRenderURL(
+						_liferayPortletResponse
+					).setMVCPath(
+						"/admin/import.jsp"
+					).setRedirect(
+						PortalUtil.getCurrentURL(_httpServletRequest)
+					).setParameter(
+						"parentKBFolderId", parentResourcePrimKey
+					).buildPortletURL());
+				dropdownItem.setIcon("import");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "import"));
+			}
+		).build();
 	}
 
 	public List<DropdownItem> getFilterDropdownItems() {
@@ -306,8 +383,16 @@ public class KBAdminManagementToolbarDisplayContext {
 		return !_searchContainer.hasResults();
 	}
 
+	public boolean isSearch() {
+		if (Validator.isNotNull(_getKeywords())) {
+			return true;
+		}
+
+		return false;
+	}
+
 	public boolean isShowInfoButton() {
-		return Validator.isNull(_getKeywords());
+		return !isSearch();
 	}
 
 	private SearchContainer<Object> _createSearchContainer()

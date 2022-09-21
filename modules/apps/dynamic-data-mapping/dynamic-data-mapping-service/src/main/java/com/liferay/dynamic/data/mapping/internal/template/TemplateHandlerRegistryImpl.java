@@ -139,29 +139,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 		_bundleContext = null;
 	}
 
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(
-		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)",
-		unbind = "-"
-	)
-	protected void setModelResourcePermission(
-		ModelResourcePermission<DDMTemplate> modelResourcePermission) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortal(Portal portal) {
-		_portal = portal;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		_userLocalService = userLocalService;
-	}
-
 	@Reference
 	protected ResourceBundleLoaderProvider resourceBundleLoaderProvider;
 
@@ -179,14 +156,24 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 	@Reference
 	private DDMTemplateLocalService _ddmTemplateLocalService;
 
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private Language _language;
 
+	@Reference(
+		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"
+	)
+	private ModelResourcePermission<DDMTemplate> _modelResourcePermission;
+
+	@Reference
 	private Portal _portal;
+
 	private final Map<TemplateHandler, ServiceRegistration<?>>
 		_serviceRegistrations = new ConcurrentHashMap<>();
+
+	@Reference
 	private UserLocalService _userLocalService;
 
 	private class TemplateHandlerPortalInstanceLifecycleListener
@@ -194,6 +181,13 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 
 		@Override
 		public void portalInstanceRegistered(Company company) throws Exception {
+			List<Element> templateElements =
+				_templateHandler.getDefaultTemplateElements();
+
+			if (templateElements.isEmpty()) {
+				return;
+			}
+
 			long classNameId = _portal.getClassNameId(
 				_templateHandler.getClassName());
 
@@ -210,9 +204,6 @@ public class TemplateHandlerRegistryImpl implements TemplateHandlerRegistry {
 				company.getCompanyId());
 
 			serviceContext.setUserId(userId);
-
-			List<Element> templateElements =
-				_templateHandler.getDefaultTemplateElements();
 
 			Map<Long, Map<String, DDMTemplate>> ddmTemplateMaps =
 				_ddmTemplateMapsThreadLocal.get();

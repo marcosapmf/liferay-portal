@@ -23,12 +23,12 @@ import com.liferay.knowledge.base.item.selector.criterion.KBAttachmentItemSelect
 import com.liferay.knowledge.base.item.selector.web.internal.KBAttachmentItemSelectorView;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalServiceUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -123,7 +123,7 @@ public class KBAttachmentItemSelectorViewDisplayContext {
 		return PortletURLBuilder.createActionURL(
 			liferayPortletResponse, KBPortletKeys.KNOWLEDGE_BASE_ADMIN
 		).setActionName(
-			"uploadKBArticleAttachments"
+			"/knowledge_base/upload_kb_article_attachments"
 		).setParameter(
 			"resourcePrimKey",
 			_kbAttachmentItemSelectorCriterion.getResourcePrimKey()

@@ -28,12 +28,12 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCriterion;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelperUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -133,19 +133,24 @@ public class FragmentCollectionResourcesManagementToolbarDisplayContext
 
 	private String _getItemSelectorURL() {
 		ItemSelectorCriterion itemSelectorCriterion =
-			new UploadItemSelectorCriterion(
-				FragmentPortletKeys.FRAGMENT,
+			UploadItemSelectorCriterion.builder(
+			).desiredItemSelectorReturnTypes(
+				new FileEntryItemSelectorReturnType()
+			).extensions(
+				_fragmentPortletConfiguration.thumbnailExtensions()
+			).maxFileSize(
+				UploadServletRequestConfigurationHelperUtil.getMaxSize()
+			).portletId(
+				FragmentPortletKeys.FRAGMENT
+			).repositoryName(
+				LanguageUtil.get(_themeDisplay.getLocale(), "resources")
+			).url(
 				PortletURLBuilder.createActionURL(
 					liferayPortletResponse
 				).setActionName(
 					"/fragment/upload_fragment_collection_resource"
-				).buildString(),
-				LanguageUtil.get(_themeDisplay.getLocale(), "resources"),
-				UploadServletRequestConfigurationHelperUtil.getMaxSize(),
-				_fragmentPortletConfiguration.thumbnailExtensions());
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new FileEntryItemSelectorReturnType());
+				).buildString()
+			).build();
 
 		return String.valueOf(
 			_itemSelector.getItemSelectorURL(

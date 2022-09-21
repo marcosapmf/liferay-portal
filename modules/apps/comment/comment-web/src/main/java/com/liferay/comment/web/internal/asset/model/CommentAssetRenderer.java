@@ -19,7 +19,6 @@ import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
 import com.liferay.comment.web.internal.constants.CommentPortletKeys;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManagerUtil;
@@ -29,6 +28,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -207,6 +207,26 @@ public class CommentAssetRenderer
 
 		return assetRenderer.getURLViewInContext(
 			liferayPortletRequest, liferayPortletResponse, noSuchEntryRedirect);
+	}
+
+	@Override
+	public String getURLViewInContext(
+			ThemeDisplay themeDisplay, String noSuchEntryRedirect)
+		throws Exception {
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				_workflowableComment.getClassName());
+
+		if (assetRendererFactory == null) {
+			return null;
+		}
+
+		AssetRenderer<?> assetRenderer = assetRendererFactory.getAssetRenderer(
+			_workflowableComment.getClassPK());
+
+		return assetRenderer.getURLViewInContext(
+			themeDisplay, noSuchEntryRedirect);
 	}
 
 	@Override

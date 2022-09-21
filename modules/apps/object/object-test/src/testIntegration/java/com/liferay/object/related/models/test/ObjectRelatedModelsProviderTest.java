@@ -16,6 +16,7 @@ package com.liferay.object.related.models.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.ObjectEntryValuesException;
 import com.liferay.object.exception.RequiredObjectRelationshipException;
@@ -33,7 +34,6 @@ import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.object.util.ObjectFieldUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -48,7 +48,6 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -108,8 +107,9 @@ public class ObjectRelatedModelsProviderTest {
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
-						"Text", "String", RandomTestUtil.randomString(),
-						StringUtil.randomId())));
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), StringUtil.randomId())));
 
 		_objectDefinition1 =
 			_objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -126,8 +126,9 @@ public class ObjectRelatedModelsProviderTest {
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
-						"Text", "String", RandomTestUtil.randomString(),
-						StringUtil.randomId())));
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), StringUtil.randomId())));
 
 		_objectDefinition2 =
 			_objectDefinitionLocalService.publishCustomObjectDefinition(
@@ -243,9 +244,9 @@ public class ObjectRelatedModelsProviderTest {
 		Assert.assertEquals(objectEntries.toString(), 1, objectEntries.size());
 		Assert.assertEquals(
 			objectEntries,
-			_objectEntryLocalService.getOneToManyRelatedObjectEntries(
+			_objectEntryLocalService.getOneToManyObjectEntries(
 				0, objectRelationship.getObjectRelationshipId(),
-				objectEntry1.getObjectEntryId(), QueryUtil.ALL_POS,
+				objectEntry1.getObjectEntryId(), true, QueryUtil.ALL_POS,
 				QueryUtil.ALL_POS));
 
 		_objectEntryLocalService.updateObjectEntry(
@@ -743,19 +744,6 @@ public class ObjectRelatedModelsProviderTest {
 				objectRelationship, false);
 
 		try {
-			UserLocalServiceUtil.deleteUser(userIds[0]);
-		}
-		catch (ModelListenerException modelListenerException) {
-			Assert.assertEquals(
-				StringBundler.concat(
-					"com.liferay.object.exception.",
-					"RequiredObjectRelationshipException: Object relationship ",
-					objectRelationship.getObjectRelationshipId(),
-					" does not allow deletes"),
-				modelListenerException.getMessage());
-		}
-
-		try {
 			_objectEntryLocalService.deleteObjectEntry(objectEntry);
 		}
 		catch (RequiredObjectRelationshipException
@@ -788,8 +776,6 @@ public class ObjectRelatedModelsProviderTest {
 
 		Assert.assertEquals(objectEntries.toString(), 0, objectEntries.size());
 
-		Assert.assertNotNull(UserLocalServiceUtil.getUser(userIds[0]));
-
 		objectEntry = _objectEntryLocalService.addObjectEntry(
 			TestPropsValues.getUserId(), 0,
 			_objectDefinition1.getObjectDefinitionId(), Collections.emptyMap(),
@@ -798,7 +784,7 @@ public class ObjectRelatedModelsProviderTest {
 		_objectRelationshipLocalService.addObjectRelationshipMappingTableValues(
 			TestPropsValues.getUserId(),
 			objectRelationship.getObjectRelationshipId(),
-			objectEntry.getObjectEntryId(), userIds[0],
+			objectEntry.getObjectEntryId(), userIds[1],
 			ServiceContextTestUtil.getServiceContext());
 
 		objectEntries = objectRelatedModelsProvider.getRelatedModels(
@@ -821,7 +807,16 @@ public class ObjectRelatedModelsProviderTest {
 
 		Assert.assertEquals(objectEntries.toString(), 0, objectEntries.size());
 
-		Assert.assertNotNull(UserLocalServiceUtil.getUser(userIds[0]));
+		try {
+			_userLocalService.getUser(userIds[1]);
+
+			Assert.fail();
+		}
+		catch (NoSuchUserException noSuchUserException) {
+			Assert.assertEquals(
+				"No User exists with the primary key " + userIds[1],
+				noSuchUserException.getMessage());
+		}
 	}
 
 	private void _testViewPermission(

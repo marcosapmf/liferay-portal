@@ -78,7 +78,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/view.jsp",
 		"javax.portlet.name=" + NestedPortletsPortletKeys.NESTED_PORTLETS,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user"
+		"javax.portlet.security-role-ref=guest,power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -180,27 +181,6 @@ public class NestedPortletsPortlet extends MVCPortlet {
 		super.include(viewTemplate, renderRequest, renderResponse);
 	}
 
-	@Reference(unbind = "-")
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-
-		_layoutLocalService = layoutLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutTemplateLocalService(
-		LayoutTemplateLocalService layoutTemplateLocalService) {
-
-		_layoutTemplateLocalService = layoutTemplateLocalService;
-	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.nested.portlets.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
 	private void _checkLayout(Layout layout, Collection<String> columnIds) {
 		UnicodeProperties typeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
@@ -252,10 +232,18 @@ public class NestedPortletsPortlet extends MVCPortlet {
 	private static final Pattern _processColumnPattern = Pattern.compile(
 		"(processColumn[(]\")(.*?)(\"(?:, *\"(?:.*?)\")?[)])", Pattern.DOTALL);
 
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
 	private LayoutTemplateLocalService _layoutTemplateLocalService;
 
 	@Reference
 	private Portal _portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.nested.portlets.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
 
 }

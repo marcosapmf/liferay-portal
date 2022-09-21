@@ -20,12 +20,12 @@ import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.util.BaseDDMDisplay;
 import com.liferay.dynamic.data.mapping.util.DDMDisplay;
 import com.liferay.dynamic.data.mapping.util.DDMDisplayTabItem;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.template.TemplateHandler;
 import com.liferay.portal.kernel.template.TemplateHandlerRegistryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -201,13 +201,7 @@ public class PortletDisplayTemplateDDMDisplay extends BaseDDMDisplay {
 		return portletURL.toString();
 	}
 
-	@Reference(unbind = "-")
-	protected void setPortletDisplayTemplate(
-		PortletDisplayTemplate portletDisplayTemplate) {
-
-		this.portletDisplayTemplate = portletDisplayTemplate;
-	}
-
+	@Reference
 	protected PortletDisplayTemplate portletDisplayTemplate;
 
 	private static final Set<String> _viewTemplateExcludedColumnNames =

@@ -61,7 +61,7 @@
 
 <tr>
 	<td>ARTICLE_TABLE_ARTICLE_STATUS</td>
-	<td>//div[contains(.,'${key_kbArticleTitle}')]//span[@class='workflow-status']/span</td>
+	<td>//div[contains(.,'${key_kbArticleTitle}')]//span[@class='text-default']//span[@class='workflow-status']/span</td>
 	<td></td>
 </tr>
 <tr>
@@ -259,6 +259,54 @@
 <tr>
 	<td>MOVE_NEW_PARENT_PRIORITY_LABEL</td>
 	<td>//div[contains(@id,'knowledge_base_web') and contains(@id,'newParent')]//label[contains(@class,'control-label') and contains(.,'Priority')]</td>
+	<td></td>
+</tr>
+
+<!--PAGE_TREE-->
+
+<tr>
+	<td>PAGE_TREE_CHEVRON_ICON_RIGHT</td>
+	<td>//button[contains(@aria-expanded,'false')]//*[contains(@class,'lexicon-icon-angle-right')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_FOLDERS_AND_ARTICLES</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-pages-tree')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_ITEM_LINK</td>
+	<td>//li[contains(@class,'treeview-item')]//a[contains(@class,'link-secondary')][normalize-space(text())='${key_itemLinkName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_ITEM_NAME</td>
+	<td>//li[contains(@class,'treeview-item')]//div[contains(@class,'component-text')][normalize-space(text())='${key_itemName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_PANEL_COLLAPSED</td>
+	<td>//div[contains(@class,'knowledge-base-vertical-bar') and not(contains(@class,'expanded'))]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_PANEL_HEADER</td>
+	<td>//div[contains(@class,'knowledge-base-vertical-bar') and contains(@class,'expanded')]//div[contains(@class,'sidebar-header') and contains(.,'${key_header}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_PANEL_OPENED</td>
+	<td>//div[contains(@class,'knowledge-base-vertical-bar') and contains(@class,'expanded')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_SUGGESTIONS</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-message')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PAGE_TREE_TEMPLATES</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-page-template')]]</td>
 	<td></td>
 </tr>
 </tbody>

@@ -747,6 +747,12 @@ public class AssetHelperImpl implements AssetHelper {
 				"ddmStructureFieldValue", ddmStructureFieldValue);
 		}
 
+		if (GetterUtil.getBoolean(
+				assetEntryQuery.getAttribute("headOrShowNonindexable"))) {
+
+			searchContext.setAttribute("headOrShowNonindexable", Boolean.TRUE);
+		}
+
 		String paginationType = GetterUtil.getString(
 			assetEntryQuery.getPaginationType(), "more");
 

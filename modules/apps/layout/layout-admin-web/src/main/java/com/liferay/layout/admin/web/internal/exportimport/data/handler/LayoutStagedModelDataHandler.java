@@ -16,6 +16,8 @@ package com.liferay.layout.admin.web.internal.exportimport.data.handler;
 
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryLocalService;
+import com.liferay.client.extension.model.ClientExtensionEntryRel;
+import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
@@ -438,6 +440,8 @@ public class LayoutStagedModelDataHandler
 
 		_exportFaviconFileEntry(layout, layoutElement, portletDataContext);
 
+		_exportClientExtensionEntryRels(layout, portletDataContext);
+
 		_fixExportTypeSettings(layout);
 
 		_exportTheme(portletDataContext, layout);
@@ -602,6 +606,14 @@ public class LayoutStagedModelDataHandler
 			existingLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
 				uuid, groupId, privateLayout);
 
+			if (existingLayout != null) {
+				Map<Long, Long> layoutPlids =
+					(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+						Layout.class);
+
+				layoutPlids.put(layout.getPlid(), existingLayout.getPlid());
+			}
+
 			if (_sites.isLayoutModifiedSinceLastMerge(existingLayout) ||
 				!_isLayoutOutdated(existingLayout, layout)) {
 
@@ -634,16 +646,6 @@ public class LayoutStagedModelDataHandler
 						mergeFailFriendlyURLLayout.getLayoutId()));
 
 				return;
-			}
-
-			if (existingLayout != null) {
-				Map<Long, Long> layoutPlids =
-					(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
-						Layout.class);
-
-				layoutPlids.put(
-					layout.getMasterLayoutPlid(),
-					existingLayout.getMasterLayoutPlid());
 			}
 		}
 		else {
@@ -823,6 +825,9 @@ public class LayoutStagedModelDataHandler
 				}
 			}
 		}
+		else {
+			importedLayout.setMasterLayoutPlid(0);
+		}
 
 		long parentPlid = layout.getParentPlid();
 		long parentLayoutId = layout.getParentLayoutId();
@@ -986,6 +991,8 @@ public class LayoutStagedModelDataHandler
 		_importFaviconFileEntry(
 			portletDataContext, layout, layoutElement, importedLayout);
 
+		_importClientExtensionEntryRels(portletDataContext, layout);
+
 		_staging.updateLastImportSettings(
 			layoutElement, importedLayout, portletDataContext);
 
@@ -1108,128 +1115,6 @@ public class LayoutStagedModelDataHandler
 		return true;
 	}
 
-	@Reference(unbind = "-")
-	protected void setConfigurationProvider(
-		ConfigurationProvider configurationProvider) {
-
-		_configurationProvider = configurationProvider;
-	}
-
-	@Reference(unbind = "-")
-	protected void setCounterLocalService(
-		CounterLocalService counterLocalService) {
-
-		_counterLocalService = counterLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setExportImportLifecycleManager(
-		ExportImportLifecycleManager exportImportLifecycleManager) {
-
-		_exportImportLifecycleManager = exportImportLifecycleManager;
-	}
-
-	@Reference(unbind = "-")
-	protected void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setImageLocalService(ImageLocalService imageLocalService) {
-		_imageLocalService = imageLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutBranchLocalService(
-		LayoutBranchLocalService layoutBranchLocalService) {
-
-		_layoutBranchLocalService = layoutBranchLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutFriendlyURLLocalService(
-		LayoutFriendlyURLLocalService layoutFriendlyURLLocalService) {
-
-		_layoutFriendlyURLLocalService = layoutFriendlyURLLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutLocalService(
-		LayoutLocalService layoutLocalService) {
-
-		_layoutLocalService = layoutLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutLocalServiceHelper(
-		LayoutLocalServiceHelper layoutLocalServiceHelper) {
-
-		_layoutLocalServiceHelper = layoutLocalServiceHelper;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutPrototypeLocalService(
-		LayoutPrototypeLocalService layoutPrototypeLocalService) {
-
-		_layoutPrototypeLocalService = layoutPrototypeLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutRevisionLocalService(
-		LayoutRevisionLocalService layoutRevisionLocalService) {
-
-		_layoutRevisionLocalService = layoutRevisionLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutSetBranchLocalService(
-		LayoutSetBranchLocalService layoutSetBranchLocalService) {
-
-		_layoutSetBranchLocalService = layoutSetBranchLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutSetLocalService(
-		LayoutSetLocalService layoutSetLocalService) {
-
-		_layoutSetLocalService = layoutSetLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setLayoutTemplateLocalService(
-		LayoutTemplateLocalService layoutTemplateLocalService) {
-
-		_layoutTemplateLocalService = layoutTemplateLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletExportController(
-		PortletExportController portletExportController) {
-
-		_portletExportController = portletExportController;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletImportController(
-		PortletImportController portletImportController) {
-
-		_portletImportController = portletImportController;
-	}
-
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setResourceLocalService(
-		ResourceLocalService resourceLocalService) {
-
-		_resourceLocalService = resourceLocalService;
-	}
-
 	@Override
 	protected void validateExport(
 			PortletDataContext portletDataContext, Layout layout)
@@ -1338,6 +1223,23 @@ public class LayoutStagedModelDataHandler
 				_layoutFriendlyURLLocalService.deleteLayoutFriendlyURL(
 					layoutFriendlyURL);
 			}
+		}
+	}
+
+	private void _exportClientExtensionEntryRels(
+			Layout layout, PortletDataContext portletDataContext)
+		throws Exception {
+
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				_portal.getClassNameId(Layout.class), layout.getPlid());
+
+		for (ClientExtensionEntryRel clientExtensionEntryRel :
+				clientExtensionEntryRels) {
+
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, layout, clientExtensionEntryRel,
+				PortletDataContext.REFERENCE_TYPE_STRONG);
 		}
 	}
 
@@ -2030,6 +1932,22 @@ public class LayoutStagedModelDataHandler
 				Layout.class, layout.getPlid()),
 			portletDataContext.getAssetTagNames(
 				Layout.class, layout.getPlid()));
+	}
+
+	private void _importClientExtensionEntryRels(
+			PortletDataContext portletDataContext, Layout layout)
+		throws Exception {
+
+		List<Element> clientExtensionEntryRelsElements =
+			portletDataContext.getReferenceDataElements(
+				layout, ClientExtensionEntryRel.class);
+
+		for (Element clientExtensionEntryRelsElement :
+				clientExtensionEntryRelsElements) {
+
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, clientExtensionEntryRelsElement);
+		}
 	}
 
 	private void _importFaviconFileEntry(
@@ -2891,7 +2809,9 @@ public class LayoutStagedModelDataHandler
 				layoutTypePortlet.getTypeSettingsProperties();
 
 			UnicodeProperties newTypeSettingsUnicodeProperties =
-				UnicodePropertiesBuilder.fastLoad(
+				UnicodePropertiesBuilder.create(
+					prototypeTypeSettingsUnicodeProperties.isSafe()
+				).fastLoad(
 					prototypeTypeSettingsUnicodeProperties.toString()
 				).build();
 
@@ -2929,7 +2849,14 @@ public class LayoutStagedModelDataHandler
 	@Reference
 	private AssetListEntryLocalService _assetListEntryLocalService;
 
+	@Reference
+	private ClientExtensionEntryRelLocalService
+		_clientExtensionEntryRelLocalService;
+
+	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private CounterLocalService _counterLocalService;
 
 	@Reference(target = "(model.class.name=java.lang.String)")
@@ -2946,6 +2873,7 @@ public class LayoutStagedModelDataHandler
 	@Reference
 	private ExportImportHelper _exportImportHelper;
 
+	@Reference
 	private ExportImportLifecycleManager _exportImportLifecycleManager;
 
 	@Reference
@@ -2955,8 +2883,13 @@ public class LayoutStagedModelDataHandler
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private ImageLocalService _imageLocalService;
+
+	@Reference
 	private LayoutBranchLocalService _layoutBranchLocalService;
 
 	@Reference
@@ -2969,8 +2902,13 @@ public class LayoutStagedModelDataHandler
 	@Reference
 	private LayoutFriendlyURLEntryHelper _layoutFriendlyURLEntryHelper;
 
+	@Reference
 	private LayoutFriendlyURLLocalService _layoutFriendlyURLLocalService;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
 	private LayoutLocalServiceHelper _layoutLocalServiceHelper;
 
 	@Reference
@@ -2985,7 +2923,10 @@ public class LayoutStagedModelDataHandler
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
+	@Reference
 	private LayoutPrototypeLocalService _layoutPrototypeLocalService;
+
+	@Reference
 	private LayoutRevisionLocalService _layoutRevisionLocalService;
 
 	@Reference
@@ -2994,8 +2935,13 @@ public class LayoutStagedModelDataHandler
 	@Reference
 	private LayoutSEOSiteLocalService _layoutSEOSiteLocalService;
 
+	@Reference
 	private LayoutSetBranchLocalService _layoutSetBranchLocalService;
+
+	@Reference
 	private LayoutSetLocalService _layoutSetLocalService;
+
+	@Reference
 	private LayoutTemplateLocalService _layoutTemplateLocalService;
 
 	@Reference
@@ -3014,13 +2960,19 @@ public class LayoutStagedModelDataHandler
 	private PortletDataHandlerStatusMessageSender
 		_portletDataHandlerStatusMessageSender;
 
+	@Reference
 	private PortletExportController _portletExportController;
+
+	@Reference
 	private PortletImportController _portletImportController;
+
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
+	@Reference
 	private ResourceLocalService _resourceLocalService;
 
 	@Reference

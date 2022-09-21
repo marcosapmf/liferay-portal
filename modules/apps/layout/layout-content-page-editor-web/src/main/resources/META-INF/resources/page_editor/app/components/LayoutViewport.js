@@ -22,6 +22,8 @@ import {config} from '../config/index';
 import {useSelectItem} from '../contexts/ControlsContext';
 import {GlobalContextFrame} from '../contexts/GlobalContext';
 import {useSelector} from '../contexts/StoreContext';
+import selectItemConfigurationOpen from '../selectors/selectItemConfigurationOpen';
+import selectSidebarIsOpened from '../selectors/selectSidebarIsOpened';
 import DisabledArea from './DisabledArea';
 import Layout from './Layout';
 import MasterLayout from './MasterLayout';
@@ -39,10 +41,9 @@ export default function LayoutViewport() {
 	const selectedViewportSize = useSelector(
 		(state) => state.selectedViewportSize
 	);
-	const {itemConfigurationOpen, sidebarOpen} = useSelector((state) => ({
-		itemConfigurationOpen: state.sidebar.itemConfigurationOpen,
-		sidebarOpen: state.sidebar.panelId && state.sidebar.open,
-	}));
+
+	const sidebarOpen = useSelector(selectSidebarIsOpened);
+	const itemConfigurationOpen = useSelector(selectItemConfigurationOpen);
 
 	const {isDragging} = useDragLayer((monitor) => ({
 		isDragging: monitor.isDragging(),
@@ -119,12 +120,7 @@ export default function LayoutViewport() {
 					'cadmin': selectedViewportSize !== VIEWPORT_SIZES.desktop,
 					'page-editor__layout-viewport__resizing': resizing,
 					'page-editor__layout-viewport--with-item-configuration-open': itemConfigurationOpen,
-					'page-editor__layout-viewport--with-sidebar-old-open':
-						sidebarOpen && !Liferay.FeatureFlags['LPS-153452'],
 					'page-editor__layout-viewport--with-sidebar-open': sidebarOpen,
-					'page-editor__layout-viewport-old': !Liferay.FeatureFlags[
-						'LPS-153452'
-					],
 				}
 			)}
 		>

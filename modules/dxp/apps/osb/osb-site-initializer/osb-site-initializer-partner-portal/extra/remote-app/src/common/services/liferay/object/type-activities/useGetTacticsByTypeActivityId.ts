@@ -12,16 +12,18 @@
 import useSWR from 'swr';
 
 import {Liferay} from '../..';
-import Tactic from '../../../../../routes/MDFRequestForm/steps/Activities/Form/interfaces/tactic';
+import Tactic from '../../../../interfaces/tactic';
 import {LiferayAPIs} from '../../common/enums/apis';
 import LiferayItems from '../../common/interfaces/liferayItems';
 import liferayFetcher from '../../common/utils/fetcher';
 
-export default function useGetTacticsByTypeActivityId(id: string | undefined) {
+export default function useGetTacticsByTypeActivityId(
+	typeActivityId: number | undefined
+) {
 	return useSWR(
-		id
+		typeActivityId
 			? [
-					`/o/${LiferayAPIs.OBJECT}/typeactivities/${id}/typeActivityToTactics`,
+					`/o/${LiferayAPIs.OBJECT}/typeactivities/${typeActivityId}/typeActivityToTactics`,
 					Liferay.authToken,
 			  ]
 			: null,

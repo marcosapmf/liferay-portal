@@ -14,10 +14,10 @@
 
 package com.liferay.trash.web.internal.portlet;
 
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.TrashPermissionException;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -293,25 +293,6 @@ public class TrashPortlet extends MVCPortlet {
 		return false;
 	}
 
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.trash.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryLocalService(
-		TrashEntryLocalService trashEntryLocalService) {
-
-		_trashEntryLocalService = trashEntryLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setTrashEntryService(TrashEntryService trashEntryService) {
-		_trashEntryService = trashEntryService;
-	}
-
 	private void _checkEntry(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
@@ -365,7 +346,15 @@ public class TrashPortlet extends MVCPortlet {
 	@Reference
 	private Portal _portal;
 
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.trash.web)(&(release.schema.version>=1.0.0)(!(release.schema.version>=2.0.0))))"
+	)
+	private Release _release;
+
+	@Reference
 	private TrashEntryLocalService _trashEntryLocalService;
+
+	@Reference
 	private TrashEntryService _trashEntryService;
 
 	@Reference

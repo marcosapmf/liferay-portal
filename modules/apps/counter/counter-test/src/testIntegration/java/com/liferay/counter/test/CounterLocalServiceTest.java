@@ -228,6 +228,7 @@ public class CounterLocalServiceTest {
 			System.setProperty(
 				PropsKeys.COUNTER_INCREMENT + "." + _counterName, "1");
 			System.setProperty("catalina.base", _catalinaBase);
+			System.setProperty("portal:hibernate.hbm.jaxb.cache", "false");
 
 			// HikariCP
 

@@ -34,6 +34,8 @@ import {
 } from '../../contexts/CollectionItemContext';
 import {useSelectItem} from '../../contexts/ControlsContext';
 import {useSelectorRef} from '../../contexts/StoreContext';
+import {formIsMapped} from '../formIsMapped';
+import {hasFormParent} from '../hasFormParent';
 import {DRAG_DROP_TARGET_TYPE} from './constants/dragDropTargetType';
 import {TARGET_POSITIONS} from './constants/targetPositions';
 import defaultComputeHover from './defaultComputeHover';
@@ -133,7 +135,20 @@ export function NotDraggableArea({children}) {
 }
 
 export function useDragItem(sourceItem, onDragEnd, onBegin = () => {}) {
-	const getSourceItem = useCallback(() => sourceItem, [sourceItem]);
+	const fragmentEntryLinksRef = useSelectorRef(
+		(state) => state.fragmentEntryLinks
+	);
+
+	const getSourceItem = useCallback(
+		() => ({
+			...sourceItem,
+			isWidget: sourceItem.isSymbol
+				? sourceItem.isWidget
+				: isWidget(sourceItem, fragmentEntryLinksRef.current),
+		}),
+		[fragmentEntryLinksRef, sourceItem]
+	);
+
 	const {canDrag, dispatch, layoutDataRef, state} = useContext(
 		DragAndDropContext
 	);
@@ -181,7 +196,7 @@ export function useDragItem(sourceItem, onDragEnd, onBegin = () => {}) {
 }
 
 export function useDragSymbol(
-	{fragmentEntryType, icon, label, type},
+	{fragmentEntryType, icon, isWidget, label, type},
 	onDragEnd
 ) {
 	const selectItem = useSelectItem();
@@ -191,11 +206,12 @@ export function useDragSymbol(
 			fragmentEntryType,
 			icon,
 			isSymbol: true,
+			isWidget,
 			itemId: label,
 			name: label,
 			type,
 		}),
-		[fragmentEntryType, icon, label, type]
+		[fragmentEntryType, icon, isWidget, label, type]
 	);
 
 	const {handlerRef, isDraggingSource, sourceRef} = useDragItem(
@@ -342,14 +358,24 @@ export function DragAndDropContextProvider({children}) {
 
 function computeDrop({dispatch, layoutDataRef, onDragEnd, state}) {
 	if (!state.droppable) {
-		let message = Liferay.Language.get('an-unexpected-error-occurred');
+		let message = '';
 
-		if (state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.collection) {
+		if (state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.dropZone) {
+			message = Liferay.Language.get(
+				'fragments-and-widgets-cannot-be-placed-inside-this-area'
+			);
+		}
+		else if (
+			state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.collection
+		) {
 			message = Liferay.Language.get(
 				'fragments-cannot-be-placed-inside-an-unmapped-collection-display-fragment'
 			);
 		}
-		else if (state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.form) {
+		else if (
+			state.dropTargetItem.type === LAYOUT_DATA_ITEM_TYPES.form &&
+			!formIsMapped(state.dropTargetItem)
+		) {
 			message = Liferay.Language.get(
 				'fragments-cannot-be-placed-inside-an-unmapped-form-container'
 			);
@@ -361,11 +387,24 @@ function computeDrop({dispatch, layoutDataRef, onDragEnd, state}) {
 				'form-components-can-only-be-placed-inside-a-mapped-form-container'
 			);
 		}
+		else if (
+			state.dropItem.isWidget &&
+			hasFormParent(state.dropItem, layoutDataRef.current)
+		) {
+			message = Liferay.Language.get(
+				'widgets-cannot-be-placed-inside-a-form-container'
+			);
+		}
+		else if (state.dropItem.parentId !== state.dropTargetItem.itemId) {
+			message = Liferay.Language.get('an-unexpected-error-occurred');
+		}
 
-		openToast({
-			message,
-			type: 'danger',
-		});
+		if (message) {
+			openToast({
+				message,
+				type: 'danger',
+			});
+		}
 
 		dispatch(initialDragDrop.state);
 
@@ -421,4 +460,16 @@ function getSiblingPosition(state, parentItem) {
 	}
 
 	return siblingPosition;
+}
+
+function isWidget(item, fragmentEntryLinks) {
+	const {fragmentEntryLinkId} = item.config;
+
+	if (!fragmentEntryLinkId) {
+		return false;
+	}
+
+	const fragmentEntryLink = fragmentEntryLinks[fragmentEntryLinkId];
+
+	return Boolean(fragmentEntryLink.portletId);
 }

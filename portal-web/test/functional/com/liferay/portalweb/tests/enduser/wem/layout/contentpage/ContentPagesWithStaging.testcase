@@ -31,6 +31,8 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			JSONUser.tearDownNonAdminUsers();
+
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 		}
 	}
@@ -221,6 +223,8 @@ definition {
 				locator1 = "PagesFinder#PAGE_ELLIPSIS_ICON");
 
 			MenuItem.viewNotVisible(menuItem = "Preview Draft");
+
+			JSONRole.deleteRole(roleTitle = "Roles Siterole Name");
 		}
 	}
 
@@ -1214,7 +1218,7 @@ definition {
 		}
 
 		task ("Edit the image via the image editor on Page Content panel") {
-			Navigator.gotoNavTab(navTab = "Page Content");
+			PageEditor.gotoTab(tabName = "Page Content");
 
 			PageEditor.gotoEllipsisMenuItemInPageContentPanel(
 				itemName = "analytics-cloud-hero-image.png",
@@ -1226,7 +1230,7 @@ definition {
 		}
 
 		task ("Take down the new naturalWidth and naturalHeight of image") {
-			Navigator.gotoNavTab(navTab = "Page Elements");
+			PageEditor.gotoTab(tabName = "Browser");
 
 			WaitForElementPresent(
 				key_resolutionLabel = "Width",
@@ -1353,7 +1357,7 @@ definition {
 		}
 
 		task ("Edit the image via the image editor on Page Content panel") {
-			Navigator.gotoNavTab(navTab = "Page Content");
+			PageEditor.gotoTab(tabName = "Page Content");
 
 			PageEditor.gotoEllipsisMenuItemInPageContentPanel(
 				itemName = "analytics-cloud-hero-image.png",
@@ -1365,7 +1369,7 @@ definition {
 		}
 
 		task ("View the version of mapped image") {
-			Navigator.gotoNavTab(navTab = "Page Elements");
+			PageEditor.gotoTab(tabName = "Browser");
 
 			WaitForElementPresent(
 				key_resolutionLabel = "Width",
@@ -1654,14 +1658,10 @@ definition {
 		task ("Open the preview modal and View the new experience selected in experience selector") {
 			ContentPages.gotoPageEditor();
 
-			PageEditor.openPreviewMode();
-
-			ContentPages.viewCurrentExperience(experienceName = "New Experience");
+			PageEditor.previewInANewTab();
 		}
 
 		task ("View the Heading and Button fragments are shown in preview modal") {
-			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
-
 			ContentPages.viewFragmentText(
 				fragmentName = "button",
 				id = "link",
@@ -1674,7 +1674,7 @@ definition {
 		}
 
 		task ("Back to view page mode and view the new experience still selected in experience selector") {
-			IFrame.closeFrame();
+			Close.closeWindow();
 
 			PageEditor.clickBack();
 
@@ -1685,60 +1685,64 @@ definition {
 	@description = "This is a test for LPS-141773. Able to land in the experience selected at preview draft page in page editor."
 	@priority = "4"
 	test ViewExperienceSelectedInPreviewDraftPage {
-		task ("Add a content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name (Staging)",
-				layoutName = "Test Page Name",
-				site = "false",
-				type = "content");
+		task ("Given a page creator has a draft content page with new experience on staging site") {
+			task ("Add a content page") {
+				JSONLayout.addPublicLayout(
+					groupName = "Test Site Name (Staging)",
+					layoutName = "Test Page Name",
+					site = "false",
+					type = "content");
+			}
+
+			task ("Add a Button fragment to page") {
+				ContentPagesNavigator.openEditContentPage(
+					pageName = "Test Page Name",
+					siteName = "Test Site Name Staging");
+
+				PageEditor.addFragment(
+					collectionName = "Basic Components",
+					fragmentName = "Button");
+			}
+
+			task ("Add a new experience") {
+				PageEditor.addExperience(
+					experienceName = "New Experience",
+					segmentName = "Anyone");
+			}
+
+			task ("Add a Heading fragment below the Button then publish") {
+				PageEditor.addFragment(
+					collectionName = "Basic Components",
+					fragmentName = "Heading",
+					targetFragmentName = "Button");
+
+				PageEditor.publish();
+			}
+
+			task ("Edit the inline text of Button in Default experience") {
+				ContentPagesNavigator.openViewContentPage(
+					pageName = "Test Page Name",
+					siteName = "Test Site Name Staging");
+
+				ContentPages.gotoPageEditor();
+
+				PageEditor.editFragmentText(
+					fragmentName = "Button",
+					id = "link",
+					text = "Edited Text");
+			}
+
+			task ("Edit the inline text of Heading in new experience") {
+				PageEditor.changeExperience(newExperience = "New Experience");
+
+				PageEditor.editFragmentText(
+					fragmentName = "Heading",
+					id = "element-text",
+					text = "Edited Heading Example");
+			}
 		}
 
-		task ("Add a Button fragment to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Button");
-		}
-
-		task ("Add a new experience") {
-			PageEditor.addExperience(
-				experienceName = "New Experience",
-				segmentName = "Anyone");
-		}
-
-		task ("Add a Heading fragment below the Button then publish") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading",
-				targetFragmentName = "Button");
-
-			PageEditor.publish();
-		}
-
-		task ("Edit the inline text of Button in Default experience") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name Staging");
-
-			PageEditor.editFragmentText(
-				fragmentName = "Button",
-				id = "link",
-				text = "Edited Text");
-		}
-
-		task ("Edit the inline text of Heading in new experience") {
-			PageEditor.changeExperience(newExperience = "New Experience");
-
-			PageEditor.editFragmentText(
-				fragmentName = "Heading",
-				id = "element-text",
-				text = "Edited Heading Example");
-		}
-
-		task ("Navigate to preview draft page via Page Tree") {
+		task ("When the page creator navigates to the preview draft page via Page Tree") {
 			PagesFinder.goToPagesFinder();
 
 			PagesFinder.gotoPageEllipsisItem(
@@ -1746,7 +1750,7 @@ definition {
 				pageName = "Test Page Name");
 		}
 
-		task ("Change to new experience and view the new experience shown in experience selector") {
+		task ("Then the page creator can change new experience and view the new experience shown in experience selector") {
 			SelectWindow.selectPopUp(locator1 = "null");
 
 			ContentPages.changeExperience(experienceName = "New Experience");
@@ -1754,20 +1758,37 @@ definition {
 			ContentPages.viewCurrentExperience(experienceName = "New Experience");
 		}
 
-		task ("Open the preview modal and View the new experience selected in experience selector") {
+		task ("When the page creator previews the draft in a new tab") {
 			ContentPages.gotoPageEditor();
 
-			PageEditor.openPreviewMode();
-
-			ContentPages.viewCurrentExperience(experienceName = "New Experience");
+			PageEditor.previewInANewTab();
 		}
 
-		task ("Back to view page mode and view the new experience still selected in experience selector") {
-			Click.mouseDownMouseUp(locator1 = "Modal#CLOSE_BUTTON");
+		task ("Then the page creator should preview the content from new experience") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Edited Heading Example");
+		}
+
+		task ("When the page creator is back to view mode") {
+			Close.closeWindow();
 
 			PageEditor.clickBack();
+		}
 
+		task ("Then the page creator should see the New Experience still selected in experience selector") {
 			ContentPages.viewCurrentExperience(experienceName = "New Experience");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "button",
+				id = "link",
+				text = "Go Somewhere");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Heading Example");
 		}
 	}
 

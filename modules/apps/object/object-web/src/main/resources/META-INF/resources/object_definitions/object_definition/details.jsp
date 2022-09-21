@@ -102,9 +102,12 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 
 							<%
 							for (ObjectField objectField : nonrelationshipObjectFields) {
+								if (Objects.equals(objectField.getName(), "id")) {
+									continue;
+								}
 							%>
 
-								<aui:option label="<%= HtmlUtil.escape(objectField.getLabel(locale)) %>" selected="<%= Objects.equals(objectField.getObjectFieldId(), objectDefinition.getTitleObjectFieldId()) %>" value="<%= objectField.getObjectFieldId() %>" />
+								<aui:option label="<%= HtmlUtil.escape(objectField.getLabel(locale)) %>" localizeLabel="<%= false %>" selected="<%= Objects.equals(objectField.getObjectFieldId(), objectDefinition.getTitleObjectFieldId()) %>" value="<%= objectField.getObjectFieldId() %>" />
 
 							<%
 							}
@@ -192,14 +195,14 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 				</h3>
 
 				<aui:field-wrapper cssClass="form-group lfr-input-text-container">
-					<aui:input disabled="<%= ListUtil.isEmpty(accountEntryRelationshipObjectFields) || objectDefinition.isApproved() %>" label="" labelOff='<%= LanguageUtil.get(request, "inactive") %>' labelOn='<%= LanguageUtil.get(request, "active") %>' name="accountEntryRestricted" onChange='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "handleAccountEntryRestrictionToggleChange();" %>' type="toggle-switch" value="<%= objectDefinition.isAccountEntryRestricted() %>" />
+					<aui:input disabled="<%= ListUtil.isEmpty(accountEntryRelationshipObjectFields) || (objectDefinition.isAccountEntryRestricted() && objectDefinition.isApproved()) %>" label="" labelOff='<%= LanguageUtil.get(request, "inactive") %>' labelOn='<%= LanguageUtil.get(request, "active") %>' name="accountEntryRestricted" onChange='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "handleAccountEntryRestrictionToggleChange();" %>' type="toggle-switch" value="<%= objectDefinition.isAccountEntryRestricted() %>" />
 				</aui:field-wrapper>
 
 				<clay:row>
 					<clay:col
 						md="11"
 					>
-						<aui:select disabled="<%= ListUtil.isEmpty(accountEntryRelationshipObjectFields) || !objectDefinition.isAccountEntryRestricted() || objectDefinition.isApproved() %>" name="accountEntryRestrictedObjectFieldId" showEmptyOption="<%= false %>">
+						<aui:select disabled="<%= ListUtil.isEmpty(accountEntryRelationshipObjectFields) || !objectDefinition.isAccountEntryRestricted() || (objectDefinition.isAccountEntryRestricted() && objectDefinition.isApproved()) %>" name="accountEntryRestrictedObjectFieldId" showEmptyOption="<%= false %>">
 							<aui:option label='<%= LanguageUtil.get(request, "choose-an-option") %>' selected="<%= true %>" value="0" />
 
 							<%
@@ -219,12 +222,29 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 
 			<clay:sheet-section>
 				<h3 class="sheet-subtitle">
-					<%= LanguageUtil.get(request, "display") %>
+					<c:choose>
+						<c:when test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158672")) %>'>
+							<%= LanguageUtil.get(request, "configuration") %>
+						</c:when>
+						<c:otherwise>
+							<%= LanguageUtil.get(request, "display") %>
+						</c:otherwise>
+					</c:choose>
 				</h3>
 
 				<aui:field-wrapper cssClass="form-group lfr-input-text-container">
-					<aui:input disabled="<%= objectDefinition.isSystem() || !objectDefinitionsDetailsDisplayContext.hasUpdateObjectDefinitionPermission() %>" label="" labelOff='<%= LanguageUtil.get(request, "hide-widget") %>' labelOn='<%= LanguageUtil.get(request, "show-widget") %>' name="portlet" type="toggle-switch" value="<%= objectDefinition.isPortlet() %>" />
+					<aui:input disabled="<%= objectDefinition.isSystem() || !objectDefinitionsDetailsDisplayContext.hasUpdateObjectDefinitionPermission() %>" label="" labelOff='<%= LanguageUtil.get(request, "show-widget") %>' labelOn='<%= LanguageUtil.get(request, "show-widget") %>' name="portlet" type="toggle-switch" value="<%= objectDefinition.isPortlet() %>" />
 				</aui:field-wrapper>
+
+				<c:if test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-158672")) && objectDefinition.isDefaultStorageType() %>'>
+					<aui:field-wrapper cssClass="form-group lfr-input-text-container">
+						<aui:input disabled="<%= objectDefinition.isSystem() || !objectDefinitionsDetailsDisplayContext.hasUpdateObjectDefinitionPermission() %>" label="" labelOff='<%= LanguageUtil.get(request, "enable-categorization") %>' labelOn='<%= LanguageUtil.get(request, "enable-categorization") %>' name="enableCategorization" type="toggle-switch" value="<%= objectDefinition.isEnableCategorization() %>" />
+					</aui:field-wrapper>
+
+					<aui:field-wrapper cssClass="form-group lfr-input-text-container">
+						<aui:input disabled="<%= objectDefinition.isSystem() || !objectDefinitionsDetailsDisplayContext.hasUpdateObjectDefinitionPermission() %>" label="" labelOff='<%= LanguageUtil.get(request, "enable-comments") %>' labelOn='<%= LanguageUtil.get(request, "enable-comments") %>' name="enableComments" type="toggle-switch" value="<%= objectDefinition.isEnableComments() %>" />
+					</aui:field-wrapper>
+				</c:if>
 			</clay:sheet-section>
 
 			<c:if test="<%= !objectDefinition.isDefaultStorageType() %>">
@@ -237,6 +257,8 @@ renderResponse.setTitle(LanguageUtil.format(request, "edit-x", objectDefinition.
 						<clay:col
 							md="11"
 						>
+							<aui:input name="externalReferenceCode" type="text" value="<%= objectDefinition.getExternalReferenceCode() %>" />
+
 							<aui:select disabled="<%= true %>" name="storageType" showEmptyOption="<%= false %>">
 								<aui:option label="<%= LanguageUtil.get(request, objectDefinition.getStorageType()) %>" selected="<%= true %>" value="" />
 							</aui:select>

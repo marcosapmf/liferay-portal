@@ -20,13 +20,13 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.ClassType;
 import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.document.library.constants.DLPortletKeys;
-import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.util.DLURLHelperUtil;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.info.display.url.provider.InfoEditURLProviderUtil;
+import com.liferay.layout.content.page.editor.web.internal.info.search.InfoSearchClassMapperTrackerUtil;
 import com.liferay.layout.content.page.editor.web.internal.layout.display.page.LayoutDisplayPageProviderTrackerUtil;
 import com.liferay.layout.content.page.editor.web.internal.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
@@ -37,7 +37,6 @@ import com.liferay.layout.service.LayoutClassedModelUsageLocalServiceUtil;
 import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -54,6 +53,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
@@ -253,14 +253,9 @@ public class ContentUtil {
 	private static AssetRendererFactory<?> _getAssetRendererFactory(
 		String className) {
 
-		// LPS-111037
-
-		if (Objects.equals(className, FileEntry.class.getName())) {
-			className = DLFileEntry.class.getName();
-		}
-
 		return AssetRendererFactoryRegistryUtil.
-			getAssetRendererFactoryByClassName(className);
+			getAssetRendererFactoryByClassName(
+				InfoSearchClassMapperTrackerUtil.getSearchClassName(className));
 	}
 
 	private static Set<LayoutDisplayPageObjectProvider<?>>
@@ -804,6 +799,10 @@ public class ContentUtil {
 			return classType.getName();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 	}

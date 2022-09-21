@@ -23,7 +23,7 @@ boolean hasUpdateLayoutPermission = GetterUtil.getBoolean(request.getAttribute(C
 %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/customization_settings.css") %>" rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/customization_settings.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <div id="<%= portletNamespace %>customizationBar">
@@ -106,7 +106,7 @@ boolean hasUpdateLayoutPermission = GetterUtil.getBoolean(request.getAttribute(C
 					"/layout_admin/reset_customization_view"
 				).buildString();
 
-				String resetCustomizationsViewURLString = "javascript:if (confirm('" + UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-reset-your-customizations-to-default") + "')){submitForm(document.hrefFm, '" + HtmlUtil.escapeJS(resetCustomizationViewURL) + "');}";
+				String resetCustomizationsViewURLString = "javascript:Liferay.Util.openConfirmModal({message: \'" + UnicodeLanguageUtil.get(resourceBundle, "are-you-sure-you-want-to-reset-your-customizations-to-default") + "\', onConfirm: function (isConfirmed) {if (isConfirmed) {submitForm(document.hrefFm, \'" + HtmlUtil.escapeJS(resetCustomizationViewURL) + "\');}}})";
 
 				String toggleCustomizationViewURL = HttpComponentsUtil.addParameter(
 					PortletURLBuilder.create(

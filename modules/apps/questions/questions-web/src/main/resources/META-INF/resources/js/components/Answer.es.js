@@ -17,17 +17,18 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import classnames from 'classnames';
 import {useMutation} from 'graphql-hooks';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
+import {AppContext} from '../AppContext.es';
+import FlagsContainer from '../pages/questions/components/FlagsContainer';
 import {
 	deleteMessageQuery,
 	markAsAnswerMessageBoardMessageQuery,
 } from '../utils/client.es';
-import lang from '../utils/lang.es';
-import {dateToInternationalHuman} from '../utils/utils.es';
 import ArticleBodyRenderer from './ArticleBodyRenderer.es';
 import Comments from './Comments.es';
+import EditedTimestamp from './EditedTimestamp.es';
 import Link from './Link.es';
 import Modal from './Modal.es';
 import Rating from './Rating.es';
@@ -44,6 +45,7 @@ export default withRouter(
 		onSubscription,
 		question,
 	}) => {
+		const context = useContext(AppContext);
 		const [comments, setComments] = useState(
 			answer.messageBoardMessages.items
 		);
@@ -104,12 +106,13 @@ export default withRouter(
 							)}
 
 							<span className="text-secondary">
-								{lang.sub(Liferay.Language.get('answered-x'), [
-									`- ${dateToInternationalHuman(
-										answer.dateCreated,
-										Liferay.ThemeDisplay.getBCP47LanguageId()
-									)}`,
-								])}
+								<EditedTimestamp
+									dateCreated={answer.dateCreated}
+									dateModified={answer.dateModified}
+									operationText={Liferay.Language.get(
+										'answered'
+									)}
+								/>
 							</span>
 
 							{answer.status && answer.status !== 'approved' && (
@@ -173,9 +176,35 @@ export default withRouter(
 																		answer.id,
 																},
 															}).then(() => {
-																deleteAnswer(
-																	answer
-																);
+																if (
+																	comments.length
+																) {
+																	Promise.all(
+																		comments.map(
+																			({
+																				id,
+																			}) =>
+																				deleteMessage(
+																					{
+																						variables: {
+																							messageBoardMessageId: id,
+																						},
+																					}
+																				)
+																		)
+																	).then(
+																		() => {
+																			deleteAnswer(
+																				answer
+																			);
+																		}
+																	);
+																}
+																else {
+																	deleteAnswer(
+																		answer
+																	);
+																}
 															});
 														}}
 														onClose={() => {
@@ -232,6 +261,18 @@ export default withRouter(
 														  )}
 												</ClayButton>
 											)}
+
+											<FlagsContainer
+												btnProps={{
+													className:
+														'c-mr-2 c-px-2 c-py-1 btn btn-secondary',
+													small: true,
+												}}
+												content={answer}
+												context={context}
+												onlyIcon={false}
+												showIcon={false}
+											/>
 
 											{/* this is an extra double check, remove it without creating 2 clay-group-item */}
 

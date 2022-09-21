@@ -14,6 +14,7 @@
 
 import '@testing-library/jest-dom/extend-expect';
 import {act, fireEvent, render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React, {useEffect} from 'react';
 
 import {COLLECTION_FILTER_FRAGMENT_ENTRY_KEY} from '../../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/collectionFilterFragmentEntryKey';
@@ -28,6 +29,15 @@ jest.mock(
 	'../../../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
 	() => ({
 		config: {
+			availableLanguages: {
+				en_US: {
+					default: false,
+					displayName: 'English (United States)',
+					languageIcon: 'en-us',
+					languageId: 'en_US',
+					w3cLanguageId: 'en-US',
+				},
+			},
 			commonStyles: [],
 			searchContainerPageMaxDelta: '50',
 		},
@@ -80,15 +90,12 @@ const renderComponent = ({
 	layoutData = {},
 	selectedViewportSize = 'desktop',
 } = {}) => {
-	Liferay.Util.sub.mockImplementation((langKey, args) =>
-		[langKey, args].join('-')
-	);
-
 	return render(
 		<StoreAPIContextProvider
 			dispatch={() => {}}
 			getState={() => ({
 				fragmentEntryLinks,
+				languageId: 'en_US',
 				layoutData,
 				permissions: {UPDATE: true},
 				segmentsExperienceId: '0',
@@ -109,14 +116,7 @@ const renderComponent = ({
 };
 
 describe('CollectionGeneralPanel', () => {
-	beforeAll(() => {
-		window.Liferay = {
-			...Liferay,
-			FeatureFlags: {},
-		};
-	});
-
-	it('allows changing the Gutter select', async () => {
+	it('allows changing the Gutter select', () => {
 		renderComponent({
 			itemConfig: {
 				numberOfColumns: 2,
@@ -125,7 +125,7 @@ describe('CollectionGeneralPanel', () => {
 
 		const input = screen.getByLabelText('show-gutter');
 
-		fireEvent.click(input);
+		userEvent.click(input);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {gutters: true},
@@ -134,14 +134,13 @@ describe('CollectionGeneralPanel', () => {
 		});
 	});
 
-	it('allows changing the Vertical Alignment select', async () => {
+	it('allows changing the Vertical Alignment select', () => {
 		renderComponent();
 
 		const input = screen.getByLabelText('vertical-alignment');
 
-		fireEvent.change(input, {
-			target: {value: 'center'},
-		});
+		userEvent.selectOptions(input, 'center');
+		fireEvent.change(input);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {
@@ -152,16 +151,55 @@ describe('CollectionGeneralPanel', () => {
 		});
 	});
 
-	it('allows changing the Pagination select', async () => {
+	it('allows changing the Show Empty Collection Alert checkbox', () => {
+		renderComponent();
+
+		const input = screen.getByLabelText('show-empty-collection-alert');
+
+		userEvent.click(input);
+
+		expect(updateItemConfig).toHaveBeenCalledWith({
+			itemConfig: expect.objectContaining({
+				emptyCollectionOptions: {
+					displayMessage: false,
+				},
+			}),
+			itemId: '0',
+			segmentsExperienceId: '0',
+		});
+	});
+
+	it('allows changing the Empty Collection Alert input', () => {
+		renderComponent();
+
+		const input = screen.getByLabelText('empty-collection-alert');
+
+		userEvent.type(input, 'Hello world!');
+
+		act(() => {
+			fireEvent.blur(input);
+		});
+
+		expect(updateItemConfig).toHaveBeenCalledWith({
+			itemConfig: expect.objectContaining({
+				emptyCollectionOptions: {
+					message: {
+						['en_US']: 'Hello world!',
+					},
+				},
+			}),
+			itemId: '0',
+			segmentsExperienceId: '0',
+		});
+	});
+
+	it('allows changing the Pagination select', () => {
 		renderComponent();
 
 		const input = screen.getByLabelText('pagination');
 
-		await act(async () => {
-			fireEvent.change(input, {
-				target: {value: 'none'},
-			});
-		});
+		userEvent.selectOptions(input, 'none');
+		fireEvent.change(input);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {
@@ -178,7 +216,7 @@ describe('CollectionGeneralPanel', () => {
 		const input = screen.getByLabelText('display-all-collection-items');
 
 		await act(async () => {
-			fireEvent.click(input);
+			userEvent.click(input);
 		});
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
@@ -200,19 +238,17 @@ describe('CollectionGeneralPanel', () => {
 
 		expect(
 			await screen.findByText(
-				'this-setting-can-affect-page-performance-severely-if-the-number-of-collection-items-is-above-x.-we-strongly-recommend-using-pagination-instead-50'
+				'this-setting-can-affect-page-performance-severely-if-the-number-of-collection-items-is-above-50.-we-strongly-recommend-using-pagination-instead'
 			)
 		).toBeInTheDocument();
 	});
 
-	it('allows changing the Display All Pages checkbox', async () => {
+	it('allows changing the Display All Pages checkbox', () => {
 		renderComponent();
 
 		const input = screen.getByLabelText('display-all-pages');
 
-		await act(async () => {
-			fireEvent.click(input);
-		});
+		userEvent.click(input);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: expect.objectContaining({
@@ -231,11 +267,7 @@ describe('CollectionGeneralPanel', () => {
 				'maximum-number-of-items-to-display'
 			);
 
-			await act(async () => {
-				fireEvent.change(input, {
-					target: {value: '3'},
-				});
-			});
+			userEvent.type(input, '3');
 
 			await act(async () => {
 				fireEvent.blur(input);
@@ -260,7 +292,7 @@ describe('CollectionGeneralPanel', () => {
 
 			expect(
 				await screen.findByText(
-					'the-current-number-of-items-in-this-collection-is-x-32'
+					'the-current-number-of-items-in-this-collection-is-32'
 				)
 			).toBeInTheDocument();
 		});
@@ -270,27 +302,23 @@ describe('CollectionGeneralPanel', () => {
 
 			expect(
 				await screen.findByText(
-					'setting-a-value-above-x-can-affect-page-performance-severely-50'
+					'setting-a-value-above-50-can-affect-page-performance-severely'
 				)
 			).toBeInTheDocument();
 		});
 	});
 
 	describe('Number of Pages Input', () => {
-		it('allows changing input value', async () => {
+		it('allows changing input value', () => {
 			renderComponent();
 
 			const input = screen.getByLabelText(
 				'maximum-number-of-pages-to-display'
 			);
 
-			await act(async () => {
-				fireEvent.change(input, {
-					target: {value: '3'},
-				});
-			});
+			userEvent.type(input, '3');
 
-			await act(async () => {
+			act(() => {
 				fireEvent.blur(input);
 			});
 
@@ -305,20 +333,16 @@ describe('CollectionGeneralPanel', () => {
 	});
 
 	describe('Number of Items per Page Input', () => {
-		it('allows changing the input value', async () => {
+		it('allows changing the input value', () => {
 			renderComponent();
 
 			const input = screen.getByLabelText(
 				'maximum-number-of-items-per-page'
 			);
 
-			await act(async () => {
-				fireEvent.change(input, {
-					target: {value: '2'},
-				});
-			});
+			userEvent.type(input, '2');
 
-			await act(async () => {
+			act(() => {
 				fireEvent.blur(input);
 			});
 
@@ -340,7 +364,7 @@ describe('CollectionGeneralPanel', () => {
 
 			expect(
 				await screen.findByText(
-					'you-can-only-display-a-maximum-of-x-items-per-page-50'
+					'you-can-only-display-a-maximum-of-50-items-per-page'
 				)
 			).toBeInTheDocument();
 		});
@@ -412,15 +436,14 @@ describe('CollectionGeneralPanel', () => {
 		});
 	});
 
-	it('allows changing Layout for a given viewport', async () => {
+	it('allows changing Layout for a given viewport', () => {
 		renderComponent({
 			selectedViewportSize: 'tablet',
 		});
 		const input = screen.getByLabelText('layout');
 
-		fireEvent.change(input, {
-			target: {value: '1'},
-		});
+		userEvent.type(input, '1');
+		fireEvent.change(input);
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {

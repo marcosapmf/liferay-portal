@@ -15,9 +15,9 @@ interface MetaState {
 }
 
 interface FieldState<T> {
-	onBlur(event: React.FocusEvent): void;
-	onChange(event: React.ChangeEvent): void;
 	name: string;
+	onBlur: (event: React.FocusEvent) => void;
+	onChange: (event: React.ChangeEvent) => void;
 	value: T;
 }
 

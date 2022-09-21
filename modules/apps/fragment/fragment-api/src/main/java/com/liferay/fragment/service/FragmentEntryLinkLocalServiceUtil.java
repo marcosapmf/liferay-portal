@@ -567,6 +567,13 @@ public class FragmentEntryLinkLocalServiceUtil {
 		getService().updateClassedModel(plid);
 	}
 
+	public static FragmentEntryLink updateDeleted(
+			long fragmentEntryLinkId, boolean deleted)
+		throws PortalException {
+
+		return getService().updateDeleted(fragmentEntryLinkId, deleted);
+	}
+
 	/**
 	 * Updates the fragment entry link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *

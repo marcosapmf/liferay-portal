@@ -58,6 +58,7 @@ JSONStylingCheck | .ipynb, .json or .npmbridgerc | Applies rules to enforce cons
 JSPCoreTaglibCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases where a `c:choose` or `c:if` tag can be used instead of an if-statement. |
 JSPEmptyLinesCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds missing and unnecessary empty lines. |
 JSPExceptionOrderCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Checks the order of exceptions in `.jsp` files. |
+JSPExpressionTagCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Applies rules to enforce consistency in code style. |
 [JSPImportsCheck](check/jsp_imports_check.markdown#jspimportscheck) | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Sorts and groups imports in `.jsp` files. |
 JSPIndentationCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds incorrect indentation in `.jsp` files. |
 JSPInlineVariableCheck | .jsp, .jspf, .jspx, .tag, .tpl or .vm | Finds cases where variables can be inlined. |
@@ -122,6 +123,7 @@ OperatorOrderCheck | .java | Verifies that when an operator has a literal string
 PlusStatementCheck | .java, .jsp, .jspf, .jspx, .tag, .tpl or .vm | Performs several checks to statements where `+` is used for concatenation. |
 PoshiStylingCheck | .function, .jar, .lar, .macro, .path, .testcase, .war or .zip | Applies rules to enforce consistency in code style. |
 PoshiVariableNameCheck | .function, .jar, .lar, .macro, .path, .testcase, .war or .zip | Checks variable names for correct use of `camelCase`. |
+PoshiWhitespaceCheck | .function, .jar, .lar, .macro, .path, .testcase, .war or .zip | Finds missing and unnecessary whitespace. |
 PropertiesCommentsCheck | .eslintignore, .prettierignore or .properties | Validates comments in `.properties` files. |
 PropertiesDefinitionKeysCheck | .eslintignore, .prettierignore or .properties | Sorts definition keys in `liferay-plugin-package.properties` file. |
 PropertiesDependenciesFileCheck | .eslintignore, .prettierignore or .properties | Sorts the properties in `dependencies.properties` file. |

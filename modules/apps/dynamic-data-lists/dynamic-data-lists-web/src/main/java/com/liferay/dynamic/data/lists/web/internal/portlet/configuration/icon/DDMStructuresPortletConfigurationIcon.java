@@ -18,7 +18,6 @@ import com.liferay.dynamic.data.lists.constants.DDLActionKeys;
 import com.liferay.dynamic.data.lists.constants.DDLPortletKeys;
 import com.liferay.dynamic.data.lists.web.internal.security.permission.resource.DDLPermission;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -64,11 +64,6 @@ public class DDMStructuresPortletConfigurationIcon
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
-
-		Portlet portlet = _portletLocalService.getPortletById(
-			portletDisplay.getId());
-
 		return PortletURLBuilder.create(
 			PortletURLFactoryUtil.create(
 				portletRequest,
@@ -84,7 +79,16 @@ public class DDMStructuresPortletConfigurationIcon
 		).setParameter(
 			"refererPortletName", DDLPortletKeys.DYNAMIC_DATA_LISTS
 		).setParameter(
-			"refererWebDAVToken", WebDAVUtil.getStorageToken(portlet)
+			"refererWebDAVToken",
+			() -> {
+				PortletDisplay portletDisplay =
+					themeDisplay.getPortletDisplay();
+
+				Portlet portlet = _portletLocalService.getPortletById(
+					portletDisplay.getId());
+
+				return WebDAVUtil.getStorageToken(portlet);
+			}
 		).setParameter(
 			"showAncestorScopes", true
 		).buildString();
@@ -116,16 +120,10 @@ public class DDMStructuresPortletConfigurationIcon
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setPortletLocalService(
-		PortletLocalService portletLocalService) {
-
-		_portletLocalService = portletLocalService;
-	}
-
 	@Reference
 	private Language _language;
 
+	@Reference
 	private PortletLocalService _portletLocalService;
 
 }

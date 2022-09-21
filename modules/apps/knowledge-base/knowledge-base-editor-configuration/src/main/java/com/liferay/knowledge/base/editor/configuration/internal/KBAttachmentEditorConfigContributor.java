@@ -17,6 +17,7 @@ package com.liferay.knowledge.base.editor.configuration.internal;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.ItemSelectorReturnType;
+import com.liferay.item.selector.constants.ItemSelectorCriterionConstants;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
@@ -24,11 +25,11 @@ import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCri
 import com.liferay.item.selector.criteria.url.criterion.URLItemSelectorCriterion;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.item.selector.criterion.KBAttachmentItemSelectorCriterion;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.editor.configuration.EditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.language.LanguageResources;
@@ -117,11 +118,6 @@ public class KBAttachmentEditorConfigContributor
 		);
 	}
 
-	@Reference(unbind = "-")
-	public void setItemSelector(ItemSelector itemSelector) {
-		_itemSelector = itemSelector;
-	}
-
 	private ItemSelectorCriterion _getImageItemSelectorCriterion(
 		List<ItemSelectorReturnType> desiredItemSelectorReturnTypes) {
 
@@ -151,24 +147,24 @@ public class KBAttachmentEditorConfigContributor
 		long resourcePrimKey, ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
-		ItemSelectorCriterion itemSelectorCriterion =
-			new UploadItemSelectorCriterion(
-				null,
-				PortletURLBuilder.create(
-					requestBackedPortletURLFactory.createActionURL(
-						KBPortletKeys.KNOWLEDGE_BASE_ADMIN)
-				).setActionName(
-					"uploadKBArticleAttachments"
-				).setParameter(
-					"resourcePrimKey", resourcePrimKey
-				).buildString(),
-				LanguageResources.getMessage(
-					themeDisplay.getLocale(), "article-attachments"));
-
-		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
-			new FileEntryItemSelectorReturnType());
-
-		return itemSelectorCriterion;
+		return UploadItemSelectorCriterion.builder(
+		).desiredItemSelectorReturnTypes(
+			new FileEntryItemSelectorReturnType()
+		).mimeTypeRestriction(
+			ItemSelectorCriterionConstants.MIME_TYPE_RESTRICTION_IMAGE
+		).repositoryName(
+			LanguageResources.getMessage(
+				themeDisplay.getLocale(), "article-attachments")
+		).url(
+			PortletURLBuilder.create(
+				requestBackedPortletURLFactory.createActionURL(
+					KBPortletKeys.KNOWLEDGE_BASE_ADMIN)
+			).setActionName(
+				"/knowledge_base/upload_kb_article_attachments"
+			).setParameter(
+				"resourcePrimKey", resourcePrimKey
+			).buildString()
+		).build();
 	}
 
 	private ItemSelectorCriterion _getURLItemSelectorCriterion() {
@@ -181,6 +177,7 @@ public class KBAttachmentEditorConfigContributor
 		return itemSelectorCriterion;
 	}
 
+	@Reference
 	private ItemSelector _itemSelector;
 
 }

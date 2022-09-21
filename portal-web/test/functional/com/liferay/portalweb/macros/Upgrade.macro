@@ -3176,10 +3176,17 @@ definition {
 	macro viewAndAddKBArticle {
 		Navigator.gotoPage(pageName = "Knowledge Base");
 
-		KBArticle.viewPG(
-			embedVideo = "true",
-			kbArticleContent = "Knowledge Base Video Content",
-			kbArticleTitle = "Knowledge Base Article Title");
+		if ("${portalVersion}" == "7.1.10.5") {
+			KBArticle.viewPG(
+				kbArticleContent = "Knowledge Base Video Content",
+				kbArticleTitle = "Knowledge Base Article Title");
+		}
+		else {
+			KBArticle.viewPG(
+				embedVideo = "true",
+				kbArticleContent = "Knowledge Base Video Content",
+				kbArticleTitle = "Knowledge Base Article Title");
+		}
 
 		Navigator.gotoPage(pageName = "Knowledge Base");
 
@@ -4695,9 +4702,7 @@ definition {
 		}
 
 		task ("Edit the inline text of the Card fragment") {
-			PageEditor.gotoTab(tabName = "Browser");
-
-			Navigator.gotoNavTab(navTab = "Page Content");
+			PageEditor.gotoTab(tabName = "Page Content");
 
 			PageEditor.editFragmentTextViaPageContentPanel(
 				itemName = "Test Title",
@@ -5893,10 +5898,6 @@ definition {
 	}
 
 	macro viewSXPBlueprintAndElements {
-		SearchAdministration.executeReindex(action = "Reindex com.liferay.search.experiences.model.SXPBlueprint.");
-
-		SearchAdministration.executeReindex(action = "Reindex com.liferay.search.experiences.model.SXPElement.");
-
 		Blueprints.openBlueprintsAdmin();
 
 		Navigator.gotoNavItem(navItem = "Elements");
@@ -5932,9 +5933,19 @@ definition {
 			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_DESCRIPTION",
 			value1 = "Boost contents in a category for users belonging to the given user segments.");
 
+		Search.searchCP(searchTerm = "Search with Query String Syntax");
+
+		AssertElementPresent(
+			entryTitle = "Search with Query String Syntax",
+			locator1 = "Blueprints#BLUEPRINTS_ADMIN_ENTRY_TITLE");
+
 		Navigator.gotoNavItem(navItem = "Blueprints");
 
 		Blueprints.gotoBlueprint(title = "Test Blueprint");
+
+		AssertElementPresent(
+			index = "40",
+			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_NTH_ELEMENT");
 
 		AssertElementPresent(
 			element = "Test Element",
@@ -5967,12 +5978,6 @@ definition {
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_GENERIC_DROPDOWN_OPTION",
 			option = "Morning (4am - 12pm)");
 
-		AssertElementPresent(
-			elementName = "Boost Contents in a Category for the Time of Day",
-			fieldLabel = "Boost",
-			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_INPUT_FIELD",
-			value1 = "100");
-
 		AssertTextPresent(
 			element = "Boost Contents in a Category for User Segments",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT",
@@ -5997,6 +6002,10 @@ definition {
 			elementName = "Boost Contents in a Category for a Period of Time",
 			fieldName = "Create Date: To",
 			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_FIELD_LABEL");
+
+		AssertNotChecked.assertNotCheckedNotVisible(
+			elementName = "Boost Proximity",
+			locator1 = "Blueprints#BLUEPRINTS_ADDED_ELEMENT_ENABLE_DISABLE_TOGGLE");
 
 		Blueprints.searchBlueprintsPreview(searchTerm = "test");
 
@@ -6562,10 +6571,9 @@ definition {
 			category = "Content & Data",
 			portlet = "Web Content");
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent1 Title");
-
-		WebContent.viewCP(
-			webContentContent = "WC WebContent1 Content",
+		WebContent.viewWithStructureCP(
+			webContentRichText = "WC WebContent1 Content",
+			webContentRichTextFieldLabel = "content",
 			webContentTitle = "WC WebContent1 Title");
 
 		SignOut.signOut();
@@ -6618,10 +6626,9 @@ definition {
 			category = "Content & Data",
 			portlet = "Web Content");
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent2 Title");
-
-		WebContent.viewCP(
-			webContentContent = "WC WebContent2 Content",
+		WebContent.viewWithStructureCP(
+			webContentRichText = "WC WebContent2 Content",
+			webContentRichTextFieldLabel = "content",
 			webContentTitle = "WC WebContent2 Title");
 
 		Upgrade.viewMatchingCalendarIndexesInPartitionedDatabase();

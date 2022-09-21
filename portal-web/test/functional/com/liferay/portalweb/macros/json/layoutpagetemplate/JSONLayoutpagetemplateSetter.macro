@@ -49,6 +49,16 @@ definition {
 		return "${descriptionMap}";
 	}
 
+	macro setDisplayPageTemplatePlid {
+		Variables.assertDefined(parameterList = "${groupId},${displayPageTemplateEntryName}");
+
+		var displayPageTemplatePlid = JSONLayoutpagetemplateAPI._getDisplayPageTemplatePlidByName(
+			displayPageTemplateEntryName = "${displayPageTemplateEntryName}",
+			groupId = "${groupId}");
+
+		return "${displayPageTemplatePlid}";
+	}
+
 	macro setGroupId {
 		Variables.assertDefined(parameterList = "${groupKey}");
 
@@ -127,6 +137,20 @@ definition {
 		}
 
 		return "${serviceContext}";
+	}
+
+	macro setStatus {
+		Variables.assertDefined(parameterList = "${statusKey}");
+
+		if ("${statusKey}" == "APPROVED") {
+			var status = "0";
+		}
+
+		if ("${statusKey}" == "DRAFT") {
+			var status = "2";
+		}
+
+		return "${status}";
 	}
 
 }

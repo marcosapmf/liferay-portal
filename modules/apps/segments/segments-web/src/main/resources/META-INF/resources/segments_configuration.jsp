@@ -29,7 +29,7 @@ SegmentsCompanyConfigurationDisplayContext segmentsCompanyConfigurationDisplayCo
 <liferay-util:html-top
 	outputKey="configuration_css"
 >
-	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/configuration.css") %>" rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/configuration.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <clay:sheet
@@ -106,9 +106,7 @@ SegmentsCompanyConfigurationDisplayContext segmentsCompanyConfigurationDisplayCo
 					<c:when test="<%= segmentsConfigurationURL != null %>">
 						<clay:link
 							href="<%= segmentsConfigurationURL %>"
-							label='<%=
-								LanguageUtil.get(request, "to-enable,-go-to-system-settings")
-%>'
+							label='<%= LanguageUtil.get(request, "to-enable,-go-to-system-settings") %>'
 						/>
 					</c:when>
 					<c:otherwise>

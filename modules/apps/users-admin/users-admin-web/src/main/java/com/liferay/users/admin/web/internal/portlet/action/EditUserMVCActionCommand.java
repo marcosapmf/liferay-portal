@@ -35,7 +35,7 @@ import com.liferay.portal.kernel.exception.UserFieldException;
 import com.liferay.portal.kernel.exception.UserIdException;
 import com.liferay.portal.kernel.exception.UserReminderQueryException;
 import com.liferay.portal.kernel.exception.UserScreenNameException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.messaging.proxy.ProxyModeThreadLocal;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Company;
@@ -338,28 +338,6 @@ public class EditUserMVCActionCommand
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setDLAppLocalService(DLAppLocalService dlAppLocalService) {
-		_dlAppLocalService = dlAppLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setListTypeLocalService(
-		ListTypeLocalService listTypeLocalService) {
-
-		_listTypeLocalService = listTypeLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserLocalService(UserLocalService userLocalService) {
-		this.userLocalService = userLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setUserService(UserService userService) {
-		_userService = userService;
-	}
-
 	protected Object[] updateUser(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
@@ -459,7 +437,7 @@ public class EditUserMVCActionCommand
 
 			Locale locale = LocaleUtil.fromLanguageId(languageId);
 
-			LanguageUtil.updateCookie(
+			_language.updateCookie(
 				httpServletRequest, httpServletResponse, locale);
 
 			// Clear cached portlet responses
@@ -486,6 +464,7 @@ public class EditUserMVCActionCommand
 	@Reference
 	protected Portal portal;
 
+	@Reference
 	protected UserLocalService userLocalService;
 
 	private User _addUser(ActionRequest actionRequest) throws Exception {
@@ -594,7 +573,13 @@ public class EditUserMVCActionCommand
 		return dynamicActionRequest;
 	}
 
+	@Reference
 	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private Language _language;
+
+	@Reference
 	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
@@ -603,6 +588,7 @@ public class EditUserMVCActionCommand
 	@Reference
 	private UsersAdmin _usersAdmin;
 
+	@Reference
 	private UserService _userService;
 
 }

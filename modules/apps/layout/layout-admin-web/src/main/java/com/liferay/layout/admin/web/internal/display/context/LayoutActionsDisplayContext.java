@@ -21,7 +21,6 @@ import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -29,6 +28,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
@@ -36,8 +36,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -86,15 +86,9 @@ public class LayoutActionsDisplayContext {
 								LanguageUtil.get(
 									_httpServletRequest, "configure"));
 
-							if (GetterUtil.getBoolean(
-									PropsUtil.get("feature.flag.LPS-153452"))) {
-
-								dropdownItem.setTarget("_blank");
-							}
+							dropdownItem.setTarget("_blank");
 						}
 					).add(
-						() -> GetterUtil.getBoolean(
-							PropsUtil.get("feature.flag.LPS-153452")),
 						dropdownItem -> {
 							String previewLayoutURL = _getPreviewLayoutURL(
 								layout);
@@ -276,8 +270,11 @@ public class LayoutActionsDisplayContext {
 
 		// LPS-131416
 
-		long segmentsExperienceId = GetterUtil.getLong(
-			unicodeProperties.getProperty("segmentsExperienceId"), -1);
+		long segmentsExperienceId = ParamUtil.getLong(
+			PortalUtil.getOriginalServletRequest(_httpServletRequest),
+			"segmentsExperienceId",
+			GetterUtil.getLong(
+				unicodeProperties.getProperty("segmentsExperienceId"), -1));
 
 		if (segmentsExperienceId != -1) {
 			segmentsExperienceId = Optional.ofNullable(

@@ -21,8 +21,6 @@
 
 		<column name="defaultBillingAddressId" type="long" />
 		<column name="defaultCPaymentMethodKey" type="String" />
-		<column name="defaultDeliveryCTermEntryId" type="long" />
-		<column name="defaultPaymentCTermEntryId" type="long" />
 		<column name="defaultShippingAddressId" type="long" />
 		<column name="parentAccountEntryId" type="long" />
 		<column name="description" type="String" />
@@ -174,6 +172,10 @@
 		<finder name="AccountGroupId" return-type="Collection">
 			<finder-column name="accountGroupId" />
 		</finder>
+		<finder name="A_C" return-type="Collection">
+			<finder-column name="accountGroupId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="C_C" return-type="Collection">
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
@@ -221,6 +223,7 @@
 		<exception>AccountEntryName</exception>
 		<exception>AccountEntryType</exception>
 		<exception>AccountEntryUserRelEmailAddress</exception>
+		<exception>AccountGroupName</exception>
 		<exception>DefaultAccountGroup</exception>
 		<exception>DuplicateAccountEntryExternalReferenceCode</exception>
 		<exception>DuplicateAccountEntryId</exception>

@@ -21,6 +21,7 @@
 <%@ taglib uri="http://liferay.com/tld/asset" prefix="liferay-asset" %><%@
 taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
+taglib uri="http://liferay.com/tld/comment" prefix="liferay-comment" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/frontend-data-set" prefix="frontend-data-set" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
@@ -32,6 +33,7 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 <%@ page import="com.liferay.asset.kernel.model.AssetVocabularyConstants" %><%@
 page import="com.liferay.list.type.model.ListTypeDefinition" %><%@
 page import="com.liferay.list.type.model.ListTypeEntry" %><%@
+page import="com.liferay.object.constants.ObjectLayoutBoxConstants" %><%@
 page import="com.liferay.object.exception.ObjectDefinitionAccountEntryRestrictedObjectFieldIdException" %><%@
 page import="com.liferay.object.exception.ObjectDefinitionActiveException" %><%@
 page import="com.liferay.object.exception.ObjectDefinitionLabelException" %><%@
@@ -70,10 +72,10 @@ page import="com.liferay.object.web.internal.object.definitions.display.context.
 page import="com.liferay.object.web.internal.object.entries.constants.ObjectEntriesFDSNames" %><%@
 page import="com.liferay.object.web.internal.object.entries.display.context.ObjectEntryDisplayContext" %><%@
 page import="com.liferay.object.web.internal.object.entries.display.context.ViewObjectEntriesDisplayContext" %><%@
-page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.LayoutConstants" %><%@
 page import="com.liferay.portal.kernel.model.ModelHintsConstants" %><%@
+page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@

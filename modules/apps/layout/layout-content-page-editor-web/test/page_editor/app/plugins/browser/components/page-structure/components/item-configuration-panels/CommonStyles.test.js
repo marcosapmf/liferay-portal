@@ -109,16 +109,18 @@ jest.mock(
 							name: 'marginLeft',
 							responsive: true,
 							type: 'select',
-							validValues: [
-								{
-									label: '0',
-									value: '0',
-								},
-								{
-									label: '1',
-									value: '1',
-								},
-							],
+							typeOptions: {
+								validValues: [
+									{
+										label: '0',
+										value: '0',
+									},
+									{
+										label: '1',
+										value: '1',
+									},
+								],
+							},
 						},
 						{
 							dataType: 'string',
@@ -129,16 +131,18 @@ jest.mock(
 							name: 'marginRight',
 							responsive: true,
 							type: 'select',
-							validValues: [
-								{
-									label: '0',
-									value: '0',
-								},
-								{
-									label: '1',
-									value: '1',
-								},
-							],
+							typeOptions: {
+								validValues: [
+									{
+										label: '0',
+										value: '0',
+									},
+									{
+										label: '1',
+										value: '1',
+									},
+								],
+							},
 						},
 					],
 				},
@@ -166,10 +170,6 @@ describe('CommonStyles', () => {
 	});
 
 	it('allows changing common styles for a given viewport', async () => {
-		Liferay.Util.sub.mockImplementation((key, args) =>
-			args.reduce((key, arg) => key.replace('x', arg), key)
-		);
-
 		const {getByLabelText} = renderComponent({
 			state: {selectedViewportSize: 'tablet'},
 		});

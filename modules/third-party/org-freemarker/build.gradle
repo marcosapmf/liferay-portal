@@ -12,10 +12,6 @@ dependencies {
 	compile group: "org.freemarker", name: "freemarker", transitive: false, version: "2.3.29"
 }
 
-liferay {
-	deployDir = file("${liferayHome}/osgi/modules")
-}
-
 patch {
 	ext {
 		autoClean = false
@@ -25,6 +21,7 @@ patch {
 	fileNames "**/freemarker/core/IteratorBlock.java"
 	fileNames "**/freemarker/core/TemplateElementArrayBuilder.java"
 	fileNames "**/freemarker/core/TextBlock.java"
+	fileNames "**/freemarker/ext/jsp/JspTagModelBase.java"
 	fileNames "**/freemarker/ext/jsp/JspWriterAdapter.java"
 	fileNames "**/freemarker/ext/jsp/TagTransformModel.java"
 

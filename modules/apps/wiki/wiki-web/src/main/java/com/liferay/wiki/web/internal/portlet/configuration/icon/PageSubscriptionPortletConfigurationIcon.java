@@ -14,13 +14,13 @@
 
 package com.liferay.wiki.web.internal.portlet.configuration.icon;
 
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -71,8 +71,7 @@ public class PageSubscriptionPortletConfigurationIcon
 			}
 		}
 
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), key);
+		return _language.get(getResourceBundle(getLocale(portletRequest)), key);
 	}
 
 	@Override
@@ -162,19 +161,16 @@ public class PageSubscriptionPortletConfigurationIcon
 			WikiNode.class.getName(), page.getNodeId());
 	}
 
-	@Reference(unbind = "-")
-	protected void setSubscriptionLocalService(
-		SubscriptionLocalService subscriptionLocalService) {
-
-		_subscriptionLocalService = subscriptionLocalService;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		PageSubscriptionPortletConfigurationIcon.class);
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
 
+	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;
 
 	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiPage)")

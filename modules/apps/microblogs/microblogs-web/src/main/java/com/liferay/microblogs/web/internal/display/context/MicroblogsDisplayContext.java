@@ -17,13 +17,15 @@ package com.liferay.microblogs.web.internal.display.context;
 import com.liferay.microblogs.model.MicroblogsEntry;
 import com.liferay.microblogs.service.MicroblogsEntryLocalServiceUtil;
 import com.liferay.microblogs.service.MicroblogsEntryServiceUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -226,6 +228,9 @@ public class MicroblogsDisplayContext {
 				assetTagName = taggedUser.getScreenName();
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 			}
 
 			String microblogsAssetTagName = assetTagName;
@@ -305,6 +310,9 @@ public class MicroblogsDisplayContext {
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		MicroblogsDisplayContext.class);
 
 	private String _assetTagName;
 	private final HttpServletRequest _httpServletRequest;

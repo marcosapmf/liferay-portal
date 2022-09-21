@@ -186,7 +186,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 	public static final String VERIFY_BUNDLE_TASK_NAME = "verifyBundle";
 
-	public static final String VERIFY_PRODCUT_TASK_NAME = "verifyProduct";
+	public static final String VERIFY_PRODUCT_TASK_NAME = "verifyProduct";
 
 	/**
 	 * @deprecated As of 1.4.0, replaced by {@link
@@ -391,14 +391,14 @@ public class RootProjectConfigurator implements Plugin<Project> {
 				userNameProperty.set(dockerUserName);
 			}
 
-			String dockerAccessToken =
-				workspaceExtension.getDockerAccessToken();
+			String dockerUserAccessToken =
+				workspaceExtension.getDockerUserAccessToken();
 
-			if (Objects.nonNull(dockerAccessToken)) {
+			if (Objects.nonNull(dockerUserAccessToken)) {
 				Property<String> passwordProperty =
 					dockerRegistryCredentials.getPassword();
 
-				passwordProperty.set(dockerAccessToken);
+				passwordProperty.set(dockerUserAccessToken);
 			}
 		}
 
@@ -1229,13 +1229,14 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			userNameProperty.set(dockerUserName);
 		}
 
-		String dockerAccessToken = workspaceExtension.getDockerAccessToken();
+		String dockerUserAccessToken =
+			workspaceExtension.getDockerUserAccessToken();
 
-		if (Objects.nonNull(dockerAccessToken)) {
+		if (Objects.nonNull(dockerUserAccessToken)) {
 			Property<String> passwordProperty =
 				dockerRegistryCredentials.getPassword();
 
-			passwordProperty.set(dockerAccessToken);
+			passwordProperty.set(dockerUserAccessToken);
 		}
 
 		dockerPullImage.setDescription("Pull the Docker image.");
@@ -1286,13 +1287,14 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			userNameProperty.set(dockerUserName);
 		}
 
-		String dockerAccessToken = workspaceExtension.getDockerAccessToken();
+		String dockerUserAccessToken =
+			workspaceExtension.getDockerUserAccessToken();
 
-		if (Objects.nonNull(dockerAccessToken)) {
+		if (Objects.nonNull(dockerUserAccessToken)) {
 			Property<String> passwordProperty =
 				dockerRegistryCredentials.getPassword();
 
-			passwordProperty.set(dockerAccessToken);
+			passwordProperty.set(dockerUserAccessToken);
 		}
 
 		return dockerPushImage;
@@ -1616,7 +1618,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 		Project project, WorkspaceExtension workspaceExtension) {
 
 		VerifyProductTask verifyProductTask = GradleUtil.addTask(
-			project, VERIFY_PRODCUT_TASK_NAME, VerifyProductTask.class);
+			project, VERIFY_PRODUCT_TASK_NAME, VerifyProductTask.class);
 
 		project.afterEvaluate(
 			new Action<Project>() {
@@ -1637,8 +1639,8 @@ public class RootProjectConfigurator implements Plugin<Project> {
 						}
 						else {
 							verifyProductTask.setErrorMessage(
-								"Please check the product key in Liferay " +
-									"workspace");
+								"The product key is invalid. Please provide " +
+									"a valid product key.");
 						}
 					}
 					else {
@@ -1654,7 +1656,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			});
 
 		verifyProductTask.setDescription(
-			"Verify liferay workspace product settings.");
+			"Verify Liferay Workspace product settings.");
 
 		return verifyProductTask;
 	}

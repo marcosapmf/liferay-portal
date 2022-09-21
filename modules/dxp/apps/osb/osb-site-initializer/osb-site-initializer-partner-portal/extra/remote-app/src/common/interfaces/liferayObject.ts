@@ -13,5 +13,5 @@ export default interface LiferayObject {
 	dateCreated: Date;
 	dateModified: Date;
 	externalReferenceCode: string;
-	id: string;
+	id: number;
 }

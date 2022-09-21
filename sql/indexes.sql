@@ -1,6 +1,6 @@
+create index IX_FEAFC68A on Address (companyId, classNameId, classPK, listTypeId);
 create index IX_923BD178 on Address (companyId, classNameId, classPK, mailing);
 create index IX_9226DBB4 on Address (companyId, classNameId, classPK, primary_);
-create index IX_58D4EA4C on Address (companyId, classNameId, classPK, typeId);
 create unique index IX_CBAD282F on Address (companyId, externalReferenceCode[$COLUMN_LENGTH:75$]);
 create index IX_5A2093E7 on Address (countryId);
 create index IX_C8E3E87D on Address (regionId);
@@ -86,7 +86,6 @@ create unique index IX_B27A301F on ClassName_ (value[$COLUMN_LENGTH:200$]);
 
 create index IX_38EFE3FD on Company (logoId);
 create index IX_12566EC2 on Company (mx[$COLUMN_LENGTH:200$]);
-create index IX_8699D9BD on Company (system_);
 create unique index IX_EC00543C on Company (webId[$COLUMN_LENGTH:75$]);
 
 create unique index IX_85C63FD7 on CompanyInfo (companyId);

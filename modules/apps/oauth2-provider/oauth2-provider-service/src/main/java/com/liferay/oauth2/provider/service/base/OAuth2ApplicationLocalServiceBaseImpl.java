@@ -38,6 +38,8 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -142,11 +144,13 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	 *
 	 * @param oAuth2Application the o auth2 application
 	 * @return the o auth2 application that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public OAuth2Application deleteOAuth2Application(
-		OAuth2Application oAuth2Application) {
+			OAuth2Application oAuth2Application)
+		throws PortalException {
 
 		return oAuth2ApplicationPersistence.remove(oAuth2Application);
 	}
@@ -459,6 +463,11 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement OAuth2ApplicationLocalServiceImpl#deleteOAuth2Application(OAuth2Application) to avoid orphaned data");
+		}
+
 		return oAuth2ApplicationLocalService.deleteOAuth2Application(
 			(OAuth2Application)persistedModel);
 	}
@@ -627,5 +636,8 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OAuth2ApplicationLocalServiceBaseImpl.class);
 
 }

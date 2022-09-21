@@ -114,14 +114,14 @@
 	{
 		"actionId": "MANAGE_AVAILABLE_ACCOUNTS",
 		"primKey": "0",
-		"resourceName": "com.liferay.commerce.account",
+		"resourceName": "com.liferay.portal.kernel.model.Organization",
 		"roleName": "Sales Agent",
 		"scope": "1"
 	},
 	{
 		"actionId": "MANAGE_AVAILABLE_ACCOUNTS",
 		"primKey": "0",
-		"resourceName": "com.liferay.commerce.account",
+		"resourceName": "com.liferay.portal.kernel.model.Organization",
 		"roleName": "Operations Manager",
 		"scope": "1"
 	},
@@ -235,6 +235,13 @@
 		"primKey": "0",
 		"resourceName": "com.liferay.commerce.product",
 		"roleName": "User",
+		"scope": "1"
+	},
+	{
+		"actionId": "VIEW",
+		"primKey": "0",
+		"resourceName": "com.liferay.commerce.product.model.CommerceChannel",
+		"roleName": "Guest",
 		"scope": "1"
 	}
 ]

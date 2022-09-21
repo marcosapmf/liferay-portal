@@ -20,12 +20,12 @@ import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.settings.MBGroupServiceSettings;
 import com.liferay.message.boards.web.internal.portlet.action.ActionUtil;
 import com.liferay.message.boards.web.internal.util.MBRequestUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -72,8 +72,7 @@ public class ThreadSubscriptionPortletConfigurationIcon
 			}
 		}
 
-		return LanguageUtil.get(
-			getResourceBundle(getLocale(portletRequest)), key);
+		return _language.get(getResourceBundle(getLocale(portletRequest)), key);
 	}
 
 	@Override
@@ -151,13 +150,6 @@ public class ThreadSubscriptionPortletConfigurationIcon
 		return false;
 	}
 
-	@Reference(unbind = "-")
-	protected void setSubscriptionLocalService(
-		SubscriptionLocalService subscriptionLocalService) {
-
-		_subscriptionLocalService = subscriptionLocalService;
-	}
-
 	private boolean _isSubscribed(
 		PortletRequest portletRequest, long threadId) {
 
@@ -172,6 +164,9 @@ public class ThreadSubscriptionPortletConfigurationIcon
 	private static final Log _log = LogFactoryUtil.getLog(
 		ThreadSubscriptionPortletConfigurationIcon.class);
 
+	@Reference
+	private Language _language;
+
 	@Reference(
 		target = "(model.class.name=com.liferay.message.boards.model.MBMessage)"
 	)
@@ -180,6 +175,7 @@ public class ThreadSubscriptionPortletConfigurationIcon
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;
 
 }

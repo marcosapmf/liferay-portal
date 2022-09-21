@@ -14,9 +14,12 @@
 
 import {TreeView as ClayTreeView} from '@clayui/core';
 import ClayIcon from '@clayui/icon';
+import classnames from 'classnames';
 import {navigate} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React from 'react';
+
+import ActionsDropdown from './ActionsDropdown';
 
 const ITEM_TYPES_SYMBOL = {
 	article: 'document-text',
@@ -25,6 +28,10 @@ const ITEM_TYPES_SYMBOL = {
 
 export default function NavigationPanel({items, selectedItemId}) {
 	const handleClickItem = (event, item) => {
+		if (event.defaultPrevented) {
+			return;
+		}
+
 		event.stopPropagation();
 		event.preventDefault();
 
@@ -41,11 +48,17 @@ export default function NavigationPanel({items, selectedItemId}) {
 			{(item) => {
 				return (
 					<ClayTreeView.Item
+						actions={ActionsDropdown({actions: item.actions})}
 						onClick={(event) => {
 							handleClickItem(event, item);
 						}}
 					>
-						<ClayTreeView.ItemStack>
+						<ClayTreeView.ItemStack
+							className={classnames({
+								'knowledge-base-navigation-item-active':
+									item.id === selectedItemId,
+							})}
+						>
 							<ClayIcon symbol={ITEM_TYPES_SYMBOL[item.type]} />
 
 							{item.name}
@@ -55,6 +68,9 @@ export default function NavigationPanel({items, selectedItemId}) {
 							{(item) => {
 								return (
 									<ClayTreeView.Item
+										actions={ActionsDropdown({
+											actions: item.actions,
+										})}
 										onClick={(event) => {
 											handleClickItem(event, item);
 										}}

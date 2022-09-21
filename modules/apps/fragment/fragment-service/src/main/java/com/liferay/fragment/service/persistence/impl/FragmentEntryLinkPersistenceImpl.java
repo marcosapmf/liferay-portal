@@ -6636,7 +6636,7 @@ public class FragmentEntryLinkPersistenceImpl
 	 * </p>
 	 *
 	 * @param groupId the group ID
-	 * @param segmentsExperienceId the segments experience ID
+	 * @param segmentsExperienceIds the segments experience IDs
 	 * @param plid the plid
 	 * @param start the lower bound of the range of fragment entry links
 	 * @param end the upper bound of the range of fragment entry links (not inclusive)
@@ -10366,6 +10366,7 @@ public class FragmentEntryLinkPersistenceImpl
 		ctStrictColumnNames.add("html");
 		ctStrictColumnNames.add("js");
 		ctStrictColumnNames.add("configuration");
+		ctStrictColumnNames.add("deleted");
 		ctStrictColumnNames.add("editableValues");
 		ctStrictColumnNames.add("namespace");
 		ctStrictColumnNames.add("position");

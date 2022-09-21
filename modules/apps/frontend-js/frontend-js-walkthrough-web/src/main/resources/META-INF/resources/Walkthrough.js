@@ -26,6 +26,7 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {Hotspot} from './Hotspot';
 import {Overlay} from './Overlay';
 import {doAlign} from './doAlign';
+import {LOCAL_STORAGE_KEYS} from './localStorageKeys';
 import {useLocalStorage} from './useLocalStorage';
 import {useObserveRect} from './useObserveRect';
 
@@ -177,9 +178,13 @@ function getSitePrefix(currentPage) {
 const Step = ({
 	closeOnClickOutside,
 	closeable,
+	currentPage,
 	currentStep,
+	memoizedTrigger,
 	onCurrentStep,
+	onPopoverVisible,
 	pages,
+	popoverVisible,
 	skippable,
 	steps,
 }) => {
@@ -187,15 +192,9 @@ const Step = ({
 
 	const hotspotRef = useRef(null);
 
-	const [popoverVisible, setPopoverVisible] = useLocalStorage(
-		'walkthrough-popover-visible',
-		false
-	);
-
 	const {
 		content,
 		darkbg,
-		id,
 		next,
 		positioning: defaultPositioning = 'right-top',
 		previous,
@@ -206,13 +205,7 @@ const Step = ({
 		defaultPositioning
 	);
 
-	const memoizedTrigger = useMemo(() => {
-		const currentNode = steps[currentStep].nodeToHighlight;
-
-		if (currentNode) {
-			return document.querySelector(currentNode);
-		}
-	}, [steps, currentStep]);
+	const [checkboxValue, setCheckboxValue] = useState(false);
 
 	const previousTrigger = usePrevious(memoizedTrigger);
 
@@ -240,10 +233,10 @@ const Step = ({
 						? index + 1
 						: index - 1
 				);
-				setPopoverVisible(false);
+				onPopoverVisible(false);
 			}
 		},
-		[pages, steps, onCurrentStep, setPopoverVisible]
+		[pages, steps, onCurrentStep, onPopoverVisible]
 	);
 
 	const onNext = useCallback(
@@ -306,18 +299,19 @@ const Step = ({
 					);
 				}
 
-				if (
-					!darkbg &&
-					previousTrigger &&
-					previousTrigger !== memoizedTrigger
-				) {
-					memoizedTrigger.classList.add(
+				if (!darkbg) {
+					memoizedTrigger?.classList.add(
 						'lfr-walkthrough-element-shadow'
 					);
 
-					previousTrigger.classList.remove(
-						'lfr-walkthrough-element-shadow'
-					);
+					if (
+						previousTrigger &&
+						memoizedTrigger !== previousTrigger
+					) {
+						previousTrigger?.classList.remove(
+							'lfr-walkthrough-element-shadow'
+						);
+					}
 				}
 
 				if (!isVisibleInViewport(popoverRef.current, boundingRect)) {
@@ -341,28 +335,19 @@ const Step = ({
 
 	useObserveRect(align, popoverRef?.current);
 
-	const currentLayoutRelativeURL = themeDisplay.getLayoutRelativeURL();
-
-	const currentPage = useMemo(
-		() => findLongestMatch(currentLayoutRelativeURL, Object.keys(pages)),
-		[pages, currentLayoutRelativeURL]
-	);
-
 	const SITE_PREFIX_PATH = `/${getSitePrefix(currentPage)}`;
-
-	if (!pages[currentPage]?.includes(id)) {
-		return null;
-	}
 
 	return (
 		<>
-			{!popoverVisible && (
-				<Hotspot
-					onHotspotClick={() => setPopoverVisible(true)}
-					ref={hotspotRef}
-					trigger={memoizedTrigger}
-				/>
-			)}
+			{!popoverVisible &&
+				currentStep !== steps.length &&
+				!localStorage.getItem(LOCAL_STORAGE_KEYS.SKIPPABLE) && (
+					<Hotspot
+						onHotspotClick={() => onPopoverVisible(true)}
+						ref={hotspotRef}
+						trigger={memoizedTrigger}
+					/>
+				)}
 
 			{darkbg && (
 				<Overlay
@@ -397,7 +382,7 @@ const Step = ({
 											className="close"
 											displayType="unstyled"
 											onClick={() =>
-												setPopoverVisible(false)
+												onPopoverVisible(false)
 											}
 											small
 											symbol="times"
@@ -406,7 +391,7 @@ const Step = ({
 								)}
 							</ClayLayout.ContentRow>
 						}
-						onShowChange={setPopoverVisible}
+						onShowChange={onPopoverVisible}
 						ref={popoverRef}
 						show={popoverVisible}
 						size="lg"
@@ -421,9 +406,18 @@ const Step = ({
 							{skippable && (
 								<ClayLayout.ContentCol expand>
 									<ClayCheckbox
+										checked={checkboxValue}
 										label={Liferay.Language.get(
 											'do-not-show-me-this-again'
 										)}
+										onChange={() => {
+											setCheckboxValue(!checkboxValue);
+
+											localStorage.setItem(
+												LOCAL_STORAGE_KEYS.SKIPPABLE,
+												!checkboxValue
+											);
+										}}
 									/>
 								</ClayLayout.ContentCol>
 							)}
@@ -438,9 +432,11 @@ const Step = ({
 
 												if (previous) {
 													navigate(
-														SITE_PREFIX_PATH.concat(
-															previous
-														)
+														SITE_PREFIX_PATH === '/'
+															? previous
+															: SITE_PREFIX_PATH.concat(
+																	previous
+															  )
 													);
 												}
 											}}
@@ -457,9 +453,11 @@ const Step = ({
 
 												if (next) {
 													navigate(
-														SITE_PREFIX_PATH.concat(
-															next
-														)
+														SITE_PREFIX_PATH === '/'
+															? next
+															: SITE_PREFIX_PATH.concat(
+																	next
+															  )
 													);
 												}
 											}}
@@ -470,7 +468,7 @@ const Step = ({
 									) : (
 										<ClayButton
 											onClick={() => {
-												setPopoverVisible(false);
+												onPopoverVisible(false);
 												onCurrentStep(0);
 											}}
 											small
@@ -490,19 +488,50 @@ const Step = ({
 
 const Walkthrough = ({
 	closeOnClickOutside,
-	closeable,
-	pages,
-	skippable,
-	steps,
+	closeable = true,
+	pages = {},
+	skippable = true,
+	steps = [],
 }) => {
 	const [
 		currentStepIndex,
 		setCurrentStepIndex,
-	] = useLocalStorage('walkthrough-current-step', () =>
+	] = useLocalStorage(LOCAL_STORAGE_KEYS.CURRENT_STEP, () =>
 		!steps.length ? null : 0
 	);
 
-	if (currentStepIndex === null) {
+	const [popoverVisible, setPopoverVisible] = useLocalStorage(
+		LOCAL_STORAGE_KEYS.POPOVER_VISIBILITY,
+		false
+	);
+
+	const currentLayoutRelativeURL = themeDisplay.getLayoutRelativeURL();
+
+	const currentPage = useMemo(
+		() => findLongestMatch(currentLayoutRelativeURL, Object.keys(pages)),
+		[pages, currentLayoutRelativeURL]
+	);
+
+	const memoizedTrigger = useMemo(() => {
+		const trigger = steps[currentStepIndex].nodeToHighlight;
+
+		if (trigger) {
+			const currentNode = document.querySelector(trigger);
+
+			if (currentNode) {
+				return currentNode;
+			}
+
+			console.error(
+				`Walkthrough Exception: ${trigger} element for highlight does not exist in DOM`
+			);
+		}
+	}, [steps, currentStepIndex]);
+
+	if (
+		currentStepIndex === null ||
+		!pages[currentPage]?.includes(steps[currentStepIndex].id)
+	) {
 		return null;
 	}
 
@@ -510,9 +539,13 @@ const Walkthrough = ({
 		<Step
 			closeOnClickOutside={closeOnClickOutside}
 			closeable={closeable}
+			currentPage={currentPage}
 			currentStep={currentStepIndex}
+			memoizedTrigger={memoizedTrigger}
 			onCurrentStep={setCurrentStepIndex}
+			onPopoverVisible={setPopoverVisible}
 			pages={pages}
+			popoverVisible={popoverVisible}
 			skippable={skippable}
 			steps={steps}
 		/>

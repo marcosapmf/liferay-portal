@@ -38,7 +38,6 @@ import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermissionUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
@@ -59,6 +58,7 @@ import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.SearchDisplayStyleUtil;
 import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
@@ -80,7 +80,9 @@ import com.liferay.portlet.asset.util.comparator.AssetVocabularyCreateDateCompar
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -220,6 +222,17 @@ public class AssetCategoriesDisplayContext {
 		sb.setIndex(sb.index() - 1);
 
 		return sb.toString();
+	}
+
+	public Set<Locale> getAvailableLocales() {
+		if (_availableLocales != null) {
+			return _availableLocales;
+		}
+
+		_availableLocales = LanguageUtil.getAvailableLocales(
+			_themeDisplay.getScopeGroupId());
+
+		return _availableLocales;
 	}
 
 	public SearchContainer<AssetCategory> getCategoriesSearchContainer()
@@ -395,6 +408,14 @@ public class AssetCategoriesDisplayContext {
 		return null;
 	}
 
+	public String getDefaultLanguageId(AssetCategory assetCategory) {
+		if (assetCategory == null) {
+			return LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault());
+		}
+
+		return assetCategory.getDefaultLanguageId();
+	}
+
 	public String getDefaultRedirect() {
 		return PortletURLBuilder.createRenderURL(
 			_renderResponse
@@ -513,16 +534,6 @@ public class AssetCategoriesDisplayContext {
 		return ParamUtil.getString(_renderRequest, "itemSelectorEventName");
 	}
 
-	public String getLinkURL() throws Exception {
-		AssetCategoriesCompanyConfiguration
-			assetCategoriesCompanyConfiguration =
-				ConfigurationProviderUtil.getCompanyConfiguration(
-					AssetCategoriesCompanyConfiguration.class,
-					_themeDisplay.getCompanyId());
-
-		return assetCategoriesCompanyConfiguration.linkToDocumentationURL();
-	}
-
 	public int getMaximumNumberOfCategoriesPerVocabulary() throws Exception {
 		AssetCategoriesCompanyConfiguration
 			assetCategoriesCompanyConfiguration =
@@ -555,6 +566,23 @@ public class AssetCategoriesDisplayContext {
 			AssetCategoriesAdminPortletKeys.ASSET_CATEGORIES_ADMIN, "asc");
 
 		return _orderByType;
+	}
+
+	public String getSelectedLanguageId(AssetCategory assetCategory) {
+		if (Validator.isNotNull(_selectedLanguageId)) {
+			return _selectedLanguageId;
+		}
+
+		String selectedLanguageId = ParamUtil.getString(
+			_httpServletRequest, "languageId");
+
+		if (Validator.isNull(selectedLanguageId)) {
+			selectedLanguageId = getDefaultLanguageId(assetCategory);
+		}
+
+		_selectedLanguageId = selectedLanguageId;
+
+		return _selectedLanguageId;
 	}
 
 	public List<AssetVocabulary> getVocabularies() throws PortalException {
@@ -750,7 +778,13 @@ public class AssetCategoriesDisplayContext {
 	}
 
 	public boolean isItemSelector() {
-		return Validator.isNotNull(getItemSelectorEventName());
+		if (Validator.isNotNull(getItemSelectorEventName()) ||
+			LiferayWindowState.isPopUp(_httpServletRequest)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public boolean isSaveAndAddNewButtonDisabled() throws Exception {
@@ -916,6 +950,7 @@ public class AssetCategoriesDisplayContext {
 
 	private final AssetCategoriesAdminWebConfiguration
 		_assetCategoriesAdminWebConfiguration;
+	private Set<Locale> _availableLocales;
 	private SearchContainer<AssetCategory> _categoriesSearchContainer;
 	private AssetCategory _category;
 	private Long _categoryId;
@@ -928,6 +963,7 @@ public class AssetCategoriesDisplayContext {
 	private String _orderByType;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private String _selectedLanguageId;
 	private Boolean _showSelectAssetDisplayPage;
 	private final ThemeDisplay _themeDisplay;
 	private List<AssetVocabulary> _vocabularies;

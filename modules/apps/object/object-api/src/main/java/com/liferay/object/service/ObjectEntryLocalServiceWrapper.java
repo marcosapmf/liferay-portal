@@ -66,6 +66,19 @@ public class ObjectEntryLocalServiceWrapper
 	}
 
 	@Override
+	public void addOrUpdateExtensionDynamicObjectDefinitionTableValues(
+			long userId,
+			com.liferay.object.model.ObjectDefinition objectDefinition,
+			long primaryKey, java.util.Map<String, java.io.Serializable> values,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectEntryLocalService.
+			addOrUpdateExtensionDynamicObjectDefinitionTableValues(
+				userId, objectDefinition, primaryKey, values, serviceContext);
+	}
+
+	@Override
 	public com.liferay.object.model.ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long userId, long groupId,
 			long objectDefinitionId,
@@ -100,6 +113,17 @@ public class ObjectEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryLocalService.createPersistedModel(primaryKeyObj);
+	}
+
+	@Override
+	public void deleteExtensionDynamicObjectDefinitionTableValues(
+			com.liferay.object.model.ObjectDefinition objectDefinition,
+			long primaryKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectEntryLocalService.
+			deleteExtensionDynamicObjectDefinitionTableValues(
+				objectDefinition, primaryKey);
 	}
 
 	/**
@@ -322,6 +346,18 @@ public class ObjectEntryLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.Map<String, java.io.Serializable>
+			getExtensionDynamicObjectDefinitionTableValues(
+				com.liferay.object.model.ObjectDefinition objectDefinition,
+				long primaryKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _objectEntryLocalService.
+			getExtensionDynamicObjectDefinitionTableValues(
+				objectDefinition, primaryKey);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 
@@ -330,23 +366,24 @@ public class ObjectEntryLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.object.model.ObjectEntry>
-			getManyToManyRelatedObjectEntries(
+			getManyToManyObjectEntries(
 				long groupId, long objectRelationshipId, long primaryKey,
-				boolean reverse, int start, int end)
+				boolean related, boolean reverse, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _objectEntryLocalService.getManyToManyRelatedObjectEntries(
-			groupId, objectRelationshipId, primaryKey, reverse, start, end);
+		return _objectEntryLocalService.getManyToManyObjectEntries(
+			groupId, objectRelationshipId, primaryKey, related, reverse, start,
+			end);
 	}
 
 	@Override
-	public int getManyToManyRelatedObjectEntriesCount(
+	public int getManyToManyObjectEntriesCount(
 			long groupId, long objectRelationshipId, long primaryKey,
-			boolean reverse)
+			boolean related, boolean reverse)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _objectEntryLocalService.getManyToManyRelatedObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey, reverse);
+		return _objectEntryLocalService.getManyToManyObjectEntriesCount(
+			groupId, objectRelationshipId, primaryKey, related, reverse);
 	}
 
 	/**
@@ -483,22 +520,23 @@ public class ObjectEntryLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.object.model.ObjectEntry>
-			getOneToManyRelatedObjectEntries(
+			getOneToManyObjectEntries(
 				long groupId, long objectRelationshipId, long primaryKey,
-				int start, int end)
+				boolean related, int start, int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _objectEntryLocalService.getOneToManyRelatedObjectEntries(
-			groupId, objectRelationshipId, primaryKey, start, end);
+		return _objectEntryLocalService.getOneToManyObjectEntries(
+			groupId, objectRelationshipId, primaryKey, related, start, end);
 	}
 
 	@Override
-	public int getOneToManyRelatedObjectEntriesCount(
-			long groupId, long objectRelationshipId, long primaryKey)
+	public int getOneToManyObjectEntriesCount(
+			long groupId, long objectRelationshipId, long primaryKey,
+			boolean related)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _objectEntryLocalService.getOneToManyRelatedObjectEntriesCount(
-			groupId, objectRelationshipId, primaryKey);
+		return _objectEntryLocalService.getOneToManyObjectEntriesCount(
+			groupId, objectRelationshipId, primaryKey, related);
 	}
 
 	/**
@@ -525,11 +563,11 @@ public class ObjectEntryLocalServiceWrapper
 	@Override
 	public java.util.Map<String, Object> getSystemModelAttributes(
 			com.liferay.object.model.ObjectDefinition objectDefinition,
-			long objectEntryId)
+			long primaryKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryLocalService.getSystemModelAttributes(
-			objectDefinition, objectEntryId);
+			objectDefinition, primaryKey);
 	}
 
 	@Override

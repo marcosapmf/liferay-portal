@@ -17,7 +17,7 @@ package com.liferay.client.extension.web.internal.display.context;
 import com.liferay.client.extension.type.factory.CETFactory;
 import com.liferay.client.extension.web.internal.display.context.util.CETLabelUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import javax.portlet.RenderRequest;
@@ -58,7 +58,7 @@ public class ClientExtensionAdminDisplayContext {
 						).buildPortletURL());
 					dropdownItem.setLabel(
 						CETLabelUtil.getAddLabel(
-							_getHttpServletRequest(), type));
+							_renderRequest.getLocale(), type));
 				});
 		}
 

@@ -129,8 +129,7 @@ public class EditRegionMVCActionCommand
 
 				SessionErrors.add(actionRequest, throwable.getClass());
 
-				actionResponse.setRenderParameter(
-					"mvcRenderCommandName", "/address/edit_region");
+				sendRedirect(actionRequest, actionResponse);
 			}
 			else {
 				throw new Exception(throwable);

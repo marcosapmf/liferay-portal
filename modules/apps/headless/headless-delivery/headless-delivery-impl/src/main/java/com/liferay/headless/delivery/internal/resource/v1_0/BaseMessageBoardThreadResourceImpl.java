@@ -429,6 +429,10 @@ public abstract class BaseMessageBoardThreadResourceImpl
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "restrictFields"
 			)
 		}
@@ -537,6 +541,11 @@ public abstract class BaseMessageBoardThreadResourceImpl
 		if (messageBoardThread.getLocked() != null) {
 			existingMessageBoardThread.setLocked(
 				messageBoardThread.getLocked());
+		}
+
+		if (messageBoardThread.getMessageBoardRootMessageId() != null) {
+			existingMessageBoardThread.setMessageBoardRootMessageId(
+				messageBoardThread.getMessageBoardRootMessageId());
 		}
 
 		if (messageBoardThread.getMessageBoardSectionId() != null) {
@@ -737,6 +746,10 @@ public abstract class BaseMessageBoardThreadResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
@@ -1237,6 +1250,10 @@ public abstract class BaseMessageBoardThreadResourceImpl
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
 				name = "fields"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "nestedFields"
 			),
 			@io.swagger.v3.oas.annotations.Parameter(
 				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,

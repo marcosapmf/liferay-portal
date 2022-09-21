@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.upgrade.BaseStagingGroupTypeSettingsUpgradeProcess;
-import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
@@ -36,7 +35,7 @@ public class DLWebUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 	@Override
 	public void register(Registry registry) {
-		registry.register("0.0.0", "1.0.2", new DummyUpgradeStep());
+		registry.registerInitialization();
 
 		registry.register(
 			"0.0.1", "1.0.0", new UpgradeAdminPortlets(),
@@ -52,25 +51,13 @@ public class DLWebUpgradeStepRegistrator implements UpgradeStepRegistrator {
 		registry.register("1.0.1", "1.0.2", new UpgradePortletPreferences());
 	}
 
-	@Reference(unbind = "-")
-	public void setCompanyLocalService(
-		CompanyLocalService companyLocalService) {
-
-		_companyLocalService = companyLocalService;
-	}
-
-	@Reference(unbind = "-")
-	public void setGroupLocalService(GroupLocalService groupLocalService) {
-		_groupLocalService = groupLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setSettingsFactory(SettingsFactory settingsFactory) {
-		_settingsFactory = settingsFactory;
-	}
-
+	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private SettingsFactory _settingsFactory;
 
 }

@@ -67,7 +67,13 @@ function ModalDeleteObjectDefinition({
 		);
 	}
 
-	return code === 0 ? (
+	if (code !== 0) {
+		onDelete(id);
+
+		return null;
+	}
+
+	return (
 		<DangerModal
 			errorMessage={sub(
 				Liferay.Language.get('input-does-not-match-x'),
@@ -111,8 +117,6 @@ function ModalDeleteObjectDefinition({
 				}}
 			/>
 		</DangerModal>
-	) : (
-		onDelete(id)
 	);
 }
 
@@ -126,7 +130,7 @@ interface IProps {
 	};
 	observer: Observer;
 	onClose: () => void;
-	onDelete: any;
+	onDelete: (value: string) => Promise<void>;
 }
 
 export default function ModalWithProvider({
@@ -142,12 +146,12 @@ export default function ModalWithProvider({
 		status: {code: number};
 	} | null>(null);
 
-	const {observer, onClose} = useModal({
+	const {observer, onClose, open} = useModal({
 		onClose: () => setObjectDefinition(null),
 	});
 
-	const deleteObjectDefinition = async (id: number) => {
-		API.deleteObjectDefinitions(id).then(() => {
+	const deleteObjectDefinition = async (id: string) => {
+		API.deleteObjectDefinitions(Number(id)).then(() => {
 			Liferay.Util.openToast({
 				message: sub(
 					Liferay.Language.get('x-was-deleted-successfully'),
@@ -155,8 +159,9 @@ export default function ModalWithProvider({
 				),
 			});
 
-			onClose();
-			setTimeout(window.location.reload, 1500);
+			open ? onClose() : setObjectDefinition(null);
+
+			setTimeout(() => window.location.reload(), 1500);
 		});
 	};
 

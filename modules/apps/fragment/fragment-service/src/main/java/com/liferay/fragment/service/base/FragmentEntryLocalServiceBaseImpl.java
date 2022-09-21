@@ -50,6 +50,8 @@ import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.search.Indexable;
@@ -491,6 +493,11 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException {
 
+		if (_log.isWarnEnabled()) {
+			_log.warn(
+				"Implement FragmentEntryLocalServiceImpl#deleteFragmentEntry(FragmentEntry) to avoid orphaned data");
+		}
+
 		return fragmentEntryLocalService.deleteFragmentEntry(
 			(FragmentEntry)persistedModel);
 	}
@@ -543,7 +550,7 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 	 * <strong>Important:</strong> Inspect FragmentEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
 	 * </p>
 	 *
-	 * @param fragmentEntry the fragment entry
+	 * @param draftFragmentEntry the fragment entry
 	 * @return the fragment entry that was updated
 	 * @throws PortalException
 	 */
@@ -1088,5 +1095,8 @@ public abstract class FragmentEntryLocalServiceBaseImpl
 
 	@Reference
 	protected FragmentEntryVersionPersistence fragmentEntryVersionPersistence;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentEntryLocalServiceBaseImpl.class);
 
 }

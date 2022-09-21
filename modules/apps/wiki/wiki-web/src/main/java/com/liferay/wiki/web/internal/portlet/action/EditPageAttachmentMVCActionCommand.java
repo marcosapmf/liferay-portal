@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.lock.DuplicateLockException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -99,13 +99,6 @@ import org.osgi.service.component.annotations.Reference;
 	service = MVCActionCommand.class
 )
 public class EditPageAttachmentMVCActionCommand extends BaseMVCActionCommand {
-
-	@Reference(unbind = "-")
-	public void setWikiAttachmentsHelper(
-		WikiAttachmentsHelper wikiAttachmentsHelper) {
-
-		_wikiAttachmentsHelper = wikiAttachmentsHelper;
-	}
 
 	@Activate
 	@Modified
@@ -356,7 +349,7 @@ public class EditPageAttachmentMVCActionCommand extends BaseMVCActionCommand {
 					errorMessage = themeDisplay.translate(
 						"please-enter-a-file-with-a-valid-file-size-no-" +
 							"larger-than-x",
-						LanguageUtil.formatStorageSize(
+						_language.formatStorageSize(
 							fileSizeException.getMaxSize(),
 							themeDisplay.getLocale()));
 
@@ -422,6 +415,9 @@ public class EditPageAttachmentMVCActionCommand extends BaseMVCActionCommand {
 	private DLValidator _dlValidator;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
@@ -434,6 +430,7 @@ public class EditPageAttachmentMVCActionCommand extends BaseMVCActionCommand {
 	@Reference(target = "(upload.response.handler=multiple)")
 	private UploadResponseHandler _uploadResponseHandler;
 
+	@Reference
 	private WikiAttachmentsHelper _wikiAttachmentsHelper;
 
 	@Reference

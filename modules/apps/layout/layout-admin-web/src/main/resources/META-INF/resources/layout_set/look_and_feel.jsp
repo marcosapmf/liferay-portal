@@ -33,15 +33,15 @@ LayoutSet selLayoutSet = layoutsAdminDisplayContext.getSelLayoutSet();
 
 <liferay-util:include page="/look_and_feel_themes.jsp" servletContext="<%= application %>" />
 
-<c:if test='<%= GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-153457")) %>'>
-	<div class="mt-5">
-		<liferay-util:include page="/look_and_feel_theme_css.jsp" servletContext="<%= application %>" />
-	</div>
+<div class="mt-5">
+	<liferay-util:include page="/look_and_feel_theme_css.jsp" servletContext="<%= application %>" />
+</div>
 
-	<clay:sheet-section>
-		<react:component
-			module="js/layout/look_and_feel/GlobalCSSCETsConfiguration"
-			props="<%= layoutLookAndFeelDisplayContext.getGlobalCSSCETsConfigurationProps(LayoutSet.class.getName(), selLayoutSet.getLayoutSetId()) %>"
-		/>
-	</clay:sheet-section>
-</c:if>
+<clay:sheet-section
+	cssClass="mt-5"
+>
+	<react:component
+		module="js/layout/look_and_feel/GlobalCSSCETsConfiguration"
+		props="<%= layoutLookAndFeelDisplayContext.getGlobalCSSCETsConfigurationProps(LayoutSet.class.getName(), selLayoutSet.getLayoutSetId()) %>"
+	/>
+</clay:sheet-section>

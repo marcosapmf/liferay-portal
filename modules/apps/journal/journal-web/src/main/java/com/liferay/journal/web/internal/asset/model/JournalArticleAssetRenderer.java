@@ -34,7 +34,6 @@ import com.liferay.journal.web.internal.security.permission.resource.JournalArti
 import com.liferay.journal.web.internal.util.JournalHelperUtil;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalServiceUtil;
-import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -47,6 +46,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -363,11 +363,19 @@ public class JournalArticleAssetRenderer
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			String noSuchEntryRedirect)
-		throws Exception {
+		throws PortalException {
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)liferayPortletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
+
+		return getURLViewInContext(themeDisplay, noSuchEntryRedirect);
+	}
+
+	@Override
+	public String getURLViewInContext(
+			ThemeDisplay themeDisplay, String noSuchEntryRedirect)
+		throws PortalException {
 
 		if (!_isShowDisplayPage(themeDisplay.getScopeGroupId(), _article)) {
 			return _getHitLayoutURL(noSuchEntryRedirect, themeDisplay);
@@ -593,7 +601,7 @@ public class JournalArticleAssetRenderer
 
 	private String _getHitLayoutURL(
 			String noSuchEntryRedirect, ThemeDisplay themeDisplay)
-		throws Exception {
+		throws PortalException {
 
 		List<LayoutClassedModelUsage> layoutClassedModelUsages =
 			LayoutClassedModelUsageLocalServiceUtil.getLayoutClassedModelUsages(
@@ -636,7 +644,7 @@ public class JournalArticleAssetRenderer
 	}
 
 	private boolean _isShowDisplayPage(long groupId, JournalArticle article)
-		throws Exception {
+		throws PortalException {
 
 		AssetRendererFactory<JournalArticle> assetRendererFactory =
 			getAssetRendererFactory();

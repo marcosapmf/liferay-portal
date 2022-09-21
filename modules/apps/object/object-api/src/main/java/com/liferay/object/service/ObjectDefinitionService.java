@@ -92,9 +92,11 @@ public interface ObjectDefinitionService extends BaseService {
 		throws PortalException;
 
 	public ObjectDefinition updateCustomObjectDefinition(
-			long objectDefinitionId, long accountEntryRestrictedObjectFieldId,
+			String externalReferenceCode, long objectDefinitionId,
+			long accountEntryRestrictedObjectFieldId,
 			long descriptionObjectFieldId, long titleObjectFieldId,
 			boolean accountEntryRestricted, boolean active,
+			boolean enableCategorization, boolean enableComments,
 			Map<Locale, String> labelMap, String name, String panelAppOrder,
 			String panelCategoryKey, boolean portlet,
 			Map<Locale, String> pluralLabelMap, String scope)
