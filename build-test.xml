@@ -180,7 +180,7 @@ description=&quot;Custom Element Description&quot;
 name=&quot;Vanilla Counter&quot;
 properties=&#91;&quot;test-data-user=QAuser&quot;&#93;
 type=&quot;customElement&quot;
-typeSettings=&#91;&quot;friendlyURLMapping=vanilla&quot;,&quot;instanceable=true&quot;,&quot;portletCategoryName=category.remote-apps&quot;,&quot;urls=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;vanilla-counter&#47;index.js&quot;,&quot;htmlElementName=vanilla-counter&quot;,&quot;cssURLs=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;index.css&quot;,&quot;useESM=true&quot;&#93;</echo>
+typeSettings=&#91;&quot;friendlyURLMapping=vanilla&quot;,&quot;instanceable=true&quot;,&quot;portletCategoryName=category.client-extensions&quot;,&quot;urls=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;vanilla-counter&#47;index.js&quot;,&quot;htmlElementName=vanilla-counter&quot;,&quot;cssURLs=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;index.css&quot;,&quot;useESM=true&quot;&#93;</echo>
 		</sequential>
 	</macrodef>
 
@@ -193,7 +193,7 @@ name=&quot;My Pretty IFrame&quot;
 properties=&#91;&quot;a=1&quot;,&quot;b=2&quot;&#93;
 sourceCodeURL=&quot;&quot;
 type=&quot;iframe&quot;
-typeSettings=&#91;&quot;friendlyURLMapping=perico&quot;,&quot;instanceable=false&quot;,&quot;portletCategoryName=category.remote-apps&quot;,&quot;url=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;index.html&quot;&#93;</echo>
+typeSettings=&#91;&quot;friendlyURLMapping=perico&quot;,&quot;instanceable=false&quot;,&quot;portletCategoryName=category.client-extensions&quot;,&quot;url=https:&#47;&#47;liferay.github.io&#47;liferay-frontend-projects&#47;index.html&quot;&#93;</echo>
 		</sequential>
 	</macrodef>
 
@@ -569,7 +569,8 @@ typeSettings=&#91;&quot;friendlyURLMapping=perico&quot;,&quot;instanceable=false
 						/ENGINE/ {f=0; n=asort(a); print a[length(a)]; for (i=1;i<n;i++) print a[i]}
 						!f
 						f{a[$0]=$0}' ${1} |
-					sed 's=/[^/]*$==;s/\,$//'
+					sed 's=/[^/]*$==;s/\,$//' |
+					sed 's/_x_.*//'
 				]]>
 			</echo>
 
@@ -2337,58 +2338,6 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 		</sequential>
 	</macrodef>
 
-	<macrodef name="prepare-chrome-driver">
-		<sequential>
-			<if>
-				<os family="mac" />
-				<then>
-					<property name="selenium.chrome.driver.zip" value="chromedriver_mac64.zip" />
-				</then>
-				<elseif>
-					<os family="unix" />
-					<then>
-						<property name="selenium.chrome.driver.zip" value="chromedriver_linux64.zip" />
-					</then>
-				</elseif>
-				<elseif>
-					<os family="windows" />
-					<then>
-						<property name="selenium.chrome.driver.zip" value="chromedriver_win32.zip" />
-					</then>
-				</elseif>
-				<else>
-					<then>
-						<fail message="Operating system is not supported." />
-					</then>
-				</else>
-			</if>
-
-			<propertycopy from="selenium.chrome.driver.version[${browser.chrome.version}]" name="selenium.chrome.driver.version" silent="true" />
-
-			<mirrors-get
-				dest="tools/selenium/${selenium.chrome.driver.zip}"
-				src="http://chromedriver.storage.googleapis.com/${selenium.chrome.driver.version}/${selenium.chrome.driver.zip}"
-			/>
-
-			<stop-chrome-driver />
-
-			<unzip
-				dest="tools/selenium"
-				src="tools/selenium/${selenium.chrome.driver.zip}"
-			/>
-
-			<if>
-				<os family="unix" />
-				<then>
-					<chmod
-						file="tools/selenium/chromedriver"
-						perm="a+x"
-					/>
-				</then>
-			</if>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="prepare-custom-properties">
 		<attribute name="custom.properties" />
 		<attribute default="portal-impl/src/portal-ext.properties" name="properties.file" />
@@ -2864,134 +2813,6 @@ jdbc.default.password=${database.password}</echo>
 		</sequential>
 	</macrodef>
 
-	<macrodef name="prepare-edge-driver">
-		<sequential>
-			<if>
-				<os family="windows" />
-				<then>
-					<stop-edge-driver />
-
-					<mirrors-get
-						dest="tools/selenium/edgedriver.zip"
-						src="${selenium.edge.driver.zip.url}"
-					/>
-
-					<unzip
-						dest="tools/selenium"
-						src="tools/selenium/edgedriver.zip"
-					>
-						<globmapper
-							from="*/${selenium.edge.driver.executable}"
-							to="${selenium.edge.driver.executable}"
-						/>
-						<patternset>
-							<include name="${selenium.edge.driver.executable}" />
-							<exclude name="*/*" />
-						</patternset>
-					</unzip>
-				</then>
-				<else>
-					<if>
-						<not>
-							<isset property="selenium.remote.driver.url" />
-						</not>
-						<then>
-							<fail message="Operating system is not supported." />
-						</then>
-					</if>
-				</else>
-			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="prepare-gecko-driver">
-		<sequential>
-			<stop-gecko-driver />
-
-			<if>
-				<os family="mac" />
-				<then>
-					<property name="selenium.gecko.driver.archive" value="geckodriver-v${selenium.gecko.driver.version}-macos.tar.gz" />
-				</then>
-				<elseif>
-					<os family="unix" />
-					<then>
-						<property name="selenium.gecko.driver.archive" value="geckodriver-v${selenium.gecko.driver.version}-linux32.tar.gz" />
-					</then>
-				</elseif>
-				<elseif>
-					<os family="windows" />
-					<then>
-						<property name="selenium.gecko.driver.archive" value="geckodriver-v${selenium.gecko.driver.version}-win32.zip" />
-					</then>
-				</elseif>
-				<else>
-					<then>
-						<fail message="Operating system is not supported." />
-					</then>
-				</else>
-			</if>
-
-			<mirrors-get
-				dest="tools/selenium/${selenium.gecko.driver.archive}"
-				src="https://github.com/mozilla/geckodriver/releases/download/v${selenium.gecko.driver.version}/${selenium.gecko.driver.archive}"
-			/>
-
-			<if>
-				<os family="unix" />
-				<then>
-					<untar
-						compression="gzip"
-						dest="tools/selenium"
-						src="tools/selenium/${selenium.gecko.driver.archive}"
-					/>
-
-					<chmod
-						file="tools/selenium/geckodriver"
-						perm="a+x"
-					/>
-				</then>
-				<else>
-					<unzip
-						dest="tools/selenium"
-						src="tools/selenium/${selenium.gecko.driver.archive}"
-					/>
-				</else>
-			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="prepare-ie-driver">
-		<sequential>
-			<if>
-				<os family="windows" />
-				<then>
-					<stop-ie-driver />
-
-					<mirrors-get
-						dest="tools/selenium/iedriver.zip"
-						src="${selenium.ie.driver.zip.url}"
-					/>
-
-					<unzip
-						dest="tools/selenium"
-						src="tools/selenium/iedriver.zip"
-					/>
-				</then>
-				<else>
-					<if>
-						<not>
-							<isset property="selenium.remote.driver.url" />
-						</not>
-						<then>
-							<fail message="Operating system is not supported." />
-						</then>
-					</if>
-				</else>
-			</if>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="prepare-liferay-online-properties">
 		<sequential>
 			<echo append="true" file="portal-impl/src/portal-ext.properties">
@@ -3448,22 +3269,7 @@ tell application "Safari" to quit
 			</if>
 
 			<if>
-				<equals arg1="${browser.type}" arg2="edge" />
-				<then>
-					<prepare-edge-driver />
-
-					<echo append="true" file="${test.ext.properties.file}">
-						selenium.edge.driver.executable=${selenium.edge.driver.executable}
-						selenium.executable.dir.name=${selenium.executable.dir.name}
-					</echo>
-				</then>
-			</if>
-
-			<if>
-				<and>
-					<equals arg1="${browser.firefox.version}" arg2="52.0" />
-					<equals arg1="${browser.type}" arg2="firefox" />
-				</and>
+				<equals arg1="${browser.type}" arg2="firefox" />
 				<then>
 					<propertycopy from="browser.firefox.bin.file[${browser.firefox.version}]" name="browser.firefox.bin.file" silent="true" />
 
@@ -3475,26 +3281,6 @@ tell application "Safari" to quit
 							</echo>
 						</then>
 					</if>
-
-					<prepare-gecko-driver />
-
-					<echo append="true" file="${test.ext.properties.file}">
-						selenium.executable.dir.name=${selenium.executable.dir.name}
-						selenium.gecko.driver.executable=${selenium.gecko.driver.executable}
-					</echo>
-				</then>
-			</if>
-
-			<if>
-				<equals arg1="${browser.type}" arg2="internetexplorer" />
-				<then>
-					<prepare-ie-driver />
-
-					<echo append="true" file="${test.ext.properties.file}">
-						selenium.executable.dir.name=${selenium.executable.dir.name}
-						selenium.ie.driver.executable=${selenium.ie.driver.executable}
-						selenium.ie.driver.version=${selenium.ie.driver.version}
-					</echo>
 				</then>
 			</if>
 
@@ -6619,8 +6405,20 @@ go</echo>
 						<var name="app.server.tomcat.version" value="9.0.65" />
 					</then>
 				</elseif>
+				<elseif>
+					<or>
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.4.13.u57" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.4.13.u58" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.4.13.u59" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.4.13.u60" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="7.4.13.u61" />
+					</or>
+					<then>
+						<var name="app.server.tomcat.version" value="9.0.68" />
+					</then>
+				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="9.0.68" />
+					<var name="app.server.tomcat.version" value="9.0.71" />
 				</else>
 			</if>
 
@@ -7709,40 +7507,6 @@ ${docker.start.error}</fail>
 			<get-operating-system-property property.name="operating.system.host" />
 
 			<stop-docker-container name="${operating.system.host}" />
-		</sequential>
-	</macrodef>
-
-	<macrodef name="stop-edge-driver">
-		<sequential>
-			<exec executable="taskkill.exe">
-				<arg line="/F /IM ${selenium.edge.driver.executable}" />
-			</exec>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="stop-gecko-driver">
-		<sequential>
-			<if>
-				<os family="unix" />
-				<then>
-					<execute failonerror="false">
-						killall geckodriver
-					</execute>
-				</then>
-				<else>
-					<execute failonerror="false">
-						taskkill.exe /F /IM geckodriver.exe
-					</execute>
-				</else>
-			</if>
-		</sequential>
-	</macrodef>
-
-	<macrodef name="stop-ie-driver">
-		<sequential>
-			<exec executable="taskkill.exe">
-				<arg line="/F /IM IEDriverServer.exe" />
-			</exec>
 		</sequential>
 	</macrodef>
 
@@ -8970,27 +8734,6 @@ go</echo>
 				<stop-chrome-driver />
 			</then>
 		</if>
-
-		<if>
-			<equals arg1="${browser.type}" arg2="edge" />
-			<then>
-				<stop-edge-driver />
-			</then>
-		</if>
-
-		<if>
-			<equals arg1="${browser.type}" arg2="firefox" />
-			<then>
-				<stop-gecko-driver />
-			</then>
-		</if>
-
-		<if>
-			<equals arg1="${browser.type}" arg2="internetexplorer" />
-			<then>
-				<stop-ie-driver />
-			</then>
-		</if>
 	</target>
 
 	<target name="clean-up-sybase-processes">
@@ -9530,38 +9273,6 @@ org.apache.catalina.tribes.level = FINE]]>
 				zip -d '${liferayHome}/osgi/marketplace/Liferay Static - Impl.lpkg' com.liferay.portal.license.enterprise.app.jar
 			]]>
 		</execute>
-	</target>
-
-	<target name="deploy-analytics-cloud-demo-data-creator">
-		<if>
-			<equals arg1="${functional.test.type}" arg2="analytics-cloud" />
-			<then>
-				<ant dir="portal-kernel" target="clean" />
-
-				<ant dir="portal-kernel" target="compile" />
-
-				<ant dir="portal-kernel" target="deploy" />
-
-				<ant dir="portal-kernel" target="install-portal-snapshot" />
-
-				<gradle-execute dir="modules/apps/analytics/analytics-demo-data-creator-api" task="deploy">
-					<arg value="clean" />
-				</gradle-execute>
-
-				<gradle-execute dir="modules/apps/analytics/analytics-demo-data-creator-impl" task="deploy">
-					<arg value="clean" />
-				</gradle-execute>
-
-				<property location="${analytics.cloud.faro.data.csv}" name="analytics.cloud.faro.data.csv.file.path" />
-
-				<echo file="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.configuration.AnalyticsDemoDataCreatorConfiguration.config">
-pathToUsersCSV="${analytics.cloud.faro.data.csv.file.path}"
-virtualHostname="localhost"
-				</echo>
-
-				<print-file file.name="${app.server.parent.dir}/osgi/modules/com.liferay.analytics.demo.data.creator.configuration.AnalyticsDemoDataCreatorConfiguration.config" />
-			</then>
-		</if>
 	</target>
 
 	<target name="deploy-commerce-license-xml">
@@ -11030,10 +10741,6 @@ ${update.properties}</echo>
 				<echo>The file ${liferay.config.xml} is not exist.</echo>
 			</else>
 		</if>
-	</target>
-
-	<target name="prepare-chrome-driver">
-		<prepare-chrome-driver />
 	</target>
 
 	<target name="prepare-database-upgrade-configuration">
@@ -13547,7 +13254,7 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 			</then>
 		</if>
 
-		<delete dir="${liferay.home}/data/elasticsearch7" />
+		<delete dir="${liferay.home}/data" />
 
 		<if>
 			<contains string="${data.archive.type}" substring="partition-large" />
@@ -15215,13 +14922,6 @@ mail.send.blacklist=</echo>
 			</then>
 		</if>
 
-		<if>
-			<equals arg1="${functional.test.type}" arg2="analytics-cloud" />
-			<then>
-				<antcall target="deploy-analytics-cloud-demo-data-creator" />
-			</then>
-		</if>
-
 		<antcall target="deploy-specific-plugins">
 			<param name="test.class" value="${test.class}" />
 		</antcall>
@@ -15504,87 +15204,16 @@ mail.send.blacklist=</echo>
 		<get-testcase-property property.name="analytics.cloud.enabled" />
 
 		<if>
-			<or>
-				<equals arg1="${analytics.cloud.enabled}" arg2="true" />
-				<equals arg1="${functional.test.type}" arg2="analytics-cloud" />
-			</or>
+			<equals arg1="${analytics.cloud.enabled}" arg2="true" />
 			<then>
 				<ant antfile="build-test-analytics-cloud.xml" target="start-analytics-cloud" />
 			</then>
 		</if>
 
-		<if>
-			<equals arg1="${functional.test.type}" arg2="analytics-cloud" />
-			<then>
-				<trycatch property="analytics.cloud.error">
-					<try>
-						<property location="${analytics.cloud.faro.dir}/osb-faro-functional-test/test_analytics_cloud.sh" name="analytics.cloud.test.sh" />
-
-						<property location="${basedir.unix}/portal-web/${selenium.executable.dir.name}" name="selenium.executable.dir.path" />
-
-						<propertycopy from="browser.chrome.bin.file[${browser.chrome.version}]" name="browser.chrome.bin.file" override="true" />
-
-						<get-ip-address />
-
-						<propertyregex
-							input="${env.HOSTNAME}"
-							override="true"
-							property="short.hostname"
-							regexp="([^\.]+)(\..*)?"
-							select="\1"
-						/>
-
-						<echo file="${analytics.cloud.faro.dir}/osb-faro-functional-test/src/testIntegration/resources/ngrok.properties">
-ip=${ip.address}
-url=${short.hostname}:8080</echo>
-
-						<prepare-chrome-driver />
-
-						<echo file="${analytics.cloud.test.sh}">
-							#!/bin/bash
-
-							../gradlew \
-								-Danalytics.cloud.url=${analytics.cloud.faro.frontend.url} \
-								-Dbrowser.chrome.bin.args="${browser.chrome.bin.args}" \
-								-Dbrowser.chrome.bin.file=${browser.chrome.bin.file} \
-								-Dbrowser.type=chrome \
-								-Dchrome.driver.version=${selenium.chrome.driver.version} \
-								-Dcucumber.options='${analytics.cloud.cucumber.options}' \
-								-Dliferay.ci=true \
-								-Dportal.url=http://${short.hostname}:8080 \
-								-Dselenium.chrome.driver.executable=${selenium.chrome.driver.executable} \
-								-Dselenium.executable.dir.name=${selenium.executable.dir.path}/ \
-								-Dwebdriver.chrome.driver=${selenium.executable.dir.path}/${selenium.chrome.driver.executable} \
-								\
-								testIntegration
-						</echo>
-
-						<exec dir="${analytics.cloud.faro.dir}/osb-faro-functional-test" executable="/bin/bash" failonerror="true">
-							<arg value="${analytics.cloud.test.sh}" />
-						</exec>
-
-						<delete file="${analytics.cloud.test.sh}" />
-					</try>
-					<catch>
-						<ant antfile="build-test-analytics-cloud.xml" target="stop-analytics-cloud" />
-
-						<fail message="${analytics.cloud.error}" />
-					</catch>
-					<finally>
-						<stop-chrome-driver />
-					</finally>
-				</trycatch>
-			</then>
-			<else>
-				<antcall target="run-selenium-test" />
-			</else>
-		</if>
+		<antcall target="run-selenium-test" />
 
 		<if>
-			<or>
-				<equals arg1="${analytics.cloud.enabled}" arg2="true" />
-				<equals arg1="${functional.test.type}" arg2="analytics-cloud" />
-			</or>
+			<equals arg1="${analytics.cloud.enabled}" arg2="true" />
 			<then>
 				<ant antfile="build-test-analytics-cloud.xml" target="stop-analytics-cloud" />
 			</then>

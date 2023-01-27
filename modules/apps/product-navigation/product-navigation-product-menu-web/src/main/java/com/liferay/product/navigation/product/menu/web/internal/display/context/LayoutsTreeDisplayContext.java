@@ -390,24 +390,15 @@ public class LayoutsTreeDisplayContext {
 	}
 
 	private JSONArray _getLayoutsJSONArray() throws Exception {
-		JSONArray layoutsJSONArray = null;
-
 		long[] openNodes = StringUtil.split(
 			SessionTreeJSClicks.getOpenNodes(
 				_httpServletRequest, "productMenuPagesTree"),
 			0L);
 
-		String layoutsJSON = _layoutsTree.getLayoutsJSON(
-			_httpServletRequest, _getGroupId(), true, _isPrivateLayout(),
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, openNodes, true,
-			"productMenuPagesTree", null);
-
-		if (layoutsJSON.startsWith(StringPool.OPEN_BRACKET)) {
-			layoutsJSONArray = JSONFactoryUtil.createJSONArray(layoutsJSON);
-		}
-		else {
-			layoutsJSONArray = JSONFactoryUtil.createJSONArray();
-		}
+		JSONArray layoutsJSONArray = _layoutsTree.getLayoutsJSONArray(
+			openNodes, _getGroupId(), _httpServletRequest, true, true,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, _isPrivateLayout(),
+			"productMenuPagesTree");
 
 		int layoutsJSONArrayLength = layoutsJSONArray.length();
 

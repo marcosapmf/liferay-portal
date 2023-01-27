@@ -18,11 +18,13 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.persistence.model.SamlSpIdpConnection;
@@ -111,6 +113,17 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 			}
 		}
 
+		boolean samlIdpRedirectMessageEnabled = GetterUtil.getBoolean(
+			_props.get("saml.idp.redirect.message.enabled"), true);
+
+		if (samlIdpRedirectMessageEnabled) {
+			httpServletRequest.setAttribute(
+				SamlWebKeys.SAML_IDP_REDIRECT_MESSAGE,
+				_language.get(
+					httpServletRequest,
+					"redirecting-to-your-identity-provider"));
+		}
+
 		httpServletRequest.setAttribute(
 			SamlWebKeys.SAML_SSO_LOGIN_CONTEXT,
 			_toJSONObject(samlSpIdpConnections));
@@ -118,7 +131,8 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		JspUtil.dispatch(
 			httpServletRequest, httpServletResponse,
 			"/portal/saml/select_idp.jsp",
-			"please-select-your-identity-provider", false);
+			"please-select-your-identity-provider",
+			!samlIdpRedirectMessageEnabled);
 
 		return null;
 	}
@@ -158,7 +172,13 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 	private JSONFactory _jsonFactory;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference
+	private Props _props;
 
 	@Reference
 	private SamlProviderConfigurationHelper _samlProviderConfigurationHelper;

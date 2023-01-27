@@ -66,10 +66,7 @@ const SubtasksCaseResults = () => {
 		}
 
 		const subtaskStatusCheck = () => {
-			const subtasksWithOpenStatus =
-				testraySubtask.dueStatus?.key === SubTaskStatuses.OPEN;
-
-			if (subtasksWithOpenStatus) {
+			if (testraySubtask.dueStatus?.key !== SubTaskStatuses.IN_ANALYSIS) {
 				return [
 					{
 						text: i18n.sub(

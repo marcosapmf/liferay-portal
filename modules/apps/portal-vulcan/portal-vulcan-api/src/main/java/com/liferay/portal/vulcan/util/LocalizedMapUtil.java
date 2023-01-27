@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
 
@@ -54,6 +52,18 @@ public class LocalizedMapUtil {
 		Map<Locale, String> localizedMap) {
 
 		return getI18nMap(true, localizedMap);
+	}
+
+	public static Map<String, String> getLanguageIdMap(
+		Map<Locale, String> localizedMap) {
+
+		Map<String, String> languageIdMap = new HashMap<>();
+
+		localizedMap.forEach(
+			(locale, value) -> languageIdMap.put(
+				LocaleUtil.toLanguageId(locale), value));
+
+		return Collections.unmodifiableMap(languageIdMap);
 	}
 
 	/**
@@ -122,6 +132,10 @@ public class LocalizedMapUtil {
 		}
 
 		return localizedMap;
+	}
+
+	public static Map<Locale, String> getLocalizedMap(String label) {
+		return Collections.singletonMap(LocaleUtil.getDefault(), label);
 	}
 
 	public static Map<Locale, String> merge(
@@ -209,16 +223,20 @@ public class LocalizedMapUtil {
 		notFoundLocales.removeAll(localizedMap.keySet());
 
 		if (!notFoundLocales.isEmpty()) {
-			Stream<Locale> notFoundLocalesStream = notFoundLocales.stream();
+			StringBundler sb = new StringBundler(
+				(notFoundLocales.size() * 2) + 2);
 
-			throw new BadRequestException(
-				StringBundler.concat(
-					entityName, " title missing in the languages: ",
-					notFoundLocalesStream.map(
-						LocaleUtil::toW3cLanguageId
-					).collect(
-						Collectors.joining(",")
-					)));
+			sb.append(entityName);
+			sb.append(" title missing in the languages: ");
+
+			for (Locale locale : notFoundLocales) {
+				sb.append(LocaleUtil.toW3cLanguageId(locale));
+				sb.append(",");
+			}
+
+			sb.setIndex(sb.index() - 1);
+
+			throw new BadRequestException(sb.toString());
 		}
 	}
 

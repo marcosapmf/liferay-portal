@@ -419,7 +419,7 @@ definition {
 				fieldLabelName = "Custom Object 162140",
 				pluralLabelName = "Custom Objects 162140");
 
-			ObjectAdmin.saveCustomObject();
+			CreateObject.saveObject();
 		}
 
 		task ("Go to Custom Object > Fields") {
@@ -580,6 +580,8 @@ definition {
 		}
 
 		task ("Go to Custom Object entries and add an entry") {
+			Navigator.openURL();
+
 			ApplicationsMenu.gotoPortlet(
 				category = "Object",
 				panel = "Control Panel",
@@ -967,8 +969,6 @@ definition {
 	@description = "LPS-154872 - Verify that it's possible to filter and sort entries using metadata fields"
 	@priority = "4"
 	test CanFilterAndSortEntriesViaMetadataFields {
-		property portal.upstream = "quarantine";
-
 		task ("Create Custom Object and Custom Field (via API)") {
 			ObjectAdmin.addObjectViaAPI(
 				labelName = "Custom Object 161889",
@@ -1000,14 +1000,14 @@ definition {
 			ObjectCustomViews.goToViewsDetails(label = "Custom Views");
 		}
 
-		var listMetaData = "Author,Create Date,Custom Field,External Reference Code,ID,Modified Date,Status";
+		var listMetaData = "Author,Create Date,External Reference Code,ID,Modified Date";
 
 		task ("Mark Custom View as default, go to View Builder and add ERC") {
 			ObjectCustomViews.markViewAsDefault();
 
 			ObjectCustomViews.goToViewsBuilderTab();
 
-			ObjectCustomViews.addColumnsViaUI(addColumns = "${listMetaData}");
+			ObjectCustomViews.addColumnsViaUI(addColumns = "Author,Create Date,Custom Field,External Reference Code,ID,Modified Date");
 		}
 
 		task ("Set order to ERC on Default Sort") {
@@ -1055,7 +1055,7 @@ definition {
 				position = "2");
 
 			Click(
-				key_orderColumn = "External Reference Code",
+				key_orderColumn = "Create Date",
 				locator1 = "ObjectPortlet#ARROW_ORDER_COLUMN");
 
 			ObjectCustomViews.viewFieldsEntryByPosition(
@@ -2362,6 +2362,65 @@ definition {
 		Click(locator1 = "ObjectField#TYPE_FIELD");
 
 		ObjectAdmin.viewDescriptionForEachFieldType();
+	}
+
+	@description = "LPS-145661 - Verify that the field type names are displayed on the Layout Builder when a field is added"
+	@priority = "4"
+	test DisplayFieldTypesOnLayoutBuilder {
+		task ("Given that an object and fields are created for that object") {
+			ObjectAdmin.addObjectViaAPI(
+				labelName = "Custom Object 161905",
+				objectName = "CustomObject161905",
+				pluralLabelName = "Custom Objects 161905");
+
+			for (var valueField : list "A,B") {
+				ObjectAdmin.addObjectFieldViaAPI(
+					fieldBusinessType = "Text",
+					fieldLabelName = "Custom Field ${valueField}",
+					fieldName = "customObjectField${valueField}",
+					fieldType = "String",
+					isRequired = "false",
+					objectName = "CustomObject161905");
+			}
+		}
+
+		task ("When a Layout is added to the object") {
+			ObjectAdmin.addObjectLayoutViaAPI(
+				layoutName = "Layout Test",
+				objectName = "CustomObject161905");
+
+			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject161905");
+
+			ObjectAdmin.openObjectAdmin();
+
+			ObjectPortlet.selectCustomObject(label = "Custom Object 161905");
+
+			ObjectAdmin.goToLayoutsTab();
+
+			ObjectAdmin.selectSpecificKebabMenuOption(
+				kebabOption = "View",
+				objectLabel = "Layout Test");
+
+			ObjectAdmin.markLayoutAsDefault();
+
+			ObjectAdmin.goToLayoutTabOnLayouts();
+
+			for (var valueField : list "A,B") {
+				ObjectAdmin.addTabFieldsOnLayout(
+					blockName = "Block Test",
+					columnsNumber = "1",
+					fieldList = "Custom Field ${valueField}",
+					tabName = "Tab Test");
+			}
+		}
+
+		task ("Then the field type names are displayed on the Layout Builder when a field is added") {
+			for (var fieldLabelName : list "Custom Field A,Custom Field B") {
+				AssertElementPresent(
+					key_fieldLabelName = "${fieldLabelName}",
+					locator1 = "CreateObject#FIELD_ADDED_ON_BLOCK");
+			}
+		}
 	}
 
 	@description = "LPS-146523 - Verify if the default folder will be the Documents and Media Home Folder of that specific site"

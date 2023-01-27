@@ -402,7 +402,7 @@ definition {
 
 			MyAccount.openMyAccountAdmin();
 
-			User.viewUserInfomation(
+			User.viewUserInformation(
 				userEmailAddress = "tester1@liferay.com",
 				userFirstName = "First1",
 				userLastName = "Last1",
@@ -468,7 +468,7 @@ definition {
 
 			MyAccount.openMyAccountAdmin();
 
-			User.viewUserInfomation(
+			User.viewUserInformation(
 				userEmailAddress = "tester1@liferay.com",
 				userFirstName = "Last1",
 				userLastName = "First1",
@@ -882,7 +882,7 @@ definition {
 
 			MyAccount.openMyAccountAdmin(baseURL = "http://www.able.com:8080");
 
-			User.viewUserInfomation(
+			User.viewUserInformation(
 				userBirthday = "12/12/1990",
 				userEmailAddress = "tester1@liferay.com",
 				userFirstName = "First1",
@@ -935,7 +935,7 @@ definition {
 
 			MyAccount.openMyAccountAdmin();
 
-			User.viewUserInfomation(
+			User.viewUserInformation(
 				userBirthday = "12/12/1990",
 				userEmailAddress = "tester1@liferay.com",
 				userFirstName = "First1",
@@ -943,7 +943,7 @@ definition {
 				userMiddleName = "Middle Name",
 				userScreenName = "user1");
 
-			User.viewUserInfomationRolesCP(roleTitle = "Power User");
+			User.viewUserInformationRolesCP(roleTitle = "Power User");
 
 			User.logoutPG();
 		}
@@ -994,7 +994,7 @@ definition {
 		task ("Then: User has power user role") {
 			MyAccount.openMyAccountAdmin();
 
-			User.viewUserInfomationRolesCP(roleTitle = "Power User");
+			User.viewUserInformationRolesCP(roleTitle = "Power User");
 		}
 	}
 

@@ -67,7 +67,6 @@ import com.liferay.object.service.persistence.ObjectEntryPersistence;
 import com.liferay.object.service.persistence.ObjectFieldPersistence;
 import com.liferay.object.service.persistence.ObjectRelationshipPersistence;
 import com.liferay.object.system.SystemObjectDefinitionMetadata;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
@@ -119,10 +118,12 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
+import com.liferay.portal.language.override.service.PLOEntryLocalService;
 import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchRegistrarHelper;
 import com.liferay.portal.util.PortalInstances;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -607,8 +608,8 @@ public class ObjectDefinitionLocalServiceImpl
 				_objectFieldLocalService, _objectLayoutLocalService,
 				_objectRelationshipLocalService, _objectScopeProviderRegistry,
 				_objectViewLocalService, _organizationLocalService,
-				_persistedModelLocalServiceRegistry, _portletLocalService,
-				_resourceActions, _userLocalService,
+				_persistedModelLocalServiceRegistry, _ploEntryLocalService,
+				_portletLocalService, _resourceActions, _userLocalService,
 				_resourcePermissionLocalService,
 				_workflowStatusModelPreFilterContributor,
 				_userGroupRoleLocalService));
@@ -1701,6 +1702,9 @@ public class ObjectDefinitionLocalServiceImpl
 	@Reference
 	private PersistedModelLocalServiceRegistry
 		_persistedModelLocalServiceRegistry;
+
+	@Reference
+	private PLOEntryLocalService _ploEntryLocalService;
 
 	@Reference
 	private Portal _portal;

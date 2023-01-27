@@ -75,7 +75,8 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 					contextCompany.getCompanyId(), _classNameIds, keywords,
 					_getParams(), pagination.getStartPosition(),
 					pagination.getEndPosition(),
-					SortUtil.getIgnoreCaseOrderByComparator(sorts)),
+					SortUtil.getIgnoreCaseOrderByComparator(
+						contextAcceptLanguage.getPreferredLocale(), sorts)),
 				group -> _siteDTOConverter.toDTO(
 					new SiteDTOConverterContext(
 						group.getGroupId(),

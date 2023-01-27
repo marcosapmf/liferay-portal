@@ -19,6 +19,7 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.layout.utility.page.exception.LayoutUtilityPageEntryNameException;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.base.LayoutUtilityPageEntryLocalServiceBaseImpl;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -80,6 +81,15 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 			layoutUtilityPageEntryPersistence.create(
 				counterLocalService.increment());
 
+		if (Validator.isNotNull(externalReferenceCode)) {
+			layoutUtilityPageEntry.setExternalReferenceCode(
+				externalReferenceCode);
+		}
+		else {
+			layoutUtilityPageEntry.setExternalReferenceCode(
+				_getExternalReferenceCode(groupId, name));
+		}
+
 		layoutUtilityPageEntry.setGroupId(groupId);
 
 		User user = _userLocalService.getUser(userId);
@@ -87,8 +97,6 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 		layoutUtilityPageEntry.setCompanyId(user.getCompanyId());
 		layoutUtilityPageEntry.setUserId(user.getUserId());
 		layoutUtilityPageEntry.setUserName(user.getFullName());
-
-		layoutUtilityPageEntry.setExternalReferenceCode(externalReferenceCode);
 
 		if (plid == 0) {
 			Layout layout = _addLayout(
@@ -398,6 +406,28 @@ public class LayoutUtilityPageEntryLocalServiceImpl
 			companyId, themeId, StringPool.BLANK);
 
 		return colorScheme.getColorSchemeId();
+	}
+
+	private String _getExternalReferenceCode(long groupId, String name) {
+		String externalReferenceCode = StringUtil.toLowerCase(name.trim());
+
+		externalReferenceCode = StringUtil.replace(
+			externalReferenceCode, CharPool.SPACE, CharPool.DASH);
+
+		int count = 0;
+
+		while (true) {
+			LayoutUtilityPageEntry layoutUtilityPageEntry =
+				layoutUtilityPageEntryPersistence.fetchByERC_G(
+					externalReferenceCode, groupId);
+
+			if (layoutUtilityPageEntry == null) {
+				return externalReferenceCode;
+			}
+
+			externalReferenceCode =
+				externalReferenceCode + CharPool.DASH + count++;
+		}
 	}
 
 	private String _getUniqueCopyName(

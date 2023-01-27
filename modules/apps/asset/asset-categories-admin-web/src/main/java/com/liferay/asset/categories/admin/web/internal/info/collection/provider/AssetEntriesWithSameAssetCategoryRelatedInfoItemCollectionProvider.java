@@ -27,19 +27,28 @@ import com.liferay.info.collection.provider.ConfigurableInfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
+import com.liferay.info.field.type.CategoriesInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
-import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.localized.bundle.ModelResourceLocalizedValue;
 import com.liferay.info.localized.bundle.ResourceBundleInfoLocalizedValue;
 import com.liferay.info.pagination.InfoPage;
 import com.liferay.info.pagination.Pagination;
+import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
+import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
@@ -52,6 +61,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -67,6 +77,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -139,6 +151,11 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 			InfoFieldSet.builder(
 			).infoFieldSetEntry(
 				_getItemTypesInfoField()
+			).descriptionInfoLocalizedValue(
+				InfoLocalizedValue.localize(
+					getClass(),
+					"by-filtering,-you-can-narrow-down-the-results-that-" +
+						"appear-on-the-page")
 			).labelInfoLocalizedValue(
 				InfoLocalizedValue.localize(getClass(), "filter")
 			).name(
@@ -155,9 +172,12 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 				).name(
 					"assetCategoryRule"
 				).attribute(
+					SelectInfoFieldType.INLINE, true
+				).attribute(
 					SelectInfoFieldType.OPTIONS,
 					ListUtil.fromArray(
 						new SelectInfoFieldType.Option(
+							true,
 							new ResourceBundleInfoLocalizedValue(
 								getClass(), "not-selected"),
 							StringPool.BLANK),
@@ -178,16 +198,27 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 			).infoFieldSetEntry(
 				InfoField.builder(
 				).infoFieldType(
-					TextInfoFieldType.INSTANCE
+					CategoriesInfoFieldType.INSTANCE
 				).namespace(
 					StringPool.BLANK
 				).name(
-					"specificAssetCategoryId"
+					"specificAssetCategoryJSONObject"
+				).attribute(
+					CategoriesInfoFieldType.DEPENDENCY,
+					new KeyValuePair(
+						"assetCategoryRule", "specificAssetCategory")
+				).attribute(
+					CategoriesInfoFieldType.INFO_ITEM_SELECTOR_URL,
+					_getItemSelectorURL()
 				).labelInfoLocalizedValue(
 					InfoLocalizedValue.localize(getClass(), "category")
 				).localizable(
 					false
 				).build()
+			).descriptionInfoLocalizedValue(
+				InfoLocalizedValue.localize(
+					getClass(),
+					"you-can-also-add-a-rule-for-more-accurate-results")
 			).labelInfoLocalizedValue(
 				InfoLocalizedValue.localize(getClass(), "advanced-rule")
 			).name(
@@ -231,13 +262,23 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 
 			if (Objects.equals(assetCategoryRule, "specificAssetCategory") &&
 				!ArrayUtil.isEmpty(
-					configuration.get("specificAssetCategoryId"))) {
+					configuration.get("specificAssetCategoryJSONObject"))) {
 
 				String[] specificAssetCategoryIds = configuration.get(
-					"specificAssetCategoryId");
+					"specificAssetCategoryJSONObject");
 
-				specificAssetCategoryId = GetterUtil.getLong(
-					specificAssetCategoryIds[0]);
+				try {
+					JSONObject jsonObject = _jsonFactory.createJSONObject(
+						specificAssetCategoryIds[0]);
+
+					specificAssetCategoryId = GetterUtil.getLong(
+						jsonObject.get("classPK"));
+				}
+				catch (JSONException jsonException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(jsonException);
+					}
+				}
 			}
 		}
 
@@ -328,6 +369,43 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 			});
 	}
 
+	private String _getItemSelectorURL() {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext == null) {
+			return null;
+		}
+
+		HttpServletRequest httpServletRequest = serviceContext.getRequest();
+
+		if (httpServletRequest == null) {
+			return null;
+		}
+
+		InfoItemItemSelectorCriterion itemSelectorCriterion =
+			new InfoItemItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoItemItemSelectorReturnType());
+		itemSelectorCriterion.setItemType(AssetCategory.class.getName());
+
+		String namespace = StringPool.BLANK;
+
+		LiferayPortletResponse liferayPortletResponse =
+			serviceContext.getLiferayPortletResponse();
+
+		if (liferayPortletResponse != null) {
+			namespace = liferayPortletResponse.getNamespace();
+		}
+
+		return PortletURLBuilder.create(
+			_itemSelector.getItemSelectorURL(
+				RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+				namespace + "selectInfoItem", itemSelectorCriterion)
+		).buildString();
+	}
+
 	private InfoField _getItemTypesInfoField() {
 		List<SelectInfoFieldType.Option> options = new ArrayList<>();
 
@@ -416,6 +494,12 @@ public class AssetEntriesWithSameAssetCategoryRelatedInfoItemCollectionProvider
 
 	@Reference
 	private AssetHelper _assetHelper;
+
+	@Reference
+	private ItemSelector _itemSelector;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

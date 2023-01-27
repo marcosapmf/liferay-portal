@@ -25,7 +25,6 @@ import BreadcrumbFinder from '../BreadcrumbFinder';
 import DropDown from '../DropDown';
 import DropDownWithActions from '../DropDown/DropDown';
 import TestrayIcons from '../Icons/TestrayIcon';
-import NotificationPopover from '../NotificationPopover';
 
 const Divider = () => <p className="mx-2 text-paragraph-lg">/</p>;
 
@@ -34,16 +33,9 @@ type BreadCrumbTriggerProps = {
 };
 
 const Header = () => {
-	const [
-		{
-			dropdown,
-			headerActions,
-			heading,
-			symbol,
-			tabs,
-			testrayDispatchTriggers,
-		},
-	] = useContext(HeaderContext);
+	const [{dropdown, headerActions, heading, symbol, tabs}] = useContext(
+		HeaderContext
+	);
 	const navigate = useNavigate();
 
 	const filteredHeaderActions = Permission.filterActions(
@@ -94,7 +86,7 @@ const Header = () => {
 				<BreadcrumbFinder heading={heading} />
 
 				<div className="d-flex flex-row justify-content-between w-100">
-					<div className="d-flex flex-1 flex-wrap">
+					<div className="d-flex flex-1">
 						{heading.map((header, index) => {
 							const isClickable =
 								header.path && index !== heading.length - 1;
@@ -124,7 +116,7 @@ const Header = () => {
 
 									<div className="d-flex flex-row">
 										<p
-											className="header-title text-paragraph-xl"
+											className="header-title text-nowrap text-paragraph-xl"
 											title={header.title}
 										>
 											{header.title}
@@ -149,10 +141,6 @@ const Header = () => {
 								position={Align.BottomLeft}
 							/>
 						)}
-
-						<NotificationPopover
-							testrayDispatchTriggers={testrayDispatchTriggers}
-						/>
 					</div>
 				</div>
 			</div>

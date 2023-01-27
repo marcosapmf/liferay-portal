@@ -33,7 +33,7 @@ export default function () {
 	useEffect(() => {
 		const getRenewalsData = async () => {
 			// eslint-disable-next-line @liferay/portal/no-global-fetch
-			await fetch('/o/c/opportunitysfs?&sort=closeDate:asc', {
+			await fetch('/o/c/opportunitysfs?pageSize=200&sort=closeDate:asc', {
 				headers: {
 					'accept': 'application/json',
 					'x-csrf-token': Liferay.authToken,
@@ -53,7 +53,13 @@ export default function () {
 		getRenewalsData();
 	}, []);
 
-	const filteredArray = useMemo(() => {
+	const STAGE_REJECTED = 'Rejected';
+	const STAGE_CLOSEDLOST = 'Closed Lost';
+	const STAGE_DISQUALIFIED = 'Disqualified';
+	const STAGE_ROLLED_INTO_ANOTHER_OPPORTUNITY =
+		'Rolled into another opportunity';
+
+	const filteredRenewals = useMemo(() => {
 		const newArray = [];
 		const currentDate = new Date();
 		const milisecondsPerDay = 1000 * 3600 * 24;
@@ -63,11 +69,19 @@ export default function () {
 			const expirationInDays =
 				Math.floor(expirationInTime / milisecondsPerDay) + 1;
 
-			if (expirationInDays > 0 && expirationInDays <= 30) {
+			if (
+				expirationInDays > 0 &&
+				expirationInDays <= 30 &&
+				item.stage !== STAGE_REJECTED &&
+				item.stage !== STAGE_ROLLED_INTO_ANOTHER_OPPORTUNITY &&
+				item.stage !== STAGE_CLOSEDLOST &&
+				item.stage !== STAGE_DISQUALIFIED
+			) {
 				newArray.push({
 					closeDate: item.closeDate,
 					expirationDays: expirationInDays,
 					opportunityName: item.opportunityName,
+					stage: item.stage,
 				});
 			}
 		});
@@ -108,7 +122,7 @@ export default function () {
 			{!data && <ClayLoadingIndicator className="mb-10 mt-9" size="md" />}
 
 			<div className="align-items-start d-flex flex-column mt-3">
-				{filteredArray?.map((item, index) => {
+				{filteredRenewals?.map((item, index) => {
 					getCurrentStatusColor(item);
 
 					return (

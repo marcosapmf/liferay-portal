@@ -46,7 +46,7 @@ const Sidebar = () => {
 					'testray-sidebar-text-expanded': expanded,
 				})}
 			>
-				{i18n.translate('compare-runs')}
+				{i18n.sub('compare-x', 'runs')}
 			</span>
 		</div>
 	);
@@ -74,7 +74,11 @@ const Sidebar = () => {
 				>
 					<Tooltip
 						position="right"
-						title={expanded ? undefined : i18n.translate('tasks')}
+						title={
+							expanded
+								? undefined
+								: i18n.translate('compare-runs')
+						}
 					>
 						{CompareRunsContent}
 					</Tooltip>

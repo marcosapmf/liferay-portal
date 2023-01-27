@@ -1453,7 +1453,10 @@ public class BlogsEntryLocalServiceImpl extends BlogsEntryLocalServiceBaseImpl {
 
 			// Resources
 
-			if (oldStatus == WorkflowConstants.STATUS_DRAFT) {
+			if ((oldStatus == WorkflowConstants.STATUS_DRAFT) ||
+				GetterUtil.getBoolean(
+					serviceContext.getAttribute("addEntryResources"))) {
+
 				if (serviceContext.isAddGroupPermissions() ||
 					serviceContext.isAddGuestPermissions()) {
 

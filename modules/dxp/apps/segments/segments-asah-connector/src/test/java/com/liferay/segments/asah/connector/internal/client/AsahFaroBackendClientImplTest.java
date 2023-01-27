@@ -14,11 +14,11 @@
 
 package com.liferay.segments.asah.connector.internal.client;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.PrefsProps;
-import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.segments.asah.connector.internal.client.model.ExperimentSettings;
 
@@ -41,15 +41,21 @@ public class AsahFaroBackendClientImplTest {
 		LiferayUnitTestRule.INSTANCE;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws ConfigurationException {
 		_jsonWebServiceClient = Mockito.mock(JSONWebServiceClient.class);
 
-		_asahFaroBackendClient = new AsahFaroBackendClientImpl(
-			_jsonWebServiceClient);
+		AnalyticsSettingsManager analyticsSettingsManager = Mockito.mock(
+			AnalyticsSettingsManager.class);
 
-		ReflectionTestUtil.setFieldValue(
-			PrefsPropsUtil.class, "_prefsProps",
-			Mockito.mock(PrefsProps.class));
+		Mockito.when(
+			analyticsSettingsManager.getAnalyticsConfiguration(
+				Mockito.anyLong())
+		).thenReturn(
+			Mockito.mock(AnalyticsConfiguration.class)
+		);
+
+		_asahFaroBackendClient = new AsahFaroBackendClientImpl(
+			analyticsSettingsManager, _jsonWebServiceClient);
 	}
 
 	@Test

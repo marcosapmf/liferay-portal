@@ -91,11 +91,9 @@ public class GetLayoutsTreeStrutsAction implements StrutsAction {
 				}
 			).put(
 				"items",
-				_jsonFactory.createJSONArray(
-					_layoutsTree.getLayoutsJSON(
-						httpServletRequest, groupId, false, privateLayout,
-						parentLayoutId, null, incomplete,
-						"productMenuPagesTree", null))
+				_layoutsTree.getLayoutsJSONArray(
+					null, groupId, httpServletRequest, false, incomplete,
+					parentLayoutId, privateLayout, "productMenuPagesTree")
 			).toString());
 
 		return null;

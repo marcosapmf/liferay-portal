@@ -74,7 +74,8 @@ public class CommerceChannelResourceImpl
 					contextCompany.getCompanyId(), _classNameIds, keywords,
 					_getParams(), pagination.getStartPosition(),
 					pagination.getEndPosition(),
-					SortUtil.getIgnoreCaseOrderByComparator(sorts)),
+					SortUtil.getIgnoreCaseOrderByComparator(
+						contextAcceptLanguage.getPreferredLocale(), sorts)),
 				group -> _commerceChannelDTOConverter.toDTO(
 					new CommerceChannelDTOConverterContext(
 						group.getGroupId(),

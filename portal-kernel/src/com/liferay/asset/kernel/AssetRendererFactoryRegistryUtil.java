@@ -18,6 +18,7 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -25,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 
@@ -40,7 +40,7 @@ public class AssetRendererFactoryRegistryUtil {
 
 		return ListUtil.fromMapValues(
 			_filterAssetRendererFactories(
-				companyId, _classNameAssetRenderFactoriesServiceTrackerMap,
+				companyId, _companyAssetRenderFactoriesServiceTrackerMap,
 				false));
 	}
 
@@ -49,7 +49,7 @@ public class AssetRendererFactoryRegistryUtil {
 
 		return ListUtil.fromMapValues(
 			_filterAssetRendererFactories(
-				companyId, _classNameAssetRenderFactoriesServiceTrackerMap,
+				companyId, _companyAssetRenderFactoriesServiceTrackerMap,
 				filterSelectable));
 	}
 
@@ -91,7 +91,7 @@ public class AssetRendererFactoryRegistryUtil {
 		if (companyId > 0) {
 			Map<String, AssetRendererFactory<?>> assetRenderFactories =
 				_filterAssetRendererFactories(
-					companyId, _classNameAssetRenderFactoriesServiceTrackerMap,
+					companyId, _companyAssetRenderFactoriesServiceTrackerMap,
 					filterSelectable);
 
 			long[] classNameIds = new long[assetRenderFactories.size()];
@@ -109,18 +109,22 @@ public class AssetRendererFactoryRegistryUtil {
 			return classNameIds;
 		}
 
+		int i = 0;
+
 		Set<String> classNames =
 			_classNameAssetRenderFactoriesServiceTrackerMap.keySet();
 
-		Stream<String> stream = classNames.stream();
+		long[] classNameIds = new long[classNames.size()];
 
-		return stream.map(
-			_classNameAssetRenderFactoriesServiceTrackerMap::getService
-		).map(
-			AssetRendererFactory::getClassNameId
-		).mapToLong(
-			classNameId -> classNameId
-		).toArray();
+		for (String className : classNames) {
+			AssetRendererFactory<?> assetRendererFactory =
+				_classNameAssetRenderFactoriesServiceTrackerMap.getService(
+					className);
+
+			classNameIds[i++] = assetRendererFactory.getClassNameId();
+		}
+
+		return classNameIds;
 	}
 
 	private static Map<String, AssetRendererFactory<?>>
@@ -140,7 +144,18 @@ public class AssetRendererFactoryRegistryUtil {
 			if (assetRendererFactory.isActive(companyId) &&
 				(!filterSelectable || assetRendererFactory.isSelectable())) {
 
-				filteredAssetRendererFactories.put(key, assetRendererFactory);
+				if (key.startsWith(
+						"com.liferay.object.model.ObjectDefinition#")) {
+
+					if (key.split("#")[2].equals(String.valueOf(companyId))) {
+						filteredAssetRendererFactories.put(
+							key, assetRendererFactory);
+					}
+				}
+				else {
+					filteredAssetRendererFactories.put(
+						key, assetRendererFactory);
+				}
 			}
 		}
 
@@ -165,6 +180,33 @@ public class AssetRendererFactoryRegistryUtil {
 						_bundleContext.getService(serviceReference);
 
 					emitter.emit(assetRendererFactory.getClassName());
+				});
+
+	private static final ServiceTrackerMap<String, AssetRendererFactory<?>>
+		_companyAssetRenderFactoriesServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				_bundleContext,
+				(Class<AssetRendererFactory<?>>)
+					(Class<?>)AssetRendererFactory.class,
+				null,
+				(serviceReference, emitter) -> {
+					AssetRendererFactory<?> assetRendererFactory =
+						_bundleContext.getService(serviceReference);
+
+					String className = assetRendererFactory.getClassName();
+
+					if (className.startsWith(
+							"com.liferay.object.model.ObjectDefinition#")) {
+
+						emitter.emit(
+							className + "#" +
+								GetterUtil.getLong(
+									serviceReference.getProperty(
+										"company.id")));
+					}
+					else {
+						emitter.emit(className);
+					}
 				});
 
 	private static final ServiceTrackerMap<String, AssetRendererFactory<?>>

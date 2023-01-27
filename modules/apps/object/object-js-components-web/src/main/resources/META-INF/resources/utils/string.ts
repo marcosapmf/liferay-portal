@@ -13,6 +13,7 @@
  */
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+const userLanguageId = Liferay.ThemeDisplay.getLanguageId();
 
 /**
  * Get the label according to the locale
@@ -28,6 +29,7 @@ export function getLocalizableLabel(
 	}
 
 	return (
+		labels[userLanguageId] ??
 		labels[defaultLanguageId] ??
 		labels[creationLanguageId] ??
 		fallback ??
@@ -40,7 +42,9 @@ export function getLocalizableLabel(
  * Checks if the string includes the query
  */
 export function stringIncludesQuery(str: string, query: string) {
-	return str.toLowerCase().includes(query.toLowerCase());
+	return str !== undefined && query !== undefined
+		? str.toLowerCase().includes(query.toLowerCase())
+		: false;
 }
 
 /**

@@ -143,6 +143,9 @@
 								"objectStateTransitions": [
 									{
 										"key": "inFinanceReview"
+									},
+									{
+										"key": "canceled"
 									}
 								]
 							},
@@ -224,6 +227,9 @@
 									},
 									{
 										"key": "rejected"
+									},
+									{
+										"key": "moreInfoRequested"
 									}
 								]
 							},
@@ -245,6 +251,7 @@
 			"type": "String"
 		}
 	],
+	"panelCategoryKey": "control_panel.object",
 	"pluralLabel": {
 		"en_US": "MDF Claims"
 	},

@@ -1,0 +1,13 @@
+@import 'cadmin-variables';
+
+.layout-incomplete {
+	color: $cadmin-secondary-l2;
+}
+
+.layout-selector-options {
+	flex-basis: 33%;
+	flex-grow: 1;
+	max-height: 400px;
+	overflow: auto;
+	padding: 8px;
+}

@@ -45,7 +45,6 @@ import java.util.Collections;
 
 import org.hamcrest.CoreMatchers;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -89,10 +88,34 @@ public class ObjectEntryResourceTest {
 			_objectDefinition2, _OBJECT_FIELD_NAME_2, _OBJECT_FIELD_VALUE_2);
 	}
 
-	@After
-	public void tearDown() throws Exception {
+	@Test
+	public void testFilterByRelatedObjectDefinitionSystemObjectField()
+		throws Exception {
+
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				"feature.flag.LPS-154672", "true"
+			).build());
+
+		_objectRelationship = _addObjectRelationshipAndRelateObjectsEntries(
+			ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+
+		_testFilterByRelatedObjectDefinitionSystemObjectField(
+			_objectRelationship);
+
 		_objectRelationshipLocalService.deleteObjectRelationship(
 			_objectRelationship);
+
+		_objectRelationship = _addObjectRelationshipAndRelateObjectsEntries(
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		_testFilterByRelatedObjectDefinitionSystemObjectField(
+			_objectRelationship);
+
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				"feature.flag.LPS-154672", "false"
+			).build());
 	}
 
 	@Test
@@ -130,7 +153,7 @@ public class ObjectEntryResourceTest {
 	}
 
 	@Test
-	public void testGetRelationshipERCFieldInOneToManyRelationship()
+	public void testGetObjectRelationshipERCFieldNameInOneToManyRelationship()
 		throws Exception {
 
 		PropsUtil.addProperties(
@@ -152,6 +175,50 @@ public class ObjectEntryResourceTest {
 
 		Assert.assertEquals(
 			itemJSONObject.getString(_objectRelationship.getName() + "ERC"),
+			_objectEntry1.getExternalReferenceCode());
+
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				"feature.flag.LPS-161364", "false"
+			).build());
+	}
+
+	@Test
+	public void testGetObjectRelationshipERCFieldNameInOneToManyRelationshipFromRelatedObjectEntry()
+		throws Exception {
+
+		PropsUtil.addProperties(
+			UnicodePropertiesBuilder.setProperty(
+				"feature.flag.LPS-161364", "true"
+			).build());
+
+		_objectRelationship = _addObjectRelationshipAndRelateObjectsEntries(
+			ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		JSONObject jsonObject = HTTPTestUtil.invoke(
+			null,
+			StringBundler.concat(
+				_objectDefinition1.getRESTContextPath(), "?nestedFields=",
+				_objectRelationship.getName()),
+			Http.Method.GET);
+
+		JSONArray itemsJSONArray = jsonObject.getJSONArray("items");
+
+		Assert.assertEquals(1, itemsJSONArray.length());
+
+		JSONObject itemJSONObject = itemsJSONArray.getJSONObject(0);
+
+		JSONArray relationshipJSONArray = itemJSONObject.getJSONArray(
+			_objectRelationship.getName());
+
+		Assert.assertEquals(1, relationshipJSONArray.length());
+
+		JSONObject relatedObjectEntryJSONObject =
+			relationshipJSONArray.getJSONObject(0);
+
+		Assert.assertEquals(
+			relatedObjectEntryJSONObject.getString(
+				_objectRelationship.getName() + "ERC"),
 			_objectEntry1.getExternalReferenceCode());
 
 		PropsUtil.addProperties(
@@ -229,6 +296,43 @@ public class ObjectEntryResourceTest {
 			objectRelationship, TestPropsValues.getUserId());
 
 		return objectRelationship;
+	}
+
+	private void _testFilterByRelatedObjectDefinitionSystemObjectField(
+			ObjectRelationship objectRelationship)
+		throws Exception {
+
+		_testFilterByRelatedObjectDefinitionSystemObjectField(
+			_OBJECT_FIELD_NAME_1, _OBJECT_FIELD_VALUE_1, _objectDefinition1,
+			objectRelationship, _objectEntry2.getObjectEntryId());
+		_testFilterByRelatedObjectDefinitionSystemObjectField(
+			_OBJECT_FIELD_NAME_2, _OBJECT_FIELD_VALUE_2, _objectDefinition2,
+			objectRelationship, _objectEntry1.getObjectEntryId());
+	}
+
+	private void _testFilterByRelatedObjectDefinitionSystemObjectField(
+			String expectedObjectFieldName, String expectedObjectFieldValue,
+			ObjectDefinition objectDefinition,
+			ObjectRelationship objectRelationship, long relatedObjectEntryId)
+		throws Exception {
+
+		String endpoint = StringBundler.concat(
+			objectDefinition.getRESTContextPath(), "?filter=",
+			objectRelationship.getName(), "/id%20eq%20'",
+			String.valueOf(relatedObjectEntryId), StringPool.APOSTROPHE);
+
+		JSONObject jsonObject = HTTPTestUtil.invoke(
+			null, endpoint, Http.Method.GET);
+
+		JSONArray itemsJSONArray = jsonObject.getJSONArray("items");
+
+		Assert.assertEquals(1, itemsJSONArray.length());
+
+		JSONObject itemJSONObject = itemsJSONArray.getJSONObject(0);
+
+		Assert.assertEquals(
+			expectedObjectFieldValue,
+			itemJSONObject.getString(expectedObjectFieldName));
 	}
 
 	private void _testGetNestedFieldDetailsInOneToManyRelationships(

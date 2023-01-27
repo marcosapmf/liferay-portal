@@ -14,8 +14,8 @@
 
 package com.liferay.segments.asah.connector.internal.model.listener;
 
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.portal.kernel.exception.ModelListenerException;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
@@ -56,14 +56,15 @@ public class SegmentsExperienceModelListener
 			SegmentsExperience segmentsExperience)
 		throws ModelListenerException {
 
-		if (AsahUtil.isSkipAsahEvent(
-				segmentsExperience.getCompanyId(),
-				segmentsExperience.getGroupId())) {
-
-			return;
-		}
-
 		try {
+			if (AsahUtil.isSkipAsahEvent(
+					_analyticsSettingsManager,
+					segmentsExperience.getCompanyId(),
+					segmentsExperience.getGroupId())) {
+
+				return;
+			}
+
 			List<SegmentsExperiment> segmentsExperiments =
 				_segmentsExperimentLocalService.getSegmentsExperiments(
 					segmentsExperience.getSegmentsExperienceId(),
@@ -88,7 +89,9 @@ public class SegmentsExperienceModelListener
 	@Activate
 	protected void activate() {
 		_asahSegmentsExperimentProcessor = new AsahSegmentsExperimentProcessor(
-			new AsahFaroBackendClientImpl(_jsonWebServiceClient),
+			_analyticsSettingsManager,
+			new AsahFaroBackendClientImpl(
+				_analyticsSettingsManager, _jsonWebServiceClient),
 			_companyLocalService, _groupLocalService, _layoutLocalService,
 			_portal, _segmentsEntryLocalService,
 			_segmentsExperienceLocalService);
@@ -102,7 +105,7 @@ public class SegmentsExperienceModelListener
 	private void _processUpdateSegmentsExperience(
 			SegmentsExperience segmentsExperience,
 			SegmentsExperiment segmentsExperiment)
-		throws PortalException {
+		throws Exception {
 
 		if (segmentsExperience.getSegmentsExperienceId() ==
 				segmentsExperiment.getSegmentsExperienceId()) {
@@ -122,6 +125,9 @@ public class SegmentsExperienceModelListener
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsExperienceModelListener.class);
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	private AsahSegmentsExperimentProcessor _asahSegmentsExperimentProcessor;
 

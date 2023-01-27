@@ -56,14 +56,13 @@ import org.osgi.service.component.annotations.Reference;
  * @author Carlos Sierra Andrés
  */
 @Component(
-	immediate = true,
 	property = {
 		"osgi.command.function=check", "osgi.command.function=checkAll",
 		"osgi.command.function=execute", "osgi.command.function=executeAll",
 		"osgi.command.function=help", "osgi.command.function=list",
 		"osgi.command.function=show", "osgi.command.scope=verify"
 	},
-	service = VerifyProcessTrackerOSGiCommands.class
+	service = {}
 )
 public class VerifyProcessTrackerOSGiCommands {
 

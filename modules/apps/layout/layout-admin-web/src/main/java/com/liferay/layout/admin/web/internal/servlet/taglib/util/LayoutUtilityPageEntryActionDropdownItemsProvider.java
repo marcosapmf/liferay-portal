@@ -105,7 +105,9 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> _hasUpdatePermission(),
+						() ->
+							_hasAssignDefaultLayoutUtilityPagePermission() &&
+							_hasUpdatePermission(),
 						_getMarkAsDefaultLayoutUtilityPageEntryActionUnsafeConsumer()
 					).add(
 						() -> _hasUpdatePermission(),
@@ -160,9 +162,7 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
-						() -> LayoutUtilityPageEntryPermission.contains(
-							_themeDisplay.getPermissionChecker(),
-							_layoutUtilityPageEntry, ActionKeys.DELETE),
+						() -> _hasDeletePermission(),
 						_getDeleteLayoutUtilityPageEntryActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
@@ -495,6 +495,61 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 		};
 	}
 
+	private boolean _hasAssignDefaultLayoutUtilityPagePermission() {
+		if (_assignDefaultLayoutUtilityPagePermission != null) {
+			return _assignDefaultLayoutUtilityPagePermission;
+		}
+
+		try {
+			_assignDefaultLayoutUtilityPagePermission =
+				GroupPermissionUtil.contains(
+					_themeDisplay.getPermissionChecker(),
+					_layoutUtilityPageEntry.getGroupId(),
+					LayoutUtilityPageActionKeys.
+						ASSIGN_DEFAULT_LAYOUT_UTILITY_PAGE_ENTRY);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return false;
+		}
+
+		return _assignDefaultLayoutUtilityPagePermission;
+	}
+
+	private boolean _hasDeletePermission() {
+		if (_deletePermission != null) {
+			return _deletePermission;
+		}
+
+		Boolean deletePermission = null;
+
+		try {
+			deletePermission = LayoutUtilityPageEntryPermission.contains(
+				_themeDisplay.getPermissionChecker(), _layoutUtilityPageEntry,
+				ActionKeys.DELETE);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			deletePermission = false;
+		}
+
+		if (!deletePermission) {
+			_deletePermission = false;
+
+			return false;
+		}
+
+		_deletePermission = _hasAssignDefaultLayoutUtilityPagePermission();
+
+		return _deletePermission;
+	}
+
 	private boolean _hasUpdatePermission() {
 		if (_updatePermission != null) {
 			return _updatePermission;
@@ -532,6 +587,8 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutUtilityPageEntryActionDropdownItemsProvider.class);
 
+	private Boolean _assignDefaultLayoutUtilityPagePermission;
+	private Boolean _deletePermission;
 	private final Layout _draftLayout;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;

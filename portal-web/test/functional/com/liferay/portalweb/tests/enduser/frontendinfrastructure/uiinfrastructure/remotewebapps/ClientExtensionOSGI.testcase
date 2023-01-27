@@ -4,7 +4,7 @@ definition {
 	property portal.acceptance = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Remote Apps";
+	property testray.main.component.name = "Client Extensions";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -16,7 +16,7 @@ definition {
 
 			ClientExtension.checkConfigFileCreatedProperly();
 
-			RemoteApps.goToRemoteAppsPortlet();
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
 		}
 	}
 
@@ -37,18 +37,18 @@ definition {
 		task ("When access the osgi deployed custom element") {
 			Click(
 				key_tableEntryName = "Vanilla Counter",
-				locator1 = "RemoteApps#TABLE_ENTRY_NAME_REMOTE_TABLE");
+				locator1 = "ClientExtension#TABLE_ENTRY_NAME_REMOTE_TABLE");
 		}
 
 		task ("Then field information is displayed correctly") {
-			RemoteApps.assertMultipleFields(
+			ClientExtensionGeneral.assertMultipleFields(
 				entry_URLs = "https://liferay.github.io/liferay-frontend-projects/vanilla-counter/index.js",
 				entryCSSURLs = "https://liferay.github.io/liferay-frontend-projects/index.css",
 				entrydescription = "Custom Element Description",
 				entryFriendlyURLMapping = "vanilla",
 				entryHTMLElementName = "vanilla-counter",
 				entryName = "Vanilla Counter",
-				entryPortletCategoryName = "category.remote-apps",
+				entryPortletCategoryName = "category.client-extensions",
 				entryproperties = "test-data-user=QAuser",
 				entrySourceCodeURL = "",
 				entryType = "Custom Element");
@@ -59,7 +59,7 @@ definition {
 		}
 
 		task ("And Then fields are not editable") {
-			RemoteApps.assertFieldDisable(entryFieldList = "Name,Source Code URL,Type,Friendly URL Mapping,HTML Element Name,Portlet Category,Name,description,CSS URLs,_URLs,properties");
+			ClientExtensionGeneral.assertFieldDisable(entryFieldList = "Name,Source Code URL,Type,Friendly URL Mapping,HTML Element Name,Portlet Category,Name,description,CSS URLs,_URLs,properties");
 		}
 	}
 
@@ -93,14 +93,14 @@ definition {
 		}
 
 		task ("Then field information is displayed correctly") {
-			RemoteApps.assertMultipleFields(
+			ClientExtensionGeneral.assertMultipleFields(
 				entry_URLs = "https://liferay.github.io/liferay-frontend-projects/vanilla-counter/index.js",
 				entryCSSURLs = "https://liferay.github.io/liferay-frontend-projects/index.css",
 				entrydescription = "Custom Element Description",
 				entryFriendlyURLMapping = "vanilla",
 				entryHTMLElementName = "vanilla-counter",
 				entryName = "Vanilla Counter",
-				entryPortletCategoryName = "category.remote-apps",
+				entryPortletCategoryName = "category.client-extensions",
 				entryproperties = "test-data-user=QAuser",
 				entrySourceCodeURL = "",
 				entryType = "Custom Element");
@@ -111,7 +111,7 @@ definition {
 		}
 
 		task ("And Then fields are not editable") {
-			RemoteApps.assertFieldDisable(entryFieldList = "Name,Source Code URL,Type,Friendly URL Mapping,HTML Element Name,Portlet Category,Name,description,CSS URLs,_URLs,properties");
+			ClientExtensionGeneral.assertFieldDisable(entryFieldList = "Name,Source Code URL,Type,Friendly URL Mapping,HTML Element Name,Portlet Category,Name,description,CSS URLs,_URLs,properties");
 		}
 	}
 

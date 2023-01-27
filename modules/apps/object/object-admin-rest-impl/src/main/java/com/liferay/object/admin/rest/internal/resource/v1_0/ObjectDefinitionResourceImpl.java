@@ -16,6 +16,7 @@ package com.liferay.object.admin.rest.internal.resource.v1_0;
 
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectAction;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
@@ -54,7 +55,6 @@ import com.liferay.object.service.ObjectViewService;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
 import com.liferay.object.system.SystemObjectDefinitionMetadata;
 import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -75,6 +75,7 @@ import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.io.Serializable;
@@ -383,8 +384,7 @@ public class ObjectDefinitionResourceImpl
 					objectField.getDefaultValue(), objectField.getIndexed(),
 					objectField.getIndexedAsKeyword(),
 					objectField.getIndexedLanguageId(),
-					com.liferay.portal.vulcan.util.LocalizedMapUtil.
-						getLocalizedMap(objectField.getLabel()),
+					LocalizedMapUtil.getLocalizedMap(objectField.getLabel()),
 					objectField.getName(), objectField.getRequired(),
 					GetterUtil.getBoolean(objectField.getState()),
 					objectField.getSystem(),
@@ -664,6 +664,7 @@ public class ObjectDefinitionResourceImpl
 						objectDefinition.getObjectDefinitionId()),
 					objectAction -> ObjectActionUtil.toObjectAction(
 						null, contextAcceptLanguage.getPreferredLocale(),
+						_notificationTemplateLocalService,
 						_objectDefinitionLocalService, objectAction),
 					ObjectAction.class);
 				objectFields = transformToArray(
@@ -778,6 +779,9 @@ public class ObjectDefinitionResourceImpl
 
 	@Reference
 	private Localization _localization;
+
+	@Reference
+	private NotificationTemplateLocalService _notificationTemplateLocalService;
 
 	@Reference
 	private ObjectActionLocalService _objectActionLocalService;

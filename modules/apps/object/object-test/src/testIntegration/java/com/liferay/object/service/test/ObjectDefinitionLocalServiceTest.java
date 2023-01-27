@@ -39,7 +39,6 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.system.BaseSystemObjectDefinitionMetadata;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.string.StringPool;
@@ -64,6 +63,7 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.sql.Connection;
 
@@ -73,7 +73,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -414,7 +413,7 @@ public class ObjectDefinitionLocalServiceTest {
 
 	@Test
 	public void testAddObjectDefinition() throws Exception {
-		String externalReferenceCode = String.valueOf(UUID.randomUUID());
+		String externalReferenceCode = RandomTestUtil.randomString();
 		User user = TestPropsValues.getUser();
 
 		ObjectDefinition objectDefinition =

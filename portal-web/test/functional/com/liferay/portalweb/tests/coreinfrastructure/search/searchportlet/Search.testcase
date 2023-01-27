@@ -1655,7 +1655,7 @@ definition {
 
 		SearchPortlets.searchEmbedded(searchTerm = "test");
 
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "john adams,test test,carter braxton,jonathan franklin");
+		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "test test,john adams,carter braxton,jonathan franklin");
 
 		SearchFacetPortlet.updateFacetConfiguration(
 			portletName = "User Facet",
@@ -1663,7 +1663,7 @@ definition {
 
 		Refresh();
 
-		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "jonathan franklin,carter braxton,test test,john adams");
+		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "jonathan franklin,carter braxton,john adams,test test");
 
 		SearchFacetPortlet.updateFacetConfiguration(
 			portletName = "User Facet",
@@ -1680,6 +1680,26 @@ definition {
 		Refresh();
 
 		SearchFacetPortlet.viewFacetItemsSpecificOrder(facetList = "test test,jonathan franklin,john adams,carter braxton");
+	}
+
+	@description = "This is a use case for LPS-172622 - Cannot perform empty searches after a non-empty search"
+	@priority = "3"
+	test CanPerformEmptySearches {
+		SearchPortlets.searchEmbedded(searchTerm = "test");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "tree.png/Document,stars.png/Document,satellite.png/Document,moon.png/Document,earth.png/Document,Home/Page,Test Test/User",
+			searchTerm = "test");
+
+		SearchPortlets.configureSearchOptions(allowEmptySearches = "true");
+
+		Refresh();
+
+		SearchPortlets.searchEmbedded(searchTerm = "");
+
+		SearchResultPortlet.viewMultipleSearchResults(
+			resultsList = "tree.png/Document,stars.png/Document,satellite.png/Document,moon.png/Document,earth.png/Document,Search/Page,Home/Page,Test Test/User",
+			searchTerm = "");
 	}
 
 	@priority = "4"

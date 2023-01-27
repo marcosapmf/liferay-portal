@@ -15,8 +15,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import ConvertToPageTemplateModal from '../../plugins/convert-to-page-template-modal/components/ConvertToPageTemplateModal';
-import {StyleBookContextProvider} from '../../plugins/page-design-options/hooks/useStyleBook';
+import ConvertToPageTemplateModal from '../../plugins/convert_to_page_template_modal/components/ConvertToPageTemplateModal';
+import {StyleBookContextProvider} from '../../plugins/page_design_options/hooks/useStyleBook';
 import {INIT} from '../actions/types';
 import {CollectionActiveItemContextProvider} from '../contexts/CollectionActiveItemContext';
 import {ControlsProvider} from '../contexts/ControlsContext';
@@ -29,8 +29,9 @@ import {
 	useMovementSource,
 } from '../contexts/KeyboardMovementContext';
 import {StoreContextProvider} from '../contexts/StoreContext';
+import AppHooks from '../hooks/app_hooks/index';
 import {reducer} from '../reducers/index';
-import {DragAndDropContextProvider} from '../utils/drag-and-drop/useDragAndDrop';
+import {DragAndDropContextProvider} from '../utils/drag_and_drop/useDragAndDrop';
 import CommonStylesManager from './CommonStylesManager';
 import {DisplayPagePreviewItemSelector} from './DisplayPagePreviewItemSelector';
 import DragPreview from './DragPreview';
@@ -44,7 +45,6 @@ import ShortcutManager from './ShortcutManager';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
 import WidgetsManager from './WidgetsManager';
-import AppHooks from './app-hooks/index';
 
 export default function App({state}) {
 	const initialState = reducer(state, {type: INIT});

@@ -22,6 +22,10 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.frontend.taglib.clay.servlet.taglib.AlertTag;
+import com.liferay.info.constants.InfoItemCreatorConstants;
+import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.info.item.creator.InfoItemCreator;
 import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -40,12 +44,14 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.PrintWriter;
 
@@ -146,20 +152,52 @@ public class CategoriesInputFragmentRenderer implements FragmentRenderer {
 				return;
 			}
 
+			String className = _portal.getClassName(
+				formStyledLayoutStructureItem.getClassNameId());
+
+			InfoItemCreator<Object> infoItemCreator =
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemCreator.class, className);
+
 			PrintWriter printWriter = httpServletResponse.getWriter();
 
-			printWriter.write("<div class=\"categories-input\">");
+			if (!infoItemCreator.supportsCategorization()) {
+				_writeDisabledCategorizationAlert(
+					httpServletRequest, httpServletResponse, printWriter);
 
-			_writeCss(fragmentRendererContext, printWriter);
+				return;
+			}
+
+			printWriter.write("<div");
+
+			if (Objects.equals(
+					fragmentRendererContext.getMode(),
+					FragmentEntryLinkConstants.EDIT)) {
+
+				printWriter.write(" inert");
+			}
+
+			printWriter.write(StringPool.GREATER_THAN);
 
 			AssetCategoriesSelectorTag assetCategoriesSelectorTag =
 				new AssetCategoriesSelectorTag();
 
-			assetCategoriesSelectorTag.setClassName(
-				_portal.getClassName(
-					formStyledLayoutStructureItem.getClassNameId()));
+			assetCategoriesSelectorTag.setClassName(className);
 			assetCategoriesSelectorTag.setClassTypePK(
 				formStyledLayoutStructureItem.getClassTypeId());
+
+			if (Objects.equals(
+					infoItemCreator.getScope(),
+					InfoItemCreatorConstants.SCOPE_COMPANY)) {
+
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				assetCategoriesSelectorTag.setGroupIds(
+					new long[] {themeDisplay.getCompanyGroupId()});
+			}
+
 			assetCategoriesSelectorTag.setShowLabel(false);
 			assetCategoriesSelectorTag.setVisibilityTypes(
 				_getVisibilityTypes(
@@ -233,17 +271,17 @@ public class CategoriesInputFragmentRenderer implements FragmentRenderer {
 	}
 
 	private int[] _getVisibilityTypes(FragmentEntryLink fragmentEntryLink) {
-		String vocabularyVisibility = GetterUtil.getString(
+		String vocabularyType = GetterUtil.getString(
 			_fragmentEntryConfigurationParser.getFieldValue(
 				fragmentEntryLink.getConfiguration(),
 				fragmentEntryLink.getEditableValues(),
-				LocaleUtil.getMostRelevantLocale(), "vocabularyVisibility"));
+				LocaleUtil.getMostRelevantLocale(), "vocabularyType"));
 
-		if (Objects.equals(vocabularyVisibility, "all")) {
+		if (Objects.equals(vocabularyType, "all")) {
 			return AssetVocabularyConstants.VISIBILITY_TYPES;
 		}
 
-		if (Objects.equals(vocabularyVisibility, "internal")) {
+		if (Objects.equals(vocabularyType, "internal")) {
 			return new int[] {
 				AssetVocabularyConstants.VISIBILITY_TYPE_INTERNAL
 			};
@@ -252,20 +290,22 @@ public class CategoriesInputFragmentRenderer implements FragmentRenderer {
 		return new int[] {AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC};
 	}
 
-	private void _writeCss(
-		FragmentRendererContext fragmentRendererContext,
-		PrintWriter printWriter) {
+	private void _writeDisabledCategorizationAlert(
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, PrintWriter printWriter)
+		throws Exception {
 
-		if (Objects.equals(
-				fragmentRendererContext.getMode(),
-				FragmentEntryLinkConstants.EDIT)) {
+		AlertTag alertTag = new AlertTag();
 
-			printWriter.write(
-				StringUtil.read(
-					getClass(),
-					"/com/liferay/fragment/renderer/categorization/inputs" +
-						"/internal/dependencies/styles.html"));
-		}
+		alertTag.setMessage(
+			_language.get(
+				httpServletRequest.getLocale(),
+				"categorization-is-disabled-for-the-selected-content"));
+		alertTag.setTitle(
+			_language.get(httpServletRequest.getLocale(), "info"));
+
+		printWriter.write(
+			alertTag.doTagAsString(httpServletRequest, httpServletResponse));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -273,6 +313,9 @@ public class CategoriesInputFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Reference
 	private JSONFactory _jsonFactory;

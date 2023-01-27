@@ -17,6 +17,9 @@ Import-Package:\
 	\
 	!com.github.kklisura.*,\
 	\
+	!com.graphbuilder.curve.*,\
+	!com.graphbuilder.geom.*,\
+	\
 	!com.keypoint.*,\
 	\
 	!com.lowagie.toolbox.*,\

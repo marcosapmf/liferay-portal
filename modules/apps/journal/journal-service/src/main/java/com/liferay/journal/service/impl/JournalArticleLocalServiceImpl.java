@@ -5907,6 +5907,8 @@ public class JournalArticleLocalServiceImpl
 
 			serviceContext.setAttribute("articleURL", articleURL);
 
+			serviceContext.setCommand(Constants.UPDATE);
+
 			sendEmail(article, articleURL, "requested", serviceContext);
 
 			startWorkflowInstance(userId, article, serviceContext);

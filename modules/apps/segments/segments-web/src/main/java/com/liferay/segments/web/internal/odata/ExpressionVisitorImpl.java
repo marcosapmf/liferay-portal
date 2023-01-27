@@ -14,6 +14,8 @@
 
 package com.liferay.segments.web.internal.odata;
 
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
+
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -42,7 +44,15 @@ import com.liferay.portal.odata.filter.expression.PrimitivePropertyExpression;
 import com.liferay.portal.odata.filter.expression.PropertyExpression;
 import com.liferay.portal.odata.filter.expression.UnaryExpression;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
+
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -77,6 +87,9 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 
 			return _getOperationJSONObject(
 				String.valueOf(operation), left, right);
+		}
+		else if (Objects.equals(BinaryExpression.Operation.SUB, operation)) {
+			return _sub(left, right);
 		}
 
 		throw new UnsupportedOperationException(
@@ -195,6 +208,12 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 	public Object visitLiteralExpression(LiteralExpression literalExpression)
 		throws ExpressionVisitException {
 
+		if (Objects.equals(
+				LiteralExpression.Type.DURATION, literalExpression.getType())) {
+
+			return _getDuration(literalExpression.getText());
+		}
+
 		return StringUtil.unquote(literalExpression.getText());
 	}
 
@@ -230,7 +249,7 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 						"type ", type, " and ", expressions.size(), "params"));
 			}
 
-			return String.valueOf(type);
+			return MethodType.NOW;
 		}
 
 		throw new UnsupportedOperationException(
@@ -267,6 +286,12 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 		throw new UnsupportedOperationException(
 			"Unsupported method visitUnaryExpressionOperation with operation " +
 				operation);
+	}
+
+	public enum MethodType {
+
+		NOW
+
 	}
 
 	private JSONObject _getConjunctionJSONObject(
@@ -309,6 +334,21 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 		);
 	}
 
+	private Duration _getDuration(String literal)
+		throws ExpressionVisitException {
+
+		literal = StringUtil.unquote(
+			StringUtil.removeSubstring(literal, "duration"));
+
+		try {
+			return Duration.parse(literal);
+		}
+		catch (DateTimeParseException dateTimeParseException) {
+			throw new ExpressionVisitException(
+				"Invalid duration: " + dateTimeParseException.getMessage());
+		}
+	}
+
 	private JSONObject _getOperationJSONObject(
 		String operatorName, Object object, List<Object> fieldValues) {
 
@@ -348,6 +388,46 @@ public class ExpressionVisitorImpl implements ExpressionVisitor<Object> {
 		return String.valueOf(object);
 	}
 
+	private Object _sub(Object left, Object right)
+		throws ExpressionVisitException {
+
+		if ((left instanceof MethodType || left instanceof String) &&
+			(right instanceof Duration)) {
+
+			try {
+				Date date = null;
+
+				if (Objects.equals(MethodType.NOW, left)) {
+					date = _date;
+				}
+				else {
+					date = ISO8601Utils.parse(
+						String.valueOf(left), new ParsePosition(0));
+				}
+
+				Duration duration = (Duration)right;
+
+				Instant instant = date.toInstant();
+
+				instant = instant.minusMillis(duration.toMillis());
+
+				return ISO8601Utils.format(Date.from(instant));
+			}
+			catch (ParseException parseException) {
+				throw new ExpressionVisitException(
+					"Only a date with ISO 8601 format is supported as a left " +
+						"operator " + parseException.getMessage());
+			}
+		}
+
+		throw new UnsupportedOperationException(
+			StringBundler.concat(
+				"Unsupported types in _sub with arithmetic operator SUB with ",
+				"left type ", left.getClass(), " and right type ",
+				right.getClass()));
+	}
+
+	private final Date _date = new Date();
 	private final EntityModel _entityModel;
 	private int _groupCount;
 

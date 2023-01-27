@@ -18,8 +18,10 @@ import {
 	AutoComplete,
 	FormError,
 	Input,
+	REQUIRED_MSG,
 	SingleSelect,
 	filterArrayByQuery,
+	getLocalizableLabel,
 	invalidateRequired,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -52,10 +54,6 @@ const ONE_TO_ONE = {
 	label: Liferay.Language.get('one-to-one'),
 	value: ObjectRelationshipType.ONE_TO_ONE,
 };
-
-const REQUIRED_MSG = Liferay.Language.get('required');
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 export function useObjectRelationshipForm({
 	initialValues,
@@ -112,6 +110,8 @@ export function ObjectRelationshipFormBase({
 	setValues,
 	values,
 }: IPros) {
+	const [creationLanguageId, setCreationLanguageId] = useState<Locale>();
+
 	const [objectDefinitions, setObjectDefinitions] = useState<
 		ObjectDefinition[]
 	>([]);
@@ -125,6 +125,17 @@ export function ObjectRelationshipFormBase({
 
 		return [types, types.find(({value}) => value === values.type)?.label];
 	}, [ffOneToOneRelationshipConfigurationEnabled, values.type]);
+
+	useEffect(() => {
+		const makeFetch = async () => {
+			const objectDefinition = await API.getObjectDefinitionByExternalReferenceCode(
+				values.objectDefinitionExternalReferenceCode1!
+			);
+
+			setCreationLanguageId(objectDefinition.defaultLanguageId);
+		};
+		makeFetch();
+	}, [values]);
 
 	useEffect(() => {
 		const fetchObjectDefinitions = async () => {
@@ -167,10 +178,11 @@ export function ObjectRelationshipFormBase({
 	const filteredRelationships = useMemo(() => {
 		return filterArrayByQuery({
 			array: objectDefinitions,
+			creationLanguageId,
 			query,
 			str: 'label',
 		});
-	}, [objectDefinitions, query]);
+	}, [creationLanguageId, objectDefinitions, query]);
 
 	return (
 		<>
@@ -217,7 +229,13 @@ export function ObjectRelationshipFormBase({
 			>
 				{({label, name, system}) => (
 					<div className="d-flex justify-content-between">
-						<div>{label[defaultLanguageId] ?? name}</div>
+						<div>
+							{getLocalizableLabel(
+								creationLanguageId as Locale,
+								label,
+								name
+							)}
+						</div>
 
 						<ClayLabel displayType={system ? 'info' : 'warning'}>
 							{system

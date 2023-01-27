@@ -39,6 +39,8 @@ if (enableKBArticleRatings && kbArticle.isDraft()) {
 	}
 }
 
+ViewKBArticleDisplayContext viewKBArticleDisplayContext = new ViewKBArticleDisplayContext(liferayPortletRequest, liferayPortletResponse);
+
 if (Validator.isNotNull(backURL)) {
 	portletDisplay.setURLBack(backURL);
 }
@@ -48,6 +50,7 @@ boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getIni
 if (portletTitleBasedNavigation) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(redirect);
+
 	renderResponse.setTitle(kbArticle.getTitle());
 }
 %>
@@ -56,8 +59,6 @@ if (portletTitleBasedNavigation) {
 
 	<%
 	KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
-
-	ViewKBArticleDisplayContext viewKBArticleDisplayContext = new ViewKBArticleDisplayContext(liferayPortletRequest, liferayPortletResponse);
 	%>
 
 	<div class="management-bar management-bar-light navbar navbar-expand-md">
@@ -163,6 +164,25 @@ if (portletTitleBasedNavigation) {
 				<div id="<portlet:namespace /><%= kbArticle.getResourcePrimKey() %>">
 					<%= kbArticle.getContent() %>
 				</div>
+
+				<c:if test="<%= viewKBArticleDisplayContext.isKBArticleDescriptionEnabled() && Validator.isNotNull(kbArticle.getDescription()) %>">
+					<liferay-ui:panel-container
+						cssClass="mt-5 panel-group-flush panel-group-sm"
+						extended="<%= true %>"
+						markupView="lexicon"
+						persistState="<%= true %>"
+					>
+						<liferay-frontend:fieldset
+							collapsible="<%= false %>"
+							cssClass="panel-unstyled"
+							label="description"
+						>
+							<div class="lfr-asset-description">
+								<%= HtmlUtil.escape(kbArticle.getDescription()) %>
+							</div>
+						</liferay-frontend:fieldset>
+					</liferay-ui:panel-container>
+				</c:if>
 
 				<clay:content-row>
 					<clay:content-col>

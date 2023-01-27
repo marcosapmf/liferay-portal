@@ -26,12 +26,12 @@ import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,15 +83,11 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 			_log.debug("OAuth 2 application " + oAuth2Application);
 		}
 
-		Company company = companyLocalService.getCompanyById(companyId);
-
-		String serviceAddress = getServiceAddress(company);
-
 		modifyConfigMap(
-			company,
+			companyLocalService.getCompanyById(companyId),
 			HashMapBuilder.put(
 				externalReferenceCode + ".oauth2.authorization.uri",
-				serviceAddress.concat("/o/oauth2/authorize")
+				"/o/oauth2/authorize"
 			).put(
 				externalReferenceCode + ".oauth2.headless.server.audience",
 				oAuth2Application.getHomePageURL()
@@ -106,13 +102,14 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 				StringUtil.merge(scopeAliasesList, StringPool.NEW_LINE)
 			).put(
 				externalReferenceCode + ".oauth2.introspection.uri",
-				serviceAddress.concat("/o/oauth2/introspect")
+				"/o/oauth2/introspect"
 			).put(
-				externalReferenceCode + ".oauth2.jwks.uri",
-				serviceAddress.concat("/o/oauth2/jwks")
+				externalReferenceCode + ".oauth2.jwks.uri", "/o/oauth2/jwks"
 			).put(
-				externalReferenceCode + ".oauth2.token.uri",
-				serviceAddress.concat("/o/oauth2/token")
+				externalReferenceCode + ".oauth2.redirect.uris",
+				"/o/oauth2/redirect"
+			).put(
+				externalReferenceCode + ".oauth2.token.uri", "/o/oauth2/token"
 			).build(),
 			properties);
 	}
@@ -129,32 +126,10 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 			List<String> scopeAliasesList)
 		throws Exception {
 
-		String userAccountEmailAddress =
-			oAuth2ProviderApplicationHeadlessServerConfiguration.
-				userAccountEmailAddress();
-
-		if (!Objects.equals(
-				_COMPANY_DEFAULT_USER_TOKEN, userAccountEmailAddress) &&
-			!Validator.isEmailAddress(userAccountEmailAddress)) {
-
-			throw new IllegalArgumentException(
-				"User account email address must be a valid email address or " +
-					_COMPANY_DEFAULT_USER_TOKEN);
-		}
-
 		User user = userLocalService.getDefaultUser(companyId);
 
-		User serviceUser = null;
-
-		if (Objects.equals(
-				_COMPANY_DEFAULT_USER_TOKEN, userAccountEmailAddress)) {
-
-			serviceUser = user;
-		}
-		else {
-			serviceUser = userLocalService.getUserByEmailAddress(
-				companyId, userAccountEmailAddress);
-		}
+		User serviceUser = _getServiceUser(
+			companyId, oAuth2ProviderApplicationHeadlessServerConfiguration);
 
 		OAuth2Application oAuth2Application =
 			oAuth2ApplicationLocalService.addOrUpdateOAuth2Application(
@@ -194,6 +169,49 @@ public class OAuth2ProviderApplicationHeadlessServerConfigurationFactory
 		return oAuth2ApplicationLocalService.updateIcon(
 			oAuth2Application.getOAuth2ApplicationId(),
 			clazz.getResourceAsStream("dependencies/logo.png"));
+	}
+
+	private User _getServiceUser(
+			long companyId,
+			OAuth2ProviderApplicationHeadlessServerConfiguration
+				oAuth2ProviderApplicationHeadlessServerConfiguration)
+		throws Exception {
+
+		String userAccountEmailAddress =
+			oAuth2ProviderApplicationHeadlessServerConfiguration.
+				userAccountEmailAddress();
+		String userAccountScreenName =
+			oAuth2ProviderApplicationHeadlessServerConfiguration.
+				userAccountScreenName();
+
+		if (!Objects.equals(
+				_COMPANY_DEFAULT_USER_TOKEN, userAccountEmailAddress) &&
+			Objects.equals(
+				_COMPANY_DEFAULT_USER_TOKEN, userAccountScreenName)) {
+
+			if (!Validator.isEmailAddress(userAccountEmailAddress)) {
+				throw new IllegalArgumentException(
+					"User account email address is not an email address");
+			}
+
+			return userLocalService.getUserByEmailAddress(
+				companyId, userAccountEmailAddress);
+		}
+
+		if (Validator.isNull(userAccountScreenName)) {
+			throw new IllegalArgumentException(
+				"User account screen name is null");
+		}
+
+		if (Objects.equals(
+				_COMPANY_DEFAULT_USER_TOKEN, userAccountScreenName)) {
+
+			return userLocalService.getUserByScreenName(
+				companyId, PropsValues.DEFAULT_ADMIN_SCREEN_NAME);
+		}
+
+		return userLocalService.getUserByScreenName(
+			companyId, userAccountScreenName);
 	}
 
 	private static final String _COMPANY_DEFAULT_USER_TOKEN =

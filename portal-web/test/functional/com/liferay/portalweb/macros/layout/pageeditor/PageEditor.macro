@@ -2276,7 +2276,9 @@ definition {
 				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
 		}
 		else {
-			PageEditor.clickConfigurableField(fragmentName = "${fragmentName}");
+			PageEditor.clickConfigurableField(
+				fragmentName = "${fragmentName}",
+				index = "${index}");
 		}
 
 		AssertVisible(
@@ -2386,6 +2388,14 @@ definition {
 		if (isSet(singleSelection)) {
 			Check.checkNotVisible(
 				checkboxName = "Single Selection",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		if (isSet(showHelpText)) {
+			Check.checkNotVisible(
+				checkboxName = "Show Help Text",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
 			PageEditor.waitForAutoSave();
@@ -5667,8 +5677,6 @@ return	Array.from(getWebElement("(//div[@aria-label='${fragmentName}'])[${index}
 
 	macro waitForAutoSave {
 		SelectFrameTop();
-
-		WaitForElementNotPresent(locator1 = "PageEditor#DRAFT_SAVING_MESSAGE");
 
 		WaitForVisible(locator1 = "PageEditor#AUTOSAVE_MESSAGE");
 	}

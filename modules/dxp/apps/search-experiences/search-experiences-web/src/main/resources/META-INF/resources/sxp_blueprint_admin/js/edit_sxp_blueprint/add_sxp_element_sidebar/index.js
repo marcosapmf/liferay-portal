@@ -37,8 +37,8 @@ import {
 } from '../../utils/data';
 import addParams from '../../utils/fetch/add_params';
 import fetchData from '../../utils/fetch/fetch_data';
-import getLocalizedText from '../../utils/language/get_localized_text';
 import {setStorageAddSXPElementSidebar} from '../../utils/sessionStorage';
+import getSXPElementTitleAndDescription from '../../utils/sxp_element/get_sxp_element_title_and_description';
 import isElementInactiveFromNonCompanyIndex from '../../utils/sxp_element/is_element_inactive_from_noncompany_index';
 
 const DEFAULT_CATEGORY = 'other';
@@ -86,12 +86,11 @@ const SXPElementList = ({
 			{showList && (
 				<ClayList>
 					{sxpElements.map((sxpElement, index) => {
-						const description = getLocalizedText(
-							sxpElement.description_i18n,
-							locale
-						);
-						const title = getLocalizedText(
-							sxpElement.title_i18n,
+						const [
+							title,
+							description,
+						] = getSXPElementTitleAndDescription(
+							sxpElement,
 							locale
 						);
 
@@ -245,8 +244,8 @@ function AddSXPElement({
 		(value) => {
 			const newSXPElements = sxpElements.filter((sxpElement) => {
 				if (value) {
-					const sxpElementTitle = getLocalizedText(
-						sxpElement.title_i18n,
+					const [sxpElementTitle] = getSXPElementTitleAndDescription(
+						sxpElement,
 						locale
 					);
 
@@ -312,7 +311,6 @@ function AddSXPElementSidebar({
 	onClose,
 	visible,
 }) {
-	const {defaultLocale} = useContext(ThemeContext);
 	const isMounted = useIsMounted();
 
 	const [querySXPElements, setQuerySXPElements] = useState(null);
@@ -325,25 +323,7 @@ function AddSXPElementSidebar({
 		)
 			.then((responseContent) => {
 				if (isMounted()) {
-					setQuerySXPElements(
-						responseContent.items.map(
-							({
-								description,
-								description_i18n,
-								title,
-								title_i18n,
-								...props
-							}) => ({
-								...props,
-								description_i18n: description_i18n || {
-									[defaultLocale]: description,
-								},
-								title_i18n: title_i18n || {
-									[defaultLocale]: title,
-								},
-							})
-						)
-					);
+					setQuerySXPElements(responseContent.items);
 				}
 			})
 			.catch(() => {

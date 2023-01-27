@@ -289,8 +289,8 @@ definition {
 				value1 = "${name}");
 		}
 
-		if (isSet(parameter)) {
-			ObjectRelationships.editRelationshipsParameter(parameter = "${parameter}");
+		if (isSet(parameterOption)) {
+			ObjectRelationships.editRelationshipsParameter(parameterOption = "${parameterOption}");
 		}
 
 		if ("${invalidEntry}" == "true") {
@@ -699,11 +699,11 @@ definition {
 	}
 
 	macro changeLabelLanguage {
-		Click(locator1 = "ObjectAdmin#DROPDOWN_LANGUAGEM");
+		Click.clickNoMouseOver(locator1 = "ObjectAdmin#DROPDOWN_LANGUAGEM");
 
 		Click(
-			key_newLanguage = "${newLanguage}",
-			locator1 = "ObjectAdmin#SELECT_LANGUAGE");
+			key_menuItem = "${newLanguage}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
 	macro changePicklistFieldEntry {
@@ -722,8 +722,8 @@ definition {
 		Click(locator1 = "ObjectAdmin#DROPDOWN_LANGUAGEM_PLURAL_LABEL");
 
 		Click(
-			key_newLanguage = "${newLanguage}",
-			locator1 = "ObjectAdmin#SELECT_LANGUAGE");
+			key_menuItem = "${newLanguage}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
 	macro changeScopeOnDefinePermissions {
@@ -913,7 +913,7 @@ definition {
 				value1 = "${pluralLabelName}");
 		}
 
-		PortletEntry.save();
+		CreateObject.saveObject();
 	}
 
 	macro editEntryName {
@@ -927,6 +927,20 @@ definition {
 		else {
 			PortletEntry.save();
 		}
+	}
+
+	macro editExternalReferenceCode {
+		Click(locator1 = "Icon#EDIT_PENCIL");
+
+		Type(
+			key_text = "External Reference Code",
+			locator1 = "TextInput#ANY",
+			value1 = "${externalReferenceCode}");
+
+		Click(
+			key_indexNumber = "2",
+			key_text = "Save",
+			locator1 = "Button#ANY_N");
 	}
 
 	macro editObjectAction {
@@ -1222,7 +1236,9 @@ definition {
 	}
 
 	macro publishObjectViaUI {
-		PortletEntry.publish();
+		Button.clickPublish();
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
 	}
 
 	macro saveCustomObject {
@@ -1286,9 +1302,11 @@ definition {
 	}
 
 	macro selectObjectScope {
-		Select(
-			locator1 = "ObjectAdmin#SELECT_OBJECT_SCOPE",
-			value1 = "${fieldOption}");
+		Click(locator1 = "ObjectAdmin#SELECT_OBJECT_SCOPE");
+
+		Click(
+			key_menuItem = "${fieldOption}",
+			locator1 = "MenuItem#ANY_MENU_ITEM");
 	}
 
 	macro selectSpecificKebabMenuOption {
@@ -1300,12 +1318,12 @@ definition {
 	}
 
 	macro viewCategorizationInObjectEntry {
-		AssertElementPresent(locator1 = "ObjectAdmin#CATEGORIZATION_TITLE_INTO_OBJECT");
+		AssertVisible(locator1 = "ObjectAdmin#CATEGORIZATION_TITLE_INTO_OBJECT");
 
-		AssertElementPresent(locator1 = "CalendarEditEvent#CATEGORIZATION_TAG_FIELD");
+		AssertVisible(locator1 = "AssetCategorization#TAGS_FIELD");
 
 		for (var vocabularyName : list "Topic,Audience,Stage") {
-			AssertElementPresent(
+			AssertVisible(
 				key_vocabularyName = "${vocabularyName}",
 				locator1 = "AssetCategorization#CATEGORIES_FIELD");
 		}
