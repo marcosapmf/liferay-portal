@@ -47,8 +47,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -158,7 +156,7 @@ public class SnapshotDemoCreatorService extends DemoCreatorService {
 				return localDateTime.format(dateTimeFormatter);
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 
@@ -169,14 +167,13 @@ public class SnapshotDemoCreatorService extends DemoCreatorService {
 		String collectionName, List<Map<String, Object>> objects) {
 
 		if (Objects.equals(collectionName, "OSBAsahMarkers")) {
-			Stream<Map<String, Object>> stream = objects.stream();
+			for (Map<String, Object> object : objects) {
+				if (Objects.equals(object.get("id"), "Upgrade")) {
+					objects.remove(object);
 
-			stream.filter(
-				object -> Objects.equals(object.get("id"), "Upgrade")
-			).findFirst(
-			).ifPresent(
-				objects::remove
-			);
+					break;
+				}
+			}
 		}
 	}
 
@@ -201,16 +198,13 @@ public class SnapshotDemoCreatorService extends DemoCreatorService {
 					entry.getValue() instanceof List) {
 
 					if (dateField && (entry.getValue() instanceof List)) {
-						List<String> values = (List<String>)entry.getValue();
+						List<Object> values = new ArrayList<>();
 
-						Stream<String> stream = values.stream();
+						for (String value : (List<String>)entry.getValue()) {
+							values.add(_addOffset(value, timeOffset));
+						}
 
-						entry.setValue(
-							stream.map(
-								value -> _addOffset(value, timeOffset)
-							).collect(
-								Collectors.toList()
-							));
+						entry.setValue(values);
 					}
 					else {
 						_adjustTime(entry.getValue(), timeOffset);
