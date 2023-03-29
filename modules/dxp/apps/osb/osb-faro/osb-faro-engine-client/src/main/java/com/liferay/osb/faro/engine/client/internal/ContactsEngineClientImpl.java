@@ -21,6 +21,7 @@ import com.liferay.osb.faro.engine.client.ContactsEngineClient;
 import com.liferay.osb.faro.engine.client.constants.ActivityConstants;
 import com.liferay.osb.faro.engine.client.constants.AssetConstants;
 import com.liferay.osb.faro.engine.client.constants.FieldMappingConstants;
+import com.liferay.osb.faro.engine.client.constants.FilterConstants;
 import com.liferay.osb.faro.engine.client.exception.FaroEngineClientException;
 import com.liferay.osb.faro.engine.client.model.Account;
 import com.liferay.osb.faro.engine.client.model.Activity;
@@ -62,7 +63,6 @@ import com.liferay.osb.faro.engine.client.model.credentials.TokenCredentials;
 import com.liferay.osb.faro.engine.client.model.provider.LiferayProvider;
 import com.liferay.osb.faro.engine.client.model.provider.SalesforceProvider;
 import com.liferay.osb.faro.engine.client.util.FilterBuilder;
-import com.liferay.osb.faro.engine.client.util.FilterConstants;
 import com.liferay.osb.faro.engine.client.util.FilterUtil;
 import com.liferay.osb.faro.engine.client.util.OrderByField;
 import com.liferay.osb.faro.model.FaroProject;
@@ -72,7 +72,7 @@ import com.liferay.portal.kernel.dao.search.SearchPaginationUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -87,17 +87,13 @@ import java.time.ZoneOffset;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -125,23 +121,19 @@ public class ContactsEngineClientImpl
 
 		Map<String, Object> response = post(
 			faroProject, Rels.BLOCKED_KEYWORDS,
-			new HashMap<String, Object>() {
-				{
-					put("keywords", keywords);
-				}
-			},
+			HashMapBuilder.<String, Object>put("keywords", keywords),
 			Map.class);
 
 		List<Object> blockedKeywords = (List<Object>)response.get(
 			"blocked-keywords");
 
-		Stream<Object> stream = blockedKeywords.stream();
+		List<BlockedKeyword> items = new ArrayList<>();
 
-		List<BlockedKeyword> items = stream.map(
-			map -> objectMapper.convertValue(map, BlockedKeyword.class)
-		).collect(
-			Collectors.toList()
-		);
+		for (Object blockedKeywordObject : blockedKeywords) {
+			items.add(
+				objectMapper.convertValue(
+					blockedKeywordObject, BlockedKeyword.class));
+		}
 
 		return new Results<>(items, items.size());
 	}
@@ -164,13 +156,18 @@ public class ContactsEngineClientImpl
 		int byteSize = 0;
 
 		for (Map<String, Object> fieldsMap : fieldsMaps) {
-			Map<String, Object> individualMap = new HashMap<>();
-
-			individualMap.put("dataSourceId", dataSourceId);
-			individualMap.put("dataSourceIndividualPK", UUID.randomUUID());
-			individualMap.put("faroProject", faroProject.getWeDeployKey());
-			individualMap.put("fields", fieldsMap);
-			individualMap.put("individualSegmentIds", individualSegmentIds);
+			Map<String, Object> individualMap =
+				HashMapBuilder.<String, Object>put(
+					"dataSourceId", dataSourceId
+				).put(
+					"dataSourceIndividualPK", UUID.randomUUID()
+				).put(
+					"faroProject", faroProject.getWeDeployKey()
+				).put(
+					"fields", fieldsMap
+				).put(
+					"individualSegmentIds", individualSegmentIds
+				).build();
 
 			byte[] bytes = objectMapper.writeValueAsBytes(individualMap);
 
@@ -241,28 +238,41 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public FieldMapping addFieldMapping(
-		FaroProject faroProject, String context,
+		FaroProject faroProject, Author author, String context,
 		Map<String, String> dataSourceFieldNames, String fieldName,
-		String fieldType, String ownerType, Boolean repeatable) {
+		String fieldType, String ownerType, FieldMapping.Strategy strategy) {
 
 		FieldMapping fieldMapping = new FieldMapping();
 
+		fieldMapping.setAuthor(author);
 		fieldMapping.setContext(context);
 		fieldMapping.setDataSourceFieldNames(dataSourceFieldNames);
 		fieldMapping.setDisplayName(fieldName);
 		fieldMapping.setFieldName(fieldName);
 		fieldMapping.setFieldType(fieldType);
 		fieldMapping.setOwnerType(ownerType);
-		fieldMapping.setRepeatable(repeatable);
+		fieldMapping.setStrategy(strategy);
 
 		return post(
 			faroProject, Rels.FIELD_MAPPINGS, fieldMapping, FieldMapping.class);
 	}
 
 	@Override
+	public FieldMapping addFieldMapping(
+		FaroProject faroProject, long userId, String context,
+		Map<String, String> dataSourceFieldNames, String fieldName,
+		String fieldType, String ownerType, FieldMapping.Strategy strategy) {
+
+		return addFieldMapping(
+			faroProject, getAuthor(userId), context, dataSourceFieldNames,
+			fieldName, fieldType, ownerType, strategy);
+	}
+
+	@Override
 	public List<FieldMapping> addFieldMappings(
-		FaroProject faroProject, String dataSourceId, String context,
-		String ownerType, List<FieldMappingMap> fieldMappingMaps) {
+		FaroProject faroProject, Author author, String dataSourceId,
+		String context, String ownerType,
+		List<FieldMappingMap> fieldMappingMaps) {
 
 		List<Object> fieldMappings = new ArrayList<>();
 		List<Map<String, Object>> uriVariablesList = new ArrayList<>();
@@ -270,6 +280,7 @@ public class ContactsEngineClientImpl
 		for (FieldMappingMap fieldMappingMap : fieldMappingMaps) {
 			FieldMapping fieldMapping = new FieldMapping();
 
+			fieldMapping.setAuthor(author);
 			fieldMapping.setContext(context);
 			fieldMapping.setDisplayName(fieldMappingMap.getName());
 
@@ -285,7 +296,7 @@ public class ContactsEngineClientImpl
 			fieldMapping.setFieldName(fieldMappingMap.getName());
 			fieldMapping.setFieldType(fieldMappingMap.getType());
 			fieldMapping.setOwnerType(ownerType);
-			fieldMapping.setRepeatable(fieldMappingMap.getRepeatable());
+			fieldMapping.setStrategy(FieldMapping.Strategy.DEFAULT);
 
 			fieldMappings.add(fieldMapping);
 
@@ -297,6 +308,17 @@ public class ContactsEngineClientImpl
 			new TypeReference<FieldMapping>() {
 			},
 			uriVariablesList);
+	}
+
+	@Override
+	public List<FieldMapping> addFieldMappings(
+		FaroProject faroProject, long userId, String dataSourceId,
+		String context, String ownerType,
+		List<FieldMappingMap> fieldMappingMaps) {
+
+		return addFieldMappings(
+			faroProject, getAuthor(userId), dataSourceId, context, ownerType,
+			fieldMappingMaps);
 	}
 
 	@Override
@@ -395,7 +417,7 @@ public class ContactsEngineClientImpl
 				String.valueOf(UUID.randomUUID()), CharPool.DASH,
 				StringPool.BLANK);
 
-			projectId = GetterUtil.get(_FARO_PROJECT_ID_PREFIX, "asah") + uuid;
+			projectId = "asah" + uuid;
 		}
 
 		faroProject.setWeDeployKey(projectId);
@@ -495,16 +517,8 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
-	public void deleteProject(FaroProject faroProject, boolean deleteData)
-		throws Exception {
-
-		Map<String, List<String>> queryParameters = new HashMap<>();
-
-		queryParameters.put(
-			"deleteData",
-			Collections.singletonList(String.valueOf(deleteData)));
-
-		delete(faroProject, queryParameters);
+	public void deleteProject(FaroProject faroProject) throws Exception {
+		delete(faroProject);
 	}
 
 	@Override
@@ -547,8 +561,7 @@ public class ContactsEngineClientImpl
 		FilterBuilder filterBuilder = new FilterBuilder();
 
 		filterBuilder.addFilter(
-			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			Long.valueOf(channelId));
+			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS, channelId);
 		filterBuilder.addFilter(
 			"name", FilterConstants.STRING_FUNCTION_CONTAINS, query);
 		filterBuilder.addFilter(
@@ -616,7 +629,7 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public Results<Distribution> getAccountsDistribution(
-		FaroProject faroProject, String channelId, String fieldMappingFieldName,
+		FaroProject faroProject, String channelId, String fieldMappingId,
 		String filter, String individualSegmentId, int count, int numberOfBins,
 		List<OrderByField> orderByFields) {
 
@@ -624,7 +637,7 @@ public class ContactsEngineClientImpl
 			faroProject, 0, count, orderByFields);
 
 		uriVariables.put("channelId", channelId);
-		uriVariables.put("fieldMappingFieldName", fieldMappingFieldName);
+		uriVariables.put("fieldMappingId", fieldMappingId);
 		uriVariables.put("filter", filter);
 		uriVariables.put("individualSegmentId", individualSegmentId);
 		uriVariables.put("numberOfBins", numberOfBins);
@@ -729,8 +742,7 @@ public class ContactsEngineClientImpl
 		FilterBuilder filterBuilder = new FilterBuilder();
 
 		filterBuilder.addFilter(
-			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			Long.valueOf(channelId));
+			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS, channelId);
 
 		addActionFilter(
 			filterBuilder,
@@ -774,11 +786,10 @@ public class ContactsEngineClientImpl
 			"applicationId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
 			applicationId);
 		filterBuilder.addFilter(
-			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			Long.valueOf(channelId));
+			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS, channelId);
 		filterBuilder.addFilter(
 			"eventId", FilterConstants.COMPARISON_OPERATOR_EQUALS, eventId);
-		filterBuilder.addSearchFilter(query, "assetTitle");
+		filterBuilder.addSearchFilter(query, "object.name");
 
 		uriVariables.put("filter", filterBuilder.build());
 
@@ -816,8 +827,7 @@ public class ContactsEngineClientImpl
 		FilterBuilder filterBuilder = new FilterBuilder();
 
 		filterBuilder.addFilter(
-			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			Long.valueOf(channelId));
+			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS, channelId);
 		filterBuilder.addFilter(
 			"day", FilterConstants.COMPARISON_OPERATOR_GREATER_THAN_OR_EQUAL,
 			getDate(startDate, false));
@@ -1263,28 +1273,6 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
-	public Long getEnrichedProfilesCount(
-		FaroProject faroProject, Long channelId) {
-
-		Map<String, Object> uriVariables = getUriVariables(faroProject);
-
-		uriVariables.put("channelId", channelId);
-
-		RestTemplate restTemplate = getRestTemplate(faroProject);
-
-		ResponseEntity<Long> responseEntity = restTemplate.exchange(
-			getTemplatedURL(
-				faroProject, Rels.INDIVIDUALS_ENRICHED_PROFILES_COUNT),
-			HttpMethod.GET, HttpEntity.EMPTY, Long.class, uriVariables);
-
-		return Optional.ofNullable(
-			responseEntity.getBody()
-		).orElse(
-			Long.valueOf(0)
-		);
-	}
-
-	@Override
 	public Field getField(FaroProject faroProject, String id)
 		throws FaroEngineClientException {
 
@@ -1292,12 +1280,10 @@ public class ContactsEngineClientImpl
 	}
 
 	@Override
-	public FieldMapping getFieldMapping(
-			FaroProject faroProject, String fieldName)
+	public FieldMapping getFieldMapping(FaroProject faroProject, String id)
 		throws FaroEngineClientException {
 
-		return get(
-			faroProject, Rels.FIELD_MAPPING, fieldName, FieldMapping.class);
+		return get(faroProject, Rels.FIELD_MAPPING, id, FieldMapping.class);
 	}
 
 	@Override
@@ -1392,7 +1378,7 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public Results<FieldMapping> getFieldMappings(
-		FaroProject faroProject, String context, String displayName,
+		FaroProject faroProject, String context, String fieldName,
 		String ownerType, String query, int cur, int delta,
 		List<OrderByField> orderByFields) {
 
@@ -1404,10 +1390,9 @@ public class ContactsEngineClientImpl
 		filterBuilder.addFilter(
 			"context", FilterConstants.COMPARISON_OPERATOR_EQUALS, context);
 		filterBuilder.addFilter(
-			"displayName", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			displayName);
+			"fieldName", FilterConstants.COMPARISON_OPERATOR_EQUALS, fieldName);
 		filterBuilder.addFilter(
-			"displayName", FilterConstants.STRING_FUNCTION_CONTAINS, query);
+			"fieldName", FilterConstants.STRING_FUNCTION_CONTAINS, query);
 		filterBuilder.addFilter(
 			"ownerType", FilterConstants.COMPARISON_OPERATOR_EQUALS, ownerType);
 
@@ -1576,14 +1561,14 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public Results<Object> getFieldValues(
-		FaroProject faroProject, Long channelId, String query,
-		String fieldMappingFieldName, int cur, int delta) {
+		FaroProject faroProject, String query, String fieldMappingId, int cur,
+		int delta) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, cur, delta, null);
 
 		FieldMapping fieldMapping = getFieldMapping(
-			faroProject, fieldMappingFieldName);
+			faroProject, fieldMappingId);
 
 		String type = null;
 
@@ -1619,7 +1604,6 @@ public class ContactsEngineClientImpl
 			query, fieldMapping.getFieldName(),
 			fieldMapping.getContext() + "/?/value");
 
-		uriVariables.put("channelId", channelId);
 		uriVariables.put("filter", filterBuilder.build());
 
 		PagedModel<?, IndividualTransformation> pagedModel = get(
@@ -1639,13 +1623,11 @@ public class ContactsEngineClientImpl
 
 			Map<String, Object> terms = individualTransformation.getTerms();
 
-			Collection<Object> curValues = terms.values();
+			ArrayList<Object> objects = new ArrayList<>(terms.values());
 
-			Stream<Object> stream = curValues.stream();
+			objects.get(0);
 
-			Optional<Object> optionalFieldValue = stream.findFirst();
-
-			values.add(optionalFieldValue.get());
+			values.add(objects.get(0));
 		}
 
 		return new Results<>(values, results.getTotal());
@@ -1668,12 +1650,12 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public List<FieldMapping> getIndividualAttributes(
-		FaroProject faroProject, String displayName) {
+		FaroProject faroProject, String name) {
 
 		Map<String, Object> uriVariables = getUriVariables(faroProject);
 
-		if (Validator.isNotNull(displayName)) {
-			uriVariables.put("displayName", displayName);
+		if (Validator.isNotNull(name)) {
+			uriVariables.put("name", name);
 		}
 
 		PagedModel<?, FieldMapping> pagedModel = get(
@@ -1703,8 +1685,7 @@ public class ContactsEngineClientImpl
 		FilterBuilder filterBuilder = new FilterBuilder();
 
 		filterBuilder.addFilter(
-			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			Long.valueOf(channelId));
+			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS, channelId);
 		filterBuilder.addFilter(
 			"name", FilterConstants.STRING_FUNCTION_CONTAINS, query);
 		filterBuilder.addFilter(
@@ -1786,35 +1767,37 @@ public class ContactsEngineClientImpl
 			faroProject, cur, delta, orderByFields,
 			FilterConstants.FIELD_NAME_CONTEXT_INDIVIDUAL);
 
-		if (Validator.isNotNull(accountId)) {
-			uriVariables.put("accountId", accountId);
-		}
-
 		if (Validator.isNotNull(channelId)) {
 			uriVariables.put("channelId", channelId);
 		}
 
-		if (Validator.isNotNull(dataSourceId)) {
-			uriVariables.put("dataSourceId", dataSourceId);
-		}
+		uriVariables.put("expand", "account-names");
 
-		if (Validator.isNotNull(filter)) {
-			uriVariables.put("filter", filter);
-		}
+		FilterBuilder filterBuilder = new FilterBuilder();
+
+		filterBuilder.addFilter(
+			"accountId", FilterConstants.COMPARISON_OPERATOR_EQUALS, accountId);
+		filterBuilder.addFilter(
+			"channelIds", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+			channelId);
+		filterBuilder.addFilter(
+			"dataSourceId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+			dataSourceId);
+		filterBuilder.addFilter(
+			"individualSegmentIds", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+			individualSegmentId);
+		filterBuilder.addFilter(
+			"individualSegmentIds",
+			FilterConstants.COMPARISON_OPERATOR_NOT_EQUALS,
+			notIndividualSegmentId);
+		filterBuilder.addInterestFilter(interestName, true);
+		filterBuilder.addFilter(filter);
+		filterBuilder.addSearchFilter(
+			query, fields, FilterConstants.FIELD_NAME_CONTEXT_INDIVIDUAL);
+
+		uriVariables.put("filter", filterBuilder.build());
 
 		uriVariables.put("includeAnonymousUsers", includeAnonymousUsers);
-
-		if (Validator.isNotNull(individualSegmentId)) {
-			uriVariables.put("segmentId", individualSegmentId);
-		}
-
-		if (Validator.isNotNull(notIndividualSegmentId)) {
-			uriVariables.put("notSegmentId", notIndividualSegmentId);
-		}
-
-		if (Validator.isNotNull(query)) {
-			uriVariables.put("query", query);
-		}
 
 		PagedModel<?, Individual> pagedModel = get(
 			faroProject, Rels.INDIVIDUALS,
@@ -1904,25 +1887,36 @@ public class ContactsEngineClientImpl
 			getTemplatedURL(faroProject, Rels.INDIVIDUALS_COUNT),
 			HttpMethod.GET, HttpEntity.EMPTY, Long.class, uriVariables);
 
-		return Optional.ofNullable(
-			responseEntity.getBody()
-		).orElse(
-			0L
-		);
+		if (responseEntity.getBody() == null) {
+			return 0L;
+		}
+
+		return responseEntity.getBody();
 	}
 
 	@Override
 	public Results<Distribution> getIndividualsDistribution(
-		FaroProject faroProject, String channelId, String fieldMappingFieldName,
-		String individualSegmentId, int count, int numberOfBins,
+		FaroProject faroProject, String channelId, String fieldMappingId,
+		String filter, String individualSegmentId, int count, int numberOfBins,
 		List<OrderByField> orderByFields) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, 0, count, orderByFields);
 
-		uriVariables.put("channelId", channelId);
-		uriVariables.put("fieldMappingFieldName", fieldMappingFieldName);
-		uriVariables.put("individualSegmentId", individualSegmentId);
+		uriVariables.put("fieldMappingId", fieldMappingId);
+
+		FilterBuilder filterBuilder = new FilterBuilder();
+
+		filterBuilder.addFilter(filter);
+		filterBuilder.addFilter(
+			"channelIds", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+			channelId);
+		filterBuilder.addFilter(
+			"individualSegmentIds", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+			individualSegmentId);
+
+		uriVariables.put("filter", filterBuilder.build());
+
 		uriVariables.put("numberOfBins", numberOfBins);
 
 		PagedModel<?, Distribution> pagedModel = get(
@@ -2088,7 +2082,7 @@ public class ContactsEngineClientImpl
 		else {
 			filterBuilder.addFilter(
 				"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-				Long.valueOf(channelId));
+				channelId);
 		}
 
 		filterBuilder.addFilter(
@@ -2127,14 +2121,14 @@ public class ContactsEngineClientImpl
 	@Override
 	public Results<IndividualTransformation> getIndividualTransformations(
 		FaroProject faroProject, String individualSegmentId, String query,
-		List<String> fields, String fieldMappingFieldName, int cur, int delta,
+		List<String> fields, String fieldMappingId, int cur, int delta,
 		List<OrderByField> orderByFields) {
 
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, cur, delta, orderByFields);
 
 		FieldMapping fieldMapping = getFieldMapping(
-			faroProject, fieldMappingFieldName);
+			faroProject, fieldMappingId);
 
 		uriVariables.put("apply", getGroupBy(fieldMapping));
 
@@ -2301,8 +2295,7 @@ public class ContactsEngineClientImpl
 
 		filterBuilder.addFilter(filter);
 		filterBuilder.addFilter(
-			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
-			Long.valueOf(channelId));
+			"channelId", FilterConstants.COMPARISON_OPERATOR_EQUALS, channelId);
 
 		uriVariables.put("filter", filterBuilder.build());
 
@@ -2405,13 +2398,14 @@ public class ContactsEngineClientImpl
 		FaroProject faroProject, String id, String dataSourceId,
 		List<Map<String, String>> groups) {
 
-		Map<String, Object> channelPatch = new HashMap<>();
-
-		channelPatch.put("dataSourceId", dataSourceId);
-		channelPatch.put("groups", groups);
-
 		Map<String, Object> patchChannelObject = patch(
-			faroProject, Rels.CHANNEL, id, channelPatch, Map.class);
+			faroProject, Rels.CHANNEL, id,
+			HashMapBuilder.<String, Object>put(
+				"dataSourceId", dataSourceId
+			).put(
+				"groups", groups
+			).build(),
+			Map.class);
 
 		return objectMapper.convertValue(
 			patchChannelObject.get("channel"), Channel.class);
@@ -2465,13 +2459,13 @@ public class ContactsEngineClientImpl
 		FaroProject faroProject, String id, String dataSourceId,
 		String fieldName) {
 
-		Map<String, Object> fieldMappingPatch = new HashMap<>();
-
-		fieldMappingPatch.put("dataSourceId", dataSourceId);
-		fieldMappingPatch.put("fieldName", fieldName);
-
 		return patch(
-			faroProject, Rels.FIELD_MAPPING, id, fieldMappingPatch,
+			faroProject, Rels.FIELD_MAPPING, id,
+			HashMapBuilder.<String, Object>put(
+				"dataSourceId", dataSourceId
+			).put(
+				"fieldName", fieldName
+			).build(),
 			FieldMapping.class);
 	}
 
@@ -2577,12 +2571,14 @@ public class ContactsEngineClientImpl
 
 	@Override
 	public FieldMapping updateFieldMapping(
-		FaroProject faroProject, String context,
+		FaroProject faroProject, String id, Author author, String context,
 		Map<String, String> dataSourceFieldNames, String fieldName,
 		String fieldType, String ownerType) {
 
 		FieldMapping fieldMapping = new FieldMapping();
 
+		fieldMapping.setAuthor(author);
+		fieldMapping.setId(id);
 		fieldMapping.setContext(context);
 		fieldMapping.setDataSourceFieldNames(dataSourceFieldNames);
 		fieldMapping.setFieldName(fieldName);
@@ -2591,7 +2587,7 @@ public class ContactsEngineClientImpl
 
 		return put(
 			faroProject, Rels.FIELD_MAPPING, fieldMapping, FieldMapping.class,
-			getUriVariables(faroProject, fieldName));
+			getUriVariables(faroProject, id));
 	}
 
 	@Override
@@ -2691,14 +2687,13 @@ public class ContactsEngineClientImpl
 	}
 
 	protected String getGroupBy(FieldMapping fieldMapping) {
-		StringBundler sb = new StringBundler(6);
+		StringBundler sb = new StringBundler(5);
 
 		sb.append("groupby((");
 		sb.append(fieldMapping.getContext());
 		sb.append(StringPool.SLASH);
 		sb.append(fieldMapping.getFieldName());
-		sb.append(StringPool.SLASH);
-		sb.append("value))");
+		sb.append("/value))");
 
 		return sb.toString();
 	}
@@ -2730,9 +2725,6 @@ public class ContactsEngineClientImpl
 	protected String getWorkspaceURL(long groupId) {
 		return _FARO_URL + "/workspace/" + groupId;
 	}
-
-	private static final String _FARO_PROJECT_ID_PREFIX = System.getenv(
-		"FARO_PROJECT_ID_PREFIX");
 
 	private static final String _FARO_TEMP_FIELD = "faro_temp_field";
 
