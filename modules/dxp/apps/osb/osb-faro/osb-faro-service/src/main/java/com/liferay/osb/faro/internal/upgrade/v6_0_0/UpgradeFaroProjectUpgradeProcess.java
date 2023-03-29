@@ -12,19 +12,17 @@
  *
  */
 
-package com.liferay.osb.faro.internal.upgrade.v13_0_0;
+package com.liferay.osb.faro.internal.upgrade.v6_0_0;
 
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
 /**
- * @author Matthew Kong
+ * @author André Miranda
  */
-public class UpgradeFaroUser extends UpgradeProcess {
+public class UpgradeFaroProjectUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		runSQL(
-			"create index IX_1B6F355D on OSBFaro_FaroUser (groupId, roleId)");
 	}
 
 }

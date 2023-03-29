@@ -12,24 +12,28 @@
  *
  */
 
-package com.liferay.osb.faro.internal.upgrade.v3_0_0;
+package com.liferay.osb.faro.internal.upgrade.v12_0_0;
 
-import com.liferay.osb.faro.model.impl.FaroProjectModelImpl;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.upgrade.UpgradeStep;
 
 /**
- * @author Matthew Kong
+ * @author André Miranda
  */
-public class UpgradeFaroProject extends UpgradeProcess {
+public class UpgradeFaroProjectUpgradeProcess extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		alter(
-			FaroProjectModelImpl.class,
-			new AlterTableAddColumn("services STRING"));
-		alter(
-			FaroProjectModelImpl.class,
-			new AlterTableDropColumn("weDeployServiceIds"));
+		runSQL("update OSBFaro_FaroProject set sharedCluster = 0");
+	}
+
+	@Override
+	protected UpgradeStep[] getPreUpgradeSteps() {
+		return new UpgradeStep[] {
+			UpgradeProcessFactory.addColumns(
+				"OSBFaro_FaroProject", "sharedCluster BOOLEAN")
+		};
 	}
 
 }
