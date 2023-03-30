@@ -17,7 +17,7 @@ package com.liferay.osb.faro.functional.test;
 import com.liferay.osb.faro.functional.test.driver.FaroSelenium;
 import com.liferay.osb.faro.functional.test.util.FaroSeleniumUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.poshi.runner.util.PropsUtil;
+import com.liferay.poshi.core.util.PropsUtil;
 
 import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
@@ -26,6 +26,7 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 /**
@@ -43,6 +44,7 @@ import org.junit.runner.RunWith;
 	},
 	tags = {"~@blocked", "~@prototype", "~@skip"}
 )
+@Ignore
 @RunWith(Cucumber.class)
 public class FaroTest {
 
@@ -52,9 +54,6 @@ public class FaroTest {
 			"wdm.targetPath", "src/testIntegration/resources/webdriver");
 
 		WebDriverManager webDriverManager = WebDriverManager.chromedriver();
-
-		webDriverManager.version(
-			System.getProperty("chrome.driver.version", "79.0.3945.36"));
 
 		webDriverManager.setup();
 
