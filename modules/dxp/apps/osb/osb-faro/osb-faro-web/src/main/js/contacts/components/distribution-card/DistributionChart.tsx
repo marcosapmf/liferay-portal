@@ -115,7 +115,7 @@ class DistributionChart extends React.Component<
 				channelId,
 				context,
 				count: MAX_BARS,
-				fieldMappingFieldName: propertyId,
+				fieldMappingId: propertyId,
 				groupId,
 				id,
 				individualSegmentId: id,
@@ -137,7 +137,8 @@ class DistributionChart extends React.Component<
 			state: {hoverIndex}
 		} = this;
 
-		const individualFieldDistribution = individualFieldDistributionIList.toJS();
+		const individualFieldDistribution =
+			individualFieldDistributionIList.toJS();
 
 		const histogram = propertyType === FieldTypes.Number;
 

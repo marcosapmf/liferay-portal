@@ -29,7 +29,7 @@ export const Changeset = new Record({
 export const Distribution = new Record({
 	data: new List(),
 	error: false,
-	fieldMappingFieldName: null,
+	fieldMappingId: null,
 	loading: true
 });
 

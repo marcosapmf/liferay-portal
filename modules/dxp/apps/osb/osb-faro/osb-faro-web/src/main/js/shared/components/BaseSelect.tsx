@@ -7,6 +7,7 @@ import Promise from 'metal-promise';
 import React, {useEffect, useImperativeHandle, useRef, useState} from 'react';
 import Spinner from './Spinner';
 import {ARROW_DOWN, ARROW_UP, ENTER} from '../util/key-constants';
+import {DocumentNode} from 'graphql';
 import {identity, noop} from 'lodash';
 import {useDebounce} from 'shared/hooks';
 import {useQuery} from '@apollo/react-hooks';
@@ -18,7 +19,7 @@ const SELECT_KEYS = [ARROW_DOWN, ARROW_UP, ENTER];
 type GraphqlQuery = {
 	mapResultsToProps: (data: any) => TMappedData;
 	variables: object;
-	query: string;
+	query: DocumentNode;
 };
 
 type TMappedData = {
@@ -83,11 +84,11 @@ const BaseSelect: React.FC<IBaseSelectProps> = ({
 	dataSourceFn,
 	disabled = false,
 	emptyInputOnInactive = false,
-	inputName,
 	focusOnInit = false,
 	forwardedRef,
 	graphqlQuery,
 	id,
+	inputName,
 	inputSize,
 	inputValue = '',
 	inset = false,

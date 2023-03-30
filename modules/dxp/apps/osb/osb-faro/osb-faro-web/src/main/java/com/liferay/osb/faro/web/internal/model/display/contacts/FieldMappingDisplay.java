@@ -30,13 +30,13 @@ public class FieldMappingDisplay extends EntityDisplay {
 	}
 
 	public FieldMappingDisplay(FieldMapping fieldMapping) {
-		setId(fieldMapping.getFieldName());
+		setId(fieldMapping.getId());
 
 		_context = fieldMapping.getContext();
 		_dataSourceFieldNames = fieldMapping.getDataSourceFieldNames();
 		_displayName = fieldMapping.getDisplayName();
 		_displayType = fieldMapping.getDisplayType();
-		_name = fieldMapping.getDisplayName();
+		_name = fieldMapping.getFieldName();
 		_ownerType = fieldMapping.getOwnerType();
 		_rawType = SchemaOrgUtil.getRawType(fieldMapping.getFieldType());
 		_type = fieldMapping.getFieldType();

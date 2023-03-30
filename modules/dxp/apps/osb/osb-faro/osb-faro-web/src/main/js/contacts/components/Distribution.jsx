@@ -137,7 +137,7 @@ export class Distribution extends React.Component {
 		error: PropTypes.bool,
 		fetchDistribution: PropTypes.func.isRequired,
 		fieldDistributionIList: PropTypes.instanceOf(List),
-		fieldMappingFieldName: PropTypes.string,
+		fieldMappingId: PropTypes.string,
 		groupId: PropTypes.string.isRequired,
 		hasSelectedPoint: PropTypes.bool,
 		history: PropTypes.object.isRequired,
@@ -250,7 +250,7 @@ export class Distribution extends React.Component {
 				channelId,
 				distributionsKey,
 				fetchDistribution,
-				fieldMappingFieldName,
+				fieldMappingId,
 				groupId,
 				id,
 				numberOfBins
@@ -266,7 +266,7 @@ export class Distribution extends React.Component {
 				channelId,
 				context: selectedContext,
 				count: MAX_ROWS,
-				fieldMappingFieldName,
+				fieldMappingId,
 				groupId,
 				id,
 				individualSegmentId: id,
@@ -295,22 +295,22 @@ export class Distribution extends React.Component {
 
 	@autoCancel
 	fetchFieldMappings() {
-		const {fieldMappingFieldName, groupId, history} = this.props;
+		const {fieldMappingId, groupId, history} = this.props;
 
-		const fieldMappingFn = fieldMappingFieldName
+		const fieldMappingFn = fieldMappingId
 			? () =>
 					API.fieldMappings.fetch({
-						fieldMappingFieldName,
+						fieldMappingId,
 						groupId
 					})
 			: () => API.fieldMappings.fetchDefault(groupId);
 
 		return fieldMappingFn()
 			.then(fieldMapping => {
-				if (!fieldMappingFieldName) {
+				if (!fieldMappingId) {
 					history.replace(
 						setUriQueryValues({
-							fieldMappingFieldName: fieldMapping.id
+							fieldMappingId: fieldMapping.id
 						})
 					);
 				}
@@ -426,7 +426,7 @@ export class Distribution extends React.Component {
 	handleBreakdownSelect(fieldMapping) {
 		const {id, rawType} = fieldMapping;
 
-		const {fieldMappingFieldName, history} = this.props;
+		const {fieldMappingId, history} = this.props;
 
 		const histogram = rawType === FieldTypes.Number;
 
@@ -437,8 +437,8 @@ export class Distribution extends React.Component {
 			histogram
 		});
 
-		if (fieldMappingFieldName !== id) {
-			history.replace(setUriQueryValues({fieldMappingFieldName: id}));
+		if (fieldMappingId !== id) {
+			history.replace(setUriQueryValues({fieldMappingId: id}));
 		}
 
 		if (histogram) {
@@ -703,8 +703,7 @@ export class Distribution extends React.Component {
 
 												<YAxis
 													axisLine={{
-														stroke:
-															AXIS.borderStroke
+														stroke: AXIS.borderStroke
 													}}
 													dataKey='graphValue'
 													domain={yAxisDomain}
@@ -743,8 +742,7 @@ export class Distribution extends React.Component {
 
 												<YAxis
 													axisLine={{
-														stroke:
-															AXIS.borderStroke
+														stroke: AXIS.borderStroke
 													}}
 													dataKey='graphValue'
 													domain={yAxisDomain}
@@ -756,8 +754,7 @@ export class Distribution extends React.Component {
 
 												<XAxis
 													axisLine={{
-														stroke:
-															AXIS.borderStroke
+														stroke: AXIS.borderStroke
 													}}
 													dataKey={CHART_DATA_ID}
 													interval='preserveStart'
@@ -769,8 +766,7 @@ export class Distribution extends React.Component {
 
 												<XAxis
 													axisLine={{
-														stroke:
-															AXIS.borderStroke
+														stroke: AXIS.borderStroke
 													}}
 													dataKey={CHART_DATA_ID}
 													tick={false}
@@ -809,8 +805,7 @@ export class Distribution extends React.Component {
 																)}
 																key={`cell-${index}`}
 																style={{
-																	cursor:
-																		'pointer'
+																	cursor: 'pointer'
 																}}
 															/>
 														)
@@ -892,7 +887,7 @@ export default compose(
 			state,
 			{
 				distributionsKey,
-				fieldMappingFieldName,
+				fieldMappingId,
 				knownIndividualCount,
 				selectedContext
 			}
@@ -906,9 +901,8 @@ export default compose(
 				error: distributionIMap.get('error'),
 				fieldDistributionIList:
 					distributionIMap.getIn(['data', 'items']) || new List(),
-				fieldMappingFieldName:
-					fieldMappingFieldName ||
-					distributionIMap.get('fieldMappingFieldName'),
+				fieldMappingId:
+					fieldMappingId || distributionIMap.get('fieldMappingId'),
 				loading:
 					distributionIMap.get('loading', true) ||
 					knownIndividualCount === null,

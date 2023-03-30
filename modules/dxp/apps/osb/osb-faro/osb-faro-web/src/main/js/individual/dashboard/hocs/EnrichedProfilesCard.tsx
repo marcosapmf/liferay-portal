@@ -2,6 +2,7 @@ import * as API from 'shared/api';
 import Card from 'shared/components/Card';
 import getCN from 'classnames';
 import InfoPopover from 'shared/components/InfoPopover';
+import moment from 'moment';
 import React from 'react';
 import {DataSource} from 'shared/util/records';
 import {isFinite} from 'lodash';
@@ -28,8 +29,18 @@ const EnrichedProfilesBody = ({count}) => (
 
 const EnrichedProfilesBodyWithData = React.memo(
 	withRequest(
-		({channelId, groupId}) =>
-			API.individuals.fetchEnrichedProfilesCount({channelId, groupId}),
+		({channelId, groupId}) => {
+			const ONE_MONTH_AGO_DATE = moment()
+				.subtract('1', 'month')
+				.format('YYYY-MM-DD');
+
+			return API.individuals.search({
+				channelId,
+				delta: 0,
+				filter: `lastEnrichmentDate gt '${ONE_MONTH_AGO_DATE}'`,
+				groupId
+			});
+		},
 		({total}) => ({count: total}),
 		{page: false}
 	)(EnrichedProfilesBody)

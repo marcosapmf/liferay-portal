@@ -10,14 +10,8 @@ import {MomentDateRange} from 'shared/components/DateRangeInput';
 import {RangeKeyTimeRanges} from 'shared/util/constants';
 import {RangeSelectors} from 'shared/types';
 
-const {
-	Last7Days,
-	Last24Hours,
-	Last28Days,
-	Last30Days,
-	Last90Days,
-	Yesterday
-} = RangeKeyTimeRanges;
+const {Last7Days, Last24Hours, Last28Days, Last30Days, Last90Days, Yesterday} =
+	RangeKeyTimeRanges;
 
 type Item = {
 	description?: string;
@@ -31,7 +25,6 @@ interface DropdownRangeKeyIProps {
 	items: Array<Item>;
 	legacy: boolean;
 	onChange: (rangeSelectors: RangeSelectors) => void;
-	rangeKeys: Array<RangeKeyTimeRanges>;
 	rangeSelectors: RangeSelectors;
 }
 
@@ -41,7 +34,6 @@ const DropdownRangeKey: React.FC<DropdownRangeKeyIProps> = ({
 	items,
 	legacy = true, // legacy can be removed once we convert all uses of DropdownRangeKey to include the new values.
 	onChange,
-	rangeKeys = [Last24Hours, Last7Days, Last30Days, Last90Days],
 	rangeSelectors: {rangeEnd, rangeKey, rangeStart} = {
 		rangeEnd: '',
 		rangeKey: Last30Days,
@@ -101,7 +93,9 @@ const DropdownRangeKey: React.FC<DropdownRangeKeyIProps> = ({
 		return items.filter(
 			({value}) =>
 				value === rangeKey ||
-				rangeKeys.includes(value as RangeKeyTimeRanges)
+				[Last24Hours, Last7Days, Last30Days, Last90Days].includes(
+					value as RangeKeyTimeRanges
+				)
 		);
 	};
 

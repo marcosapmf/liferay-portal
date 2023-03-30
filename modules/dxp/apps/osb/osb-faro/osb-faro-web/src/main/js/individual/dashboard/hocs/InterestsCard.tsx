@@ -73,7 +73,7 @@ const InterestsCard: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 		<Card className='interests-card-root' minHeight={536}>
 			<Card.Header>
 				<Card.Title>
-					{Liferay.Language.get('top-interests-as-of-yesterday')}
+					{Liferay.Language.get('top-interests-as-of-today')}
 				</Card.Title>
 			</Card.Header>
 

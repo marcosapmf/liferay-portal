@@ -60,10 +60,7 @@ export class StaticSegmentEdit extends React.Component {
 			changeset.added.isEmpty();
 
 		const validExistingSegment =
-			segment &&
-			segment.individualCount &&
-			validName &&
-			!removedEntireMembership;
+			segment && validName && !removedEntireMembership;
 
 		const validNewSegment =
 			!segment && !changeset.added.isEmpty() && validName;

@@ -27,14 +27,6 @@ export function fetchDetails({groupId, individualId}) {
 	});
 }
 
-export function fetchEnrichedProfilesCount({channelId, groupId}) {
-	return sendRequest({
-		data: {channelId},
-		method: 'GET',
-		path: `contacts/${groupId}/individual/enriched_profiles_count`
-	});
-}
-
 export function fetchMembership({
 	delta,
 	groupId,
@@ -60,17 +52,12 @@ export function fetchMembership({
 	});
 }
 
-export function fetchFieldValues({
-	channelId,
-	fieldMappingFieldName,
-	groupId,
-	query
-}) {
+export function fetchFieldValues({channelId, fieldMappingId, groupId, query}) {
 	return sendRequest({
 		data: {
 			channelId,
 			delta: 20,
-			fieldMappingFieldName,
+			fieldMappingId,
 			query: escapeSingleQuotes(query)
 		},
 		method: 'GET',

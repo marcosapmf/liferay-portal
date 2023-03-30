@@ -31,11 +31,11 @@ import com.liferay.osb.faro.web.internal.util.SchemaOrgUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,12 +60,11 @@ public class SegmentDistributionContactsCardTemplateDisplay
 
 		_binSize = MapUtil.getDouble(settings, "binSize");
 
-		String fieldMappingFieldName = MapUtil.getString(
-			settings, "fieldMappingFieldName");
+		String fieldMappingId = MapUtil.getString(settings, "fieldMappingId");
 
-		if (Validator.isNotNull(fieldMappingFieldName)) {
+		if (Validator.isNotNull(fieldMappingId)) {
 			FieldMapping fieldMapping = contactsEngineClient.getFieldMapping(
-				faroProject, fieldMappingFieldName);
+				faroProject, fieldMappingId);
 
 			_fieldMappingDisplay = new FieldMappingDisplay(fieldMapping);
 		}
@@ -79,8 +78,6 @@ public class SegmentDistributionContactsCardTemplateDisplay
 	public Map<String, Object> getContactsCardData(
 		FaroProject faroProject, FaroEntityDisplay faroEntityDisplay,
 		ContactsEngineClient contactsEngineClient) {
-
-		Map<String, Object> contactsCardData = new HashMap<>();
 
 		List<Map<String, Object>> individualFieldDistribution =
 			new ArrayList<>();
@@ -120,14 +117,13 @@ public class SegmentDistributionContactsCardTemplateDisplay
 						1, _max, contactsEngineClient);
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 
-		contactsCardData.put(
-			"individualFieldDistribution", individualFieldDistribution);
-
-		return contactsCardData;
+		return HashMapBuilder.<String, Object>put(
+			"individualFieldDistribution", individualFieldDistribution
+		).build();
 	}
 
 	protected static int[] getSupportedSizes(

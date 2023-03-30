@@ -21,7 +21,7 @@ exports[`EntityList should render 1`] = `
           </div>
         </div>
         <div
-          class="autofit-col justify-content-center autofit-col-expand"
+          class="autofit-col autofit-col-expand"
         >
           <span
             class="text-truncate"
@@ -57,7 +57,7 @@ exports[`EntityList should render 1`] = `
           </div>
         </div>
         <div
-          class="autofit-col justify-content-center autofit-col-expand"
+          class="autofit-col autofit-col-expand"
         >
           <span
             class="text-truncate"
@@ -93,7 +93,7 @@ exports[`EntityList should render 1`] = `
           </div>
         </div>
         <div
-          class="autofit-col justify-content-center autofit-col-expand"
+          class="autofit-col autofit-col-expand"
         >
           <span
             class="text-truncate"

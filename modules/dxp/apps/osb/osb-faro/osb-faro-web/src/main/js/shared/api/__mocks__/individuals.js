@@ -7,10 +7,6 @@ export const fetchDetails = jest.fn(() =>
 	Promise.resolve(data.mockIndividualDetails())
 );
 
-export const fetchEnrichedProfilesCount = jest.fn(() =>
-	Promise.resolve(data.mockSearch(data.mockIndividual))
-);
-
 export const fetchMembership = jest.fn(() =>
 	Promise.resolve(data.mockSearch(data.mockIndividual))
 );

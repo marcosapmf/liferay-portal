@@ -58,8 +58,7 @@ export default (state = new Map(), action) => {
 								new Distribution(
 									fromJS({
 										data: entity.data,
-										fieldMappingFieldName:
-											meta.fieldMappingFieldName,
+										fieldMappingId: meta.fieldMappingId,
 										loading: false
 									})
 								)

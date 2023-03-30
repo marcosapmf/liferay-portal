@@ -15,6 +15,7 @@
 package com.liferay.osb.faro.web.internal.controller.contacts;
 
 import com.liferay.osb.faro.engine.client.constants.FieldMappingConstants;
+import com.liferay.osb.faro.engine.client.model.Author;
 import com.liferay.osb.faro.engine.client.model.Field;
 import com.liferay.osb.faro.engine.client.model.FieldMapping;
 import com.liferay.osb.faro.engine.client.model.FieldMappingMap;
@@ -28,6 +29,7 @@ import com.liferay.osb.faro.web.internal.model.display.FaroResultsDisplay;
 import com.liferay.osb.faro.web.internal.model.display.contacts.FieldMappingDisplay;
 import com.liferay.osb.faro.web.internal.model.display.contacts.FieldMappingValuesDisplay;
 import com.liferay.osb.faro.web.internal.util.FieldMappingUtil;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.util.Validator;
@@ -38,8 +40,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
 
@@ -75,7 +75,8 @@ public class FieldMappingController extends BaseFaroController {
 			faroProjectLocalService.getFaroProjectByGroupId(groupId);
 
 		contactsEngineClient.addFieldMappings(
-			faroProject, null, FieldMappingConstants.CONTEXT_ORGANIZATION,
+			faroProject, Author.getSystem(), null,
+			FieldMappingConstants.CONTEXT_ORGANIZATION,
 			FieldMappingConstants.OWNER_TYPE_ACCOUNT,
 			FieldMappingUtil.getNewFieldMappingMaps(
 				contactsEngineClient, faroProject,
@@ -92,7 +93,8 @@ public class FieldMappingController extends BaseFaroController {
 			FieldMappingConstants.getSalesforceIndividualFieldMappingMaps());
 
 		contactsEngineClient.addFieldMappings(
-			faroProject, null, FieldMappingConstants.CONTEXT_DEMOGRAPHICS,
+			faroProject, Author.getSystem(), null,
+			FieldMappingConstants.CONTEXT_DEMOGRAPHICS,
 			FieldMappingConstants.OWNER_TYPE_INDIVIDUAL,
 			FieldMappingUtil.getNewFieldMappingMaps(
 				contactsEngineClient, faroProject,
@@ -111,23 +113,22 @@ public class FieldMappingController extends BaseFaroController {
 		return new FieldMappingDisplay(
 			contactsEngineClient.addFieldMapping(
 				faroProjectLocalService.getFaroProjectByGroupId(groupId),
-				FieldMappingConstants.CONTEXT_DEMOGRAPHICS,
+				getUserId(), FieldMappingConstants.CONTEXT_DEMOGRAPHICS,
 				Collections.emptyMap(), name, type,
-				FieldMappingConstants.OWNER_TYPE_INDIVIDUAL, false));
+				FieldMappingConstants.OWNER_TYPE_INDIVIDUAL,
+				FieldMapping.Strategy.DEFAULT));
 	}
 
 	@GET
-	@Path("/{fieldName}")
+	@Path("/{id}")
 	@RolesAllowed(RoleConstants.SITE_MEMBER)
 	public FieldMappingDisplay get(
-			@PathParam("groupId") long groupId,
-			@PathParam("fieldName") String fieldName)
+			@PathParam("groupId") long groupId, @PathParam("id") String id)
 		throws Exception {
 
 		return new FieldMappingDisplay(
 			contactsEngineClient.getFieldMapping(
-				faroProjectLocalService.getFaroProjectByGroupId(groupId),
-				fieldName));
+				faroProjectLocalService.getFaroProjectByGroupId(groupId), id));
 	}
 
 	@GET
@@ -136,7 +137,7 @@ public class FieldMappingController extends BaseFaroController {
 	public FaroResultsDisplay search(
 			@PathParam("groupId") long groupId,
 			@QueryParam("context") String context,
-			@QueryParam("displayName") String displayName,
+			@QueryParam("fieldName") String fieldName,
 			@QueryParam("ownerType") String ownerType,
 			@QueryParam("query") String query, @QueryParam("cur") int cur,
 			@QueryParam("delta") int delta,
@@ -147,12 +148,12 @@ public class FieldMappingController extends BaseFaroController {
 
 		if (Validator.isNotNull(orderByType)) {
 			orderByFields = Collections.singletonList(
-				new OrderByField("displayName", orderByType, true));
+				new OrderByField("fieldName", orderByType, true));
 		}
 
 		Results<FieldMapping> results = contactsEngineClient.getFieldMappings(
 			faroProjectLocalService.getFaroProjectByGroupId(groupId), context,
-			displayName, ownerType, query, cur, delta, orderByFields);
+			fieldName, ownerType, query, cur, delta, orderByFields);
 
 		Function<FieldMapping, FieldMappingDisplay> function =
 			FieldMappingDisplay::new;
@@ -166,7 +167,7 @@ public class FieldMappingController extends BaseFaroController {
 	public FaroResultsDisplay searchByForm(
 			@PathParam("groupId") long groupId,
 			@FormParam("context") String context,
-			@FormParam("displayName") String displayName,
+			@FormParam("fieldName") String fieldName,
 			@FormParam("ownerType") String ownerType,
 			@FormParam("query") String query, @FormParam("cur") int cur,
 			@FormParam("delta") int delta,
@@ -174,7 +175,7 @@ public class FieldMappingController extends BaseFaroController {
 		throws Exception {
 
 		return search(
-			groupId, context, displayName, ownerType, query, cur, delta,
+			groupId, context, fieldName, ownerType, query, cur, delta,
 			orderByType);
 	}
 
@@ -200,15 +201,9 @@ public class FieldMappingController extends BaseFaroController {
 
 		List<FieldMapping> fieldMappings = results.getItems();
 
-		Stream<FieldMapping> stream = fieldMappings.stream();
-
 		List<List<Field>> fieldsList = contactsEngineClient.getFieldsList(
 			faroProject, FieldMappingConstants.CONTEXT_DEMOGRAPHICS,
-			stream.map(
-				FieldMapping::getFieldName
-			).collect(
-				Collectors.toList()
-			),
+			TransformUtil.transform(fieldMappings, FieldMapping::getFieldName),
 			1, 1, null);
 
 		for (int i = 0; i < fieldMappings.size(); i++) {

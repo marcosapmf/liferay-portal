@@ -23,7 +23,7 @@ export function fetchDistribution(data) {
 					actionTypes.FETCH_DISTRIBUTION_FAILURE
 				]
 			},
-			fieldMappingFieldName: data.fieldMappingFieldName,
+			fieldMappingId: data.fieldMappingId,
 			individualSegmentId: data.individualSegmentId
 		},
 		payload: {
@@ -48,7 +48,7 @@ export function fetchIndividualsDistribution(data) {
 					actionTypes.FETCH_DISTRIBUTION_FAILURE
 				]
 			},
-			fieldMappingFieldName: data.fieldMappingFieldName
+			fieldMappingId: data.fieldMappingId
 		},
 		payload: {
 			id: INDIVIDUALS_DASHBOARD_DISTRUBTIONS_KEY

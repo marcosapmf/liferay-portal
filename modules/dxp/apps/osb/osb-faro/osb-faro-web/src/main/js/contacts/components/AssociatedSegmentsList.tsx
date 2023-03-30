@@ -2,7 +2,7 @@ import Card from 'shared/components/Card';
 import getCN from 'classnames';
 import React from 'react';
 import SearchableEntityTable from 'shared/components/SearchableEntityTable';
-import {DATE_CREATED, NAME} from 'shared/util/pagination';
+import {DATE_CREATED, INDIVIDUAL_COUNT, NAME} from 'shared/util/pagination';
 import {getPluralMessage} from 'shared/util/lang';
 import {OrderedMap} from 'immutable';
 import {OrderParams} from 'shared/util/records';
@@ -72,6 +72,10 @@ const AssociatedSegmentsList: React.FC<IAssociatedSegmentsListProps> = ({
 				{
 					label: Liferay.Language.get('name'),
 					value: NAME
+				},
+				{
+					label: Liferay.Language.get('members'),
+					value: INDIVIDUAL_COUNT
 				},
 				{
 					label: Liferay.Language.get('date-created'),

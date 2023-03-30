@@ -10,12 +10,12 @@ import Sticker from './Sticker';
 import TextTruncate from './TextTruncate';
 import {EntityTypes, SegmentTypes} from '../util/constants';
 import {getDataSourceLangKey} from 'shared/util/lang';
+import {getPluralMessage, sub} from '../util/lang';
 import {getRouteName, Routes, toRoute} from 'shared/util/router';
 import {LIFERAY_SITE_TYPE} from 'shared/util/data-sources';
 import {Link} from 'react-router-dom';
 import {PropTypes} from 'prop-types';
 import {Set} from 'immutable';
-import {sub} from '../util/lang';
 
 class EntityListItem extends React.Component {
 	static propTypes = {
@@ -52,7 +52,8 @@ class EntityListItem extends React.Component {
 	}
 
 	getMessage() {
-		const {friendlyURL, properties, providerType, type} = this.props.item;
+		const {friendlyURL, individualCount, properties, providerType, type} =
+			this.props.item;
 
 		switch (type) {
 			case EntityTypes.Individual:
@@ -66,7 +67,11 @@ class EntityListItem extends React.Component {
 			case LIFERAY_SITE_TYPE:
 				return friendlyURL;
 			default:
-				return;
+				return getPluralMessage(
+					Liferay.Language.get('x-individual'),
+					Liferay.Language.get('x-individuals'),
+					individualCount
+				);
 		}
 	}
 
@@ -99,7 +104,7 @@ class EntityListItem extends React.Component {
 					)}
 				</ListGroup.ItemField>
 
-				<ListGroup.ItemField className='justify-content-center' expand>
+				<ListGroup.ItemField expand>
 					<TextTruncate title={name}>
 						<strong>
 							<Link
@@ -171,8 +176,8 @@ class EntityList extends React.Component {
 			loading,
 			noItemsContent,
 			onSelectItemsChange,
-			selectedItemsISet,
 			selectMultiple,
+			selectedItemsISet,
 			showBorder,
 			total,
 			...otherProps

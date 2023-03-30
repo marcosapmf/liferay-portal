@@ -19,13 +19,12 @@ import com.liferay.osb.faro.engine.client.model.FieldMapping;
 import com.liferay.osb.faro.engine.client.model.FieldMappingMap;
 import com.liferay.osb.faro.engine.client.model.Results;
 import com.liferay.osb.faro.model.FaroProject;
+import com.liferay.petra.function.transform.TransformUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Matthew Kong
@@ -38,34 +37,23 @@ public class FieldMappingUtil {
 
 		List<FieldMappingMap> newFieldMappingMaps = new ArrayList<>();
 
-		Stream<FieldMappingMap> fieldMappingMapsStream =
-			fieldMappingMaps.stream();
-
 		Results<FieldMapping> results = contactsEngineClient.getFieldMappings(
 			faroProject, context,
-			fieldMappingMapsStream.map(
-				FieldMappingMap::getName
-			).collect(
-				Collectors.toList()
-			),
+			TransformUtil.transform(fieldMappingMaps, FieldMappingMap::getName),
 			1, 10000, null);
 
-		List<FieldMapping> fieldMappings = results.getItems();
+		Set<String> fieldMappingsDisplayName = new HashSet<>();
 
-		Stream<FieldMapping> fieldMappingsStream = fieldMappings.stream();
-
-		Set<String> currentFieldNames = fieldMappingsStream.map(
-			FieldMapping::getFieldName
-		).collect(
-			Collectors.toSet()
-		);
+		for (FieldMapping fieldMapping : results.getItems()) {
+			fieldMappingsDisplayName.add(fieldMapping.getDisplayName());
+		}
 
 		Set<String> newFieldMappingNames = new HashSet<>();
 
 		for (FieldMappingMap fieldMappingMap : fieldMappingMaps) {
 			String name = fieldMappingMap.getName();
 
-			if (currentFieldNames.contains(name) ||
+			if (fieldMappingsDisplayName.contains(name) ||
 				newFieldMappingNames.contains(name)) {
 
 				continue;

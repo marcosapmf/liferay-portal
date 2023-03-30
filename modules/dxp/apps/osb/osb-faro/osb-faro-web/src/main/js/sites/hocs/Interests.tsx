@@ -1,9 +1,5 @@
 import Card from 'shared/components/Card';
-import Constants, {
-	CompositionTypes,
-	RangeKeyTimeRanges,
-	Sizes
-} from 'shared/util/constants';
+import Constants, {CompositionTypes, Sizes} from 'shared/util/constants';
 import DropdownRangeKey from 'shared/hoc/DropdownRangeKey';
 import InterestsQuery from 'shared/queries/InterestsQuery';
 import React from 'react';
@@ -102,14 +98,9 @@ const Interests = ({history}) => {
 	const {delta, orderIOMap, page} = useQueryPagination({
 		initialOrderIOMap: createOrderIOMap(COUNT)
 	});
-
 	const rangeSelectors = useQueryRangeSelectors();
 
-	const {Last7Days, Last30Days, Last90Days, Yesterday} = RangeKeyTimeRanges;
-
-	const rangeKeys = [Yesterday, Last7Days, Last30Days, Last90Days];
-
-	const handleRangeKeyValueChange = ({rangeEnd, rangeKey, rangeStart}) => {
+	const handleRangeKeyValueChange = ({rangeEnd, rangeKey, rangeStart}) =>
 		history.push(
 			setUriQueryValues(
 				pickBy({
@@ -120,7 +111,6 @@ const Interests = ({history}) => {
 				})
 			)
 		);
-	};
 
 	return (
 		<Card className='sites-interests-root' pageDisplay>
@@ -136,7 +126,6 @@ const Interests = ({history}) => {
 				<DropdownRangeKey
 					legacy={false}
 					onChange={handleRangeKeyValueChange}
-					rangeKeys={rangeKeys}
 					rangeSelectors={rangeSelectors}
 				/>
 			</Card.Header>

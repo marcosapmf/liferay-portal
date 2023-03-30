@@ -70,6 +70,10 @@ exports[`AssociatedSegmentsList should render 1`] = `
           "value": "name",
         },
         Object {
+          "label": "Members",
+          "value": "individualCount",
+        },
+        Object {
           "label": "Date Created",
           "value": "dateCreated",
         },

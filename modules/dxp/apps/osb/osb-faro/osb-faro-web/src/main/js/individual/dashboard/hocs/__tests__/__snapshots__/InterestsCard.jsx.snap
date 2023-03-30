@@ -12,7 +12,7 @@ exports[`InterestsCard renders 1`] = `
       <h5
         class="card-title"
       >
-        Top Interests as of Yesterday
+        Top Interests as of Today
       </h5>
     </div>
     <div
@@ -392,7 +392,7 @@ exports[`InterestsCard renders with empty data 1`] = `
       <h5
         class="card-title"
       >
-        Top Interests as of Yesterday
+        Top Interests as of Today
       </h5>
     </div>
     <div

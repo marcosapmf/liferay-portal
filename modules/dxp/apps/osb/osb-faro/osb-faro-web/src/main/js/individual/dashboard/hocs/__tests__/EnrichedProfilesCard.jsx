@@ -47,9 +47,7 @@ describe('EnrichedProfilesCard', () => {
 	});
 
 	it('should render a fallback display if count is not finite', () => {
-		API.individuals.fetchEnrichedProfilesCount.mockReturnValue(
-			Promise.resolve({total: 0})
-		);
+		API.individuals.search.mockReturnValue(Promise.resolve({total: 0}));
 
 		const {container} = render(<EnrichedProfilesCard />);
 

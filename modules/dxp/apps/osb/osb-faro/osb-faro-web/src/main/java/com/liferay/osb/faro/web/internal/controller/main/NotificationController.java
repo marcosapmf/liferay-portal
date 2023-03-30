@@ -21,13 +21,12 @@ import com.liferay.osb.faro.service.FaroNotificationLocalService;
 import com.liferay.osb.faro.web.internal.controller.BaseFaroController;
 import com.liferay.osb.faro.web.internal.controller.FaroController;
 import com.liferay.osb.faro.web.internal.model.display.contacts.NotificationDisplay;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
 
@@ -100,17 +99,10 @@ public class NotificationController extends BaseFaroController {
 			}
 		}
 
-		List<FaroNotification> faroNotifications =
+		return TransformUtil.transform(
 			_faroNotificationLocalService.findFaroNotificationsLast30Days(
-				groupId, type, getUserId());
-
-		Stream<FaroNotification> stream = faroNotifications.stream();
-
-		return stream.map(
-			NotificationDisplay::new
-		).collect(
-			Collectors.toList()
-		);
+				groupId, type, getUserId()),
+			NotificationDisplay::new);
 	}
 
 	@Path("/{id}/read")

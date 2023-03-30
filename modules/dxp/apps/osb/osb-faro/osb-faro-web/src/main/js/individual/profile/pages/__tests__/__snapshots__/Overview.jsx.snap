@@ -664,7 +664,7 @@ Chrome"
                   </div>
                 </div>
                 <div
-                  class="autofit-col justify-content-center autofit-col-expand"
+                  class="autofit-col autofit-col-expand"
                 >
                   <span
                     class="text-truncate"
@@ -682,7 +682,9 @@ Chrome"
                   </span>
                   <div
                     class="secondary-info"
-                  />
+                  >
+                    10 Individuals
+                  </div>
                 </div>
               </li>
             </ul>

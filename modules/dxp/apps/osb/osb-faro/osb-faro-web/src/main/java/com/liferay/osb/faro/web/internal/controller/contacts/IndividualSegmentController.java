@@ -206,7 +206,7 @@ public class IndividualSegmentController extends BaseFaroController {
 	@RolesAllowed(RoleConstants.SITE_MEMBER)
 	public List<Map<String, Object>> getDistribution(
 			@PathParam("groupId") long groupId, @PathParam("id") String id,
-			@QueryParam("fieldMappingFieldName") String fieldMappingFieldName,
+			@QueryParam("fieldMappingId") String fieldMappingId,
 			@QueryParam("binSize") double binSize,
 			@QueryParam("numberOfBins") int numberOfBins,
 			@QueryParam("cur") int cur, @QueryParam("delta") int delta)
@@ -214,7 +214,7 @@ public class IndividualSegmentController extends BaseFaroController {
 
 		return IndividualSegmentUtil.getFieldDistribution(
 			faroProjectLocalService.getFaroProjectByGroupId(groupId), id,
-			fieldMappingFieldName, binSize, numberOfBins, cur, delta,
+			fieldMappingId, binSize, numberOfBins, cur, delta,
 			contactsEngineClient);
 	}
 

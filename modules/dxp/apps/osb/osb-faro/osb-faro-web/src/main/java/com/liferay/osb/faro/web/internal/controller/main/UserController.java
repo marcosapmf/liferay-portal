@@ -26,6 +26,7 @@ import com.liferay.osb.faro.web.internal.model.display.FaroResultsDisplay;
 import com.liferay.osb.faro.web.internal.model.display.contacts.FaroUserDisplay;
 import com.liferay.osb.faro.web.internal.param.FaroParam;
 import com.liferay.osb.faro.web.internal.util.comparator.FaroUserComparator;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchPaginationUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -42,8 +43,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
 
@@ -208,18 +207,12 @@ public class UserController extends BaseFaroController {
 				orderByFieldsFaroParam.getValue());
 		}
 
-		List<FaroUser> faroUsers = _faroUserLocalService.search(
-			groupId, query, statuses, startAndEnd[0], startAndEnd[1],
-			orderByComparator);
-
-		Stream<FaroUser> stream = faroUsers.stream();
-
 		return new FaroResultsDisplay(
-			stream.map(
-				FaroUserDisplay::new
-			).collect(
-				Collectors.toList()
-			),
+			TransformUtil.transform(
+				_faroUserLocalService.search(
+					groupId, query, statuses, startAndEnd[0], startAndEnd[1],
+					orderByComparator),
+				FaroUserDisplay::new),
 			_faroUserLocalService.searchCount(groupId, query, statuses));
 	}
 

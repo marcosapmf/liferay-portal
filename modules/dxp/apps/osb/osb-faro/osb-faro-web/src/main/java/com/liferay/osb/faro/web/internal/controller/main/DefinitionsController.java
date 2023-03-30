@@ -19,12 +19,11 @@ import com.liferay.osb.faro.web.internal.controller.BaseFaroController;
 import com.liferay.osb.faro.web.internal.controller.FaroController;
 import com.liferay.osb.faro.web.internal.model.display.FaroResultsDisplay;
 import com.liferay.osb.faro.web.internal.model.display.contacts.AttributesDisplay;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.RoleConstants;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.security.RolesAllowed;
 
@@ -52,23 +51,16 @@ public class DefinitionsController extends BaseFaroController {
 	@Path("/individual_attributes")
 	@RolesAllowed(RoleConstants.SITE_MEMBER)
 	public FaroResultsDisplay get(
-			@PathParam("groupId") long groupId,
-			@QueryParam("displayName") String displayName)
+			@PathParam("groupId") long groupId, @QueryParam("name") String name)
 		throws PortalException {
 
 		List<FieldMapping> individualAttributes =
 			contactsEngineClient.getIndividualAttributes(
-				faroProjectLocalService.getFaroProjectByGroupId(groupId),
-				displayName);
-
-		Stream<FieldMapping> stream = individualAttributes.stream();
+				faroProjectLocalService.getFaroProjectByGroupId(groupId), name);
 
 		return new FaroResultsDisplay(
-			stream.map(
-				AttributesDisplay::new
-			).collect(
-				Collectors.toList()
-			),
+			TransformUtil.transform(
+				individualAttributes, AttributesDisplay::new),
 			individualAttributes.size());
 	}
 
