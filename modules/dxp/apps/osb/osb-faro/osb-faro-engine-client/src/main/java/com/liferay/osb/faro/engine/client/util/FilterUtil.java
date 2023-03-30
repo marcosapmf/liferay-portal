@@ -15,13 +15,13 @@
 package com.liferay.osb.faro.engine.client.util;
 
 import com.liferay.osb.faro.engine.client.constants.FilterConstants;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -59,17 +59,11 @@ public class FilterUtil {
 			value = String.valueOf(date.toInstant());
 		}
 		else if (value instanceof List) {
-			List<?> values = (List<?>)value;
-
-			List<String> valuesListString = new ArrayList<>();
-
-			for (Object valueObject : values) {
-				valuesListString.add(String.valueOf(valueObject));
-			}
-
 			value = StringBundler.concat(
 				StringPool.OPEN_BRACKET,
-				StringUtil.merge(valuesListString, StringPool.COMMA),
+				StringUtil.merge(
+					TransformUtil.transform((List<?>)value, String::valueOf),
+					StringPool.COMMA),
 				StringPool.CLOSE_BRACKET);
 		}
 		else {

@@ -506,11 +506,8 @@ public class Table {
 		List<WebElement> tableHeaders = _faroSelenium.findElements(
 			"//thead//th");
 
-		List<String> webElementText = new ArrayList<>();
-
-		for (WebElement webElement : tableHeaders) {
-			webElementText.add(webElement.getText());
-		}
+		List<String> webElementText = TransformUtil.transform(
+			tableHeaders, tableHeader -> tableHeader.getText());
 
 		int rowTdOffset = 1;
 

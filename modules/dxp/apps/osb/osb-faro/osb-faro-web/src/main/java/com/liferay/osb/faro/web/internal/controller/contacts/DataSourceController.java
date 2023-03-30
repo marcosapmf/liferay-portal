@@ -569,17 +569,11 @@ public class DataSourceController extends BaseFaroController {
 				<List<Long>> groupIdsFaroParam)
 		throws Exception {
 
-		List<DXPGroup> dxpGroups = contactsEngineClient.getDataSourceDXPGroups(
-			faroProjectLocalService.getFaroProjectByGroupId(groupId), id,
-			groupIdsFaroParam.getValue());
-
-		List<DXPGroupDisplay> dxpGroupDisplays = new ArrayList<>();
-
-		for (DXPGroup dxpGroup : dxpGroups) {
-			dxpGroupDisplays.add(new DXPGroupDisplay(dxpGroup));
-		}
-
-		return dxpGroupDisplays;
+		return TransformUtil.transform(
+			contactsEngineClient.getDataSourceDXPGroups(
+				faroProjectLocalService.getFaroProjectByGroupId(groupId), id,
+				groupIdsFaroParam.getValue()),
+			DXPGroupDisplay::new);
 	}
 
 	@GET
@@ -734,26 +728,21 @@ public class DataSourceController extends BaseFaroController {
 							fieldsMap.get(currentFieldMapping.getFieldName()));
 				}
 
-				List<FieldMappingValuesDisplay>
-					suggestionFieldMappingValuesDisplays = new ArrayList<>();
-
 				List<List<String>> fieldNamesList =
 					contactsEngineClient.getFieldNamesList(
 						faroProject, dataSourceFieldNames,
 						FieldMappingConstants.OWNER_TYPE_INDIVIDUAL,
 						dataSourceFieldValues);
 
-				for (String fieldName : fieldNamesList.get(i)) {
-					suggestionFieldMappingValuesDisplays.add(
-						fieldMappingValuesDisplayMap.get(fieldName));
-				}
-
 				dataSourceMappingDisplays.add(
 					new DataSourceMappingDisplay(
 						fieldValuesDisplay.getName(),
 						fieldValuesDisplay.getValues(),
 						currentFieldMappingValuesDisplay,
-						suggestionFieldMappingValuesDisplays));
+						TransformUtil.transform(
+							fieldNamesList.get(i),
+							fieldName -> fieldMappingValuesDisplayMap.get(
+								fieldName))));
 			}
 		}
 

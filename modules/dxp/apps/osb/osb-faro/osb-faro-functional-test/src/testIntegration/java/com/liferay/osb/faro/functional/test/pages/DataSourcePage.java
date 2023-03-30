@@ -21,6 +21,7 @@ import com.liferay.osb.faro.functional.test.util.FaroSeleniumUtil;
 import com.liferay.osb.faro.functional.test.util.FaroTestConstants;
 import com.liferay.osb.faro.functional.test.util.FaroTestDataUtil;
 import com.liferay.osb.faro.functional.test.util.FaroTransformer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -32,7 +33,6 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -154,15 +154,12 @@ public class DataSourcePage {
 	public void assertDataPreviewCSV(DataTable dataTable) throws Exception {
 		List<List<String>> dataTableRows = dataTable.raw();
 
-		List<String> dataTableRowStrings = new ArrayList<>();
-
-		for (List<String> dataTableRow : dataTableRows) {
-			dataTableRowStrings.add(
-				StringUtil.merge(dataTableRow, StringPool.SPACE));
-		}
-
 		String dataTableString = StringUtil.merge(
-			dataTableRowStrings, StringPool.NEW_LINE);
+			TransformUtil.transform(
+				dataTableRows,
+				dataTableRow -> StringUtil.merge(
+					dataTableRow, StringPool.SPACE)),
+			StringPool.NEW_LINE);
 
 		WebElement webElement = _faroSelenium.findElement(
 			"//div[@class='modal-content']/table");

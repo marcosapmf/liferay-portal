@@ -17,6 +17,7 @@ package com.liferay.osb.faro.service.persistence.impl;
 import com.liferay.osb.faro.model.FaroUser;
 import com.liferay.osb.faro.model.impl.FaroUserImpl;
 import com.liferay.osb.faro.service.persistence.FaroUserFinder;
+import com.liferay.petra.function.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
@@ -29,7 +30,6 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -326,13 +326,8 @@ public class FaroUserFinderImpl
 			return StringPool.BLANK;
 		}
 
-		List<String> statusesString = new ArrayList<>();
-
-		for (Integer status : statuses) {
-			String.valueOf(status);
-		}
-
-		return StringUtil.merge(statusesString, ", ");
+		return StringUtil.merge(
+			TransformUtil.transform(statuses -> String::valueOf), ", ");
 	}
 
 	private static final String _AVAILABLE_FARO_USER_SQL =

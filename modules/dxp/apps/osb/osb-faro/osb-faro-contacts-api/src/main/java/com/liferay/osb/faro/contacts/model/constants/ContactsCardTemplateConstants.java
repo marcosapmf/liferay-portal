@@ -86,36 +86,35 @@ public class ContactsCardTemplateConstants {
 		return _constants;
 	}
 
-	private static final Map<String, Integer> _cardTypes =
-		HashMapBuilder.<String, Integer>put(
-			"activityHistory", TYPE_ACTIVITY_HISTORY
-		).put(
-			"associatedSegments", TYPE_ASSOCIATED_SEGMENTS
-		).put(
-			"closedWon", TYPE_CLOSED_WON
-		).put(
-			"conversionHealth", TYPE_CONVERSION_HEALTH
-		).put(
-			"coworkers", TYPE_COWORKERS
-		).put(
-			"interests", TYPE_INTEREST
-		).put(
-			"lifetimeValue", TYPE_LIFETIME_VALUE
-		).put(
-			"netSales", TYPE_NET_SALES
-		).put(
-			"profile", TYPE_PROFILE
-		).put(
-			"recentActivities", TYPE_RECENT_ACTIVITIES
-		).put(
-			"segmentDistribution", TYPE_SEGMENT_DISTRIBUTION
-		).put(
-			"segmentMembership", TYPE_SEGMENT_MEMBERSHIP
-		).put(
-			"similar", TYPE_SIMILAR
-		).put(
-			"touchpointAttribution", TYPE_TOUCHPOINT_ATTRIBUTION
-		).build();
+	private static final Map<String, Integer> _cardTypes = HashMapBuilder.put(
+		"activityHistory", TYPE_ACTIVITY_HISTORY
+	).put(
+		"associatedSegments", TYPE_ASSOCIATED_SEGMENTS
+	).put(
+		"closedWon", TYPE_CLOSED_WON
+	).put(
+		"conversionHealth", TYPE_CONVERSION_HEALTH
+	).put(
+		"coworkers", TYPE_COWORKERS
+	).put(
+		"interests", TYPE_INTEREST
+	).put(
+		"lifetimeValue", TYPE_LIFETIME_VALUE
+	).put(
+		"netSales", TYPE_NET_SALES
+	).put(
+		"profile", TYPE_PROFILE
+	).put(
+		"recentActivities", TYPE_RECENT_ACTIVITIES
+	).put(
+		"segmentDistribution", TYPE_SEGMENT_DISTRIBUTION
+	).put(
+		"segmentMembership", TYPE_SEGMENT_MEMBERSHIP
+	).put(
+		"similar", TYPE_SIMILAR
+	).put(
+		"touchpointAttribution", TYPE_TOUCHPOINT_ATTRIBUTION
+	).build();
 	private static final Map<String, Object> _constants = new HashMap<>();
 
 	static {

@@ -15,6 +15,7 @@
 package com.liferay.osb.faro.web.internal.util;
 
 import com.liferay.osb.faro.web.internal.model.display.contacts.TimeZoneDisplay;
+import com.liferay.petra.function.TransformUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -26,7 +27,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.zone.ZoneRulesException;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -52,15 +52,10 @@ public class TimeZoneUtil {
 		Set<Map.Entry<String, String>> timeZoneIds =
 			_timeZoneIdCountryMap.entrySet();
 
-		ArrayList<TimeZoneDisplay> timeZoneDisplayList = new ArrayList<>();
-
-		for (Map.Entry<String, String> timeZoneId : timeZoneIds) {
-			timeZoneDisplayList.add(
-				new TimeZoneDisplay(
-					ZoneId.of(timeZoneId.getKey()), timeZoneId.getValue()));
-		}
-
-		return timeZoneDisplayList;
+		return TransformUtil.transform(
+			timeZoneIds,
+			timeZoneId -> new TimeZoneDisplay(
+				ZoneId.of(timeZoneId.getKey()), timeZoneId.getValue()));
 	}
 
 	public static boolean validate(String timeZoneId) {

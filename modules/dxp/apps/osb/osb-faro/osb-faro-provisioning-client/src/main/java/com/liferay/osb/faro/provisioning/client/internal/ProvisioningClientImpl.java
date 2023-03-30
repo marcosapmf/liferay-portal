@@ -25,6 +25,7 @@ import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Account;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Contact;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ContactRole;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.Product;
+import com.liferay.petra.function.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -178,13 +179,8 @@ public class ProvisioningClientImpl implements ProvisioningClient {
 			List<Account> accounts = KoroneikiHttpUtil.searchAccounts(
 				sb.toString(), page, 500);
 
-			List<OSBAccountEntry> osbAccountEntry = new ArrayList<>();
-
-			for (Account account : accounts) {
-				osbAccountEntry.add(new OSBAccountEntry(account));
-			}
-
-			osbAccountEntries.addAll(osbAccountEntry);
+			osbAccountEntries.addAll(
+				TransformUtil.transform(accounts -> OSBAccountEntry::new));
 
 			page++;
 		}

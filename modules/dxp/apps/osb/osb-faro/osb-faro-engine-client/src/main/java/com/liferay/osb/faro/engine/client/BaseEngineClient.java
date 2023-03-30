@@ -34,6 +34,7 @@ import com.liferay.osb.faro.engine.client.web.client.ResponseErrorHandler;
 import com.liferay.osb.faro.engine.client.web.util.UriTemplateHandler;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.osb.faro.util.FaroThreadLocal;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
@@ -527,20 +528,23 @@ public abstract class BaseEngineClient {
 			return uriVariables;
 		}
 
-		List<String> sort = new ArrayList<>();
+		uriVariables.put(
+			"sort",
+			TransformUtil.transform(
+				orderByFields,
+				orderByField -> {
+					String fieldName = orderByField.getFieldName();
 
-		for (OrderByField orderByField : orderByFields) {
-			String fieldName = orderByField.getFieldName();
+					if (!orderByField.isSystem() &&
+						(fieldNameContext != null)) {
 
-			if (!orderByField.isSystem() && (fieldNameContext != null)) {
-				fieldName = StringUtil.replace(
-					fieldNameContext, CharPool.QUESTION, fieldName);
-			}
+						fieldName = StringUtil.replace(
+							fieldNameContext, CharPool.QUESTION, fieldName);
+					}
 
-			sort.add(fieldName + StringPool.COMMA + orderByField.getOrderBy());
-		}
-
-		uriVariables.put("sort", sort);
+					return fieldName + StringPool.COMMA +
+						orderByField.getOrderBy();
+				}));
 
 		return uriVariables;
 	}

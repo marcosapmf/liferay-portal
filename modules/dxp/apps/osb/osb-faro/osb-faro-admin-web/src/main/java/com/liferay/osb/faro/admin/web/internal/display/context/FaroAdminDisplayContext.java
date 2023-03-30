@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -36,7 +35,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -60,7 +58,7 @@ public class FaroAdminDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -209,7 +207,9 @@ public class FaroAdminDisplayContext {
 		Hits hits = indexer.search(searchContext);
 
 		searchContainer.setResultsAndTotal(
-			() -> TransformUtil.transform(hits.toList(), FaroProjectAdminDisplay::new), hits.getLength());
+			() -> TransformUtil.transform(
+				hits.toList(), FaroProjectAdminDisplay::new),
+			hits.getLength());
 
 		searchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));

@@ -66,6 +66,7 @@ import com.liferay.osb.faro.engine.client.util.FilterBuilder;
 import com.liferay.osb.faro.engine.client.util.FilterUtil;
 import com.liferay.osb.faro.engine.client.util.OrderByField;
 import com.liferay.osb.faro.model.FaroProject;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchPaginationUtil;
@@ -127,15 +128,12 @@ public class ContactsEngineClientImpl
 		List<Object> blockedKeywords = (List<Object>)response.get(
 			"blocked-keywords");
 
-		List<BlockedKeyword> items = new ArrayList<>();
-
-		for (Object blockedKeywordObject : blockedKeywords) {
-			items.add(
-				objectMapper.convertValue(
-					blockedKeywordObject, BlockedKeyword.class));
-		}
-
-		return new Results<>(items, items.size());
+		return new Results<>(
+			TransformUtil.transform(
+				blockedKeywords,
+				blockedKeywordObject -> objectMapper.convertValue(
+					blockedKeywordObject, BlockedKeyword.class)),
+			blockedKeywords.size());
 	}
 
 	@Override
@@ -367,24 +365,22 @@ public class ContactsEngineClientImpl
 		FaroProject faroProject, String individualSegmentId,
 		List<String> individualIds) {
 
-		List<IndividualSegmentMembership> individualSegmentMemberships =
-			new ArrayList<>();
-
-		for (String individualId : individualIds) {
-			IndividualSegmentMembership individualSegmentMembership =
-				new IndividualSegmentMembership();
-
-			individualSegmentMembership.setIndividualId(individualId);
-
-			individualSegmentMemberships.add(individualSegmentMembership);
-		}
-
 		Map<String, Object> uriVariables = getUriVariables(
 			faroProject, individualSegmentId);
 
 		post(
 			faroProject, Rels.INDIVIDUAL_SEGMENT_MEMBERSHIPS,
-			individualSegmentMemberships, Void.class, uriVariables);
+			TransformUtil.transform(
+				individualIds,
+				individualId -> {
+					IndividualSegmentMembership individualSegmentMembership =
+						new IndividualSegmentMembership();
+
+					individualSegmentMembership.setIndividualId(individualId);
+
+					return individualSegmentMembership;
+				}),
+			Void.class, uriVariables);
 	}
 
 	@Override
@@ -694,31 +690,30 @@ public class ContactsEngineClientImpl
 		FaroProject faroProject, List<String> groupIds, String query,
 		int action, int cur, int delta, List<OrderByField> orderByFields) {
 
-		List<Map<String, Object>> uriVariablesList = new ArrayList<>();
-
-		for (String groupId : groupIds) {
-			Map<String, Object> uriVariables = getUriVariables(
-				faroProject, cur, delta, orderByFields);
-
-			FilterBuilder filterBuilder = new FilterBuilder();
-
-			addActionFilter(
-				filterBuilder, ActivityConstants.getActionKeys(action));
-
-			filterBuilder.addFilter(
-				"groupId", FilterConstants.COMPARISON_OPERATOR_EQUALS, groupId);
-			filterBuilder.addSearchFilter(query, "object/name");
-
-			uriVariables.put("filter", filterBuilder.build());
-
-			uriVariablesList.add(uriVariables);
-		}
-
 		return bulk(
 			faroProject, Rels.ACTIVITIES, HttpMethod.GET,
 			new TypeReference<List<Activity>>() {
 			},
-			uriVariablesList);
+			TransformUtil.transform(
+				groupIds,
+				groupId -> {
+					Map<String, Object> uriVariables = getUriVariables(
+						faroProject, cur, delta, orderByFields);
+
+					FilterBuilder filterBuilder = new FilterBuilder();
+
+					addActionFilter(
+						filterBuilder, ActivityConstants.getActionKeys(action));
+
+					filterBuilder.addFilter(
+						"groupId", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+						groupId);
+					filterBuilder.addSearchFilter(query, "object/name");
+
+					uriVariables.put("filter", filterBuilder.build());
+
+					return uriVariables;
+				}));
 	}
 
 	@Override
@@ -1534,29 +1529,29 @@ public class ContactsEngineClientImpl
 		FaroProject faroProject, String context, List<String> names, int cur,
 		int delta, List<OrderByField> orderByFields) {
 
-		List<Map<String, Object>> uriVariablesList = new ArrayList<>();
-
-		for (String name : names) {
-			Map<String, Object> uriVariables = getUriVariables(
-				faroProject, cur, delta, orderByFields);
-
-			FilterBuilder filterBuilder = new FilterBuilder();
-
-			filterBuilder.addFilter(
-				"context", FilterConstants.COMPARISON_OPERATOR_EQUALS, context);
-			filterBuilder.addFilter(
-				"name", FilterConstants.COMPARISON_OPERATOR_EQUALS, name);
-
-			uriVariables.put("filter", filterBuilder.build());
-
-			uriVariablesList.add(uriVariables);
-		}
-
 		return bulk(
 			faroProject, Rels.FIELDS, HttpMethod.GET,
 			new TypeReference<List<Field>>() {
 			},
-			uriVariablesList);
+			TransformUtil.transform(
+				names,
+				name -> {
+					Map<String, Object> uriVariables = getUriVariables(
+						faroProject, cur, delta, orderByFields);
+
+					FilterBuilder filterBuilder = new FilterBuilder();
+
+					filterBuilder.addFilter(
+						"context", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+						context);
+					filterBuilder.addFilter(
+						"name", FilterConstants.COMPARISON_OPERATOR_EQUALS,
+						name);
+
+					uriVariables.put("filter", filterBuilder.build());
+
+					return uriVariables;
+				}));
 	}
 
 	@Override
@@ -1594,8 +1589,6 @@ public class ContactsEngineClientImpl
 			return new Results<>();
 		}
 
-		List<Object> values = new ArrayList<>();
-
 		uriVariables.put("apply", getGroupBy(fieldMapping));
 
 		FilterBuilder filterBuilder = new FilterBuilder();
@@ -1618,19 +1611,20 @@ public class ContactsEngineClientImpl
 		List<IndividualTransformation> individualTransformations =
 			results.getItems();
 
-		for (IndividualTransformation individualTransformation :
-				individualTransformations) {
+		return new Results<>(
+			TransformUtil.transform(
+				individualTransformations,
+				individualTransformation -> {
+					Map<String, Object> terms =
+						individualTransformation.getTerms();
 
-			Map<String, Object> terms = individualTransformation.getTerms();
+					List<Object> objects = new ArrayList<>(terms.values());
 
-			ArrayList<Object> objects = new ArrayList<>(terms.values());
+					objects.get(0);
 
-			objects.get(0);
-
-			values.add(objects.get(0));
-		}
-
-		return new Results<>(values, results.getTotal());
+					return objects.get(0);
+				}),
+			results.getTotal());
 	}
 
 	@Override

@@ -26,6 +26,7 @@ import com.liferay.osb.faro.service.FaroProjectEmailDomainLocalService;
 import com.liferay.osb.faro.service.FaroUserLocalService;
 import com.liferay.osb.faro.service.base.FaroProjectLocalServiceBaseImpl;
 import com.liferay.osb.faro.util.EmailUtil;
+import com.liferay.petra.function.TransformUtil;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -200,11 +201,8 @@ public class FaroProjectLocalServiceImpl
 			user.getUserId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 			new GroupNameComparator(true));
 
-		List<Long> groupIds = new ArrayList<>();
-
-		for (Group group : groups) {
-			groupIds.add(group.getGroupId());
-		}
+		List<Long> groupIds = TransformUtil.transform(
+			groups, Group::getGroupId);
 
 		List<FaroProject> faroProjectsFiltered = new ArrayList<>();
 
