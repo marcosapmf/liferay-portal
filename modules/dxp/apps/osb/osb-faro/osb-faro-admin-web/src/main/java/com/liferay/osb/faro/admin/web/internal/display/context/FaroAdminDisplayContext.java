@@ -18,6 +18,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.osb.faro.admin.web.internal.model.FaroProjectAdminDisplay;
 import com.liferay.osb.faro.model.FaroProject;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -207,15 +208,8 @@ public class FaroAdminDisplayContext {
 
 		Hits hits = indexer.search(searchContext);
 
-		List<FaroProjectAdminDisplay> faroProjectAdminDisplays =
-			new ArrayList<>();
-
-		for (Document document : hits.toList()) {
-			faroProjectAdminDisplays.add(new FaroProjectAdminDisplay(document));
-		}
-
 		searchContainer.setResultsAndTotal(
-			() -> faroProjectAdminDisplays, hits.getLength());
+			() -> TransformUtil.transform(hits.toList(), FaroProjectAdminDisplay::new), hits.getLength());
 
 		searchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
