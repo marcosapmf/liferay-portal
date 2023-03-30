@@ -87,7 +87,7 @@ public class ContactsCardTemplateConstants {
 	}
 
 	private static final Map<String, Integer> _cardTypes =
-		new HashMapBuilder<>().<String, Integer>put(
+		HashMapBuilder.<String, Integer>put(
 			"activityHistory", TYPE_ACTIVITY_HISTORY
 		).put(
 			"associatedSegments", TYPE_ASSOCIATED_SEGMENTS
@@ -122,12 +122,12 @@ public class ContactsCardTemplateConstants {
 		_constants.put("cardTypes", _cardTypes);
 		_constants.put(
 			"fiterTypes",
-			new HashMapBuilder<>().<String, String>put(
+			HashMapBuilder.<String, String>put(
 				"all", SETTINGS_FILTER_ALL
 			).build());
 		_constants.put(
 			"graphTypes",
-			new HashMapBuilder<>().<String, Integer>put(
+			HashMapBuilder.<String, Integer>put(
 				"bar", SETTINGS_GRAPH_TYPE_BAR
 			).put(
 				"line", SETTINGS_GRAPH_TYPE_LINE
@@ -136,7 +136,7 @@ public class ContactsCardTemplateConstants {
 			).build());
 		_constants.put(
 			"profileCardLayoutTypes",
-			new HashMapBuilder<>().<String, Integer>put(
+			HashMapBuilder.<String, Integer>put(
 				"horizontal", SETTINGS_PROFILE_CARD_LAYOUT_TYPE_HORIZONTAL
 			).put(
 				"noAvatar", SETTINGS_PROFILE_CARD_LAYOUT_TYPE_NO_AVATAR
@@ -145,7 +145,7 @@ public class ContactsCardTemplateConstants {
 			).build());
 		_constants.put(
 			"segmentsMembershipCardOrders",
-			new HashMapBuilder<>().<String, Integer>put(
+			HashMapBuilder.<String, Integer>put(
 				"alphabetical", SETTINGS_SEGMENTS_MEMBERSHIP_CARD_ORDER_BY_NAME
 			).put(
 				"numberOfMembers",
@@ -153,7 +153,7 @@ public class ContactsCardTemplateConstants {
 			).build());
 		_constants.put(
 			"units",
-			new HashMapBuilder<>().<String, Integer>put(
+			HashMapBuilder.<String, Integer>put(
 				"count", SETTINGS_UNIT_COUNT
 			).put(
 				"percentage", SETTINGS_UNIT_PERCENTAGE
