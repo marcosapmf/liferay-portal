@@ -26,6 +26,7 @@ const Liferay = {
 		getBCP47LanguageId: () => 'en-US',
 		getCanonicalURL: () => '/',
 		getDefaultLanguageId: () => 'en_US',
+		getDoAsUserIdEncoded: () => '',
 		getLanguageId: () => 'it_IT',
 		getPathContext: () => '',
 		getPathThemeImages: () => '/assets',
@@ -45,7 +46,7 @@ const Liferay = {
 		window.removeEventListener(name, fn);
 	},
 	fire: (name, payload) => {
-		var event = document.createEvent('CustomEvent');
+		const event = document.createEvent('CustomEvent');
 		event.initCustomEvent(name);
 		if (payload) {
 			Object.keys(payload).forEach((key) => {

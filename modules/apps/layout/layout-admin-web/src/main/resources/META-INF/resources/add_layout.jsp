@@ -25,12 +25,14 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 <clay:container-fluid>
 	<liferay-frontend:edit-form
 		action="<%= (sourcePlid <= 0) ? layoutsAdminDisplayContext.getAddLayoutURL() : layoutsAdminDisplayContext.getCopyLayoutURL(sourcePlid) %>"
+		cssClass="add-layout-form"
 		method="post"
 		name="fm"
 		onSubmit="event.preventDefault();"
+		validateOnBlur="<%= false %>"
 	>
 		<liferay-frontend:edit-form-body>
-			<aui:input autoFocus="<%= true %>" label="name" name="name" required="<%= true %>" />
+			<aui:input label="name" name="name" placeholder='<%= LanguageUtil.get(request, "add-page-name") %>' required="<%= true %>" />
 
 			<c:choose>
 				<c:when test="<%= autoSiteNavigationMenus.size() > 1 %>">

@@ -18,6 +18,7 @@ import {useForm} from 'react-hook-form';
 import Form from '../../../components/Form';
 import Container from '../../../components/Layout/Container';
 import Modal from '../../../components/Modal';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../hoc/withVisibleContent';
 import {useFetch} from '../../../hooks/useFetch';
 import {FormModalOptions} from '../../../hooks/useFormModal';
@@ -31,7 +32,6 @@ import {
 	testraySubTaskImpl,
 } from '../../../services/rest';
 import {testraySubtaskIssuesImpl} from '../../../services/rest/TestraySubtaskIssues';
-import {searchUtil} from '../../../util/search';
 import {CaseResultStatuses} from '../../../util/statuses';
 
 type SubtaskForm = typeof yupSchema.subtask.__outputType;
@@ -51,7 +51,9 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 		data: subTaskIssuesResponse,
 		revalidate: revalidateSubtaskIssues,
 	} = useFetch(testraySubtaskIssuesImpl.resource, {
-		filter: searchUtil.eq('subtaskId', subtask.id),
+		params: {
+			filter: SearchBuilder.eq('subtaskId', subtask.id),
+		},
 		transformData: (response) =>
 			testraySubtaskIssuesImpl.transformDataFromList(response),
 	});
@@ -67,7 +69,7 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 		.join(', ');
 
 	const {
-		formState: {errors},
+		formState: {errors, isSubmitting},
 		handleSubmit,
 		register,
 		setValue,
@@ -130,6 +132,7 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 				<Form.Footer
 					onClose={onClose}
 					onSubmit={handleSubmit(_onSubmit)}
+					primaryButtonProps={{loading: isSubmitting}}
 				/>
 			}
 			observer={observer}
@@ -144,10 +147,22 @@ const SubtaskCompleteModal: React.FC<SubTaskCompleteModalProps> = ({
 					label={i18n.translate('case-results-status')}
 					name="dueStatus"
 					options={[
-						{label: 'Blocked', value: CaseResultStatuses.BLOCKED},
-						{label: 'Failed', value: CaseResultStatuses.FAILED},
-						{label: 'Passed', value: CaseResultStatuses.PASSED},
-						{label: 'Test Fix', value: CaseResultStatuses.TEST_FIX},
+						{
+							label: i18n.translate('blocked'),
+							value: CaseResultStatuses.BLOCKED,
+						},
+						{
+							label: i18n.translate('failed'),
+							value: CaseResultStatuses.FAILED,
+						},
+						{
+							label: i18n.translate('passed'),
+							value: CaseResultStatuses.PASSED,
+						},
+						{
+							label: i18n.translate('test-fix'),
+							value: CaseResultStatuses.TEST_FIX,
+						},
 					]}
 					register={register}
 				/>

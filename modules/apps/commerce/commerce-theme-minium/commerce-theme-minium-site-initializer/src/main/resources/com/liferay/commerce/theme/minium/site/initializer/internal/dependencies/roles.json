@@ -11,10 +11,17 @@
 				"actionIds": [
 					"MANAGE_ORGANIZATIONS"
 				],
-				"resource": "com.liferay.commerce.account.model.CommerceAccount"
+				"resource": "com.liferay.account.model.AccountEntry"
 			},
 			{
 				"actionIds": [
+					"MANAGE_USERS"
+				],
+				"resource": "com.liferay.account.model.AccountEntry"
+			},
+			{
+				"actionIds": [
+					"ADD_COMMERCE_ORDER",
 					"CHECKOUT_OPEN_COMMERCE_ORDERS",
 					"VIEW_OPEN_COMMERCE_ORDERS"
 				],

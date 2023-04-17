@@ -12,9 +12,9 @@
  * details.
  */
 
-import dateFns from 'date-fns';
+import {format, isValid, parseISO} from 'date-fns';
 
-import {CONJUNCTIONS} from './constants.es';
+import {CONJUNCTIONS} from './constants';
 
 const GROUP_ID_NAMESPACE = 'group_';
 
@@ -183,7 +183,7 @@ export function sub(langKey, args, join = true) {
 
 export function dateToInternationalHuman(
 	ISOString,
-	localeKey = navigator.language
+	localeKey = Liferay.ThemeDisplay.getBCP47LanguageId()
 ) {
 	const date = new Date(ISOString);
 
@@ -207,7 +207,9 @@ export function dateToInternationalHuman(
  * @returns {string}
  */
 export function jsDatetoYYYYMMDD(dateJsObject) {
-	const DATE_FORMAT = 'YYYY-MM-DD';
+	if (!isValid(dateJsObject)) {
+		dateJsObject = parseISO(dateJsObject);
+	}
 
-	return dateFns.format(dateJsObject, DATE_FORMAT);
+	return format(dateJsObject, 'yyyy-MM-dd');
 }

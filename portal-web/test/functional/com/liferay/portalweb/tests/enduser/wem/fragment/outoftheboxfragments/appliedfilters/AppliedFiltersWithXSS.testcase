@@ -13,14 +13,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +29,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-142486. View no alert shown when search a term with XSS in Collection Filter."
-	@priority = "4"
+	@priority = 4
 	test SearchTermWithXSSInCollectionFilter {
 		task ("Add a dynamic collection for All Types") {
 			JSONAssetlist.addDynamicAssetListEntryWithItemType(

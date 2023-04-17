@@ -28,11 +28,20 @@ export let config = DEFAULT_CONFIG;
  * the app, so we can safely store is as a variable.
  */
 export function initializeConfig(backendConfig) {
+	if (!backendConfig.layoutType) {
+		config = {
+			...backendConfig,
+		};
+
+		return config;
+	}
+
 	const {
 		commonStyles,
 		layoutType,
 		pluginsRootPath,
 		portletNamespace,
+		restrictedItemIds,
 		sidebarPanels,
 	} = backendConfig;
 	const toolbarId = `${portletNamespace}${DEFAULT_CONFIG.toolbarId}`;
@@ -45,6 +54,7 @@ export function initializeConfig(backendConfig) {
 		commonStyles: getCommonStyles(commonStyles),
 		commonStylesFields: getCommonStylesFields(commonStyles),
 		panels: generatePanels(augmentedPanels),
+		restrictedItemIds: new Set(restrictedItemIds),
 		sidebarPanels: partitionPanels(augmentedPanels),
 		toolbarId,
 		toolbarPlugins: getToolbarPlugins(

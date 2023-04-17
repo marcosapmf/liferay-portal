@@ -34,6 +34,29 @@ public class DSDocument implements Cloneable, Serializable {
 		return DSDocumentSerDes.toDTO(json);
 	}
 
+	public String getAssignTabsToDSRecipientId() {
+		return assignTabsToDSRecipientId;
+	}
+
+	public void setAssignTabsToDSRecipientId(String assignTabsToDSRecipientId) {
+		this.assignTabsToDSRecipientId = assignTabsToDSRecipientId;
+	}
+
+	public void setAssignTabsToDSRecipientId(
+		UnsafeSupplier<String, Exception>
+			assignTabsToDSRecipientIdUnsafeSupplier) {
+
+		try {
+			assignTabsToDSRecipientId =
+				assignTabsToDSRecipientIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String assignTabsToDSRecipientId;
+
 	public String getData() {
 		return data;
 	}
@@ -136,6 +159,27 @@ public class DSDocument implements Cloneable, Serializable {
 	}
 
 	protected String name;
+
+	public Boolean getTransformPDFFields() {
+		return transformPDFFields;
+	}
+
+	public void setTransformPDFFields(Boolean transformPDFFields) {
+		this.transformPDFFields = transformPDFFields;
+	}
+
+	public void setTransformPDFFields(
+		UnsafeSupplier<Boolean, Exception> transformPDFFieldsUnsafeSupplier) {
+
+		try {
+			transformPDFFields = transformPDFFieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean transformPDFFields;
 
 	public String getUri() {
 		return uri;

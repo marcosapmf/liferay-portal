@@ -4751,7 +4751,9 @@ public class OAuth2ApplicationPersistenceImpl
 				if (ercOAuth2Application != null) {
 					throw new DuplicateOAuth2ApplicationExternalReferenceCodeException(
 						"Duplicate o auth2 application with external reference code " +
-							oAuth2Application.getExternalReferenceCode());
+							oAuth2Application.getExternalReferenceCode() +
+								" and company " +
+									oAuth2Application.getCompanyId());
 				}
 			}
 			else {
@@ -4761,7 +4763,9 @@ public class OAuth2ApplicationPersistenceImpl
 
 					throw new DuplicateOAuth2ApplicationExternalReferenceCodeException(
 						"Duplicate o auth2 application with external reference code " +
-							oAuth2Application.getExternalReferenceCode());
+							oAuth2Application.getExternalReferenceCode() +
+								" and company " +
+									oAuth2Application.getCompanyId());
 				}
 			}
 		}

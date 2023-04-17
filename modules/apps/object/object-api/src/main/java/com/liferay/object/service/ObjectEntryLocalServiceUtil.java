@@ -305,13 +305,14 @@ public class ObjectEntryLocalServiceUtil {
 	}
 
 	public static Map<Object, Long> getAggregationCounts(
-			long objectDefinitionId, String aggregationTerm,
+			long groupId, long objectDefinitionId, String aggregationTerm,
 			com.liferay.petra.sql.dsl.expression.Predicate predicate, int start,
 			int end)
 		throws PortalException {
 
 		return getService().getAggregationCounts(
-			objectDefinitionId, aggregationTerm, predicate, start, end);
+			groupId, objectDefinitionId, aggregationTerm, predicate, start,
+			end);
 	}
 
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
@@ -374,17 +375,14 @@ public class ObjectEntryLocalServiceUtil {
 	}
 
 	public static List<ObjectEntry> getObjectEntries(
-			long groupId, long objectDefinitionId, int start, int end)
-		throws PortalException {
+		long groupId, long objectDefinitionId, int start, int end) {
 
 		return getService().getObjectEntries(
 			groupId, objectDefinitionId, start, end);
 	}
 
 	public static List<ObjectEntry> getObjectEntries(
-			long groupId, long objectDefinitionId, int status, int start,
-			int end)
-		throws PortalException {
+		long groupId, long objectDefinitionId, int status, int start, int end) {
 
 		return getService().getObjectEntries(
 			groupId, objectDefinitionId, status, start, end);

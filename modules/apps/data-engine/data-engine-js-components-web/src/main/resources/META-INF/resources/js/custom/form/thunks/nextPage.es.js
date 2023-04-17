@@ -26,6 +26,7 @@ export default function nextPage({
 	portletNamespace,
 	rules,
 	selectedPage,
+	title,
 	viewMode,
 }) {
 	const isValidPage = (currentPage, pages) => {
@@ -107,9 +108,16 @@ export default function nextPage({
 
 				Liferay.fire('ddmFormPageShow', {
 					formId,
+					formPageTitle: pages[activePageUpdated].title,
 					page: activePageUpdated,
-					title: pages[activePageUpdated].title,
+					title,
 				});
+
+				const formPagination = document.getElementsByClassName(
+					'ddm-form-pagination'
+				)[0];
+
+				formPagination.scrollIntoView();
 			}
 			else {
 				const pageIndex = selectedPage ? currentPage : activePage;

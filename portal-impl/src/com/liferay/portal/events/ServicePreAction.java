@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.exception.LayoutPermissionException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -1001,9 +1002,7 @@ public class ServicePreAction extends Action {
 			Group layoutGroup = layout.getGroup();
 
 			if (layoutGroup.isUser()) {
-				if (!GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LPS-155692"))) {
-
+				if (!FeatureFlagManagerUtil.isEnabled("LPS-155692")) {
 					long originalPlid = ParamUtil.getLong(
 						PortalUtil.getOriginalServletRequest(
 							httpServletRequest),
@@ -1806,6 +1805,12 @@ public class ServicePreAction extends Action {
 	 *         <code>false</code> otherwise
 	 */
 	private boolean _isLoginRequest(HttpServletRequest httpServletRequest) {
+		if (GetterUtil.getBoolean(
+				httpServletRequest.getAttribute(WebKeys.LOGIN_REQUEST))) {
+
+			return true;
+		}
+
 		String requestURI = httpServletRequest.getRequestURI();
 
 		String mainPath = _PATH_MAIN;

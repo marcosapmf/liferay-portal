@@ -16,6 +16,7 @@ package com.liferay.account.service.test.util;
 
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 
 /**
@@ -29,7 +30,8 @@ public class AccountGroupTestUtil {
 		throws Exception {
 
 		return accountGroupLocalService.addAccountGroup(
-			TestPropsValues.getUserId(), description, name);
+			TestPropsValues.getUserId(), description, name,
+			new ServiceContext());
 	}
 
 }

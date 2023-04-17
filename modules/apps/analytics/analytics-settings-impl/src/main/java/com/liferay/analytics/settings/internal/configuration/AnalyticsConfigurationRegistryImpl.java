@@ -15,6 +15,7 @@
 package com.liferay.analytics.settings.internal.configuration;
 
 import com.liferay.analytics.batch.exportimport.AnalyticsDXPEntityBatchExporter;
+import com.liferay.analytics.batch.exportimport.constants.AnalyticsDXPEntityBatchExporterConstants;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesDestinationNames;
 import com.liferay.analytics.message.sender.constants.AnalyticsMessagesProcessorCommand;
 import com.liferay.analytics.message.sender.model.AnalyticsMessage;
@@ -24,12 +25,14 @@ import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.configuration.AnalyticsConfigurationRegistry;
 import com.liferay.analytics.settings.internal.model.AnalyticsUserImpl;
 import com.liferay.analytics.settings.internal.util.EntityModelListenerRegistry;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.security.constants.AnalyticsSecurityConstants;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -52,7 +55,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
@@ -71,7 +73,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.Configuration;
@@ -129,34 +130,25 @@ public class AnalyticsConfigurationRegistryImpl
 			return null;
 		}
 
-		Set<Map.Entry<String, Long>> entries = _companyIds.entrySet();
+		for (Map.Entry<String, Long> entry : _companyIds.entrySet()) {
+			if (Objects.equals(entry.getValue(), companyId)) {
+				try {
+					Configuration configuration =
+						_configurationAdmin.getConfiguration(
+							entry.getKey(), StringPool.QUESTION);
 
-		Stream<Map.Entry<String, Long>> stream = entries.stream();
+					return configuration.getProperties();
+				}
+				catch (Exception exception) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to get configuration for company " +
+								companyId,
+							exception);
+					}
 
-		String pid = stream.filter(
-			entry -> Objects.equals(entry.getValue(), companyId)
-		).map(
-			Map.Entry::getKey
-		).findFirst(
-		).orElse(
-			null
-		);
-
-		if (pid == null) {
-			return null;
-		}
-
-		try {
-			Configuration configuration = _configurationAdmin.getConfiguration(
-				pid, StringPool.QUESTION);
-
-			return configuration.getProperties();
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to get configuration for company " + companyId,
-					exception);
+					break;
+				}
 			}
 		}
 
@@ -224,7 +216,23 @@ public class AnalyticsConfigurationRegistryImpl
 				_enable((Long)dictionary.get("companyId"));
 			}
 
-			_sync(dictionary);
+			AnalyticsConfiguration analyticsConfiguration =
+				getAnalyticsConfiguration(companyId);
+
+			if (!FeatureFlagManagerUtil.isEnabled("LRAC-10757") &&
+				analyticsConfiguration.wizardMode()) {
+
+				return;
+			}
+
+			if (!FeatureFlagManagerUtil.isEnabled("LRAC-10757") &&
+				analyticsConfiguration.firstSync()) {
+
+				_firstSync(companyId);
+			}
+			else {
+				_sync((Long)dictionary.get("companyId"), dictionary);
+			}
 		}
 	}
 
@@ -376,16 +384,24 @@ public class AnalyticsConfigurationRegistryImpl
 	private void _disable(long companyId) {
 		try {
 			if (companyId != CompanyConstants.SYSTEM) {
-				if (GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LRAC-10632"))) {
+				_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
+					companyId,
+					ArrayUtil.append(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAMES_DXP_ENTITIES,
+						new String[] {
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ACCOUNT_ENTRY_DXP_ENTITIES,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_USER_DXP_ENTITIES
+						}));
 
-					_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
-						companyId);
-				}
-				else {
-					_analyticsMessageLocalService.deleteAnalyticsMessages(
-						companyId);
-				}
+				_analyticsMessageLocalService.deleteAnalyticsMessages(
+					companyId);
 
 				_deleteAnalyticsAdmin(companyId);
 				_deleteSAPEntry(companyId);
@@ -406,6 +422,111 @@ public class AnalyticsConfigurationRegistryImpl
 
 			_addAnalyticsAdmin(companyId);
 			_addSAPEntry(companyId);
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+	}
+
+	private void _firstSync(long companyId) {
+		try {
+			Set<String> dispatchTriggerNames = new HashSet<>();
+
+			if (FeatureFlagManagerUtil.isEnabled("LRAC-10632")) {
+				Collections.addAll(
+					dispatchTriggerNames,
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAMES_DXP_ENTITIES);
+
+				if (_analyticsSettingsManager.syncedContactSettingsEnabled(
+						companyId)) {
+
+					dispatchTriggerNames.add(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_USER_DXP_ENTITIES);
+				}
+			}
+
+			if (_analyticsSettingsManager.syncedAccountSettingsEnabled(
+					companyId)) {
+
+				dispatchTriggerNames.add(
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_ACCOUNT_ENTRY_DXP_ENTITIES);
+			}
+
+			if (_analyticsSettingsManager.syncedCommerceSettingsEnabled(
+					companyId)) {
+
+				Collections.addAll(
+					dispatchTriggerNames,
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_ACCOUNT_ENTRY_DXP_ENTITIES,
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_ORDER,
+					AnalyticsDXPEntityBatchExporterConstants.
+						DISPATCH_TRIGGER_NAME_PRODUCT);
+			}
+
+			_analyticsDXPEntityBatchExporter.scheduleExportTriggers(
+				companyId, dispatchTriggerNames.toArray(new String[0]));
+
+			_analyticsDXPEntityBatchExporter.export(
+				companyId, dispatchTriggerNames.toArray(new String[0]));
+
+			AnalyticsConfiguration analyticsConfiguration =
+				getAnalyticsConfiguration(companyId);
+
+			Collection<EntityModelListener<?>> entityModelListeners =
+				_entityModelListenerRegistry.getEntityModelListeners();
+
+			for (EntityModelListener<?> entityModelListener :
+					entityModelListeners) {
+
+				entityModelListener.syncAll(companyId);
+			}
+
+			_syncDefaultFields(
+				companyId, analyticsConfiguration.syncedContactFieldNames(),
+				analyticsConfiguration.syncedUserFieldNames());
+
+			_syncUserCustomFields(
+				companyId, analyticsConfiguration.syncedUserFieldNames());
+
+			if (GetterUtil.getBoolean(
+					analyticsConfiguration.syncAllContacts())) {
+
+				_syncContacts(companyId);
+			}
+			else {
+				_syncOrganizationUsers(
+					companyId, analyticsConfiguration.syncedOrganizationIds());
+				_syncUserGroupUsers(
+					companyId, analyticsConfiguration.syncedUserGroupIds());
+			}
+
+			Message message = new Message();
+
+			message.put("command", AnalyticsMessagesProcessorCommand.SEND);
+			message.put("companyId", companyId);
+			message.put("principalName", _getAnalyticsAdminUserId(companyId));
+
+			if (_log.isInfoEnabled()) {
+				_log.info("Queueing send analytics messages message");
+			}
+
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					_messageBus.sendMessage(
+						AnalyticsMessagesDestinationNames.
+							ANALYTICS_MESSAGES_PROCESSOR,
+						message);
+
+					return null;
+				});
+
+			_analyticsSettingsManager.updateCompanyConfiguration(
+				companyId, Collections.singletonMap("firstSync", false));
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -453,72 +574,179 @@ public class AnalyticsConfigurationRegistryImpl
 		return false;
 	}
 
-	private void _sync(Dictionary<String, ?> dictionary) {
+	private void _sync(long companyId, Dictionary<String, ?> dictionary) {
 		try {
 			if (Validator.isNotNull(dictionary.get("token")) &&
 				Validator.isNull(dictionary.get("previousToken"))) {
 
-				if (GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LRAC-10632"))) {
+				Collection<EntityModelListener<?>> entityModelListeners =
+					_entityModelListenerRegistry.getEntityModelListeners();
 
-					_analyticsDXPEntityBatchExporter.scheduleExportTriggers(
-						(Long)dictionary.get("companyId"));
+				for (EntityModelListener<?> entityModelListener :
+						entityModelListeners) {
+
+					entityModelListener.syncAll(companyId);
 				}
-				else {
-					Collection<EntityModelListener<?>> entityModelListeners =
-						_entityModelListenerRegistry.getEntityModelListeners();
+			}
 
-					for (EntityModelListener<?> entityModelListener :
-							entityModelListeners) {
+			if (FeatureFlagManagerUtil.isEnabled("LRAC-10632") ||
+				!FeatureFlagManagerUtil.isEnabled("LRAC-10757")) {
 
-						entityModelListener.syncAll(
-							(Long)dictionary.get("companyId"));
+				Set<String> refreshDispatchTriggerNames = new HashSet<>();
+				Set<String> unscheduleDispatchTriggerNames = new HashSet<>();
+
+				if (_analyticsSettingsManager.syncedAccountSettingsChanged(
+						companyId)) {
+
+					if (_analyticsSettingsManager.syncedAccountSettingsEnabled(
+							companyId)) {
+
+						refreshDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ACCOUNT_ENTRY_DXP_ENTITIES);
 					}
+					else {
+						unscheduleDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ACCOUNT_ENTRY_DXP_ENTITIES);
+					}
+				}
+
+				if (_analyticsSettingsManager.syncedAccountSettingsEnabled(
+						companyId) &&
+					_analyticsSettingsManager.syncedAccountFieldsChanged(
+						companyId)) {
+
+					refreshDispatchTriggerNames.add(
+						AnalyticsDXPEntityBatchExporterConstants.
+							DISPATCH_TRIGGER_NAME_ACCOUNT_ENTRY_DXP_ENTITIES);
+				}
+
+				if (_analyticsSettingsManager.syncedCommerceSettingsChanged(
+						companyId)) {
+
+					if (_analyticsSettingsManager.syncedCommerceSettingsEnabled(
+							companyId)) {
+
+						Collections.addAll(
+							refreshDispatchTriggerNames,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT);
+					}
+					else {
+						Collections.addAll(
+							unscheduleDispatchTriggerNames,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER,
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT);
+					}
+				}
+
+				if (_analyticsSettingsManager.syncedCommerceSettingsEnabled(
+						companyId)) {
+
+					if (_analyticsSettingsManager.syncedOrderFieldsChanged(
+							companyId)) {
+
+						refreshDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_ORDER);
+					}
+
+					if (_analyticsSettingsManager.syncedProductFieldsChanged(
+							companyId)) {
+
+						refreshDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_PRODUCT);
+					}
+				}
+
+				if (FeatureFlagManagerUtil.isEnabled("LRAC-10632")) {
+					if (_analyticsSettingsManager.syncedContactSettingsChanged(
+							companyId)) {
+
+						if (_analyticsSettingsManager.
+								syncedContactSettingsEnabled(companyId)) {
+
+							refreshDispatchTriggerNames.add(
+								AnalyticsDXPEntityBatchExporterConstants.
+									DISPATCH_TRIGGER_NAME_USER_DXP_ENTITIES);
+						}
+						else {
+							unscheduleDispatchTriggerNames.add(
+								AnalyticsDXPEntityBatchExporterConstants.
+									DISPATCH_TRIGGER_NAME_USER_DXP_ENTITIES);
+						}
+					}
+
+					if (_analyticsSettingsManager.syncedContactSettingsEnabled(
+							companyId) &&
+						_analyticsSettingsManager.syncedUserFieldsChanged(
+							companyId)) {
+
+						refreshDispatchTriggerNames.add(
+							AnalyticsDXPEntityBatchExporterConstants.
+								DISPATCH_TRIGGER_NAME_USER_DXP_ENTITIES);
+					}
+				}
+
+				if (!refreshDispatchTriggerNames.isEmpty()) {
+					_analyticsDXPEntityBatchExporter.refreshExportTriggers(
+						companyId,
+						refreshDispatchTriggerNames.toArray(new String[0]));
+
+					if (FeatureFlagManagerUtil.isEnabled("LRAC-10632") &&
+						FeatureFlagManagerUtil.isEnabled("LRAC-10757")) {
+
+						_analyticsDXPEntityBatchExporter.export(
+							companyId,
+							new String[] {
+								AnalyticsDXPEntityBatchExporterConstants.
+									DISPATCH_TRIGGER_NAME_USER_DXP_ENTITIES
+							});
+					}
+				}
+
+				if (!unscheduleDispatchTriggerNames.isEmpty()) {
+					_analyticsDXPEntityBatchExporter.unscheduleExportTriggers(
+						companyId,
+						unscheduleDispatchTriggerNames.toArray(new String[0]));
+				}
+
+				if (FeatureFlagManagerUtil.isEnabled("LRAC-10632")) {
+					return;
 				}
 			}
 
 			String[] previousSyncedContactFieldNames =
 				GetterUtil.getStringValues(
 					dictionary.get("previousSyncedContactFieldNames"));
+
+			Arrays.sort(previousSyncedContactFieldNames);
+
 			String[] previousSyncedUserFieldNames = GetterUtil.getStringValues(
 				dictionary.get("previousSyncedUserFieldNames"));
+
+			Arrays.sort(previousSyncedUserFieldNames);
+
 			String[] syncedContactFieldNames = GetterUtil.getStringValues(
 				dictionary.get("syncedContactFieldNames"));
+
+			Arrays.sort(syncedContactFieldNames);
+
 			String[] syncedUserFieldNames = GetterUtil.getStringValues(
 				dictionary.get("syncedUserFieldNames"));
 
-			Arrays.sort(previousSyncedContactFieldNames);
-			Arrays.sort(previousSyncedUserFieldNames);
-			Arrays.sort(syncedContactFieldNames);
 			Arrays.sort(syncedUserFieldNames);
-
-			if (GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LRAC-10632"))) {
-
-				if (!Arrays.equals(
-						previousSyncedUserFieldNames, syncedUserFieldNames) ||
-					!Arrays.equals(
-						previousSyncedContactFieldNames,
-						syncedContactFieldNames) ||
-					!Arrays.equals(
-						previousSyncedUserFieldNames, syncedUserFieldNames)) {
-
-					_analyticsDXPEntityBatchExporter.refreshExportTrigger(
-						(Long)dictionary.get("companyId"),
-						"export-user-analytics-dxp-entities");
-				}
-
-				_analyticsDXPEntityBatchExporter.export(
-					(Long)dictionary.get("companyId"));
-
-				return;
-			}
 
 			if (!Arrays.equals(
 					previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
-				_syncUserCustomFields(
-					(Long)dictionary.get("companyId"), syncedUserFieldNames);
+				_syncUserCustomFields(companyId, syncedUserFieldNames);
 			}
 
 			if (!Arrays.equals(
@@ -527,33 +755,34 @@ public class AnalyticsConfigurationRegistryImpl
 					previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
 				_syncDefaultFields(
-					(Long)dictionary.get("companyId"), syncedContactFieldNames,
-					syncedUserFieldNames);
+					companyId, syncedContactFieldNames, syncedUserFieldNames);
 			}
 
 			if (GetterUtil.getBoolean(dictionary.get("syncAllContacts"))) {
 				if (!GetterUtil.getBoolean(
-						dictionary.get("previousSyncAllContacts"))) {
+						dictionary.get("previousSyncAllContacts")) ||
+					!Arrays.equals(
+						previousSyncedContactFieldNames,
+						syncedContactFieldNames) ||
+					!Arrays.equals(
+						previousSyncedUserFieldNames, syncedUserFieldNames)) {
 
-					_syncContacts((Long)dictionary.get("companyId"));
+					_syncContacts(companyId);
 				}
 			}
 			else {
 				_syncOrganizationUsers(
-					(Long)dictionary.get("companyId"),
+					companyId,
 					(String[])dictionary.get("syncedOrganizationIds"));
 				_syncUserGroupUsers(
-					(Long)dictionary.get("companyId"),
-					(String[])dictionary.get("syncedUserGroupIds"));
+					companyId, (String[])dictionary.get("syncedUserGroupIds"));
 			}
 
 			Message message = new Message();
 
 			message.put("command", AnalyticsMessagesProcessorCommand.SEND);
 			message.put("companyId", dictionary.get("companyId"));
-			message.put(
-				"principalName",
-				_getAnalyticsAdminUserId((Long)dictionary.get("companyId")));
+			message.put("principalName", _getAnalyticsAdminUserId(companyId));
 
 			if (_log.isInfoEnabled()) {
 				_log.info("Queueing send analytics messages message");
@@ -847,6 +1076,9 @@ public class AnalyticsConfigurationRegistryImpl
 
 	@Reference
 	private AnalyticsMessageLocalService _analyticsMessageLocalService;
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;

@@ -35,6 +35,7 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleResourceLocalService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.journal.util.JournalConverter;
+import com.liferay.journal.util.JournalHelper;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
@@ -193,13 +194,7 @@ public class JournalArticleAssetRendererFactory
 		itemSelectorCriterion.setItemType(JournalArticle.class.getName());
 
 		if (classTypeId > 0) {
-			DDMStructure ddmStructure =
-				_ddmStructureLocalService.fetchDDMStructure(classTypeId);
-
-			if (ddmStructure != null) {
-				itemSelectorCriterion.setItemSubtype(
-					ddmStructure.getStructureKey());
-			}
+			itemSelectorCriterion.setItemSubtype(String.valueOf(classTypeId));
 		}
 
 		itemSelectorCriterion.setMultiSelection(multiSelection);
@@ -260,25 +255,22 @@ public class JournalArticleAssetRendererFactory
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse, long classTypeId) {
 
-		PortletURL portletURL = PortletURLBuilder.create(
+		return PortletURLBuilder.create(
 			_portal.getControlPanelPortletURL(
 				liferayPortletRequest, getGroup(liferayPortletRequest),
 				JournalPortletKeys.JOURNAL, 0, 0, PortletRequest.RENDER_PHASE)
 		).setMVCPath(
 			"/edit_article.jsp"
-		).buildPortletURL();
+		).setParameter(
+			"ddmStructureId",
+			() -> {
+				if (classTypeId > 0) {
+					return classTypeId;
+				}
 
-		if (classTypeId > 0) {
-			DDMStructure ddmStructure =
-				_ddmStructureLocalService.fetchDDMStructure(classTypeId);
-
-			if (ddmStructure != null) {
-				portletURL.setParameter(
-					"ddmStructureKey", ddmStructure.getStructureKey());
+				return null;
 			}
-		}
-
-		return portletURL;
+		).buildPortletURL();
 	}
 
 	@Override
@@ -331,7 +323,8 @@ public class JournalArticleAssetRendererFactory
 		JournalArticle article) {
 
 		JournalArticleAssetRenderer journalArticleAssetRenderer =
-			new JournalArticleAssetRenderer(article, _htmlParser);
+			new JournalArticleAssetRenderer(
+				article, _htmlParser, _journalHelper);
 
 		journalArticleAssetRenderer.setAssetDisplayPageFriendlyURLProvider(
 			_assetDisplayPageFriendlyURLProvider);
@@ -384,6 +377,9 @@ public class JournalArticleAssetRendererFactory
 
 	@Reference
 	private JournalConverter _journalConverter;
+
+	@Reference
+	private JournalHelper _journalHelper;
 
 	@Reference
 	private Language _language;

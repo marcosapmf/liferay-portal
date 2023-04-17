@@ -11,17 +11,27 @@
 
 import {isNode} from 'react-flow-renderer';
 
-import {retrieveRolesBy, retrieveUsersBy} from '../../util/fetchUtil';
+import {
+	retrieveAccountRoles,
+	retrieveRoleById,
+	retrieveRoles,
+	retrieveUsersBy,
+} from '../../util/fetchUtil';
 
-const populateNotificationsData = (initialElements, setElements) => {
+const populateNotificationsData = (
+	accountEntryId,
+	initialElements,
+	setElements
+) => {
 	for (let i = 0; i < initialElements.length; i++) {
 		const element = initialElements[i];
 
 		if (isNode(element) && element.data.notifications) {
 			const recipients = element.data.notifications.recipients;
+
 			recipients.map((recipient, index) => {
 				if (recipient?.assignmentType?.[0] === 'roleId') {
-					retrieveRolesBy('roleId', recipient.roleId)
+					retrieveRoleById(recipient.roleId)
 						.then((response) => response.json())
 						.then((response) => {
 							initialElements[i].data.notifications.recipients[
@@ -34,6 +44,51 @@ const populateNotificationsData = (initialElements, setElements) => {
 
 							setElements([...initialElements]);
 						});
+				}
+				else if (recipient?.assignmentType?.[0] === 'roleType') {
+					Promise.all([
+						retrieveRoles(),
+						retrieveAccountRoles(accountEntryId),
+					]).then(([response1, response2]) =>
+						Promise.all([response1.json(), response2.json()]).then(
+							([roles, accountRoles]) => {
+								const items = roles.items.concat(
+									accountRoles.items
+								);
+
+								initialElements[
+									i
+								].data.notifications.recipients[
+									index
+								].roleKey.forEach((key) => {
+									const role = items.find(
+										(item) =>
+											item.externalReferenceCode ===
+												key || item.displayName === key
+									);
+
+									if (
+										!initialElements[i].data.notifications
+											.recipients[index].roleName
+									) {
+										initialElements[
+											i
+										].data.notifications.recipients[
+											index
+										].roleName = [];
+									}
+
+									initialElements[
+										i
+									].data.notifications.recipients[
+										index
+									].roleName.push(role?.name);
+								});
+
+								setElements([...initialElements]);
+							}
+						)
+					);
 				}
 				else if (
 					recipient?.assignmentType?.[0] === 'user' &&

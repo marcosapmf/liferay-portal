@@ -20,11 +20,12 @@ import DefaultPage from './pages/default/DefaultPage';
 import WizardPage from './pages/wizard/WizardPage';
 import {SPRITEMAP} from './utils/constants';
 
-type TData = {
+export type TData = {
 	connected: boolean;
 	liferayAnalyticsURL: string;
 	pageView: EPageView;
 	token: string;
+	wizardMode: boolean;
 };
 
 type TView = {
@@ -41,11 +42,12 @@ export const View: TView = {
 	[EPageView.Default]: DefaultPage,
 };
 
-const initialState = {
+export const initialState = {
 	connected: false,
 	liferayAnalyticsURL: '',
 	pageView: EPageView.Wizard,
 	token: '',
+	wizardMode: true,
 };
 
 export const AppContextData = React.createContext<TData>(initialState);
@@ -63,6 +65,7 @@ interface IAppProps extends React.HTMLAttributes<HTMLElement> {
 	connected: boolean;
 	liferayAnalyticsURL: string;
 	token: string;
+	wizardMode: boolean;
 }
 
 const AppContent = () => {
@@ -77,11 +80,17 @@ const AppContent = () => {
 	);
 };
 
-const App: React.FC<IAppProps> = ({connected, liferayAnalyticsURL, token}) => {
+const AppContextProvider: React.FC<IAppProps> = ({
+	children,
+	connected,
+	liferayAnalyticsURL,
+	token,
+	wizardMode,
+}) => {
 	const [state, dispatch] = useReducer(reducer, {
 		connected,
 		liferayAnalyticsURL,
-		pageView: connected ? EPageView.Default : EPageView.Wizard,
+		pageView: wizardMode ? EPageView.Wizard : EPageView.Default,
 		token,
 	});
 
@@ -90,9 +99,7 @@ const App: React.FC<IAppProps> = ({connected, liferayAnalyticsURL, token}) => {
 			<ClayIconSpriteContext.Provider value={SPRITEMAP}>
 				<AppContextData.Provider value={state}>
 					<AppContextDispatch.Provider value={dispatch}>
-						<div className="analytics-settings-web mt-5">
-							<AppContent />
-						</div>
+						{children}
 					</AppContextDispatch.Provider>
 				</AppContextData.Provider>
 			</ClayIconSpriteContext.Provider>
@@ -119,5 +126,15 @@ function reducer(state: TData, action: {payload: any; type: Events}) {
 	}
 }
 
-export {useData, useDispatch};
+const App: React.FC<IAppProps> = (props) => {
+	return (
+		<AppContextProvider {...props}>
+			<div className="analytics-settings-web mt-5">
+				<AppContent />
+			</div>
+		</AppContextProvider>
+	);
+};
+
+export {AppContextProvider, useData, useDispatch};
 export default App;

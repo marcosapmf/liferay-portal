@@ -19,6 +19,7 @@ import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.NoSuchObjectFieldException;
+import com.liferay.object.exception.ObjectDefinitionAccountEntryRestrictedException;
 import com.liferay.object.exception.ObjectDefinitionEnableObjectEntryHistoryException;
 import com.liferay.object.exception.ObjectDefinitionLabelException;
 import com.liferay.object.exception.ObjectDefinitionNameException;
@@ -39,7 +40,6 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.system.BaseSystemObjectDefinitionMetadata;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.string.StringPool;
@@ -64,6 +64,7 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.sql.Connection;
 
@@ -73,7 +74,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -308,7 +308,7 @@ public class ObjectDefinitionLocalServiceTest {
 			null, TestPropsValues.getUserId(), 0,
 			objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, false, null,
+			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
 			LocalizedMapUtil.getLocalizedMap("Charlie"), "charlie", true, false,
 			Collections.emptyList());
 
@@ -356,7 +356,7 @@ public class ObjectDefinitionLocalServiceTest {
 			null, TestPropsValues.getUserId(), 0,
 			objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, false, null,
+			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
 			LocalizedMapUtil.getLocalizedMap("Dog"), "dog", true, false,
 			Collections.emptyList());
 
@@ -414,7 +414,7 @@ public class ObjectDefinitionLocalServiceTest {
 
 	@Test
 	public void testAddObjectDefinition() throws Exception {
-		String externalReferenceCode = String.valueOf(UUID.randomUUID());
+		String externalReferenceCode = RandomTestUtil.randomString();
 		User user = TestPropsValues.getUser();
 
 		ObjectDefinition objectDefinition =
@@ -435,6 +435,7 @@ public class ObjectDefinitionLocalServiceTest {
 		Assert.assertFalse(objectDefinition.isEnableCategorization());
 		Assert.assertFalse(objectDefinition.isEnableComments());
 		Assert.assertFalse(objectDefinition.isEnableObjectEntryHistory());
+		Assert.assertTrue(objectDefinition.isModifiable());
 		Assert.assertEquals(externalReferenceCode, objectDefinition.getName());
 		Assert.assertEquals(
 			externalReferenceCode, objectDefinition.getPluralLabel());
@@ -457,6 +458,14 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addOrUpdateSystemObjectDefinition(
 				TestPropsValues.getCompanyId(),
 				new BaseSystemObjectDefinitionMetadata() {
+
+					@Override
+					public long addBaseModel(
+							User user, Map<String, Object> values)
+						throws Exception {
+
+						return 0;
+					}
 
 					@Override
 					public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
@@ -543,6 +552,13 @@ public class ObjectDefinitionLocalServiceTest {
 						return 1;
 					}
 
+					@Override
+					public void updateBaseModel(
+							long primaryKey, User user,
+							Map<String, Object> values)
+						throws Exception {
+					}
+
 				});
 
 		Assert.assertEquals(
@@ -577,6 +593,14 @@ public class ObjectDefinitionLocalServiceTest {
 			_objectDefinitionLocalService.addOrUpdateSystemObjectDefinition(
 				TestPropsValues.getCompanyId(),
 				new BaseSystemObjectDefinitionMetadata() {
+
+					@Override
+					public long addBaseModel(
+							User user, Map<String, Object> values)
+						throws Exception {
+
+						return 0;
+					}
 
 					@Override
 					public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
@@ -660,6 +684,13 @@ public class ObjectDefinitionLocalServiceTest {
 					@Override
 					public int getVersion() {
 						return 2;
+					}
+
+					@Override
+					public void updateBaseModel(
+							long primaryKey, User user,
+							Map<String, Object> values)
+						throws Exception {
 					}
 
 				});
@@ -796,12 +827,13 @@ public class ObjectDefinitionLocalServiceTest {
 		// Duplicate name
 
 		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+				_objectDefinitionLocalService,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -824,12 +856,12 @@ public class ObjectDefinitionLocalServiceTest {
 		// Scope is null
 
 		try {
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"", null, 1,
+				"", null, 1, _objectDefinitionLocalService,
 				Arrays.asList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
@@ -848,12 +880,13 @@ public class ObjectDefinitionLocalServiceTest {
 		String scope = RandomTestUtil.randomString();
 
 		try {
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				scope, null, 1, Collections.<ObjectField>emptyList());
+				scope, null, 1, _objectDefinitionLocalService,
+				Collections.<ObjectField>emptyList());
 
 			Assert.fail();
 		}
@@ -866,12 +899,13 @@ public class ObjectDefinitionLocalServiceTest {
 		// System object definition versions must greater than 0
 
 		try {
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, -1,
+				_objectDefinitionLocalService,
 				Collections.<ObjectField>emptyList());
 		}
 		catch (ObjectDefinitionVersionException
@@ -883,12 +917,13 @@ public class ObjectDefinitionLocalServiceTest {
 		}
 
 		try {
-			_objectDefinitionLocalService.addSystemObjectDefinition(
+			ObjectDefinitionTestUtil.addSystemObjectDefinition(
 				TestPropsValues.getUserId(), "Test", null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
+				false, "Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_COMPANY, null, 0,
+				_objectDefinitionLocalService,
 				Collections.<ObjectField>emptyList());
 		}
 		catch (ObjectDefinitionVersionException
@@ -899,22 +934,22 @@ public class ObjectDefinitionLocalServiceTest {
 				objectDefinitionVersionException.getMessage());
 		}
 
-		// Database table, resources, and status
+		// Database table, messaging, resources, and status
 
-		objectDefinition =
-			_objectDefinitionLocalService.addSystemObjectDefinition(
-				TestPropsValues.getUserId(), "Test", null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
-				Collections.<ObjectField>emptyList());
+		objectDefinition = ObjectDefinitionTestUtil.addSystemObjectDefinition(
+			TestPropsValues.getUserId(), "Test", null,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			false, "Test", null, null,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+			_objectDefinitionLocalService,
+			Collections.<ObjectField>emptyList());
 
 		_objectFieldLocalService.addCustomObjectField(
 			null, TestPropsValues.getUserId(), 0,
 			objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, false, null,
+			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
 			LocalizedMapUtil.getLocalizedMap("Able"), "able", true, false,
 			Collections.emptyList());
 
@@ -1049,6 +1084,74 @@ public class ObjectDefinitionLocalServiceTest {
 	}
 
 	@Test
+	public void testEnableAccountEntryRestricted() throws Exception {
+
+		// Enabling account restriction between AccountEntry
+		// and a custom object definition
+
+		ObjectDefinition objectDefinition1 =
+			_objectDefinitionLocalService.fetchSystemObjectDefinition(
+				"AccountEntry");
+
+		User user = TestPropsValues.getUser();
+
+		ObjectDefinition objectDefinition2 =
+			_objectDefinitionLocalService.addObjectDefinition(
+				RandomTestUtil.randomString(), user.getUserId());
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.addObjectRelationship(
+				TestPropsValues.getUserId(),
+				objectDefinition1.getObjectDefinitionId(),
+				objectDefinition2.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		objectDefinition2 =
+			_objectDefinitionLocalService.enableAccountEntryRestricted(
+				objectRelationship);
+
+		Assert.assertTrue(objectDefinition2.isAccountEntryRestricted());
+		Assert.assertFalse(objectDefinition2.isSystem());
+
+		// Enable account restriction between two custom object definitions
+
+		ObjectDefinition objectDefinition3 =
+			_objectDefinitionLocalService.addObjectDefinition(
+				RandomTestUtil.randomString(), user.getUserId());
+
+		objectRelationship =
+			_objectRelationshipLocalService.addObjectRelationship(
+				TestPropsValues.getUserId(),
+				objectDefinition2.getObjectDefinitionId(),
+				objectDefinition3.getObjectDefinitionId(), 0,
+				ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				StringUtil.randomId(),
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+
+		try {
+			_objectDefinitionLocalService.enableAccountEntryRestricted(
+				objectRelationship);
+
+			Assert.fail();
+		}
+		catch (ObjectDefinitionAccountEntryRestrictedException
+					objectDefinitionAccountEntryRestrictedException) {
+
+			Assert.assertEquals(
+				"Custom object definitions can only be restricted by account " +
+					"entry",
+				objectDefinitionAccountEntryRestrictedException.getMessage());
+
+			_objectDefinitionLocalService.deleteObjectDefinition(
+				objectDefinition3);
+		}
+	}
+
+	@Test
 	public void testSystemObjectFields() throws Exception {
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
@@ -1064,14 +1167,14 @@ public class ObjectDefinitionLocalServiceTest {
 
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
 
-		objectDefinition =
-			_objectDefinitionLocalService.addSystemObjectDefinition(
-				TestPropsValues.getUserId(), "Test", null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"Test", null, null,
-				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
-				Collections.<ObjectField>emptyList());
+		objectDefinition = ObjectDefinitionTestUtil.addSystemObjectDefinition(
+			TestPropsValues.getUserId(), "Test", null,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			false, "Test", null, null,
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+			_objectDefinitionLocalService,
+			Collections.<ObjectField>emptyList());
 
 		_testSystemObjectFields(objectDefinition);
 
@@ -1150,7 +1253,7 @@ public class ObjectDefinitionLocalServiceTest {
 			null, TestPropsValues.getUserId(), 0,
 			objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, false, null,
+			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			StringUtil.randomId(), true, false, Collections.emptyList());
 
@@ -1281,7 +1384,7 @@ public class ObjectDefinitionLocalServiceTest {
 			null, TestPropsValues.getUserId(), 0,
 			objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, false, null,
+			ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			StringUtil.randomId(), true, false, Collections.emptyList());
 
@@ -1323,9 +1426,6 @@ public class ObjectDefinitionLocalServiceTest {
 			expectedObjectField.getDBTableName(), objectField.getDBTableName());
 		Assert.assertEquals(
 			expectedObjectField.getDBType(), objectField.getDBType());
-		Assert.assertEquals(
-			expectedObjectField.getDefaultValue(),
-			objectField.getDefaultValue());
 		Assert.assertEquals(
 			expectedObjectField.isIndexed(), objectField.isIndexed());
 		Assert.assertEquals(
@@ -1411,12 +1511,14 @@ public class ObjectDefinitionLocalServiceTest {
 
 		try {
 			objectDefinition =
-				_objectDefinitionLocalService.addSystemObjectDefinition(
+				ObjectDefinitionTestUtil.addSystemObjectDefinition(
 					TestPropsValues.getUserId(), name, null,
-					LocalizedMapUtil.getLocalizedMap(label), name, null, null,
+					LocalizedMapUtil.getLocalizedMap(label), false, name, null,
+					null,
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					ObjectDefinitionConstants.SCOPE_COMPANY, null, 1,
+					_objectDefinitionLocalService,
 					Arrays.asList(
 						ObjectFieldUtil.createObjectField(
 							ObjectFieldConstants.BUSINESS_TYPE_TEXT,

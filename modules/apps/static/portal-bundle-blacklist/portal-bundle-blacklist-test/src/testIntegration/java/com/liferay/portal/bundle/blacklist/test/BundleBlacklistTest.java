@@ -75,7 +75,7 @@ public class BundleBlacklistTest {
 		_bundleBlacklistConfiguration = OSGiServiceUtil.callService(
 			_bundleContext, ConfigurationAdmin.class,
 			configurationAdmin -> configurationAdmin.getConfiguration(
-				_CONFIG_NAME, null));
+				_CONFIG_NAME, StringPool.QUESTION));
 
 		_properties = _bundleBlacklistConfiguration.getProperties();
 

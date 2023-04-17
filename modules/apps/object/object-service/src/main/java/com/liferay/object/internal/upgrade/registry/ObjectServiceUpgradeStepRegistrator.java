@@ -29,6 +29,7 @@ import com.liferay.object.internal.upgrade.v3_24_0.ObjectFieldSettingUpgradeProc
 import com.liferay.object.internal.upgrade.v3_27_0.ObjectActionUpgradeProcess;
 import com.liferay.object.internal.upgrade.v3_3_0.util.ObjectViewFilterColumnTable;
 import com.liferay.object.internal.upgrade.v3_9_0.ObjectLayoutBoxUpgradeProcess;
+import com.liferay.object.internal.upgrade.v4_1_0.ObjectDefinitionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
@@ -98,7 +99,7 @@ public class ObjectServiceUpgradeStepRegistrator
 		registry.register(
 			"3.3.0", "3.4.0",
 			UpgradeProcessFactory.addColumns(
-				"ObjectAction", "description STRING null"));
+				"ObjectAction", "description VARCHAR(75) null"));
 
 		registry.register(
 			"3.4.0", "3.5.0",
@@ -247,6 +248,37 @@ public class ObjectServiceUpgradeStepRegistrator
 			"3.27.0", "3.27.1",
 			new com.liferay.object.internal.upgrade.v3_27_1.
 				ObjectFieldSettingUpgradeProcess());
+
+		registry.register(
+			"3.27.1", "3.28.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {{"ObjectAction", "objectActionId"}};
+				}
+
+			});
+
+		registry.register(
+			"3.28.0", "4.0.0",
+			UpgradeProcessFactory.alterColumnType(
+				"ObjectAction", "description", "VARCHAR(75) null"),
+			UpgradeProcessFactory.alterColumnType(
+				"ObjectValidationRule", "script", "TEXT null"));
+
+		registry.register(
+			"4.0.0", "4.1.0", new ObjectDefinitionUpgradeProcess());
+
+		registry.register(
+			"4.1.0", "4.1.1",
+			new com.liferay.object.internal.upgrade.v4_1_1.
+				ObjectViewUpgradeProcess());
+
+		registry.register(
+			"4.1.1", "5.0.0",
+			new com.liferay.object.internal.upgrade.v5_0_0.
+				ObjectFieldSettingUpgradeProcess(_portalUUID));
 	}
 
 	@Reference

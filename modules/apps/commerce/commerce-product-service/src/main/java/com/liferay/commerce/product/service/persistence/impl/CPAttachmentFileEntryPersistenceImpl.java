@@ -7031,7 +7031,9 @@ public class CPAttachmentFileEntryPersistenceImpl
 				if (ercCPAttachmentFileEntry != null) {
 					throw new DuplicateCPAttachmentFileEntryExternalReferenceCodeException(
 						"Duplicate cp attachment file entry with external reference code " +
-							cpAttachmentFileEntry.getExternalReferenceCode());
+							cpAttachmentFileEntry.getExternalReferenceCode() +
+								" and company " +
+									cpAttachmentFileEntry.getCompanyId());
 				}
 			}
 			else {
@@ -7042,7 +7044,9 @@ public class CPAttachmentFileEntryPersistenceImpl
 
 					throw new DuplicateCPAttachmentFileEntryExternalReferenceCodeException(
 						"Duplicate cp attachment file entry with external reference code " +
-							cpAttachmentFileEntry.getExternalReferenceCode());
+							cpAttachmentFileEntry.getExternalReferenceCode() +
+								" and company " +
+									cpAttachmentFileEntry.getCompanyId());
 				}
 			}
 		}

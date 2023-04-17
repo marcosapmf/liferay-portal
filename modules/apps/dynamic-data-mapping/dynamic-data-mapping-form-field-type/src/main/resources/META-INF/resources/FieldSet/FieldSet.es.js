@@ -41,9 +41,14 @@ const getRows = (rows, nestedFields) => {
 		columns: row.columns.map((column) => {
 			return {
 				...column,
-				fields: nestedFields.filter((nestedField) =>
-					column.fields.includes(nestedField.fieldName)
-				),
+				fields: nestedFields
+					.map((field, index) => ({
+						...field,
+						nestedFieldIndex: index,
+					}))
+					.filter((nestedField) =>
+						column.fields.includes(nestedField.fieldName)
+					),
 			};
 		}),
 	}));
@@ -119,7 +124,6 @@ const FieldSet = ({
 						name={name}
 						readOnly={readOnly}
 						repeatable={repeatable}
-						showLabel={showLabel}
 						showRepeatableRemoveButton={
 							repeatable && repeatedIndex > 0
 						}

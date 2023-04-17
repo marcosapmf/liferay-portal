@@ -19,6 +19,7 @@ import {Observer} from '@clayui/modal/lib/types';
 import {Input, InputLocalized} from '@liferay/object-js-components-web';
 import React, {FormEvent, useState} from 'react';
 
+import {defaultLanguageId} from '../../../utils/constants';
 import {TYPES, useViewContext} from '../objectViewContext';
 
 interface IProps {
@@ -26,8 +27,6 @@ interface IProps {
 	observer: Observer;
 	onClose: () => void;
 }
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 export function ModalEditViewColumn({
 	editingObjectFieldName,
@@ -54,7 +53,7 @@ export function ModalEditViewColumn({
 
 		Object.entries(translations).forEach(([key, value]) => {
 			if (value === '' && key !== defaultLanguageId) {
-				delete translations[key as Locale];
+				delete translations[key as Liferay.Language.Locale];
 			}
 		});
 

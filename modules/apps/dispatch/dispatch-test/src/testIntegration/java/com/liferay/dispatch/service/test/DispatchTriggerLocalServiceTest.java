@@ -281,7 +281,7 @@ public class DispatchTriggerLocalServiceTest {
 			}
 
 			Assert.assertNull(
-				_schedulerEngineHelper.getJobState(
+				_schedulerEngineHelper.getScheduledJob(
 					String.format(
 						"DISPATCH_JOB_%07d",
 						dispatchTrigger.getDispatchTriggerId()),
@@ -451,7 +451,7 @@ public class DispatchTriggerLocalServiceTest {
 
 		int index = 0;
 		int randomIndex = RandomTestUtil.randomInt(
-			0, dispatchTaskExecutorTypes.size());
+			0, dispatchTaskExecutorTypes.size() - 1);
 
 		for (String dispatchTaskExecutorType : dispatchTaskExecutorTypes) {
 			if (index++ == randomIndex) {

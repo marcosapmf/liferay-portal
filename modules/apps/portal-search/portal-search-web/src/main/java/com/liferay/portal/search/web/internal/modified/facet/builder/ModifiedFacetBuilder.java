@@ -67,6 +67,10 @@ public class ModifiedFacetBuilder {
 		_customRangeTo = customRangeTo;
 	}
 
+	public void setOrder(String order) {
+		_order = order;
+	}
+
 	public void setRangesJSONArray(JSONArray rangesJSONArray) {
 		_rangesJSONArray = rangesJSONArray;
 	}
@@ -92,7 +96,7 @@ public class ModifiedFacetBuilder {
 
 		facetConfiguration.setFieldName(facet.getFieldName());
 		facetConfiguration.setLabel("any-time");
-		facetConfiguration.setOrder("OrderHitsDesc");
+		facetConfiguration.setOrder(_order);
 		facetConfiguration.setStatic(false);
 		facetConfiguration.setWeight(1.0);
 
@@ -172,6 +176,7 @@ public class ModifiedFacetBuilder {
 	private final DateRangeFactory _dateRangeFactory;
 	private final JSONFactory _jsonFactory;
 	private final ModifiedFacetFactory _modifiedFacetFactory;
+	private String _order;
 	private JSONArray _rangesJSONArray;
 	private SearchContext _searchContext;
 	private String[] _selectedRanges;

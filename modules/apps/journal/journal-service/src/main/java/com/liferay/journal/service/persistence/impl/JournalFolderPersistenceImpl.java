@@ -8056,7 +8056,8 @@ public class JournalFolderPersistenceImpl
 				if (ercJournalFolder != null) {
 					throw new DuplicateJournalFolderExternalReferenceCodeException(
 						"Duplicate journal folder with external reference code " +
-							journalFolder.getExternalReferenceCode());
+							journalFolder.getExternalReferenceCode() +
+								" and group " + journalFolder.getGroupId());
 				}
 			}
 			else {
@@ -8066,7 +8067,8 @@ public class JournalFolderPersistenceImpl
 
 					throw new DuplicateJournalFolderExternalReferenceCodeException(
 						"Duplicate journal folder with external reference code " +
-							journalFolder.getExternalReferenceCode());
+							journalFolder.getExternalReferenceCode() +
+								" and group " + journalFolder.getGroupId());
 				}
 			}
 		}

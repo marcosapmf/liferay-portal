@@ -51,15 +51,13 @@ public class ReschedulePublicationDisplayContext {
 		_ctCollection = ctCollection;
 		_language = language;
 		_portal = portal;
-
 		_renderRequest = renderRequest;
-
-		_httpServletRequest = _portal.getHttpServletRequest(_renderRequest);
-		_themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		_renderResponse = renderResponse;
 		_scheduledPublishInfo = scheduledPublishInfo;
+
+		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
+		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 	}
 
 	public Map<String, Object> getReactData() {

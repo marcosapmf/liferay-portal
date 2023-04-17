@@ -431,6 +431,7 @@ create table DLFileVersion (
 	version VARCHAR(75) null,
 	size_ LONG,
 	checksum VARCHAR(75) null,
+	storeUUID VARCHAR(255) null,
 	expirationDate DATE null,
 	reviewDate DATE null,
 	lastPublishDate DATE null,
@@ -707,8 +708,9 @@ create table LayoutFriendlyURL (
 
 create table LayoutPrototype (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	layoutPrototypeId LONG not null primary key,
+	layoutPrototypeId LONG not null,
 	companyId LONG,
 	userId LONG,
 	userName VARCHAR(75) null,
@@ -717,7 +719,8 @@ create table LayoutPrototype (
 	name TEXT null,
 	description TEXT null,
 	settings_ STRING null,
-	active_ BOOLEAN
+	active_ BOOLEAN,
+	primary key (layoutPrototypeId, ctCollectionId)
 );
 
 create table LayoutRevision (

@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.File;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -38,6 +39,7 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Javier Gamarra
+ * @author Igor Beslic
  */
 @RunWith(Arquillian.class)
 public class KnowledgeBaseAttachmentResourceTest
@@ -122,6 +124,15 @@ public class KnowledgeBaseAttachmentResourceTest
 	}
 
 	@Override
+	protected Map<String, Map<String, String>>
+			testGetKnowledgeBaseArticleKnowledgeBaseAttachmentsPage_getExpectedActions(
+				Long knowledgeBaseArticleId)
+		throws Exception {
+
+		return Collections.emptyMap();
+	}
+
+	@Override
 	protected Long
 		testGetKnowledgeBaseArticleKnowledgeBaseAttachmentsPage_getKnowledgeBaseArticleId() {
 
@@ -141,10 +152,92 @@ public class KnowledgeBaseAttachmentResourceTest
 
 	@Override
 	protected KnowledgeBaseAttachment
+			testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment()
+		throws Exception {
+
+		return knowledgeBaseAttachmentResource.
+			postKnowledgeBaseArticleKnowledgeBaseAttachment(
+				_kbArticle.getResourcePrimKey(),
+				randomKnowledgeBaseAttachment(), getMultipartFiles());
+	}
+
+	@Override
+	protected String
+			testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode()
+		throws Exception {
+
+		return _kbArticle.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+		testGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId() {
+
+		return testGroup.getGroupId();
+	}
+
+	@Override
+	protected String
+			testGraphQLGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode()
+		throws Exception {
+
+		return _kbArticle.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testGraphQLGetSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
+	}
+
+	@Override
+	protected KnowledgeBaseAttachment
 			testGraphQLKnowledgeBaseAttachment_addKnowledgeBaseAttachment()
 		throws Exception {
 
 		return testDeleteKnowledgeBaseAttachment_addKnowledgeBaseAttachment();
+	}
+
+	@Override
+	protected KnowledgeBaseAttachment
+			testPostSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment(
+				KnowledgeBaseAttachment knowledgeBaseAttachment,
+				Map<String, File> multipartFiles)
+		throws Exception {
+
+		return knowledgeBaseAttachmentResource.
+			postKnowledgeBaseArticleKnowledgeBaseAttachment(
+				_kbArticle.getResourcePrimKey(), knowledgeBaseAttachment,
+				multipartFiles);
+	}
+
+	@Override
+	protected KnowledgeBaseAttachment
+			testPutSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_addKnowledgeBaseAttachment()
+		throws Exception {
+
+		return knowledgeBaseAttachmentResource.
+			postKnowledgeBaseArticleKnowledgeBaseAttachment(
+				_kbArticle.getResourcePrimKey(),
+				randomKnowledgeBaseAttachment(), getMultipartFiles());
+	}
+
+	@Override
+	protected String
+			testPutSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getKnowledgeBaseArticleExternalReferenceCode()
+		throws Exception {
+
+		return _kbArticle.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testPutSiteKnowledgeBaseArticleByExternalReferenceCodeKnowledgeBaseArticleExternalReferenceCodeKnowledgeBaseAttachmentByExternalReferenceCode_getSiteId()
+		throws Exception {
+
+		return testGroup.getGroupId();
 	}
 
 	private String _read(String url) throws Exception {

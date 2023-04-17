@@ -487,7 +487,7 @@
 </tr>
 <tr>
 	<td>NUMERIC</td>
-	<td>//label[contains(.,'${key_fieldLabel}')]/following-sibling::input[1]</td>
+	<td>//label[contains(.,'${key_fieldLabel}')]/following-sibling::input[1] | //label[contains(.,'${key_fieldLabel}')]//..//input[1]</td>
 	<td></td>
 </tr>
 <tr>
@@ -651,6 +651,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SPECIFIC_REQUIRED_ALERT</td>
+	<td>//div[contains(@class,'has-error')][contains(.,'${key_fieldName}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SPECIFIC_LABEL_TEXT_INPUT</td>
 	<td>//label[contains(text(),'${key_labelName}')]//following::input[contains(@type,'text')]</td>
 	<td></td>
@@ -663,6 +668,11 @@
 <tr>
 	<td>SEARCH</td>
 	<td>//input[contains(@title,'S') or contains(@title,'s')][contains(@title,'earch')] | //input[contains(@aria-label,'S') or contains(@title,'s')][contains(@aria-label,'earch')] | //input[contains(@name,'keywords')] | //input[(ancestor::header[@id='banner'])][contains(@data-qa-id,'searchInput')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_DISABLED</td>
+	<td>//input[@disabled and contains(@name,'keywords')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -732,7 +742,7 @@
 </tr>
 <tr>
 	<td>TEXT_SPECIFIC</td>
-	<td>//label[contains(.,'Text')]/following-sibling::input[1]</td>
+	<td>//label[contains(.,'Text')]/following-sibling::input[1] | //label[contains(.,'Text')]//..//input[1]</td>
 	<td></td>
 </tr>
 <tr>

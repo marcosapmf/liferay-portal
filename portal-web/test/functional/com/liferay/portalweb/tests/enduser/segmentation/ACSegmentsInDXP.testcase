@@ -11,7 +11,7 @@ definition {
 		task ("Open Analytics Cloud") {
 			var analyticsCloudURL = PropsUtil.get("analytics.cloud.url");
 
-			Navigator.openURL(baseURL = "${analyticsCloudURL}");
+			Navigator.openURL(baseURL = ${analyticsCloudURL});
 		}
 
 		task ("Take token from Analytics Cloud") {
@@ -50,7 +50,7 @@ definition {
 		task ("Launch AC and Switch Property") {
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 		}
 
 		task ("Go to Segments and add a new segment") {
@@ -85,7 +85,7 @@ definition {
 
 		ACUtils.tearDownDXP();
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -95,16 +95,13 @@ definition {
 		ACUtils.tearDownAC();
 	}
 
-	@description = "LPS-96574 Given I have edit, delete and permission permissions for segments
-	and I have connected my DXP instance with AC
-	when I create an Individual Segment in AC and it shows in the DXP Segments administration
-	then I don't see the edit action"
-	@priority = "3"
+	@description = "LPS-96574 Given I have edit, delete and permission permissions for segments And I have connected my DXP instance with AC When I create an Individual Segment in AC and it shows in the DXP Segments administration Then I don't see the edit action"
+	@priority = 3
 	test CheckNotEditableSegmentFromACAtDXP {
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#CheckNotEditableSegmentFromACAtDXP";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateSegmentsInterval();
+			Segmentation.updateSegmentsInterval(interval = 1);
 		}
 
 		task ("Go to segmentats page and assert that not possible Edit/Delete ") {
@@ -113,6 +110,10 @@ definition {
 			ProductMenu.gotoPortlet(
 				category = "People",
 				portlet = "Segments");
+
+			while ((IsElementNotPresent(key_tableEntry = "Dynamic Segment Test", locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS")) && (maxIterations = "40")) {
+				Refresh();
+			}
 
 			Click.waitForMenuToggleJSClick(
 				key_tableEntry = "Dynamic Segment Test",
@@ -125,7 +126,7 @@ definition {
 	}
 
 	@description = "LPS-111465 When a default virtual instance/company is not synced to AC, none of the segments created on AC for other virtual instances are listed in People > Segments"
-	@priority = "5"
+	@priority = 5
 	test DefaultInstanceNotSynchronizedWithAC {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#DefaultInstanceNotSynchronizedWithAC";
@@ -160,7 +161,7 @@ definition {
 
 			Click(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_DXP_BUTTON");
 
-			AssertElementPresent(locator1 = "ACDXPSettings#CONNECT_DISCONNECT_BUTTON_DISABLED");
+			AssertElementPresent(locator1 = "ACDXPSettings#CONNECT_BUTTON_DISABLED");
 
 			Navigator.openSpecificURL(url = "http://www.able.com:8080");
 		}
@@ -178,25 +179,21 @@ definition {
 
 	@description = "LPS-111465 When a non-default virtual instance/company is synced to AC, all the segments created on AC with more than one member are listed in People > Segments"
 	@ignore = "true"
-	@priority = "5"
+	@priority = 5
 	test NonDefaultInstanceSynchronizedOnAC {
 
 		// TODO LPS-111464 NonDefaultInstanceSynchronizedOnAC pending implementation
 
 	}
 
-	@description = "LPS-96574 Given I have edit, delete and permission permissions for segments
-	and I have connected my DXP instance with AC
-	when I create an Individual Segment in AC and it shows in the DXP Segments administration
-	and I delete the segment
-	Then in the next sync time, the segment will appear again"
-	@priority = "4"
+	@description = "LPS-96574 Given I have edit, delete and permission permissions for segments And I have connected my DXP instance with AC When I create an Individual Segment in AC and it shows in the DXP Segments administration And I delete the segment Then in the next sync time, the segment will appear again"
+	@priority = 4
 	test PersistSegmentFromACAtDXP {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#PersistSegmentFromACAtDXP";
 
 		task ("Change 'Check Interval' at Segment Analytics Cloud in System Settings") {
-			Segmentation.updateSegmentsInterval(interval = "1");
+			Segmentation.updateSegmentsInterval(interval = 1);
 		}
 
 		task ("Go to segmentats page and assert that the segment created is preset") {
@@ -206,15 +203,11 @@ definition {
 				category = "People",
 				portlet = "Segments");
 
+			while ((IsElementNotPresent(key_tableEntry = "Dynamic Segment Test", locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS")) && (maxIterations = "40")) {
+				Refresh();
+			}
+
 			AssertElementPresent(
-				key_tableEntry = "Dynamic Segment Test",
-				locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
-		}
-
-		task ("Delete Dynamic Segment Test") {
-			Segmentation.deleteSegment(entry = "Dynamic Segment Test");
-
-			AssertElementNotPresent(
 				key_tableEntry = "Dynamic Segment Test",
 				locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS");
 		}
@@ -231,8 +224,8 @@ definition {
 				configurationScope = "System Scope");
 
 			AssertElementPresent(
-				key_value = "1",
-				locator1 = "SystemSettings#CHECK_INTERVAL_SEGMENTS_VALUE");
+				key_value = 1,
+				locator1 = "SystemSettings#UPDATE_INTERVAL_SEGMENTS_VALUE");
 
 			AssertClick(
 				key_text = "Update",
@@ -242,7 +235,7 @@ definition {
 			Alert.viewSuccessMessage();
 		}
 
-		task ("Go to segmentats page and assert that the segment created is preset again") {
+		task ("Go to segments page and assert that the segment created is preset again") {
 			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/content-page");
 
 			ProductMenu.gotoPortlet(
@@ -256,13 +249,13 @@ definition {
 	}
 
 	@description = "LPS-94938 Validate if the user is redirected to the segment page details when he tries to see the detail of the imported segment from Analytics Cloud into DXP	"
-	@priority = "5"
+	@priority = 5
 	test RedirectToSegmentPageAC {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#RedirectToSegmentPageAC";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateSegmentsInterval();
+			Segmentation.updateSegmentsInterval(interval = 1);
 		}
 
 		task ("Go to segmentats page and click at segment crieted in AC") {
@@ -272,30 +265,36 @@ definition {
 				category = "People",
 				portlet = "Segments");
 
+			while ((IsElementNotPresent(key_tableEntry = "Dynamic Segment Test", locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS")) && (maxIterations = "40")) {
+				Refresh();
+			}
+
 			Click(
 				key_tableEntry = "Dynamic Segment Test",
 				locator1 = "LexiconTable#TABLE_ENTRY_TITLE_LINK");
 		}
 
 		task ("Go and Log into AC and assert the segment page is open") {
-			Navigator.selectSpecificWindow(windowTitle = "Analytics Cloud");
+			Navigator.selectSpecificWindow(windowTitle = "Dynamic Segment Test - Segment - Analytics Cloud");
 
-			AnalyticsCloud.loginAnalyticsCloud(
-				emailAddress = "test@liferay.com",
-				password = "test");
+			if (IsElementPresent(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_USER_LOGIN_FIELD")) {
+				AnalyticsCloud.loginAnalyticsCloud(
+					emailAddress = "test@liferay.com",
+					password = "test");
+			}
 
 			ACUtils.assertPageTitle(pageTitle = "Dynamic Segment Test");
 		}
 	}
 
 	@description = "LPS-94938 Validate if the user is redirected to the not found Analytics Cloud page, when he tries to see the detail of the imported segment from Analytics Cloud into DXP, one time that the segment does not exist in Analytics Cloud anymore"
-	@priority = "4"
+	@priority = 4
 	test RedirectToSegmentPageErrorAC {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#RedirectToSegmentPageErrorAC";
 
 		task ("Update Segments Analytics Cloud in System Settings") {
-			Segmentation.updateSegmentsInterval();
+			Segmentation.updateSegmentsInterval(interval = 1);
 		}
 
 		task ("Go to segmentats page and at segment created in AC") {
@@ -304,6 +303,10 @@ definition {
 			ProductMenu.gotoPortlet(
 				category = "People",
 				portlet = "Segments");
+
+			while ((IsElementNotPresent(key_tableEntry = "Dynamic Segment Test", locator1 = "LexiconTable#TABLE_ENTRY_ELLIPSIS")) && (maxIterations = "40")) {
+				Refresh();
+			}
 
 			AssertElementPresent(
 				key_tableEntry = "Dynamic Segment Test",
@@ -315,7 +318,7 @@ definition {
 
 			ACUtils.launchAC();
 
-			ACProperties.switchProperty(propertyName = "${assignedPropertyName}");
+			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
 
 			ACNavigation.goToSegments();
 
@@ -349,9 +352,11 @@ definition {
 		task ("Go and Log into AC and assert the ERROR page is open") {
 			Navigator.selectSpecificWindow(windowTitle = "Analytics Cloud");
 
-			AnalyticsCloud.loginAnalyticsCloud(
-				emailAddress = "test@liferay.com",
-				password = "test");
+			if (IsElementPresent(locator1 = "AnalyticsCloudConnection#ANALYTICS_CLOUD_USER_LOGIN_FIELD")) {
+				AnalyticsCloud.loginAnalyticsCloud(
+					emailAddress = "test@liferay.com",
+					password = "test");
+			}
 
 			AssertTextPresent(
 				locator1 = "//body",
@@ -361,7 +366,7 @@ definition {
 
 	@description = "LPS-94940 Validate if, The migrated AC segment, it appears in Liferay DXP Segments administration without an edit/delete actions"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test SegmentsWithoutEditingAndDeletingFromTheSite {
 
 		// TODO LPS-94940 SegmentsWithoutEditingAndDeletingFromTheSite pending implementation
@@ -369,7 +374,7 @@ definition {
 	}
 
 	@description = "LPS-94938 Validate if the user have the text unlinked when he tries to see the detail of the imported segment from Analytics Cloud into DXP, one time that the connection with Analytics Cloud does not exist anymore"
-	@priority = "4"
+	@priority = 4
 	test ShoudNotRedirectToSegmentPageAC {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ACSegmentsInDXP#ShoudNotRedirectToSegmentPageAC";

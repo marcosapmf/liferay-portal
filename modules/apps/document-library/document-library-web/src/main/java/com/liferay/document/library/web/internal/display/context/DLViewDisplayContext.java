@@ -41,7 +41,6 @@ import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -51,8 +50,6 @@ import com.liferay.taglib.security.PermissionsURLTag;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
@@ -107,16 +104,6 @@ public class DLViewDisplayContext {
 		).buildString();
 	}
 
-	public String getColumnNames() {
-		return Stream.of(
-			_dlPortletInstanceSettingsHelper.getEntryColumns()
-		).map(
-			HtmlUtil::escapeJS
-		).collect(
-			Collectors.joining("','")
-		);
-	}
-
 	public String getDownloadEntryURL() {
 		ResourceURL resourceURL = _renderResponse.createResourceURL();
 
@@ -140,6 +127,8 @@ public class DLViewDisplayContext {
 			_renderResponse
 		).setActionName(
 			"/document_library/edit_entry"
+		).setRedirect(
+			_getRedirect()
 		).buildString();
 	}
 
@@ -208,6 +197,14 @@ public class DLViewDisplayContext {
 			"vocabularyIds", "{vocabularyIds}"
 		).setWindowState(
 			LiferayWindowState.POP_UP
+		).buildString();
+	}
+
+	public String getSelectExtensionURL() throws PortletException {
+		return PortletURLBuilder.create(
+			PortletURLUtil.clone(_getCurrentPortletURL(), _renderResponse)
+		).setParameter(
+			"extension", (String)null
 		).buildString();
 	}
 

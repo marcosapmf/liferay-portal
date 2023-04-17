@@ -574,8 +574,7 @@ public class JournalManagementToolbarDisplayContext
 							).setRedirect(
 								PortalUtil.getCurrentURL(httpServletRequest)
 							).setParameter(
-								"ddmStructureKey",
-								ddmStructure.getStructureKey()
+								"ddmStructureId", ddmStructure.getStructureId()
 							).setParameter(
 								"folderId", _journalDisplayContext.getFolderId()
 							).setParameter(
@@ -597,7 +596,7 @@ public class JournalManagementToolbarDisplayContext
 
 						if (ArrayUtil.contains(
 								_journalDisplayContext.getAddMenuFavItems(),
-								ddmStructure.getStructureKey())) {
+								ddmStructure.getStructureId())) {
 
 							addFavoriteDropdownItem(unsafeConsumer);
 						}

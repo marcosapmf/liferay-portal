@@ -14,7 +14,10 @@
 
 package com.liferay.object.internal.system;
 
+import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
+import com.liferay.headless.admin.user.resource.v1_0.UserAccountResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionMetadata;
 import com.liferay.object.system.JaxRsApplicationDescriptor;
@@ -22,10 +25,12 @@ import com.liferay.object.system.SystemObjectDefinitionMetadata;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +47,22 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = SystemObjectDefinitionMetadata.class)
 public class UserSystemObjectDefinitionMetadata
 	extends BaseSystemObjectDefinitionMetadata {
+
+	@Override
+	public long addBaseModel(User user, Map<String, Object> values)
+		throws Exception {
+
+		UserAccountResource userAccountResource = _buildUserAccountResource(
+			user);
+
+		UserAccount userAccount = userAccountResource.postUserAccount(
+			_toUserAccount(values));
+
+		setExtendedProperties(
+			UserAccount.class.getName(), userAccount, user, values);
+
+		return userAccount.getId();
+	}
 
 	@Override
 	public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
@@ -89,13 +110,19 @@ public class UserSystemObjectDefinitionMetadata
 	public List<ObjectField> getObjectFields() {
 		return Arrays.asList(
 			createObjectField(
+				"Text", "middleName", "String", "middle-name", "additionalName",
+				false, true),
+			createObjectField(
+				"Text", "screenName", "String", "screen-name", "alternateName",
+				true, true),
+			createObjectField(
 				"Text", "String", "email-address", "emailAddress", true, true),
+			createObjectField(
+				"Text", "lastName", "String", "last-name", "familyName", true,
+				true),
 			createObjectField(
 				"Text", "firstName", "String", "first-name", "givenName", true,
 				true),
-			createObjectField(
-				"Text", "middleName", "String", "middle-name", "additionalName",
-				false, true),
 			createObjectField(
 				"Text", "uuid_", "String", "uuid", "uuid", false, true));
 	}
@@ -126,9 +153,83 @@ public class UserSystemObjectDefinitionMetadata
 	}
 
 	@Override
-	public int getVersion() {
-		return 1;
+	public Map<String, Object> getVariables(
+		String contentType, ObjectDefinition objectDefinition,
+		boolean oldValues, JSONObject payloadJSONObject) {
+
+		Map<String, Object> variables = super.getVariables(
+			contentType, objectDefinition, oldValues, payloadJSONObject);
+
+		if (variables.containsKey("firstName")) {
+			variables.put("givenName", variables.get("firstName"));
+		}
+
+		if (variables.containsKey("lastName")) {
+			variables.put("familyName", variables.get("lastName"));
+		}
+
+		if (variables.containsKey("middleName")) {
+			variables.put("additionalName", variables.get("middleName"));
+		}
+
+		if (variables.containsKey("screenName")) {
+			variables.put("alternateName", variables.get("screenName"));
+		}
+
+		return variables;
 	}
+
+	@Override
+	public int getVersion() {
+		return 2;
+	}
+
+	@Override
+	public void updateBaseModel(
+			long primaryKey, User user, Map<String, Object> values)
+		throws Exception {
+
+		UserAccountResource userAccountResource = _buildUserAccountResource(
+			user);
+
+		UserAccount userAccount = userAccountResource.patchUserAccount(
+			primaryKey, _toUserAccount(values));
+
+		setExtendedProperties(
+			UserAccount.class.getName(), userAccount, user, values);
+	}
+
+	private UserAccountResource _buildUserAccountResource(User user) {
+		UserAccountResource.Builder builder =
+			_userAccountResourceFactory.create();
+
+		return builder.checkPermissions(
+			false
+		).preferredLocale(
+			user.getLocale()
+		).user(
+			user
+		).build();
+	}
+
+	private UserAccount _toUserAccount(Map<String, Object> values) {
+		return new UserAccount() {
+			{
+				additionalName = GetterUtil.getString(
+					values.get("additionalName"));
+				alternateName = GetterUtil.getString(
+					values.get("alternateName"));
+				emailAddress = GetterUtil.getString(values.get("emailAddress"));
+				externalReferenceCode = GetterUtil.getString(
+					values.get("externalReferenceCode"));
+				familyName = GetterUtil.getString(values.get("familyName"));
+				givenName = GetterUtil.getString(values.get("givenName"));
+			}
+		};
+	}
+
+	@Reference
+	private UserAccountResource.Factory _userAccountResourceFactory;
 
 	@Reference
 	private UserLocalService _userLocalService;

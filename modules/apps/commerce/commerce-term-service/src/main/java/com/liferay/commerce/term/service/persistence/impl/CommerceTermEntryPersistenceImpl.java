@@ -8271,7 +8271,9 @@ public class CommerceTermEntryPersistenceImpl
 				if (ercCommerceTermEntry != null) {
 					throw new DuplicateCommerceTermEntryExternalReferenceCodeException(
 						"Duplicate commerce term entry with external reference code " +
-							commerceTermEntry.getExternalReferenceCode());
+							commerceTermEntry.getExternalReferenceCode() +
+								" and company " +
+									commerceTermEntry.getCompanyId());
 				}
 			}
 			else {
@@ -8281,7 +8283,9 @@ public class CommerceTermEntryPersistenceImpl
 
 					throw new DuplicateCommerceTermEntryExternalReferenceCodeException(
 						"Duplicate commerce term entry with external reference code " +
-							commerceTermEntry.getExternalReferenceCode());
+							commerceTermEntry.getExternalReferenceCode() +
+								" and company " +
+									commerceTermEntry.getCompanyId());
 				}
 			}
 		}

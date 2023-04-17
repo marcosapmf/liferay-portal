@@ -14,14 +14,14 @@
 
 package com.liferay.search.experiences.rest.internal.resource.v1_0;
 
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.search.experiences.rest.dto.v1_0.MLModel;
@@ -48,7 +48,7 @@ public class MLModelResourceImpl extends BaseMLModelResourceImpl {
 			Integer limit, String pipelineTag, String query, String tag)
 		throws Exception {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-163688"))) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-122920")) {
 			return null;
 		}
 
@@ -86,7 +86,10 @@ public class MLModelResourceImpl extends BaseMLModelResourceImpl {
 
 		try {
 			JSONArray jsonArray = _jsonFactory.createJSONArray(
-				_http.URLtoString(_getAPIURL(limit, pipelineTag, query, tag)));
+				_http.URLtoString(
+					_getAPIURL(
+						limit, pipelineTag, URLCodec.encodeURL(query, false),
+						tag)));
 
 			jsonArray.forEach(
 				object -> {

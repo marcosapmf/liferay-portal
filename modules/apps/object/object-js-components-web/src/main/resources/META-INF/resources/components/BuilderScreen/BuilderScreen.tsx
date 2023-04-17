@@ -156,7 +156,7 @@ export function BuilderScreen({
 											: filter
 											? viewColumn?.objectFieldBusinessType
 											: getLocalizableLabel(
-													creationLanguageId!,
+													creationLanguageId as Liferay.Language.Locale,
 													viewColumn?.label,
 													viewColumn.objectFieldName
 											  )
@@ -216,7 +216,7 @@ type TBuilderScreenColumn = {
 };
 
 interface IProps {
-	creationLanguageId?: Locale;
+	creationLanguageId?: Liferay.Language.Locale;
 	defaultSort?: boolean;
 	disableEdit?: boolean;
 	emptyState: {

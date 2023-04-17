@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -17,7 +16,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,7 +24,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test AddCalendarEventPublication {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -50,10 +49,9 @@ definition {
 
 		CalendarNavigator.gotoAddEvent();
 
-		CalendarEvent.addRegularInCustomSite(
-			eventTitle = "Publication Calendar Event Title",
-			pageName = "Calendar Page",
-			siteName = "Site Name");
+		CalendarEvent.editTitle(eventTitle = "Publication Calendar Event Title");
+
+		CalendarEvent.publish();
 
 		Navigator.openSitePage(
 			pageName = "Calendar Page",
@@ -77,13 +75,6 @@ definition {
 			changeType = "Added",
 			changeUser = "Test Test");
 
-		PublicationsChanges.viewChanges(
-			changeCategory = "Calendar Resource",
-			changeSite = "Site Name",
-			changeTitle = "Site Name",
-			changeType = "Added",
-			changeUser = "Test Test");
-
 		JSONPublications.publishPublication(publicationName = "Publication Name");
 
 		Publications.viewPublicationPublished(publicationName = "Publication Name");
@@ -96,7 +87,7 @@ definition {
 	}
 
 	@description = "Assert the conflict can be manually resovled on Calendar by discarding within Publications."
-	@priority = "4"
+	@priority = 4
 	test ResolveConflictingPublicationsByDiscarding {
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -117,14 +108,17 @@ definition {
 
 		CalendarNavigator.gotoAddEvent();
 
-		CalendarEvent.addRegularInCustomSite(
-			eventTitle = "Publication Calendar Event Title",
-			pageName = "Calendar Page",
-			siteName = "Site Name");
+		CalendarEvent.editTitle(eventTitle = "Publication Calendar Event Title");
+
+		CalendarEvent.publish();
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
 		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		Navigator.gotoSitePage(
+			pageName = "Calendar Page",
+			siteName = "Site Name");
 
 		CalendarNavigator.gotoEditEvent(eventTitle = "Publication Calendar Event Title");
 

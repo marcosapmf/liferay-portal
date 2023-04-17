@@ -18,12 +18,9 @@ import com.liferay.item.selector.provider.GroupItemSelectorProvider;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -36,11 +33,11 @@ import org.osgi.service.component.annotations.Deactivate;
 @Component(service = {})
 public class GroupItemSelectorProviderRegistryUtil {
 
-	public static Optional<GroupItemSelectorProvider>
-		getGroupItemSelectorProviderOptional(String groupType) {
+	public static GroupItemSelectorProvider getGroupItemSelectorProvider(
+		String groupType) {
 
 		if (_serviceTrackerMap == null) {
-			return Optional.empty();
+			return null;
 		}
 
 		GroupItemSelectorProvider groupItemSelectorProvider =
@@ -49,10 +46,10 @@ public class GroupItemSelectorProviderRegistryUtil {
 		if ((groupItemSelectorProvider != null) &&
 			groupItemSelectorProvider.isEnabled()) {
 
-			return Optional.of(groupItemSelectorProvider);
+			return groupItemSelectorProvider;
 		}
 
-		return Optional.empty();
+		return null;
 	}
 
 	public static Set<String> getGroupItemSelectorProviderTypes() {
@@ -60,18 +57,17 @@ public class GroupItemSelectorProviderRegistryUtil {
 			return Collections.emptySet();
 		}
 
-		Collection<GroupItemSelectorProvider> values =
-			_serviceTrackerMap.values();
+		Set<String> types = new HashSet<>();
 
-		Stream<GroupItemSelectorProvider> stream = values.stream();
+		for (GroupItemSelectorProvider groupItemSelectorProvider :
+				_serviceTrackerMap.values()) {
 
-		return stream.filter(
-			GroupItemSelectorProvider::isEnabled
-		).map(
-			GroupItemSelectorProvider::getGroupType
-		).collect(
-			Collectors.toSet()
-		);
+			if (groupItemSelectorProvider.isEnabled()) {
+				types.add(groupItemSelectorProvider.getGroupType());
+			}
+		}
+
+		return types;
 	}
 
 	@Activate

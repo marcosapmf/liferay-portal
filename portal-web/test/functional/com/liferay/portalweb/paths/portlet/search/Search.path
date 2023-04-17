@@ -111,6 +111,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>FACET_DISPLAY_FREQUENCIES_COUNT</td>
+	<td>//small[contains(@class,'term-count')]/preceding-sibling::span[contains(.,'${facetValueName}')]//following-sibling::small[contains(.,'${facetValueCount}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>FIELD_MAPPINGS_EDITOR</td>
 	<td>//div[contains(@class,'ace_editor')]//span[contains(.,'${indexName}')]</td>
 	<td></td>
@@ -168,6 +173,11 @@
 <tr>
 	<td>SEARCH_INFO</td>
 	<td>//div[contains(@class,'container-fluid')]//span[contains(@class,'text-truncate')]/span | //section[contains(@class,'count-feedback')]//p</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SEARCH_INFO_WITHOUT_INLINE</td>
+	<td>//div[contains(@class,'container-fluid')]//span[contains(@class,'text-truncate')]</td>
 	<td></td>
 </tr>
 <tr>

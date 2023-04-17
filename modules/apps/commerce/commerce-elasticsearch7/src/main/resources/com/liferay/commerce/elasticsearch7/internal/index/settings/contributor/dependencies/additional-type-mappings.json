@@ -96,6 +96,10 @@
 			"store": true,
 			"type": "keyword"
 		},
+		"orderCreatorEmailAddress": {
+			"store": true,
+			"type": "keyword"
+		},
 		"orderOrganizationId": {
 			"store": true,
 			"type": "keyword"
@@ -114,6 +118,10 @@
 				"1_10_ngram": {
 					"analyzer": "1_10_ngram",
 					"type": "text"
+				},
+				"raw": {
+					"store": true,
+					"type": "keyword"
 				},
 				"reverse": {
 					"analyzer": "reverse_keyword_lowercase",

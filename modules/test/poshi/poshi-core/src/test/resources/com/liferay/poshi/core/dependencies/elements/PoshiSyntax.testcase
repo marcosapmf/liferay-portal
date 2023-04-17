@@ -41,8 +41,15 @@
 		<task summary="Add a blogs entry called 'Blogs Entry1 Title' with content 'Blogs Entry1 Content'">
 			<execute macro="Navigator#openURL" />
 
+			<execute class="ListUtil" method="add">
+				<arg value="${orderID}"/>
+				<arg value="${orderIDs}"/>
+			</execute>
+
 			<var name="camelCase" method="StringUtil#replace('${camelCase}', ' ', '')"/>
 			<var name="payload" method="StringUtil#replace('${payload}', '${payload}', '${payload}}')"/>
+
+			<var name="parameters" method="JSONUtil2#_addJSONObject('JSON = ${parameters}', 'key = &quot;virtualHost&quot;', 'value = &quot;\&quot;${virtualHost}\&quot;&quot;')"/>
 
 			<execute macro="ProductMenu#gotoPortlet">
 				<var name="category" value="Content" />

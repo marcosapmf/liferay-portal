@@ -10,27 +10,20 @@
  * distribution rights of the Software.
  */
 
-const siteURL = Liferay.ThemeDisplay.getLayoutRelativeURL()
-	.split('/')
-	.slice(0, 3)
-	.join('/');
+const queryParams = new URLSearchParams(window.location.search);
+const hasNewSuccess = Boolean(queryParams.get('new-success'));
+const hasEditSuccess = Boolean(queryParams.get('edit-success'));
 
-const buttonMDFRequest = fragmentElement.querySelector('#mdf-request');
-const buttonMDFClaim = fragmentElement.querySelector('#mdf-claim');
-
-if (buttonMDFRequest) {
-	buttonMDFRequest.onclick = () =>
-		Liferay.Util.navigate(`${siteURL}/marketing/mdf-requests`);
+if (hasNewSuccess) {
+	Liferay.Util.openToast({
+		message: 'Your MDF Request was successfully submited.',
+		type: 'success',
+	});
 }
 
-if (buttonMDFClaim) {
-	buttonMDFClaim.onclick = () =>
-		Liferay.Util.navigate(`${siteURL}/marketing/mdf-claim`);
-}
-
-if (Liferay.currentURL.includes('claim')) {
-	buttonMDFClaim.classList.toggle('active');
-}
-else if (Liferay.currentURL.includes('request')) {
-	buttonMDFRequest.classList.toggle('active');
+if (hasEditSuccess) {
+	Liferay.Util.openToast({
+		message: 'Your MDF Request was successfully edited.',
+		type: 'success',
+	});
 }

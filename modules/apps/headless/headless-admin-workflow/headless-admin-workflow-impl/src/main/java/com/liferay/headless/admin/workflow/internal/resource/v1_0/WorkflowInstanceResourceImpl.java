@@ -36,11 +36,8 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.io.Serializable;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -147,16 +144,15 @@ public class WorkflowInstanceResourceImpl
 			Map<String, ?> context, long siteId)
 		throws Exception {
 
-		Map<String, Serializable> workflowContext = Stream.of(
-			context.entrySet()
-		).flatMap(
-			Collection::parallelStream
-		).filter(
-			entry -> entry.getValue() instanceof Serializable
-		).collect(
-			Collectors.toMap(
-				Map.Entry::getKey, entry -> (Serializable)entry.getValue())
-		);
+		Map<String, Serializable> workflowContext = new HashMap<>();
+
+		for (Map.Entry<String, ?> entry : context.entrySet()) {
+			Object value = entry.getValue();
+
+			if (value instanceof Serializable) {
+				workflowContext.put(entry.getKey(), (Serializable)value);
+			}
+		}
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			contextHttpServletRequest);
@@ -177,15 +173,9 @@ public class WorkflowInstanceResourceImpl
 		return new WorkflowInstance() {
 			{
 				completed = workflowInstance.isComplete();
-				currentNodeNames = Stream.of(
-					workflowInstance.getCurrentWorkflowNodes()
-				).flatMap(
-					List::stream
-				).map(
-					WorkflowNode::getName
-				).toArray(
-					String[]::new
-				);
+				currentNodeNames = transformToArray(
+					workflowInstance.getCurrentWorkflowNodes(),
+					WorkflowNode::getName, String.class);
 				dateCompletion = workflowInstance.getEndDate();
 				dateCreated = workflowInstance.getStartDate();
 				id = workflowInstance.getWorkflowInstanceId();

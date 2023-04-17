@@ -1,6 +1,7 @@
 @component-name = "portal-bundle-blacklist"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Bundle Blacklist";
@@ -14,12 +15,12 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test BlacklistComponent {
 		property test.name.skip.portal.instance = "ComponentBlacklist#BlacklistComponent";
 
@@ -44,7 +45,7 @@ definition {
 		AssertConsoleTextPresent(value1 = "Enabling com.liferay.portal.security.ldap.internal.authenticator.LDAPAuth from bundle com.liferay.portal.security.ldap.impl");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test CanExportComponentBlacklistConfig {
 		property test.name.skip.portal.instance = "ComponentBlacklist#CanExportComponentBlacklistConfig";
 
@@ -83,7 +84,7 @@ definition {
 		var tempFileDirectory = selenium.getOutputDirName();
 
 		OSGiConfig.copyOSGiConfigFile(
-			osgiConfigFileBaseDir = "${tempFileDirectory}",
+			osgiConfigFileBaseDir = ${tempFileDirectory},
 			osgiConfigFileName = "com.liferay.portal.component.blacklist.internal.configuration.ComponentBlacklistConfiguration.config");
 
 		GogoShell.openGogoShellAdmin();
@@ -93,7 +94,7 @@ definition {
 		GogoShell.viewNoOutput(outputContent = "ACTIVE");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test CanRemoveBlacklistedComponentViaUI {
 		property test.name.skip.portal.instance = "ComponentBlacklist#CanRemoveBlacklistedComponentViaUI";
 
@@ -138,7 +139,7 @@ definition {
 		GogoShell.viewOutput(outputContent = "ACTIVE");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test EnableBlacklistedComponentAfterShutdown {
 		property test.name.skip.portal.instance = "ComponentBlacklist#EnableBlacklistedComponentAfterShutdown";
 
@@ -172,7 +173,7 @@ definition {
 		GogoShell.viewOutput(outputContent = "ACTIVE");
 	}
 
-	@priority = "3"
+	@priority = 3
 	test EnableBlacklistedComponentAtRuntime {
 		property test.name.skip.portal.instance = "ComponentBlacklist#EnableBlacklistedComponentAtRuntime";
 

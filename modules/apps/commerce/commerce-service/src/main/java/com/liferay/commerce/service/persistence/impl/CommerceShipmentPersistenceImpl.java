@@ -4392,7 +4392,9 @@ public class CommerceShipmentPersistenceImpl
 				if (ercCommerceShipment != null) {
 					throw new DuplicateCommerceShipmentExternalReferenceCodeException(
 						"Duplicate commerce shipment with external reference code " +
-							commerceShipment.getExternalReferenceCode());
+							commerceShipment.getExternalReferenceCode() +
+								" and company " +
+									commerceShipment.getCompanyId());
 				}
 			}
 			else {
@@ -4402,7 +4404,9 @@ public class CommerceShipmentPersistenceImpl
 
 					throw new DuplicateCommerceShipmentExternalReferenceCodeException(
 						"Duplicate commerce shipment with external reference code " +
-							commerceShipment.getExternalReferenceCode());
+							commerceShipment.getExternalReferenceCode() +
+								" and company " +
+									commerceShipment.getCompanyId());
 				}
 			}
 		}

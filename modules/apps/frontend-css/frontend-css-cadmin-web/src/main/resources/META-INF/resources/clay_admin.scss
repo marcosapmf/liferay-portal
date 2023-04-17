@@ -2,16 +2,16 @@
 @import 'sidebar';
 
 $table-responsive-margin-left-md: 375px !default;
-$user-icon-color-0: $cadmin-secondary !default;
-$user-icon-color-1: $cadmin-blue !default;
-$user-icon-color-2: $cadmin-orange !default;
-$user-icon-color-3: $cadmin-red !default;
-$user-icon-color-4: $cadmin-teal !default;
-$user-icon-color-5: $cadmin-pink !default;
-$user-icon-color-6: $cadmin-green !default;
-$user-icon-color-7: $cadmin-purple !default;
-$user-icon-color-8: $cadmin-yellow !default;
-$user-icon-color-9: $cadmin-cyan !default;
+$user-icon-color-0: #6b6c7e !default;
+$user-icon-color-1: #4a97f2 !default;
+$user-icon-color-2: #e87523 !default;
+$user-icon-color-3: #fb625b !default;
+$user-icon-color-4: #4fa488 !default;
+$user-icon-color-5: #fe4fb5 !default;
+$user-icon-color-6: #879b7a !default;
+$user-icon-color-7: #af78ff !default;
+$user-icon-color-8: #bf8c2a !default;
+$user-icon-color-9: #5f9bc7 !default;
 
 html#{$cadmin-selector} {
 	.cadmin {
@@ -606,58 +606,6 @@ html#{$cadmin-selector} {
 				}
 			}
 		}
-
-		// Info Bar
-
-		.info-bar-container {
-			background-color: #fff;
-			border-bottom: 1px solid #edf0f2;
-			min-height: 47px;
-
-			.info-bar {
-				padding: 0;
-			}
-
-			@include media-breakpoint-up(sm, $cadmin-grid-breakpoints) {
-				min-height: 59px;
-			}
-
-			.info-bar-default {
-				.taglib-workflow-status .workflow-version {
-					color: #6b6c7e;
-				}
-
-				.btn {
-					margin: 7px 0 7px 15px;
-
-					@include media-breakpoint-up(sm, $cadmin-grid-breakpoints) {
-						margin: 13px 0 13px 15px;
-					}
-				}
-			}
-
-			.info-bar-center {
-				left: 50%;
-				margin-top: 16px;
-				position: absolute;
-				text-align: center;
-				transform: translate(-50%);
-				width: 100%;
-
-				@include media-breakpoint-up(sm) {
-					margin-top: 20px;
-				}
-			}
-
-			&.affix {
-				min-height: 35px;
-				transition: min-height 0.15s ease;
-
-				.info-bar-center {
-					margin-top: 5px;
-				}
-			}
-		}
 	}
 
 	.portal-popup,
@@ -728,14 +676,6 @@ html#{$cadmin-selector} {
 
 		.login-container {
 			padding: $cadmin-modal-inner-padding;
-		}
-
-		.management-bar-default {
-			border-left-width: 0;
-			border-radius: 0;
-			border-right-width: 0;
-			border-top-width: 0;
-			margin-bottom: 0;
 		}
 
 		.navbar ~ .portlet-configuration-setup,

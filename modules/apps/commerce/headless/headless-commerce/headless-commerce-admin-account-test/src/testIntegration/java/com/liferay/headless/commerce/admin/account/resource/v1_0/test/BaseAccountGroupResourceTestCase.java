@@ -29,6 +29,7 @@ import com.liferay.headless.commerce.admin.account.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.account.client.resource.v1_0.AccountGroupResource;
 import com.liferay.headless.commerce.admin.account.client.serdes.v1_0.AccountGroupSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -67,8 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -219,11 +218,20 @@ public abstract class BaseAccountGroupResourceTestCase {
 
 		assertContains(accountGroup1, (List<AccountGroup>)page.getItems());
 		assertContains(accountGroup2, (List<AccountGroup>)page.getItems());
-		assertValid(page);
+		assertValid(page, testGetAccountGroupsPage_getExpectedActions());
 
 		accountGroupResource.deleteAccountGroup(accountGroup1.getId());
 
 		accountGroupResource.deleteAccountGroup(accountGroup2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountGroupsPage_getExpectedActions()
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -852,7 +860,10 @@ public abstract class BaseAccountGroupResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantAccountGroup),
 				(List<AccountGroup>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountByExternalReferenceCodeAccountGroupsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		AccountGroup accountGroup1 =
@@ -873,11 +884,24 @@ public abstract class BaseAccountGroupResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(accountGroup1, accountGroup2),
 			(List<AccountGroup>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetAccountByExternalReferenceCodeAccountGroupsPage_getExpectedActions(
+				externalReferenceCode));
 
 		accountGroupResource.deleteAccountGroup(accountGroup1.getId());
 
 		accountGroupResource.deleteAccountGroup(accountGroup2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountByExternalReferenceCodeAccountGroupsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -981,7 +1005,10 @@ public abstract class BaseAccountGroupResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantAccountGroup),
 				(List<AccountGroup>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetAccountIdAccountGroupsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		AccountGroup accountGroup1 =
@@ -1000,11 +1027,21 @@ public abstract class BaseAccountGroupResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(accountGroup1, accountGroup2),
 			(List<AccountGroup>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page, testGetAccountIdAccountGroupsPage_getExpectedActions(id));
 
 		accountGroupResource.deleteAccountGroup(accountGroup1.getId());
 
 		accountGroupResource.deleteAccountGroup(accountGroup2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetAccountIdAccountGroupsPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1198,6 +1235,13 @@ public abstract class BaseAccountGroupResourceTestCase {
 	}
 
 	protected void assertValid(Page<AccountGroup> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<AccountGroup> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<AccountGroup> accountGroups = page.getItems();
@@ -1212,6 +1256,20 @@ public abstract class BaseAccountGroupResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1363,14 +1421,16 @@ public abstract class BaseAccountGroupResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1387,6 +1447,10 @@ public abstract class BaseAccountGroupResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1396,18 +1460,18 @@ public abstract class BaseAccountGroupResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

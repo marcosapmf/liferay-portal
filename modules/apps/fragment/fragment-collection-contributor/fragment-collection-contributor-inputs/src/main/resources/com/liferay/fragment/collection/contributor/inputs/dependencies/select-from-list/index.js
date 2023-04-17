@@ -1,3 +1,5 @@
+const isRTL = document.documentElement.classList.contains('rtl');
+
 const buttonElement = fragmentElement.querySelector('.btn');
 const dropdownElement = fragmentElement.querySelector('.dropdown-menu');
 const optionListElement = fragmentElement.querySelector('.list-unstyled');
@@ -26,6 +28,11 @@ const valueInputElement = document.getElementById(
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-value-input`
 );
+
+if (layoutMode === 'edit') {
+	buttonElement.setAttribute('disabled', true);
+	uiInputElement.setAttribute('disabled', true);
+}
 
 buttonElement.addEventListener('click', toggleDropdown);
 buttonElement.addEventListener('blur', handleResultListBlur);
@@ -231,11 +238,24 @@ function filterRemoteOptions(query, abortController) {
 	})
 		.then((response) => response.json())
 		.then((result) => {
-			return result.items.map((entry) => ({
-				textContent: entry[input.attributes.relationshipLabelFieldName],
-				textValue: entry[input.attributes.relationshipLabelFieldName],
-				value: `${entry[input.attributes.relationshipValueFieldName]}`,
-			}));
+			return result.items.map((entry) => {
+				let label = entry[input.attributes.relationshipLabelFieldName];
+
+				if (Array.isArray(label)) {
+					label = label.map((label) => label.name).join(', ');
+				}
+				else if (typeof label === 'object') {
+					label = label.name;
+				}
+
+				return {
+					textContent: label,
+					textValue: label,
+					value: `${
+						entry[input.attributes.relationshipValueFieldName]
+					}`,
+				};
+			});
 		});
 }
 
@@ -378,7 +398,10 @@ function repositionDropdownElement() {
 	}
 
 	dropdownElement.style.transform = `
-		translateX(${uiInputRect.left + window.scrollX}px)
+		translateX(${
+			(isRTL ? uiInputRect.right - window.innerWidth : uiInputRect.left) +
+			window.scrollX
+		}px)
 		translateY(${uiInputRect.bottom + window.scrollY}px)
 	`;
 }

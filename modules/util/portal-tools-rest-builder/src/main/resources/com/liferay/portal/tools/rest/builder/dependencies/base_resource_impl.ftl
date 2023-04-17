@@ -10,9 +10,13 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.Resource;
 import com.liferay.portal.kernel.model.ResourceAction;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -21,9 +25,12 @@ import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourceLocalServiceUtil;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
@@ -38,11 +45,13 @@ import com.liferay.portal.odata.sort.SortParser;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.permission.ModelPermissionsUtil;
+import com.liferay.portal.vulcan.permission.Permission;
 import com.liferay.portal.vulcan.permission.PermissionUtil;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
@@ -51,7 +60,11 @@ import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -158,6 +171,19 @@ public abstract class Base${schemaName}ResourceImpl
 
 				return responseBuilder.entity(
 					vulcanBatchEngineImportTaskResource.deleteImportTask(${javaDataType}.class.getName(), callbackURL, object)
+				).build();
+			<#elseif generateBatch && stringUtil.equals(javaMethodSignature.methodName, "post" + parentSchemaName + schemaName + "sPageExportBatch")>
+				vulcanBatchEngineExportTaskResource.setContextAcceptLanguage(contextAcceptLanguage);
+				vulcanBatchEngineExportTaskResource.setContextCompany(contextCompany);
+				vulcanBatchEngineExportTaskResource.setContextHttpServletRequest(contextHttpServletRequest);
+				vulcanBatchEngineExportTaskResource.setContextUriInfo(contextUriInfo);
+				vulcanBatchEngineExportTaskResource.setContextUser(contextUser);
+				vulcanBatchEngineExportTaskResource.setGroupLocalService(groupLocalService);
+
+				javax.ws.rs.core.Response.ResponseBuilder responseBuilder = javax.ws.rs.core.Response.accepted();
+
+				return responseBuilder.entity(
+					vulcanBatchEngineExportTaskResource.postExportTask(${javaDataType}.class.getName(), callbackURL, contentType, fieldNames)
 				).build();
 			<#elseif generateBatch && (stringUtil.equals(javaMethodSignature.methodName, "post" + parentSchemaName + schemaName + "Batch") || stringUtil.equals(javaMethodSignature.methodName, "post" + parentSchemaName + "Id" + schemaName + "Batch"))>
 				vulcanBatchEngineImportTaskResource.setContextAcceptLanguage(contextAcceptLanguage);
@@ -313,14 +339,23 @@ public abstract class Base${schemaName}ResourceImpl
 			<#elseif freeMarkerTool.hasHTTPMethod(javaMethodSignature, "patch") && freeMarkerTool.hasJavaMethodSignature(javaMethodSignatures, "get" + javaMethodSignature.methodName?remove_beginning("patch")) && freeMarkerTool.hasJavaMethodSignature(javaMethodSignatures, "put" + javaMethodSignature.methodName?remove_beginning("patch")) && !javaMethodSignature.operation.requestBody.content?keys?seq_contains("multipart/form-data")>
 				<#assign
 					generatePatchMethods = true
-					firstJavaMethodParameter = javaMethodSignature.javaMethodParameters[0]
+					javaMethodParameters = javaMethodSignature.javaMethodParameters[0..javaMethodSignature.javaMethodParameters?size-2]
+					javaMethodParameterName = ""
 				/>
 
 				<#if javaMethodSignature.methodName?contains("ByExternalReferenceCode")>
-					${javaDataType} existing${schemaName} = get${schemaName}ByExternalReferenceCode(${firstJavaMethodParameter.parameterName});
+					<#assign javaMethodParameterName = javaMethodSignature.methodName?replace("patch", "get") />
 				<#else>
-					${javaDataType} existing${schemaName} = get${schemaName}(${firstJavaMethodParameter.parameterName});
+					<#assign javaMethodParameterName = "get" + schemaName />
 				</#if>
+
+				${javaDataType} existing${schemaName} = ${javaMethodParameterName}(
+					<#list javaMethodParameters as javaMethodParameter>
+						${javaMethodParameter.parameterName}
+
+						<#sep>, </#sep>
+					</#list>
+				);
 
 				<#assign properties = freeMarkerTool.getDTOProperties(configYAML, openAPIYAML, schema) />
 
@@ -335,10 +370,20 @@ public abstract class Base${schemaName}ResourceImpl
 				preparePatch(${schemaVarName}, existing${schemaName});
 
 				<#if javaMethodSignature.methodName?contains("ByExternalReferenceCode")>
-					return put${schemaName}ByExternalReferenceCode(${firstJavaMethodParameter.parameterName}, existing${schemaName});
+					<#assign javaMethodParameterName = javaMethodSignature.methodName?replace("patch", "put") />
 				<#else>
-					return put${schemaName}(${firstJavaMethodParameter.parameterName}, existing${schemaName});
+					<#assign javaMethodParameterName = "put" + schemaName />
 				</#if>
+
+				return ${javaMethodParameterName}(
+					<#list javaMethodParameters as javaMethodParameter>
+						${javaMethodParameter.parameterName}
+
+						<#sep>, </#sep>
+					</#list>
+
+					, existing${schemaName}
+				);
 			<#else>
 				return new ${javaMethodSignature.returnType}();
 			</#if>
@@ -354,7 +399,7 @@ public abstract class Base${schemaName}ResourceImpl
 		/>
 		@Override
 		@SuppressWarnings("PMD.UnusedLocalVariable")
-		public void create(java.util.Collection<${javaDataType}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
+		public void create(Collection<${javaDataType}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
 
 			<#if createStrategies?has_content>
 				UnsafeConsumer<${javaDataType}, Exception> ${schemaVarName}UnsafeConsumer = null;
@@ -486,7 +531,7 @@ public abstract class Base${schemaName}ResourceImpl
 		}
 
 		@Override
-		public void delete(java.util.Collection<${javaDataType}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
+		public void delete(Collection<${javaDataType}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
 			<#if deleteBatchJavaMethodSignature?? && properties?keys?seq_contains("id")>
 				for (${javaDataType} ${schemaVarName} : ${schemaVarNames}) {
 					delete${schemaName}(${schemaVarName}.getId());
@@ -616,7 +661,7 @@ public abstract class Base${schemaName}ResourceImpl
 		}
 
 		@Override
-		public void update(java.util.Collection<${javaDataType}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
+		public void update(Collection<${javaDataType}> ${schemaVarNames}, Map<String, Serializable> parameters) throws Exception {
 			<#if updateStrategies?has_content>
 				UnsafeConsumer<${javaDataType}, Exception> ${schemaVarName}UnsafeConsumer = null;
 
@@ -736,18 +781,72 @@ public abstract class Base${schemaName}ResourceImpl
 			List<ResourceAction> resourceActions = resourceActionLocalService.getResourceActions(resourceName);
 
 			if (Validator.isNotNull(roleNames)) {
-				return Page.of(
-					actions,
-					transform(
-						PermissionUtil.getRoles(contextCompany, roleLocalService, StringUtil.split(roleNames)),
-						role -> PermissionUtil.toPermission(contextCompany.getCompanyId(), id, resourceActions, resourceName, resourcePermissionLocalService, role)));
+				return Page.of(actions, _getPermissions(contextCompany.getCompanyId(), resourceActions, id, resourceName, StringUtil.split(roleNames)));
 			}
 
-			return Page.of(
-				actions,
-				transform(
-					PermissionUtil.getResourcePermissions(contextCompany.getCompanyId(), id, resourceName, resourcePermissionLocalService),
-					resourcePermission -> PermissionUtil.toPermission(resourceActions, resourcePermission, roleLocalService.getRole(resourcePermission.getRoleId()))));
+			return Page.of(actions, _getPermissions(contextCompany.getCompanyId(), resourceActions, id, resourceName, null));
+		}
+
+		private Collection<Permission> _getPermissions(long companyId, List<ResourceAction> resourceActions, long resourceId, String resourceName, String[] roleNames) throws Exception {
+			Map<String, Permission> permissions = new HashMap<>();
+
+			int count = resourcePermissionLocalService.getResourcePermissionsCount(companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(resourceId));
+
+			if (count == 0) {
+				ResourceLocalServiceUtil.addResources(companyId, resourceId, 0, resourceName, String.valueOf(resourceId), false, true, true);
+			}
+
+			List<String> actionIds = transform(resourceActions, resourceAction -> resourceAction.getActionId());
+
+			Set<ResourcePermission> resourcePermissions = new HashSet<>();
+
+			resourcePermissions.addAll(resourcePermissionLocalService.getResourcePermissions(companyId, resourceName, ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId)));
+			resourcePermissions.addAll(resourcePermissionLocalService.getResourcePermissions(companyId, resourceName, ResourceConstants.SCOPE_GROUP, String.valueOf(GroupThreadLocal.getGroupId())));
+			resourcePermissions.addAll(resourcePermissionLocalService.getResourcePermissions(companyId, resourceName, ResourceConstants.SCOPE_GROUP_TEMPLATE, "0"));
+			resourcePermissions.addAll(resourcePermissionLocalService.getResourcePermissions(companyId, resourceName, ResourceConstants.SCOPE_INDIVIDUAL, String.valueOf(resourceId)));
+
+			List<Resource> resources = transform(resourcePermissions, resourcePermission -> ResourceLocalServiceUtil.getResource(resourcePermission.getCompanyId(), resourcePermission.getName(), resourcePermission.getScope(), resourcePermission.getPrimKey()));
+
+			Set<com.liferay.portal.kernel.model.Role> roles = new HashSet<>();
+
+			if (roleNames != null) {
+				for (String roleName: roleNames) {
+					roles.add(roleLocalService.getRole(companyId, roleName));
+				}
+			}
+			else {
+				for (ResourcePermission resourcePermission : resourcePermissions) {
+					com.liferay.portal.kernel.model.Role role = roleLocalService.getRole(resourcePermission.getRoleId());
+
+					roles.add(role);
+				}
+			}
+
+			for (com.liferay.portal.kernel.model.Role role : roles) {
+				Set<String> actionsIdsSet = new HashSet<>();
+
+				for (Resource resource : resources) {
+					actionsIdsSet.addAll(resourcePermissionLocalService.getAvailableResourcePermissionActionIds(resource.getCompanyId(), resource.getName(), ResourceConstants.SCOPE_COMPANY, String.valueOf(resource.getCompanyId()), role.getRoleId(), actionIds));
+					actionsIdsSet.addAll(resourcePermissionLocalService.getAvailableResourcePermissionActionIds(resource.getCompanyId(), resource.getName(), ResourceConstants.SCOPE_GROUP, String.valueOf(GroupThreadLocal.getGroupId()), role.getRoleId(), actionIds));
+					actionsIdsSet.addAll(resourcePermissionLocalService.getAvailableResourcePermissionActionIds(resource.getCompanyId(), resource.getName(), ResourceConstants.SCOPE_GROUP_TEMPLATE, "0", role.getRoleId(), actionIds));
+					actionsIdsSet.addAll(resourcePermissionLocalService.getAvailableResourcePermissionActionIds(resource.getCompanyId(), resource.getName(), resource.getScope(), resource.getPrimKey(), role.getRoleId(), actionIds));
+				}
+
+				if (actionsIdsSet.isEmpty()) {
+					continue;
+				}
+
+				Permission permission = new Permission() {
+					{
+						actionIds = actionsIdsSet.toArray(new String[0]);
+						roleName = role.getName();
+					}
+				};
+
+				permissions.put(role.getName(), permission);
+			}
+
+			return permissions.values();
 		}
 	</#if>
 
@@ -756,7 +855,7 @@ public abstract class Base${schemaName}ResourceImpl
 	}
 
 	<#if generateBatch>
-		public void setContextBatchUnsafeConsumer(UnsafeBiConsumer<java.util.Collection<${javaDataType}>, UnsafeConsumer<${javaDataType}, Exception>, Exception> contextBatchUnsafeConsumer) {
+		public void setContextBatchUnsafeConsumer(UnsafeBiConsumer<Collection<${javaDataType}>, UnsafeConsumer<${javaDataType}, Exception>, Exception> contextBatchUnsafeConsumer) {
 			this.contextBatchUnsafeConsumer = contextBatchUnsafeConsumer;
 		}
 	</#if>
@@ -810,6 +909,12 @@ public abstract class Base${schemaName}ResourceImpl
 	}
 
 	<#if generateBatch>
+		<#if freeMarkerTool.isVersionCompatible(configYAML, 2)>
+			public void setVulcanBatchEngineExportTaskResource(VulcanBatchEngineExportTaskResource vulcanBatchEngineExportTaskResource) {
+				this.vulcanBatchEngineExportTaskResource = vulcanBatchEngineExportTaskResource;
+			}
+		</#if>
+
 		public void setVulcanBatchEngineImportTaskResource(VulcanBatchEngineImportTaskResource vulcanBatchEngineImportTaskResource) {
 			this.vulcanBatchEngineImportTaskResource = vulcanBatchEngineImportTaskResource;
 		}
@@ -888,7 +993,7 @@ public abstract class Base${schemaName}ResourceImpl
 		}
 	</#if>
 
-	protected <T, R, E extends Throwable> List<R> transform(java.util.Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+	protected <T, R, E extends Throwable> List<R> transform(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
 		return TransformUtil.transform(collection, unsafeFunction);
 	}
 
@@ -896,7 +1001,7 @@ public abstract class Base${schemaName}ResourceImpl
 		return TransformUtil.transform(array, unsafeFunction, clazz);
 	}
 
-	protected <T, R, E extends Throwable> R[] transformToArray(java.util.Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
+	protected <T, R, E extends Throwable> R[] transformToArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
 		return TransformUtil.transformToArray(collection, unsafeFunction, clazz);
 	}
 
@@ -904,7 +1009,11 @@ public abstract class Base${schemaName}ResourceImpl
 		return TransformUtil.transformToList(array, unsafeFunction);
 	}
 
-	protected <T, R, E extends Throwable> List<R> unsafeTransform(java.util.Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) throws E {
+	protected <T, R, E extends Throwable> long[] transformToLongArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
+		return TransformUtil.transformToLongArray(collection, unsafeFunction);
+	}
+
+	protected <T, R, E extends Throwable> List<R> unsafeTransform(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) throws E {
 		return TransformUtil.unsafeTransform(collection, unsafeFunction);
 	}
 
@@ -912,7 +1021,7 @@ public abstract class Base${schemaName}ResourceImpl
 		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
 	}
 
-	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(java.util.Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) throws E {
+	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) throws E {
 		return TransformUtil.unsafeTransformToArray(collection, unsafeFunction, clazz);
 	}
 
@@ -923,7 +1032,7 @@ public abstract class Base${schemaName}ResourceImpl
 	protected AcceptLanguage contextAcceptLanguage;
 
 	<#if generateBatch>
-		protected UnsafeBiConsumer<java.util.Collection<${javaDataType}>, UnsafeConsumer<${javaDataType}, Exception>, Exception> contextBatchUnsafeConsumer;
+		protected UnsafeBiConsumer<Collection<${javaDataType}>, UnsafeConsumer<${javaDataType}, Exception>, Exception> contextBatchUnsafeConsumer;
 	</#if>
 
 	protected com.liferay.portal.kernel.model.Company contextCompany;
@@ -941,6 +1050,10 @@ public abstract class Base${schemaName}ResourceImpl
 	protected SortParserProvider sortParserProvider;
 
 	<#if generateBatch>
+		<#if freeMarkerTool.isVersionCompatible(configYAML, 2)>
+			protected VulcanBatchEngineExportTaskResource vulcanBatchEngineExportTaskResource;
+		</#if>
+
 		protected VulcanBatchEngineImportTaskResource vulcanBatchEngineImportTaskResource;
 	</#if>
 

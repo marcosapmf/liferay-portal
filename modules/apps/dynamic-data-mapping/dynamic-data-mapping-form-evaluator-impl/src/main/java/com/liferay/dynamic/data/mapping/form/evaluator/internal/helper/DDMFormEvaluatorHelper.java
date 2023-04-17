@@ -85,7 +85,7 @@ public class DDMFormEvaluatorHelper {
 
 		_ddmFormEvaluatorFormValuesHelper =
 			new DDMFormEvaluatorFormValuesHelper(
-				_ddmFormEvaluatorEvaluateRequest.getDDMFormValues());
+				ddmFormEvaluatorEvaluateRequest.getDDMFormValues());
 
 		ddmFormEvaluatorExpressionObserver =
 			new DDMFormEvaluatorExpressionObserver(
@@ -1039,9 +1039,7 @@ public class DDMFormEvaluatorHelper {
 							ddmFormField.getName())) {
 
 				if (!_isObjectRelationshipFieldInvalid(
-						ddmFormEvaluatorFieldContextKey) ||
-					(getDDMFormFieldValue(ddmFormEvaluatorFieldContextKey) !=
-						null)) {
+						ddmFormEvaluatorFieldContextKey)) {
 
 					continue;
 				}

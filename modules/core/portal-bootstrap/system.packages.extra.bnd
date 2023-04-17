@@ -20,7 +20,6 @@ Export-Package:\
 	!aQute.lib.filter,\
 	\
 	!com.liferay.portal.cache.thread.local,\
-	!com.liferay.portal.dao.jdbc.aop,\
 	!com.liferay.portal.freemarker,\
 	!com.liferay.portal.increment,\
 	!com.liferay.portal.javadoc,\
@@ -294,6 +293,5 @@ Provide-Capability:\
 	@lib/com.liferay.petra.sql.dsl.spi.jar,\
 	@lib/com.liferay.petra.string.jar,\
 	@lib/com.liferay.petra.url.pattern.mapper.jar,\
-	@lib/com.liferay.petra.xml.jar,\
 	@lib/com.liferay.portal.log4j.jar
 -removeheaders: Private-Package

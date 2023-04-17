@@ -2,7 +2,6 @@
 	"dependencies": {
 		"@liferay/frontend-icons-web": "*",
 		"@liferay/frontend-js-react-web": "*",
-		"@types/react-router-dom": "^5.3.3",
 		"clipboard": "2.0.4",
 		"data-engine-js-components-web": "*",
 		"data-engine-taglib": "*",
@@ -25,5 +24,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "4.0.123"
+	"version": "4.0.131"
 }

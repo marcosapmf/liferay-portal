@@ -23,7 +23,10 @@ import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
 import com.liferay.message.boards.moderation.configuration.MBModerationGroupConfiguration;
 import com.liferay.message.boards.service.MBStatsUserLocalService;
+import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListener;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
@@ -48,11 +51,12 @@ import com.liferay.questions.web.internal.constants.QuestionsWebKeys;
 
 import java.io.IOException;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Properties;
 
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
@@ -110,6 +114,36 @@ public class QuestionsPortlet extends MVCPortlet {
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
+		Company company = themeDisplay.getCompany();
+
+		renderRequest.setAttribute(
+			QuestionsWebKeys.COMPANY_NAME, company.getName());
+
+		Properties properties = _portal.getPortalProperties();
+
+		String ranks = properties.getProperty("message.boards.user.ranks");
+
+		if (ranks == null) {
+			throw new IllegalArgumentException(
+				"No value found for property \"message.boards.user.ranks\"");
+		}
+
+		String min = Collections.min(
+			StringUtil.split(ranks),
+			Comparator.comparing(
+				rank -> {
+					List<String> rankParts = StringUtil.split(
+						rank, CharPool.EQUAL);
+
+					return rankParts.get(1);
+				}));
+
+		List<String> minParts = StringUtil.split(min, CharPool.EQUAL);
+
+		String lowestRank = minParts.get(0);
+
+		renderRequest.setAttribute(QuestionsWebKeys.DEFAULT_RANK, lowestRank);
+
 		ItemSelectorCriterion itemSelectorCriterion =
 			new ImageItemSelectorCriterion();
 
@@ -123,29 +157,6 @@ public class QuestionsPortlet extends MVCPortlet {
 
 		renderRequest.setAttribute(
 			QuestionsWebKeys.IMAGE_BROWSE_URL, portletURL.toString());
-
-		String lowestRank = Stream.of(
-			_portal.getPortalProperties()
-		).map(
-			properties -> properties.getProperty("message.boards.user.ranks")
-		).map(
-			s -> s.split(",")
-		).flatMap(
-			Arrays::stream
-		).min(
-			Comparator.comparing(rank -> rank.split("=")[1])
-		).map(
-			rank -> rank.split("=")[0]
-		).orElse(
-			"Youngling"
-		);
-
-		Company company = themeDisplay.getCompany();
-
-		renderRequest.setAttribute(
-			QuestionsWebKeys.COMPANY_NAME, company.getName());
-
-		renderRequest.setAttribute(QuestionsWebKeys.DEFAULT_RANK, lowestRank);
 
 		renderRequest.setAttribute(
 			QuestionsWebKeys.FLAGS_PROPERTIES,
@@ -264,6 +275,11 @@ public class QuestionsPortlet extends MVCPortlet {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		QuestionsPortlet.class);
+
+	@Reference(
+		target = "(model.class.name=com.liferay.questions.web.internal.configuration.QuestionsConfiguration)"
+	)
+	private ConfigurationModelListener _configurationModelListener;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

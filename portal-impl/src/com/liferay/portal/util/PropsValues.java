@@ -142,10 +142,6 @@ public class PropsValues {
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.ASSET_BROWSER_SEARCH_WITH_DATABASE));
 
-	public static final boolean ASSET_CATEGORIES_SEARCH_HIERARCHICAL =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.ASSET_CATEGORIES_SEARCH_HIERARCHICAL));
-
 	public static final int ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES));
@@ -479,8 +475,8 @@ public class PropsValues {
 	public static final String DATABASE_MYSQL_ENGINE = PropsUtil.get(
 		PropsKeys.DATABASE_MYSQL_ENGINE);
 
-	public static final String DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX =
-		PropsUtil.get(PropsKeys.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX);
+	public static String DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX = PropsUtil.get(
+		PropsKeys.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX);
 
 	public static String DEFAULT_ADMIN_FIRST_NAME = PropsUtil.get(
 		PropsKeys.DEFAULT_ADMIN_FIRST_NAME);
@@ -1502,10 +1498,6 @@ public class PropsValues {
 	public static final int NOTIFICATIONS_MAX_EVENTS = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.NOTIFICATIONS_MAX_EVENTS));
 
-	public static final int OBJECT_ENTRY_SCRIPT_VARIABLES_VERSION =
-		GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.OBJECT_ENTRY_SCRIPT_VARIABLES_VERSION));
-
 	public static final int OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH =
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH));
@@ -2299,13 +2291,6 @@ public class PropsValues {
 	public static boolean TERMS_OF_USE_REQUIRED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.TERMS_OF_USE_REQUIRED));
 
-	public static final boolean TEXT_EXTRACTION_FORK_PROCESS_ENABLED =
-		GetterUtil.getBoolean(
-			PropsUtil.get(PropsKeys.TEXT_EXTRACTION_FORK_PROCESS_ENABLED));
-
-	public static final String[] TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES =
-		PropsUtil.getArray(PropsKeys.TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES);
-
 	public static boolean THEME_CSS_FAST_LOAD = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.THEME_CSS_FAST_LOAD));
 
@@ -2403,9 +2388,6 @@ public class PropsValues {
 	public static final boolean UPGRADE_LOG_CONTEXT_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.UPGRADE_LOG_CONTEXT_ENABLED));
-
-	public static final String UPGRADE_LOG_CONTEXT_NAME = PropsUtil.get(
-		PropsKeys.UPGRADE_LOG_CONTEXT_NAME);
 
 	public static final boolean UPGRADE_REPORT_ENABLED = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.UPGRADE_REPORT_ENABLED));

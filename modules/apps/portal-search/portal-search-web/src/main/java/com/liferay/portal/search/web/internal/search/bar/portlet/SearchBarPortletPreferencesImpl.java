@@ -36,27 +36,23 @@ public class SearchBarPortletPreferencesImpl
 	}
 
 	@Override
+	public String getDestination() {
+		Optional<String> optional = getDestinationOptional();
+
+		return optional.orElse(StringPool.BLANK);
+	}
+
+	@Override
 	public Optional<String> getDestinationOptional() {
 		return _portletPreferencesHelper.getString(
 			SearchBarPortletPreferences.PREFERENCE_KEY_DESTINATION);
 	}
 
 	@Override
-	public String getDestinationString() {
-		Optional<String> valueOptional = getDestinationOptional();
-
-		return valueOptional.orElse(StringPool.BLANK);
-	}
-
-	@Override
-	public Optional<String> getFederatedSearchKeyOptional() {
+	public String getFederatedSearchKey() {
 		return _portletPreferencesHelper.getString(
-			SearchBarPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY);
-	}
-
-	@Override
-	public String getFederatedSearchKeyString() {
-		return getFederatedSearchKeyOptional().orElse(StringPool.BLANK);
+			SearchBarPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY,
+			StringPool.BLANK);
 	}
 
 	@Override

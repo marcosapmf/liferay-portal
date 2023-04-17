@@ -15,6 +15,7 @@
 package com.liferay.object.exception;
 
 import com.liferay.object.model.ObjectState;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
@@ -281,6 +282,19 @@ public class ObjectEntryValuesException extends PortalException {
 		}
 
 		private String _objectFieldName;
+
+	}
+
+	public static class UnmodifiableAccountEntryObjectField
+		extends ObjectEntryValuesException {
+
+		public UnmodifiableAccountEntryObjectField(String objectFieldName) {
+			super(
+				StringBundler.concat(
+					"The object field ", objectFieldName,
+					" is unmodifiable because it is the account entry ",
+					"restrictor"));
+		}
 
 	}
 

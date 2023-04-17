@@ -32,6 +32,7 @@ export default function _JournalPortlet({
 	classNameId,
 	contentTitle,
 	defaultLanguageId: initialDefaultLanguageId,
+	displayDate,
 	hasSavePermission,
 	namespace,
 }) {
@@ -76,10 +77,13 @@ export default function _JournalPortlet({
 	const editingDefaultValues = classNameId && classNameId !== '0';
 
 	if (editingDefaultValues) {
-		const resetInput = (inputName) => {
-			const input = document.getElementById(`${namespace}${inputName}`);
+		const getInput = (inputName) =>
+			document.getElementById(`${namespace}${inputName}`);
 
-			if (input) {
+		const resetInput = (inputName) => {
+			const input = getInput(inputName);
+
+			if (input && !displayDate) {
 				input.value = '';
 			}
 		};
@@ -92,6 +96,18 @@ export default function _JournalPortlet({
 		resetInput('displayDateMonth');
 		resetInput('displayDateTime');
 		resetInput('displayDateYear');
+
+		const displayDateInput = getInput('displayDate');
+
+		if (displayDateInput) {
+			displayDateInput.addEventListener('change', (event) => {
+				if (!event.target.value) {
+					getInput('displayDateDay').value = '';
+					getInput('displayDateMonth').value = '';
+					getInput('displayDateYear').value = '';
+				}
+			});
+		}
 	}
 
 	const handleContextualSidebarButton = () => {
@@ -130,6 +146,12 @@ export default function _JournalPortlet({
 	const handleDDMFormError = (error) => {
 		publishingLock.unlock();
 		console.error(error);
+
+		const workflowActionInput = document.getElementById(
+			`${namespace}workflowAction`
+		);
+
+		workflowActionInput.value = Liferay.Workflow.ACTION_SAVE_DRAFT;
 
 		const titleInputComponent = Liferay.component(
 			`${namespace}titleMapAsXML`

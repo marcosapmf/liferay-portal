@@ -22,6 +22,7 @@ import com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -33,14 +34,12 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 
@@ -166,7 +165,8 @@ public class ObjectDefinitionVulcanBatchEngineTaskItemDelegateTest {
 	}
 
 	private ObjectDefinition _createObjectDefinition(String name) {
-		String sanitizedName = name.toLowerCase(LocaleUtil.getDefault());
+		String finalName = name.toLowerCase(LocaleUtil.getDefault());
+		boolean finalSystem = RandomTestUtil.randomBoolean();
 
 		return new ObjectDefinition() {
 			{
@@ -181,8 +181,13 @@ public class ObjectDefinitionVulcanBatchEngineTaskItemDelegateTest {
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
-				label = Collections.singletonMap("en_US", "O" + sanitizedName);
-				name = "O" + sanitizedName;
+				label = Collections.singletonMap("en_US", "O" + finalName);
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-167253")) {
+					modifiable = !finalSystem;
+				}
+
+				name = "O" + finalName;
 				objectFields = new ObjectField[] {_createObjectField()};
 				panelAppOrder = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -190,15 +195,13 @@ public class ObjectDefinitionVulcanBatchEngineTaskItemDelegateTest {
 					RandomTestUtil.randomString());
 				parameterRequired = RandomTestUtil.randomBoolean();
 				pluralLabel = Collections.singletonMap(
-					"en_US", "O" + sanitizedName + "s");
+					"en_US", "O" + finalName + "s");
 				portlet = RandomTestUtil.randomBoolean();
 				restContextPath = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				scope = ObjectDefinitionConstants.SCOPE_COMPANY;
 
-				if (GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LPS-135430"))) {
-
+				if (FeatureFlagManagerUtil.isEnabled("LPS-135430")) {
 					storageType = StringUtil.toLowerCase(
 						RandomTestUtil.randomString());
 				}
@@ -206,7 +209,7 @@ public class ObjectDefinitionVulcanBatchEngineTaskItemDelegateTest {
 					storageType = StringPool.BLANK;
 				}
 
-				system = RandomTestUtil.randomBoolean();
+				system = finalSystem;
 				titleObjectFieldName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 			}

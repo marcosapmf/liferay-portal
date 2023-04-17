@@ -42,6 +42,8 @@ import ThemeContext from '../shared/ThemeContext';
 import SXPElement from '../shared/sxp_element/index';
 import {CONFIG_PREFIX} from '../utils/constants';
 import {DEFAULT_ERROR} from '../utils/errorMessages';
+import {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
+import isDefined from '../utils/functions/is_defined';
 import formatLocaleWithDashes from '../utils/language/format_locale_with_dashes';
 import formatLocaleWithUnderscores from '../utils/language/format_locale_with_underscores';
 import renameKeys from '../utils/language/rename_keys';
@@ -112,6 +114,13 @@ const validateConfigKeys = (
 	configurationJSONObject,
 	uiConfigurationJSONObject
 ) => {
+
+	// Skip validation if `configurationJSONObject` is undefined.
+
+	if (!isDefined(configurationJSONObject)) {
+		return;
+	}
+
 	const regex = new RegExp(`\\$\\{${CONFIG_PREFIX}.([\\w\\d_]+)\\}`, 'g');
 
 	const elementKeys = [
@@ -155,7 +164,9 @@ const validateConfigKeys = (
 };
 
 function EditSXPElementForm({
+	initialDescription = '',
 	initialElementJSONEditorValue = {},
+	initialTitle = '',
 	predefinedVariables = [],
 	readOnly,
 	type,
@@ -413,9 +424,7 @@ function EditSXPElementForm({
 						title_i18n: sxpElementJSONObjectNew.title_i18n,
 						type,
 					}),
-					headers: new Headers({
-						'Content-Type': 'application/json',
-					}),
+					headers: DEFAULT_HEADERS,
 					method: 'PATCH',
 				}
 			).then((response) => {
@@ -546,7 +555,8 @@ function EditSXPElementForm({
 				/>
 
 				<PageToolbar
-					description={renameKeys(
+					description={initialDescription}
+					descriptionI18n={renameKeys(
 						sxpElementJSONObject.description_i18n,
 						formatLocaleWithDashes
 					)}
@@ -558,7 +568,8 @@ function EditSXPElementForm({
 						_handleTitleAndDescriptionChange
 					}
 					readOnly={readOnly}
-					title={renameKeys(
+					title={initialTitle}
+					titleI18n={renameKeys(
 						sxpElementJSONObject.title_i18n,
 						formatLocaleWithDashes
 					)}
@@ -656,6 +667,9 @@ function EditSXPElementForm({
 							<div className="sxp-element-header">
 								{!readOnly && (
 									<ClayButton
+										aria-label={Liferay.Language.get(
+											'predefined-variables'
+										)}
 										borderless
 										className={getCN({
 											active: showVariablesSidebar,
@@ -689,6 +703,7 @@ function EditSXPElementForm({
 								</div>
 
 								<ClayButton
+									aria-label={Liferay.Language.get('info')}
 									borderless
 									className={getCN({active: showInfoSidebar})}
 									displayType="secondary"
@@ -790,7 +805,9 @@ function EditSXPElementForm({
 }
 
 EditSXPElementForm.propTypes = {
+	initialDescription: PropTypes.string,
 	initialElementJSONEditorValue: PropTypes.object,
+	initialTitle: PropTypes.string,
 	predefinedVariables: PropTypes.arrayOf(PropTypes.object),
 	readOnly: PropTypes.bool,
 	sxpElementId: PropTypes.string,

@@ -21,7 +21,10 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 /**
  * @author Tomas Polesovsky
  */
-@ExtendedObjectClassDefinition(category = "infrastructure")
+@ExtendedObjectClassDefinition(
+	category = "publications",
+	scope = ExtendedObjectClassDefinition.Scope.COMPANY
+)
 @Meta.OCD(
 	id = "com.liferay.change.tracking.web.internal.configuration.CTConfiguration",
 	localization = "content/Language",
@@ -30,15 +33,8 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 public interface CTConfiguration {
 
 	@Meta.AD(
-		deflt = "com.liferay.portal.kernel.model.Group|com.liferay.portal.kernel.model.User",
-		name = "root-display-class-names", required = false
+		deflt = "1000", name = "context-view-limit-count", required = false
 	)
-	public String[] rootDisplayClassNames();
-
-	@Meta.AD(
-		deflt = "com.liferay.asset.kernel.model.AssetEntry",
-		name = "root-display-child-class-names", required = false
-	)
-	public String[] rootDisplayChildClassNames();
+	public int contextViewLimitCount();
 
 }

@@ -19,11 +19,11 @@ import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.object.model.ObjectRelationship",
-	service = {DTOConverter.class, ObjectRelationshipDTOConverter.class}
+	service = DTOConverter.class
 )
 public class ObjectRelationshipDTOConverter
 	implements DTOConverter
@@ -84,6 +84,9 @@ public class ObjectRelationshipDTOConverter
 				parameterObjectFieldId =
 					serviceBuilderObjectRelationship.
 						getParameterObjectFieldId();
+				reverse = serviceBuilderObjectRelationship.isReverse();
+				type = ObjectRelationship.Type.create(
+					serviceBuilderObjectRelationship.getType());
 
 				setParameterObjectFieldName(
 					() -> {
@@ -101,9 +104,6 @@ public class ObjectRelationshipDTOConverter
 
 						return objectField.getName();
 					});
-				reverse = serviceBuilderObjectRelationship.isReverse();
-				type = ObjectRelationship.Type.create(
-					serviceBuilderObjectRelationship.getType());
 			}
 		};
 	}

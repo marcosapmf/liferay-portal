@@ -353,9 +353,6 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				cmd.equals(Constants.ADD_DYNAMIC)) {
 
 				hideDefaultSuccessMessage(actionRequest);
-
-				MultiSessionMessages.add(
-					actionRequest, portletResource + "requestProcessed");
 			}
 		}
 		catch (Exception exception) {

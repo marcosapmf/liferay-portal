@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactory;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
@@ -39,6 +40,7 @@ import com.liferay.portal.odata.filter.expression.ListExpression;
 import com.liferay.portal.odata.filter.expression.LiteralExpression;
 import com.liferay.portal.odata.filter.expression.MemberExpression;
 import com.liferay.portal.odata.filter.expression.MethodExpression;
+import com.liferay.portal.odata.filter.expression.NavigationPropertyExpression;
 import com.liferay.portal.odata.internal.filter.expression.BinaryExpressionImpl;
 import com.liferay.portal.odata.internal.filter.expression.CollectionPropertyExpressionImpl;
 import com.liferay.portal.odata.internal.filter.expression.LambdaFunctionExpressionImpl;
@@ -47,6 +49,7 @@ import com.liferay.portal.odata.internal.filter.expression.ListExpressionImpl;
 import com.liferay.portal.odata.internal.filter.expression.LiteralExpressionImpl;
 import com.liferay.portal.odata.internal.filter.expression.MemberExpressionImpl;
 import com.liferay.portal.odata.internal.filter.expression.MethodExpressionImpl;
+import com.liferay.portal.odata.internal.filter.expression.NavigationPropertyExpressionImpl;
 import com.liferay.portal.odata.internal.filter.expression.PrimitivePropertyExpressionImpl;
 import com.liferay.portal.search.internal.query.NestedFieldQueryHelperImpl;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
@@ -60,9 +63,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -105,6 +105,22 @@ public class ExpressionConvertImplTest {
 
 		fastDateFormatFactoryUtil.setFastDateFormatFactory(
 			fastDateFormatFactory);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testConvertBinaryExpressionWithCount()
+		throws ExpressionVisitException {
+
+		BinaryExpression binaryExpression = new BinaryExpressionImpl(
+			new MemberExpressionImpl(
+				new NavigationPropertyExpressionImpl(
+					"EntityModelName",
+					NavigationPropertyExpression.Type.COUNT)),
+			BinaryExpression.Operation.GE,
+			new LiteralExpressionImpl("2", LiteralExpression.Type.INTEGER));
+
+		_expressionConvertImpl.convert(
+			binaryExpression, LocaleUtil.getDefault(), _entityModel);
 	}
 
 	@Test
@@ -263,16 +279,17 @@ public class ExpressionConvertImplTest {
 
 		@Override
 		public Map<String, EntityField> getEntityFieldsMap() {
-			return Stream.of(
-				new CollectionEntityField(
-					new StringEntityField(
-						"keywords", locale -> "keywords.raw")),
-				new StringEntityField("title", locale -> "title"),
-				new DateTimeEntityField(
+			return HashMapBuilder.put(
+				"dateTime",
+				(EntityField)new DateTimeEntityField(
 					"dateTime", locale -> "dateTime", locale -> "dateTime")
-			).collect(
-				Collectors.toMap(EntityField::getName, Function.identity())
-			);
+			).put(
+				"keywords",
+				new CollectionEntityField(
+					new StringEntityField("keywords", locale -> "keywords.raw"))
+			).put(
+				"title", new StringEntityField("title", locale -> "title")
+			).build();
 		}
 
 		@Override

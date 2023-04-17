@@ -16,7 +16,8 @@
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
-<%@ taglib uri="http://liferay.com/tld/react" prefix="react" %>
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %>
 
 <%@ page import="com.liferay.learn.LearnMessageUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
@@ -35,48 +36,48 @@ SemanticSearchCompanyConfigurationDisplayContext semanticSearchCompanyConfigurat
 		module="semantic_search/js/configuration/index"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
-				"assetEntryClassNames", semanticSearchCompanyConfigurationDisplayContext.getAssetEntryClassNames()
-			).put(
-				"availableAssetEntryClassNames", semanticSearchCompanyConfigurationDisplayContext.getAvailableAssetEntryClassNames()
-			).put(
 				"availableEmbeddingVectorDimensions", semanticSearchCompanyConfigurationDisplayContext.getAvailableEmbeddingVectorDimensions()
 			).put(
 				"availableLanguageDisplayNames", semanticSearchCompanyConfigurationDisplayContext.getAvailableLanguageDisplayNames()
+			).put(
+				"availableModelClassNames", semanticSearchCompanyConfigurationDisplayContext.getAvailableModelClassNames()
 			).put(
 				"availableTextEmbeddingProviders", semanticSearchCompanyConfigurationDisplayContext.getAvailableTextEmbeddingProviders()
 			).put(
 				"availableTextTruncationStrategies", semanticSearchCompanyConfigurationDisplayContext.getAvailableTextTruncationStrategies()
 			).put(
-				"cacheTimeout", semanticSearchCompanyConfigurationDisplayContext.getCacheTimeout()
+				"formName", liferayPortletResponse.getNamespace() + "fm"
 			).put(
-				"embeddingVectorDimensions", semanticSearchCompanyConfigurationDisplayContext.getEmbeddingVectorDimensions()
+				"initialTextEmbeddingCacheTimeout", semanticSearchCompanyConfigurationDisplayContext.getTextEmbeddingCacheTimeout()
 			).put(
-				"huggingFaceAccessToken", semanticSearchCompanyConfigurationDisplayContext.getHuggingFaceAccessToken()
+				"initialTextEmbeddingProviderConfigurationJSONs", semanticSearchCompanyConfigurationDisplayContext.getTextEmbeddingProviderConfigurationJSONs()
 			).put(
-				"languageIds", semanticSearchCompanyConfigurationDisplayContext.getLanguageIds()
+				"initialTextEmbeddingsEnabled", semanticSearchCompanyConfigurationDisplayContext.isTextEmbeddingsEnabled()
 			).put(
 				"learnMessages", LearnMessageUtil.getJSONObject("search-experiences-web")
 			).put(
-				"maxCharacterCount", semanticSearchCompanyConfigurationDisplayContext.getMaxCharacterCount()
-			).put(
-				"model", semanticSearchCompanyConfigurationDisplayContext.getModel()
-			).put(
-				"modelTimeout", semanticSearchCompanyConfigurationDisplayContext.getModelTimeout()
-			).put(
 				"namespace", liferayPortletResponse.getNamespace()
 			).put(
-				"textEmbeddingProvider", semanticSearchCompanyConfigurationDisplayContext.getTextEmbeddingProvider()
-			).put(
-				"textEmbeddingsEnabled", semanticSearchCompanyConfigurationDisplayContext.isTextEmbeddingsEnabled()
-			).put(
-				"textTruncationStrategy", semanticSearchCompanyConfigurationDisplayContext.getTextTruncationStrategy()
-			).put(
-				"txtaiHostAddress", semanticSearchCompanyConfigurationDisplayContext.getTxtaiHostAddress()
-			).put(
-				"txtaiPassword", semanticSearchCompanyConfigurationDisplayContext.getTxtaiPassword()
-			).put(
-				"txtaiUsername", semanticSearchCompanyConfigurationDisplayContext.getTxtaiUserName()
+				"redirectURL", String.valueOf(liferayPortletResponse.createRenderURL())
 			).build()
 		%>'
 	/>
 </div>
+
+<aui:script>
+	function <portlet:namespace />removeExistingFormSubmitButtons() {
+		const formElement = document.getElementById('<portlet:namespace />fm');
+
+		if (formElement) {
+			const submitButtonGroupElement = formElement.querySelector(
+				'.button-holder'
+			);
+
+			if (submitButtonGroupElement) {
+				submitButtonGroupElement.remove();
+			}
+		}
+	}
+
+	<portlet:namespace />removeExistingFormSubmitButtons();
+</aui:script>

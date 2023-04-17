@@ -19,6 +19,7 @@ import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectLayout;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectRelationship;
+import com.liferay.object.admin.rest.client.dto.v1_0.ObjectValidationRule;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectView;
 import com.liferay.object.admin.rest.client.json.BaseJSONParser;
 
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -226,6 +226,16 @@ public class ObjectDefinitionSerDes {
 			sb.append(_toJSON(objectDefinition.getLabel()));
 		}
 
+		if (objectDefinition.getModifiable() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"modifiable\": ");
+
+			sb.append(objectDefinition.getModifiable());
+		}
+
 		if (objectDefinition.getName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -327,6 +337,32 @@ public class ObjectDefinitionSerDes {
 
 				if ((i + 1) <
 						objectDefinition.getObjectRelationships().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (objectDefinition.getObjectValidationRules() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectValidationRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i < objectDefinition.getObjectValidationRules().length; i++) {
+
+				sb.append(
+					String.valueOf(
+						objectDefinition.getObjectValidationRules()[i]));
+
+				if ((i + 1) <
+						objectDefinition.getObjectValidationRules().length) {
 
 					sb.append(", ");
 				}
@@ -626,6 +662,14 @@ public class ObjectDefinitionSerDes {
 			map.put("label", String.valueOf(objectDefinition.getLabel()));
 		}
 
+		if (objectDefinition.getModifiable() == null) {
+			map.put("modifiable", null);
+		}
+		else {
+			map.put(
+				"modifiable", String.valueOf(objectDefinition.getModifiable()));
+		}
+
 		if (objectDefinition.getName() == null) {
 			map.put("name", null);
 		}
@@ -667,6 +711,15 @@ public class ObjectDefinitionSerDes {
 			map.put(
 				"objectRelationships",
 				String.valueOf(objectDefinition.getObjectRelationships()));
+		}
+
+		if (objectDefinition.getObjectValidationRules() == null) {
+			map.put("objectValidationRules", null);
+		}
+		else {
+			map.put(
+				"objectValidationRules",
+				String.valueOf(objectDefinition.getObjectValidationRules()));
 		}
 
 		if (objectDefinition.getObjectViews() == null) {
@@ -878,6 +931,12 @@ public class ObjectDefinitionSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "modifiable")) {
+				if (jsonParserFieldValue != null) {
+					objectDefinition.setModifiable(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
 				if (jsonParserFieldValue != null) {
 					objectDefinition.setName((String)jsonParserFieldValue);
@@ -885,65 +944,108 @@ public class ObjectDefinitionSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectActions")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectActions(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectActionSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectAction[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectAction[] objectActionsArray =
+						new ObjectAction[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectActionsArray.length; i++) {
+						objectActionsArray[i] = ObjectActionSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectActions(objectActionsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectFields")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectFields(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectFieldSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectField[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectField[] objectFieldsArray =
+						new ObjectField[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectFieldsArray.length; i++) {
+						objectFieldsArray[i] = ObjectFieldSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectFields(objectFieldsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectLayouts")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectLayouts(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectLayoutSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectLayout[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectLayout[] objectLayoutsArray =
+						new ObjectLayout[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectLayoutsArray.length; i++) {
+						objectLayoutsArray[i] = ObjectLayoutSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectLayouts(objectLayoutsArray);
 				}
 			}
 			else if (Objects.equals(
 						jsonParserFieldName, "objectRelationships")) {
 
 				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectRelationship[] objectRelationshipsArray =
+						new ObjectRelationship[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectRelationshipsArray.length; i++) {
+						objectRelationshipsArray[i] =
+							ObjectRelationshipSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
 					objectDefinition.setObjectRelationships(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectRelationshipSerDes.toDTO(
-								(String)object)
-						).toArray(
-							size -> new ObjectRelationship[size]
-						));
+						objectRelationshipsArray);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "objectValidationRules")) {
+
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectValidationRule[] objectValidationRulesArray =
+						new ObjectValidationRule[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectValidationRulesArray.length;
+						 i++) {
+
+						objectValidationRulesArray[i] =
+							ObjectValidationRuleSerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectValidationRules(
+						objectValidationRulesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "objectViews")) {
 				if (jsonParserFieldValue != null) {
-					objectDefinition.setObjectViews(
-						Stream.of(
-							toStrings((Object[])jsonParserFieldValue)
-						).map(
-							object -> ObjectViewSerDes.toDTO((String)object)
-						).toArray(
-							size -> new ObjectView[size]
-						));
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					ObjectView[] objectViewsArray =
+						new ObjectView[jsonParserFieldValues.length];
+
+					for (int i = 0; i < objectViewsArray.length; i++) {
+						objectViewsArray[i] = ObjectViewSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					objectDefinition.setObjectViews(objectViewsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "panelAppOrder")) {

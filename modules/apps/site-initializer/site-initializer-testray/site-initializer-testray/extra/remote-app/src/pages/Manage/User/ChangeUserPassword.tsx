@@ -25,7 +25,7 @@ import {TestrayContext} from '../../../context/TestrayContext';
 import useFormActions from '../../../hooks/useFormActions';
 import i18n from '../../../i18n';
 import yupSchema from '../../../schema/yup';
-import {UserAccount, liferayUserAccountsRest} from '../../../services/rest';
+import {UserAccount, liferayUserAccountsImpl} from '../../../services/rest';
 
 type UserPasswordDefault = {
 	alternateName?: string;
@@ -75,16 +75,14 @@ const ChangeUserPassword: React.FC = () => {
 		onSubmit(
 			{...form, userId: userAccount.id},
 			{
-				create: (...params) =>
-					liferayUserAccountsRest.create(...params),
-				update: (...params) =>
-					liferayUserAccountsRest.update(...params),
+				create: (data) => liferayUserAccountsImpl.create(data),
+				update: (id, data) => liferayUserAccountsImpl.update(id, data),
 			}
 		)
 			.then(mutatePassword)
 			.then(() => onSave())
 			.catch((error) => {
-				if (error.info.type === 'MustMatchCurrentPassword') {
+				if (error.info.type.includes('MustMatchCurrentPassword')) {
 					return setError('currentPassword', {
 						message: i18n.translate(
 							'current-password-is-incorrect'
@@ -138,12 +136,7 @@ const ChangeUserPassword: React.FC = () => {
 				/>
 			</ClayForm>
 
-			<div>
-				<Form.Footer
-					onClose={onClose}
-					onSubmit={handleSubmit(_onSubmit)}
-				/>
-			</div>
+			<Form.Footer onClose={onClose} onSubmit={handleSubmit(_onSubmit)} />
 		</Container>
 	);
 };

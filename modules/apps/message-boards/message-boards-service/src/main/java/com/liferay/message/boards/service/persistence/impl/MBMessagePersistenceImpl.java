@@ -21684,7 +21684,8 @@ public class MBMessagePersistenceImpl
 				if (ercMBMessage != null) {
 					throw new DuplicateMBMessageExternalReferenceCodeException(
 						"Duplicate message-boards message with external reference code " +
-							mbMessage.getExternalReferenceCode());
+							mbMessage.getExternalReferenceCode() +
+								" and group " + mbMessage.getGroupId());
 				}
 			}
 			else {
@@ -21693,7 +21694,8 @@ public class MBMessagePersistenceImpl
 
 					throw new DuplicateMBMessageExternalReferenceCodeException(
 						"Duplicate message-boards message with external reference code " +
-							mbMessage.getExternalReferenceCode());
+							mbMessage.getExternalReferenceCode() +
+								" and group " + mbMessage.getGroupId());
 				}
 			}
 		}

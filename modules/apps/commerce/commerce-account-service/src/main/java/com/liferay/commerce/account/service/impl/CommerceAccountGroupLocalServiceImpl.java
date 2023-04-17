@@ -58,7 +58,6 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -90,11 +89,11 @@ public class CommerceAccountGroupLocalServiceImpl
 		_validate(companyId, 0, name, externalReferenceCode);
 
 		AccountGroup accountGroup = _accountGroupLocalService.addAccountGroup(
-			serviceContext.getUserId(), null, name);
+			serviceContext.getUserId(), null, name, serviceContext);
 
+		accountGroup.setExternalReferenceCode(externalReferenceCode);
 		accountGroup.setDefaultAccountGroup(system);
 		accountGroup.setType(CommerceAccountGroupImpl.toAccountGroupType(type));
-		accountGroup.setExternalReferenceCode(externalReferenceCode);
 		accountGroup.setExpandoBridgeAttributes(serviceContext);
 
 		CommerceAccountGroup commerceAccountGroup =
@@ -249,16 +248,12 @@ public class CommerceAccountGroupLocalServiceImpl
 			return new ArrayList<>();
 		}
 
-		Stream<CommerceAccountGroupCommerceAccountRel> stream =
-			commerceAccountGroupCommerceAccountRels.stream();
-
-		long[] commerceAccountGroupIds = stream.mapToLong(
-			CommerceAccountGroupCommerceAccountRel::getCommerceAccountGroupId
-		).toArray();
-
 		return TransformUtil.transform(
 			_accountGroupLocalService.getAccountGroupsByAccountGroupId(
-				commerceAccountGroupIds),
+				TransformUtil.transformToLongArray(
+					commerceAccountGroupCommerceAccountRels,
+					CommerceAccountGroupCommerceAccountRel::
+						getCommerceAccountGroupId)),
 			CommerceAccountGroupImpl::fromAccountGroup);
 	}
 

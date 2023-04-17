@@ -14,7 +14,6 @@
 
 package com.liferay.site.internal.struts;
 
-import com.liferay.layout.admin.kernel.util.SitemapUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutSetException;
 import com.liferay.portal.kernel.log.Log;
@@ -38,6 +37,7 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.site.util.Sitemap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -62,8 +62,6 @@ public class SitemapStrutsAction implements StrutsAction {
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
 
-			String layoutUuid = ParamUtil.getString(
-				httpServletRequest, "layoutUuid");
 			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
 
 			LayoutSet layoutSet = null;
@@ -120,13 +118,25 @@ public class SitemapStrutsAction implements StrutsAction {
 				}
 			}
 
-			String sitemap = SitemapUtil.getSitemap(
-				layoutUuid, layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
-				themeDisplay);
+			Group currentGroup = _groupLocalService.getGroup(
+				layoutSet.getGroupId());
 
-			ServletResponseUtil.sendFile(
-				httpServletRequest, httpServletResponse, null,
-				sitemap.getBytes(StringPool.UTF8), ContentTypes.TEXT_XML_UTF8);
+			if (currentGroup.isActive()) {
+				String layoutUuid = ParamUtil.getString(
+					httpServletRequest, "layoutUuid");
+
+				String sitemap = _sitemap.getSitemap(
+					layoutUuid, layoutSet.getGroupId(),
+					layoutSet.isPrivateLayout(), themeDisplay);
+
+				ServletResponseUtil.sendFile(
+					httpServletRequest, httpServletResponse, null,
+					sitemap.getBytes(StringPool.UTF8),
+					ContentTypes.TEXT_XML_UTF8);
+			}
+			else {
+				throw new NoSuchLayoutSetException();
+			}
 		}
 		catch (NoSuchLayoutSetException noSuchLayoutSetException) {
 			_portal.sendError(
@@ -160,6 +170,9 @@ public class SitemapStrutsAction implements StrutsAction {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private Sitemap _sitemap;
 
 	@Reference
 	private VirtualHostLocalService _virtualHostLocalService;

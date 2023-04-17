@@ -91,6 +91,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CHECKBOX_NAME</td>
+	<td>//input[@name='${key_fieldName}'][@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DELETIONS</td>
 	<td>//label[contains(.,'Deletions')]/input[contains(@id,'DELETIONS')]</td>
 	<td></td>
@@ -178,6 +183,11 @@
 <tr>
 	<td>ENABLE_CONVERSION_TXT</td>
 	<td>//label[contains(.,'TXT')]/input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENABLE_DESCRIPTION_CHECKBOX</td>
+	<td>//label[contains(@for,'enableKBArticleDescription')]//input[@type='checkbox']</td>
 	<td></td>
 </tr>
 <tr>
@@ -288,6 +298,11 @@
 <tr>
 	<td>LEXICON_SELECT_ALL_CONTAINER</td>
 	<td>//nav[contains(@class,'management-bar')]//div[contains(@class,'custom-checkbox')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LEXICON_SELECT_ALL_CONTAINER_DISABLED</td>
+	<td>//nav[contains(@class,'management-bar')]//div[contains(@class,'custom-checkbox')]/label/input[@disabled]</td>
 	<td></td>
 </tr>
 <tr>

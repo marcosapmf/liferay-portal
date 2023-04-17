@@ -12,6 +12,7 @@
  * details.
  */
 
+import ClayEmptyState from '@clayui/empty-state';
 import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
@@ -37,12 +38,13 @@ const SelectLayout = ({
 	selectedLayoutIds,
 }) => {
 	const [filter, setFilter] = useState();
+	const [selectedItemsCount, setSelectedItemsCount] = useState(0);
 
 	const empty = !nodes.length;
 
 	return (
-		<ClayLayout.ContainerFluid className="p-4 select-layout">
-			<ClayForm.Group>
+		<ClayLayout.ContainerFluid className="p-0 select-layout">
+			<ClayForm.Group className="m-0 p-3 select-layout-filter">
 				<ClayInput.Group>
 					<ClayInput.GroupItem prepend>
 						<ClayInput
@@ -66,14 +68,37 @@ const SelectLayout = ({
 			{empty ? (
 				<EmptyState />
 			) : (
-				<SelectLayoutTree
-					filter={filter}
-					followURLOnTitleClick={followURLOnTitleClick}
-					itemSelectorSaveEvent={itemSelectorSaveEvent}
-					items={nodes}
-					multiSelection={multiSelection}
-					selectedLayoutIds={selectedLayoutIds}
-				/>
+				<>
+					{Boolean(selectedItemsCount) && multiSelection && (
+						<ClayLayout.Container
+							className="align-items-center d-flex layout-tree-count-feedback px-3"
+							containerElement="section"
+							fluid
+						>
+							<div className="container p-0">
+								<p className="m-0 text-2">
+									{selectedItemsCount > 1
+										? `${selectedItemsCount} ${Liferay.Language.get(
+												'items-selected'
+										  )}`
+										: `${selectedItemsCount} ${Liferay.Language.get(
+												'item-selected'
+										  )}`}
+								</p>
+							</div>
+						</ClayLayout.Container>
+					)}
+
+					<SelectLayoutTree
+						filter={filter}
+						followURLOnTitleClick={followURLOnTitleClick}
+						itemSelectorSaveEvent={itemSelectorSaveEvent}
+						items={nodes}
+						multiSelection={multiSelection}
+						onItemsCountChange={setSelectedItemsCount}
+						selectedLayoutIds={selectedLayoutIds}
+					/>
+				</>
 			)}
 		</ClayLayout.ContainerFluid>
 	);
@@ -81,13 +106,14 @@ const SelectLayout = ({
 
 const EmptyState = () => {
 	return (
-		<div className="sheet taglib-empty-result-message">
-			<div className="taglib-empty-result-message-header"></div>
-
-			<div className="sheet-text text-center">
-				{Liferay.Language.get('there-are-no-pages')}
-			</div>
-		</div>
+		<ClayLayout.Sheet>
+			<ClayEmptyState
+				className="mt-0"
+				description={Liferay.Language.get('there-are-no-pages')}
+				imgSrc={`${themeDisplay.getPathThemeImages()}/states/empty_state.gif`}
+				title={null}
+			/>
+		</ClayLayout.Sheet>
 	);
 };
 

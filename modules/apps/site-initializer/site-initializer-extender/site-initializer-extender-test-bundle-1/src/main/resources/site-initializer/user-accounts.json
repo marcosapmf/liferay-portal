@@ -1,0 +1,38 @@
+[
+	{
+		"accountBriefs": [
+			{
+				"externalReferenceCode": "TESTACC0001"
+			}
+		],
+		"alternateName": "testAlternateName1",
+		"emailAddress": "test.user1@liferay.com",
+		"externalReferenceCode": "USER-1",
+		"familyName": "User1",
+		"givenName": "Test",
+		"name": "Test User 1",
+		"organizationBriefs": [
+			{
+				"name": "Test Organization 1"
+			}
+		]
+	},
+	{
+		"accountBriefs": [
+			{
+				"externalReferenceCode": "TESTACC0002"
+			}
+		],
+		"alternateName": "testAlternateName2",
+		"emailAddress": "test.user2@liferay.com",
+		"externalReferenceCode": "USER-2",
+		"familyName": "User2",
+		"givenName": "Test",
+		"name": "Test User 2",
+		"organizationBriefs": [
+			{
+				"name": "Test Organization 2"
+			}
+		]
+	}
+]

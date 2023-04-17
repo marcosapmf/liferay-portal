@@ -25,7 +25,7 @@ import {normalizeFieldSettings} from '../../utils/fieldSettings';
 import {ObjectFieldErrors} from './ObjectFieldFormBase';
 
 interface IAggregationSourcePropertyProps {
-	creationLanguageId: Locale;
+	creationLanguageId2: Liferay.Language.Locale;
 	disabled?: boolean;
 	editingField?: boolean;
 	errors: ObjectFieldErrors;
@@ -68,7 +68,7 @@ const aggregationFunctions = [
 ];
 
 export function AggregationFormBase({
-	creationLanguageId,
+	creationLanguageId2,
 	disabled,
 	errors,
 	editingField,
@@ -157,52 +157,54 @@ export function AggregationFormBase({
 						aggregationFunction.value === settings.function
 				);
 
-				const relatedFields = await API.getObjectFieldsByExternalReferenceCode(
-					currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
-				);
-
-				const currentSummarizeField = relatedFields.find(
-					(relatedField) =>
-						relatedField.name === settings.objectFieldName
-				) as ObjectField;
-
-				if (onRelationshipChange) {
-					onRelationshipChange(
+				if (currentRelatedObjectRelationship) {
+					const relatedFields = await API.getObjectFieldsByExternalReferenceCode(
 						currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
 					);
-				}
 
-				setObjectRelationshipFields(
-					relatedFields.filter(
-						(objectField) =>
-							objectField.businessType === 'Integer' ||
-							objectField.businessType === 'LongInteger' ||
-							objectField.businessType === 'Decimal' ||
-							objectField.businessType === 'PrecisionDecimal'
-					)
-				);
+					const currentSummarizeField = relatedFields.find(
+						(relatedField) =>
+							relatedField.name === settings.objectFieldName
+					) as ObjectField;
 
-				setSelectRelatedObjectRelationship(
-					currentRelatedObjectRelationship
-				);
+					if (onRelationshipChange) {
+						onRelationshipChange(
+							currentRelatedObjectRelationship.objectDefinitionExternalReferenceCode2
+						);
+					}
 
-				setSelectedAggregationFunction(currentFunction);
-
-				if (currentSummarizeField) {
-					setSelectedSummarizeField(
-						getLocalizableLabel(
-							creationLanguageId!,
-							currentSummarizeField.label,
-							currentSummarizeField.name
+					setObjectRelationshipFields(
+						relatedFields.filter(
+							(objectField) =>
+								objectField.businessType === 'Integer' ||
+								objectField.businessType === 'LongInteger' ||
+								objectField.businessType === 'Decimal' ||
+								objectField.businessType === 'PrecisionDecimal'
 						)
 					);
+
+					setSelectRelatedObjectRelationship(
+						currentRelatedObjectRelationship
+					);
+
+					setSelectedAggregationFunction(currentFunction);
+
+					if (currentSummarizeField) {
+						setSelectedSummarizeField(
+							getLocalizableLabel(
+								creationLanguageId2 as Liferay.Language.Locale,
+								currentSummarizeField.label,
+								currentSummarizeField.name
+							)
+						);
+					}
 				}
 			};
 
 			makeFetch();
 		}
 	}, [
-		creationLanguageId,
+		creationLanguageId2,
 		editingField,
 		objectRelationships,
 		objectFieldSettings,
@@ -316,7 +318,7 @@ export function AggregationFormBase({
 	const handleSummarizeFieldChange = (objectField: ObjectField) => {
 		setSelectedSummarizeField(
 			getLocalizableLabel(
-				creationLanguageId!,
+				creationLanguageId2 as Liferay.Language.Locale,
 				objectField.label,
 				objectField.name
 			)
@@ -340,6 +342,7 @@ export function AggregationFormBase({
 	return (
 		<>
 			<AutoComplete<TObjectRelationship>
+				creationLanguageId={creationLanguageId2}
 				emptyStateMessage={Liferay.Language.get(
 					'no-relationships-were-found'
 				)}
@@ -353,7 +356,7 @@ export function AggregationFormBase({
 				query={relationshipsQuery}
 				required
 				value={getLocalizableLabel(
-					creationLanguageId!,
+					creationLanguageId2 as Liferay.Language.Locale,
 					selectedRelatedObjectRelationship?.label,
 					selectedRelatedObjectRelationship?.name
 				)}
@@ -362,7 +365,7 @@ export function AggregationFormBase({
 					<div className="d-flex justify-content-between">
 						<div>
 							{getLocalizableLabel(
-								creationLanguageId!,
+								creationLanguageId2 as Liferay.Language.Locale,
 								label,
 								name
 							)}
@@ -383,6 +386,9 @@ export function AggregationFormBase({
 
 			{selectedAggregationFunction?.value !== 'COUNT' && (
 				<AutoComplete<ObjectField>
+					creationLanguageId={
+						creationLanguageId2 as Liferay.Language.Locale
+					}
 					emptyStateMessage={Liferay.Language.get(
 						'no-fields-were-found'
 					)}
@@ -401,7 +407,7 @@ export function AggregationFormBase({
 						<div className="d-flex justify-content-between">
 							<div>
 								{getLocalizableLabel(
-									creationLanguageId!,
+									creationLanguageId2 as Liferay.Language.Locale,
 									label,
 									name
 								)}

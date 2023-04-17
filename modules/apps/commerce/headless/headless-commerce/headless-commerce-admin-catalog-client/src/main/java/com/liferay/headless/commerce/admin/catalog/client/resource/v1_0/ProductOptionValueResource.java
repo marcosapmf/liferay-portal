@@ -60,12 +60,12 @@ public interface ProductOptionValueResource {
 		throws Exception;
 
 	public void postProductOptionIdProductOptionValueBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postProductOptionIdProductOptionValueBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -77,6 +77,10 @@ public interface ProductOptionValueResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public ProductOptionValueResource build() {
 			return new ProductOptionValueResourceImpl(this);
 		}
@@ -85,6 +89,28 @@ public interface ProductOptionValueResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -336,12 +362,12 @@ public interface ProductOptionValueResource {
 		}
 
 		public void postProductOptionIdProductOptionValueBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postProductOptionIdProductOptionValueBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -371,7 +397,7 @@ public interface ProductOptionValueResource {
 
 		public HttpInvoker.HttpResponse
 				postProductOptionIdProductOptionValueBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -406,8 +432,6 @@ public interface ProductOptionValueResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/productOptions/productOptionValues/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

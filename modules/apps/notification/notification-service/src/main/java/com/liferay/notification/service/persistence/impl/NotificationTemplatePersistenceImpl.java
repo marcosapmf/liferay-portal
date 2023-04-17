@@ -2645,7 +2645,9 @@ public class NotificationTemplatePersistenceImpl
 				if (ercNotificationTemplate != null) {
 					throw new DuplicateNotificationTemplateExternalReferenceCodeException(
 						"Duplicate notification template with external reference code " +
-							notificationTemplate.getExternalReferenceCode());
+							notificationTemplate.getExternalReferenceCode() +
+								" and company " +
+									notificationTemplate.getCompanyId());
 				}
 			}
 			else {
@@ -2655,7 +2657,9 @@ public class NotificationTemplatePersistenceImpl
 
 					throw new DuplicateNotificationTemplateExternalReferenceCodeException(
 						"Duplicate notification template with external reference code " +
-							notificationTemplate.getExternalReferenceCode());
+							notificationTemplate.getExternalReferenceCode() +
+								" and company " +
+									notificationTemplate.getCompanyId());
 				}
 			}
 		}

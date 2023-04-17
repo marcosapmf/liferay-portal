@@ -25,8 +25,6 @@ import com.liferay.portal.search.test.util.mappings.NestedDDMFieldArrayUtil;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -52,20 +50,11 @@ public abstract class BaseNestedFieldsSortTestCase
 		assertSort("ddm__keyword__41523__Textp47b_en_US");
 	}
 
-	protected void addDocumentWithOneDDMField(
-		String name, String valueFieldName, Object value) {
-
-		addDocument(
-			DocumentCreationHelpers.oneDDMField(name, valueFieldName, value));
-	}
-
 	protected void assertSort(String fieldName) {
-		Stream.of(
-			"C", "B", "A"
-		).forEach(
-			value -> addDocumentWithOneDDMField(
-				fieldName, "ddmFieldValueKeyword", value)
-		);
+		addDocuments(
+			value -> DocumentCreationHelpers.oneDDMField(
+				fieldName, "ddmFieldValueKeyword", value),
+			"C", "B", "A");
 
 		FieldSort fieldSort = sorts.field("ddmFieldArray.ddmFieldValueKeyword");
 
@@ -101,10 +90,8 @@ public abstract class BaseNestedFieldsSortTestCase
 	protected Object getDDMFieldValue(String fieldName, Document document) {
 		List<?> values = document.getValues("ddmFieldArray");
 
-		Optional<Object> optional = NestedDDMFieldArrayUtil.getFieldValue(
-			fieldName, (Stream<Map<String, Object>>)values.stream());
-
-		return optional.get();
+		return NestedDDMFieldArrayUtil.getFieldValue(
+			fieldName, (List<Map<String, Object>>)values);
 	}
 
 	protected List<?> getDDMFieldValues(

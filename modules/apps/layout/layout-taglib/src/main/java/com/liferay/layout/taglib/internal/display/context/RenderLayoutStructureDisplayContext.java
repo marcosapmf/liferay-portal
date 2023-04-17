@@ -101,7 +101,7 @@ public class RenderLayoutStructureDisplayContext {
 		_mode = mode;
 		_showPreview = showPreview;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		Theme theme = _themeDisplay.getTheme();
@@ -361,6 +361,11 @@ public class RenderLayoutStructureDisplayContext {
 		defaultFragmentRendererContext.setLocale(_themeDisplay.getLocale());
 
 		Layout layout = _themeDisplay.getLayout();
+
+		if (infoForm == null) {
+			infoForm = (InfoForm)_httpServletRequest.getAttribute(
+				InfoDisplayWebKeys.INFO_FORM);
+		}
 
 		if (!Objects.equals(layout.getType(), LayoutConstants.TYPE_PORTLET)) {
 			defaultFragmentRendererContext.setInfoForm(infoForm);

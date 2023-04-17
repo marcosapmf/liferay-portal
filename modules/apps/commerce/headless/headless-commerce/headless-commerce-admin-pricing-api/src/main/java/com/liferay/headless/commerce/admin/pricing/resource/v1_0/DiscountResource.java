@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -59,6 +60,10 @@ public interface DiscountResource {
 	public Page<Discount> getDiscountsPage(Pagination pagination)
 		throws Exception;
 
+	public Response postDiscountsPageExportBatch(
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
 	public Discount postDiscount(Discount discount) throws Exception;
 
 	public Response postDiscountBatch(String callbackURL, Object object)
@@ -78,8 +83,7 @@ public interface DiscountResource {
 
 	public Response deleteDiscount(Long id) throws Exception;
 
-	public Response deleteDiscountBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteDiscountBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public Discount getDiscount(Long id) throws Exception;
@@ -124,6 +128,10 @@ public interface DiscountResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

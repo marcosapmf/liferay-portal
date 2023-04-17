@@ -1725,7 +1725,9 @@ public class ERCCompanyEntryPersistenceImpl
 				if (ercERCCompanyEntry != null) {
 					throw new DuplicateERCCompanyEntryExternalReferenceCodeException(
 						"Duplicate erc company entry with external reference code " +
-							ercCompanyEntry.getExternalReferenceCode());
+							ercCompanyEntry.getExternalReferenceCode() +
+								" and company " +
+									ercCompanyEntry.getCompanyId());
 				}
 			}
 			else {
@@ -1735,7 +1737,9 @@ public class ERCCompanyEntryPersistenceImpl
 
 					throw new DuplicateERCCompanyEntryExternalReferenceCodeException(
 						"Duplicate erc company entry with external reference code " +
-							ercCompanyEntry.getExternalReferenceCode());
+							ercCompanyEntry.getExternalReferenceCode() +
+								" and company " +
+									ercCompanyEntry.getCompanyId());
 				}
 			}
 		}

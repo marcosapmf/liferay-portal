@@ -43,8 +43,9 @@ import {
 import './ModalAddFilter.scss';
 interface IProps {
 	aggregationFilter?: boolean;
-	creationLanguageId?: Locale;
+	creationLanguageId?: Liferay.Language.Locale;
 	currentFilters: CurrentFilter[];
+	disableAutoClose?: boolean;
 	disableDateValues?: boolean;
 	editingFilter: boolean;
 	editingObjectFieldName: string;
@@ -125,6 +126,7 @@ export function ModalAddFilter({
 	aggregationFilter,
 	creationLanguageId,
 	currentFilters,
+	disableAutoClose = false,
 	disableDateValues,
 	editingFilter,
 	editingObjectFieldName,
@@ -158,7 +160,7 @@ export function ModalAddFilter({
 	const filteredAvailableFields = useMemo(() => {
 		return filterArrayByQuery({
 			array: objectFields,
-			creationLanguageId: creationLanguageId!,
+			creationLanguageId: creationLanguageId as Liferay.Language.Locale,
 			query,
 			str: 'label',
 		});
@@ -271,6 +273,12 @@ export function ModalAddFilter({
 					const relatedEntries = await API.getList<ObjectEntry>(
 						`${restContextPath}`
 					);
+
+					if (!relatedEntries) {
+						setItems([]);
+
+						return;
+					}
 
 					if (editingFilter) {
 						setItems(
@@ -443,12 +451,15 @@ export function ModalAddFilter({
 			selectedFilterBy?.businessType === 'Relationship');
 
 	return (
-		<ClayModal observer={observer}>
+		<ClayModal disableAutoClose={disableAutoClose} observer={observer}>
 			<ClayModal.Header>{header}</ClayModal.Header>
 
 			<ClayModal.Body>
 				{!editingFilter && (
 					<AutoComplete<ObjectField>
+						creationLanguageId={
+							creationLanguageId as Liferay.Language.Locale
+						}
 						emptyStateMessage={Liferay.Language.get(
 							'there-are-no-columns-available'
 						)}
@@ -482,7 +493,7 @@ export function ModalAddFilter({
 						query={query}
 						required
 						value={getLocalizableLabel(
-							creationLanguageId!,
+							creationLanguageId as Liferay.Language.Locale,
 							selectedFilterBy?.label
 						)}
 					>
@@ -490,7 +501,7 @@ export function ModalAddFilter({
 							<div className="d-flex justify-content-between">
 								<div>
 									{getLocalizableLabel(
-										creationLanguageId!,
+										creationLanguageId as Liferay.Language.Locale,
 										label,
 										name
 									)}

@@ -112,7 +112,7 @@
 </tr>
 <tr>
 	<td>RESULTS_SIDEBAR</td>
-	<td>//div[contains(@class, 'testray-sidebar')]//a[contains(@class, 'testray-sidebar-item') and contains(., 'Results')]</td>
+	<td>//a[contains(@class, 'tr-sidebar') and contains(., 'Results')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -153,6 +153,11 @@
 <tr>
 	<td>ORDER_BY_NAME</td>
 	<td>//p[contains(@class,'table-list-title') and contains(text(), 'Name')]//*[name()='svg']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_BREADCRUMB</td>
+	<td>//*[contains(@class, 'cursor-pointer')]//*[text()='${key_text}']</td>
 	<td></td>
 </tr>
 <tr>

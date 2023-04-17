@@ -15,8 +15,8 @@
 import {useOutletContext, useParams} from 'react-router-dom';
 
 import Container from '../../../../../../components/Layout/Container';
+import SearchBuilder from '../../../../../../core/SearchBuilder';
 import {TestrayCaseResult} from '../../../../../../services/rest';
-import {searchUtil} from '../../../../../../util/search';
 import CaseResultHistory from '../../../../Cases/CaseResultHistory';
 
 type OutletContext = {
@@ -33,7 +33,7 @@ const History = () => {
 			<CaseResultHistory
 				listViewProps={{
 					variables: {
-						filter: searchUtil.eq(
+						filter: SearchBuilder.eq(
 							'caseId',
 							caseResult.case?.id as number
 						),

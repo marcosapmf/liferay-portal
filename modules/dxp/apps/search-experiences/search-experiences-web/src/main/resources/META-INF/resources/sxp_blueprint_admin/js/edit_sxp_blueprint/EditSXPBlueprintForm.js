@@ -33,14 +33,17 @@ import ThemeContext from '../shared/ThemeContext';
 import {DEFAULT_INDEX_CONFIGURATION} from '../utils/constants';
 import {DEFAULT_ERROR} from '../utils/errorMessages';
 import addParams from '../utils/fetch/add_params';
-import fetchData from '../utils/fetch/fetch_data';
+import fetchData, {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
 import fetchPreviewSearch from '../utils/fetch/fetch_preview_search';
 import filterAndSortClassNames from '../utils/functions/filter_and_sort_class_names';
 import getResultsError from '../utils/functions/get_results_error';
 import isDefined from '../utils/functions/is_defined';
 import formatLocaleWithUnderscores from '../utils/language/format_locale_with_underscores';
 import renameKeys from '../utils/language/rename_keys';
-import {setStorageAddSXPElementSidebar} from '../utils/sessionStorage';
+import {
+	SIDEBAR_STATE,
+	setStorageAddSXPElementSidebar,
+} from '../utils/sessionStorage';
 import cleanUIConfiguration from '../utils/sxp_element/clean_ui_configuration';
 import getUIConfigurationValues from '../utils/sxp_element/get_ui_configuration_values';
 import isCustomJSONSXPElement from '../utils/sxp_element/is_custom_json_sxp_element';
@@ -77,9 +80,11 @@ const TABS = {
 function EditSXPBlueprintForm({
 	entityJSON,
 	initialConfiguration = {},
-	initialDescription = {},
+	initialDescription = '',
+	initialDescriptionI18n = {},
 	initialSXPElementInstances = [],
-	initialTitle = {},
+	initialTitle = '',
+	initialTitleI18n = {},
 	sxpBlueprintId,
 }) {
 	const {
@@ -186,16 +191,14 @@ function EditSXPBlueprintForm({
 						body: JSON.stringify({
 							configuration,
 							description_i18n: renameKeys(
-								formik.values.description,
+								formik.values.description_i18n,
 								formatLocaleWithUnderscores
 							),
 							elementInstances,
-							title_i18n: renameKeys(formik.values.title,
+							title_i18n: renameKeys(formik.values.title_i18n,
 								formatLocaleWithUnderscores),
 						}),
-						headers: new Headers({
-							'Content-Type': 'application/json',
-						}),
+						headers: DEFAULT_HEADERS,
 						method: 'POST',
 					}
 				).then((response) => response.json());
@@ -215,18 +218,16 @@ function EditSXPBlueprintForm({
 					body: JSON.stringify({
 						configuration,
 						description_i18n: renameKeys(
-							formik.values.description,
+							formik.values.description_i18n,
 							formatLocaleWithUnderscores
 						),
 						elementInstances,
 						title_i18n: renameKeys(
-							formik.values.title,
+							formik.values.title_i18n,
 							formatLocaleWithUnderscores
 						),
 					}),
-					headers: new Headers({
-						'Content-Type': 'application/json',
-					}),
+					headers: DEFAULT_HEADERS,
 					method: 'PATCH',
 				}
 			).then((response) => {
@@ -384,7 +385,7 @@ function EditSXPBlueprintForm({
 			),
 			applyIndexerClauses:
 				initialConfiguration.queryConfiguration?.applyIndexerClauses,
-			description: initialDescription,
+			description_i18n: initialDescriptionI18n,
 			elementInstances: initialSXPElementInstances.map(
 				(elementInstance, index) => ({
 					...elementInstance,
@@ -413,7 +414,7 @@ function EditSXPBlueprintForm({
 				null,
 				'\t'
 			),
-			title: initialTitle,
+			title_i18n: initialTitleI18n,
 		},
 		onSubmit: _handleFormikSubmit,
 		validate: _handleFormikValidate,
@@ -450,7 +451,7 @@ function EditSXPBlueprintForm({
 			setSearchIndexes([]);
 		}
 
-		setStorageAddSXPElementSidebar('open');
+		setStorageAddSXPElementSidebar(SIDEBAR_STATE.OPEN);
 	}, []); //eslint-disable-line
 
 	/**
@@ -597,8 +598,8 @@ function EditSXPBlueprintForm({
 	};
 
 	const _handleChangeTitleAndDescription = ({description, title}) => {
-		formik.setFieldValue('description', description);
-		formik.setFieldValue('title', title);
+		formik.setFieldValue('description_i18n', description);
+		formik.setFieldValue('title_i18n', title);
 	};
 
 	const _handleCloseSidebar = () => {
@@ -852,7 +853,7 @@ function EditSXPBlueprintForm({
 
 	const _handleToggleSidebar = (type) => () => {
 		if (type === SIDEBAR_TYPES.PREVIEW) {
-			setStorageAddSXPElementSidebar('closed');
+			setStorageAddSXPElementSidebar(SIDEBAR_STATE.CLOSED);
 		}
 
 		setOpenSidebar(openSidebar === type ? '' : type);
@@ -1021,7 +1022,8 @@ function EditSXPBlueprintForm({
 			/>
 
 			<PageToolbar
-				description={formik.values.description}
+				description={initialDescription}
+				descriptionI18n={formik.values.description_i18n}
 				isSubmitting={formik.isSubmitting}
 				onCancel={redirectURL}
 				onChangeTab={_handleChangeTab}
@@ -1029,7 +1031,8 @@ function EditSXPBlueprintForm({
 				onTitleAndDescriptionChange={_handleChangeTitleAndDescription}
 				tab={tab}
 				tabs={TABS}
-				title={formik.values.title}
+				title={initialTitle}
+				titleI18n={formik.values.title_i18n}
 			>
 				<ClayToolbar.Item>
 					<ClayButton
@@ -1075,9 +1078,11 @@ function EditSXPBlueprintForm({
 EditSXPBlueprintForm.propTypes = {
 	entityJSON: PropTypes.object,
 	initialConfiguration: PropTypes.object,
-	initialDescription: PropTypes.object,
+	initialDescription: PropTypes.string,
+	initialDescriptionI18n: PropTypes.object,
 	initialSXPElementInstances: PropTypes.arrayOf(PropTypes.object),
-	initialTitle: PropTypes.object,
+	initialTitle: PropTypes.string,
+	initialTitleI18n: PropTypes.object,
 	sxpBlueprintId: PropTypes.string,
 };
 

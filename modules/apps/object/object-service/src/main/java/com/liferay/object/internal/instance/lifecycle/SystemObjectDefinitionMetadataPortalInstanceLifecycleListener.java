@@ -19,7 +19,6 @@ import com.liferay.item.selector.ItemSelectorViewDescriptorRenderer;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.notification.handler.NotificationHandler;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
-import com.liferay.object.constants.ObjectSAPConstants;
 import com.liferay.object.internal.item.selector.SystemObjectEntryItemSelectorView;
 import com.liferay.object.internal.notification.handler.ObjectDefinitionNotificationHandler;
 import com.liferay.object.internal.notification.term.contributor.ObjectDefinitionNotificationTermEvaluator;
@@ -42,8 +41,10 @@ import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
 import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomizer;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
+import com.liferay.portal.instance.lifecycle.EveryNodeEveryStartup;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -52,15 +53,11 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.language.LanguageResources;
-import com.liferay.portal.security.service.access.policy.model.SAPEntry;
-import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -75,22 +72,13 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = PortalInstanceLifecycleListener.class)
 public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
-	extends BasePortalInstanceLifecycleListener {
+	extends BasePortalInstanceLifecycleListener
+	implements EveryNodeEveryStartup {
 
 	@Override
 	public void portalInstanceRegistered(Company company) {
 		if (_log.isDebugEnabled()) {
 			_log.debug("Registered portal instance " + company);
-		}
-
-		try {
-			_addSAPEntry(company.getCompanyId());
-		}
-		catch (PortalException portalException) {
-			_log.error(
-				"Unable to add service access policy entry for company " +
-					company.getCompanyId(),
-				portalException);
 		}
 
 		for (SystemObjectDefinitionMetadata systemObjectDefinitionMetadata :
@@ -107,6 +95,8 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		}
 
 		_bundleContext = bundleContext;
+
+		_openingThreadLocal.set(Boolean.TRUE);
 
 		_serviceTrackerList = ServiceTrackerListFactory.open(
 			bundleContext, SystemObjectDefinitionMetadata.class, null,
@@ -128,9 +118,11 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 							"Adding service " + systemObjectDefinitionMetadata);
 					}
 
-					_companyLocalService.forEachCompanyId(
-						companyId -> _apply(
-							companyId, systemObjectDefinitionMetadata));
+					if (!_openingThreadLocal.get()) {
+						_companyLocalService.forEachCompanyId(
+							companyId -> _apply(
+								companyId, systemObjectDefinitionMetadata));
+					}
 
 					return systemObjectDefinitionMetadata;
 				}
@@ -154,29 +146,13 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 				}
 
 			});
+
+		_openingThreadLocal.set(Boolean.FALSE);
 	}
 
 	@Deactivate
 	protected void deactivate() {
 		_serviceTrackerList.close();
-	}
-
-	private void _addSAPEntry(long companyId) throws PortalException {
-		SAPEntry sapEntry = _sapEntryLocalService.fetchSAPEntry(
-			companyId, ObjectSAPConstants.SAP_ENTRY_NAME);
-
-		if (sapEntry != null) {
-			return;
-		}
-
-		_sapEntryLocalService.addSAPEntry(
-			_userLocalService.getDefaultUserId(companyId),
-			ObjectSAPConstants.ALLOWED_SERVICE_SIGNATURES, true, true,
-			ObjectSAPConstants.SAP_ENTRY_NAME,
-			ResourceBundleUtil.getLocalizationMap(
-				LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER,
-				"service-access-policy-entry-default-object-title"),
-			new ServiceContext());
 	}
 
 	private void _apply(
@@ -214,17 +190,16 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 				ItemSelectorView.class,
 				new SystemObjectEntryItemSelectorView(
 					_itemSelectorViewDescriptorRenderer, objectDefinition,
-					_objectEntryLocalService, _objectFieldLocalService,
-					_objectRelatedModelsProviderRegistry, _portal,
-					systemObjectDefinitionMetadata),
+					_objectFieldLocalService,
+					_objectRelatedModelsProviderRegistry, _portal),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"item.selector.view.order", 500
 				).build());
 			_bundleContext.registerService(
 				NotificationTermEvaluator.class,
 				new ObjectDefinitionNotificationTermEvaluator(
-					objectDefinition, _objectFieldLocalService,
-					_userLocalService),
+					_listTypeLocalService, objectDefinition,
+					_objectFieldLocalService, _userLocalService),
 				HashMapDictionaryBuilder.<String, Object>put(
 					"class.name", objectDefinition.getClassName()
 				).build());
@@ -276,6 +251,12 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 	private static final Log _log = LogFactoryUtil.getLog(
 		SystemObjectDefinitionMetadataPortalInstanceLifecycleListener.class);
 
+	private static final ThreadLocal<Boolean> _openingThreadLocal =
+		new CentralizedThreadLocal<>(
+			SystemObjectDefinitionMetadataPortalInstanceLifecycleListener.class.
+				getName() + "._openingThreadLocal",
+			() -> Boolean.FALSE);
+
 	private BundleContext _bundleContext;
 
 	@Reference
@@ -284,6 +265,9 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 	@Reference
 	private ItemSelectorViewDescriptorRenderer<InfoItemItemSelectorCriterion>
 		_itemSelectorViewDescriptorRenderer;
+
+	@Reference
+	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
@@ -315,9 +299,6 @@ public class SystemObjectDefinitionMetadataPortalInstanceLifecycleListener
 		target = "(&(release.bundle.symbolic.name=com.liferay.object.service)(release.schema.version>=1.0.0))"
 	)
 	private Release _release;
-
-	@Reference
-	private SAPEntryLocalService _sapEntryLocalService;
 
 	private ServiceTrackerList<SystemObjectDefinitionMetadata>
 		_serviceTrackerList;

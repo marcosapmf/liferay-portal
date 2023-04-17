@@ -20,7 +20,9 @@ import {BaseWrapper} from '../Base';
 type InputSelectProps = {
 	className?: string;
 	defaultOption?: boolean;
+	disabled?: boolean;
 	errors?: any;
+	forceSelectOption?: boolean;
 	id?: string;
 	label?: string;
 	name: string;
@@ -33,6 +35,7 @@ type InputSelectProps = {
 
 const InputSelect: React.FC<InputSelectProps> = ({
 	className,
+	disabled = false,
 	registerOptions,
 	defaultOption = true,
 	errors = {},
@@ -42,11 +45,13 @@ const InputSelect: React.FC<InputSelectProps> = ({
 	register = () => {},
 	id = name,
 	options,
+	forceSelectOption = false,
 	required = false,
 	...otherProps
 }) => {
 	return (
 		<BaseWrapper
+			disabled={disabled}
 			error={errors[name]?.message}
 			label={label}
 			required={required}
@@ -54,6 +59,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
 			<select
 				className={classNames('form-control rounded-xs', className)}
 				defaultValue={defaultValue}
+				disabled={disabled}
 				id={id}
 				name={name}
 				{...otherProps}
@@ -64,7 +70,11 @@ const InputSelect: React.FC<InputSelectProps> = ({
 				{options.map(({label, value}, index) => (
 					<option
 						key={index}
-						selected={value === defaultValue}
+						selected={
+							forceSelectOption
+								? value === defaultValue
+								: undefined
+						}
 						value={value}
 					>
 						{label}

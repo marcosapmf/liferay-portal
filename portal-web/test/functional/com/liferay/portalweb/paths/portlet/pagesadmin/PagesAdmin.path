@@ -170,7 +170,7 @@
 
 <tr>
 	<td>MASTER_LAYOUT_NAME</td>
-	<td>//div[contains(@class,'sheet-section')]//p[contains(.,'Master Name:')][normalize-space(text())='${key_masterLayoutName}']</td>
+	<td>//div[contains(@class,'sheet-section')]//*[contains(@class,'sheet-subtitle')][normalize-space(text())='Master']//following-sibling::div//input</td>
 	<td></td>
 </tr>
 <tr>
@@ -185,12 +185,12 @@
 </tr>
 <tr>
 	<td>STYLE_BOOK_NAME</td>
-	<td>//div[contains(@class,'sheet-section')]//p[contains(.,'Style Book Name:')][normalize-space(text())='${key_styleBookName}']</td>
+	<td>//div[contains(@class,'sheet-section')]//*[contains(@class,'sheet-subtitle')][normalize-space(text())='Style Book']//following-sibling::div//input</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FAVICON_NAME</td>
-	<td>//span[contains(@id,'faviconTitle')][contains(.,'${faviconName}')]</td>
+	<td>//*[contains(@class,'sheet-subtitle')][normalize-space()='Favicon']//following-sibling::div//input[not(@type='hidden')]</td>
 	<td></td>
 </tr>
 <tr>

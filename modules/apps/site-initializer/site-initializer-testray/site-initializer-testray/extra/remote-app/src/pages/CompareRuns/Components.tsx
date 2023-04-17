@@ -12,49 +12,27 @@
  * details.
  */
 
-import TableChart from '../../components/TableChart';
-import useTableChartData from '../../data/useTableChartData';
+import ClayLayout from '@clayui/layout';
 
-const CompareRunsComponents: React.FC = () => {
-	const {colors, columns, data} = useTableChartData();
+import TableChart from '../../components/TableChart';
+import i18n from '../../i18n';
+import useCompareRuns from './useCompareRuns';
+
+const CompareRunsComponents = () => {
+	document.title = i18n.sub('compare-x', 'cases');
+
+	const components = useCompareRuns('components');
 
 	return (
 		<div className="d-flex flex-wrap mt-5">
-			<div className="col-6 col-lg-6 col-md-12 mb-3">
-				<TableChart
-					colors={colors}
-					columns={columns}
-					data={data}
-					title="Number of Case Results"
-				/>
-			</div>
-
-			<div className="col-6 col-lg-6 col-md-12 mb-3">
-				<TableChart
-					colors={colors}
-					columns={columns}
-					data={data}
-					title="Number of Case Results"
-				/>
-			</div>
-
-			<div className="col-6 col-lg-6 col-md-12 mb-3">
-				<TableChart
-					colors={colors}
-					columns={columns}
-					data={data}
-					title="Number of Case Results"
-				/>
-			</div>
-
-			<div className="col-6 col-lg-6 col-md-12 mb-3">
-				<TableChart
-					colors={colors}
-					columns={columns}
-					data={data}
-					title="Number of Case Results"
-				/>
-			</div>
+			{components.map(({component, values}, index) => (
+				<ClayLayout.Col className="mb-3" key={index} lg={6} md={12}>
+					<TableChart
+						matrixData={values}
+						title={component?.name as string}
+					/>
+				</ClayLayout.Col>
+			))}
 		</div>
 	);
 };

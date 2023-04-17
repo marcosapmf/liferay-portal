@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.service.ResourceLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -69,7 +70,8 @@ public class AccountGroupLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public AccountGroup addAccountGroup(
-			long userId, String description, String name)
+			long userId, String description, String name,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_validateName(name);
@@ -88,14 +90,16 @@ public class AccountGroupLocalServiceImpl
 		accountGroup.setDefaultAccountGroup(false);
 		accountGroup.setDescription(description);
 		accountGroup.setName(name);
-
 		accountGroup.setType(AccountConstants.ACCOUNT_GROUP_TYPE_STATIC);
+		accountGroup.setExpandoBridgeAttributes(serviceContext);
+
+		accountGroup = accountGroupPersistence.update(accountGroup);
 
 		_resourceLocalService.addResources(
 			user.getCompanyId(), 0, user.getUserId(),
 			AccountGroup.class.getName(), accountGroupId, false, false, false);
 
-		return accountGroupPersistence.update(accountGroup);
+		return accountGroup;
 	}
 
 	@Override
@@ -180,7 +184,7 @@ public class AccountGroupLocalServiceImpl
 
 		if (Validator.isNull(name)) {
 			return accountGroupPersistence.findByCompanyId(
-				companyId, start, end);
+				companyId, start, end, orderByComparator);
 		}
 
 		return accountGroupPersistence.findByC_LikeN(
@@ -272,7 +276,8 @@ public class AccountGroupLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public AccountGroup updateAccountGroup(
-			long accountGroupId, String description, String name)
+			long accountGroupId, String description, String name,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_validateName(name);
@@ -282,6 +287,7 @@ public class AccountGroupLocalServiceImpl
 
 		accountGroup.setDescription(description);
 		accountGroup.setName(name);
+		accountGroup.setExpandoBridgeAttributes(serviceContext);
 
 		return accountGroupPersistence.update(accountGroup);
 	}

@@ -32,6 +32,8 @@ import com.liferay.info.list.renderer.InfoListRendererRegistry;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.helper.CollectionPaginationHelper;
+import com.liferay.layout.list.permission.provider.LayoutListPermissionProvider;
+import com.liferay.layout.list.permission.provider.LayoutListPermissionProviderRegistry;
 import com.liferay.layout.list.retriever.DefaultLayoutListRetrieverContext;
 import com.liferay.layout.list.retriever.LayoutListRetriever;
 import com.liferay.layout.list.retriever.LayoutListRetrieverRegistry;
@@ -44,11 +46,13 @@ import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -66,7 +70,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -112,7 +115,9 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			_getLayoutListRetriever();
 		ListObjectReference listObjectReference = _getListObjectReference();
 
-		if ((layoutListRetriever == null) || (listObjectReference == null)) {
+		if ((layoutListRetriever == null) || (listObjectReference == null) ||
+			!_hasViewPermission(listObjectReference)) {
+
 			return Collections.emptyList();
 		}
 
@@ -146,7 +151,9 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			_getLayoutListRetriever();
 		ListObjectReference listObjectReference = _getListObjectReference();
 
-		if ((layoutListRetriever == null) || (listObjectReference == null)) {
+		if ((layoutListRetriever == null) || (listObjectReference == null) ||
+			!_hasViewPermission(listObjectReference)) {
+
 			return 0;
 		}
 
@@ -319,6 +326,16 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			_collectionStyledLayoutStructureItem.getPaginationType());
 	}
 
+	public boolean hasViewPermission() {
+		ListObjectReference listObjectReference = _getListObjectReference();
+
+		if (listObjectReference == null) {
+			return true;
+		}
+
+		return _hasViewPermission(listObjectReference);
+	}
+
 	private Map<String, String[]> _getConfiguration() {
 		JSONObject collectionJSONObject =
 			_collectionStyledLayoutStructureItem.getCollectionJSONObject();
@@ -355,12 +372,15 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 	}
 
 	private Object _getContextObject() {
+		Object infoItem = _httpServletRequest.getAttribute(
+			InfoDisplayWebKeys.INFO_ITEM);
+
 		InfoItemReference infoItemReference =
 			(InfoItemReference)_httpServletRequest.getAttribute(
 				InfoDisplayWebKeys.INFO_ITEM_REFERENCE);
 
 		if (infoItemReference == null) {
-			return null;
+			return infoItem;
 		}
 
 		InfoItemIdentifier infoItemIdentifier =
@@ -375,7 +395,12 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 				infoItemIdentifier.getInfoItemServiceFilter());
 
 		try {
-			return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
+			Object object = infoItemObjectProvider.getInfoItem(
+				infoItemIdentifier);
+
+			if (object != null) {
+				return object;
+			}
 		}
 		catch (NoSuchInfoItemException noSuchInfoItemException) {
 			if (_log.isDebugEnabled()) {
@@ -383,7 +408,7 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			}
 		}
 
-		return null;
+		return infoItem;
 	}
 
 	private DefaultLayoutListRetrieverContext
@@ -395,12 +420,7 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			new DefaultLayoutListRetrieverContext();
 
 		defaultLayoutListRetrieverContext.setConfiguration(_getConfiguration());
-		defaultLayoutListRetrieverContext.setContextObject(
-			Optional.ofNullable(
-				_getContextObject()
-			).orElse(
-				_httpServletRequest.getAttribute(InfoDisplayWebKeys.INFO_ITEM)
-			));
+		defaultLayoutListRetrieverContext.setContextObject(_getContextObject());
 		defaultLayoutListRetrieverContext.setInfoFilters(
 			_getInfoFilters(layoutListRetriever, listObjectReference));
 		defaultLayoutListRetrieverContext.setSegmentsEntryIds(
@@ -512,16 +532,9 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 		LayoutListRetrieverRegistry layoutListRetrieverRegistry =
 			ServletContextUtil.getLayoutListRetrieverRegistry();
 
-		LayoutListRetriever<?, ListObjectReference> layoutListRetriever =
-			(LayoutListRetriever<?, ListObjectReference>)
-				layoutListRetrieverRegistry.getLayoutListRetriever(
-					collectionJSONObject.getString("type"));
-
-		if (layoutListRetriever == null) {
-			return null;
-		}
-
-		return layoutListRetriever;
+		return (LayoutListRetriever<?, ListObjectReference>)
+			layoutListRetrieverRegistry.getLayoutListRetriever(
+				collectionJSONObject.getString("type"));
 	}
 
 	private ListObjectReference _getListObjectReference() {
@@ -609,6 +622,36 @@ public class RenderCollectionLayoutStructureItemDisplayContext {
 			requestContextMapper.map(_httpServletRequest));
 
 		return _segmentsEntryIds;
+	}
+
+	private boolean _hasViewPermission(
+		ListObjectReference listObjectReference) {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-169923")) {
+			return true;
+		}
+
+		LayoutListPermissionProviderRegistry
+			layoutListPermissionProviderRegistry =
+				ServletContextUtil.getLayoutListPermissionProviderRegistry();
+
+		Class<? extends ListObjectReference> listObjectReferenceClass =
+			listObjectReference.getClass();
+
+		LayoutListPermissionProvider<ListObjectReference>
+			layoutListPermissionProvider =
+				(LayoutListPermissionProvider<ListObjectReference>)
+					layoutListPermissionProviderRegistry.
+						getLayoutListPermissionProvider(
+							listObjectReferenceClass.getName());
+
+		if (layoutListPermissionProvider == null) {
+			return true;
+		}
+
+		return layoutListPermissionProvider.hasPermission(
+			_themeDisplay.getPermissionChecker(), listObjectReference,
+			ActionKeys.VIEW);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

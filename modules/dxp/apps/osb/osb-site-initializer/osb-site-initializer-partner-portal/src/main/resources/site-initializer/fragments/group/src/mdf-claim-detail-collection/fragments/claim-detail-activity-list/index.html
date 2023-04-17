@@ -1,0 +1,68 @@
+[#assign mdf_claim_id = (request.getAttribute("INFO_ITEM").objectEntryId)! /]
+
+[#function get_currency value currency_key="USD"]
+	[#return value?string["¤,##0.00;; currencyCode=${currency_key}"] /]
+[/#function]
+
+[#macro activity_panel activity]
+	<div class="panel panel-secondary" role="tablist">
+		<button aria-controls="mdfClaimActivitiesPanel-${activity.id}" aria-expanded="false" class="btn btn-unstyled collapse-icon collapse-icon-middle collapsed panel-header panel-header-link" data-target="#mdfClaimActivitiesPanel-${activity.id}" data-toggle="liferay-collapse" role="tab">
+			<div>
+				<div class="d-flex">
+					<div class="w-100">
+						<h4 class="text-neutral-10">${activity.name}</h4>
+
+						<div class="d-flex justify-content-between">
+							<h6 class="text-neutral-6">MDF Claim:</h6>
+
+							<h5 class="justify-content-end text-neutral-10">${get_currency(activity.totalCost?number, (activity.currency.key)!"USD")}</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+		</button>
+
+		<div class="collapse panel-collapse" id="mdfClaimActivitiesPanel-${activity.id}" role="tabpanel">
+			<div class="panel-body">
+				<div class="table-responsive">
+					<table class="bg-brand-primary-lighten-6 border-0 show-quick-actions-on-hover table table-autofit table-hover table-list table-striped">
+						<thead>
+							<tr>
+								<th class="border-neutral-2 border-top rounded-0 table-cell-expand w-50">
+									<p class="mt-4 text-neutral-10">Budget Breakdown</p>
+								</th>
+								<td class="border-neutral-2 border-top rounded-0 w-50"></td>
+							</tr>
+						</thead>
+
+						<tbody>
+							[#list activity.mdfClmActToMDFClmBgts as budget]
+								<tr>
+									<td class="border-0 w-50">
+										<p class="text-neutral-10">${budget.expenseName}</p>
+									</td>
+									<td class="border-0 w-50">
+										<p class="text-neutral-10">${get_currency(budget.invoiceAmount?number, (activity.currency.key)!"USD")}</p>
+									</td>
+								</tr>
+							[/#list]
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+[/#macro]
+
+[#if mdf_claim_id?has_content]
+	[#assign activities = restClient.get("/c/mdfclaims/${mdf_claim_id}/mdfClmToMDFClmActs?nestedFields=mdfClmActToMDFClmBgts").items /]
+
+	[#list activities as activity]
+		[@activity_panel activity=activity /]
+	[/#list]
+[#else]
+	<div class="alert alert-info">
+		<p>To use this fragment either place it on a Display Page Template to see which attributes are available from <em>request.getAttribute("INFO_ITEM")</em>.</p>
+		<p class="mb-0">It's important to note that this will only display the attributes of a display page when you view the published display page not when you are editing it.</p>
+	</div>
+[/#if]

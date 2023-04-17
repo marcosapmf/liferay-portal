@@ -63,6 +63,35 @@ public class Sku implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Sku.class, json);
 	}
 
+	@Schema
+	@Valid
+	public DDMOption[] getDDMOptions() {
+		return DDMOptions;
+	}
+
+	public void setDDMOptions(DDMOption[] DDMOptions) {
+		this.DDMOptions = DDMOptions;
+	}
+
+	@JsonIgnore
+	public void setDDMOptions(
+		UnsafeSupplier<DDMOption[], Exception> DDMOptionsUnsafeSupplier) {
+
+		try {
+			DDMOptions = DDMOptionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected DDMOption[] DDMOptions;
+
 	@Schema(example = "[10, 20, 30, 40]")
 	public String[] getAllowedOrderQuantities() {
 		return allowedOrderQuantities;
@@ -150,6 +179,62 @@ public class Sku implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Double depth;
 
+	@Schema(example = "false")
+	public Boolean getDiscontinued() {
+		return discontinued;
+	}
+
+	public void setDiscontinued(Boolean discontinued) {
+		this.discontinued = discontinued;
+	}
+
+	@JsonIgnore
+	public void setDiscontinued(
+		UnsafeSupplier<Boolean, Exception> discontinuedUnsafeSupplier) {
+
+		try {
+			discontinued = discontinuedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean discontinued;
+
+	@Schema(example = "2017-07-21")
+	public Date getDiscontinuedDate() {
+		return discontinuedDate;
+	}
+
+	public void setDiscontinuedDate(Date discontinuedDate) {
+		this.discontinuedDate = discontinuedDate;
+	}
+
+	@JsonIgnore
+	public void setDiscontinuedDate(
+		UnsafeSupplier<Date, Exception> discontinuedDateUnsafeSupplier) {
+
+		try {
+			discontinuedDate = discontinuedDateUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Date discontinuedDate;
+
 	@Schema(example = "2017-07-21")
 	public Date getDisplayDate() {
 		return displayDate;
@@ -177,6 +262,35 @@ public class Sku implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date displayDate;
+
+	@Schema(example = "true")
+	public Boolean getDisplayDiscountLevels() {
+		return displayDiscountLevels;
+	}
+
+	public void setDisplayDiscountLevels(Boolean displayDiscountLevels) {
+		this.displayDiscountLevels = displayDiscountLevels;
+	}
+
+	@JsonIgnore
+	public void setDisplayDiscountLevels(
+		UnsafeSupplier<Boolean, Exception>
+			displayDiscountLevelsUnsafeSupplier) {
+
+		try {
+			displayDiscountLevels = displayDiscountLevelsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean displayDiscountLevels;
 
 	@Schema(example = "2017-08-21")
 	public Date getExpirationDate() {
@@ -287,6 +401,34 @@ public class Sku implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
+
+	@Schema
+	public String getIncomingQuantityLabel() {
+		return incomingQuantityLabel;
+	}
+
+	public void setIncomingQuantityLabel(String incomingQuantityLabel) {
+		this.incomingQuantityLabel = incomingQuantityLabel;
+	}
+
+	@JsonIgnore
+	public void setIncomingQuantityLabel(
+		UnsafeSupplier<String, Exception> incomingQuantityLabelUnsafeSupplier) {
+
+		try {
+			incomingQuantityLabel = incomingQuantityLabelUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String incomingQuantityLabel;
 
 	@Schema(example = "12341234")
 	public String getManufacturerPartNumber() {
@@ -484,6 +626,68 @@ public class Sku implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean purchasable;
 
+	@Schema(example = "SKU0111")
+	public String getReplacementSkuExternalReferenceCode() {
+		return replacementSkuExternalReferenceCode;
+	}
+
+	public void setReplacementSkuExternalReferenceCode(
+		String replacementSkuExternalReferenceCode) {
+
+		this.replacementSkuExternalReferenceCode =
+			replacementSkuExternalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setReplacementSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			replacementSkuExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			replacementSkuExternalReferenceCode =
+				replacementSkuExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String replacementSkuExternalReferenceCode;
+
+	@DecimalMin("0")
+	@Schema(example = "33135")
+	public Long getReplacementSkuId() {
+		return replacementSkuId;
+	}
+
+	public void setReplacementSkuId(Long replacementSkuId) {
+		this.replacementSkuId = replacementSkuId;
+	}
+
+	@JsonIgnore
+	public void setReplacementSkuId(
+		UnsafeSupplier<Long, Exception> replacementSkuIdUnsafeSupplier) {
+
+		try {
+			replacementSkuId = replacementSkuIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long replacementSkuId;
+
 	@Schema
 	public String getSku() {
 		return sku;
@@ -627,6 +831,26 @@ public class Sku implements Serializable {
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+		if (DDMOptions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"DDMOptions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < DDMOptions.length; i++) {
+				sb.append(String.valueOf(DDMOptions[i]));
+
+				if ((i + 1) < DDMOptions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (allowedOrderQuantities != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -671,6 +895,30 @@ public class Sku implements Serializable {
 			sb.append(depth);
 		}
 
+		if (discontinued != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"discontinued\": ");
+
+			sb.append(discontinued);
+		}
+
+		if (discontinuedDate != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"discontinuedDate\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(discontinuedDate));
+
+			sb.append("\"");
+		}
+
 		if (displayDate != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -683,6 +931,16 @@ public class Sku implements Serializable {
 			sb.append(liferayToJSONDateFormat.format(displayDate));
 
 			sb.append("\"");
+		}
+
+		if (displayDiscountLevels != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"displayDiscountLevels\": ");
+
+			sb.append(displayDiscountLevels);
 		}
 
 		if (expirationDate != null) {
@@ -731,6 +989,20 @@ public class Sku implements Serializable {
 			sb.append("\"id\": ");
 
 			sb.append(id);
+		}
+
+		if (incomingQuantityLabel != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"incomingQuantityLabel\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(incomingQuantityLabel));
+
+			sb.append("\"");
 		}
 
 		if (manufacturerPartNumber != null) {
@@ -805,6 +1077,30 @@ public class Sku implements Serializable {
 			sb.append("\"purchasable\": ");
 
 			sb.append(purchasable);
+		}
+
+		if (replacementSkuExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacementSkuExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(replacementSkuExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		if (replacementSkuId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"replacementSkuId\": ");
+
+			sb.append(replacementSkuId);
 		}
 
 		if (sku != null) {

@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -60,6 +61,11 @@ public interface OrderItemResource {
 			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postOrderItemsPageExportBatch(
+			String search, Filter filter, Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
 	public Response deleteOrderItemByExternalReferenceCode(
 			String externalReferenceCode)
 		throws Exception;
@@ -78,8 +84,7 @@ public interface OrderItemResource {
 
 	public Response deleteOrderItem(Long id) throws Exception;
 
-	public Response deleteOrderItemBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteOrderItemBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public OrderItem getOrderItem(Long id) throws Exception;
@@ -90,8 +95,7 @@ public interface OrderItemResource {
 	public OrderItem putOrderItem(Long id, OrderItem orderItem)
 		throws Exception;
 
-	public Response putOrderItemBatch(
-			Long id, String callbackURL, Object object)
+	public Response putOrderItemBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public Page<OrderItem> getOrderByExternalReferenceCodeOrderItemsPage(
@@ -109,8 +113,7 @@ public interface OrderItemResource {
 	public OrderItem postOrderIdOrderItem(Long id, OrderItem orderItem)
 		throws Exception;
 
-	public Response postOrderIdOrderItemBatch(
-			Long id, String callbackURL, Object object)
+	public Response postOrderIdOrderItemBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -151,6 +154,10 @@ public interface OrderItemResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

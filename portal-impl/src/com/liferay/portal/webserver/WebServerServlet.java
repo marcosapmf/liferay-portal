@@ -1176,11 +1176,18 @@ public class WebServerServlet extends HttpServlet {
 
 		// Send file
 
+		String cacheControlValue = HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE;
+
+		boolean download = ParamUtil.getBoolean(httpServletRequest, "download");
+
+		if (download) {
+			cacheControlValue = HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE;
+		}
+
 		httpServletResponse.addHeader(
 			HttpHeaders.CACHE_CONTROL,
 			FileEntryHttpHeaderCustomizerUtil.getHttpHeaderValue(
-				fileEntry, HttpHeaders.CACHE_CONTROL,
-				HttpHeaders.CACHE_CONTROL_PRIVATE_VALUE));
+				fileEntry, HttpHeaders.CACHE_CONTROL, cacheControlValue));
 
 		if (isSupportsRangeHeader(contentType)) {
 			ServletResponseUtil.sendFileWithRangeHeader(
@@ -1188,9 +1195,6 @@ public class WebServerServlet extends HttpServlet {
 				contentLength, contentType);
 		}
 		else {
-			boolean download = ParamUtil.getBoolean(
-				httpServletRequest, "download");
-
 			if (download) {
 				ServletResponseUtil.sendFile(
 					httpServletRequest, httpServletResponse, fileName,
@@ -1293,8 +1297,7 @@ public class WebServerServlet extends HttpServlet {
 			return;
 		}
 
-		String fileName = HttpComponentsUtil.decodeURL(
-			HtmlUtil.escape(pathArray[2]));
+		String fileName = HtmlUtil.escape(pathArray[2]);
 
 		if (Validator.isNull(fileName)) {
 			throw new NoSuchFileEntryException("Invalid path " + path);
@@ -1397,7 +1400,7 @@ public class WebServerServlet extends HttpServlet {
 		else if (pathArray.length == 3) {
 			long groupId = GetterUtil.getLong(pathArray[0]);
 			long folderId = GetterUtil.getLong(pathArray[1]);
-			String fileName = HttpComponentsUtil.decodeURL(pathArray[2]);
+			String fileName = pathArray[2];
 
 			try {
 				try {
@@ -1727,7 +1730,7 @@ public class WebServerServlet extends HttpServlet {
 			long groupId = GetterUtil.getLong(pathArray[0]);
 			long folderId = GetterUtil.getLong(pathArray[1]);
 
-			String fileName = HttpComponentsUtil.decodeURL(pathArray[2]);
+			String fileName = pathArray[2];
 
 			if (fileName.contains(StringPool.QUESTION)) {
 				fileName = fileName.substring(

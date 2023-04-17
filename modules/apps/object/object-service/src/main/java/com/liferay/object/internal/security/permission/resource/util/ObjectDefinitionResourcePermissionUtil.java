@@ -14,11 +14,13 @@
 
 package com.liferay.object.internal.security.permission.resource.util;
 
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -94,14 +96,26 @@ public class ObjectDefinitionResourcePermissionUtil {
 	private static String _getPermissionsSupports(
 		ObjectDefinition objectDefinition) {
 
-		if (!objectDefinition.isEnableComments()) {
-			return StringPool.BLANK;
+		String permissionsSupports = StringPool.BLANK;
+
+		if (objectDefinition.isEnableComments()) {
+			permissionsSupports = StringBundler.concat(
+				"<action-key>ADD_DISCUSSION</action-key>",
+				"<action-key>DELETE_DISCUSSION</action-key>",
+				"<action-key>UPDATE_DISCUSSION</action-key>");
 		}
 
-		return StringBundler.concat(
-			"<action-key>ADD_DISCUSSION</action-key>",
-			"<action-key>DELETE_DISCUSSION</action-key>",
-			"<action-key>UPDATE_DISCUSSION</action-key>");
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-164582")) {
+			return permissionsSupports;
+		}
+
+		if (objectDefinition.isEnableObjectEntryHistory()) {
+			permissionsSupports = StringBundler.concat(
+				permissionsSupports, "<action-key>",
+				ObjectActionKeys.OBJECT_ENTRY_HISTORY, "</action-key>");
+		}
+
+		return permissionsSupports;
 	}
 
 }

@@ -88,6 +88,10 @@ XMLDefinition.prototype = {
 						key: 'scriptLanguage',
 						locator: 'script-language',
 					},
+					{
+						key: 'status',
+						locator: 'status',
+					},
 				],
 				resultListLocator: tagName || 'action',
 			},

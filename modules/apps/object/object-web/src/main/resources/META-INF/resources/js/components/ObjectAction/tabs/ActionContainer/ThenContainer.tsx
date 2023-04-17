@@ -36,18 +36,17 @@ import {ActionError} from '../..';
 
 interface ThenContainerProps {
 	errors: ActionError;
-	isValidField: ({
-		businessType,
-		objectFieldSettings,
-		system,
-	}: ObjectField) => boolean;
+	isValidField: (
+		{businessType, name, objectFieldSettings, system}: ObjectField,
+		isObjectActionSystem?: boolean
+	) => boolean;
 	newObjectActionExecutors: CustomItem<string>[];
 	objectActionExecutors: CustomItem[];
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	setAddObjectEntryDefinitions: (values: AddObjectEntryDefinitions[]) => void;
 	setCurrentObjectDefinitionFields: (values: ObjectField[]) => void;
-	setRelationships: (values: ObjectDefinitionsRelationship[]) => void;
 	setValues: (values: Partial<ObjectAction>) => void;
 	systemObject: boolean;
 	updateParameters: (value: string) => Promise<void>;
@@ -62,24 +61,30 @@ export function ThenContainer({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	setAddObjectEntryDefinitions,
 	setCurrentObjectDefinitionFields,
-	setRelationships,
 	setValues,
 	systemObject,
 	updateParameters,
 	values,
 }: ThenContainerProps) {
-	const [objectsOptions, setObjectOptions] = useState<ObjectsOptionsList>([]);
-
 	const [notificationTemplates, setNotificationTemplates] = useState<
-		CustomItem<number>[]
+		CustomItem<string>[]
 	>([]);
 
 	const notificationTemplateLabel = useMemo(() => {
 		return notificationTemplates.find(
-			({value}) => value === values.parameters?.notificationTemplateId
+			({value}) =>
+				value ===
+				values.parameters?.notificationTemplateExternalReferenceCode
 		)?.label;
 	}, [notificationTemplates, values.parameters]);
+
+	const [objectsOptions, setObjectOptions] = useState<ObjectsOptionsList>([]);
+
+	const [selectedObjectDefinition, setSelectedObjectDefinition] = useState(
+		''
+	);
 
 	const actionExecutors = useMemo(() => {
 		const executors = new Map<string, string>();
@@ -106,11 +111,13 @@ export function ThenContainer({
 				}
 
 				setNotificationTemplates(
-					notificationArray.map(({id, name, type}) => ({
-						label: name,
-						type,
-						value: id,
-					}))
+					notificationArray.map(
+						({externalReferenceCode, name, type}) => ({
+							label: name,
+							type,
+							value: externalReferenceCode,
+						})
+					)
 				);
 			};
 
@@ -118,16 +125,18 @@ export function ThenContainer({
 		}
 
 		if (values.objectActionExecutorKey === 'add-object-entry') {
-			fetchObjectDefinitions(
+			fetchObjectDefinitions({
 				objectDefinitionsRelationshipsURL,
+				setAddObjectEntryDefinitions,
+				setObjectOptions,
+				setSelectedObjectDefinition,
 				values,
-				setRelationships,
-				setObjectOptions
-			);
+			});
 
 			fetchObjectDefinitionFields(
 				objectDefinitionId,
 				objectDefinitionExternalReferenceCode,
+				systemObject,
 				values,
 				isValidField,
 				setCurrentObjectDefinitionFields,
@@ -149,15 +158,6 @@ export function ThenContainer({
 				<SingleSelect
 					error={errors.objectActionExecutorKey}
 					onChange={({value}) => {
-						if (value === 'add-object-entry') {
-							fetchObjectDefinitions(
-								objectDefinitionsRelationshipsURL,
-								values,
-								setRelationships,
-								setObjectOptions
-							);
-						}
-
 						if (values.objectActionExecutorKey !== value) {
 							return setValues({
 								objectActionExecutorKey: value,
@@ -184,16 +184,15 @@ export function ThenContainer({
 								'choose-an-object'
 							)}
 							error={errors.objectDefinitionExternalReferenceCode}
-							onChange={({target: {value}}) =>
-								updateParameters(value)
-							}
-							options={objectsOptions}
-							value={
-								values.parameters
-									?.objectDefinitionExternalReferenceCode
-									? `${values.parameters.objectDefinitionExternalReferenceCode},${values.parameters.objectDefinitionId}`
-									: ''
-							}
+							items={objectsOptions}
+							onSelectChange={(label, value) => {
+								updateParameters(value);
+								setSelectedObjectDefinition(label);
+							}}
+							placeholder={Liferay.Language.get(
+								'choose-an-object'
+							)}
+							value={selectedObjectDefinition}
 						/>
 						{values.parameters?.relatedObjectEntries !==
 							undefined && (
@@ -235,14 +234,14 @@ export function ThenContainer({
 				)}
 
 				{values.objectActionExecutorKey === 'notification' && (
-					<SingleSelect<CustomItem<number>>
+					<SingleSelect<CustomItem<string>>
 						className="lfr-object__action-builder-notification-then"
 						error={errors.objectActionExecutorKey}
 						onChange={({value}) => {
 							setValues({
 								parameters: {
 									...values.parameters,
-									notificationTemplateId: value,
+									notificationTemplateExternalReferenceCode: value,
 								},
 							});
 						}}

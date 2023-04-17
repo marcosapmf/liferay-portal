@@ -273,12 +273,12 @@ public class TaxonomyVocabularyResourceImpl
 		return _toTaxonomyVocabulary(
 			_assetVocabularyService.updateVocabulary(
 				assetVocabulary.getVocabularyId(), null,
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					assetVocabulary.getTitleMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					taxonomyVocabulary.getName(),
 					taxonomyVocabulary.getName_i18n()),
-				LocalizedMapUtil.patch(
+				LocalizedMapUtil.patchLocalizedMap(
 					assetVocabulary.getDescriptionMap(),
 					contextAcceptLanguage.getPreferredLocale(),
 					taxonomyVocabulary.getDescription(),
@@ -431,8 +431,8 @@ public class TaxonomyVocabularyResourceImpl
 
 						AssetRendererFactory<?> assetRendererFactory =
 							AssetRendererFactoryRegistryUtil.
-								getAssetRendererFactoryByClassName(
-									_portal.getClassName(classNameId));
+								getAssetRendererFactoryByClassNameId(
+									classNameId);
 
 						ClassTypeReader classTypeReader =
 							assetRendererFactory.getClassTypeReader();
@@ -473,8 +473,8 @@ public class TaxonomyVocabularyResourceImpl
 
 						return _getModelResource(
 							AssetRendererFactoryRegistryUtil.
-								getAssetRendererFactoryByClassName(
-									_portal.getClassName(classNameId)));
+								getAssetRendererFactoryByClassNameId(
+									classNameId));
 					});
 			}
 		};
@@ -570,7 +570,7 @@ public class TaxonomyVocabularyResourceImpl
 	private long _getClassTypePK(long classNameId, String subtype, long groupId)
 		throws Exception {
 
-		if (Objects.equals("AllAssetSubtypes", subtype) ||
+		if (Objects.equals(subtype, "AllAssetSubtypes") ||
 			(classNameId == AssetCategoryConstants.ALL_CLASS_NAME_ID) ||
 			(subtype == null)) {
 
@@ -578,8 +578,8 @@ public class TaxonomyVocabularyResourceImpl
 		}
 
 		AssetRendererFactory<?> assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
-				_portal.getClassName(classNameId));
+			AssetRendererFactoryRegistryUtil.
+				getAssetRendererFactoryByClassNameId(classNameId);
 
 		ClassTypeReader classTypeReader =
 			assetRendererFactory.getClassTypeReader();

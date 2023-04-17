@@ -18,8 +18,8 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import {DragSource as dragSource} from 'react-dnd';
 
-import {PROPERTY_TYPES} from '../../utils/constants.es';
-import {DragTypes} from '../../utils/drag-types.es';
+import {PROPERTY_TYPES} from '../../utils/constants';
+import {DragTypes} from '../../utils/drag-types';
 
 const TYPE_ICON_MAP = {
 	[PROPERTY_TYPES.BOOLEAN]: 'check-circle',

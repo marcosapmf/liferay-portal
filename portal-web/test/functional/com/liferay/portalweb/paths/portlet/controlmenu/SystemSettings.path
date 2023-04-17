@@ -16,8 +16,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>CHECK_INTERVAL_SEGMENTS_VALUE</td>
-	<td>//*[contains(text(),'Check Interval')]/following-sibling::input[contains(@value,'${key_value}')]</td>
+	<td>UPDATE_INTERVAL_SEGMENTS_VALUE</td>
+	<td>//*[contains(text(),'Update Interval')]/following-sibling::div[contains(@title,'${key_value}')] | //*[contains(text(),'Update Interval')]/following-sibling::input[contains(@value,'${key_value}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -32,7 +32,7 @@
 </tr>
 <tr>
 	<td>KEY</td>
-	<td>//div[@class='form-group']/label[contains(.,'Key')]/following-sibling::textarea[@type='text']</td>
+	<td>//div[@class='form-group']/label[contains(.,'Key')]/..//textarea</td>
 	<td></td>
 </tr>
 <tr>
@@ -67,7 +67,7 @@
 </tr>
 <tr>
 	<td>SETTINGS_TEXT</td>
-	<td>//span[contains(@id,'fieldDetails')][contains(.,'${key_settingsText}')]</td>
+	<td>//div[contains(@id,'fieldHelp')][contains(.,'${key_settingsText}')]</td>
 	<td></td>
 </tr>
 

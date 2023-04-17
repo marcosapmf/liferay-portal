@@ -14,6 +14,7 @@
 
 package com.liferay.layout.internal.importer.helper;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -36,15 +37,12 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -115,30 +113,16 @@ public class PortletPermissionsImporterHelper {
 				continue;
 			}
 
-			List<String> actionIds = new ArrayList<>();
+			List<String> resourceActionsIds = TransformUtil.transform(
+				resourceActions, ResourceAction::getActionId);
 
-			Stream<ResourceAction> stream = resourceActions.stream();
+			List<String> actionKeys = ListUtil.filter(
+				(List<String>)widgetPermissionsMap.get("actionKeys"),
+				resourceActionsIds::contains);
 
-			List<String> resourceActionsIds = stream.map(
-				ResourceAction::getActionId
-			).collect(
-				Collectors.toList()
-			);
-
-			List<String> actionKeys = (List<String>)widgetPermissionsMap.get(
-				"actionKeys");
-
-			for (String actionKey : actionKeys) {
-				if (!resourceActionsIds.contains(actionKey)) {
-					continue;
-				}
-
-				actionIds.add(actionKey);
-			}
-
-			if (ListUtil.isNotEmpty(actionIds)) {
+			if (ListUtil.isNotEmpty(actionKeys)) {
 				roleIdsToActionIds.put(
-					role.getRoleId(), actionIds.toArray(new String[0]));
+					role.getRoleId(), actionKeys.toArray(new String[0]));
 			}
 		}
 

@@ -23,6 +23,7 @@ import com.liferay.object.action.executor.ObjectActionExecutorRegistry;
 import com.liferay.object.constants.ObjectActionConstants;
 import com.liferay.object.internal.action.util.ObjectActionThreadLocal;
 import com.liferay.object.internal.action.util.ObjectEntryVariablesUtil;
+import com.liferay.object.internal.dynamic.data.mapping.expression.ObjectEntryDDMExpressionParameterAccessor;
 import com.liferay.object.internal.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
@@ -71,11 +72,18 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			objectDefinition, payloadJSONObject,
 			_userLocalService.getUser(userId));
 
-		_executeObjectAction(
-			objectAction, objectDefinition, payloadJSONObject, userId,
-			ObjectEntryVariablesUtil.getActionVariables(
-				_dtoConverterRegistry, objectDefinition, payloadJSONObject,
-				_systemObjectDefinitionMetadataRegistry));
+		try {
+			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
+
+			_executeObjectAction(
+				objectAction, objectDefinition, payloadJSONObject, userId,
+				ObjectEntryVariablesUtil.getVariables(
+					_dtoConverterRegistry, objectDefinition, payloadJSONObject,
+					_systemObjectDefinitionMetadataRegistry));
+		}
+		finally {
+			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(false);
+		}
 	}
 
 	@Override
@@ -114,7 +122,7 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			_updatePayloadJSONObject(objectDefinition, payloadJSONObject, user);
 
 			Map<String, Object> variables =
-				ObjectEntryVariablesUtil.getActionVariables(
+				ObjectEntryVariablesUtil.getVariables(
 					_dtoConverterRegistry, objectDefinition, payloadJSONObject,
 					_systemObjectDefinitionMetadataRegistry);
 
@@ -152,9 +160,13 @@ public class ObjectActionEngineImpl implements ObjectActionEngine {
 			_ddmExpressionFactory.createExpression(
 				CreateExpressionRequest.Builder.newBuilder(
 					conditionExpression
+				).withDDMExpressionParameterAccessor(
+					new ObjectEntryDDMExpressionParameterAccessor(
+						(Map<String, Object>)variables.get("originalBaseModel"))
 				).build());
 
-		ddmExpression.setVariables(variables);
+		ddmExpression.setVariables(
+			(Map<String, Object>)variables.get("baseModel"));
 
 		return ddmExpression.evaluate();
 	}

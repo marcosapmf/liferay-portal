@@ -38,6 +38,7 @@ page import="com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocal
 page import="com.liferay.asset.kernel.model.AssetVocabularyConstants" %><%@
 page import="com.liferay.expando.kernel.model.ExpandoColumn" %><%@
 page import="com.liferay.expando.util.ExpandoAttributesUtil" %><%@
+page import="com.liferay.frontend.taglib.servlet.taglib.util.EmptyResultMessageKeys" %><%@
 page import="com.liferay.petra.string.CharPool" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
@@ -203,8 +204,7 @@ page import="java.util.Map" %><%@
 page import="java.util.Set" %><%@
 page import="java.util.TimeZone" %>
 
-<%@ page import="javax.portlet.PortletURL" %><%@
-page import="javax.portlet.WindowState" %>
+<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

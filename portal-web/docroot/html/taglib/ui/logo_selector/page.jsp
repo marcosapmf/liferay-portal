@@ -56,9 +56,9 @@ else {
 	<c:when test="<%= showButtons %>">
 		<div class="taglib-logo-selector" id="<%= randomNamespace %>taglibLogoSelector">
 			<div class="taglib-logo-selector-content" id="<%= randomNamespace %>taglibLogoSelectorContent">
-				<a class="lfr-change-logo <%= showBackground ? "show-background" : StringPool.BLANK %>" href="javascript:void(0);">
+				<span class="lfr-change-logo <%= showBackground ? "show-background" : StringPool.BLANK %>">
 					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="current-image" />" class="avatar img-fluid mw-100" id="<%= randomNamespace %>avatar" src="<%= HtmlUtil.escape(imageURL) %>" />
-				</a>
+				</span>
 
 				<c:if test='<%= Validator.isNull(imageURL) || imageURL.contains("/spacer.png") %>'>
 					<p class="text-muted" id="<%= randomNamespace %>emptyResultMessage">
@@ -68,9 +68,9 @@ else {
 
 				<div class="mb-4 mt-3 portrait-icons">
 					<div class="btn-group button-holder">
-						<aui:button cssClass="edit-logo modify-link mr-3" value="change" />
+						<aui:button aria-label='<%= LanguageUtil.get(request, "change-image") %>' cssClass="edit-logo modify-link mr-3" value="change" />
 
-						<aui:button cssClass="delete-logo modify-link" disabled="<%= defaultLogo && (fileEntryId == 0) %>" value="delete" />
+						<aui:button aria-label='<%= LanguageUtil.get(request, "delete-image") %>' cssClass="delete-logo modify-link" disabled="<%= defaultLogo && (fileEntryId == 0) %>" value="delete" />
 					</div>
 
 					<aui:input name="deleteLogo" type="hidden" value="<%= deleteLogo %>" />

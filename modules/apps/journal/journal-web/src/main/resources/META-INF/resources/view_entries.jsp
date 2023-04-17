@@ -108,19 +108,31 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<span class="text-default">
+							<div class="d-flex">
+								<c:choose>
+									<c:when test="<%= editURL != StringPool.BLANK %>">
+										<clay:link
+											cssClass="d-block lfr-portal-tooltip text-dark text-truncate"
+											href="<%= editURL %>"
+											label="<%= title %>"
+											title="<%= HtmlUtil.escape(title) %>"
+										/>
+									</c:when>
+									<c:otherwise>
+										<span class="d-block lfr-portal-tooltip text-dark text-truncate" title="<%= HtmlUtil.escape(title) %>">
+											<%= HtmlUtil.escape(title) %>
+										</span>
+									</c:otherwise>
+								</c:choose>
+							</div>
+
+							<span class="text-secondary">
 								<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription, HtmlUtil.escape(curArticle.getStatusByUserName())} %>" key="modified-x-ago-by-x" />
 							</span>
 
-							<p class="font-weight-bold h5">
-								<aui:a href="<%= editURL %>">
-									<%= HtmlUtil.escape(title) %>
-								</aui:a>
-							</p>
-
 							<c:if test="<%= journalDisplayContext.isSearch() && ((curArticle.getFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curArticle.getFolder(), ActionKeys.VIEW)) %>">
 								<h5>
-									<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curArticle.getFolderId()) %>
+									<%= journalDisplayContext.getAbsolutePath(curArticle.getFolderId()) %>
 								</h5>
 							</c:if>
 
@@ -190,7 +202,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
-								value="<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curArticle.getFolderId()) %>"
+								value="<%= journalDisplayContext.getAbsolutePath(curArticle.getFolderId()) %>"
 							/>
 						</c:if>
 
@@ -307,25 +319,33 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							String createDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 							%>
 
-							<span class="text-default">
-								<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curFolder.getUserName()), createDateDescription} %>" key="x-modified-x-ago" />
-							</span>
+							<div class="d-flex">
+								<c:choose>
+									<c:when test="<%= rowURL.toString() != StringPool.BLANK %>">
+										<clay:link
+											cssClass="d-block lfr-portal-tooltip text-dark text-truncate"
+											href="<%= rowURL.toString() %>"
+											label="<%= HtmlUtil.escape(curFolder.getName()) %>"
+											title="<%= HtmlUtil.escape(curFolder.getName()) %>"
+										/>
+									</c:when>
+									<c:otherwise>
+										<span class="d-block lfr-portal-tooltip text-dark text-truncate" title="<%= HtmlUtil.escape(curFolder.getName()) %>">
+											<%= HtmlUtil.escape(curFolder.getName()) %>
+										</span>
+									</c:otherwise>
+								</c:choose>
+							</div>
 
-							<p class="font-weight-bold h5">
-								<aui:a href="<%= rowURL.toString() %>">
-									<%= HtmlUtil.escape(curFolder.getName()) %>
-								</aui:a>
-							</p>
+							<span class="text-secondary">
+								<liferay-ui:message arguments="<%= new String[] {createDateDescription, HtmlUtil.escape(curFolder.getUserName())} %>" key="modified-x-ago-by-x" />
+							</span>
 
 							<c:if test="<%= journalDisplayContext.isSearch() && ((curFolder.getParentFolderId() <= 0) || JournalFolderPermission.contains(permissionChecker, curFolder.getParentFolder(), ActionKeys.VIEW)) %>">
 								<h5>
-									<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curFolder.getParentFolderId()) %>
+									<%= journalDisplayContext.getAbsolutePath(curFolder.getParentFolderId()) %>
 								</h5>
 							</c:if>
-
-							<span class="text-default">
-								<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= curFolder.getStatus() %>" />
-							</span>
 						</liferay-ui:search-container-column-text>
 
 						<liferay-ui:search-container-column-text>
@@ -380,7 +400,7 @@ Map<String, Object> componentContext = journalDisplayContext.getComponentContext
 							<liferay-ui:search-container-column-text
 								cssClass="table-cell-expand-smallest table-cell-minw-200"
 								name="path"
-								value="<%= JournalHelperUtil.getAbsolutePath(liferayPortletRequest, curFolder.getParentFolderId()) %>"
+								value="<%= journalDisplayContext.getAbsolutePath(curFolder.getParentFolderId()) %>"
 							/>
 						</c:if>
 

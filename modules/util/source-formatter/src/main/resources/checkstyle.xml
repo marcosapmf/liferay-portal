@@ -243,11 +243,6 @@
 			<message key="variable.move.after.branching.statement" value="For better performance, the variable assignment for ''{0}'' should come after the ''{1}'' statement on line ''{2}''" />
 			<message key="variable.move.inside.if.statement" value="For better performance, the variable assignment for ''{0}'' should be moved inside the {1}-statement on line ''{2}''" />
 		</module>
-		<module name="com.liferay.source.formatter.checkstyle.check.AttributeOrderCheck">
-			<property name="category" value="Styling" />
-			<property name="description" value="Checks that attributes in anonymous classes are ordered alphabetically." />
-			<message key="attribute.incorrect.order" value="Attribute ''{0}'' should come after attribute ''{1}''" />
-		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.CamelCaseNameCheck">
 			<property name="category" value="Naming Conventions" />
 			<property name="description" value="Checks variable names for correct use of `CamelCase`." />
@@ -283,7 +278,8 @@
 		<module name="com.liferay.source.formatter.checkstyle.check.ComponentAnnotationCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Performs several checks on classes with @Component annotation." />
-			<message key="configuration.policy.incorrect" value="Always specify ''configurationPolicy = ConfigurationPolicy.REQUIRE'' when a classs extends ''BaseAuthVerifierPipelineConfigurator''" />
+			<message key="configuration.policy.incorrect" value="Always specify ''configurationPolicy = ConfigurationPolicy.REQUIRE'' when a class extends ''BaseAuthVerifierPipelineConfigurator''" />
+			<message key="configuration.policy.unnecessary" value="Remove ''configurationPolicy = {0}'' as it is unnecessary" />
 			<message key="osgi.jaxrs.name.incorrect" value="The value of ''osgi.jaxrs.name'' should end with ''{0}''" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ConcatCheck">
@@ -418,6 +414,13 @@
 			<property name="populateTypeNames" value="false" />
 			<message key="generic.type.parameterize" value="Parameterize the generic {0} for ''{1}'" />
 		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.InstanceInitializerCheck">
+			<property name="category" value="Styling" />
+			<property name="description" value="Checks the order of variable assignments and set* calls in the instance initializer." />
+			<message key="assign.incorrect.order" value="The variable assignment for ''{0}'' should come before the variable assignment for ''{1}''" />
+			<message key="assign.move.before.method.call" value="The variable assignment for ''{0}'' shoud come before the method calling ''{1}''" />
+			<message key="method.call.incorrect.order" value="The method calling ''{0}'' should come before the method calling ''{1}''" />
+		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.InstanceofOrderCheck">
 			<property name="category" value="Styling" />
 			<property name="description" value="Check the order of `instanceof` calls." />
@@ -471,7 +474,8 @@
 		<module name="com.liferay.source.formatter.checkstyle.check.LambdaCheck">
 			<property name="category" value="Styling" />
 			<property name="description" value="Checks that `lambda` statements are as simple as possible." />
-			<message key="lambda.simplify" value="Simplify lambda statement with single statement" />
+			<message key="lambda.simplify.1" value="Simplify lambda statement with single statement" />
+			<message key="lambda.simplify.2" value="Simplify lambda statement with method reference" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ListUtilCheck">
 			<property name="category" value="Styling" />
@@ -677,7 +681,19 @@
 		<module name="com.liferay.source.formatter.checkstyle.check.ResourceImplCheck">
 			<property name="category" value="Bug Prevention" />
 			<property name="description" value="Performs several checks on `*ResourceImpl` classes (except `Base*ResourceImpl` classes)." />
+			<property name="enabled" value="false" />
 			<message key="invalid.method.parameter.annotation" value="Remove annotation ''{0}'' from method parameter ''{1}''" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ResourcePermissionCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Performs several checks on `*ResourcePermission` classes." />
+			<message key="remove.service.ranking.property" value="Remove property ''{0}'' from @Component annotation" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ResourcePermissionFactoryCheck">
+			<property name="category" value="Performance" />
+			<property name="description" value="Checks usage of `*ResourcePermissionFactory` classes." />
+			<property name="enabled" value="false" />
+			<message key="deprecated.get.instance.usage" value="Do not use ''{0}''. Use @Reference instead" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.SelfReferenceCheck">
 			<property name="category" value="Bug Prevention" />
@@ -688,6 +704,12 @@
 			<property name="category" value="Styling" />
 			<property name="description" value="Finds cases of unnecessary semicolon." />
 			<message key="semi.colon.unnecessary" value="Unnecessary semi colon" />
+		</module>
+		<module name="com.liferay.source.formatter.checkstyle.check.ServiceComponentRuntimeCheck">
+			<property name="category" value="Bug Prevention" />
+			<property name="description" value="Checks `ServiceComponentRuntime` usage in test classes." />
+			<property name="enabled" value="false" />
+			<message key="promise.get.value" value="Must wait for ''Promise'' from ''{0}'' to complete. Assign the promise to a variable and call its ''getValue()'' method" />
 		</module>
 		<module name="com.liferay.source.formatter.checkstyle.check.ServiceProxyFactoryCheck">
 			<property name="category" value="Bug Prevention" />

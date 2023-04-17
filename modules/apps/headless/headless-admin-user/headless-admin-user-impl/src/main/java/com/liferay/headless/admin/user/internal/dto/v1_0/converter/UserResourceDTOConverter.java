@@ -51,6 +51,11 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.UserBag;
+import com.liferay.portal.kernel.security.permission.UserBagFactoryUtil;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
@@ -157,10 +162,6 @@ public class UserResourceDTOConverter
 					organization -> _toOrganizationBrief(
 						dtoConverterContext, organization, user),
 					OrganizationBrief.class);
-				roleBriefs = TransformUtil.transformToArray(
-					_roleLocalService.getUserRoles(user.getUserId()),
-					role -> _toRoleBrief(dtoConverterContext, role),
-					RoleBrief.class);
 				siteBriefs = TransformUtil.transformToArray(
 					_groupLocalService.getGroups(
 						user.getCompanyId(),
@@ -233,6 +234,26 @@ public class UserResourceDTOConverter
 						}
 
 						return group.getDisplayURL(_getThemeDisplay(group));
+					});
+				setRoleBriefs(
+					() -> {
+						UserBag userBag = UserBagFactoryUtil.create(
+							user.getUserId());
+
+						return TransformUtil.transformToArray(
+							userBag.getRoles(),
+							role -> {
+								if (!_roleModelResourcePermission.contains(
+										PermissionThreadLocal.
+											getPermissionChecker(),
+										role, ActionKeys.VIEW)) {
+
+									return null;
+								}
+
+								return _toRoleBrief(dtoConverterContext, role);
+							},
+							RoleBrief.class);
 					});
 			}
 		};
@@ -380,6 +401,11 @@ public class UserResourceDTOConverter
 
 	@Reference
 	private RoleLocalService _roleLocalService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.portal.kernel.model.Role)"
+	)
+	private ModelResourcePermission<Role> _roleModelResourcePermission;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

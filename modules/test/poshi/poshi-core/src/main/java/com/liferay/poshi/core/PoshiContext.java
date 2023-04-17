@@ -502,7 +502,13 @@ public class PoshiContext {
 				}
 			}
 
-			properties.remove("test.class.method.name");
+			if (!properties.containsKey("test.liferay.virtual.instance") ||
+				Boolean.parseBoolean(
+					(String)properties.get("test.liferay.virtual.instance"))) {
+
+				properties.remove("test.class.method.name");
+			}
+
 			properties.remove("test.class.name");
 
 			multimap.put(properties, classCommandName);
@@ -637,9 +643,10 @@ public class PoshiContext {
 			poshiFileIncludes.toArray(new String[0]), "default/testFunctional",
 			"testFunctional");
 
+		String testBaseDirName = PropsUtil.get("test.base.dir.name");
+
 		if (((baseDirNames == null) || (baseDirNames.length == 0)) &&
-			(Validator.isNull(PropsValues.TEST_BASE_DIR_NAME) ||
-			 PropsValues.TEST_BASE_DIR_NAME.isEmpty())) {
+			(Validator.isNull(testBaseDirName) || testBaseDirName.isEmpty())) {
 
 			throw new RuntimeException("Please set 'test.base.dir.name'");
 		}
@@ -652,12 +659,14 @@ public class PoshiContext {
 			Collections.addAll(testDirNames, baseDirNames);
 		}
 
-		if (Validator.isNotNull(PropsValues.TEST_BASE_DIR_NAME)) {
-			testDirNames.add(PropsValues.TEST_BASE_DIR_NAME);
+		if (Validator.isNotNull(testBaseDirName)) {
+			testDirNames.add(testBaseDirName);
 		}
 
-		if (Validator.isNotNull(PropsValues.TEST_DIRS)) {
-			Collections.addAll(testDirNames, PropsValues.TEST_DIRS);
+		String[] testDirs = StringUtil.split(PropsUtil.get("test.dirs"));
+
+		if ((testDirs != null) && (testDirs.length > 0)) {
+			Collections.addAll(testDirNames, testDirs);
 		}
 
 		for (String testDirName : testDirNames) {
@@ -668,9 +677,11 @@ public class PoshiContext {
 
 		Set<String> testSupportDirNames = new HashSet<>();
 
-		if (Validator.isNotNull(PropsValues.TEST_SUPPORT_DIRS)) {
-			Collections.addAll(
-				testSupportDirNames, PropsValues.TEST_SUPPORT_DIRS);
+		String[] testSupportDirs = StringUtil.split(
+			PropsUtil.get("test.support.dirs"));
+
+		if ((testSupportDirs != null) && (testSupportDirs.length > 0)) {
+			Collections.addAll(testSupportDirNames, testSupportDirs);
 		}
 
 		for (String testSupportDirName : testSupportDirNames) {
@@ -683,9 +694,9 @@ public class PoshiContext {
 
 		_initComponentCommandNamesMap();
 
-		_throwExceptions();
-
 		PoshiScriptParserException.throwExceptions();
+
+		_throwExceptions();
 
 		long duration = System.currentTimeMillis() - start;
 
@@ -722,7 +733,7 @@ public class PoshiContext {
 
 		executorService.shutdown();
 
-		if (!executorService.awaitTermination(1, TimeUnit.MINUTES)) {
+		if (!executorService.awaitTermination(2, TimeUnit.MINUTES)) {
 			throw new TimeoutException(
 				"Timed out while loading " + poshiFileType + " Poshi files");
 		}
@@ -1387,6 +1398,13 @@ public class PoshiContext {
 
 		for (Element trElement : trElements) {
 			List<Element> tdElements = trElement.elements("td");
+
+			if (tdElements.size() != 3) {
+				throw new Exception(
+					"<tr> element must have 3 <td> child elements at:\n" +
+						filePath + ":" +
+							trElement.attributeValue("line-number"));
+			}
 
 			Element locatorKeyElement = tdElements.get(0);
 

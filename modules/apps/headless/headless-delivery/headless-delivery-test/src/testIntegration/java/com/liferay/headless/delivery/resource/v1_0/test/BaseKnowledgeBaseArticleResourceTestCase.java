@@ -32,6 +32,7 @@ import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.KnowledgeBaseArticleResource;
 import com.liferay.headless.delivery.client.serdes.v1_0.KnowledgeBaseArticleSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -72,8 +73,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -617,7 +616,10 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantKnowledgeBaseArticle),
 				(List<KnowledgeBaseArticle>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetKnowledgeBaseArticleKnowledgeBaseArticlesPage_getExpectedActions(
+					irrelevantParentKnowledgeBaseArticleId));
 		}
 
 		KnowledgeBaseArticle knowledgeBaseArticle1 =
@@ -639,13 +641,26 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(knowledgeBaseArticle1, knowledgeBaseArticle2),
 			(List<KnowledgeBaseArticle>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetKnowledgeBaseArticleKnowledgeBaseArticlesPage_getExpectedActions(
+				parentKnowledgeBaseArticleId));
 
 		knowledgeBaseArticleResource.deleteKnowledgeBaseArticle(
 			knowledgeBaseArticle1.getId());
 
 		knowledgeBaseArticleResource.deleteKnowledgeBaseArticle(
 			knowledgeBaseArticle2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetKnowledgeBaseArticleKnowledgeBaseArticlesPage_getExpectedActions(
+				Long parentKnowledgeBaseArticleId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1057,7 +1072,10 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantKnowledgeBaseArticle),
 				(List<KnowledgeBaseArticle>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetKnowledgeBaseFolderKnowledgeBaseArticlesPage_getExpectedActions(
+					irrelevantKnowledgeBaseFolderId));
 		}
 
 		KnowledgeBaseArticle knowledgeBaseArticle1 =
@@ -1079,13 +1097,37 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(knowledgeBaseArticle1, knowledgeBaseArticle2),
 			(List<KnowledgeBaseArticle>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetKnowledgeBaseFolderKnowledgeBaseArticlesPage_getExpectedActions(
+				knowledgeBaseFolderId));
 
 		knowledgeBaseArticleResource.deleteKnowledgeBaseArticle(
 			knowledgeBaseArticle1.getId());
 
 		knowledgeBaseArticleResource.deleteKnowledgeBaseArticle(
 			knowledgeBaseArticle2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetKnowledgeBaseFolderKnowledgeBaseArticlesPage_getExpectedActions(
+				Long knowledgeBaseFolderId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/knowledge-base-folders/{knowledgeBaseFolderId}/knowledge-base-articles/batch".
+				replace(
+					"{knowledgeBaseFolderId}",
+					String.valueOf(knowledgeBaseFolderId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1490,7 +1532,10 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantKnowledgeBaseArticle),
 				(List<KnowledgeBaseArticle>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetSiteKnowledgeBaseArticlesPage_getExpectedActions(
+					irrelevantSiteId));
 		}
 
 		KnowledgeBaseArticle knowledgeBaseArticle1 =
@@ -1509,13 +1554,33 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(knowledgeBaseArticle1, knowledgeBaseArticle2),
 			(List<KnowledgeBaseArticle>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetSiteKnowledgeBaseArticlesPage_getExpectedActions(siteId));
 
 		knowledgeBaseArticleResource.deleteKnowledgeBaseArticle(
 			knowledgeBaseArticle1.getId());
 
 		knowledgeBaseArticleResource.deleteKnowledgeBaseArticle(
 			knowledgeBaseArticle2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetSiteKnowledgeBaseArticlesPage_getExpectedActions(Long siteId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/headless-delivery/v1.0/sites/{siteId}/knowledge-base-articles/batch".
+				replace("{siteId}", String.valueOf(siteId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -1943,22 +2008,33 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 			204,
 			knowledgeBaseArticleResource.
 				deleteSiteKnowledgeBaseArticleByExternalReferenceCodeHttpResponse(
-					knowledgeBaseArticle.getSiteId(),
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						knowledgeBaseArticle),
 					knowledgeBaseArticle.getExternalReferenceCode()));
 
 		assertHttpResponseStatusCode(
 			404,
 			knowledgeBaseArticleResource.
 				getSiteKnowledgeBaseArticleByExternalReferenceCodeHttpResponse(
-					knowledgeBaseArticle.getSiteId(),
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						knowledgeBaseArticle),
 					knowledgeBaseArticle.getExternalReferenceCode()));
 
 		assertHttpResponseStatusCode(
 			404,
 			knowledgeBaseArticleResource.
 				getSiteKnowledgeBaseArticleByExternalReferenceCodeHttpResponse(
-					knowledgeBaseArticle.getSiteId(),
+					testDeleteSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						knowledgeBaseArticle),
 					knowledgeBaseArticle.getExternalReferenceCode()));
+	}
+
+	protected Long
+			testDeleteSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+				KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception {
+
+		return knowledgeBaseArticle.getSiteId();
 	}
 
 	protected KnowledgeBaseArticle
@@ -1979,11 +2055,20 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		KnowledgeBaseArticle getKnowledgeBaseArticle =
 			knowledgeBaseArticleResource.
 				getSiteKnowledgeBaseArticleByExternalReferenceCode(
-					postKnowledgeBaseArticle.getSiteId(),
+					testGetSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						postKnowledgeBaseArticle),
 					postKnowledgeBaseArticle.getExternalReferenceCode());
 
 		assertEquals(postKnowledgeBaseArticle, getKnowledgeBaseArticle);
 		assertValid(getKnowledgeBaseArticle);
+	}
+
+	protected Long
+			testGetSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+				KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception {
+
+		return knowledgeBaseArticle.getSiteId();
 	}
 
 	protected KnowledgeBaseArticle
@@ -2014,8 +2099,10 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 										put(
 											"siteKey",
 											"\"" +
-												knowledgeBaseArticle.
-													getSiteId() + "\"");
+												testGraphQLGetSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+													knowledgeBaseArticle) +
+														"\"");
+
 										put(
 											"externalReferenceCode",
 											"\"" +
@@ -2027,6 +2114,14 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/knowledgeBaseArticleByExternalReferenceCode"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+				KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception {
+
+		return knowledgeBaseArticle.getSiteId();
 	}
 
 	@Test
@@ -2077,7 +2172,8 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		KnowledgeBaseArticle putKnowledgeBaseArticle =
 			knowledgeBaseArticleResource.
 				putSiteKnowledgeBaseArticleByExternalReferenceCode(
-					postKnowledgeBaseArticle.getSiteId(),
+					testPutSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						postKnowledgeBaseArticle),
 					postKnowledgeBaseArticle.getExternalReferenceCode(),
 					randomKnowledgeBaseArticle);
 
@@ -2087,7 +2183,8 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		KnowledgeBaseArticle getKnowledgeBaseArticle =
 			knowledgeBaseArticleResource.
 				getSiteKnowledgeBaseArticleByExternalReferenceCode(
-					putKnowledgeBaseArticle.getSiteId(),
+					testPutSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						putKnowledgeBaseArticle),
 					putKnowledgeBaseArticle.getExternalReferenceCode());
 
 		assertEquals(randomKnowledgeBaseArticle, getKnowledgeBaseArticle);
@@ -2099,7 +2196,8 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		putKnowledgeBaseArticle =
 			knowledgeBaseArticleResource.
 				putSiteKnowledgeBaseArticleByExternalReferenceCode(
-					newKnowledgeBaseArticle.getSiteId(),
+					testPutSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						newKnowledgeBaseArticle),
 					newKnowledgeBaseArticle.getExternalReferenceCode(),
 					newKnowledgeBaseArticle);
 
@@ -2109,7 +2207,8 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		getKnowledgeBaseArticle =
 			knowledgeBaseArticleResource.
 				getSiteKnowledgeBaseArticleByExternalReferenceCode(
-					putKnowledgeBaseArticle.getSiteId(),
+					testPutSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+						putKnowledgeBaseArticle),
 					putKnowledgeBaseArticle.getExternalReferenceCode());
 
 		assertEquals(newKnowledgeBaseArticle, getKnowledgeBaseArticle);
@@ -2117,6 +2216,14 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		Assert.assertEquals(
 			newKnowledgeBaseArticle.getExternalReferenceCode(),
 			putKnowledgeBaseArticle.getExternalReferenceCode());
+	}
+
+	protected Long
+			testPutSiteKnowledgeBaseArticleByExternalReferenceCode_getSiteId(
+				KnowledgeBaseArticle knowledgeBaseArticle)
+		throws Exception {
+
+		return knowledgeBaseArticle.getSiteId();
 	}
 
 	protected KnowledgeBaseArticle
@@ -2739,6 +2846,13 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 	}
 
 	protected void assertValid(Page<KnowledgeBaseArticle> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<KnowledgeBaseArticle> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<KnowledgeBaseArticle> knowledgeBaseArticles =
@@ -2754,6 +2868,20 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected void assertValid(Rating rating) {
@@ -3321,14 +3449,16 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -3345,6 +3475,10 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -3354,18 +3488,18 @@ public abstract class BaseKnowledgeBaseArticleResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

@@ -5,7 +5,7 @@
 		"moment": "2.29.4",
 		"react": "16.12.0",
 		"react-flow-renderer": "9.7.0",
-		"uuid": "^3.3.2"
+		"uuid": "9.0.0"
 	},
 	"jest": {
 		"setupFiles": [
@@ -26,5 +26,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "5.0.95"
+	"version": "5.0.102"
 }

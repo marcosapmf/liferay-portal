@@ -29,6 +29,7 @@ import com.liferay.data.engine.rest.client.pagination.Pagination;
 import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.client.resource.v2_0.DataRecordCollectionResource;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataRecordCollectionSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -59,6 +60,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,8 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -207,10 +207,19 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 
 		DataRecordCollection getDataRecordCollection =
 			dataRecordCollectionResource.getDataDefinitionDataRecordCollection(
-				postDataRecordCollection.getDataDefinitionId());
+				testGetDataDefinitionDataRecordCollection_getDataDefinitionId(
+					postDataRecordCollection));
 
 		assertEquals(postDataRecordCollection, getDataRecordCollection);
 		assertValid(getDataRecordCollection);
+	}
+
+	protected Long
+			testGetDataDefinitionDataRecordCollection_getDataDefinitionId(
+				DataRecordCollection dataRecordCollection)
+		throws Exception {
+
+		return dataRecordCollection.getDataDefinitionId();
 	}
 
 	protected DataRecordCollection
@@ -240,13 +249,21 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 									{
 										put(
 											"dataDefinitionId",
-											dataRecordCollection.
-												getDataDefinitionId());
+											testGraphQLGetDataDefinitionDataRecordCollection_getDataDefinitionId(
+												dataRecordCollection));
 									}
 								},
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/dataDefinitionDataRecordCollection"))));
+	}
+
+	protected Long
+			testGraphQLGetDataDefinitionDataRecordCollection_getDataDefinitionId(
+				DataRecordCollection dataRecordCollection)
+		throws Exception {
+
+		return dataRecordCollection.getDataDefinitionId();
 	}
 
 	@Test
@@ -313,7 +330,10 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantDataRecordCollection),
 				(List<DataRecordCollection>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetDataDefinitionDataRecordCollectionsPage_getExpectedActions(
+					irrelevantDataDefinitionId));
 		}
 
 		DataRecordCollection dataRecordCollection1 =
@@ -334,13 +354,36 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(dataRecordCollection1, dataRecordCollection2),
 			(List<DataRecordCollection>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetDataDefinitionDataRecordCollectionsPage_getExpectedActions(
+				dataDefinitionId));
 
 		dataRecordCollectionResource.deleteDataRecordCollection(
 			dataRecordCollection1.getId());
 
 		dataRecordCollectionResource.deleteDataRecordCollection(
 			dataRecordCollection2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetDataDefinitionDataRecordCollectionsPage_getExpectedActions(
+				Long dataDefinitionId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		Map createBatchAction = new HashMap<>();
+		createBatchAction.put("method", "POST");
+		createBatchAction.put(
+			"href",
+			"http://localhost:8080/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-record-collections/batch".
+				replace(
+					"{dataDefinitionId}", String.valueOf(dataDefinitionId)));
+
+		expectedActions.put("createBatch", createBatchAction);
+
+		return expectedActions;
 	}
 
 	@Test
@@ -711,11 +754,20 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		DataRecordCollection getDataRecordCollection =
 			dataRecordCollectionResource.
 				getSiteDataRecordCollectionByDataRecordCollectionKey(
-					postDataRecordCollection.getSiteId(),
+					testGetSiteDataRecordCollectionByDataRecordCollectionKey_getSiteId(
+						postDataRecordCollection),
 					postDataRecordCollection.getDataRecordCollectionKey());
 
 		assertEquals(postDataRecordCollection, getDataRecordCollection);
 		assertValid(getDataRecordCollection);
+	}
+
+	protected Long
+			testGetSiteDataRecordCollectionByDataRecordCollectionKey_getSiteId(
+				DataRecordCollection dataRecordCollection)
+		throws Exception {
+
+		return dataRecordCollection.getSiteId();
 	}
 
 	protected DataRecordCollection
@@ -746,8 +798,10 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 										put(
 											"siteKey",
 											"\"" +
-												dataRecordCollection.
-													getSiteId() + "\"");
+												testGraphQLGetSiteDataRecordCollectionByDataRecordCollectionKey_getSiteId(
+													dataRecordCollection) +
+														"\"");
+
 										put(
 											"dataRecordCollectionKey",
 											"\"" +
@@ -759,6 +813,14 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/dataRecordCollectionByDataRecordCollectionKey"))));
+	}
+
+	protected Long
+			testGraphQLGetSiteDataRecordCollectionByDataRecordCollectionKey_getSiteId(
+				DataRecordCollection dataRecordCollection)
+		throws Exception {
+
+		return dataRecordCollection.getSiteId();
 	}
 
 	@Test
@@ -947,6 +1009,13 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	}
 
 	protected void assertValid(Page<DataRecordCollection> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<DataRecordCollection> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<DataRecordCollection> dataRecordCollections =
@@ -962,6 +1031,20 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1136,14 +1219,16 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1160,6 +1245,10 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1169,18 +1258,18 @@ public abstract class BaseDataRecordCollectionResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

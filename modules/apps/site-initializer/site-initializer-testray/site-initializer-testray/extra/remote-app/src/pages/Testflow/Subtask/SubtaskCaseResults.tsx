@@ -21,6 +21,7 @@ import ListView from '../../../components/ListView';
 import StatusBadge from '../../../components/StatusBadge';
 import {StatusBadgeType} from '../../../components/StatusBadge/StatusBadge';
 import {ListViewTypes} from '../../../context/ListViewContext';
+import SearchBuilder from '../../../core/SearchBuilder';
 import useMutate from '../../../hooks/useMutate';
 import i18n from '../../../i18n';
 import {Liferay} from '../../../services/liferay';
@@ -30,7 +31,6 @@ import {
 	testraySubTaskImpl,
 } from '../../../services/rest';
 import {testraySubtaskCaseResultImpl} from '../../../services/rest/TestraySubtaskCaseResults';
-import {searchUtil} from '../../../util/search';
 import {SubTaskStatuses} from '../../../util/statuses';
 
 type OutletContext = {
@@ -66,10 +66,7 @@ const SubtasksCaseResults = () => {
 		}
 
 		const subtaskStatusCheck = () => {
-			const subtasksWithOpenStatus =
-				testraySubtask.dueStatus?.key === SubTaskStatuses.OPEN;
-
-			if (subtasksWithOpenStatus) {
+			if (testraySubtask.dueStatus?.key !== SubTaskStatuses.IN_ANALYSIS) {
 				return [
 					{
 						text: i18n.sub(
@@ -215,7 +212,7 @@ const SubtasksCaseResults = () => {
 						render: (
 							_,
 							testraySubTaskCaseResult: TestraySubTaskCaseResult
-						) => testraySubTaskCaseResult.caseResult?.issues,
+						) => testraySubTaskCaseResult.caseResult?.issues as any,
 						value: i18n.translate('issues'),
 					},
 					{
@@ -257,7 +254,7 @@ const SubtasksCaseResults = () => {
 				testraySubtaskCaseResultImpl.transformDataFromList(response)
 			}
 			variables={{
-				filter: searchUtil.eq('subtaskId', subtaskId as string),
+				filter: SearchBuilder.eq('subtaskId', subtaskId as string),
 			}}
 		>
 			{({items}, {dispatch, listViewContext: {selectedRows}, mutate}) => {

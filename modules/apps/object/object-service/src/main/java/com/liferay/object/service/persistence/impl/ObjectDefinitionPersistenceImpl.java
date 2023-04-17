@@ -7979,7 +7979,9 @@ public class ObjectDefinitionPersistenceImpl
 				if (ercObjectDefinition != null) {
 					throw new DuplicateObjectDefinitionExternalReferenceCodeException(
 						"Duplicate object definition with external reference code " +
-							objectDefinition.getExternalReferenceCode());
+							objectDefinition.getExternalReferenceCode() +
+								" and company " +
+									objectDefinition.getCompanyId());
 				}
 			}
 			else {
@@ -7989,7 +7991,9 @@ public class ObjectDefinitionPersistenceImpl
 
 					throw new DuplicateObjectDefinitionExternalReferenceCodeException(
 						"Duplicate object definition with external reference code " +
-							objectDefinition.getExternalReferenceCode());
+							objectDefinition.getExternalReferenceCode() +
+								" and company " +
+									objectDefinition.getCompanyId());
 				}
 			}
 		}

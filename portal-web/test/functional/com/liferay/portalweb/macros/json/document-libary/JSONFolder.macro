@@ -8,15 +8,15 @@ definition {
 			var site = "true";
 		}
 
-		var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = "${groupName}");
+		var repositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${groupName});
 
 		if (isSet(parentFolderName)) {
 			var parentFolderId = JSONDocumentAPI._getFolderIdByFolderName(
-				groupName = "${groupName}",
-				name = "${parentFolderName}");
+				groupName = ${groupName},
+				name = ${parentFolderName});
 		}
 		else {
-			var parentFolderId = "0";
+			var parentFolderId = 0;
 		}
 
 		if (!(isSet(guestPermissions))) {
@@ -32,12 +32,13 @@ definition {
 		}
 
 		var serviceContext = JSONServiceContextUtil.setServiceContext(
-			addGroupPermissions = "${groupPermissions}",
-			addGuestPermissions = "${guestPermissions}");
+			addGroupPermissions = ${groupPermissions},
+			addGuestPermissions = ${guestPermissions});
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlapp/add-folder \
 				-u test@liferay.com:test \
+				-d externalReferenceCode= \
 				-d repositoryId=${repositoryId} \
 				-d parentFolderId=${parentFolderId} \
 				-d name=${dmFolderName} \
@@ -51,15 +52,15 @@ definition {
 
 		echo("## * Description: ${dmFolderDescription}");
 
-		var messageId = JSONCurlUtil.post("${curl}");
+		var messageId = JSONCurlUtil.post(${curl});
 	}
 
 	@summary = "This calls the JSON WS API to delete a folder"
 	macro deleteFolder {
 		var portalURL = JSONCompany.getPortalURL();
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
-			groupName = "${groupName}",
-			name = "${folderName}");
+			groupName = ${groupName},
+			name = ${folderName});
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfolder/delete-folder \
@@ -72,8 +73,8 @@ definition {
 	macro moveFolderToTrash {
 		var portalURL = JSONCompany.getPortalURL();
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
-			groupName = "${groupName}",
-			name = "${folderName}");
+			groupName = ${groupName},
+			name = ${folderName});
 
 		var curl = '''
 			${portalURL}/api/jsonws/dltrash/move-folder-to-trash \
@@ -81,7 +82,7 @@ definition {
 				-d folderId=${folderId}
 		''';
 
-		com.liferay.poshi.runner.util.JSONCurlUtil.post("${curl}");
+		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
 }

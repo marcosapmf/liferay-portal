@@ -28,6 +28,7 @@ import com.liferay.headless.commerce.delivery.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.delivery.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.delivery.catalog.client.resource.v1_0.ProductSpecificationResource;
 import com.liferay.headless.commerce.delivery.catalog.client.serdes.v1_0.ProductSpecificationSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -55,6 +56,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,8 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -184,7 +184,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		ProductSpecification productSpecification =
 			randomProductSpecification();
 
+		productSpecification.setSpecificationGroupKey(regex);
+		productSpecification.setSpecificationGroupTitle(regex);
 		productSpecification.setSpecificationKey(regex);
+		productSpecification.setSpecificationTitle(regex);
 		productSpecification.setValue(regex);
 
 		String json = ProductSpecificationSerDes.toJSON(productSpecification);
@@ -193,7 +196,13 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 		productSpecification = ProductSpecificationSerDes.toDTO(json);
 
+		Assert.assertEquals(
+			regex, productSpecification.getSpecificationGroupKey());
+		Assert.assertEquals(
+			regex, productSpecification.getSpecificationGroupTitle());
 		Assert.assertEquals(regex, productSpecification.getSpecificationKey());
+		Assert.assertEquals(
+			regex, productSpecification.getSpecificationTitle());
 		Assert.assertEquals(regex, productSpecification.getValue());
 	}
 
@@ -234,7 +243,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantProductSpecification),
 				(List<ProductSpecification>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetChannelProductProductSpecificationsPage_getExpectedActions(
+					irrelevantChannelId, irrelevantProductId));
 		}
 
 		ProductSpecification productSpecification1 =
@@ -255,7 +267,20 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(productSpecification1, productSpecification2),
 			(List<ProductSpecification>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetChannelProductProductSpecificationsPage_getExpectedActions(
+				channelId, productId));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetChannelProductProductSpecificationsPage_getExpectedActions(
+				Long channelId, Long productId)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -481,6 +506,26 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"specificationGroupKey", additionalAssertFieldName)) {
+
+				if (productSpecification.getSpecificationGroupKey() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationGroupTitle", additionalAssertFieldName)) {
+
+				if (productSpecification.getSpecificationGroupTitle() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("specificationId", additionalAssertFieldName)) {
 				if (productSpecification.getSpecificationId() == null) {
 					valid = false;
@@ -491,6 +536,16 @@ public abstract class BaseProductSpecificationResourceTestCase {
 
 			if (Objects.equals("specificationKey", additionalAssertFieldName)) {
 				if (productSpecification.getSpecificationKey() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationTitle", additionalAssertFieldName)) {
+
+				if (productSpecification.getSpecificationTitle() == null) {
 					valid = false;
 				}
 
@@ -514,6 +569,13 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	}
 
 	protected void assertValid(Page<ProductSpecification> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ProductSpecification> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ProductSpecification> productSpecifications =
@@ -529,6 +591,20 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -644,6 +720,32 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"specificationGroupKey", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productSpecification1.getSpecificationGroupKey(),
+						productSpecification2.getSpecificationGroupKey())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationGroupTitle", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productSpecification1.getSpecificationGroupTitle(),
+						productSpecification2.getSpecificationGroupTitle())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("specificationId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						productSpecification1.getSpecificationId(),
@@ -659,6 +761,19 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				if (!Objects.deepEquals(
 						productSpecification1.getSpecificationKey(),
 						productSpecification2.getSpecificationKey())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"specificationTitle", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productSpecification1.getSpecificationTitle(),
+						productSpecification2.getSpecificationTitle())) {
 
 					return false;
 				}
@@ -714,14 +829,16 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -738,6 +855,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -747,18 +868,18 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(
@@ -796,6 +917,26 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("specificationGroupKey")) {
+			sb.append("'");
+			sb.append(
+				String.valueOf(
+					productSpecification.getSpecificationGroupKey()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("specificationGroupTitle")) {
+			sb.append("'");
+			sb.append(
+				String.valueOf(
+					productSpecification.getSpecificationGroupTitle()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("specificationId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -805,6 +946,15 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			sb.append("'");
 			sb.append(
 				String.valueOf(productSpecification.getSpecificationKey()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("specificationTitle")) {
+			sb.append("'");
+			sb.append(
+				String.valueOf(productSpecification.getSpecificationTitle()));
 			sb.append("'");
 
 			return sb.toString();
@@ -868,8 +1018,14 @@ public abstract class BaseProductSpecificationResourceTestCase {
 				optionCategoryId = RandomTestUtil.randomLong();
 				priority = RandomTestUtil.randomDouble();
 				productId = RandomTestUtil.randomLong();
+				specificationGroupKey = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				specificationGroupTitle = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				specificationId = RandomTestUtil.randomLong();
 				specificationKey = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				specificationTitle = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				value = StringUtil.toLowerCase(RandomTestUtil.randomString());
 			}

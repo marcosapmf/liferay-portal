@@ -123,13 +123,19 @@ public class ModifiedFacetPortlet extends MVCPortlet {
 				parameterName + "From", renderRequest),
 			modifiedFacetDisplayContextBuilder::setFromParameterValue);
 
+		modifiedFacetDisplayContextBuilder.setFrequenciesVisible(
+			modifiedFacetPortletPreferences.isFrequenciesVisible());
+		modifiedFacetDisplayContextBuilder.setFrequencyThreshold(
+			modifiedFacetPortletPreferences.getFrequencyThreshold());
+
 		ThemeDisplay themeDisplay = _getThemeDisplay(renderRequest);
 
 		modifiedFacetDisplayContextBuilder.setLocale(themeDisplay.getLocale());
 
+		modifiedFacetDisplayContextBuilder.setOrder(
+			modifiedFacetPortletPreferences.getOrder());
 		modifiedFacetDisplayContextBuilder.setPaginationStartParameterName(
 			_getPaginationStartParameterName(portletSharedSearchResponse));
-
 		modifiedFacetDisplayContextBuilder.setParameterName(parameterName);
 
 		SearchOptionalUtil.copy(

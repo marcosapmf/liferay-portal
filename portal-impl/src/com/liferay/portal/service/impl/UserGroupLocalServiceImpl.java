@@ -23,6 +23,7 @@ import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.service.ExportImportLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -86,17 +87,14 @@ import java.io.File;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 /**
  * Provides the local service for accessing, adding, deleting, and updating user
@@ -1286,34 +1284,33 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	protected void reindexUsers(List<UserGroup> userGroups)
 		throws PortalException {
 
-		Stream<UserGroup> stream1 = userGroups.stream();
+		Map<Long, List<UserGroup>> map = new HashMap<>();
 
-		Map<Long, List<UserGroup>> map = stream1.collect(
-			Collectors.groupingBy(UserGroup::getCompanyId));
+		for (UserGroup userGroup : userGroups) {
+			List<UserGroup> companyUserGroups = map.computeIfAbsent(
+				userGroup.getCompanyId(), companyId -> new ArrayList<>());
+
+			companyUserGroups.add(userGroup);
+		}
 
 		for (Map.Entry<Long, List<UserGroup>> entry : map.entrySet()) {
-			long companyId = entry.getKey();
-
-			List<UserGroup> list = entry.getValue();
-
-			Stream<UserGroup> stream2 = list.stream();
-
-			final long[] userGroupIds = stream2.mapToLong(
-				UserGroup::getUserGroupId
-			).toArray();
-
 			TransactionCommitCallbackUtil.registerCallback(
 				() -> {
-					LongStream longStream = Arrays.stream(userGroupIds);
+					Set<Long> userIdsSet = new LinkedHashSet<>();
 
-					long[] userIds = longStream.flatMap(
-						userGroupId -> Arrays.stream(
-							getUserPrimaryKeys(userGroupId))
-					).distinct(
-					).toArray();
+					for (long userGroupId :
+							TransformUtil.transform(
+								entry.getValue(), UserGroup::getUserGroupId)) {
 
-					if (ArrayUtil.isNotEmpty(userIds)) {
-						reindex(companyId, userIds);
+						for (long userId : getUserPrimaryKeys(userGroupId)) {
+							userIdsSet.add(userId);
+						}
+					}
+
+					if (!userIdsSet.isEmpty()) {
+						reindex(
+							entry.getKey(),
+							ArrayUtil.toArray(userIdsSet.toArray(new Long[0])));
 					}
 
 					return null;
@@ -1326,13 +1323,8 @@ public class UserGroupLocalServiceImpl extends UserGroupLocalServiceBaseImpl {
 	}
 
 	protected void reindexUsers(long[] userGroupIds) throws PortalException {
-		List<UserGroup> list = new ArrayList<>(userGroupIds.length);
-
-		for (long userGroupId : userGroupIds) {
-			list.add(getUserGroup(userGroupId));
-		}
-
-		reindexUsers(list);
+		reindexUsers(
+			TransformUtil.transformToList(userGroupIds, this::getUserGroup));
 	}
 
 	protected void reindexUsers(UserGroup userGroup) throws PortalException {

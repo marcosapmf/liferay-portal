@@ -1,8 +1,7 @@
 {
 	"dependencies": {
 		"@liferay/frontend-js-react-web": "*",
-		"custom-event-polyfill": "1.0.6",
-		"dom4": "^2.1.5",
+		"date-fns": "2.29.3",
 		"frontend-js-web": "*",
 		"moment": "2.29.4",
 		"numeral": "2.0.6",
@@ -37,5 +36,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "RTL_SKIP_AUTO_CLEANUP=true liferay-npm-scripts test"
 	},
-	"version": "3.0.53"
+	"version": "3.0.57"
 }

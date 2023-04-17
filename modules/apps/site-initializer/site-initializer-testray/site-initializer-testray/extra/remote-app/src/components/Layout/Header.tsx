@@ -17,15 +17,14 @@ import ClayIcon from '@clayui/icon';
 import ClayTabs from '@clayui/tabs';
 import classNames from 'classnames';
 import {useContext} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {Link, useNavigate} from 'react-router-dom';
+import Permission from '~/core/Permission';
 
 import {HeaderContext} from '../../context/HeaderContext';
-import {Permission} from '../../util/permission';
 import BreadcrumbFinder from '../BreadcrumbFinder';
 import DropDown from '../DropDown';
 import DropDownWithActions from '../DropDown/DropDown';
 import TestrayIcons from '../Icons/TestrayIcon';
-import NotificationPopover from '../NotificationPopover';
 
 const Divider = () => <p className="mx-2 text-paragraph-lg">/</p>;
 
@@ -34,16 +33,9 @@ type BreadCrumbTriggerProps = {
 };
 
 const Header = () => {
-	const [
-		{
-			dropdown,
-			headerActions,
-			heading,
-			symbol,
-			tabs,
-			testrayDispatchTriggers,
-		},
-	] = useContext(HeaderContext);
+	const [{dropdown, headerActions, heading, symbol, tabs}] = useContext(
+		HeaderContext
+	);
 	const navigate = useNavigate();
 
 	const filteredHeaderActions = Permission.filterActions(
@@ -73,7 +65,7 @@ const Header = () => {
 	);
 
 	return (
-		<header className="d-flex flex-column header-container pt-4">
+		<header className="tr-header-container">
 			<div className="d-flex">
 				<div className="align-items-center d-flex justify-content-center mx-3">
 					{dropdown.length ? (
@@ -94,25 +86,23 @@ const Header = () => {
 				<BreadcrumbFinder heading={heading} />
 
 				<div className="d-flex flex-row justify-content-between w-100">
-					<div className="d-flex flex-1 flex-wrap">
+					<div className="d-flex flex-1">
 						{heading.map((header, index) => {
 							const isClickable =
 								header.path && index !== heading.length - 1;
 
+							const Component =
+								isClickable && header.path
+									? Link
+									: (props: any) => <span {...props} />;
+
 							return (
-								<span
+								<Component
 									className={classNames(
-										'd-flex flex-column header-item',
-										{
-											'cursor-pointer': isClickable,
-										}
+										'tr-header-container__item'
 									)}
 									key={index}
-									onClick={() => {
-										if (isClickable && header.path) {
-											navigate(header.path);
-										}
-									}}
+									to={header.path as string}
 								>
 									<small className="pr-2 text-paragraph-xs text-secondary">
 										{header.category ? (
@@ -124,7 +114,7 @@ const Header = () => {
 
 									<div className="d-flex flex-row">
 										<p
-											className="header-title text-paragraph-xl"
+											className="tr-header-container__item__title"
 											title={header.title}
 										>
 											{header.title}
@@ -135,7 +125,7 @@ const Header = () => {
 												<Divider />
 											)}
 									</div>
-								</span>
+								</Component>
 							);
 						})}
 					</div>
@@ -149,15 +139,11 @@ const Header = () => {
 								position={Align.BottomLeft}
 							/>
 						)}
-
-						<NotificationPopover
-							testrayDispatchTriggers={testrayDispatchTriggers}
-						/>
 					</div>
 				</div>
 			</div>
 
-			<ClayTabs className="header-container-tabs ml-3">
+			<ClayTabs className="tr-header-container__tabs">
 				{tabs.map((tab, index) => (
 					<ClayTabs.Item
 						active={tab.active}

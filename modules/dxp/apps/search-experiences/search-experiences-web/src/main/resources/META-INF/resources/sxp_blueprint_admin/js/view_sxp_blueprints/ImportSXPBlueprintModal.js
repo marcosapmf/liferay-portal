@@ -17,6 +17,8 @@ import ClayModal, {useModal} from '@clayui/modal';
 import {fetch, navigate} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
+import {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
+
 const VALID_EXTENSIONS = '.json';
 
 const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
@@ -76,9 +78,7 @@ const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
 
 			fetch(fetchURL, {
 				body: importText,
-				headers: new Headers({
-					'Content-Type': 'application/json',
-				}),
+				headers: DEFAULT_HEADERS,
 				method: 'POST',
 			})
 				.then((response) => {
@@ -89,15 +89,35 @@ const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
 				})
 				.then(({ok, responseContent}) => {
 					if (!ok) {
-						_handleFormError(
-							isElement
-								? Liferay.Language.get(
-										'unable-to-import-because-the-element-configuration-is-invalid'
-								  )
-								: Liferay.Language.get(
-										'unable-to-import-because-the-blueprint-configuration-is-invalid'
-								  )
-						);
+						if (
+							responseContent.type.includes(
+								'DuplicateSXPBlueprintExternalReferenceCodeException'
+							) ||
+							responseContent.type.includes(
+								'DuplicateSXPElementExternalReferenceCodeException'
+							)
+						) {
+							_handleFormError(
+								isElement
+									? Liferay.Language.get(
+											'unable-to-import-element-with-the-same-external-reference-code-as-an-existing-element'
+									  )
+									: Liferay.Language.get(
+											'unable-to-import-blueprint-with-the-same-external-reference-code-as-an-existing-blueprint'
+									  )
+							);
+						}
+						else {
+							_handleFormError(
+								isElement
+									? Liferay.Language.get(
+											'unable-to-import-because-the-element-configuration-is-invalid'
+									  )
+									: Liferay.Language.get(
+											'unable-to-import-because-the-blueprint-configuration-is-invalid'
+									  )
+							);
+						}
 
 						if (process.env.NODE_ENV === 'development') {
 							console.error(responseContent.title);
@@ -137,7 +157,7 @@ const ImportSXPBlueprintModal = ({portletNamespace, redirectURL}) => {
 
 	return visible ? (
 		<ClayModal
-			className="import-sxp-blueprint-form"
+			className="sxp-import-modal-root"
 			observer={observer}
 			size="full-screen"
 		>

@@ -47,11 +47,11 @@ public interface DiscountAccountGroupResource {
 		throws Exception;
 
 	public void deleteDiscountAccountGroupBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteDiscountAccountGroupBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Page<DiscountAccountGroup>
@@ -95,12 +95,12 @@ public interface DiscountAccountGroupResource {
 		throws Exception;
 
 	public void postDiscountIdDiscountAccountGroupBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postDiscountIdDiscountAccountGroupBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -112,6 +112,10 @@ public interface DiscountAccountGroupResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public DiscountAccountGroupResource build() {
 			return new DiscountAccountGroupResourceImpl(this);
 		}
@@ -120,6 +124,28 @@ public interface DiscountAccountGroupResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -251,12 +277,12 @@ public interface DiscountAccountGroupResource {
 		}
 
 		public void deleteDiscountAccountGroupBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				deleteDiscountAccountGroupBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -286,7 +312,7 @@ public interface DiscountAccountGroupResource {
 
 		public HttpInvoker.HttpResponse
 				deleteDiscountAccountGroupBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -321,8 +347,6 @@ public interface DiscountAccountGroupResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v1.0/discountAccountGroups/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -692,12 +716,12 @@ public interface DiscountAccountGroupResource {
 		}
 
 		public void postDiscountIdDiscountAccountGroupBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postDiscountIdDiscountAccountGroupBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -727,7 +751,7 @@ public interface DiscountAccountGroupResource {
 
 		public HttpInvoker.HttpResponse
 				postDiscountIdDiscountAccountGroupBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -762,8 +786,6 @@ public interface DiscountAccountGroupResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v1.0/discounts/discountAccountGroups/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

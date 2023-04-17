@@ -17,6 +17,8 @@ import AccountSubscriptionCard from './components/AccountSubscriptionCard/Accoun
 import AccountSubscriptionModal from './components/AccountSubscriptionModal/AccountSubscriptionModal';
 
 const AccountSubscriptionsList = ({
+	accountKey,
+	accountSubscriptionGroup,
 	accountSubscriptions,
 	loading,
 	maxCardsLoading = 4,
@@ -58,8 +60,10 @@ const AccountSubscriptionsList = ({
 		<div className="d-flex flex-wrap">
 			{open && (
 				<AccountSubscriptionModal
-					accountSubscriptionsStatus={
-						currentAccountSubscription.subscriptionStatus
+					accountKey={accountKey}
+					accountSubscriptionGroup={accountSubscriptionGroup}
+					accountSubscriptionProductKey={
+						currentAccountSubscription.productKey
 					}
 					externalReferenceCode={
 						currentAccountSubscription?.externalReferenceCode

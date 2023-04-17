@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
@@ -76,8 +77,7 @@ public class KnowledgeBaseServiceUpgradeStepRegistrator
 		registry.register(
 			"1.1.0", "1.2.0",
 			UpgradeProcessFactory.dropColumns("KBArticle", "kbTemplateId"),
-			new com.liferay.knowledge.base.internal.upgrade.v1_2_0.
-				KBStructureUpgradeProcess(),
+			UpgradeProcessFactory.dropTables("KBStructure"),
 			UpgradeProcessFactory.dropColumns(
 				"KBTemplate", "engineType", "cacheable"));
 
@@ -187,6 +187,11 @@ public class KnowledgeBaseServiceUpgradeStepRegistrator
 		registry.register(
 			"4.3.0", "4.4.0",
 			new KBGroupServiceConfigurationUpgradeProcess(_configurationAdmin));
+
+		registry.register(
+			"4.4.0", "4.5.0",
+			new CTModelUpgradeProcess(
+				"KBArticle", "KBComment", "KBFolder", "KBTemplate"));
 	}
 
 	@Reference

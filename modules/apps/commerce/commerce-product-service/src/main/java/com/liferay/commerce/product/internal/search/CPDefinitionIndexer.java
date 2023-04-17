@@ -44,6 +44,7 @@ import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.commerce.util.CommerceBigDecimalUtil;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -934,20 +935,11 @@ public class CPDefinitionIndexer extends BaseIndexer<CPDefinition> {
 	}
 
 	private long[] _getUserCommerceCatalogIds(SearchContext searchContext) {
-		List<CommerceCatalog> commerceCatalogs =
+		return TransformUtil.transformToLongArray(
 			_commerceCatalogService.getCommerceCatalogs(
 				searchContext.getCompanyId(), QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS);
-
-		if (commerceCatalogs.isEmpty()) {
-			return new long[0];
-		}
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		return stream.mapToLong(
-			commerceCatalog -> commerceCatalog.getCommerceCatalogId()
-		).toArray();
+				QueryUtil.ALL_POS),
+			CommerceCatalog::getCommerceCatalogId);
 	}
 
 	private void _reindexCPDefinitions(long companyId) throws Exception {

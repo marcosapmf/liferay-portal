@@ -10,20 +10,18 @@
  */
 
 import MDFRequestDTO from '../../../interfaces/dto/mdfRequestDTO';
-import LiferayPicklist from '../../../interfaces/liferayPicklist';
 import MDFRequest from '../../../interfaces/mdfRequest';
 
-export function getMDFRequestFromDTO(
-	mdfRequest: MDFRequestDTO,
-	requestUpdateStatus: LiferayPicklist
-): MDFRequest {
+export function getMDFRequestFromDTO(mdfRequest: MDFRequestDTO): MDFRequest {
 	return {
 		...mdfRequest,
 		activities:
 			mdfRequest.mdfReqToActs?.map((activityItem) => {
 				const {
 					actToBgts,
+					activityStatus,
 					endDate,
+					externalReferenceCodeSF,
 					id,
 					mdfRequestAmount,
 					mdfRequestExternalReferenceCodeSF,
@@ -40,13 +38,18 @@ export function getMDFRequestFromDTO(
 				return {
 					activityDescription: {
 						...activityDescription,
+						assetsLiferayRequired: String(
+							activityItem.assetsLiferayRequired
+						),
 						leadFollowUpStrategies: activityItem.leadFollowUpStrategies?.split(
-							'; '
+							', '
 						),
 						leadGenerated: String(activityItem.leadGenerated),
 					},
+					activityStatus,
 					budgets: actToBgts || [],
 					endDate: endDate?.split('T')[0],
+					externalReferenceCodeSF,
 					id,
 					mdfRequestAmount,
 					mdfRequestExternalReferenceCodeSF,
@@ -65,7 +68,7 @@ export function getMDFRequestFromDTO(
 		liferayBusinessSalesGoals: mdfRequest.liferayBusinessSalesGoals?.split(
 			'; '
 		),
-		mdfRequestStatus: requestUpdateStatus,
+		mdfRequestStatus: mdfRequest.mdfRequestStatus,
 		targetAudienceRoles: mdfRequest.targetAudienceRoles?.split('; '),
 		targetMarkets: mdfRequest.targetMarkets?.split('; '),
 	};

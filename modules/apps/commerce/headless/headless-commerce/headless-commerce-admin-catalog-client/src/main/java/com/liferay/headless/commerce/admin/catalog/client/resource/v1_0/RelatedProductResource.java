@@ -78,12 +78,12 @@ public interface RelatedProductResource {
 		throws Exception;
 
 	public void postProductIdRelatedProductBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postProductIdRelatedProductBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public void deleteRelatedProduct(Long id) throws Exception;
@@ -91,12 +91,11 @@ public interface RelatedProductResource {
 	public HttpInvoker.HttpResponse deleteRelatedProductHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteRelatedProductBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteRelatedProductBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteRelatedProductBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public RelatedProduct getRelatedProduct(Long id) throws Exception;
@@ -113,6 +112,10 @@ public interface RelatedProductResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public RelatedProductResource build() {
 			return new RelatedProductResourceImpl(this);
 		}
@@ -121,6 +124,28 @@ public interface RelatedProductResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -547,12 +572,12 @@ public interface RelatedProductResource {
 		}
 
 		public void postProductIdRelatedProductBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postProductIdRelatedProductBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -582,7 +607,7 @@ public interface RelatedProductResource {
 
 		public HttpInvoker.HttpResponse
 				postProductIdRelatedProductBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -617,8 +642,6 @@ public interface RelatedProductResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/products/relatedProducts/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -694,12 +717,11 @@ public interface RelatedProductResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteRelatedProductBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteRelatedProductBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteRelatedProductBatchHttpResponse(id, callbackURL, object);
+				deleteRelatedProductBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -728,7 +750,7 @@ public interface RelatedProductResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteRelatedProductBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -763,8 +785,6 @@ public interface RelatedProductResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/relatedProducts/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

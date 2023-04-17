@@ -123,7 +123,7 @@ public class BasicFragmentEntryVerticalCard
 			_httpServletRequest, "x-usages",
 			FragmentEntryLinkLocalServiceUtil.
 				getFragmentEntryLinksCountByFragmentEntryId(
-					fragmentEntry.getFragmentEntryId()));
+					fragmentEntry.getFragmentEntryId(), false));
 	}
 
 	@Override

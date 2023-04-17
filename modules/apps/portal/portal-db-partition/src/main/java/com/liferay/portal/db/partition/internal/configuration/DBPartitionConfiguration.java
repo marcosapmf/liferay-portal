@@ -29,14 +29,14 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 public interface DBPartitionConfiguration {
 
 	@Meta.AD(
-		deflt = "liferay/adaptive_media_image_configuration|liferay/background_task|liferay/background_task_status|liferay/scheduler_engine|liferay/scheduler_scripting",
+		deflt = "liferay/background_task|liferay/background_task_status|liferay/scheduler_engine|liferay/scheduler_scripting",
 		description = "excluded-message-bus-destination-names-description",
 		name = "excluded-message-bus-destination-names", required = false
 	)
 	public String[] excludedMessageBusDestinationNames();
 
 	@Meta.AD(
-		deflt = "com.liferay.analytics.settings.internal.messaging.CheckAnalyticsConnectionsMessageListener|com.liferay.portal.store.s3.AbortedMultipartUploadCleaner|com.liferay.server.admin.web.internal.messaging.PluginRepositoriesMessageListener",
+		deflt = "com.liferay.analytics.settings.internal.scheduler.CheckAnalyticsConnectionsSchedulerJobConfiguration|com.liferay.portal.store.s3.scheduler.AbortedMultipartUploadCleanerSchedulerJobConfiguration",
 		description = "excluded-scheduler-job-names-description",
 		name = "excluded-scheduler-job-names", required = false
 	)

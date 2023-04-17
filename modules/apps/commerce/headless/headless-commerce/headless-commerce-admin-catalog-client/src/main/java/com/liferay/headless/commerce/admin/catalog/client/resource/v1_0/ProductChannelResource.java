@@ -45,12 +45,11 @@ public interface ProductChannelResource {
 	public HttpInvoker.HttpResponse deleteProductChannelHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteProductChannelBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteProductChannelBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteProductChannelBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public ProductChannel getProductChannel(Long id) throws Exception;
@@ -85,6 +84,10 @@ public interface ProductChannelResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public ProductChannelResource build() {
 			return new ProductChannelResourceImpl(this);
 		}
@@ -93,6 +96,28 @@ public interface ProductChannelResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -234,12 +259,11 @@ public interface ProductChannelResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteProductChannelBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteProductChannelBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteProductChannelBatchHttpResponse(id, callbackURL, object);
+				deleteProductChannelBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -268,7 +292,7 @@ public interface ProductChannelResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteProductChannelBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -303,8 +327,6 @@ public interface ProductChannelResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/product-channels/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

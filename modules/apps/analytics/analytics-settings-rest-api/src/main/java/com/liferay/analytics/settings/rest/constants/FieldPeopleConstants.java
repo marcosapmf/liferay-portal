@@ -20,43 +20,41 @@ package com.liferay.analytics.settings.rest.constants;
 public class FieldPeopleConstants {
 
 	public static final String[] FIELD_CONTACT_DEFAULTS = {
-		"birthday", "classNameId", "classPK", "contactId", "createDate",
-		"emailAddress", "employeeNumber", "employeeStatusId", "facebookSn",
-		"hoursOfOperation", "jabberSn", "jobClass", "male", "modifiedDate",
-		"parentContactId", "skypeSn", "smsSn", "twitterSn", "userName"
+		"birthday", "classPK", "contactId", "createDate", "emailAddress",
+		"firstName", "jobTitle", "lastName", "modifiedDate"
 	};
 
 	public static final String[] FIELD_CONTACT_EXAMPLES = {
-		"31st Oct 2008", "12345", "12345", "12345", "31st Oct 2008",
-		"johndoe@example.com", "12346-A", "0", "12345", "9:00 AM - 5:00 PM",
-		"johndoe", "Manager", "True", "31st Oct 2008", "12345", "12345",
-		"johndoe", "johndoe", "12345", "@johndoe", "John User"
+		"31st Oct 2008", "12345", "12345", "12345", "12345", "31st Oct 2008",
+		"johndoe@example.com", "12346-A", "0", "12345", "John",
+		"9:00 AM - 5:00 PM", "johndoe", "Manager", "Manager", "Doe", "True",
+		"Vincent", "31st Oct 2008", "12345", "12345", "johndoe", "johndoe",
+		"12345", "@johndoe", "John User"
 	};
 
 	public static final String[] FIELD_CONTACT_NAMES = {
-		"birthday", "classNameId", "classPK", "contactId", "createDate",
-		"emailAddress", "employeeNumber", "employeeStatusId", "facebookSn",
-		"hoursOfOperation", "jabberSn", "jobClass", "male", "modifiedDate",
+		"birthday", "classNameId", "classPK", "companyId", "contactId",
+		"createDate", "emailAddress", "employeeNumber", "employeeStatusId",
+		"facebookSn", "firstName", "hoursOfOperation", "jabberSn", "jobClass",
+		"jobTitle", "lastName", "male", "middleName", "modifiedDate",
 		"parentContactId", "prefixListTypeId", "skypeSn", "smsSn",
 		"suffixListTypeId", "twitterSn", "userName"
 	};
 
 	public static final String[] FIELD_CONTACT_REQUIRED_NAMES = {
-		"classNameId", "classPK", "contactId", "createDate", "emailAddress",
-		"modifiedDate"
+		"classPK", "contactId", "createDate", "emailAddress", "modifiedDate"
 	};
 
 	public static final String[] FIELD_CONTACT_TYPES = {
-		"Date", "Long", "Long", "Long", "Date", "String", "String", "Long",
-		"String", "String", "String", "String", "Boolean", "Date", "Long",
-		"Long", "String", "String", "Long", "String", "String"
+		"Date", "Long", "Long", "Long", "Long", "Date", "String", "String",
+		"Long", "String", "String", "String", "String", "String", "String",
+		"String", "Boolean", "String", "Date", "Long", "Long", "String",
+		"String", "Long", "String", "String"
 	};
 
 	public static final String[] FIELD_USER_DEFAULTS = {
-		"agreedToTermsOfUse", "companyId", "contactId", "createDate",
-		"defaultUser", "emailAddress", "emailAddressVerified", "firstName",
-		"jobTitle", "languageId", "lastName", "middleName", "modifiedDate",
-		"status", "timeZoneId", "userId", "uuid"
+		"createDate", "emailAddress", "firstName", "jobTitle", "lastName",
+		"modifiedDate", "timeZoneId", "userId", "uuid"
 	};
 
 	public static final String[] FIELD_USER_EXAMPLES = {
@@ -77,8 +75,7 @@ public class FieldPeopleConstants {
 	};
 
 	public static final String[] FIELD_USER_REQUIRED_NAMES = {
-		"contactId", "createDate", "emailAddress", "modifiedDate", "userId",
-		"uuid"
+		"createDate", "emailAddress", "modifiedDate", "userId", "uuid"
 	};
 
 	public static final String[] FIELD_USER_TYPES = {

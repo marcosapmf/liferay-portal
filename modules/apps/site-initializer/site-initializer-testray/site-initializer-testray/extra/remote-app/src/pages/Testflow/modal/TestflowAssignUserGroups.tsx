@@ -17,11 +17,11 @@ import {useEffect, useState} from 'react';
 import Container from '../../../components/Layout/Container';
 import ListView, {ListViewProps} from '../../../components/ListView';
 import {TableProps} from '../../../components/Table';
+import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
 import fetcher from '../../../services/fetcher';
 import {Actions} from '../../../types';
 import {getUniqueList} from '../../../util';
-import {searchUtil} from '../../../util/search';
 
 type UserGroupsListViewProps = {
 	actions?: Actions;
@@ -66,7 +66,7 @@ const UserGroups: React.FC<UserGroupProps> = ({setState}) => {
 	useEffect(() => {
 		if (users?.length) {
 			fetcher(
-				`/user-accounts?field=id&filter=${searchUtil.in(
+				`/user-accounts?field=id&filter=${SearchBuilder.in(
 					'userGroupIds',
 					users
 				)}`

@@ -39,10 +39,10 @@ import com.liferay.portal.language.override.web.internal.display.context.ViewDis
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -147,15 +147,21 @@ public class PLOPortlet extends MVCPortlet {
 		try {
 			ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
 
-			List<PLOEntry> ploEntries = _ploEntryService.getPLOEntries(
-				_portal.getCompanyId(resourceRequest));
+			Map<String, List<PLOEntry>> keyPLOEntries = new HashMap<>();
 
-			Stream<PLOEntry> stream = ploEntries.stream();
+			for (PLOEntry ploEntry :
+					_ploEntryService.getPLOEntries(
+						_portal.getCompanyId(resourceRequest))) {
 
-			Map<String, List<PLOEntry>> map = stream.collect(
-				Collectors.groupingBy(PLOEntry::getLanguageId));
+				List<PLOEntry> ploEntries = keyPLOEntries.computeIfAbsent(
+					ploEntry.getLanguageId(), key -> new ArrayList<>());
 
-			for (Map.Entry<String, List<PLOEntry>> entry : map.entrySet()) {
+				ploEntries.add(ploEntry);
+			}
+
+			for (Map.Entry<String, List<PLOEntry>> entry :
+					keyPLOEntries.entrySet()) {
+
 				StringBundler sb = new StringBundler();
 
 				for (PLOEntry ploEntry : entry.getValue()) {

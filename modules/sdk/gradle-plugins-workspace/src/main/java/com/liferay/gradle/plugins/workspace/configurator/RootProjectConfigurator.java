@@ -32,9 +32,11 @@ import com.liferay.gradle.plugins.LiferayBasePlugin;
 import com.liferay.gradle.plugins.node.NodeExtension;
 import com.liferay.gradle.plugins.node.task.NpmInstallTask;
 import com.liferay.gradle.plugins.source.formatter.FormatSourceTask;
+import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
 import com.liferay.gradle.plugins.workspace.LiferayWorkspaceYarnPlugin;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
+import com.liferay.gradle.plugins.workspace.docker.DockerPruneImage;
 import com.liferay.gradle.plugins.workspace.internal.configurator.TargetPlatformRootProjectConfigurator;
 import com.liferay.gradle.plugins.workspace.internal.util.FileUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
@@ -173,6 +175,9 @@ public class RootProjectConfigurator implements Plugin<Project> {
 	public static final String PROVIDED_MODULES_CONFIGURATION_NAME =
 		"providedModules";
 
+	public static final String PRUNE_DOCKER_IMAGE_TASK_NAME =
+		"pruneDockerImage";
+
 	public static final String PULL_DOCKER_IMAGE_TASK_NAME = "pullDockerImage";
 
 	public static final String PUSH_DOCKER_IMAGE_TASK_NAME = "pushDockerImage";
@@ -222,6 +227,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 		GradleUtil.applyPlugin(project, DockerRemoteApiPlugin.class);
 		GradleUtil.applyPlugin(project, LifecycleBasePlugin.class);
+		GradleUtil.applyPlugin(project, SourceFormatterPlugin.class);
 
 		String nodePackageManager = workspaceExtension.getNodePackageManager();
 
@@ -420,7 +426,6 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			project, CLEAN_DOCKER_IMAGE_TASK_NAME, DockerRemoveImage.class);
 
 		dockerRemoveImage.dependsOn(REMOVE_DOCKER_CONTAINER_TASK_NAME);
-
 		dockerRemoveImage.setDescription("Removes the Docker image.");
 		dockerRemoveImage.setGroup(DOCKER_GROUP);
 
@@ -444,6 +449,12 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 			});
 
+		DockerPruneImage dockerPruneImage = GradleUtil.addTask(
+			project, PRUNE_DOCKER_IMAGE_TASK_NAME, DockerPruneImage.class);
+
+		dockerPruneImage.setDescription("Prunes the Docker image.");
+		dockerPruneImage.setGroup(DOCKER_GROUP);
+
 		Project rootProject = project.getRootProject();
 
 		rootProject.afterEvaluate(
@@ -458,9 +469,15 @@ public class RootProjectConfigurator implements Plugin<Project> {
 
 					setProperty.add(dockerImageId);
 
-					Property<String> property = dockerRemoveImage.getImageId();
+					Property<String> dockerPruneImageIdProperty =
+						dockerPruneImage.getImageId();
 
-					property.set(dockerImageId);
+					dockerPruneImageIdProperty.set(dockerImageId);
+
+					Property<String> dockerRemoveImageIdProperty =
+						dockerRemoveImage.getImageId();
+
+					dockerRemoveImageIdProperty.set(dockerImageId);
 				}
 
 			});
@@ -653,6 +670,9 @@ public class RootProjectConfigurator implements Plugin<Project> {
 			"ENV LIFERAY_WORKSPACE_ENVIRONMENT=" +
 				workspaceExtension.getEnvironment());
 
+		dockerfile.instruction(
+			"COPY --chown=liferay:liferay client-extensions /home/liferay" +
+				"/osgi/client-extensions");
 		dockerfile.instruction(
 			"COPY --chown=liferay:liferay deploy /mnt/liferay/deploy");
 		dockerfile.instruction(
@@ -1058,7 +1078,7 @@ public class RootProjectConfigurator implements Plugin<Project> {
 						try {
 							URL srcURL = (URL)src;
 
-							if (Objects.equals("file", srcURL.getProtocol())) {
+							if (Objects.equals(srcURL.getProtocol(), "file")) {
 								URI uri = project.uri(src);
 
 								file = project.file(uri);

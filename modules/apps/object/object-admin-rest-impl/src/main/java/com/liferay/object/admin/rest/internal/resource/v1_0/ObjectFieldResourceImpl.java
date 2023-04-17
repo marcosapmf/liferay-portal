@@ -18,7 +18,7 @@ import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
-import com.liferay.object.admin.rest.internal.dto.v1_0.converter.ObjectFieldDTOConverter;
+import com.liferay.object.admin.rest.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldSettingUtil;
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectFieldEntityModel;
@@ -28,15 +28,16 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldSupport;
@@ -128,7 +129,7 @@ public class ObjectFieldResourceImpl
 			Long objectDefinitionId, ObjectField objectField)
 		throws Exception {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-164948")) &&
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
 			Objects.equals(
 				objectField.getBusinessTypeAsString(),
 				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
@@ -146,25 +147,20 @@ public class ObjectFieldResourceImpl
 				ObjectFieldUtil.getDBType(
 					objectField.getDBTypeAsString(),
 					objectField.getTypeAsString()),
-				objectField.getDefaultValue(),
 				GetterUtil.getBoolean(objectField.getIndexed()),
 				GetterUtil.getBoolean(objectField.getIndexedAsKeyword()),
 				objectField.getIndexedLanguageId(),
 				LocalizedMapUtil.getLocalizedMap(objectField.getLabel()),
 				objectField.getName(), objectField.getRequired(),
 				GetterUtil.getBoolean(objectField.getState()),
-				transformToList(
-					objectField.getObjectFieldSettings(),
-					objectFieldSetting ->
-						ObjectFieldSettingUtil.toObjectFieldSetting(
-							objectField.getBusinessTypeAsString(),
-							ObjectFieldUtil.addListTypeDefinition(
-								contextUser.getCompanyId(),
-								_listTypeDefinitionLocalService,
-								_listTypeEntryLocalService, objectField,
-								contextUser.getUserId()),
-							objectFieldSetting, _objectFieldSettingLocalService,
-							_objectFilterLocalService))));
+				ObjectFieldSettingUtil.toObjectFieldSettings(
+					ObjectFieldUtil.addListTypeDefinition(
+						contextUser.getCompanyId(),
+						_listTypeDefinitionLocalService,
+						_listTypeEntryLocalService, objectField,
+						contextUser.getUserId()),
+					objectField, _objectFieldSettingLocalService,
+					_objectFilterLocalService)));
 	}
 
 	@Override
@@ -172,7 +168,7 @@ public class ObjectFieldResourceImpl
 			Long objectFieldId, ObjectField objectField)
 		throws Exception {
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-164948")) &&
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
 			Objects.equals(
 				objectField.getBusinessTypeAsString(),
 				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
@@ -204,28 +200,21 @@ public class ObjectFieldResourceImpl
 		return _toObjectField(
 			_objectFieldService.updateObjectField(
 				objectField.getExternalReferenceCode(), objectFieldId,
-				ObjectFieldUtil.getListTypeDefinitionId(
-					contextUser.getCompanyId(), _listTypeDefinitionLocalService,
-					objectField),
+				objectField.getListTypeDefinitionId(),
 				objectField.getBusinessTypeAsString(),
 				ObjectFieldUtil.getDBType(
 					objectField.getDBTypeAsString(),
 					objectField.getTypeAsString()),
-				objectField.getDefaultValue(),
 				GetterUtil.getBoolean(objectField.getIndexed()),
 				GetterUtil.getBoolean(objectField.getIndexedAsKeyword()),
 				objectField.getIndexedLanguageId(),
 				LocalizedMapUtil.getLocalizedMap(objectField.getLabel()),
 				objectField.getName(), objectField.getRequired(),
 				GetterUtil.getBoolean(objectField.getState()),
-				transformToList(
-					objectField.getObjectFieldSettings(),
-					objectFieldSetting ->
-						ObjectFieldSettingUtil.toObjectFieldSetting(
-							objectField.getBusinessTypeAsString(),
-							objectField.getListTypeDefinitionId(),
-							objectFieldSetting, _objectFieldSettingLocalService,
-							_objectFilterLocalService))));
+				ObjectFieldSettingUtil.toObjectFieldSettings(
+					objectField.getListTypeDefinitionId(), objectField,
+					_objectFieldSettingLocalService,
+					_objectFilterLocalService)));
 	}
 
 	private Page<ObjectField> _getObjectFieldsPage(
@@ -365,8 +354,9 @@ public class ObjectFieldResourceImpl
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
-	@Reference
-	private ObjectFieldDTOConverter _objectFieldDTOConverter;
+	@Reference(target = DTOConverterConstants.OBJECT_FIELD_DTO_CONVERTER)
+	private DTOConverter<com.liferay.object.model.ObjectField, ObjectField>
+		_objectFieldDTOConverter;
 
 	@Reference
 	private ObjectFieldService _objectFieldService;

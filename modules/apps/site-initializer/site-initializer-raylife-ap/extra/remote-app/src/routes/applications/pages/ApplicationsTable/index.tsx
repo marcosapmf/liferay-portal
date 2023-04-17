@@ -23,7 +23,7 @@ import classNames from 'classnames';
 import React, {useEffect, useState} from 'react';
 
 import Header from '../../../../common/components/header';
-import Table from '../../../../common/components/table';
+import Table, {TableRowContentType} from '../../../../common/components/table';
 import {
 	deleteApplicationByExternalReferenceCode,
 	getAllApplications,
@@ -88,16 +88,6 @@ const HEADERS = [
 	},
 ];
 
-const STATUS_EDIT_DISABLED = ['Bound', 'Quoted'];
-
-const STATUS_DELETE_DISABLED = [
-	'Bound',
-	'Quoted',
-	'Rejected',
-	'Reviewed',
-	'Underwriting',
-];
-
 type Application = {
 	applicationCreateDate: Date;
 	applicationNumber: number;
@@ -125,27 +115,36 @@ type TableItemType = {
 	value: string;
 };
 
-type TableRowContentType = {[keys: string]: string};
-
-type itemsApplications = {
-	[keys: string]: string;
-};
-
 type itemsApplicationsFilter = {
 	applicationStatus: {name: string};
 	productName: string;
 };
 
-type itemsProducts = {
-	[keys: string]: string;
-};
+type itemsApplications = TableContent;
 
-type itemsPicklists = {
-	[keys: string]: string;
-};
+type itemsProducts = TableContent;
+
+type itemsPicklists = TableContent;
 
 type StateSortType = {
 	[keys: string]: boolean;
+};
+
+const STATUS_EDIT_DISABLED = ['Bound', 'Quoted'];
+
+const STATUS_DELETE_DISABLED = [
+	'Bound',
+	'Quoted',
+	'Rejected',
+	'Reviewed',
+	'Underwriting',
+];
+
+const CLICKBLE_STATUS: TableRowContentType = {
+	Bound: 'Bound',
+	Incomplete: 'Incomplete',
+	Rejected: 'Rejected',
+	Reviewed: 'Reviewed',
 };
 
 const ApplicationsTable = () => {
@@ -406,6 +405,7 @@ const ApplicationsTable = () => {
 						email,
 						externalReferenceCode,
 						fullName,
+						isClickable: 'true',
 						key: externalReferenceCode,
 						name,
 						productName,
@@ -450,17 +450,17 @@ const ApplicationsTable = () => {
 		rowContent: TableRowContentType
 	) => {
 		if (item.clickable && item.key === 'email') {
-			handleRedirectToGmail(rowContent[item.key]);
+			handleRedirectToGmail(rowContent[item.key] as string);
 		}
 
 		if (
-			((item.clickable && rowContent['name'] === 'Incomplete') ||
-				rowContent['name'] === 'Bound') &&
+			item.clickable &&
+			CLICKBLE_STATUS[rowContent['name']] &&
 			(item.key === 'externalReferenceCode' ||
 				item.key === 'applicationCreateDate')
 		) {
 			handleRedirectToDetailsPages(
-				rowContent['externalReferenceCode'],
+				rowContent['externalReferenceCode'] as string,
 				'app-details'
 			);
 		}

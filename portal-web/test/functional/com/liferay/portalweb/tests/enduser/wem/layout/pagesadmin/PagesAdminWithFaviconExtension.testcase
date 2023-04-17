@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Pages Administration";
+	property testray.main.component.name = "Page Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,16 +13,16 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 
 		task ("Add two remote apps for favicon extension") {
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "Google Favicon",
 				type = "themeFavicon",
 				url = "https://www.google.com/favicon.ico");
 
-			JSONRemoteApp.addRemoteAppEntry(
+			JSONClientExtension.addRemoteAppEntry(
 				name = "NBA Favicon",
 				type = "themeFavicon",
 				url = "https://www.nba.com/favicon.ico");
@@ -32,18 +32,18 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
 
-			RemoteApps.tearDown();
+			ClientExtensionGeneral.tearDown();
 		}
 	}
 
 	@description = "This is a test for LPS-153654. The site designer could change favicon from favicon extension for page, page template, and group of pages."
-	@priority = "5"
+	@priority = 5
 	test ChangeFavicons {
 		property portal.acceptance = "true";
 
@@ -75,14 +75,12 @@ definition {
 			Navigator.gotoNavTab(navTab = "Look and Feel");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
 			PagesAdmin.selectFaviconExtension(extensionName = "Google Favicon");
 
 			AssertTextEquals(
-				faviconName = "Google Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Google Favicon");
 
@@ -125,14 +123,12 @@ definition {
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
 			PagesAdmin.selectFaviconExtension(extensionName = "Google Favicon");
 
 			AssertTextEquals(
-				faviconName = "Google Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Google Favicon");
 
@@ -159,14 +155,12 @@ definition {
 			DropdownMenuItem.click(menuItem = "Configuration");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
 			PagesAdmin.selectFaviconExtension(extensionName = "NBA Favicon");
 
 			AssertTextEquals(
-				faviconName = "NBA Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "NBA Favicon");
 
@@ -198,7 +192,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153654. The site designer could clear the favicon extenion selection."
-	@priority = "4"
+	@priority = 4
 	test ClearFaviconExtensionSelection {
 		task ("Given a site designer has a content page with a favicon extension") {
 			JSONLayout.addPublicLayout(
@@ -235,16 +229,14 @@ definition {
 
 		task ("Then the site designer could clear the favicon extension selection") {
 			AssertTextEquals(
-				faviconName = "Google Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Google Favicon");
 
 			Click(
-				buttonId = "clearFaviconButton",
-				locator1 = "Button#BUTTON_ID");
+				ariaLabel = "Clear Favicon",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
@@ -261,7 +253,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153654. The site designer could apply a different favicon extension to an inheritor page from master page."
-	@priority = "4"
+	@priority = 4
 	test OverwriteInheritedFavionExtensionFromMasterPageTemplate {
 		task ("Given a site designer has a content page with inherited favicon extension from master page template") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
@@ -307,7 +299,6 @@ definition {
 			WaitForPageLoad();
 
 			AssertTextEquals(
-				faviconName = "Favicon from Master",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Master");
 		}
@@ -316,7 +307,6 @@ definition {
 			PagesAdmin.selectFaviconExtension(extensionName = "NBA Favicon");
 
 			AssertTextEquals(
-				faviconName = "NBA Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "NBA Favicon");
 
@@ -333,7 +323,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153654. The site designer could apply a different favicon extension to an inheritor page from page template."
-	@priority = "4"
+	@priority = 4
 	test OverwriteInheritedFavionExtensionFromPageTemplate {
 		task ("Given a site designer has a content page with inherited favicon extension from content page template") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
@@ -386,7 +376,6 @@ definition {
 			PagesAdmin.selectFaviconExtension(extensionName = "NBA Favicon");
 
 			AssertTextEquals(
-				faviconName = "NBA Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "NBA Favicon");
 
@@ -403,7 +392,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153654. Page should inherit the favicon extension from page template."
-	@priority = "4"
+	@priority = 4
 	test ViewInheritedFavionExtensionFromPageTemplate {
 		task ("Given a site designer has a content page template with a favicon extension") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
@@ -458,7 +447,6 @@ definition {
 			WaitForPageLoad();
 
 			AssertTextEquals(
-				faviconName = "Google Favicon",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Google Favicon");
 		}

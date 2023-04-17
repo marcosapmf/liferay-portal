@@ -19,14 +19,22 @@ import com.liferay.object.definition.notification.term.util.ObjectDefinitionNoti
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.petra.function.UnsafeTriFunction;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Gustavo Lima
@@ -35,10 +43,12 @@ public class ObjectDefinitionNotificationTermEvaluator
 	implements NotificationTermEvaluator {
 
 	public ObjectDefinitionNotificationTermEvaluator(
+		ListTypeLocalService listTypeLocalService,
 		ObjectDefinition objectDefinition,
 		ObjectFieldLocalService objectFieldLocalService,
 		UserLocalService userLocalService) {
 
+		_listTypeLocalService = listTypeLocalService;
 		_objectDefinition = objectDefinition;
 		_objectFieldLocalService = objectFieldLocalService;
 		_userLocalService = userLocalService;
@@ -54,70 +64,165 @@ public class ObjectDefinitionNotificationTermEvaluator
 
 		Map<String, Object> termValues = (Map<String, Object>)object;
 
-		if (termName.contains("_CREATOR")) {
+		for (EvaluatorFunction evaluatorFunction : _evaluatorFunctions) {
+			String termValue = evaluatorFunction.apply(
+				context, termName, termValues);
+
+			if (termValue != null) {
+				return termValue;
+			}
+		}
+
+		return termName;
+	}
+
+	@FunctionalInterface
+	public interface EvaluatorFunction
+		extends UnsafeTriFunction
+			<Context, String, Map<String, Object>, String, PortalException> {
+	}
+
+	private String _evaluateAuthor(
+			Context context, String termName, Map<String, Object> termValues)
+		throws PortalException {
+
+		String prefix = StringUtil.toUpperCase(
+			_objectDefinition.getShortName());
+
+		if (!termName.equals("[%" + prefix + "_AUTHOR_EMAIL_ADDRESS%]") &&
+			!termName.equals("[%" + prefix + "_AUTHOR_FIRST_NAME%]") &&
+			!termName.equals("[%" + prefix + "_AUTHOR_ID%]") &&
+			!termName.equals("[%" + prefix + "_AUTHOR_LAST_NAME%]") &&
+			!termName.equals("[%" + prefix + "_AUTHOR_MIDDLE_NAME%]") &&
+			!termName.equals("[%" + prefix + "_AUTHOR_PREFIX%]") &&
+			!termName.equals("[%" + prefix + "_AUTHOR_SUFFIX%]") &&
+			!termName.equals("[%" + prefix + "_CREATOR%]")) {
+
+			return null;
+		}
+
+		User user = _userLocalService.getUser(
+			GetterUtil.getLong(termValues.get("creator")));
+
+		if (termName.equals("[%" + prefix + "_CREATOR%]")) {
 			if (context.equals(Context.RECIPIENT)) {
 				return String.valueOf(termValues.get("creator"));
 			}
 
-			User user = _userLocalService.getUser(
-				GetterUtil.getLong(termValues.get("creator")));
-
 			return user.getFullName(true, true);
 		}
 
-		Map<String, Long> objectFieldIds = _getObjectFieldIds();
+		return _getTermValue(
+			StringUtil.removeSubstring(termName, "[%" + prefix + "_AUTHOR_"),
+			user);
+	}
 
-		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
-			objectFieldIds.get(termName));
+	private String _evaluateCurrentUser(
+			Context context, String termName, Map<String, Object> termValues)
+		throws PortalException {
 
-		if (objectField == null) {
+		if (!termName.equals("[%CURRENT_USER_EMAIL_ADDRESS%]") &&
+			!termName.equals("[%CURRENT_USER_FIRST_NAME%]") &&
+			!termName.equals("[%CURRENT_USER_ID%]") &&
+			!termName.equals("[%CURRENT_USER_LAST_NAME%]") &&
+			!termName.equals("[%CURRENT_USER_MIDDLE_NAME%]") &&
+			!termName.equals("[%CURRENT_USER_PREFIX%]") &&
+			!termName.equals("[%CURRENT_USER_SUFFIX%]")) {
+
+			return null;
+		}
+
+		return _getTermValue(
+			StringUtil.removeSubstring(termName, "[%CURRENT_USER_"),
+			_userLocalService.getUser(
+				GetterUtil.getLong(termValues.get("currentUserId"))));
+	}
+
+	private String _evaluateObjectFields(
+			Context context, String termName, Map<String, Object> termValues)
+		throws PortalException {
+
+		if (termName.equals("[%OBJECT_ENTRY_CREATOR%]")) {
 			return termName;
 		}
 
-		Object termValue = termValues.get(objectField.getName());
+		for (ObjectField objectField :
+				_objectFieldLocalService.getObjectFields(
+					_objectDefinition.getObjectDefinitionId())) {
 
-		if (Validator.isNotNull(termValue)) {
-			return String.valueOf(termValue);
-		}
-
-		return String.valueOf(termValues.get(objectField.getDBColumnName()));
-	}
-
-	private Map<String, Long> _getObjectFieldIds() {
-		Map<String, Long> objectFieldIds = _objectFieldIds;
-
-		if (objectFieldIds != null) {
-			return objectFieldIds;
-		}
-
-		synchronized (this) {
-			if (_objectFieldIds != null) {
-				return _objectFieldIds;
-			}
-
-			objectFieldIds = HashMapBuilder.put(
-				"[%OBJECT_ENTRY_CREATOR%]", 0L
-			).build();
-
-			for (ObjectField objectField :
-					_objectFieldLocalService.getObjectFields(
-						_objectDefinition.getObjectDefinitionId())) {
-
-				objectFieldIds.put(
+			if (!Objects.equals(
 					ObjectDefinitionNotificationTermUtil.getObjectFieldTermName(
 						_objectDefinition.getShortName(),
 						objectField.getName()),
-					objectField.getObjectFieldId());
+					termName)) {
+
+				continue;
 			}
 
-			_objectFieldIds = objectFieldIds;
+			String termValue = String.valueOf(
+				termValues.get(objectField.getName()));
+
+			if (Validator.isNotNull(termValue)) {
+				return termValue;
+			}
+
+			return String.valueOf(
+				termValues.get(objectField.getDBColumnName()));
 		}
 
-		return objectFieldIds;
+		return null;
 	}
 
+	private String _getTermValue(String partialTermName, User user)
+		throws PortalException {
+
+		if (partialTermName.equals("EMAIL_ADDRESS%]")) {
+			return user.getEmailAddress();
+		}
+		else if (partialTermName.equals("FIRST_NAME%]")) {
+			return user.getFirstName();
+		}
+		else if (partialTermName.equals("ID%]")) {
+			return String.valueOf(user.getUserId());
+		}
+		else if (partialTermName.equals("LAST_NAME%]")) {
+			return user.getLastName();
+		}
+		else if (partialTermName.equals("MIDDLE_NAME%]")) {
+			return user.getMiddleName();
+		}
+		else if (partialTermName.equals("PREFIX%]") ||
+				 partialTermName.equals("SUFFIX%]")) {
+
+			Contact contact = user.fetchContact();
+
+			if (contact == null) {
+				return StringPool.BLANK;
+			}
+
+			long listTypeId = contact.getPrefixListTypeId();
+
+			if (partialTermName.equals("SUFFIX%]")) {
+				listTypeId = contact.getSuffixListTypeId();
+			}
+
+			if (listTypeId == 0) {
+				return StringPool.BLANK;
+			}
+
+			ListType listType = _listTypeLocalService.getListType(listTypeId);
+
+			return listType.getName();
+		}
+
+		return null;
+	}
+
+	private final List<EvaluatorFunction> _evaluatorFunctions = Arrays.asList(
+		this::_evaluateAuthor, this::_evaluateCurrentUser,
+		this::_evaluateObjectFields);
+	private final ListTypeLocalService _listTypeLocalService;
 	private final ObjectDefinition _objectDefinition;
-	private volatile Map<String, Long> _objectFieldIds;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final UserLocalService _userLocalService;
 

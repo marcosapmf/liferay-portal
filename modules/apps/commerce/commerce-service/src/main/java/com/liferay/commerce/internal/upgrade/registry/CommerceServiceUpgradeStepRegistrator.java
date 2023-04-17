@@ -35,6 +35,7 @@ import com.liferay.commerce.model.impl.CPDAvailabilityEstimateModelImpl;
 import com.liferay.commerce.model.impl.CommerceAvailabilityEstimateModelImpl;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CommerceChannelRelLocalService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.AddressLocalService;
@@ -415,6 +416,18 @@ public class CommerceServiceUpgradeStepRegistrator
 			"8.9.0", "8.9.1",
 			new CommerceChannelAccountEntryRelUpgradeProcess());
 
+		registry.register(
+			"8.9.1", "8.9.2",
+			new com.liferay.commerce.internal.upgrade.v8_9_2.
+				CommercePermissionUpgradeProcess(
+					_resourceActionLocalService,
+					_resourcePermissionLocalService, _roleLocalService));
+
+		registry.register(
+			"8.9.2", "8.9.3",
+			new com.liferay.commerce.internal.upgrade.v8_9_3.
+				CommerceCountryUpgradeProcess(_commerceChannelRelLocalService));
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce upgrade step registrator finished");
 		}
@@ -438,6 +451,9 @@ public class CommerceServiceUpgradeStepRegistrator
 	@Reference
 	private CommerceAccountOrganizationRelLocalService
 		_commerceAccountOrganizationRelLocalService;
+
+	@Reference
+	private CommerceChannelRelLocalService _commerceChannelRelLocalService;
 
 	@Reference
 	private CountryLocalService _countryLocalService;

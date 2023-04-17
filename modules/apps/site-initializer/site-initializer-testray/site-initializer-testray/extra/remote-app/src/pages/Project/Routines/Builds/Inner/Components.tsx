@@ -16,7 +16,6 @@ import Container from '../../../../../components/Layout/Container';
 import ListView from '../../../../../components/ListView';
 import ProgressBar from '../../../../../components/ProgressBar';
 import i18n from '../../../../../i18n';
-import {filters} from '../../../../../schema/filter';
 
 const Components = () => (
 	<Container className="mt-4">
@@ -28,9 +27,10 @@ const Components = () => (
 					test_fix: false,
 					untested: false,
 				},
+				columnsFixed: ['name'],
 			}}
 			managementToolbarProps={{
-				filterFields: filters.build.components,
+				filterSchema: 'buildComponents',
 				title: i18n.translate('component'),
 			}}
 			resource="/components"
@@ -39,7 +39,7 @@ const Components = () => (
 					{
 						key: 'name',
 						size: 'md',
-						value: i18n.translate('team'),
+						value: i18n.translate('component'),
 					},
 					{
 						clickable: true,

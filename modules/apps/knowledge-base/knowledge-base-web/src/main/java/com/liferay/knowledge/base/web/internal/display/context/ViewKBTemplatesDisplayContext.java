@@ -35,10 +35,8 @@ import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -202,9 +200,7 @@ public class ViewKBTemplatesDisplayContext {
 	public boolean hasKBTemplates() throws PortalException {
 		SearchContainer<KBTemplate> searchContainer = getSearchContainer();
 
-		if (!GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-156421")) ||
-			searchContainer.hasResults() || searchContainer.isSearch()) {
-
+		if (searchContainer.hasResults() || searchContainer.isSearch()) {
 			return true;
 		}
 

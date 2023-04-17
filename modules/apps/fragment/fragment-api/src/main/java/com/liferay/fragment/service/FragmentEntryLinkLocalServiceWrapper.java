@@ -158,6 +158,22 @@ public class FragmentEntryLinkLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId) {
+
+		_fragmentEntryLinkLocalService.
+			deleteFragmentEntryLinksByFragmentEntryId(fragmentEntryId);
+	}
+
+	@Override
+	public void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		_fragmentEntryLinkLocalService.
+			deleteFragmentEntryLinksByFragmentEntryId(fragmentEntryId, deleted);
+	}
+
+	@Override
 	public java.util.List<FragmentEntryLink>
 		deleteLayoutPageTemplateEntryFragmentEntryLinks(
 			long groupId, long plid) {
@@ -462,6 +478,22 @@ public class FragmentEntryLinkLocalServiceWrapper
 
 	@Override
 	public java.util.List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String rendererKey) {
+
+		return _fragmentEntryLinkLocalService.getFragmentEntryLinks(
+			companyId, rendererKey);
+	}
+
+	@Override
+	public java.util.List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String[] rendererKeys) {
+
+		return _fragmentEntryLinkLocalService.getFragmentEntryLinks(
+			companyId, rendererKeys);
+	}
+
+	@Override
+	public java.util.List<FragmentEntryLink> getFragmentEntryLinks(
 		String rendererKey) {
 
 		return _fragmentEntryLinkLocalService.getFragmentEntryLinks(
@@ -474,6 +506,15 @@ public class FragmentEntryLinkLocalServiceWrapper
 
 		return _fragmentEntryLinkLocalService.
 			getFragmentEntryLinksByFragmentEntryId(fragmentEntryId);
+	}
+
+	@Override
+	public java.util.List<FragmentEntryLink>
+		getFragmentEntryLinksByFragmentEntryId(
+			long fragmentEntryId, boolean deleted) {
+
+		return _fragmentEntryLinkLocalService.
+			getFragmentEntryLinksByFragmentEntryId(fragmentEntryId, deleted);
 	}
 
 	@Override
@@ -568,6 +609,15 @@ public class FragmentEntryLinkLocalServiceWrapper
 
 		return _fragmentEntryLinkLocalService.
 			getFragmentEntryLinksCountByFragmentEntryId(fragmentEntryId);
+	}
+
+	@Override
+	public int getFragmentEntryLinksCountByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		return _fragmentEntryLinkLocalService.
+			getFragmentEntryLinksCountByFragmentEntryId(
+				fragmentEntryId, deleted);
 	}
 
 	@Override

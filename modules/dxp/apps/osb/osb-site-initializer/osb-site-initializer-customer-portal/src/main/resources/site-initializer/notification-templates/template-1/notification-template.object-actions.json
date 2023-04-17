@@ -1,6 +1,7 @@
 [
 	{
 		"active": true,
+		"externalReferenceCode": "CP-OBJECT-ACTION-1",
 		"label": {
 			"en_US": "Notification Template Action"
 		},

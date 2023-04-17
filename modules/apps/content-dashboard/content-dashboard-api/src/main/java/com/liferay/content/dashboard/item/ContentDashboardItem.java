@@ -52,7 +52,7 @@ public interface ContentDashboardItem<T> {
 		HttpServletRequest httpServletRequest,
 		ContentDashboardItemAction.Type... types);
 
-	public ContentDashboardItemSubtype getContentDashboardItemSubtype();
+	public ContentDashboardItemSubtype<T> getContentDashboardItemSubtype();
 
 	public Date getCreateDate();
 
@@ -62,6 +62,8 @@ public interface ContentDashboardItem<T> {
 	public Locale getDefaultLocale();
 
 	public String getDescription(Locale locale);
+
+	public long getId();
 
 	public InfoItemReference getInfoItemReference();
 

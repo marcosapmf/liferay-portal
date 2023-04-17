@@ -12,7 +12,7 @@
  * details.
  */
 
-import {openToast, sub} from 'frontend-js-web';
+import {fetch, navigate, openToast, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useRef, useState} from 'react';
 
@@ -80,6 +80,105 @@ export function Editor({autocompleteData, initialScript, mode}) {
 	}, [initialScript, portletNamespace]);
 
 	useEffect(() => {
+		const saveTemplate = (redirect) => {
+			const form = document.getElementById(`${portletNamespace}fm`);
+
+			if (!redirect) {
+				const saveAndContinueInput = document.getElementById(
+					`${portletNamespace}saveAndContinue`
+				);
+
+				saveAndContinueInput.value = true;
+			}
+
+			const saveButtons = document.querySelectorAll('save-button');
+
+			const changeDisabled = (disabled) => {
+				saveButtons.forEach((button) => {
+					button.disabled = disabled;
+				});
+			};
+
+			const formData = new FormData(form);
+
+			formData.append(
+				`${portletNamespace}scriptContent`,
+				new File([new Blob([script])], 'scriptContent')
+			);
+
+			changeDisabled(true);
+
+			const liferayForm = Liferay.Form.get(form.id);
+
+			if (liferayForm) {
+				const validator = liferayForm.formValidator;
+
+				validator.validate();
+
+				if (validator.hasErrors()) {
+					validator.focusInvalidField();
+				}
+			}
+
+			fetch(form.action, {body: formData, method: 'POST'})
+				.then((response) => {
+					if (response.redirected) {
+						navigate(response.url);
+					}
+
+					changeDisabled(false);
+
+					return response;
+				})
+				.then((response) => response.json())
+				.then(({error}) => {
+					if (error) {
+						openToast({
+							message: Liferay.Language.get(error),
+							title: Liferay.Language.get('error'),
+							type: 'danger',
+						});
+					}
+				})
+				.catch(() => {
+					changeDisabled(true);
+				});
+		};
+
+		const saveAndContinueButton = document.querySelector(
+			'.save-and-continue-button'
+		);
+
+		const saveButton = document.querySelector('.save-button');
+
+		const onSaveAndContinueButtonClick = (event) => {
+			event.preventDefault();
+
+			saveTemplate(false);
+		};
+
+		const onSaveButtonClick = (event) => {
+			event.preventDefault();
+
+			saveTemplate(true);
+		};
+
+		saveAndContinueButton.addEventListener(
+			'click',
+			onSaveAndContinueButtonClick
+		);
+		saveButton.addEventListener('click', onSaveButtonClick);
+
+		return () => {
+			saveAndContinueButton.removeEventListener(
+				'click',
+				onSaveAndContinueButtonClick
+			);
+			saveButton.removeEventListener('click', onSaveButtonClick);
+		};
+	}, [portletNamespace, script]);
+
+	useEffect(() => {
 		const exportScriptHandler = Liferay.on(
 			`${portletNamespace}exportScript`,
 			() => {
@@ -96,17 +195,10 @@ export function Editor({autocompleteData, initialScript, mode}) {
 		<>
 			<CodeMirrorEditor
 				autocompleteData={autocompleteData}
-				content={script}
+				content={initialScript}
 				inputChannel={inputChannel}
 				mode={mode}
 				onChange={setScript}
-			/>
-
-			<input
-				id={`${portletNamespace}scriptContent`}
-				name={`${portletNamespace}scriptContent`}
-				type="hidden"
-				value={btoa(script)}
 			/>
 		</>
 	);
@@ -115,7 +207,13 @@ export function Editor({autocompleteData, initialScript, mode}) {
 Editor.propTypes = {
 	autocompleteData: PropTypes.object.isRequired,
 	initialScript: PropTypes.string.isRequired,
-	mode: PropTypes.object,
+	mode: PropTypes.oneOfType([
+		PropTypes.string,
+		PropTypes.shape({
+			globalVars: PropTypes.bool.isRequired,
+			name: PropTypes.string.isRequired,
+		}),
+	]),
 };
 
 const exportScript = (script) => {

@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -17,7 +16,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +25,7 @@ definition {
 	}
 
 	@description = "Able to Publish Team with assigned User"
-	@priority = "4"
+	@priority = 4
 	test CanPublishTeamWithAssignedUser {
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -82,7 +81,7 @@ definition {
 	}
 
 	@description = "Able to Publish Team with assigned User Group"
-	@priority = "4"
+	@priority = 4
 	test CanPublishTeamWithAssignedUserGroup {
 		JSONGroup.addGroup(groupName = "Site Name");
 

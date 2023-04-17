@@ -38,14 +38,17 @@ import com.liferay.commerce.product.internal.upgrade.v2_3_0.CommerceChannelUpgra
 import com.liferay.commerce.product.internal.upgrade.v2_5_0.FriendlyURLEntryUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v3_9_2.MiniumSiteInitializerUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v4_0_0.util.CommerceChannelAccountEntryRelTable;
+import com.liferay.commerce.product.internal.upgrade.v4_0_2.CommerceRepositoryUpgradeProcess;
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
@@ -54,6 +57,7 @@ import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.uuid.PortalUUID;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -204,8 +208,7 @@ public class CommerceProductServiceUpgradeStepRegistrator
 
 		registry.register(
 			"2.6.1", "3.0.0",
-			new com.liferay.commerce.product.internal.upgrade.v3_0_0.
-				CPFriendlyURLEntryUpgradeProcess());
+			UpgradeProcessFactory.dropTables("CPFriendlyURLEntry"));
 
 		registry.register(
 			"3.0.0", "3.1.0",
@@ -331,6 +334,27 @@ public class CommerceProductServiceUpgradeStepRegistrator
 			new com.liferay.commerce.product.internal.upgrade.v4_0_1.
 				CommerceChannelUpgradeProcess(_groupLocalService));
 
+		registry.register(
+			"4.0.1", "4.0.2",
+			new CommerceRepositoryUpgradeProcess(_companyLocalService));
+
+		registry.register(
+			"4.0.2", "4.0.3",
+			new com.liferay.commerce.product.internal.upgrade.v4_0_3.
+				CommerceRepositoryUpgradeProcess(
+					_companyLocalService, _portal, _repositoryLocalService));
+
+		registry.register(
+			"4.0.3", "4.1.0",
+			UpgradeProcessFactory.addColumns(
+				"CPDisplayLayout",
+				"layoutPageTemplateEntryUuid VARCHAR(75) null"));
+
+		registry.register(
+			"4.1.0", "5.0.0",
+			new com.liferay.commerce.product.internal.upgrade.v5_0_0.
+				CPTaxCategoryUpgradeProcess());
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce product upgrade step registrator finished");
 		}
@@ -349,6 +373,9 @@ public class CommerceProductServiceUpgradeStepRegistrator
 	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
@@ -364,7 +391,13 @@ public class CommerceProductServiceUpgradeStepRegistrator
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
+	private Portal _portal;
+
+	@Reference
 	private PortalUUID _portalUUID;
+
+	@Reference
+	private RepositoryLocalService _repositoryLocalService;
 
 	@Reference
 	private SettingsFactory _settingsFactory;

@@ -14,12 +14,11 @@
 
 package com.liferay.redirect.internal.util;
 
-import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.redirect.model.RedirectPatternEntry;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -40,27 +39,53 @@ public class PatternUtilTest {
 
 	@Test
 	public void testAnchoredPattern() {
-		Map<Pattern, String> patternStrings = PatternUtil.parse(
+		List<RedirectPatternEntry> redirectPatternEntries = PatternUtil.parse(
 			new String[] {"^xyz abc"});
 
-		Assert.assertEquals("^xyz", _getFistPatternString(patternStrings));
 		Assert.assertEquals(
-			patternStrings.toString(), 1, patternStrings.size());
+			"^xyz", _getFirstPatternString(redirectPatternEntries));
+		Assert.assertEquals(
+			redirectPatternEntries.toString(), 1,
+			redirectPatternEntries.size());
+	}
+
+	@Test
+	public void testCaretPattern() {
+		List<RedirectPatternEntry> redirectPatternEntries = PatternUtil.parse(
+			new String[] {"^xyz abc"});
+
+		Assert.assertEquals(
+			"^xyz", _getFirstPatternString(redirectPatternEntries));
+		Assert.assertEquals(
+			redirectPatternEntries.toString(), 1,
+			redirectPatternEntries.size());
+	}
+
+	@Test
+	public void testCaretSlashPattern() {
+		List<RedirectPatternEntry> redirectPatternEntries = PatternUtil.parse(
+			new String[] {"^/xyz abc"});
+
+		Assert.assertEquals(
+			"^xyz", _getFirstPatternString(redirectPatternEntries));
+		Assert.assertEquals(
+			redirectPatternEntries.toString(), 1,
+			redirectPatternEntries.size());
 	}
 
 	@Test
 	public void testEmptyPatternOrEmptyReplacement() {
 		Assert.assertTrue(
-			MapUtil.isEmpty(PatternUtil.parse(new String[] {" xyz"})));
+			ListUtil.isEmpty(PatternUtil.parse(new String[] {" xyz"})));
 		Assert.assertTrue(
-			MapUtil.isEmpty(PatternUtil.parse(new String[] {"xyz "})));
+			ListUtil.isEmpty(PatternUtil.parse(new String[] {"xyz "})));
 		Assert.assertTrue(
-			MapUtil.isEmpty(PatternUtil.parse(new String[] {"xyz"})));
+			ListUtil.isEmpty(PatternUtil.parse(new String[] {"xyz"})));
 	}
 
 	@Test
 	public void testEmptyPatterns() {
-		Assert.assertTrue(MapUtil.isEmpty(PatternUtil.parse(new String[0])));
+		Assert.assertTrue(ListUtil.isEmpty(PatternUtil.parse(new String[0])));
 	}
 
 	@Test(expected = PatternSyntaxException.class)
@@ -69,23 +94,36 @@ public class PatternUtilTest {
 	}
 
 	@Test
-	public void testUnanchoredPattern() {
-		Map<Pattern, String> patternStrings = PatternUtil.parse(
-			new String[] {"xyz abc"});
+	public void testSlashPattern() {
+		List<RedirectPatternEntry> redirectPatternEntries = PatternUtil.parse(
+			new String[] {"/xyz abc"});
 
-		Assert.assertEquals("^xyz", _getFistPatternString(patternStrings));
 		Assert.assertEquals(
-			patternStrings.toString(), 1, patternStrings.size());
+			"^xyz", _getFirstPatternString(redirectPatternEntries));
+		Assert.assertEquals(
+			redirectPatternEntries.toString(), 1,
+			redirectPatternEntries.size());
 	}
 
-	private String _getFistPatternString(Map<Pattern, String> patternStrings) {
-		Set<Map.Entry<Pattern, String>> entries = patternStrings.entrySet();
+	@Test
+	public void testUnanchoredPattern() {
+		List<RedirectPatternEntry> redirectPatternEntries = PatternUtil.parse(
+			new String[] {"xyz abc"});
 
-		Iterator<Map.Entry<Pattern, String>> iterator = entries.iterator();
+		Assert.assertEquals(
+			"^xyz", _getFirstPatternString(redirectPatternEntries));
+		Assert.assertEquals(
+			redirectPatternEntries.toString(), 1,
+			redirectPatternEntries.size());
+	}
 
-		Map.Entry<Pattern, String> entry = iterator.next();
+	private String _getFirstPatternString(
+		List<RedirectPatternEntry> redirectPatternEntries) {
 
-		Pattern pattern = entry.getKey();
+		RedirectPatternEntry redirectPatternEntry = redirectPatternEntries.get(
+			0);
+
+		Pattern pattern = redirectPatternEntry.getPattern();
 
 		return pattern.pattern();
 	}

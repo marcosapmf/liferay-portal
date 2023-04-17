@@ -28,8 +28,10 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.ProductSpecificationResource;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.ProductSpecificationSerDes;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -55,6 +57,7 @@ import java.text.DateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -196,6 +197,181 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProductSpecification() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ProductSpecification productSpecification =
+			testDeleteProductSpecification_addProductSpecification();
+
+		assertHttpResponseStatusCode(
+			204,
+			productSpecificationResource.deleteProductSpecificationHttpResponse(
+				productSpecification.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			productSpecificationResource.getProductSpecificationHttpResponse(
+				productSpecification.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			productSpecificationResource.getProductSpecificationHttpResponse(
+				productSpecification.getId()));
+	}
+
+	protected ProductSpecification
+			testDeleteProductSpecification_addProductSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteProductSpecification() throws Exception {
+		ProductSpecification productSpecification =
+			testGraphQLDeleteProductSpecification_addProductSpecification();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteProductSpecification",
+						new HashMap<String, Object>() {
+							{
+								put("id", productSpecification.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteProductSpecification"));
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"productSpecification",
+					new HashMap<String, Object>() {
+						{
+							put("id", productSpecification.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray.length() > 0);
+	}
+
+	protected ProductSpecification
+			testGraphQLDeleteProductSpecification_addProductSpecification()
+		throws Exception {
+
+		return testGraphQLProductSpecification_addProductSpecification();
+	}
+
+	@Test
+	public void testGetProductSpecification() throws Exception {
+		ProductSpecification postProductSpecification =
+			testGetProductSpecification_addProductSpecification();
+
+		ProductSpecification getProductSpecification =
+			productSpecificationResource.getProductSpecification(
+				postProductSpecification.getId());
+
+		assertEquals(postProductSpecification, getProductSpecification);
+		assertValid(getProductSpecification);
+	}
+
+	protected ProductSpecification
+			testGetProductSpecification_addProductSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProductSpecification() throws Exception {
+		ProductSpecification productSpecification =
+			testGraphQLGetProductSpecification_addProductSpecification();
+
+		Assert.assertTrue(
+			equals(
+				productSpecification,
+				ProductSpecificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"productSpecification",
+								new HashMap<String, Object>() {
+									{
+										put("id", productSpecification.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/productSpecification"))));
+	}
+
+	@Test
+	public void testGraphQLGetProductSpecificationNotFound() throws Exception {
+		Long irrelevantId = RandomTestUtil.randomLong();
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"productSpecification",
+						new HashMap<String, Object>() {
+							{
+								put("id", irrelevantId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ProductSpecification
+			testGraphQLGetProductSpecification_addProductSpecification()
+		throws Exception {
+
+		return testGraphQLProductSpecification_addProductSpecification();
+	}
+
+	@Test
+	public void testPatchProductSpecification() throws Exception {
+		ProductSpecification postProductSpecification =
+			testPatchProductSpecification_addProductSpecification();
+
+		ProductSpecification randomPatchProductSpecification =
+			randomPatchProductSpecification();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ProductSpecification patchProductSpecification =
+			productSpecificationResource.patchProductSpecification(
+				postProductSpecification.getId(),
+				randomPatchProductSpecification);
+
+		ProductSpecification expectedPatchProductSpecification =
+			postProductSpecification.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchProductSpecification, expectedPatchProductSpecification);
+
+		ProductSpecification getProductSpecification =
+			productSpecificationResource.getProductSpecification(
+				patchProductSpecification.getId());
+
+		assertEquals(
+			expectedPatchProductSpecification, getProductSpecification);
+		assertValid(getProductSpecification);
+	}
+
+	protected ProductSpecification
+			testPatchProductSpecification_addProductSpecification()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetProductIdProductSpecificationsPage() throws Exception {
 		Long id = testGetProductIdProductSpecificationsPage_getId();
 		Long irrelevantId =
@@ -222,7 +398,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantProductSpecification),
 				(List<ProductSpecification>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetProductIdProductSpecificationsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		ProductSpecification productSpecification1 =
@@ -242,7 +421,25 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(productSpecification1, productSpecification2),
 			(List<ProductSpecification>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetProductIdProductSpecificationsPage_getExpectedActions(id));
+
+		productSpecificationResource.deleteProductSpecification(
+			productSpecification1.getId());
+
+		productSpecificationResource.deleteProductSpecification(
+			productSpecification2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetProductIdProductSpecificationsPage_getExpectedActions(
+				Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -509,6 +706,13 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	}
 
 	protected void assertValid(Page<ProductSpecification> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<ProductSpecification> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<ProductSpecification> productSpecifications =
@@ -524,6 +728,20 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -720,14 +938,16 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -744,6 +964,10 @@ public abstract class BaseProductSpecificationResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -753,18 +977,18 @@ public abstract class BaseProductSpecificationResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

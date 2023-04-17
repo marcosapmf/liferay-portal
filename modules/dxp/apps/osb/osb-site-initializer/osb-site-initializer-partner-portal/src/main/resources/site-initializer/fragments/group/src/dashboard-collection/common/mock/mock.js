@@ -9,19 +9,17 @@
  * distribution rights of the Software.
  */
 
-export const level = {
-	progressNewMoc: Object.entries({
-		achieved: {qtd: 350, total: 'USD $80.000,29'},
-		remaining: {qtd: 100, total: 'USD $5.500,00'},
-	}),
-	progressTotalMoc: Object.entries({
-		achieved: {qtd: 350, total: 'USD $6.500,50'},
-		supplemental: {qtd: 100, total: 'USD $5.500,00'},
-	}),
-	totalLevel: {
-		business: 600,
-		newBusiness: 450,
+export const partnerLevelData = {
+	arr: {
+		arr: 100000,
+		npOrNb: 2,
 	},
+	certification: 'Solution Delivery Certification',
+	headcount: {
+		marketing: 1,
+		sales: 2,
+	},
+	marketing: 'Plan & Performance',
 };
 
 export const mdf = {

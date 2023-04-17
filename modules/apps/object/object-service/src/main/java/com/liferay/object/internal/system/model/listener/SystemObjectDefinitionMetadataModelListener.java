@@ -86,7 +86,8 @@ public class SystemObjectDefinitionMetadataModelListener<T extends BaseModel<T>>
 	@Override
 	public void onAfterRemove(T baseModel) throws ModelListenerException {
 		_executeObjectActions(
-			ObjectActionTriggerConstants.KEY_ON_AFTER_DELETE, null, baseModel);
+			ObjectActionTriggerConstants.KEY_ON_AFTER_DELETE, baseModel,
+			baseModel);
 	}
 
 	@Override
@@ -113,6 +114,16 @@ public class SystemObjectDefinitionMetadataModelListener<T extends BaseModel<T>>
 			if (objectDefinition == null) {
 				return;
 			}
+
+			EntityExtensionThreadLocal.setExtendedProperties(
+				HashMapBuilder.putAll(
+					_objectEntryLocalService.
+						getExtensionDynamicObjectDefinitionTableValues(
+							objectDefinition,
+							GetterUtil.getLong(baseModel.getPrimaryKeyObj()))
+				).putAll(
+					EntityExtensionThreadLocal.getExtendedProperties()
+				).build());
 
 			_objectEntryLocalService.
 				deleteExtensionDynamicObjectDefinitionTableValues(

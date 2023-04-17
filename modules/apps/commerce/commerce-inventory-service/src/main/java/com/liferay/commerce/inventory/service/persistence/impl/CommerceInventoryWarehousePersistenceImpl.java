@@ -6731,7 +6731,8 @@ public class CommerceInventoryWarehousePersistenceImpl
 					throw new DuplicateCommerceInventoryWarehouseExternalReferenceCodeException(
 						"Duplicate commerce inventory warehouse with external reference code " +
 							commerceInventoryWarehouse.
-								getExternalReferenceCode());
+								getExternalReferenceCode() + " and company " +
+									commerceInventoryWarehouse.getCompanyId());
 				}
 			}
 			else {
@@ -6744,7 +6745,8 @@ public class CommerceInventoryWarehousePersistenceImpl
 					throw new DuplicateCommerceInventoryWarehouseExternalReferenceCodeException(
 						"Duplicate commerce inventory warehouse with external reference code " +
 							commerceInventoryWarehouse.
-								getExternalReferenceCode());
+								getExternalReferenceCode() + " and company " +
+									commerceInventoryWarehouse.getCompanyId());
 				}
 			}
 		}

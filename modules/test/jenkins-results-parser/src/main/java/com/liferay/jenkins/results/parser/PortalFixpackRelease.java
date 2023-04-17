@@ -35,7 +35,7 @@ public class PortalFixpackRelease {
 		_portalRelease = portalRelease;
 
 		try {
-			String portalVersion = _portalRelease.getPortalVersion();
+			String portalVersion = portalRelease.getPortalVersion();
 			String portalFixpackType = "dxp";
 
 			if (portalVersion.contains("7.0")) {
@@ -150,9 +150,8 @@ public class PortalFixpackRelease {
 			else if (portalFixpackVersion.equals("3")) {
 				return "7.3.10.3";
 			}
-			else {
-				return "7.3.10.u" + portalFixpackVersion;
-			}
+
+			return "7.3.10.u" + portalFixpackVersion;
 		}
 
 		String basePortalVersionRegex = "(\\d)(\\d)(\\d\\d)";

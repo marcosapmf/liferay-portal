@@ -18,13 +18,13 @@ import {useOutletContext} from 'react-router-dom';
 import Button from '../../../components/Button';
 import Container from '../../../components/Layout/Container';
 import ListView from '../../../components/ListView';
+import SearchBuilder from '../../../core/SearchBuilder';
 import i18n from '../../../i18n';
 import {
 	TestrayCase,
 	TestrayRequirementCase,
 	testrayCaseRequirementsImpl,
 } from '../../../services/rest';
-import {searchUtil} from '../../../util/search';
 import CaseRequirementLinkModal from './CaseRequirementLinkModal';
 import useCaseRequirementActions from './useCaseRequirementActions';
 
@@ -51,6 +51,7 @@ const CaseRequirement = () => {
 							{i18n.translate('link-requirements')}
 						</Button>
 					),
+					filterSchema: 'caseRequirements',
 					title: i18n.translate('requirements'),
 				}}
 				resource={testrayCaseRequirementsImpl.resource}
@@ -136,7 +137,7 @@ const CaseRequirement = () => {
 					testrayCaseRequirementsImpl.transformDataFromList(response)
 				}
 				variables={{
-					filter: searchUtil.eq('caseId', testrayCase.id),
+					filter: SearchBuilder.eq('caseId', testrayCase.id),
 				}}
 			>
 				{(response) => {

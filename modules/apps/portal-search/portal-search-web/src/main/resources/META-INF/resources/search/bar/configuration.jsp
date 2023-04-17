@@ -26,13 +26,15 @@ taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/template" prefix="liferay-template" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.petra.string.StringBundler" %><%@
+<%@ page import="com.liferay.learn.LearnMessageUtil" %><%@
+page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.petra.string.StringUtil" %><%@
 page import="com.liferay.portal.kernel.util.Constants" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.ReleaseInfo" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
+page import="com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortlet" %><%@
 page import="com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortletPreferences" %><%@
 page import="com.liferay.portal.search.web.internal.search.bar.portlet.SearchBarPortletPreferencesImpl" %><%@
 page import="com.liferay.portal.search.web.internal.search.bar.portlet.configuration.SearchBarPortletInstanceConfiguration" %><%@
@@ -69,7 +71,7 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 			label="display-settings"
 		>
 			<liferay-template:template-selector
-				className="<%= SearchBarPortletDisplayContext.class.getName() %>"
+				className="<%= SearchBarPortlet.class.getName() %>"
 				displayStyle="<%= searchBarPortletInstanceConfiguration.displayStyle() %>"
 				displayStyleGroupId="<%= searchBarPortletDisplayContext.getDisplayStyleGroupId() %>"
 				refreshURL="<%= configurationRenderURL %>"
@@ -94,7 +96,7 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 
 			<aui:input disabled="<%= searchBarPortletDisplayContext.isDisplayWarningIgnoredConfiguration() %>" label="scope-parameter-name" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SCOPE_PARAMETER_NAME) %>" value="<%= searchBarPortletPreferences.getScopeParameterName() %>" />
 
-			<aui:input helpMessage="destination-page-help" label="destination-page" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_DESTINATION) %>" value="<%= searchBarPortletPreferences.getDestinationString() %>" />
+			<aui:input helpMessage="destination-page-help" label="destination-page" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_DESTINATION) %>" value="<%= searchBarPortletPreferences.getDestination() %>" />
 		</liferay-frontend:fieldset>
 
 		<c:if test="<%= searchBarPortletDisplayContext.isSuggestionsEndpointEnabled() %>">
@@ -122,7 +124,7 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 						<span aria-hidden="true" class="loading-animation loading-animation-sm mt-4"></span>
 
 						<react:component
-							module="js/components/SearchBarConfigurationSuggestions"
+							module="js/components/search_bar_configuration_suggestions/index"
 							props='<%=
 								HashMapBuilder.<String, Object>put(
 									"initialSuggestionsContributorConfiguration", suggestionsContributorConfiguration
@@ -130,6 +132,8 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 									"isDXP", ReleaseInfo.isDXP()
 								).put(
 									"isSearchExperiencesSupported", searchBarPortletDisplayContext.isSearchExperiencesSupported()
+								).put(
+									"learnMessages", LearnMessageUtil.getJSONObject("portal-search-web")
 								).put(
 									"namespace", liferayPortletResponse.getNamespace()
 								).put(
@@ -150,7 +154,7 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 
 			<aui:input disabled="<%= searchBarPortletDisplayContext.isDisplayWarningIgnoredConfiguration() %>" helpMessage="show-results-from-staged-sites-help" label="show-results-from-staged-sites" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SHOW_STAGED_RESULTS) %>" type="checkbox" value="<%= searchBarPortletPreferences.isShowStagedResults() %>" />
 
-			<aui:input helpMessage="enter-the-key-of-an-alternate-search-this-widget-is-participating-on-if-not-set-widget-participates-on-default-search" label="federated-search-key" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY) %>" type="text" value="<%= searchBarPortletPreferences.getFederatedSearchKeyString() %>" />
+			<aui:input helpMessage="enter-the-key-of-an-alternate-search-this-widget-is-participating-on-if-not-set-widget-participates-on-default-search" label="federated-search-key" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY) %>" type="text" value="<%= searchBarPortletPreferences.getFederatedSearchKey() %>" />
 		</liferay-frontend:fieldset>
 	</liferay-frontend:edit-form-body>
 

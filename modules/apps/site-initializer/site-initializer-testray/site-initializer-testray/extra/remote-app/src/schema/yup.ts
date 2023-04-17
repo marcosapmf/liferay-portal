@@ -64,9 +64,9 @@ const passwordRequiredStructure = {
 };
 
 const buildStructure = {
-	active: yup.boolean(),
 	caseIds: yup.array().of(yup.number()),
 	description: yup.string(),
+	dueStatus: yup.string(),
 	factorStacks: yup.mixed(),
 	gitHash: yup.string(),
 	id: yup.string(),
@@ -157,7 +157,6 @@ const yupSchema = {
 		number: yup.number(),
 	}),
 	issue: yup.object({
-		id: yup.string().nullable(),
 		name: yup.string(),
 	}),
 	option: yup.object({

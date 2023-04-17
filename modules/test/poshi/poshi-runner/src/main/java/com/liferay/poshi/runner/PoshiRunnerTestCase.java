@@ -17,15 +17,13 @@ package com.liferay.poshi.runner;
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.PoshiValidation;
 import com.liferay.poshi.core.util.PropsUtil;
-import com.liferay.poshi.runner.selenium.SeleniumUtil;
+import com.liferay.poshi.runner.selenium.WebDriverUtil;
 
 import java.io.File;
 
 import java.util.Properties;
 
 import junit.framework.TestCase;
-
-import org.junit.After;
 
 /**
  * @author Kenji Heigel
@@ -38,6 +36,8 @@ public abstract class PoshiRunnerTestCase extends TestCase {
 		poshiRunner.setUp();
 
 		poshiRunner.test();
+
+		WebDriverUtil.stopWebDriver(testName);
 	}
 
 	public void setUpPoshiRunner(String testBaseDirName) throws Exception {
@@ -59,12 +59,6 @@ public abstract class PoshiRunnerTestCase extends TestCase {
 		PoshiContext.readFiles();
 
 		PoshiValidation.validate();
-	}
-
-	@After
-	@Override
-	public void tearDown() {
-		SeleniumUtil.stopSelenium();
 	}
 
 }

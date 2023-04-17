@@ -1,6 +1,7 @@
 @component-name = "portal-staging"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Staging";
@@ -22,7 +23,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -30,7 +31,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ActivateStagingForSiteWithTheme {
 		property test.name.skip.portal.instance = "StagingUsecase#ActivateStagingForSiteWithTheme";
 
@@ -67,8 +68,10 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-98170"
-	@priority = "4"
+	@priority = 4
 	test AssertAssetPriorityNotBeResetAfterPublication {
+		property test.name.skip.portal.instance = "StagingUsecase#AssertAssetPriorityNotBeResetAfterPublication";
+
 		task ("Given: User add a page and an AP portlet to the default page") {
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name (Staging)",
@@ -76,7 +79,7 @@ definition {
 				site = "false");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -96,7 +99,7 @@ definition {
 
 		task ("And: Add an AP portlet to the second page and a priority metadata field to it") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Second Test Page",
 				site = "false",
@@ -195,7 +198,7 @@ definition {
 
 		task ("And: Add the WC to the first page of the staging site and publish it") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -243,7 +246,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-128736."
-	@priority = "4"
+	@priority = 4
 	test AssertContentNotBePublishedByDefault {
 		property test.name.skip.portal.instance = "StagingUsecase#AssertContentNotBePublishedByDefault";
 
@@ -263,7 +266,7 @@ definition {
 				title = "WC WebContent Title");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -288,11 +291,13 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-71786"
-	@priority = "3"
+	@priority = 3
 	test AssertDeletedAssetLinkRemovedFromLiveSite {
+		property test.name.skip.portal.instance = "StagingUsecase#AssertDeletedAssetLinkRemovedFromLiveSite";
+
 		task ("Given: User add a Blog portlet to the Staging site and 2 documents") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -351,7 +356,7 @@ definition {
 
 		for (var assetTitle : list "DM Document Title 1,DM Document Title 2") {
 			BlogsEntry.viewRelatedAssetPG(
-				assetTitle = "${assetTitle}",
+				assetTitle = ${assetTitle},
 				assetType = "Basic Document",
 				entryTitle = "Blogs Entry Title");
 		}
@@ -397,7 +402,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-123156."
-	@priority = "3"
+	@priority = 3
 	test AssertPublishTemplateInfo {
 		task ("Given: User add a new publish template") {
 			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
@@ -423,14 +428,14 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-123156."
-	@priority = "3"
+	@priority = 3
 	test AssertScheduledPublicationInfo {
 		task ("Given: There is no scheduled publish processes by default") {
 			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
 
 			Staging.gotoNavTab(tabName = "Scheduled");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No scheduled publish processes were found.");
 		}
@@ -451,7 +456,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-123156"
-	@priority = "4"
+	@priority = 4
 	test AssertStagingPublicationAndProcessesMessage {
 		task ("Given: The initial publish process is deleted") {
 			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
@@ -460,7 +465,7 @@ definition {
 
 			Staging.deletePublishTask(publicationTitle = "Initial Publish Process");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No publish processes were found.");
 		}
@@ -489,7 +494,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-95516."
-	@priority = "3"
+	@priority = 3
 	test AssertWebContentNotBeDeletedOnLiveViaSAP {
 		task ("Given: User add a WC then publish only that on staging") {
 			JSONWebcontent.addWebContent(
@@ -545,7 +550,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ContentCannotBeCreatedOnLive {
 		property portal.acceptance = "true";
 
@@ -586,7 +591,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test DeleteLivePage {
 		task ("Given: User add a new page to the staging site and publish it") {
 			property portal.acceptance = "true";
@@ -624,7 +629,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test EditPublishTemplate {
 		property test.name.skip.portal.instance = "StagingUsecase#EditPublishTemplate";
 
@@ -635,7 +640,7 @@ definition {
 				site = "false");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Page Name 2",
 				site = "false",
@@ -771,11 +776,11 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ImportLARsOnStagedSite {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "StagingUsecase#ImportLARsOnStagedSite";
-		property testray.component.names = "Site Pages Administration,Training,Web Content Administration";
+		property testray.component.names = "Page Administration,Training,Web Content Administration";
 
 		task ("Given: User import home page from LAR file on staging site") {
 			LAR.importSiteCP(
@@ -801,17 +806,17 @@ definition {
 				siteName = "Site Name");
 
 			AssertTextEquals(
-				index = "1",
+				index = 1,
 				locator1 = "WCD#WEB_CONTENT_CONTENT",
 				value1 = "Faculty Meet-and-Greet Brunch Events All faculty are invited to a Meet-and-Greet Brunch at Allen Café 11:00 A.M. Saturday, June 13. This brunch is intended to introduce new faculty members and promote inter-departmental unity. Brunch will be catered by the Provincetown chapter of the NECI.");
 
 			AssertTextEquals(
-				index = "2",
+				index = 2,
 				locator1 = "WCD#WEB_CONTENT_CONTENT",
 				value1 = "New Faculty and Staff Orientation Events Attention all new faculty and staff: Orientation will be held Monday, June 8 at 8:00 A.M. New faculty should meet in Rm. 221 and new staff should meet in Rm. 139 of Adams Hall. A full schedule of orientation will be emailed to you in the coming weeks.");
 
 			AssertTextEquals(
-				index = "3",
+				index = 3,
 				locator1 = "WCD#WEB_CONTENT_CONTENT",
 				value1 = "Vaccinations and Physical Check-Ups Health Any members of faculty or staff planning to leave Earth are required to have up-to-date vaccinations. Please check with the Health Center on your status. In addition, each and every Earth departure requires a physical check-up. The Health Center is happy to give both vaccinations and physical check-ups free of charge.");
 
@@ -820,7 +825,7 @@ definition {
 			for (var webContentTitle : list "Meet and Greet,Orientation,Physicals") {
 				WebContent.viewTitle(
 					onLive = "true",
-					webContentTitle = "${webContentTitle}");
+					webContentTitle = ${webContentTitle});
 			}
 		}
 
@@ -876,13 +881,13 @@ definition {
 			for (var webContentTitle : list "Meet and Greet,Orientation,Physicals") {
 				WebContent.viewTitle(
 					onLive = "true",
-					webContentTitle = "${webContentTitle}");
+					webContentTitle = ${webContentTitle});
 			}
 		}
 	}
 
 	@description = "This is a use case for LPS-167777 TC-2: Verify that the modified referred content(DM content) will present in the LAR when 'Include if modified' is enabled for Web Content."
-	@priority = "4"
+	@priority = 4
 	test ModifiedReferredContentCanPublishToLiveWhenEnableIncludeIfModifiedOption {
 		property test.name.skip.portal.instance = "StagingUsecase#ModifiedReferredContentCanPublishToLiveWhenEnableIncludeIfModifiedOption";
 
@@ -953,7 +958,7 @@ definition {
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test ModifyInitalPageVariationSetup {
 		task ("When: User open staging site") {
 			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
@@ -964,7 +969,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test MoveToTheRecycleBinAndRestorePublishTemplate {
 		task ("Given: User add a new publish template") {
 			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
@@ -1009,7 +1014,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-167777 TC-1: Verify that the non-modified referred content(DM content) will not present in the LAR when 'Include if modified' is enabled for Web Content."
-	@priority = "4"
+	@priority = 4
 	test NonModifiedReferredContentCannotPublishToLiveWhenEnableIncludeIfModifiedOption {
 		property test.name.skip.portal.instance = "StagingUsecase#NonModifiedReferredContentCannotPublishToLiveWhenEnableIncludeIfModifiedOption";
 
@@ -1074,7 +1079,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-128305."
-	@priority = "3"
+	@priority = 3
 	test PublishContentPageWithDLReference {
 		task ("Given: User add a new Document file") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1118,7 +1123,7 @@ definition {
 				text = "DL Image");
 
 			PageEditor.addEntryWithLink(
-				entryExternalURL = "${dmDocumentURL}",
+				entryExternalURL = ${dmDocumentURL},
 				fragmentName = "Paragraph",
 				id = "element-text");
 
@@ -1160,7 +1165,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test PublishPortlet {
 		property portal.acceptance = "true";
 		property testray.component.names = "Training";
@@ -1182,7 +1187,7 @@ definition {
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test PublishSiteTeams {
 		task ("When: User add a new team portlet on the staging site") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name-staging");
@@ -1205,7 +1210,7 @@ definition {
 		}
 	}
 
-	@priority = "5"
+	@priority = 5
 	test PublishThemeFromStagedToLive {
 		property test.name.skip.portal.instance = "StagingUsecase#PublishThemeFromStagedToLive";
 
@@ -1252,7 +1257,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-127207."
-	@priority = "4"
+	@priority = 4
 	test PublishWebContentFolderWithChildFolders {
 		task ("When: User add a new folder with 3 subfolder") {
 			JSONWebcontent.addFolder(
@@ -1284,8 +1289,10 @@ definition {
 		}
 	}
 
-	@priority = "3"
+	@priority = 3
 	test PublishWebContentFriendlyURLEncoding {
+		property test.name.skip.portal.instance = "StagingUsecase#PublishWebContentFriendlyURLEncoding";
+
 		task ("Given: User add 2 WC with friendly URL") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
 
@@ -1324,7 +1331,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-149374. TC-3: Verify the state of portlets and contents in Live when publishing with Publish Displayed Content by Default and Replicate Individual Deletions."
-	@priority = "5"
+	@priority = 5
 	test PublishWithDefaultTrueAndReplicateIndividualDeletions {
 		property test.name.skip.portal.instance = "StagingUsecase#PublishWithDefaultTrueAndReplicateIndividualDeletions";
 
@@ -1358,7 +1365,7 @@ definition {
 
 			Form.editName(formName = "Form Name");
 
-			Form.addTextField(fieldPositionNumber = "0");
+			Form.addTextField(fieldPositionNumber = 0);
 
 			Form.editFieldLabelMetal(fieldValue = "Text Field");
 
@@ -1542,7 +1549,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-84418 and LPS-117578."
-	@priority = "5"
+	@priority = 5
 	test PublishWithImpossibleDateRange {
 		property portal.acceptance = "true";
 
@@ -1558,11 +1565,11 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test RemoveTagsFromPublishBlogAndDM {
 		task ("Given: User add a Blog portlet to the staging site with an entry") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -1578,7 +1585,7 @@ definition {
 
 		task ("And: Add DM portlet to the staging site with a document attached") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -1666,7 +1673,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SearchPublishTemplate {
 		task ("When: User add two publish templates on the staging site") {
 			Staging.openStagingAdmin(siteURLKey = "site-name-staging");
@@ -1702,11 +1709,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-82028."
-	@priority = "4"
+	@priority = 4
 	test SingleAssetPublishLayoutScopedContent {
 		task ("Given: User add a Blog portlet to the staging site") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -1750,7 +1757,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-92578. It ensures that DM succeeds to publish to live when file exists in the recycle bin."
-	@priority = "4"
+	@priority = 4
 	test SinglePublicationAfterDeleteDocument {
 		task ("Given: User add a new file on the staging site") {
 			JSONDocument.addFileWithUploadedFile(
@@ -1790,7 +1797,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-82689."
-	@priority = "3"
+	@priority = 3
 	test StagingPublishAssetPublisherConfiguredTagsFilter {
 		task ("Given: User add a new Tag and an AP widget to the staging site") {
 			Tag.openTagsAdmin(siteURLKey = "site-name-staging");
@@ -1798,7 +1805,7 @@ definition {
 			Tag.addCP(tagName = "tag1");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -1880,7 +1887,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test StagingPublishChildSiteWithReference {
 		task ("Given: User add a new WC to staging then publish the site") {
 			JSONWebcontent.addWebContent(
@@ -1940,13 +1947,13 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test StagingPublishOnlySelectedPage {
 		task ("Given: User add 3 pages to the staging site") {
 			for (var layoutName : list "Page 1,Page 2,Page 3") {
 				JSONLayout.addPublicLayout(
 					groupName = "Site Name (Staging)",
-					layoutName = "${layoutName}",
+					layoutName = ${layoutName},
 					site = "false");
 			}
 		}
@@ -1975,11 +1982,13 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-91017, LPS-89646."
-	@priority = "4"
+	@priority = 4
 	test StagingPublishWCWithWebContentFieldViaAP {
+		property test.name.skip.portal.instance = "StagingUsecase#StagingPublishWCWithWebContentFieldViaAP";
+
 		task ("Given: User add a new AP widget and a WC to the staging site") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2068,11 +2077,11 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test StagingWithPublishTemplateSmoke {
 		task ("Given: User add a new Web Content and WC Display widget to the staging site") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2127,7 +2136,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-98473."
-	@priority = "3"
+	@priority = 3
 	test SubscribeWebContentWithStaging {
 		task ("Given: User add a new site and a new role") {
 			JSONGroup.addGroup(groupName = "Test Site");
@@ -2138,7 +2147,7 @@ definition {
 
 			for (var resourceActionIndex : list "VIEW,SUBSCRIBE") {
 				Permissions.definePermissionViaJSONAPI(
-					resourceAction = "${resourceActionIndex}",
+					resourceAction = ${resourceActionIndex},
 					resourceName = "com.liferay.journal",
 					roleTitle = "Web Content Subscriber Role");
 			}
@@ -2194,7 +2203,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-123156"
-	@priority = "5"
+	@priority = 5
 	test TrashEntryReferencePublishing {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "StagingUsecase#TrashEntryReferencePublishing";
@@ -2220,7 +2229,7 @@ definition {
 				webContentTitle = "Web Content Title");
 
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2237,7 +2246,7 @@ definition {
 
 		task ("And: Add Document and Media widget to the page then publish only this from staging") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2304,11 +2313,13 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test ViewPublishDMWithModifiedTitle {
+		property test.name.skip.portal.instance = "StagingUsecase#ViewPublishDMWithModifiedTitle";
+
 		task ("Given: User add a new AP widget to the staging site") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2359,9 +2370,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-96721."
-	@priority = "4"
+	@priority = 4
 	test ViewPublishedContentWithSpecialCharsInDocumentTitle {
-		property test.name.skip.portal.instance = "Staging#ViewPublishedContentWithSpecialCharsInDocumentTitle";
+		property test.name.skip.portal.instance = "StagingUsecase#ViewPublishedContentWithSpecialCharsInDocumentTitle";
 
 		task ("Given: User add a new file") {
 			JSONDocument.addFileWithUploadedFile(
@@ -2423,7 +2434,7 @@ definition {
 
 		task ("When: User add a new WC display widget to the staging site and select the new WC to be shown there") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2453,9 +2464,9 @@ definition {
 
 			var downloadURL = selenium.getAttribute("//div[contains(@class,'journal-content-article')]/a@href");
 
-			var stagingGroupId = StringUtil.extractLast("${downloadURL}", "documents/");
+			var stagingGroupId = StringUtil.extractLast(${downloadURL}, "documents/");
 
-			var stagingGroupId = StringUtil.extractFirst("${stagingGroupId}", "/");
+			var stagingGroupId = StringUtil.extractFirst(${stagingGroupId}, "/");
 
 			echo("## * Staging GroupId: ${stagingGroupId}");
 
@@ -2465,20 +2476,20 @@ definition {
 
 			var downloadURL = selenium.getAttribute("//div[contains(@class,'journal-content-article')]/a@href");
 
-			var liveGroupId = StringUtil.extractLast("${downloadURL}", "documents/");
+			var liveGroupId = StringUtil.extractLast(${downloadURL}, "documents/");
 
-			var liveGroupId = StringUtil.extractFirst("${liveGroupId}", "/");
+			var liveGroupId = StringUtil.extractFirst(${liveGroupId}, "/");
 
 			echo("## * Live GroupId: ${liveGroupId}");
 
-			if ("${liveGroupId}" == "${stagingGroupId}") {
+			if (${liveGroupId} == ${stagingGroupId}) {
 				fail("The groupID should be different in live site.");
 			}
 		}
 	}
 
 	@description = "This is a use case for LPS-87280."
-	@priority = "4"
+	@priority = 4
 	test ViewPublishedWCWithApostropheInImageField {
 		property name.skip.portal.instance = "StagingUsecase#ViewPublishedWCWithApostropheInImageField";
 
@@ -2530,7 +2541,7 @@ definition {
 
 		task ("When: User add a WC widget with the previously created WC to the staging site") {
 			JSONLayout.addWidgetToPublicLayout(
-				column = "1",
+				column = 1,
 				groupName = "Site Name (Staging)",
 				layoutName = "Staging Test Page",
 				site = "false",
@@ -2569,7 +2580,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-96664."
-	@priority = "3"
+	@priority = 3
 	test ViewPublishTemplateDateRange {
 		property name.skip.portal.instance = "StagingUsecase#ViewPublishTemplateDateRange";
 
@@ -2609,7 +2620,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-76633."
-	@priority = "5"
+	@priority = 5
 	test ViewSingleAssetPublication {
 		property test.name.skip.portal.instance = "Staging#ViewSingleAssetPublication";
 

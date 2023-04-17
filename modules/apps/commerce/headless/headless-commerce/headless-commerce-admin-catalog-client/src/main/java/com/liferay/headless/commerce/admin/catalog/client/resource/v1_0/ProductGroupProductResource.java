@@ -47,11 +47,11 @@ public interface ProductGroupProductResource {
 		throws Exception;
 
 	public void deleteProductGroupProductBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteProductGroupProductBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Page<ProductGroupProduct>
@@ -95,12 +95,12 @@ public interface ProductGroupProductResource {
 		throws Exception;
 
 	public void postProductGroupIdProductGroupProductBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postProductGroupIdProductGroupProductBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -112,6 +112,10 @@ public interface ProductGroupProductResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public ProductGroupProductResource build() {
 			return new ProductGroupProductResourceImpl(this);
 		}
@@ -120,6 +124,28 @@ public interface ProductGroupProductResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -262,12 +288,11 @@ public interface ProductGroupProductResource {
 		}
 
 		public void deleteProductGroupProductBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteProductGroupProductBatchHttpResponse(
-					id, callbackURL, object);
+				deleteProductGroupProductBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -297,7 +322,7 @@ public interface ProductGroupProductResource {
 
 		public HttpInvoker.HttpResponse
 				deleteProductGroupProductBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -332,8 +357,6 @@ public interface ProductGroupProductResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/product-group-products/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -703,12 +726,12 @@ public interface ProductGroupProductResource {
 		}
 
 		public void postProductGroupIdProductGroupProductBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postProductGroupIdProductGroupProductBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -738,7 +761,7 @@ public interface ProductGroupProductResource {
 
 		public HttpInvoker.HttpResponse
 				postProductGroupIdProductGroupProductBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -773,8 +796,6 @@ public interface ProductGroupProductResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/product-groups/product-group-products/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

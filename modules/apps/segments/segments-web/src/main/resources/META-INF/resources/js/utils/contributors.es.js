@@ -12,7 +12,7 @@
  * details.
  */
 
-import {CONJUNCTIONS, SUPPORTED_CONJUNCTIONS} from './constants.es';
+import {CONJUNCTIONS, SUPPORTED_CONJUNCTIONS} from './constants';
 import {buildQueryString} from './odata.es';
 
 /**

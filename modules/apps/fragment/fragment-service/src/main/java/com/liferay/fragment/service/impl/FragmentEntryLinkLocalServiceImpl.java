@@ -225,6 +225,32 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
+	public void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId) {
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			fragmentEntryLinkPersistence.findByFragmentEntryId(fragmentEntryId);
+
+		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			fragmentEntryLinkLocalService.deleteFragmentEntryLink(
+				fragmentEntryLink);
+		}
+	}
+
+	@Override
+	public void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			fragmentEntryLinkPersistence.findByF_D(fragmentEntryId, deleted);
+
+		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
+			fragmentEntryLinkLocalService.deleteFragmentEntryLink(
+				fragmentEntryLink);
+		}
+	}
+
+	@Override
 	public List<FragmentEntryLink>
 		deleteLayoutPageTemplateEntryFragmentEntryLinks(
 			long groupId, long plid) {
@@ -356,6 +382,20 @@ public class FragmentEntryLinkLocalServiceImpl
 	}
 
 	@Override
+	public List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String rendererKey) {
+
+		return fragmentEntryLinkPersistence.findByC_R(companyId, rendererKey);
+	}
+
+	@Override
+	public List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String[] rendererKeys) {
+
+		return fragmentEntryLinkPersistence.findByC_R(companyId, rendererKeys);
+	}
+
+	@Override
 	public List<FragmentEntryLink> getFragmentEntryLinks(String rendererKey) {
 		return fragmentEntryLinkPersistence.findByRendererKey(rendererKey);
 	}
@@ -366,6 +406,13 @@ public class FragmentEntryLinkLocalServiceImpl
 
 		return fragmentEntryLinkPersistence.findByFragmentEntryId(
 			fragmentEntryId);
+	}
+
+	@Override
+	public List<FragmentEntryLink> getFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		return fragmentEntryLinkPersistence.findByF_D(fragmentEntryId, deleted);
 	}
 
 	@Override
@@ -406,6 +453,14 @@ public class FragmentEntryLinkLocalServiceImpl
 
 		return fragmentEntryLinkPersistence.countByFragmentEntryId(
 			fragmentEntryId);
+	}
+
+	@Override
+	public int getFragmentEntryLinksCountByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		return fragmentEntryLinkPersistence.countByF_D(
+			fragmentEntryId, deleted);
 	}
 
 	@Override

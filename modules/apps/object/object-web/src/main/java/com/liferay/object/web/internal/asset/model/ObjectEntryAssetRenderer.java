@@ -14,18 +14,22 @@
 
 package com.liferay.object.web.internal.asset.model;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.BaseJSPAssetRenderer;
+import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectEntryService;
-import com.liferay.object.web.internal.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.object.entries.display.context.ObjectEntryDisplayContextFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Locale;
@@ -43,11 +47,15 @@ public class ObjectEntryAssetRenderer
 	extends BaseJSPAssetRenderer<ObjectEntry> {
 
 	public ObjectEntryAssetRenderer(
+			AssetDisplayPageFriendlyURLProvider
+				assetDisplayPageFriendlyURLProvider,
 			ObjectDefinition objectDefinition, ObjectEntry objectEntry,
 			ObjectEntryDisplayContextFactory objectEntryDisplayContextFactory,
 			ObjectEntryService objectEntryService)
 		throws PortalException {
 
+		_assetDisplayPageFriendlyURLProvider =
+			assetDisplayPageFriendlyURLProvider;
 		_objectDefinition = objectDefinition;
 		_objectEntry = objectEntry;
 		_objectEntryDisplayContextFactory = objectEntryDisplayContextFactory;
@@ -109,6 +117,25 @@ public class ObjectEntryAssetRenderer
 	}
 
 	@Override
+	public String getURLViewInContext(
+			LiferayPortletRequest liferayPortletRequest,
+			LiferayPortletResponse liferayPortletResponse,
+			String noSuchEntryRedirect)
+		throws Exception {
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)liferayPortletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (themeDisplay != null) {
+			return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+				getClassName(), getClassPK(), themeDisplay);
+		}
+
+		return null;
+	}
+
+	@Override
 	public long getUserId() {
 		return _objectEntry.getUserId();
 	}
@@ -147,13 +174,15 @@ public class ObjectEntryAssetRenderer
 		throws Exception {
 
 		httpServletRequest.setAttribute(
-			ObjectWebKeys.EXTERNAL_REFERENCE_CODE,
-			_objectEntry.getExternalReferenceCode());
-		httpServletRequest.setAttribute(
 			ObjectWebKeys.OBJECT_DEFINITION, _objectDefinition);
 		httpServletRequest.setAttribute(
+			ObjectWebKeys.OBJECT_ENTRY_EXTERNAL_REFERENCE_CODE,
+			_objectEntry.getExternalReferenceCode());
+		httpServletRequest.setAttribute(
+			ObjectWebKeys.OBJECT_ENTRY_READ_ONLY, Boolean.TRUE);
+		httpServletRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
-			_objectEntryDisplayContextFactory.create(httpServletRequest, true));
+			_objectEntryDisplayContextFactory.create(httpServletRequest));
 
 		return super.include(httpServletRequest, httpServletResponse, template);
 	}
@@ -166,6 +195,8 @@ public class ObjectEntryAssetRenderer
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryAssetRenderer.class);
 
+	private final AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntry _objectEntry;
 	private final ObjectEntryDisplayContextFactory

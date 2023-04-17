@@ -67,8 +67,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -139,6 +137,8 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 		WorkbookBuilder workbookBuilder) {
 
 		workbookBuilder.cell(
+			String.valueOf(contentDashboardItem.getId())
+		).cell(
 			contentDashboardItem.getTitle(locale)
 		).cell(
 			contentDashboardItem.getUserName()
@@ -199,20 +199,16 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			_toString(contentDashboardItem.getCreateDate())
 		);
 
-		List<Locale> locales = contentDashboardItem.getAvailableLocales();
-
-		Stream<Locale> stream = locales.stream();
-
 		workbookBuilder.cell(
-			stream.map(
-				LocaleUtil::toLanguageId
-			).collect(
-				Collectors.joining(StringPool.COMMA)
-			));
+			StringUtil.merge(
+				contentDashboardItem.getAvailableLocales(),
+				LocaleUtil::toLanguageId, StringPool.COMMA));
 	}
 
 	private void _addWorkbookHeaders(WorkbookBuilder workbookBuilder) {
 		workbookBuilder.localizedCell(
+			"id"
+		).localizedCell(
 			"title"
 		).localizedCell(
 			"author"

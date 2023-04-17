@@ -669,6 +669,10 @@
 			<category name="Bug Prevention" />
 			<description name="Checks that hardcoded SQL values in `*FinderImpl` classes match the SQL in the `.xml` file in the `custom-sql` directory." />
 		</check>
+		<check name="JavaGetFeatureFlagCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that `FeatureFlagManagerUtil.isEnabled` should be used (instead of `PropsUtil.get` in `GetterUtil.getBoolean`)." />
+		</check>
 		<check name="JavaHelperUtilCheck">
 			<category name="Naming Conventions" />
 			<description name="Finds incorrect use of `*Helper` or `*Util` classes." />
@@ -808,6 +812,10 @@
 			<description name="Finds cases where the service builder indexes are updated manually in Upgrade classes. This is not needed because Liferay takes care of it." />
 			<property name="enabled" value="false" />
 		</check>
+		<check name="JavaUpgradeProcessFactoryCheck">
+			<category name="Styling" />
+			<description name="Sorts and groups method calls." />
+		</check>
 		<check name="JavaUpgradeVersionCheck">
 			<category name="Bug Prevention" />
 			<description name="Verifies that the correct upgrade versions are used in classes that implement `UpgradeStepRegistrator`." />
@@ -892,6 +900,11 @@
 		<check name="JavaModuleTestCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks package names in tests." />
+		</check>
+		<check name="JavaModuleUniqueVerifyProcessCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that a module can not have more than 1 verify process class (class extends VerifyProcess)." />
+			<property name="enabled" value="false" />
 		</check>
 		<check name="JavaOSGiReferenceCheck">
 			<category name="Bug Prevention" />
@@ -1258,6 +1271,10 @@
 		</check>
 	</source-processor>
 	<source-processor name="PoshiSourceProcessor">
+		<check name="PoshiAntCommandParametersOrderCheck">
+			<category name="Styling" />
+			<description name="Sorts parameters in AntCommand call in Poshi Script files." />
+		</check>
 		<check name="PoshiDependenciesFileLocationCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that dependencies files are located in the correct directory." />
@@ -1509,6 +1526,16 @@
 		</check>
 	</source-processor>
 	<source-processor name="UpgradeSourceProcessor">
+		<check name="UpgradeBNDIncludeResourceCheck">
+			<category name="Upgrade" />
+			<description name="Checks if the property value `-includeresource` or `Include-Resource` exists and removes it" />
+			<weight>1</weight>
+		</check>
+		<check name="UpgradeGradleIncludeResourceCheck">
+			<category name="Upgrade" />
+			<description name="Replaces with `compileInclude` the configuration attribute for dependencies in `build.gradle` that are listed at `Include-Resource` property at `bnd.bnd` associated file." />
+			<weight>2</weight>
+		</check>
 		<check name="UpgradeJavaCheck">
 			<category name="Upgrade" />
 			<description name="Performs upgrade checks for `java` files" />
@@ -1566,6 +1593,10 @@
 		<check name="XMLLog4jFileCheck">
 			<category name="Styling" />
 			<description name="Checks the order of categories in `*-log4j.xml` file." />
+		</check>
+		<check name="XMLLog4jLoggersCheck">
+			<category name="Miscellaneous" />
+			<description name="Checks the loggers defined in `*-log4j.xml` file." />
 		</check>
 		<check name="XMLLookAndFeelCompatibilityVersionCheck">
 			<category name="Bug Prevention" />

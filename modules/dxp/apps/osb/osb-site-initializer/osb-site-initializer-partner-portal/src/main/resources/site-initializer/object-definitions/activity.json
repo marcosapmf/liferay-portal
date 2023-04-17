@@ -41,8 +41,8 @@
 			"type": "Date"
 		},
 		{
-			"DBType": "String",
-			"businessType": "Text",
+			"DBType": "BigDecimal",
+			"businessType": "PrecisionDecimal",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
@@ -50,7 +50,7 @@
 			},
 			"name": "totalCostOfExpense",
 			"required": false,
-			"type": "String"
+			"type": "BigDecimal"
 		},
 		{
 			"DBType": "String",
@@ -266,8 +266,8 @@
 			"type": "Boolean"
 		},
 		{
-			"DBType": "String",
-			"businessType": "Text",
+			"DBType": "BigDecimal",
+			"businessType": "PrecisionDecimal",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
@@ -275,7 +275,7 @@
 			},
 			"name": "mdfRequestAmount",
 			"required": false,
-			"type": "String"
+			"type": "BigDecimal"
 		},
 		{
 			"DBType": "String",
@@ -359,6 +359,59 @@
 			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Tactic$]",
 			"name": "tactic",
 			"required": false,
+			"type": "String"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"defaultValue": "submitted",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Activity Status"
+			},
+			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Activity Status$]",
+			"name": "activityStatus",
+			"objectFieldSettings": [
+				{
+					"name": "stateFlow",
+					"value": {
+						"objectStates": [
+							{
+								"key": "submitted",
+								"objectStateTransitions": [
+									{
+										"key": "approved"
+									}
+								]
+							},
+							{
+								"key": "approved",
+								"objectStateTransitions": [
+									{
+										"key": "active"
+									}
+								]
+							},
+							{
+								"key": "active",
+								"objectStateTransitions": [
+									{
+										"key": "expired"
+									}
+								]
+							},
+							{
+								"key": "expired",
+								"objectStateTransitions": [
+								]
+							}
+						]
+					}
+				}
+			],
+			"required": true,
+			"state": true,
 			"type": "String"
 		},
 		{
@@ -601,8 +654,22 @@
 			"name": "resourcesNecessaryFromLiferay",
 			"required": false,
 			"type": "String"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Currency"
+			},
+			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Currencies$]",
+			"name": "currency",
+			"required": false,
+			"type": "String"
 		}
 	],
+	"panelCategoryKey": "control_panel.object",
 	"pluralLabel": {
 		"en_US": "Activities"
 	},

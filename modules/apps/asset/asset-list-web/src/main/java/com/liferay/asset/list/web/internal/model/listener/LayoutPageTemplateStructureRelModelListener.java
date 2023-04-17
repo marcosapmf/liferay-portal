@@ -15,7 +15,6 @@
 package com.liferay.asset.list.web.internal.model.listener;
 
 import com.liferay.asset.list.model.AssetListEntry;
-import com.liferay.asset.list.model.AssetListEntryUsage;
 import com.liferay.asset.list.service.AssetListEntryUsageLocalService;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
@@ -39,7 +38,6 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,36 +68,58 @@ public class LayoutPageTemplateStructureRelModelListener
 	}
 
 	private void _addAssetListEntryUsage(
-		long classNameId, long groupId, String key,
-		long layoutPageTemplateStructureId, long plid) {
+		long classNameId, long groupId, String itemId, String key, long plid) {
 
-		AssetListEntryUsage assetListEntryUsage =
-			_assetListEntryUsageLocalService.fetchAssetListEntryUsage(
-				groupId, classNameId,
-				String.valueOf(layoutPageTemplateStructureId),
-				_portal.getClassNameId(LayoutPageTemplateStructure.class), key,
-				plid);
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
 
-		if (assetListEntryUsage != null) {
-			return;
+		if (serviceContext == null) {
+			serviceContext = new ServiceContext();
 		}
-
-		ServiceContext serviceContext = Optional.ofNullable(
-			ServiceContextThreadLocal.getServiceContext()
-		).orElse(
-			new ServiceContext()
-		);
 
 		try {
 			_assetListEntryUsageLocalService.addAssetListEntryUsage(
-				serviceContext.getUserId(), groupId, classNameId,
-				String.valueOf(layoutPageTemplateStructureId),
-				_portal.getClassNameId(LayoutPageTemplateStructure.class), key,
-				plid, serviceContext);
+				serviceContext.getUserId(), groupId, classNameId, itemId,
+				_getCollectionStyledLayoutStructureItemClassNameId(), key, plid,
+				serviceContext);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
 		}
+	}
+
+	private long _getAssetListEntryClassNameId() {
+		if (_assetListEntryClassNameId != null) {
+			return _assetListEntryClassNameId;
+		}
+
+		_assetListEntryClassNameId = _portal.getClassNameId(
+			AssetListEntry.class.getName());
+
+		return _assetListEntryClassNameId;
+	}
+
+	private long _getCollectionStyledLayoutStructureItemClassNameId() {
+		if (_collectionStyledLayoutStructureItemClassNameId != null) {
+			return _collectionStyledLayoutStructureItemClassNameId;
+		}
+
+		_collectionStyledLayoutStructureItemClassNameId =
+			_portal.getClassNameId(
+				CollectionStyledLayoutStructureItem.class.getName());
+
+		return _collectionStyledLayoutStructureItemClassNameId;
+	}
+
+	private long _getInfoCollectionProviderClassNameId() {
+		if (_infoCollectionProviderClassNameId != null) {
+			return _infoCollectionProviderClassNameId;
+		}
+
+		_infoCollectionProviderClassNameId = _portal.getClassNameId(
+			InfoCollectionProvider.class.getName());
+
+		return _infoCollectionProviderClassNameId;
 	}
 
 	private boolean _isMapped(
@@ -146,9 +166,7 @@ public class LayoutPageTemplateStructureRelModelListener
 		}
 
 		_assetListEntryUsageLocalService.deleteAssetListEntryUsages(
-			String.valueOf(
-				layoutPageTemplateStructure.getLayoutPageTemplateStructureId()),
-			_portal.getClassNameId(LayoutPageTemplateStructure.class),
+			_getCollectionStyledLayoutStructureItemClassNameId(),
 			layoutPageTemplateStructure.getPlid());
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
@@ -179,21 +197,19 @@ public class LayoutPageTemplateStructureRelModelListener
 
 			if (collectionJSONObject.has("classPK")) {
 				_addAssetListEntryUsage(
-					_portal.getClassNameId(AssetListEntry.class),
+					_getAssetListEntryClassNameId(),
 					layoutPageTemplateStructure.getGroupId(),
+					layoutStructureItem.getItemId(),
 					collectionJSONObject.getString("classPK"),
-					layoutPageTemplateStructure.
-						getLayoutPageTemplateStructureId(),
 					layoutPageTemplateStructure.getPlid());
 			}
 
 			if (collectionJSONObject.has("key")) {
 				_addAssetListEntryUsage(
-					_portal.getClassNameId(InfoCollectionProvider.class),
+					_getInfoCollectionProviderClassNameId(),
 					layoutPageTemplateStructure.getGroupId(),
+					layoutStructureItem.getItemId(),
 					collectionJSONObject.getString("key"),
-					layoutPageTemplateStructure.
-						getLayoutPageTemplateStructureId(),
 					layoutPageTemplateStructure.getPlid());
 			}
 		}
@@ -202,8 +218,13 @@ public class LayoutPageTemplateStructureRelModelListener
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutPageTemplateStructureRelModelListener.class);
 
+	private Long _assetListEntryClassNameId;
+
 	@Reference
 	private AssetListEntryUsageLocalService _assetListEntryUsageLocalService;
+
+	private Long _collectionStyledLayoutStructureItemClassNameId;
+	private Long _infoCollectionProviderClassNameId;
 
 	@Reference
 	private LayoutPageTemplateStructureLocalService

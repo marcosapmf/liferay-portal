@@ -19,6 +19,7 @@ import React, {useEffect, useState} from 'react';
 
 import {CUSTOM_JSON_SXP_ELEMENT} from '../utils/data';
 import {DEFAULT_ERROR} from '../utils/errorMessages';
+import {DEFAULT_HEADERS} from '../utils/fetch/fetch_data';
 import isDefined from '../utils/functions/is_defined';
 import {setInitialSuccessToast} from '../utils/toasts';
 
@@ -64,9 +65,7 @@ const AddSXPElementModal = ({
 				elementDefinition: CUSTOM_JSON_SXP_ELEMENT.elementDefinition,
 				title_i18n: {[defaultLocale]: titleInputValue},
 			}),
-			headers: new Headers({
-				'Content-Type': 'application/json',
-			}),
+			headers: DEFAULT_HEADERS,
 			method: 'POST',
 		})
 			.then((response) => {
@@ -122,7 +121,11 @@ const AddSXPElementModal = ({
 	return (
 		<ClayModalProvider>
 			{visibleModal && (
-				<ClayModal observer={observer} size="md">
+				<ClayModal
+					className="sxp-add-element-modal-root"
+					observer={observer}
+					size="md"
+				>
 					<ClayModal.Header>
 						{Liferay.Language.get('new-search-element')}
 					</ClayModal.Header>

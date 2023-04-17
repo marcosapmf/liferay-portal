@@ -225,6 +225,9 @@
 																	}
 																}
 															],
+															"fragmentStyle": {
+																"paddingTop": "2"
+															},
 															"indexed": true,
 															"widgetInstances": [
 																{
@@ -485,6 +488,7 @@
 																}
 															],
 															"fragmentStyle": {
+																"paddingBottom": "2",
 																"textAlign": "center"
 															},
 															"indexed": true

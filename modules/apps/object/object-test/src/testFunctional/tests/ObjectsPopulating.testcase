@@ -16,14 +16,14 @@ definition {
 
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field and view its entries in a Field Group"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test CanMapAndViewEntriesForFieldGroup {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 214",
@@ -84,25 +84,25 @@ definition {
 
 		FormViewBuilder.editText(
 			fieldName = "Numeric",
-			fieldValue = "1234567");
+			fieldValue = 1234567);
 
 		FormViewBuilder.editText(
 			fieldName = "Text",
 			fieldValue = "Test text");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject214");
 
-		ObjectPortlet.viewEntry(entry = "1234567");
+		ObjectPortlet.viewEntry(entry = 1234567);
 
 		ObjectPortlet.viewEntry(entry = "Test text");
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of BigDecimal type and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapBigDecimalTypeAndViewEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 215",
@@ -149,7 +149,7 @@ definition {
 			fieldName = "Numeric",
 			fieldValue = "123.123456");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -159,7 +159,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of Boolean type and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapBooleanTypeAndViewEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 216",
@@ -202,7 +202,7 @@ definition {
 			checkboxName = "Boolean",
 			locator1 = "Checkbox#ANY_CHECKBOX");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -212,7 +212,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of Date type and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapDateTypeAndViewEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 217",
@@ -255,7 +255,7 @@ definition {
 			fieldName = "Date",
 			fieldValue = "01/01/2001");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -265,7 +265,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of Double type and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapDoubleTypeAndViewEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 218",
@@ -312,7 +312,7 @@ definition {
 			fieldName = "Numeric",
 			fieldValue = "1.54");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -322,7 +322,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of Integer type and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapIntegerTypeAndViewEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 219",
@@ -363,19 +363,19 @@ definition {
 
 		FormViewBuilder.editText(
 			fieldName = "Numeric",
-			fieldValue = "123456789");
+			fieldValue = 123456789);
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject219");
 
-		ObjectPortlet.viewEntry(entry = "123456789");
+		ObjectPortlet.viewEntry(entry = 123456789);
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of Long type and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapLongTypeAndViewEntries {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 220",
@@ -416,25 +416,25 @@ definition {
 
 		FormViewBuilder.editText(
 			fieldName = "Numeric",
-			fieldValue = "1234567891234567");
+			fieldValue = 1234567891234567);
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject220");
 
-		ObjectPortlet.viewEntry(entry = "1234567891234567");
+		ObjectPortlet.viewEntry(entry = 1234567891234567);
 	}
 
 	@description = "LPS-138495 - Verify it is possible to map a Picklist for a Select From List field and view its entries"
-	@priority = "4"
+	@priority = 4
 	test CanMapPicklistTypeAndViewEntries {
 		Picklist.addPicklistViaAPI(picklistName = "Custom Picklist");
 
 		for (var itemsName : list "1,2") {
 			Picklist.addPicklistItemViaAPI(
-				itemKey = "${itemsName}",
+				itemKey = ${itemsName},
 				itemName = "Item Test ${itemsName}",
 				picklistName = "Custom Picklist");
 		}
@@ -485,7 +485,7 @@ definition {
 
 		PopulateObjectFormsConfiguration.selectPicklistObject(picklistItem = "Item Test 1");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -495,7 +495,7 @@ definition {
 	}
 
 	@description = "LPS-133365 - Verify if it's possible to map an Object field of String type and view its entries"
-	@priority = "5"
+	@priority = 5
 	test CanMapStringTypeAndViewEntries {
 		property portal.acceptance = "true";
 
@@ -540,7 +540,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "Test Text Test Text Test Text Test Text Test Text Test Text Test Text  Test");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -550,7 +550,7 @@ definition {
 	}
 
 	@description = "LPS-137865 - Verify that it is possible to submit an entry with a Double field blank that is not required"
-	@priority = "4"
+	@priority = 4
 	test CanSubmitEntryWithDoubleFieldBlank {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 223",
@@ -615,7 +615,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "String text");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -625,7 +625,7 @@ definition {
 	}
 
 	@description = "LPS-139902 - Verify that entries Object entries added through forms are not deleted when form is deleted"
-	@priority = "4"
+	@priority = 4
 	test EntriesAreNotDeletedWhenFormIsDeleted {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 224",
@@ -668,7 +668,7 @@ definition {
 			fieldName = "Text",
 			fieldValue = "Test text");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 
@@ -682,7 +682,7 @@ definition {
 	}
 
 	@description = "LPS-136451 - Verify if it's possible to see the entries of a field with capitalized letters in the name"
-	@priority = "4"
+	@priority = 4
 	test FieldWithCapitalizedLetters {
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object 225",
@@ -725,7 +725,7 @@ definition {
 			fieldName = "Date",
 			fieldValue = "01/01/2001");
 
-		PortletEntry.submitForPublication();
+		PortletEntry.submitForWorkflow();
 
 		Navigator.openURL();
 

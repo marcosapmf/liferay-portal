@@ -2,8 +2,8 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Remote Apps";
-	property testray.main.component.name = "Remote Apps";
+	property testray.component.names = "Client Extensions";
+	property testray.main.component.name = "Client Extensions";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -14,29 +14,29 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			Navigator.gotoPage(pageName = "Home");
 
-			RemoteApps.tearDown();
+			ClientExtensionGeneral.tearDown();
 		}
 	}
 
 	@description = "LPS-170678 - Assert if 'Custom Element' can be categorized as 'Client Extension'"
-	@priority = "3"
+	@priority = 3
 	test CanBeCategorizedInAddWidgetList {
 		property app.server.types = "tomcat";
 		property database.types = "mysql";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		task ("When client extension has portal category 'Client Extensions'") {
-			RemoteApps.goToRemoteAppsPortlet();
+			ClientExtensionGeneral.goToRemoteAppsPortlet();
 
-			RemoteApps.addCustomElementAllFields(
+			ClientExtensionGeneral.addCustomElementAllFields(
 				entryCssurl = "https://liferay.github.io/liferay-frontend-projects/index.css",
 				entryHtmlName = "vanilla-counter",
 				entryName = "Vanilla Counter",

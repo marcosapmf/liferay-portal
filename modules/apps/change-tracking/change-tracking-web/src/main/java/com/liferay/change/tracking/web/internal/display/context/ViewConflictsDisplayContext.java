@@ -19,17 +19,21 @@ import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.change.tracking.web.internal.configuration.helper.CTSettingsConfigurationHelper;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.learn.LearnMessage;
 import com.liferay.learn.LearnMessageUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -62,23 +66,25 @@ public class ViewConflictsDisplayContext {
 		Map<Long, List<ConflictInfo>> conflictInfoMap,
 		CTCollection ctCollection,
 		CTDisplayRendererRegistry ctDisplayRendererRegistry,
-		CTEntryLocalService ctEntryLocalService, boolean hasUnapprovedChanges,
-		Language language, Portal portal, RenderRequest renderRequest,
-		RenderResponse renderResponse) {
+		CTEntryLocalService ctEntryLocalService,
+		CTSettingsConfigurationHelper ctSettingsConfigurationHelper,
+		boolean hasUnapprovedChanges, Language language, Portal portal,
+		RenderRequest renderRequest, RenderResponse renderResponse) {
 
 		_activeCtCollectionId = activeCtCollectionId;
 		_conflictInfoMap = conflictInfoMap;
 		_ctCollection = ctCollection;
 		_ctDisplayRendererRegistry = ctDisplayRendererRegistry;
 		_ctEntryLocalService = ctEntryLocalService;
+		_ctSettingsConfigurationHelper = ctSettingsConfigurationHelper;
 		_hasUnapprovedChanges = hasUnapprovedChanges;
 		_language = language;
 		_portal = portal;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 
-		_httpServletRequest = _portal.getHttpServletRequest(_renderRequest);
-		_themeDisplay = (ThemeDisplay)_renderRequest.getAttribute(
+		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
+		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
@@ -206,6 +212,10 @@ public class ViewConflictsDisplayContext {
 
 				return timeZone.getID();
 			}
+		).put(
+			"unapprovedChangesAllowed",
+			_ctSettingsConfigurationHelper.isUnapprovedChangesAllowed(
+				_themeDisplay.getCompanyId())
 		).put(
 			"unresolvedConflicts", unresolvedConflictsJSONArray
 		).build();
@@ -377,6 +387,17 @@ public class ViewConflictsDisplayContext {
 					));
 
 				jsonObject.put("actions", actionsJSONArray);
+
+				if (_log.isInfoEnabled()) {
+					_log.info(
+						StringBundler.concat(
+							"Unresolved conflict with change tracking entry ",
+							"ID, ", ctEntry.getCtEntryId(),
+							", model class name ID ",
+							ctEntry.getModelClassNameId(),
+							", and model class PK ", ctEntry.getModelClassPK(),
+							": ", jsonObject));
+				}
 			}
 		}
 		else {
@@ -416,11 +437,15 @@ public class ViewConflictsDisplayContext {
 		return jsonObject;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		ViewConflictsDisplayContext.class);
+
 	private final long _activeCtCollectionId;
 	private final Map<Long, List<ConflictInfo>> _conflictInfoMap;
 	private final CTCollection _ctCollection;
 	private final CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 	private final CTEntryLocalService _ctEntryLocalService;
+	private final CTSettingsConfigurationHelper _ctSettingsConfigurationHelper;
 	private final boolean _hasUnapprovedChanges;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;

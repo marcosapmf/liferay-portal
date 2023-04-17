@@ -17,7 +17,7 @@ import {useOutletContext} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 
 import Avatar from '../../../components/Avatar';
-import AssignToMe from '../../../components/Avatar/AssigneToMe';
+import AssignToMe from '../../../components/Avatar/AssignToMe';
 import Code from '../../../components/Code';
 import Container from '../../../components/Layout/Container';
 import Loading from '../../../components/Loading';
@@ -98,7 +98,8 @@ const Subtasks = () => {
 									value: testraySubtask.user ? (
 										<Avatar
 											displayName
-											name={`${testraySubtask.user?.givenName} ${testraySubtask?.user?.additionalName}`}
+											name={testraySubtask.user?.name}
+											url={testraySubtask.user?.image}
 										/>
 									) : (
 										<AssignToMe

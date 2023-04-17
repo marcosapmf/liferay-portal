@@ -51,10 +51,9 @@ public class ObjectUserNotificationsHandler
 			ServiceContext serviceContext)
 		throws Exception {
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			userNotificationEvent.getPayload());
-
-		return HtmlUtil.escape(jsonObject.getString("notificationMessage"));
+		return _getMessage(
+			JSONFactoryUtil.createJSONObject(
+				userNotificationEvent.getPayload()));
 	}
 
 	@Override
@@ -66,13 +65,16 @@ public class ObjectUserNotificationsHandler
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			userNotificationEvent.getPayload());
 
-		String friendlyURL =
-			_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				_objectDefinition.getClassName(), jsonObject.getLong("classPK"),
-				serviceContext.getThemeDisplay());
+		if (serviceContext.getThemeDisplay() != null) {
+			String friendlyURL =
+				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+					_objectDefinition.getClassName(),
+					jsonObject.getLong("classPK"),
+					serviceContext.getThemeDisplay());
 
-		if (friendlyURL != null) {
-			return friendlyURL;
+			if (friendlyURL != null) {
+				return friendlyURL;
+			}
 		}
 
 		return PortletURLBuilder.create(
@@ -90,6 +92,21 @@ public class ObjectUserNotificationsHandler
 		).setWindowState(
 			WindowState.MAXIMIZED
 		).buildString();
+	}
+
+	@Override
+	protected String getTitle(
+			UserNotificationEvent userNotificationEvent,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		return _getMessage(
+			JSONFactoryUtil.createJSONObject(
+				userNotificationEvent.getPayload()));
+	}
+
+	private String _getMessage(JSONObject jsonObject) {
+		return HtmlUtil.escape(jsonObject.getString("notificationMessage"));
 	}
 
 	private final AssetDisplayPageFriendlyURLProvider

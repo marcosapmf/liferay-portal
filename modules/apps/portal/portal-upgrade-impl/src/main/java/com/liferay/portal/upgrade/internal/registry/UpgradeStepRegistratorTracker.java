@@ -18,7 +18,6 @@ import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
-import com.liferay.portal.kernel.dao.db.DBContext;
 import com.liferay.portal.kernel.dao.db.DBProcessContext;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -29,6 +28,7 @@ import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.upgrade.internal.executor.UpgradeExecutor;
+import com.liferay.portal.upgrade.log.UpgradeLogContext;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portal.util.PropsValues;
 
@@ -77,11 +77,6 @@ public class UpgradeStepRegistratorTracker {
 				DBProcessContext dbProcessContext = new DBProcessContext() {
 
 					@Override
-					public DBContext getDBContext() {
-						return new DBContext();
-					}
-
-					@Override
 					public OutputStream getOutputStream() {
 						return null;
 					}
@@ -90,10 +85,15 @@ public class UpgradeStepRegistratorTracker {
 
 				for (UpgradeStep releaseUpgradeStep : releaseUpgradeSteps) {
 					try {
+						UpgradeLogContext.setContext(bundleSymbolicName);
+
 						releaseUpgradeStep.upgrade(dbProcessContext);
 					}
 					catch (UpgradeException upgradeException) {
 						_log.error(upgradeException);
+					}
+					finally {
+						UpgradeLogContext.clearContext();
 					}
 				}
 

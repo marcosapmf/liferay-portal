@@ -606,13 +606,13 @@
 		<column change-tracking-resolution-type="merge" name="typeSettings" type="String" />
 		<column name="hidden" type="boolean" />
 		<column name="system" type="boolean" />
-		<column name="friendlyURL" type="String" />
+		<column change-tracking-resolution-type="merge" name="friendlyURL" type="String" />
 		<column name="iconImageId" type="long" />
 		<column name="themeId" type="String" />
 		<column name="colorSchemeId" type="String" />
 		<column name="styleBookEntryId" type="long" />
 		<column name="css" type="String" />
-		<column name="priority" type="int" />
+		<column change-tracking-resolution-type="merge" name="priority" type="int" />
 		<column name="faviconFileEntryId" type="long" />
 		<column name="masterLayoutPlid" type="long" />
 		<column name="layoutPrototypeUuid" type="String" />
@@ -794,7 +794,7 @@
 
 		<column name="plid" type="long" />
 		<column name="privateLayout" type="boolean" />
-		<column name="friendlyURL" type="String" />
+		<column change-tracking-resolution-type="merge" name="friendlyURL" type="String" />
 		<column name="languageId" type="String" />
 		<column name="lastPublishDate" type="Date" />
 
@@ -829,7 +829,7 @@
 			<finder-column name="languageId" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="LayoutPrototype" remote-service="true" uad-application-name="Layout" uad-dir-path="../modules/apps/layout/layout-uad/src/main/java" uad-package-path="com.liferay.layout" uuid="true">
+	<entity change-tracking-enabled="true" local-service="true" name="LayoutPrototype" remote-service="true" uad-application-name="Layout" uad-dir-path="../modules/apps/layout/layout-uad/src/main/java" uad-package-path="com.liferay.layout" uuid="true">
 
 		<!-- PK fields -->
 
@@ -1743,6 +1743,11 @@
 		<finder name="P_N" return-type="Collection">
 			<finder-column name="portletPreferencesId" />
 			<finder-column name="name" />
+		</finder>
+		<finder name="C_N_SV" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="name" />
+			<finder-column name="smallValue" />
 		</finder>
 		<finder name="P_I_N" return-type="PortletPreferenceValue" unique="true">
 			<finder-column name="portletPreferencesId" />
@@ -2752,7 +2757,7 @@
 			<finder-column name="deliveryType" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="UserNotificationEvent" remote-service="false" uad-application-name="Notifications" uad-auto-delete="true" uad-dir-path="../modules/apps/notifications/notifications-uad/src/main/java" uad-package-path="com.liferay.notifications" uuid="true">
+	<entity local-service="true" name="UserNotificationEvent" remote-service="true" uad-application-name="Notifications" uad-auto-delete="true" uad-dir-path="../modules/apps/notifications/notifications-uad/src/main/java" uad-package-path="com.liferay.notifications" uuid="true">
 
 		<!-- PK fields -->
 

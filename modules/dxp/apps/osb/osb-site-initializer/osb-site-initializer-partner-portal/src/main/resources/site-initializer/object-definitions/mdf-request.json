@@ -152,8 +152,8 @@
 			"type": "Date"
 		},
 		{
-			"DBType": "String",
-			"businessType": "Text",
+			"DBType": "BigDecimal",
+			"businessType": "PrecisionDecimal",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
@@ -161,11 +161,11 @@
 			},
 			"name": "totalCostOfExpense",
 			"required": false,
-			"type": "String"
+			"type": "BigDecimal"
 		},
 		{
-			"DBType": "String",
-			"businessType": "Text",
+			"DBType": "BigDecimal",
+			"businessType": "PrecisionDecimal",
 			"indexed": true,
 			"indexedAsKeyword": false,
 			"label": {
@@ -173,7 +173,7 @@
 			},
 			"name": "totalMDFRequestAmount",
 			"required": false,
-			"type": "String"
+			"type": "BigDecimal"
 		},
 		{
 			"DBType": "String",
@@ -219,6 +219,12 @@
 									},
 									{
 										"key": "canceled"
+									},
+									{
+										"key": "pendingMarketingReview"
+									},
+									{
+										"key": "marketingDirectorReview"
 									}
 								]
 							},
@@ -249,6 +255,9 @@
 										"key": "marketingDirectorReview"
 									},
 									{
+										"key": "pendingMarketingReview"
+									},
+									{
 										"key": "expired"
 									},
 									{
@@ -267,6 +276,9 @@
 									},
 									{
 										"key": "moreInfoRequested"
+									},
+									{
+										"key": "pendingMarketingReview"
 									},
 									{
 										"key": "canceled"
@@ -320,8 +332,22 @@
 			"state": true,
 			"system": false,
 			"type": "String"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Currency"
+			},
+			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Currencies$]",
+			"name": "currency",
+			"required": false,
+			"type": "String"
 		}
 	],
+	"panelCategoryKey": "control_panel.object",
 	"pluralLabel": {
 		"en_US": "MDF Requests"
 	},

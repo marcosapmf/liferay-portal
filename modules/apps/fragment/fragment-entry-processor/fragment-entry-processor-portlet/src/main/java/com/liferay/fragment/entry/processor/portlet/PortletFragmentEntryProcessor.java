@@ -60,8 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletPreferences;
 
@@ -256,18 +254,14 @@ public class PortletFragmentEntryProcessor implements FragmentEntryProcessor {
 				continue;
 			}
 
-			List<String> portletIds =
-				_portletRegistry.getFragmentEntryLinkPortletIds(
-					fragmentEntryLink);
+			Set<String> portletNames = new HashSet<>();
 
-			Stream<String> stream = portletIds.stream();
+			for (String portletId :
+					_portletRegistry.getFragmentEntryLinkPortletIds(
+						fragmentEntryLink)) {
 
-			List<String> portletNames = stream.map(
-				portletId -> PortletIdCodec.decodePortletName(portletId)
-			).distinct(
-			).collect(
-				Collectors.toList()
-			);
+				portletNames.add(PortletIdCodec.decodePortletName(portletId));
+			}
 
 			if (!portletNames.contains(currentPortletName)) {
 				continue;

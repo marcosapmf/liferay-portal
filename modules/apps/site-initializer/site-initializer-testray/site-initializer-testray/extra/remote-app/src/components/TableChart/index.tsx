@@ -13,89 +13,127 @@
  */
 
 import classNames from 'classnames';
-
-type DataProps = {
-	redirectTo?: string;
-	value?: number;
-};
+import {memo} from 'react';
+import {Link} from 'react-router-dom';
+import i18n from '~/i18n';
 
 type TableChartProps = {
-	colors: string[][];
-	columns: string[][];
-	data: DataProps[][];
+	matrixData: number[][];
 	title: string;
 };
 
-const TableChart: React.FC<TableChartProps> = ({
-	colors,
-	columns,
-	data,
-	title,
-}) => {
-	const [horizontalColumns, verticalColumns] = columns;
+const columns = [
+	i18n.translate('passed'),
+	i18n.translate('failed'),
+	i18n.translate('blocked'),
+	i18n.translate('test-fix'),
+	i18n.translate('dnr'),
+];
 
-	return (
-		<table className="table table-borderless table-chart table-sm">
-			<thead>
-				<tr>
-					<td className="border-0 pb-2" colSpan={6}>
-						{title}
-					</td>
-				</tr>
-			</thead>
-
-			<tbody>
-				<tr>
-					<th></th>
-
-					{horizontalColumns.map((horizontalColumn) => (
-						<td
-							className="text-neutral-7 text-paragraph-xs"
-							key={horizontalColumn}
-						>
-							{horizontalColumn}
-						</td>
-					))}
-				</tr>
-
-				{verticalColumns.map((verticalColumn, verticalColumnIndex) => (
-					<tr key={verticalColumn}>
-						<td className="text-neutral-7 text-paragraph-xs">
-							{verticalColumn}
-						</td>
-
-						{horizontalColumns.map((_, horizontalColumnIndex) => {
-							const dataType =
-								data[verticalColumnIndex][
-									horizontalColumnIndex
-								];
-
-							return (
-								<td
-									className={classNames(
-										'border py-2 table-chart-data-area text-right',
-										colors[verticalColumnIndex][
-											horizontalColumnIndex
-										]
-									)}
-									key={`${verticalColumnIndex}-${horizontalColumnIndex}`}
-								>
-									{dataType?.value && (
-										<a
-											className="text-neutral-10"
-											href={dataType?.redirectTo}
-										>
-											{dataType.value}
-										</a>
-									)}
-								</td>
-							);
-						})}
-					</tr>
-				))}
-			</tbody>
-		</table>
-	);
+const STATUS_COLOR = {
+	BLOCKED: 'blocked',
+	DNR: 'dnr',
+	FAILED: 'failed',
+	PASSED: 'passed',
+	TEST_FIX: 'test-fix',
 };
 
-export default TableChart;
+const colors = [
+	[
+		STATUS_COLOR.PASSED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.PASSED,
+	],
+	[
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.FAILED,
+	],
+	[
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.BLOCKED,
+	],
+	[
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.TEST_FIX,
+	],
+	[
+		STATUS_COLOR.PASSED,
+		STATUS_COLOR.FAILED,
+		STATUS_COLOR.BLOCKED,
+		STATUS_COLOR.TEST_FIX,
+		STATUS_COLOR.DNR,
+	],
+];
+
+const TableChart: React.FC<TableChartProps> = ({matrixData, title}) => (
+	<table className="table table-borderless table-sm tr-table-chart">
+		<thead>
+			<tr>
+				<td className="border-0 pb-2" colSpan={6}>
+					{title}
+				</td>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr>
+				<th></th>
+
+				{columns.map((horizontalColumn, index) => (
+					<td
+						className="text-paragraph-xs tr-table-chart__column-title"
+						key={index}
+					>
+						B {horizontalColumn}
+					</td>
+				))}
+			</tr>
+
+			{columns.map((verticalColumn, verticalColumnIndex) => (
+				<tr key={verticalColumnIndex}>
+					<td className="text-paragraph-xs tr-table-chart__column-title">
+						A {verticalColumn}
+					</td>
+
+					{columns.map((_, horizontalColumnIndex) => {
+						const value =
+							matrixData[verticalColumnIndex][
+								horizontalColumnIndex
+							];
+
+						return (
+							<td
+								className={classNames(
+									'border py-2 tr-table-chart__data-area text-center',
+									colors[verticalColumnIndex][
+										horizontalColumnIndex
+									]
+								)}
+								key={`${verticalColumnIndex}-${horizontalColumnIndex}`}
+							>
+								{value > 0 && (
+									<Link className="font-weight-bold" to="">
+										{value}
+									</Link>
+								)}
+							</td>
+						);
+					})}
+				</tr>
+			))}
+		</tbody>
+	</table>
+);
+
+export default memo(TableChart);

@@ -15,7 +15,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -40,7 +40,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-159730."
-	@priority = "4"
+	@priority = 4
 	test AssertURLforSuggestionsResults {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -70,12 +70,12 @@ definition {
 
 		var currentURL = selenium.getCurrentUrl();
 
-		if (!(contains("${currentURL}", "/new-search-page"))) {
+		if (!(contains(${currentURL}, "/new-search-page"))) {
 			fail("URL should contain /new-search-page");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanConfigureSearchContributorSize {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -90,8 +90,8 @@ definition {
 			title = "Apple Pie");
 
 		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
-			suggestionContributorOrder = "1",
-			suggestionContributorSize = "1");
+			suggestionContributorOrder = 1,
+			suggestionContributorSize = 1);
 
 		Type(
 			locator1 = "Search#EMBEDDED_SEARCH_BAR",
@@ -104,48 +104,57 @@ definition {
 		SearchBarSuggestions.viewNoResultAssetTitle(searchAssetTitle = "Apple Pie");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanCopyPasteInputFields {
 		SearchPortlets.gotoEmbeddedOptions(portletOption = "Configuration");
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
-		Click.javaScriptClick(
-			key_text = "Add Contributor",
+		Click.mouseDownMouseUp(
+			key_text = "Add Suggestions",
 			locator1 = "Button#ANY");
 
+		Click(
+			key_suggestionContributorOrder = 1,
+			locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR");
+
+		Click(
+			key_suggestionContributor = "Blueprint",
+			key_suggestionContributorOrder = 1,
+			locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SELECT");
+
 		Click.clickAt(
-			key_suggestionContributorOrder = "1",
+			key_suggestionContributorOrder = 1,
 			locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME");
 
 		SearchBarSuggestions.copyConfiguration(
-			contributorOrder = "1",
+			contributorOrder = 1,
 			suggestionContributor = "Display Group Name");
 
 		SearchBarSuggestions.pasteConfiguration(
-			contributorOrder = "2",
+			contributorOrder = 2,
 			suggestionContributor = "Display Group Name");
 
 		AssertVisible(
-			key_suggestionContributorOrder = "2",
+			key_suggestionContributorOrder = 2,
 			locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_DISPLAY_GROUP_NAME",
 			value1 = "suggestions");
 
 		SearchBarSuggestions.copyConfiguration(
-			contributorOrder = "1",
+			contributorOrder = 1,
 			suggestionContributor = "Size");
 
 		SearchBarSuggestions.pasteConfiguration(
-			contributorOrder = "2",
+			contributorOrder = 2,
 			suggestionContributor = "Size");
 
 		AssertVisible(
-			key_suggestionContributorOrder = "2",
+			key_suggestionContributorOrder = 2,
 			locator1 = "SearchBarSuggestions#SUGGESTION_CONTRIBUTOR_SIZE",
-			value1 = "5");
+			value1 = 5);
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanViewBasicAndBlueprintSuggestionsTogether {
 		property test.run.environment = "EE";
 
@@ -166,8 +175,8 @@ definition {
 			suggestionContributor = "Blueprint",
 			suggestionContributorBlueprint = "Empty Blueprint",
 			suggestionContributorDisplayGroupName = "blueprint suggestions",
-			suggestionContributorOrder = "2",
-			suggestionContributorSize = "5");
+			suggestionContributorOrder = 2,
+			suggestionContributorSize = 5);
 
 		Type(
 			locator1 = "Search#EMBEDDED_SEARCH_BAR",
@@ -184,7 +193,7 @@ definition {
 			suggestionContributorDisplayGroupName = "blueprint suggestions");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanViewSearchBarSuggestionsResultDetails {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -231,7 +240,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-166050. When using a Blueprint to drive Search Bar suggestions, I can configure a character threshold that applies to this group"
-	@priority = "3"
+	@priority = 3
 	test ConfigureBlueprintContributorCharacterThresholds {
 		task ("Add Web Content and Blueprint") {
 			JSONWebcontent.addWebContent(
@@ -248,34 +257,34 @@ definition {
 
 		task ("Add and configure Contributors") {
 			SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
-				characterThreshold = "1",
+				characterThreshold = 1,
 				suggestionContributor = "Blueprint",
 				suggestionContributorBlueprint = "Empty Blueprint",
 				suggestionContributorDisplayGroupName = "Blueprint 1",
-				suggestionContributorOrder = "1",
-				suggestionContributorSize = "2");
+				suggestionContributorOrder = 2,
+				suggestionContributorSize = 2);
 
 			Refresh();
 
 			SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
 				addContributor = "true",
-				characterThreshold = "3",
+				characterThreshold = 3,
 				suggestionContributor = "Blueprint",
 				suggestionContributorBlueprint = "Empty Blueprint",
 				suggestionContributorDisplayGroupName = "Blueprint 3",
-				suggestionContributorOrder = "2",
-				suggestionContributorSize = "2");
+				suggestionContributorOrder = 3,
+				suggestionContributorSize = 2);
 
 			Refresh();
 
 			SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
 				addContributor = "true",
-				characterThreshold = "5",
+				characterThreshold = 5,
 				suggestionContributor = "Blueprint",
 				suggestionContributorBlueprint = "Empty Blueprint",
 				suggestionContributorDisplayGroupName = "Blueprint 5",
-				suggestionContributorOrder = "3",
-				suggestionContributorSize = "2");
+				suggestionContributorOrder = 4,
+				suggestionContributorSize = 2);
 		}
 
 		task ("Assert that 'Blueprint 1' shows up as a display group and 'Pineapple' appears as a suggestion in that group") {
@@ -283,13 +292,9 @@ definition {
 				locator1 = "Search#EMBEDDED_SEARCH_BAR",
 				value1 = "p");
 
-			AssertElementPresent(
-				locator1 = "Dropdown#DROPDOWN_SUBHEADER",
-				subHeader = "Blueprint 1");
-
-			AssertElementPresent(
-				key_dropdownItem = "Pineapple",
-				locator1 = "CP2ActivationKeys#DROPDOWN_ITEM_BUTTON");
+			SearchBarSuggestions.viewSuggestions(
+				searchAssetTitle = "Pineapple",
+				suggestionContributorDisplayGroupName = "Blueprint 1");
 		}
 
 		task ("Assert that 'Blueprint 3' shows up as a display group and 'Pineapple' appears as a suggestion in that group") {
@@ -297,13 +302,9 @@ definition {
 				locator1 = "Search#EMBEDDED_SEARCH_BAR",
 				value1 = "pin");
 
-			AssertElementPresent(
-				locator1 = "Dropdown#DROPDOWN_SUBHEADER",
-				subHeader = "Blueprint 3");
-
-			AssertElementPresent(
-				key_dropdownItem = "Pineapple",
-				locator1 = "CP2ActivationKeys#DROPDOWN_ITEM_BUTTON");
+			SearchBarSuggestions.viewSuggestions(
+				searchAssetTitle = "Pineapple",
+				suggestionContributorDisplayGroupName = "Blueprint 3");
 		}
 
 		task ("Assert that 'Blueprint 5' shows up as a display group and 'Pineapple' appears as a suggestion in that group") {
@@ -311,18 +312,14 @@ definition {
 				locator1 = "Search#EMBEDDED_SEARCH_BAR",
 				value1 = "pinea");
 
-			AssertElementPresent(
-				locator1 = "Dropdown#DROPDOWN_SUBHEADER",
-				subHeader = "Blueprint 5");
-
-			AssertElementPresent(
-				key_dropdownItem = "Pineapple",
-				locator1 = "CP2ActivationKeys#DROPDOWN_ITEM_BUTTON");
+			SearchBarSuggestions.viewSuggestions(
+				searchAssetTitle = "Pineapple",
+				suggestionContributorDisplayGroupName = "Blueprint 5");
 		}
 	}
 
 	@description = "This is a use case for LPS-155317"
-	@priority = "4"
+	@priority = 4
 	test DisablingSuggestionsSAPHidesSuggestionsFromGuests {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -360,7 +357,7 @@ definition {
 		SignIn.signIn(userEmailAddress = "test@liferay.com");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test DisplaySuggestionsAfterCharacterThresholdIsMet {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -375,7 +372,7 @@ definition {
 			mimeType = "application/msword",
 			sourceFileName = "Document_1.doc");
 
-		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(characterThresholdForDisplayingSuggestions = "3");
+		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(characterThresholdForDisplayingSuggestions = 3);
 
 		Type(
 			locator1 = "Search#EMBEDDED_SEARCH_BAR",
@@ -397,7 +394,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-162509."
-	@priority = "4"
+	@priority = 4
 	test HonorLetUserChooseSiteScope {
 		JSONWebcontent.addWebContent(
 			content = "Content",
@@ -442,19 +439,54 @@ definition {
 			searchAssetTitle = "Apple Web Content");
 	}
 
-	@priority = "4"
+	@description = "This is a use case for LPS-176871."
+	@priority = 4
+	test SearchSuggestionsInNonRootContext {
+		property portal.context = "liferay";
+		property search.environment.suite.exclude = "true";
+		property skip.clean-app-server-deploy-dir = "true";
+		property test.assert.warning.exceptions = "true";
+		property test.name.skip.portal.instance = "SearchBarSuggestions#SearchSuggestionsInNonRootContext";
+
+		JSONWebcontent.addWebContent(
+			content = "Web Content",
+			description = "WC WebContent Description",
+			groupName = "Guest",
+			title = "Apple");
+
+		Type(
+			locator1 = "Search#EMBEDDED_SEARCH_BAR",
+			value1 = "Apple");
+
+		SearchBarSuggestions.viewSuggestions(
+			searchAssetDescription = "WC WebContent Description",
+			searchAssetTitle = "Apple");
+
+		AssertJavaScriptErrors();
+	}
+
+	@priority = 4
 	test ShowHTMLAsPlainText {
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Content Page Name",
+			type = "content");
+
+		JSONLayout.publishLayout(
+			groupName = "Guest",
+			layoutName = "Test Content Page Name");
+
 		Type(
 			locator1 = "Search#EMBEDDED_SEARCH_BAR",
 			value1 = "test");
 
 		SearchBarSuggestions.viewSuggestions(
-			searchAssetDescription = "Page: Home",
-			searchAssetTitle = "Home",
+			searchAssetDescription = "Page: Test Content Page Name",
+			searchAssetTitle = "Test Content Page Name",
 			suggestionContributorDisplayGroupName = "Suggestions");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewBasicSuggestionsAcrossDifferentScopes {
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -498,7 +530,44 @@ definition {
 			searchAssetTitle = "Apple Pie");
 	}
 
-	@priority = "5"
+	@priority = 3
+	test ViewBlueprintContributorZeroCharacterThreshold {
+		JSONWebcontent.addWebContent(
+			content = "WC WebContent Content",
+			groupName = "Guest",
+			title = "Software");
+
+		Blueprints.openBlueprintsAdmin();
+
+		Blueprints.createBlueprint(title = "Test Blueprint");
+
+		Blueprints.addElement(element = "Text Match Over Multiple Fields");
+
+		Type(
+			ariaLabel = "Text to Match",
+			locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+			value1 = "software");
+
+		PortletEntry.save();
+
+		Navigator.gotoPage(pageName = "Home");
+
+		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
+			characterThreshold = 0,
+			suggestionContributor = "Blueprint",
+			suggestionContributorBlueprint = "Test Blueprint",
+			suggestionContributorDisplayGroupName = "Blueprint 0",
+			suggestionContributorOrder = 2,
+			suggestionContributorSize = 5);
+
+		Click(locator1 = "Search#EMBEDDED_SEARCH_BAR");
+
+		SearchBarSuggestions.viewSuggestions(
+			searchAssetTitle = "Software",
+			suggestionContributorDisplayGroupName = "Blueprint 0");
+	}
+
+	@priority = 5
 	test ViewBlueprintSuggestionsAcrossDifferentScopes {
 		property test.run.environment = "EE";
 
@@ -543,7 +612,7 @@ definition {
 		Button.click(button = "Select Asset Types");
 
 		Check.checkNotVisible(
-			assetType = "Web Content Article",
+			key_assetType = "Web Content Article",
 			locator1 = "Blueprints#BLUEPRINTS_SEARCHABLE_ASSET_TYPE_CHECKBOX");
 
 		Button.clickDone();
@@ -553,8 +622,12 @@ definition {
 		Navigator.openURL();
 
 		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
+			addContributor = "true",
+			deleteBasicContributor = "true",
 			suggestionContributor = "Blueprint",
-			suggestionContributorBlueprint = "Test Blueprint");
+			suggestionContributorBlueprint = "Test Blueprint",
+			suggestionContributorDisplayGroupName = "Suggestions",
+			suggestionContributorSize = 3);
 
 		Type(
 			locator1 = "Search#EMBEDDED_SEARCH_BAR",
@@ -590,7 +663,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-162509."
-	@priority = "4"
+	@priority = 4
 	test ViewSuggestionsLocalizedDisplayGroupName {
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -616,15 +689,15 @@ definition {
 
 		Navigator.openURL();
 
-		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(suggestionContributorSize = "3");
+		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(suggestionContributorSize = 3);
 
 		SearchBarSuggestions.configureEmbeddedSearchBarSuggestions(
 			addContributor = "true",
 			suggestionContributor = "Blueprint",
 			suggestionContributorBlueprint = "Test Blueprint",
 			suggestionContributorDisplayGroupName = "top-search-keywords",
-			suggestionContributorOrder = "2",
-			suggestionContributorSize = "3");
+			suggestionContributorOrder = 2,
+			suggestionContributorSize = 3);
 
 		Type(
 			locator1 = "Search#EMBEDDED_SEARCH_BAR",

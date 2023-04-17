@@ -19,6 +19,8 @@ import com.liferay.commerce.product.model.CPDefinitionTable;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CProductLocalService;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
+import com.liferay.headless.commerce.admin.catalog.resource.v1_0.ProductResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionMetadata;
@@ -27,7 +29,10 @@ import com.liferay.object.system.SystemObjectDefinitionMetadata;
 import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +48,19 @@ import org.osgi.service.component.annotations.Reference;
 @Component(enabled = true, service = SystemObjectDefinitionMetadata.class)
 public class CPDefinitionSystemObjectDefinitionMetadata
 	extends BaseSystemObjectDefinitionMetadata {
+
+	@Override
+	public long addBaseModel(User user, Map<String, Object> values)
+		throws Exception {
+
+		ProductResource productResource = _buildProductResource(user);
+
+		Product product = productResource.postProduct(_toProduct(values));
+
+		setExtendedProperties(Product.class.getName(), product, user, values);
+
+		return product.getId();
+	}
 
 	@Override
 	public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
@@ -91,11 +109,17 @@ public class CPDefinitionSystemObjectDefinitionMetadata
 	public List<ObjectField> getObjectFields() {
 		return Arrays.asList(
 			createObjectField(
+				"Boolean", "Boolean", "active", "active", true, true),
+			createObjectField(
+				"LongInteger", "Long", "catalog-id", "catalogId", true, true),
+			createObjectField(
 				"Text", "String", "description", "description", false, true),
-			createObjectField("Text", "String", "name", "name", false, true),
+			createObjectField("Text", "String", "name", "name", true, true),
 			createObjectField(
 				"Text", "CPDefinitionId", "String", "product-id", "productId",
 				false, true),
+			createObjectField(
+				"Text", "String", "product-type", "productType", true, true),
 			createObjectField(
 				"Text", "String", "short-description", "shortDescription",
 				false, true),
@@ -138,7 +162,55 @@ public class CPDefinitionSystemObjectDefinitionMetadata
 
 	@Override
 	public int getVersion() {
-		return 1;
+		return 2;
+	}
+
+	@Override
+	public void updateBaseModel(
+			long primaryKey, User user, Map<String, Object> values)
+		throws Exception {
+
+		ProductResource productResource = _buildProductResource(user);
+
+		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
+			primaryKey);
+
+		productResource.patchProduct(
+			cpDefinition.getCProductId(), _toProduct(values));
+
+		setExtendedProperties(
+			Product.class.getName(), JSONUtil.put("id", primaryKey), user,
+			values);
+	}
+
+	private ProductResource _buildProductResource(User user) {
+		ProductResource.Builder builder = _productResourceFactory.create();
+
+		return builder.checkPermissions(
+			false
+		).preferredLocale(
+			user.getLocale()
+		).user(
+			user
+		).build();
+	}
+
+	private Product _toProduct(Map<String, Object> values) {
+		return new Product() {
+			{
+				active = GetterUtil.getBoolean(values.get("active"));
+				catalogId = GetterUtil.getLong(values.get("catalogId"));
+				description = getLanguageIdMap("description", values);
+				externalReferenceCode = GetterUtil.getString(
+					values.get("externalReferenceCode"));
+				name = getLanguageIdMap("name", values);
+				productId = GetterUtil.getLong(values.get("productId"));
+				productType = GetterUtil.getString(values.get("productType"));
+				shortDescription = getLanguageIdMap("shortDescription", values);
+				skuFormatted = GetterUtil.getString(values.get("skuFormatted"));
+				thumbnail = GetterUtil.getString(values.get("thumbnail"));
+			}
+		};
 	}
 
 	@Reference
@@ -146,5 +218,8 @@ public class CPDefinitionSystemObjectDefinitionMetadata
 
 	@Reference
 	private CProductLocalService _cProductLocalService;
+
+	@Reference
+	private ProductResource.Factory _productResourceFactory;
 
 }

@@ -18,6 +18,7 @@ import {useParams} from 'react-router-dom';
 
 import Form from '../../../../../../components/Form';
 import Modal from '../../../../../../components/Modal/index';
+import SearchBuilder from '../../../../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../../../../hoc/withVisibleContent';
 import {useFetch} from '../../../../../../hooks/useFetch';
 import {FormModalOptions} from '../../../../../../hooks/useFormModal';
@@ -32,7 +33,6 @@ import {
 	testrayFactorRest,
 	testrayRunImpl,
 } from '../../../../../../services/rest';
-import {searchUtil} from '../../../../../../util/search';
 
 type RunForm = Omit<typeof yupSchema.run.__outputType, 'id'>;
 
@@ -68,14 +68,16 @@ const RunFormModal: React.FC<RunFormModalProps> = ({
 	>([[] as any]);
 
 	const filter = selectedRun
-		? searchUtil.eq('runId', selectedRun.id)
-		: searchUtil.eq('routineId', routineId as string);
+		? SearchBuilder.eq('runId', selectedRun.id)
+		: SearchBuilder.eq('routineId', routineId as string);
 
 	const {data: factorsData} = useFetch<APIResponse<TestrayFactor>>(
 		testrayFactorRest.resource,
 		{
-			filter,
-			pageSize: 1000,
+			params: {
+				filter,
+				pageSize: 1000,
+			},
 			transformData: (response) =>
 				testrayFactorRest.transformDataFromList(response),
 		}
@@ -84,8 +86,10 @@ const RunFormModal: React.FC<RunFormModalProps> = ({
 	const {data: runResponse} = useFetch<APIResponse<RunForm>>(
 		selectedRun ? null : testrayRunImpl.resource,
 		{
-			filter: searchUtil.eq('buildId', buildId as string),
-			pageSize: 1000,
+			params: {
+				filter: SearchBuilder.eq('buildId', buildId as string),
+				pageSize: 1000,
+			},
 		}
 	);
 

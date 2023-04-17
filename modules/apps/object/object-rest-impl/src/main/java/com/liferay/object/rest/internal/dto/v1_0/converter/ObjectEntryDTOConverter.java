@@ -14,57 +14,70 @@
 
 package com.liferay.object.rest.internal.dto.v1_0.converter;
 
+import com.liferay.asset.kernel.model.AssetTag;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.util.DLURLHelper;
-import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.field.setting.util.ObjectFieldSettingUtil;
-import com.liferay.object.field.util.ObjectFieldFormulaEvaluatorUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.rest.dto.v1_0.AuditEvent;
+import com.liferay.object.rest.dto.v1_0.AuditFieldChange;
 import com.liferay.object.rest.dto.v1_0.FileEntry;
-import com.liferay.object.rest.dto.v1_0.Link;
 import com.liferay.object.rest.dto.v1_0.ListEntry;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.dto.v1_0.Status;
+import com.liferay.object.rest.dto.v1_0.TaxonomyCategoryBrief;
 import com.liferay.object.rest.dto.v1_0.util.CreatorUtil;
+import com.liferay.object.rest.dto.v1_0.util.LinkUtil;
+import com.liferay.object.rest.internal.dto.v1_0.util.TaxonomyCategoryBriefUtil;
+import com.liferay.object.rest.internal.util.DTOConverterUtil;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.system.SystemObjectDefinitionMetadata;
+import com.liferay.object.system.SystemObjectDefinitionMetadataRegistry;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
+import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
+import com.liferay.portal.security.audit.storage.service.AuditEventLocalService;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
@@ -76,7 +89,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -89,7 +101,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.object.model.ObjectEntry",
-	service = {DTOConverter.class, ObjectEntryDTOConverter.class}
+	service = DTOConverter.class
 )
 public class ObjectEntryDTOConverter
 	implements DTOConverter<com.liferay.object.model.ObjectEntry, ObjectEntry> {
@@ -105,10 +117,7 @@ public class ObjectEntryDTOConverter
 			com.liferay.object.model.ObjectEntry objectEntry)
 		throws Exception {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
-
-		UriInfo uriInfo = uriInfoOptional.orElse(null);
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
 		if (uriInfo == null) {
 			return _toDTO(
@@ -130,8 +139,59 @@ public class ObjectEntryDTOConverter
 	}
 
 	private void _addNestedFields(
-		Map<String, Object> map, String nestedFields, String objectFieldName,
-		ObjectRelationship objectRelationship, Object value) {
+			DTOConverterContext dtoConverterContext, Map<String, Object> map,
+			int nestedFieldsDepth, String objectFieldName,
+			ObjectRelationship objectRelationship, long primaryKey)
+		throws Exception {
+
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
+
+		if (uriInfo == null) {
+			return;
+		}
+
+		MultivaluedMap<String, String> queryParameters =
+			uriInfo.getQueryParameters();
+
+		String nestedFields = queryParameters.getFirst("nestedFields");
+
+		if (nestedFields == null) {
+			return;
+		}
+
+		Object value = null;
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				objectRelationship.getObjectDefinitionId1());
+
+		if (objectDefinition.isSystem()) {
+			if (FeatureFlagManagerUtil.isEnabled("LPS-172094")) {
+				SystemObjectDefinitionMetadata systemObjectDefinitionMetadata =
+					_systemObjectDefinitionMetadataRegistry.
+						getSystemObjectDefinitionMetadata(
+							objectDefinition.getName());
+
+				value = DTOConverterUtil.toDTO(
+					systemObjectDefinitionMetadata.
+						getBaseModelByExternalReferenceCode(
+							systemObjectDefinitionMetadata.
+								getExternalReferenceCode(primaryKey),
+							objectDefinition.getCompanyId()),
+					_dtoConverterRegistry, systemObjectDefinitionMetadata,
+					dtoConverterContext.getUser());
+			}
+			else {
+				value = _objectEntryLocalService.getSystemModelAttributes(
+					objectDefinition, primaryKey);
+			}
+		}
+		else {
+			value = _toDTO(
+				_getDTOConverterContext(dtoConverterContext, primaryKey),
+				nestedFieldsDepth - 1,
+				_objectEntryLocalService.getObjectEntry(primaryKey));
+		}
 
 		String objectFieldNameNestedField = StringUtil.replaceLast(
 			objectFieldName.substring(
@@ -144,22 +204,40 @@ public class ObjectEntryDTOConverter
 					StringUtil.replaceLast(objectFieldName, "Id", ""), value);
 			}
 
-			if (GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-161364")) &&
-				nestedField.equals(objectRelationship.getName())) {
-
+			if (nestedField.equals(objectRelationship.getName())) {
 				map.put(nestedField, value);
 			}
 		}
 	}
 
+	private void _addObjectRelationshipNames(
+		Map<String, Object> map, ObjectField objectField,
+		String objectFieldName, ObjectRelationship objectRelationship,
+		long primaryKey, Map<String, Serializable> values) {
+
+		String objectRelationshipERCObjectFieldName =
+			ObjectFieldSettingUtil.getValue(
+				ObjectFieldSettingConstants.
+					NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
+				objectField);
+
+		String relatedObjectEntryERC = GetterUtil.getString(
+			values.get(objectRelationshipERCObjectFieldName));
+
+		if (map.get(objectRelationship.getName()) == null) {
+			map.put(
+				objectRelationship.getName() + "ERC", relatedObjectEntryERC);
+		}
+
+		map.put(objectFieldName, primaryKey);
+
+		map.put(objectRelationshipERCObjectFieldName, relatedObjectEntryERC);
+	}
+
 	private DTOConverterContext _getDTOConverterContext(
 		DTOConverterContext dtoConverterContext, long objectEntryId) {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
-
-		UriInfo uriInfo = uriInfoOptional.orElse(null);
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
 		return new DefaultDTOConverterContext(
 			dtoConverterContext.isAcceptAllLanguages(), null,
@@ -279,6 +357,90 @@ public class ObjectEntryDTOConverter
 		return null;
 	}
 
+	private AuditEvent[] _toAuditEvents(
+			DTOConverterContext dtoConverterContext,
+			ObjectDefinition objectDefinition,
+			com.liferay.object.model.ObjectEntry objectEntry)
+		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-164582") ||
+			!objectDefinition.isEnableObjectEntryHistory()) {
+
+			return null;
+		}
+
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
+
+		if (uriInfo == null) {
+			return null;
+		}
+
+		MultivaluedMap<String, String> queryParameters =
+			uriInfo.getQueryParameters();
+
+		String nestedFields = queryParameters.getFirst("nestedFields");
+
+		if ((nestedFields == null) || !nestedFields.contains("auditEvents") ||
+			!_objectEntryService.hasModelResourcePermission(
+				objectDefinition.getObjectDefinitionId(),
+				objectEntry.getObjectEntryId(),
+				ObjectActionKeys.OBJECT_ENTRY_HISTORY)) {
+
+			return null;
+		}
+
+		return TransformUtil.transformToArray(
+			_auditEventLocalService.getAuditEvents(
+				0, 0, null, null, null, null, null,
+				String.valueOf(objectEntry.getObjectEntryId()), null, null,
+				null, 0, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			auditEvent -> new AuditEvent() {
+				{
+					auditFieldChanges = _toAuditFieldChanges(
+						auditEvent.getAdditionalInfo(),
+						auditEvent.getEventType());
+					creator = CreatorUtil.toCreator(
+						_portal, dtoConverterContext.getUriInfo(),
+						_userLocalService.fetchUser(auditEvent.getUserId()));
+					dateCreated = auditEvent.getCreateDate();
+					eventType = auditEvent.getEventType();
+				}
+			},
+			AuditEvent.class);
+	}
+
+	private AuditFieldChange[] _toAuditFieldChanges(
+			String additionalInfo, String eventType)
+		throws Exception {
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject(additionalInfo);
+
+		if (StringUtil.equals(eventType, EventTypes.ADD)) {
+			Map<String, Object> map = jsonObject.toMap();
+
+			return TransformUtil.transformToArray(
+				map.keySet(),
+				key -> new AuditFieldChange() {
+					{
+						name = key;
+						newValue = map.get(key);
+					}
+				},
+				AuditFieldChange.class);
+		}
+
+		return JSONUtil.toArray(
+			jsonObject.getJSONArray("attributes"),
+			attributeJSONObject -> new AuditFieldChange() {
+				{
+					name = attributeJSONObject.getString("name");
+					newValue = attributeJSONObject.get("newValue");
+					oldValue = attributeJSONObject.get("oldValue");
+				}
+			},
+			AuditFieldChange.class);
+	}
+
 	private ObjectEntry _toDTO(
 			DTOConverterContext dtoConverterContext, int nestedFieldsDepth,
 			com.liferay.object.model.ObjectEntry objectEntry)
@@ -290,13 +452,24 @@ public class ObjectEntryDTOConverter
 		return new ObjectEntry() {
 			{
 				actions = dtoConverterContext.getActions();
+				auditEvents = _toAuditEvents(
+					dtoConverterContext, objectDefinition, objectEntry);
 				creator = CreatorUtil.toCreator(
-					_portal, dtoConverterContext.getUriInfoOptional(),
+					_portal, dtoConverterContext.getUriInfo(),
 					_userLocalService.fetchUser(objectEntry.getUserId()));
 				dateCreated = objectEntry.getCreateDate();
 				dateModified = objectEntry.getModifiedDate();
 				externalReferenceCode = objectEntry.getExternalReferenceCode();
 				id = objectEntry.getObjectEntryId();
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-176651")) {
+					keywords = ListUtil.toArray(
+						_assetTagLocalService.getTags(
+							objectDefinition.getClassName(),
+							objectEntry.getObjectEntryId()),
+						AssetTag.NAME_ACCESSOR);
+				}
+
 				properties = _toProperties(
 					dtoConverterContext, nestedFieldsDepth, objectDefinition,
 					objectEntry);
@@ -313,6 +486,17 @@ public class ObjectEntryDTOConverter
 								objectEntry.getStatus()));
 					}
 				};
+
+				if (FeatureFlagManagerUtil.isEnabled("LPS-176651")) {
+					taxonomyCategoryBriefs = TransformUtil.transformToArray(
+						_assetCategoryLocalService.getCategories(
+							objectDefinition.getClassName(),
+							objectEntry.getObjectEntryId()),
+						assetCategory ->
+							TaxonomyCategoryBriefUtil.toTaxonomyCategoryBrief(
+								assetCategory, dtoConverterContext),
+						TaxonomyCategoryBrief.class);
+				}
 			}
 		};
 	}
@@ -408,50 +592,27 @@ public class ObjectEntryDTOConverter
 					continue;
 				}
 
-				DLFileEntry dlFileEntry = _dLFileEntryLocalService.getFileEntry(
-					fileEntryId);
+				DLFileEntry dlFileEntry =
+					_dLFileEntryLocalService.fetchDLFileEntry(fileEntryId);
 
-				Link fileEntryLink = new Link() {
-					{
-						href = StringBundler.concat(
-							_portal.getPathContext(), _portal.getPathMain(),
-							"/portal/login");
-						label = dlFileEntry.getFileName();
-					}
-				};
-
-				try {
-					com.liferay.portal.kernel.repository.model.FileEntry
-						fileEntry = _dlAppService.getFileEntry(fileEntryId);
-
-					String href = _dlURLHelper.getDownloadURL(
-						fileEntry, fileEntry.getFileVersion(), null,
-						StringPool.BLANK);
-
-					href = HttpComponentsUtil.addParameter(
-						href, "objectDefinitionExternalReferenceCode",
-						objectDefinition.getExternalReferenceCode());
-					href = HttpComponentsUtil.addParameter(
-						href, "objectEntryExternalReferenceCode",
-						objectEntry.getExternalReferenceCode());
-
-					fileEntryLink.setHref(href);
+				if (dlFileEntry != null) {
+					map.put(
+						objectFieldName,
+						new FileEntry() {
+							{
+								id = dlFileEntry.getFileEntryId();
+								link = LinkUtil.toLink(
+									_dlAppService, dlFileEntry, _dlURLHelper,
+									objectDefinition.getExternalReferenceCode(),
+									objectEntry.getExternalReferenceCode(),
+									_portal);
+								name = dlFileEntry.getFileName();
+							}
+						});
 				}
-				catch (PrincipalException principalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(principalException);
-					}
+				else {
+					map.put(objectFieldName, new FileEntry());
 				}
-
-				map.put(
-					objectFieldName,
-					new FileEntry() {
-						{
-							id = dlFileEntry.getFileEntryId();
-							link = fileEntryLink;
-							name = dlFileEntry.getFileName();
-						}
-					});
 			}
 			else if (Objects.equals(
 						objectField.getBusinessType(),
@@ -467,100 +628,36 @@ public class ObjectEntryDTOConverter
 						 objectField.getRelationshipType(),
 						 ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
 
-				long objectEntryId = 0;
+				long primaryKey = GetterUtil.getLong(serializable);
 
 				ObjectRelationship objectRelationship =
 					_objectRelationshipLocalService.
 						fetchObjectRelationshipByObjectFieldId2(
 							objectField.getObjectFieldId());
 
-				if (serializable != null) {
-					if (GetterUtil.getLong(serializable) > 0) {
-						objectEntryId = (long)serializable;
-					}
-
-					Optional<UriInfo> uriInfoOptional =
-						dtoConverterContext.getUriInfoOptional();
-
-					Optional<String> nestedFieldsOptional = uriInfoOptional.map(
-						UriInfo::getQueryParameters
-					).map(
-						queryParameters -> queryParameters.getFirst(
-							"nestedFields")
-					);
-
-					if ((objectEntryId != 0) &&
-						nestedFieldsOptional.isPresent()) {
-
-						ObjectDefinition relatedObjectDefinition =
-							_objectDefinitionLocalService.getObjectDefinition(
-								objectRelationship.getObjectDefinitionId1());
-
-						if (relatedObjectDefinition.isSystem()) {
-							Map<String, Serializable> variables =
-								new HashMap<>();
-
-							Map<String, Object> systemModelAttributes =
-								_objectEntryLocalService.
-									getSystemModelAttributes(
-										relatedObjectDefinition, objectEntryId);
-
-							for (Map.Entry<String, Object> entry :
-									systemModelAttributes.entrySet()) {
-
-								variables.put(
-									entry.getKey(),
-									(Serializable)entry.getValue());
-							}
-
-							_addNestedFields(
-								map, nestedFieldsOptional.get(),
-								objectFieldName, objectRelationship,
-								ObjectFieldFormulaEvaluatorUtil.evaluate(
-									_ddmExpressionFactory,
-									_objectFieldLocalService.getObjectFields(
-										relatedObjectDefinition.
-											getObjectDefinitionId()),
-									_objectFieldSettingLocalService,
-									_userLocalService, variables));
-						}
-						else {
-							_addNestedFields(
-								map, nestedFieldsOptional.get(),
-								objectFieldName, objectRelationship,
-								_toDTO(
-									_getDTOConverterContext(
-										dtoConverterContext, objectEntryId),
-									nestedFieldsDepth - 1,
-									_objectEntryLocalService.getObjectEntry(
-										objectEntryId)));
-						}
-					}
+				if (primaryKey > 0) {
+					_addNestedFields(
+						dtoConverterContext, map, nestedFieldsDepth,
+						objectFieldName, objectRelationship, primaryKey);
 				}
 
-				map.put(objectFieldName, objectEntryId);
+				_addObjectRelationshipNames(
+					map, objectField, objectFieldName, objectRelationship,
+					primaryKey, values);
+			}
+			else if ((nestedFieldsDepth == 0) &&
+					 Objects.equals(
+						 objectField.getRelationshipType(),
+						 ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
 
-				String objectRelationshipERCObjectFieldName =
-					ObjectFieldSettingUtil.getValue(
-						ObjectFieldSettingConstants.
-							NAME_OBJECT_RELATIONSHIP_ERC_OBJECT_FIELD_NAME,
-						objectField);
+				ObjectRelationship objectRelationship =
+					_objectRelationshipLocalService.
+						fetchObjectRelationshipByObjectFieldId2(
+							objectField.getObjectFieldId());
 
-				String relatedObjectEntryERC = GetterUtil.getString(
-					values.get(objectRelationshipERCObjectFieldName));
-
-				if (GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LPS-161364")) &&
-					(map.get(objectRelationship.getName()) == null)) {
-
-					map.put(
-						objectRelationship.getName() + "ERC",
-						relatedObjectEntryERC);
-				}
-
-				map.put(
-					objectRelationshipERCObjectFieldName,
-					relatedObjectEntryERC);
+				_addObjectRelationshipNames(
+					map, objectField, objectFieldName, objectRelationship,
+					(long)serializable, values);
 			}
 			else {
 				map.put(objectFieldName, serializable);
@@ -568,54 +665,55 @@ public class ObjectEntryDTOConverter
 		}
 
 		if (nestedFieldsDepth > 0) {
-			List<ObjectRelationship> objectRelationships =
-				_objectRelationshipLocalService.getObjectRelationships(
-					objectDefinition.getObjectDefinitionId());
+			UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-			Optional<UriInfo> uriInfoOptional =
-				dtoConverterContext.getUriInfoOptional();
+			if (uriInfo != null) {
+				MultivaluedMap<String, String> queryParameters =
+					uriInfo.getQueryParameters();
 
-			for (ObjectRelationship objectRelationship : objectRelationships) {
-				if (!uriInfoOptional.map(
-						UriInfo::getQueryParameters
-					).map(
-						queryParameters -> queryParameters.getFirst(
-							"nestedFields")
-					).map(
-						nestedFields -> {
-							List<String> strings = Arrays.asList(
-								nestedFields.split(","));
+				String nestedFields = queryParameters.getFirst("nestedFields");
 
-							return strings.contains(
-								objectRelationship.getName());
-						}
-					).orElse(
-						false
-					)) {
+				if (nestedFields == null) {
+					values.remove(objectDefinition.getPKObjectFieldName());
 
-					continue;
+					return map;
 				}
 
-				ObjectEntry[] objectEntries = new ObjectEntry[0];
+				List<ObjectRelationship> objectRelationships =
+					_objectRelationshipLocalService.getObjectRelationships(
+						objectDefinition.getObjectDefinitionId());
 
-				if (Objects.equals(
-						objectRelationship.getType(),
-						ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
+				for (ObjectRelationship objectRelationship :
+						objectRelationships) {
 
-					objectEntries = _getManyToManyRelationshipObjectEntries(
-						dtoConverterContext, nestedFieldsDepth, objectEntry,
-						objectRelationship);
-				}
-				else if (Objects.equals(
+					List<String> strings = Arrays.asList(
+						nestedFields.split(","));
+
+					if (!strings.contains(objectRelationship.getName())) {
+						continue;
+					}
+
+					ObjectEntry[] objectEntries = new ObjectEntry[0];
+
+					if (Objects.equals(
 							objectRelationship.getType(),
-							ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+							ObjectRelationshipConstants.TYPE_MANY_TO_MANY)) {
 
-					objectEntries = _getOneToManyRelationshipObjectEntries(
-						dtoConverterContext, nestedFieldsDepth, objectEntry,
-						objectRelationship);
+						objectEntries = _getManyToManyRelationshipObjectEntries(
+							dtoConverterContext, nestedFieldsDepth, objectEntry,
+							objectRelationship);
+					}
+					else if (Objects.equals(
+								objectRelationship.getType(),
+								ObjectRelationshipConstants.TYPE_ONE_TO_MANY)) {
+
+						objectEntries = _getOneToManyRelationshipObjectEntries(
+							dtoConverterContext, nestedFieldsDepth, objectEntry,
+							objectRelationship);
+					}
+
+					map.put(objectRelationship.getName(), objectEntries);
 				}
-
-				map.put(objectRelationship.getName(), objectEntries);
 			}
 		}
 
@@ -628,7 +726,13 @@ public class ObjectEntryDTOConverter
 		ObjectEntryDTOConverter.class);
 
 	@Reference
-	private DDMExpressionFactory _ddmExpressionFactory;
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Reference
+	private AssetTagLocalService _assetTagLocalService;
+
+	@Reference
+	private AuditEventLocalService _auditEventLocalService;
 
 	@Reference
 	private DLAppService _dlAppService;
@@ -640,7 +744,13 @@ public class ObjectEntryDTOConverter
 	private DLURLHelper _dlURLHelper;
 
 	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;
@@ -655,10 +765,10 @@ public class ObjectEntryDTOConverter
 	private ObjectEntryLocalService _objectEntryLocalService;
 
 	@Reference
-	private ObjectFieldLocalService _objectFieldLocalService;
+	private ObjectEntryService _objectEntryService;
 
 	@Reference
-	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
@@ -668,6 +778,10 @@ public class ObjectEntryDTOConverter
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SystemObjectDefinitionMetadataRegistry
+		_systemObjectDefinitionMetadataRegistry;
 
 	@Reference
 	private UserLocalService _userLocalService;

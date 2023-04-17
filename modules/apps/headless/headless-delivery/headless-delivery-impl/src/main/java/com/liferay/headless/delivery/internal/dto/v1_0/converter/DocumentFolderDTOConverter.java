@@ -61,7 +61,7 @@ public class DocumentFolderDTOConverter
 				actions = dtoConverterContext.getActions();
 				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
 				creator = CreatorUtil.toCreator(
-					_portal, dtoConverterContext.getUriInfoOptional(),
+					_portal, dtoConverterContext.getUriInfo(),
 					_userLocalService.fetchUser(folder.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					dtoConverterContext.isAcceptAllLanguages(),
@@ -70,6 +70,7 @@ public class DocumentFolderDTOConverter
 				dateCreated = folder.getCreateDate();
 				dateModified = folder.getModifiedDate();
 				description = folder.getDescription();
+				externalReferenceCode = folder.getExternalReferenceCode();
 				id = folder.getFolderId();
 				name = folder.getName();
 				numberOfDocumentFolders = _dlAppService.getFoldersCount(

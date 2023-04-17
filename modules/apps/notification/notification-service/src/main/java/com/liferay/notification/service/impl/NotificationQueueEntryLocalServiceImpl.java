@@ -16,6 +16,7 @@ package com.liferay.notification.service.impl;
 
 import com.liferay.notification.constants.NotificationQueueEntryConstants;
 import com.liferay.notification.context.NotificationContext;
+import com.liferay.notification.exception.NotificationQueueEntryStatusException;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
@@ -23,6 +24,8 @@ import com.liferay.notification.service.NotificationQueueEntryAttachmentLocalSer
 import com.liferay.notification.service.NotificationRecipientLocalService;
 import com.liferay.notification.service.NotificationRecipientSettingLocalService;
 import com.liferay.notification.service.base.NotificationQueueEntryLocalServiceBaseImpl;
+import com.liferay.notification.type.NotificationType;
+import com.liferay.notification.type.NotificationTypeServiceTracker;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -115,11 +118,8 @@ public class NotificationQueueEntryLocalServiceImpl
 		for (NotificationQueueEntry notificationQueueEntry :
 				notificationQueueEntryPersistence.findByLtSentDate(sentDate)) {
 
-			notificationQueueEntryPersistence.remove(notificationQueueEntry);
-
-			_notificationQueueEntryAttachmentLocalService.
-				deleteNotificationQueueEntryAttachments(
-					notificationQueueEntry.getNotificationQueueEntryId());
+			notificationQueueEntryLocalService.deleteNotificationQueueEntry(
+				notificationQueueEntry);
 		}
 	}
 
@@ -136,6 +136,7 @@ public class NotificationQueueEntryLocalServiceImpl
 			notificationQueueEntry);
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public NotificationQueueEntry deleteNotificationQueueEntry(
@@ -170,11 +171,10 @@ public class NotificationQueueEntryLocalServiceImpl
 	}
 
 	@Override
-	public List<NotificationQueueEntry> getUnsentNotificationEntries(
-		String type) {
+	public List<NotificationQueueEntry> getNotificationEntries(
+		String type, int status) {
 
-		return notificationQueueEntryPersistence.findByT_S(
-			type, NotificationQueueEntryConstants.STATUS_UNSENT);
+		return notificationQueueEntryPersistence.findByT_S(type, status);
 	}
 
 	@Override
@@ -182,9 +182,25 @@ public class NotificationQueueEntryLocalServiceImpl
 			long notificationQueueEntryId)
 		throws PortalException {
 
-		return notificationQueueEntryLocalService.updateStatus(
-			notificationQueueEntryId,
-			NotificationQueueEntryConstants.STATUS_UNSENT);
+		NotificationQueueEntry notificationQueueEntry =
+			getNotificationQueueEntry(notificationQueueEntryId);
+
+		if (notificationQueueEntry.getStatus() ==
+				NotificationQueueEntryConstants.STATUS_SENT) {
+
+			throw new NotificationQueueEntryStatusException(
+				"Notification queue entry " +
+					notificationQueueEntry.getNotificationQueueEntryId() +
+						" has already been sent");
+		}
+
+		NotificationType notificationType =
+			_notificationTypeServiceTracker.getNotificationType(
+				notificationQueueEntry.getType());
+
+		notificationType.resendNotification(notificationQueueEntry);
+
+		return getNotificationQueueEntry(notificationQueueEntryId);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)
@@ -228,6 +244,9 @@ public class NotificationQueueEntryLocalServiceImpl
 	@Reference
 	private NotificationRecipientSettingLocalService
 		_notificationRecipientSettingLocalService;
+
+	@Reference
+	private NotificationTypeServiceTracker _notificationTypeServiceTracker;
 
 	@Reference
 	private Portal _portal;

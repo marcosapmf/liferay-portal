@@ -12,13 +12,13 @@
  * details.
  */
 
-type Locale = Liferay.Language.Locale;
 type LocalizedValue<T> = Liferay.Language.LocalizedValue<T>;
 interface ObjectDefinition {
 	active: boolean;
 	dateCreated: string;
 	dateModified: string;
 	defaultLanguageId: string;
+	externalReferenceCode: string;
 	id: number;
 	label: LocalizedValue<string>;
 	name: string;
@@ -49,7 +49,7 @@ interface ObjectField {
 	id: number;
 	indexed: boolean;
 	indexedAsKeyword: boolean;
-	indexedLanguageId: Locale | null;
+	indexedLanguageId: Liferay.Language.Locale | null;
 	label: LocalizedValue<string>;
 	listTypeDefinitionId: number;
 	name: string;
@@ -59,7 +59,7 @@ interface ObjectField {
 	state: boolean;
 	system?: boolean;
 }
-
+type LabelValueObject = {label: string; value: string};
 type ObjectFieldBusinessType =
 	| 'Attachment'
 	| 'LongText'

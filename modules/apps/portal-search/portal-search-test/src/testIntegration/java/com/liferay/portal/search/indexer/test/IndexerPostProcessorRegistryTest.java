@@ -18,6 +18,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Contact;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
@@ -35,8 +36,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
@@ -205,16 +204,13 @@ public class IndexerPostProcessorRegistryTest {
 
 			List<String> expectedClassNames = Arrays.asList(
 				TestSampleModelIndexerPostProcessor.class.getName());
+			List<String> actualClassNames = TransformUtil.transformToList(
+				indexer.getIndexerPostProcessors(),
+				indexerPostProcessor -> {
+					Class<?> clazz = indexerPostProcessor.getClass();
 
-			List<String> actualClassNames = Stream.of(
-				indexer.getIndexerPostProcessors()
-			).map(
-				IndexerPostProcessor::getClass
-			).map(
-				Class::getName
-			).collect(
-				Collectors.toList()
-			);
+					return clazz.getName();
+				});
 
 			Assert.assertEquals(
 				expectedClassNames.toString(), actualClassNames.toString());

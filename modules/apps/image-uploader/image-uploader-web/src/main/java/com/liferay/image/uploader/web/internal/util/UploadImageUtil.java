@@ -18,7 +18,7 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelper;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProvider;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
@@ -31,7 +31,6 @@ import javax.portlet.PortletRequest;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -40,7 +39,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.users.admin.configuration.UserFileUploadsConfiguration",
-	configurationPolicy = ConfigurationPolicy.OPTIONAL, service = {}
+	service = {}
 )
 public class UploadImageUtil {
 
@@ -63,7 +62,7 @@ public class UploadImageUtil {
 			return _userFileUploadsConfiguration.imageMaxSize();
 		}
 
-		return _uploadServletRequestConfigurationHelper.getMaxSize();
+		return _uploadServletRequestConfigurationProvider.getMaxSize();
 	}
 
 	public static FileEntry getTempImageFileEntry(PortletRequest portletRequest)
@@ -96,15 +95,15 @@ public class UploadImageUtil {
 
 	@Reference(unbind = "-")
 	protected void setUploadServletRequestConfigurationHelper(
-		UploadServletRequestConfigurationHelper
-			uploadServletRequestConfigurationHelper) {
+		UploadServletRequestConfigurationProvider
+			uploadServletRequestConfigurationProvider) {
 
-		_uploadServletRequestConfigurationHelper =
-			uploadServletRequestConfigurationHelper;
+		_uploadServletRequestConfigurationProvider =
+			uploadServletRequestConfigurationProvider;
 	}
 
-	private static UploadServletRequestConfigurationHelper
-		_uploadServletRequestConfigurationHelper;
+	private static UploadServletRequestConfigurationProvider
+		_uploadServletRequestConfigurationProvider;
 	private static volatile UserFileUploadsConfiguration
 		_userFileUploadsConfiguration;
 

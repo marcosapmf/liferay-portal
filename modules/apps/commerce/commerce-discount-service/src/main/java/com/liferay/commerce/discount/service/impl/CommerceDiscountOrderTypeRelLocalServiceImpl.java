@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.discount.service.impl;
 
+import com.liferay.commerce.discount.exception.DuplicateCommerceDiscountOrderTypeRelException;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountOrderTypeRel;
 import com.liferay.commerce.discount.model.CommerceDiscountOrderTypeRelTable;
@@ -60,15 +61,24 @@ public class CommerceDiscountOrderTypeRelLocalServiceImpl
 			int priority, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
-
 		CommerceDiscountOrderTypeRel commerceDiscountOrderTypeRel =
+			commerceDiscountOrderTypeRelPersistence.fetchByCDI_COTI(
+				commerceDiscountId, commerceOrderTypeId);
+
+		if (commerceDiscountOrderTypeRel != null) {
+			throw new DuplicateCommerceDiscountOrderTypeRelException();
+		}
+
+		commerceDiscountOrderTypeRel =
 			commerceDiscountOrderTypeRelPersistence.create(
 				counterLocalService.increment());
+
+		User user = _userLocalService.getUser(userId);
 
 		commerceDiscountOrderTypeRel.setCompanyId(user.getCompanyId());
 		commerceDiscountOrderTypeRel.setUserId(user.getUserId());
 		commerceDiscountOrderTypeRel.setUserName(user.getFullName());
+
 		commerceDiscountOrderTypeRel.setCommerceDiscountId(commerceDiscountId);
 		commerceDiscountOrderTypeRel.setCommerceOrderTypeId(
 			commerceOrderTypeId);

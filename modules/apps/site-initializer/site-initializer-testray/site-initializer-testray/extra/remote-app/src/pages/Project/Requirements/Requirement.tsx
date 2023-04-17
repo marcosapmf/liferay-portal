@@ -22,9 +22,9 @@ import Container from '../../../components/Layout/Container';
 import ListView from '../../../components/ListView';
 import MarkdownPreview from '../../../components/Markdown';
 import QATable from '../../../components/Table/QATable';
+import SearchBuilder from '../../../core/SearchBuilder';
 import useHeader from '../../../hooks/useHeader';
 import i18n from '../../../i18n';
-import {filters} from '../../../schema/filter';
 import {
 	TestrayRequirement,
 	TestrayRequirementCase,
@@ -32,7 +32,6 @@ import {
 	testrayCaseRequirementsImpl,
 } from '../../../services/rest';
 import {DescriptionType} from '../../../types';
-import {searchUtil} from '../../../util/search';
 import RequirementCaseLinkModal from './RequirementCaseLinkModal';
 import useRequirementCaseActions from './useRequirementCaseActions';
 
@@ -137,7 +136,7 @@ const Requirement = () => {
 								</Button>
 							</ClayManagementToolbar.Item>
 						),
-						filterFields: filters.requirementCase as any,
+						filterSchema: 'requirementCases',
 						title: i18n.translate('cases'),
 					}}
 					resource={requirementsCasesResource}
@@ -181,7 +180,7 @@ const Requirement = () => {
 						)
 					}
 					variables={{
-						filter: searchUtil.eq(
+						filter: SearchBuilder.eq(
 							'requirementId',
 							testrayRequirement.id
 						),

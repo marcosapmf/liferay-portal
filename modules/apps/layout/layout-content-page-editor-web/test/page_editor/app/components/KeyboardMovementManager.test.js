@@ -22,7 +22,7 @@ import {
 	useSetMovementTarget,
 } from '../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/KeyboardMovementContext';
 import moveItem from '../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/moveItem';
-import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test-utils/StoreMother';
+import StoreMother from '../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
 jest.mock(
 	'../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/KeyboardMovementContext',
@@ -117,7 +117,7 @@ describe('KeyboardMovementManager', () => {
 
 		document.body.dispatchEvent(
 			new KeyboardEvent('keydown', {
-				keyCode: 38,
+				code: 'ArrowUp',
 			})
 		);
 
@@ -137,7 +137,7 @@ describe('KeyboardMovementManager', () => {
 
 		document.body.dispatchEvent(
 			new KeyboardEvent('keydown', {
-				keyCode: 40,
+				code: 'ArrrwDown',
 			})
 		);
 
@@ -157,7 +157,7 @@ describe('KeyboardMovementManager', () => {
 
 		document.body.dispatchEvent(
 			new KeyboardEvent('keydown', {
-				keyCode: 27,
+				code: 'Escape',
 			})
 		);
 
@@ -175,7 +175,7 @@ describe('KeyboardMovementManager', () => {
 
 		document.body.dispatchEvent(
 			new KeyboardEvent('keydown', {
-				keyCode: 13,
+				code: 'Enter',
 			})
 		);
 

@@ -1,7 +1,6 @@
 {
 	"dependencies": {
-		"frontend-js-web": "*",
-		"resize-observer-polyfill": "^1.5.1"
+		"frontend-js-web": "*"
 	},
 	"name": "commerce-dashboard-web",
 	"private": true,
@@ -12,5 +11,5 @@
 		"watch": "liferay-npm-scripts webpack --watch"
 	},
 	"sideEffects": false,
-	"version": "4.0.32"
+	"version": "4.0.35"
 }

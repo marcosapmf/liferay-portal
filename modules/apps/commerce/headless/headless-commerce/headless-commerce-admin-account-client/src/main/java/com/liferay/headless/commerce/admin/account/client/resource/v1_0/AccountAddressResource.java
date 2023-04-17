@@ -72,12 +72,11 @@ public interface AccountAddressResource {
 	public HttpInvoker.HttpResponse deleteAccountAddressHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteAccountAddressBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteAccountAddressBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteAccountAddressBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public AccountAddress getAccountAddress(Long id) throws Exception;
@@ -101,12 +100,11 @@ public interface AccountAddressResource {
 			Long id, AccountAddress accountAddress)
 		throws Exception;
 
-	public void putAccountAddressBatch(
-			Long id, String callbackURL, Object object)
+	public void putAccountAddressBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse putAccountAddressBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public Page<AccountAddress>
@@ -146,12 +144,12 @@ public interface AccountAddressResource {
 		throws Exception;
 
 	public void postAccountIdAccountAddressBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			postAccountIdAccountAddressBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -163,6 +161,10 @@ public interface AccountAddressResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public AccountAddressResource build() {
 			return new AccountAddressResourceImpl(this);
 		}
@@ -171,6 +173,28 @@ public interface AccountAddressResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -533,12 +557,11 @@ public interface AccountAddressResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteAccountAddressBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteAccountAddressBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteAccountAddressBatchHttpResponse(id, callbackURL, object);
+				deleteAccountAddressBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -567,7 +590,7 @@ public interface AccountAddressResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteAccountAddressBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -602,8 +625,6 @@ public interface AccountAddressResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-account/v1.0/accountAddresses/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -857,12 +878,11 @@ public interface AccountAddressResource {
 			return httpInvoker.invoke();
 		}
 
-		public void putAccountAddressBatch(
-				Long id, String callbackURL, Object object)
+		public void putAccountAddressBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				putAccountAddressBatchHttpResponse(id, callbackURL, object);
+				putAccountAddressBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -891,7 +911,7 @@ public interface AccountAddressResource {
 		}
 
 		public HttpInvoker.HttpResponse putAccountAddressBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -926,8 +946,6 @@ public interface AccountAddressResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-account/v1.0/accountAddresses/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1288,12 +1306,12 @@ public interface AccountAddressResource {
 		}
 
 		public void postAccountIdAccountAddressBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postAccountIdAccountAddressBatchHttpResponse(
-					id, callbackURL, object);
+					callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1323,7 +1341,7 @@ public interface AccountAddressResource {
 
 		public HttpInvoker.HttpResponse
 				postAccountIdAccountAddressBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1358,8 +1376,6 @@ public interface AccountAddressResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-account/v1.0/accounts/accountAddresses/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

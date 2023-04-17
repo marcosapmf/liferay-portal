@@ -72,33 +72,32 @@ public class SelectAssetDisplayPageDisplayContext {
 
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
-
 		_liferayPortletResponse = liferayPortletResponse;
 
 		_classNameId = GetterUtil.getLong(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:classNameId"));
 		_classPK = GetterUtil.getLong(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:classPK"));
 		_classTypeId = GetterUtil.getLong(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:classTypeId"));
 		_eventName = GetterUtil.getString(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:eventName"),
-			_liferayPortletResponse.getNamespace() + "selectDisplayPage");
+			liferayPortletResponse.getNamespace() + "selectDisplayPage");
 		_groupId = GetterUtil.getLong(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:groupId"));
 		_parentClassPK = GetterUtil.getLong(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:parentClassPK"));
 		_showPortletLayouts = GetterUtil.getBoolean(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:showPortletLayouts"));
 		_showViewInContextLink = GetterUtil.getBoolean(
-			_httpServletRequest.getAttribute(
+			httpServletRequest.getAttribute(
 				"liferay-asset:select-asset-display-page:" +
 					"showViewInContextLink"));
 	}

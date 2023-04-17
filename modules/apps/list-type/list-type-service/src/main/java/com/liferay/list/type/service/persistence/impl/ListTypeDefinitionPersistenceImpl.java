@@ -2631,7 +2631,9 @@ public class ListTypeDefinitionPersistenceImpl
 				if (ercListTypeDefinition != null) {
 					throw new DuplicateListTypeDefinitionExternalReferenceCodeException(
 						"Duplicate list type definition with external reference code " +
-							listTypeDefinition.getExternalReferenceCode());
+							listTypeDefinition.getExternalReferenceCode() +
+								" and company " +
+									listTypeDefinition.getCompanyId());
 				}
 			}
 			else {
@@ -2641,7 +2643,9 @@ public class ListTypeDefinitionPersistenceImpl
 
 					throw new DuplicateListTypeDefinitionExternalReferenceCodeException(
 						"Duplicate list type definition with external reference code " +
-							listTypeDefinition.getExternalReferenceCode());
+							listTypeDefinition.getExternalReferenceCode() +
+								" and company " +
+									listTypeDefinition.getCompanyId());
 				}
 			}
 		}

@@ -95,6 +95,7 @@ const FrontendDataSet = ({
 	sidePanelId,
 	sorting: sortingProp,
 	style,
+	uniformActionsDisplay,
 	views,
 }) => {
 	const wrapperRef = useRef(null);
@@ -200,8 +201,6 @@ const FrontendDataSet = ({
 		name: activeViewName,
 		...currentViewProps
 	} = activeView;
-
-	const selectable = !!(bulkActions?.length && selectedItemsKey);
 
 	const requestData = useCallback(() => {
 		const activeFiltersOdataStrings = filters.reduce(
@@ -760,7 +759,10 @@ const FrontendDataSet = ({
 				portletId,
 				searchParam,
 				selectItems,
-				selectable,
+				selectable: Boolean(
+					selectedItemsKey &&
+						(bulkActions?.length || selectionType === 'single')
+				),
 				selectedItemsKey,
 				selectedItemsValue,
 				selectionType,
@@ -768,6 +770,7 @@ const FrontendDataSet = ({
 				sorting,
 				style,
 				toggleItemInlineEdit,
+				uniformActionsDisplay,
 				updateDataSetItems,
 				updateItem,
 				updateSearchParam: setSearchParam,

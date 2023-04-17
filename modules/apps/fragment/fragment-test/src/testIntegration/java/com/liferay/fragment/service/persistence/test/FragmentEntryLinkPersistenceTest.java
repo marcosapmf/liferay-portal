@@ -345,6 +345,39 @@ public class FragmentEntryLinkPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_R() throws Exception {
+		_persistence.countByC_R(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_R(0L, "null");
+
+		_persistence.countByC_R(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByC_RArrayable() throws Exception {
+		_persistence.countByC_R(
+			RandomTestUtil.nextLong(),
+			new String[] {
+				RandomTestUtil.randomString(), "", "null", null, null
+			});
+	}
+
+	@Test
+	public void testCountByF_D() throws Exception {
+		_persistence.countByF_D(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByF_D(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByF_DArrayable() throws Exception {
+		_persistence.countByF_D(
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByG_OFELI_P() throws Exception {
 		_persistence.countByG_OFELI_P(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),

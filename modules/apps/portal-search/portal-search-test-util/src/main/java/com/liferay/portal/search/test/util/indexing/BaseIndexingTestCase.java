@@ -72,14 +72,12 @@ import com.liferay.portal.search.test.util.document.DocumentTranslator;
 import java.io.Serializable;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -177,21 +175,19 @@ public abstract class BaseIndexingTestCase {
 	}
 
 	protected void addDocuments(
-		Function<String, DocumentCreationHelper> function,
-		Collection<String> values) {
+		Function<Double, DocumentCreationHelper> function, double... values) {
 
-		addDocuments(function, values.stream());
+		for (double value : values) {
+			addDocument(function.apply(value));
+		}
 	}
 
 	protected void addDocuments(
-		Function<String, DocumentCreationHelper> function,
-		Stream<String> stream) {
+		Function<String, DocumentCreationHelper> function, String... values) {
 
-		stream.map(
-			function
-		).forEach(
-			this::addDocument
-		);
+		for (String value : values) {
+			addDocument(function.apply(value));
+		}
 	}
 
 	protected void assertSearch(

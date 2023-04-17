@@ -28,7 +28,6 @@ import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.web.internal.configuration.CTConfiguration;
 import com.liferay.change.tracking.web.internal.display.BasePersistenceRegistry;
-import com.liferay.change.tracking.web.internal.display.CTClosureUtil;
 import com.liferay.change.tracking.web.internal.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.web.internal.display.CTModelDisplayRendererAdapter;
 import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
@@ -42,6 +41,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ORMException;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -82,7 +82,6 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -135,7 +134,7 @@ public class ViewChangesDisplayContext {
 		_renderResponse = renderResponse;
 		_userLocalService = userLocalService;
 
-		_httpServletRequest = _portal.getHttpServletRequest(renderRequest);
+		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
 
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -163,7 +162,12 @@ public class ViewChangesDisplayContext {
 
 		CTClosure ctClosure = null;
 
-		if (_ctCollection.getStatus() != WorkflowConstants.STATUS_APPROVED) {
+		int ctEntriesCount = _ctEntryLocalService.getCTCollectionCTEntriesCount(
+			_ctCollection.getCtCollectionId());
+
+		if ((_ctCollection.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
+			(ctEntriesCount <= _ctConfiguration.contextViewLimitCount())) {
+
 			try {
 				ctClosure = _ctClosureFactory.create(
 					_ctCollection.getCtCollectionId());
@@ -239,13 +243,15 @@ public class ViewChangesDisplayContext {
 			}
 		}
 
+		boolean showHideable = ParamUtil.getBoolean(
+			_renderRequest, "showHideable");
 		Map<Long, String> typeNameCacheMap = new HashMap<>();
 
 		for (Map.Entry<Long, Set<Long>> entry :
 				classNameIdClassPKsMap.entrySet()) {
 
 			_populateEntryValues(
-				modelInfoMap, entry.getKey(), entry.getValue(),
+				modelInfoMap, entry.getKey(), entry.getValue(), showHideable,
 				typeNameCacheMap);
 		}
 
@@ -260,8 +266,6 @@ public class ViewChangesDisplayContext {
 					ctClosure, modelInfoMap, groupClassNameId, groupId);
 			}
 		}
-
-		Set<Long> rootClassNameIds = _getRootClassNameIds(ctClosure);
 
 		return HashMapBuilder.<String, Object>put(
 			"changes",
@@ -281,16 +285,30 @@ public class ViewChangesDisplayContext {
 			ParamUtil.getString(_renderRequest, "changeTypes")
 		).put(
 			"collaboratorsData",
-			_publicationsDisplayContext.getCollaboratorsReactData(_ctCollection)
+			_publicationsDisplayContext.getCollaboratorsReactData(
+				_ctCollection.getCtCollectionId(), false)
 		).put(
 			"columnFromURL", ParamUtil.getString(_renderRequest, "column")
 		).put(
 			"contextView",
 			_getContextViewJSONObject(
-				ctClosure, modelInfoMap, rootClassNameIds,
-				contextViewJSONObject, typeNameCacheMap)
+				ctClosure, modelInfoMap, contextViewJSONObject,
+				typeNameCacheMap)
 		).put(
 			"ctCollectionId", _ctCollection.getCtCollectionId()
+		).put(
+			"ctCollections",
+			JSONUtil.toJSONArray(
+				_ctCollectionLocalService.getCTCollections(
+					_themeDisplay.getCompanyId(),
+					WorkflowConstants.STATUS_DRAFT, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null),
+				ctCollection -> JSONUtil.put(
+					"ctCollectionId",
+					String.valueOf(ctCollection.getCtCollectionId())
+				).put(
+					"name", ctCollection.getName()
+				))
 		).put(
 			"ctMappingInfos",
 			() -> {
@@ -524,6 +542,23 @@ public class ViewChangesDisplayContext {
 				return modelDataJSONObject;
 			}
 		).put(
+			"moveChangesURL",
+			PortletURLBuilder.createActionURL(
+				_renderResponse
+			).setActionName(
+				"/change_tracking/move_changes"
+			).setRedirect(
+				PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/view_changes"
+				).setParameter(
+					"ctCollectionId", _ctCollection.getCtCollectionId()
+				).buildString()
+			).setParameter(
+				"ctCollectionId", _ctCollection.getCtCollectionId()
+			).buildString()
+		).put(
 			"name", _ctCollection.getName()
 		).put(
 			"namespace", _renderResponse.getNamespace()
@@ -598,23 +633,6 @@ public class ViewChangesDisplayContext {
 				).buildString();
 			}
 		).put(
-			"rootDisplayClasses",
-			() -> {
-				JSONArray rootDisplayClassesJSONArray =
-					JSONFactoryUtil.createJSONArray();
-
-				for (long rootClassNameId : rootClassNameIds) {
-					if (classNameIdClassPKsMap.containsKey(rootClassNameId)) {
-						rootDisplayClassesJSONArray.put(
-							_getTypeName(
-								_themeDisplay.getLocale(), rootClassNameId,
-								typeNameCacheMap));
-					}
-				}
-
-				return rootDisplayClassesJSONArray;
-			}
-		).put(
 			"scheduleURL",
 			() -> {
 				if ((_ctCollection.getStatus() !=
@@ -638,8 +656,7 @@ public class ViewChangesDisplayContext {
 				).buildString();
 			}
 		).put(
-			"showHideableFromURL",
-			ParamUtil.getBoolean(_renderRequest, "showHideable")
+			"showHideableFromURL", showHideable
 		).put(
 			"siteNames",
 			() -> {
@@ -688,6 +705,8 @@ public class ViewChangesDisplayContext {
 			"statusStyle",
 			_publicationsDisplayContext.getStatusStyle(
 				_ctCollection.getStatus())
+		).put(
+			"total", ctEntriesCount
 		).put(
 			"typeNames",
 			() -> {
@@ -755,7 +774,7 @@ public class ViewChangesDisplayContext {
 
 	private JSONObject _getContextViewJSONObject(
 		CTClosure ctClosure, Map<ModelInfoKey, ModelInfo> modelInfoMap,
-		Set<Long> rootClassNameIds, JSONObject defaultContextViewJSONObject,
+		JSONObject defaultContextViewJSONObject,
 		Map<Long, String> typeNameCacheMap) {
 
 		if (ctClosure == null) {
@@ -804,9 +823,7 @@ public class ViewChangesDisplayContext {
 
 					childrenJSONArray.put(jsonObject);
 
-					if (rootClassNameIds.contains(modelClassNameId) &&
-						rootModelKeys.add(modelKey)) {
-
+					if (rootModelKeys.add(modelKey)) {
 						JSONArray jsonArray = rootDisplayMap.computeIfAbsent(
 							modelClassNameId,
 							key -> JSONFactoryUtil.createJSONArray());
@@ -952,31 +969,6 @@ public class ViewChangesDisplayContext {
 			", modelClassNameId=", modelClassNameId, "}");
 	}
 
-	private Set<Long> _getRootClassNameIds(CTClosure ctClosure) {
-		if (ctClosure == null) {
-			return Collections.emptySet();
-		}
-
-		Set<Long> rootClassNameIds = new LinkedHashSet<>();
-
-		for (String className : _ctConfiguration.rootDisplayClassNames()) {
-			rootClassNameIds.add(_portal.getClassNameId(className));
-		}
-
-		for (String childClassName :
-				_ctConfiguration.rootDisplayChildClassNames()) {
-
-			for (long parentClassNameId :
-					CTClosureUtil.getParentClassNameIds(
-						ctClosure, _portal.getClassNameId(childClassName))) {
-
-				rootClassNameIds.add(parentClassNameId);
-			}
-		}
-
-		return rootClassNameIds;
-	}
-
 	private <T extends BaseModel<T>> String _getTitle(
 		long ctCollectionId, CTSQLModeThreadLocal.CTSQLMode ctSQLMode,
 		Locale locale, T model, long modelClassNameId,
@@ -1028,7 +1020,8 @@ public class ViewChangesDisplayContext {
 
 	private <T extends BaseModel<T>> void _populateEntryValues(
 			Map<ModelInfoKey, ModelInfo> modelInfoMap, long modelClassNameId,
-			Set<Long> classPKs, Map<Long, String> typeNameCacheMap)
+			Set<Long> classPKs, boolean showHideable,
+			Map<Long, String> typeNameCacheMap)
 		throws Exception {
 
 		Map<Serializable, T> baseModelMap = null;
@@ -1075,10 +1068,15 @@ public class ViewChangesDisplayContext {
 					continue;
 				}
 
+				boolean hideable = _ctDisplayRendererRegistry.isHideable(
+					model, modelClassNameId);
+
+				if (hideable && !showHideable) {
+					continue;
+				}
+
 				modelInfo._jsonObject = JSONUtil.put(
-					"hideable",
-					_ctDisplayRendererRegistry.isHideable(
-						model, modelClassNameId)
+					"hideable", hideable
 				).put(
 					"modelClassNameId", modelClassNameId
 				).put(
@@ -1119,7 +1117,9 @@ public class ViewChangesDisplayContext {
 									modelClassNameId, classPKs);
 						}
 
-						model = ctModelMap.get(classPK);
+						if (ctModelMap != null) {
+							model = ctModelMap.get(classPK);
+						}
 					}
 					else {
 						model = _ctDisplayRendererRegistry.fetchCTModel(
@@ -1162,6 +1162,13 @@ public class ViewChangesDisplayContext {
 					continue;
 				}
 
+				boolean hideable = _ctDisplayRendererRegistry.isHideable(
+					model, modelClassNameId);
+
+				if (hideable && !showHideable) {
+					continue;
+				}
+
 				Map<String, Object> modelAttributes =
 					model.getModelAttributes();
 
@@ -1174,9 +1181,7 @@ public class ViewChangesDisplayContext {
 				).put(
 					"ctEntryId", ctEntry.getCtEntryId()
 				).put(
-					"hideable",
-					_ctDisplayRendererRegistry.isHideable(
-						model, modelClassNameId)
+					"hideable", hideable
 				).put(
 					"modelClassNameId", ctEntry.getModelClassNameId()
 				).put(

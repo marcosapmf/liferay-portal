@@ -57,12 +57,8 @@ public class ObjectActionNameExceptionMapper
 						objectActionNameException.getMessageKey())
 				)
 			).toString(),
-			Response.Status.BAD_REQUEST, null, "ObjectActionNameException");
-	}
-
-	@Override
-	protected boolean isSanitize() {
-		return false;
+			Response.Status.BAD_REQUEST, null,
+			ObjectActionNameException.class.getName());
 	}
 
 	@Context

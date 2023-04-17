@@ -1,6 +1,7 @@
 @component-name = "portal-frontend-infrastructure"
 definition {
 
+	property osgi.modules.includes = "frontend-taglib-clay-sample-web";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Clay";
@@ -33,7 +34,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -44,7 +45,7 @@ definition {
 	}
 
 	@description = "Verify stripe alert contains close button"
-	@priority = "5"
+	@priority = 5
 	test CanDisplayCloseButton {
 		task ("When the alert is a stripe variation") {
 			VerifyElementPresent(

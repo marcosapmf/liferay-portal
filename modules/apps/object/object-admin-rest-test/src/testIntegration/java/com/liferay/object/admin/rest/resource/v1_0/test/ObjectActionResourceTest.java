@@ -21,11 +21,11 @@ import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Collections;
 
@@ -91,6 +91,7 @@ public class ObjectActionResourceTest extends BaseObjectActionResourceTestCase {
 				description = RandomTestUtil.randomString();
 				errorMessage = Collections.singletonMap(
 					"en_US", RandomTestUtil.randomString());
+				externalReferenceCode = RandomTestUtil.randomString();
 				id = RandomTestUtil.randomLong();
 				label = Collections.singletonMap(
 					"en_US", RandomTestUtil.randomString());
@@ -115,6 +116,13 @@ public class ObjectActionResourceTest extends BaseObjectActionResourceTestCase {
 
 	@Override
 	protected ObjectAction testGetObjectAction_addObjectAction()
+		throws Exception {
+
+		return _addObjectAction();
+	}
+
+	protected ObjectAction
+			testGetObjectActionByExternalReferenceCode_addObjectAction()
 		throws Exception {
 
 		return _addObjectAction();

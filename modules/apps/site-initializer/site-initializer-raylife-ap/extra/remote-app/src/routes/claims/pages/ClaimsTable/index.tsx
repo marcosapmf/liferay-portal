@@ -23,7 +23,10 @@ import classNames from 'classnames';
 import {useCallback, useEffect, useState} from 'react';
 
 import Header from '../../../../common/components/header';
-import Table from '../../../../common/components/table';
+import Table, {
+	TableHeaders,
+	TableRowContentType,
+} from '../../../../common/components/table';
 import {Parameters} from '../../../../common/services';
 import {
 	deleteClaimByExternalReferenceCode,
@@ -40,6 +43,7 @@ import {
 	lowercaseFirstLetter,
 } from '../../../../common/utils/constantsType';
 import formatDate from '../../../../common/utils/dateFormatter';
+import {redirectTo} from '../../../../common/utils/liferay';
 import useDebounce from '../../../../hooks/useDebounce';
 
 type ClaimTableType = {
@@ -47,6 +51,7 @@ type ClaimTableType = {
 	claimStatus: {name: string};
 	externalReferenceCode: string;
 	id: string;
+	isClickable: string;
 	r_policyToClaims_c_raylifePolicy: {
 		externalReferenceCode: string;
 		policyOwnerName: string;
@@ -54,17 +59,13 @@ type ClaimTableType = {
 	};
 };
 
-type ItemsProducts = {
-	[keys: string]: string;
-};
-
-type ItemsPicklists = {
-	[keys: string]: string;
-};
-
 type TableContentType = {
 	[key: string]: string;
 };
+
+type ItemsProducts = TableContentType;
+
+type ItemsPicklists = TableContentType;
 
 type ItemsFilteredType = {
 	checked: boolean;
@@ -165,11 +166,10 @@ const ClaimsTable = () => {
 	const [parameters, setParameters] = useState<Parameters>(
 		generateParameters()
 	);
+	const parameterDebounce = useDebounce(parameters, 200);
 
 	parameters.pageSize = pageSize.toString();
 	parameters.page = page.toString();
-
-	const parameterDebounce = useDebounce(parameters, 200);
 
 	const setFilterSearch = () => {
 		setPage(1);
@@ -194,6 +194,10 @@ const ClaimsTable = () => {
 		}
 		if (!searchInput) {
 			setParameters(generateParameters());
+
+			if (!filterProductCheck.length && !filterStatusCheck.length) {
+				return setParameters(generateParameters(filterSearch));
+			}
 
 			if (!filterProductCheck.length && filterStatusCheck.length) {
 				return setParameters(generateParameters(filterStatus));
@@ -246,6 +250,7 @@ const ClaimsTable = () => {
 		},
 		{
 			bold: true,
+			clickable: true,
 			clickableSort: true,
 			hasSort: false,
 			key: 'id',
@@ -293,6 +298,7 @@ const ClaimsTable = () => {
 
 	const handleEditClaim = (externalReferenceCode: string) => {
 		alert(`Edit ${externalReferenceCode} Action`);
+		searchInput;
 	};
 
 	useEffect(() => {
@@ -351,7 +357,12 @@ const ClaimsTable = () => {
 		setFilterSearch();
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [filterProductCheck, filterStatusCheck, filterCheckedLabel]);
+	}, [
+		filterProductCheck,
+		filterStatusCheck,
+		filterCheckedLabel,
+		currentSort,
+	]);
 
 	const getClaimsAndPolicies = useCallback(async () => {
 		const claimList: TableContentType[] = [];
@@ -372,6 +383,9 @@ const ClaimsTable = () => {
 				claimName: r_policyToClaims_c_raylifePolicy?.policyOwnerName,
 				claimStatus: claimStatus?.name,
 				id,
+				isClickable: (
+					r_policyToClaims_c_raylifePolicy.productName === 'Auto'
+				).toString(),
 				key: externalReferenceCode,
 				policyNumber:
 					r_policyToClaims_c_raylifePolicy?.externalReferenceCode,
@@ -582,10 +596,18 @@ const ClaimsTable = () => {
 		setCheckedStateStatus(updatedCheckedStateStatus);
 	};
 
+	const handleSortParameters = (filter: string) => {
+		setSortedOrder(filter);
+		setParameters((previous) => ({
+			...previous,
+			sort: `${currentSort}:${filter}`,
+		}));
+	};
+
 	const setSortRule = () => {
 		sortedOrder === Order.Descendant
-			? setSortedOrder(Order.Ascendant)
-			: setSortedOrder(Order.Descendant);
+			? handleSortParameters(Order.Ascendant)
+			: handleSortParameters(Order.Descendant);
 	};
 
 	const setHeader = (user: string) => {
@@ -659,6 +681,22 @@ const ClaimsTable = () => {
 			...prevFilterStatusCheck,
 			`'${claimStatusFieldKey}'`,
 		]);
+	};
+
+	const handleRedirectToDetailsPages = (id: number, entity: string) => {
+		redirectTo(`${entity}?id=${id}`);
+	};
+
+	const onClickRules = (
+		item: TableHeaders,
+		rowContent: TableRowContentType
+	) => {
+		if (item.clickable && item.key === 'id') {
+			handleRedirectToDetailsPages(
+				rowContent['id'] as number,
+				'claim-details'
+			);
+		}
 	};
 
 	useEffect(() => {
@@ -911,6 +949,7 @@ const ClaimsTable = () => {
 									setFilterCheckedLabel([]);
 									setFilterProductCheck([]);
 									setFilterStatusCheck([]);
+									setIsRemaining(false);
 									setParameters(generateParameters());
 								}}
 							>
@@ -935,6 +974,7 @@ const ClaimsTable = () => {
 				]}
 				data={dataClaims}
 				headers={HEADERS}
+				onClickRules={onClickRules}
 				onSaveCurrent={setHeader}
 				setSort={setSortState}
 				sort={sortState}

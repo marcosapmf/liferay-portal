@@ -42,7 +42,7 @@ const ActivityContent = ({mdfRequestActivity}: IProps) => {
 			{
 				title: 'Lead Follow Up strategy',
 				value: mdfRequestActivity?.activityDescription?.leadFollowUpStrategies?.join(
-					'; '
+					', '
 				) as string,
 			},
 			{
@@ -56,7 +56,6 @@ const ActivityContent = ({mdfRequestActivity}: IProps) => {
 	return (
 		<>
 			<Table
-				borderless
 				className="bg-brand-primary-lighten-6 border-top table-striped"
 				columns={[
 					{
@@ -70,12 +69,13 @@ const ActivityContent = ({mdfRequestActivity}: IProps) => {
 				]}
 				rows={mdfRequestActivity.budgets.map((budget) => ({
 					title: budget.expense.name,
-					value: getIntlNumberFormat().format(budget.cost),
+					value: getIntlNumberFormat(
+						mdfRequestActivity.currency
+					).format(budget.cost),
 				}))}
 			/>
 
 			<Table
-				borderless
 				className="bg-brand-primary-lighten-6 border-top table-striped"
 				columns={[
 					{
@@ -88,7 +88,6 @@ const ActivityContent = ({mdfRequestActivity}: IProps) => {
 					},
 				]}
 				rows={leadList}
-				truncate
 			/>
 		</>
 	);

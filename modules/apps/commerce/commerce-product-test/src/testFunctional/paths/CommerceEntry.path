@@ -91,6 +91,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PRODUCT_DETAIL_UUID</td>
+	<td>//*[contains(text(),'${uuid}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PRODUCT_CARD_COMPARE_CHECKBOX_DISABLED</td>
 	<td>//p[@title='${key_productName}']//../..//input[contains(@aria-label,'Compare') and @disabled]</td>
 	<td></td>
@@ -338,6 +343,11 @@
 <tr>
 	<td>OVERRIDE_DEFAULT_DISPLAY_PAGE_LAYOUT</td>
 	<td>//div[contains(@class,'table')]//div[contains(text(),'${key_layout}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>OVERRIDE_DEFAULT_DISPLAY_PAGE_SIDE_PANEL_CHOOSE_BUTTON</td>
+	<td>//*[contains(.,'${key_tabName}')]//..//button[contains(.,'Choose')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -607,7 +617,7 @@
 </tr>
 <tr>
 	<td>CHANNELS_GENERAL_TAB_EDITS</td>
-	<td>//div[contains(text(),'${key_entryName}')]/following-sibling::div[contains(@class,'item-actions')]//a</td>
+	<td>//div[contains(text(),'${key_entryName}')]/following-sibling::div[contains(@class,'item-actions')]//*</td>
 	<td></td>
 </tr>
 <tr>
@@ -681,6 +691,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>TABLE_ENTRY_FIELD_VALUE</td>
+	<td>//*[contains(@class, 'table-list-title')]/a[text()='${key_entryTitle}']/../../../div[${key_index}][text()='${key_value}']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>TABLE_ENTRY_STATUS</td>
 	<td>//h4[contains(.,'${key_table}')]//..//div/a[contains(.,'${key_entryName}')]/parent::div/parent::div/parent::div//div[@class='dnd-td']/span[contains(@class,'label')][contains(.,'${key_entryStatus}')]</td>
 	<td></td>
@@ -706,8 +721,13 @@
 	<td></td>
 </tr>
 <tr>
+	<td>TABLE_ENTRY_DELETE_BUTTON</td>
+	<td>//h4[contains(.,'${key_table}')]//..//div/a[contains(.,'${key_entryName}')]//..//..//../div/*[contains(.,'Delete')] | //div[contains(.,'${key_table}')]//div[@class='dnd-tr'][contains(.,'${key_entryName}')]//*[contains(text(),'Delete')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>TABLE_ENTRY_EDIT_BUTTON</td>
-	<td>//h4[contains(.,'${key_table}')]//..//div/a[contains(.,'${key_entryName}')]//..//..//../div/a[contains(.,'Edit')] | //div[contains(.,'${key_table}')]//div[@class='dnd-tr'][contains(.,'${key_entryName}')]//a[contains(text(),'Edit')]</td>
+	<td>//h4[contains(.,'${key_table}')]//..//div/a[contains(.,'${key_entryName}')]//..//..//../div/*[contains(.,'Edit')] | //div[contains(.,'${key_table}')]//div[@class='dnd-tr'][contains(.,'${key_entryName}')]//*[contains(text(),'Edit')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -885,6 +905,11 @@
 	<td>//div[@class='side-panel-iframe-title']//h3</td>
 	<td></td>
 </tr>
+<tr>
+	<td>SPECIFIC_SIDE_PANEL_CLOSE_BUTTON</td>
+	<td>//div[contains(@class,'side-panel-iframe-title')][normalize-space()='${key_frameTitle}']/..//button[contains(@class,'side-panel-iframe-close')]</td>
+	<td></td>
+</tr>
 
 <!--PRICE-->
 
@@ -1011,6 +1036,11 @@
 <tr>
 	<td>PRODUCT_CARD_SKU</td>
 	<td>//div[@class="cp-information"]//span[contains(text(),'${key_productSku}')]//following::p[contains(.,'${key_productName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_DETAIL_CARD_HEADER</td>
+	<td>//div[contains(@class,'card d-flex')]//h4[contains(.,'${key_cardName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -1257,6 +1287,20 @@
 	<td>//h4[contains(.,"${key_name}")]//span[contains(@id,'toggle-switch')]//..//..//..//div[contains(@class,'collapse show')]</td>
 	<td></td>
 </tr>
+
+<!--SITEMAP-->
+
+<tr>
+	<td>PRODUCT_DETAIL_SITEMAP_URL</td>
+	<td>//*[text()='${key_basePortalURL}/web/minium/p/${key_productName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_DETAIL_SITEMAP_URL_HREF_HREFLANG</td>
+	<td>//*[text()='${key_basePortalURL}/web/minium/p/${key_productURLName}']/following-sibling::*[@href = '${key_basePortalURL}/web/minium/p/${key_productName}'][@hreflang='${key_productNameLang}']</td>
+	<td></td>
+</tr>
+
 </tbody>
 </table>
 </body>

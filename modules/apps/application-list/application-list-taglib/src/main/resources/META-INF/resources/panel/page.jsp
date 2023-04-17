@@ -68,9 +68,15 @@ PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(panelAppRegist
 								</c:if>
 							</c:if>
 
-							<aui:icon cssClass="collapse-icon-closed" image="angle-right" markupView="lexicon" />
+							<clay:icon
+								cssClass="collapse-icon-closed"
+								symbol="angle-right"
+							/>
 
-							<aui:icon cssClass="collapse-icon-open" image="angle-down" markupView="lexicon" />
+							<clay:icon
+								cssClass="collapse-icon-open"
+								symbol="angle-down"
+							/>
 						</a>
 
 						<div class="collapse <%= active ? "show" : StringPool.BLANK %>" id="<%= id %>">
@@ -183,16 +189,14 @@ PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(panelAppRegist
 	</li>
 
 	<%
-	for (PanelApp panelApp : panelAppRegistry.getPanelApps(panelCategory.getKey())) {
+	for (PanelApp panelApp : panelAppRegistry.getPanelApps(panelCategory.getKey(), permissionChecker, themeDisplay.getScopeGroup())) {
 	%>
 
-		<c:if test="<%= panelApp.isShow(permissionChecker, themeDisplay.getScopeGroup()) %>">
-			<li class="list-group" role="none">
-				<div class="list-group-heading panel-app-root panel-header <%= Objects.equals(themeDisplay.getPpid(), panelApp.getPortletId()) ? "active" : StringPool.BLANK %>">
-					<%@ include file="/panel/panel_app.jspf" %>
-				</div>
-			</li>
-		</c:if>
+		<li class="list-group" role="none">
+			<div class="list-group-heading panel-app-root panel-header <%= PanelAppUtil.isActive(request, panelApp) ? "active" : StringPool.BLANK %>">
+				<%@ include file="/panel/panel_app.jspf" %>
+			</div>
+		</li>
 
 	<%
 	}

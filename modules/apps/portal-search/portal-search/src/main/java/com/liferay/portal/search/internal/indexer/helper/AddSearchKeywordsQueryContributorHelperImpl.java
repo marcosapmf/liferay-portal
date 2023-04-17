@@ -30,8 +30,7 @@ import com.liferay.portal.search.spi.model.query.contributor.helper.KeywordQuery
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -59,8 +58,7 @@ public class AddSearchKeywordsQueryContributorHelperImpl
 
 		return Arrays.asList(
 			SearchStringUtil.splitAndUnquote(
-				Optional.ofNullable(
-					(String)searchContext.getAttribute(string))));
+				(String)searchContext.getAttribute(string)));
 	}
 
 	@Reference
@@ -81,8 +79,8 @@ public class AddSearchKeywordsQueryContributorHelperImpl
 			return;
 		}
 
-		Stream<KeywordQueryContributor> stream =
-			keywordQueryContributorsRegistry.stream(
+		List<KeywordQueryContributor> filteredKeywordQueryContributors =
+			keywordQueryContributorsRegistry.filterKeywordQueryContributors(
 				getStrings(
 					"search.full.query.clause.contributors.excludes",
 					searchContext),
@@ -90,8 +88,10 @@ public class AddSearchKeywordsQueryContributorHelperImpl
 					"search.full.query.clause.contributors.includes",
 					searchContext));
 
-		stream.forEach(
-			keywordQueryContributor -> keywordQueryContributor.contribute(
+		for (KeywordQueryContributor keywordQueryContributor :
+				filteredKeywordQueryContributors) {
+
+			keywordQueryContributor.contribute(
 				keywords, booleanQuery,
 				new KeywordQueryContributorHelper() {
 
@@ -101,7 +101,7 @@ public class AddSearchKeywordsQueryContributorHelperImpl
 					}
 
 					@Override
-					public Stream<String> getSearchClassNamesStream() {
+					public String[] getSearchClassNames() {
 						throw new UnsupportedOperationException();
 					}
 
@@ -110,7 +110,8 @@ public class AddSearchKeywordsQueryContributorHelperImpl
 						return searchContext;
 					}
 
-				}));
+				});
+		}
 	}
 
 	private void _addStringQuery(BooleanQuery booleanQuery, String keywords) {

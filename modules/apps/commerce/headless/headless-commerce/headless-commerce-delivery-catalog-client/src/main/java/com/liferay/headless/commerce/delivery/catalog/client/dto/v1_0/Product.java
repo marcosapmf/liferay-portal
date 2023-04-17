@@ -141,6 +141,27 @@ public class Product implements Cloneable, Serializable {
 
 	protected Map<String, ?> expando;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public Long getId() {
 		return id;
 	}
@@ -180,6 +201,28 @@ public class Product implements Cloneable, Serializable {
 	}
 
 	protected Attachment[] images;
+
+	public LinkedProduct[] getLinkedProducts() {
+		return linkedProducts;
+	}
+
+	public void setLinkedProducts(LinkedProduct[] linkedProducts) {
+		this.linkedProducts = linkedProducts;
+	}
+
+	public void setLinkedProducts(
+		UnsafeSupplier<LinkedProduct[], Exception>
+			linkedProductsUnsafeSupplier) {
+
+		try {
+			linkedProducts = linkedProductsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected LinkedProduct[] linkedProducts;
 
 	public String getMetaDescription() {
 		return metaDescription;

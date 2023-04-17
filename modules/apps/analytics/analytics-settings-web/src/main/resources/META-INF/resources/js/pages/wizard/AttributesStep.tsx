@@ -18,11 +18,12 @@ import React from 'react';
 import {EPageView, Events, useDispatch} from '../../App';
 import BasePage from '../../components/BasePage';
 import Attributes from '../../components/attributes/Attributes';
-import {IGenericStepProps} from './WizardPage';
+import {sync} from '../../utils/api';
+import {ESteps, IGenericStepProps} from './WizardPage';
 
 interface IStepProps extends IGenericStepProps {}
 
-const Step: React.FC<IStepProps> = () => {
+const Step: React.FC<IStepProps> = ({onChangeStep}) => {
 	const dispatch = useDispatch();
 
 	return (
@@ -34,7 +35,16 @@ const Step: React.FC<IStepProps> = () => {
 
 			<BasePage.Footer>
 				<ClayButton
+					displayType="secondary"
+					onClick={() => onChangeStep(ESteps.People)}
+				>
+					{Liferay.Language.get('previous')}
+				</ClayButton>
+
+				<ClayButton
 					onClick={() => {
+						sync();
+
 						dispatch({
 							payload: EPageView.Default,
 							type: Events.ChangePageView,

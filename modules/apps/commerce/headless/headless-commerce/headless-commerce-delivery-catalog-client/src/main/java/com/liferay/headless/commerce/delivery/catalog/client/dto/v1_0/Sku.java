@@ -35,6 +35,27 @@ public class Sku implements Cloneable, Serializable {
 		return SkuSerDes.toDTO(json);
 	}
 
+	public DDMOption[] getDDMOptions() {
+		return DDMOptions;
+	}
+
+	public void setDDMOptions(DDMOption[] DDMOptions) {
+		this.DDMOptions = DDMOptions;
+	}
+
+	public void setDDMOptions(
+		UnsafeSupplier<DDMOption[], Exception> DDMOptionsUnsafeSupplier) {
+
+		try {
+			DDMOptions = DDMOptionsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected DDMOption[] DDMOptions;
+
 	public String[] getAllowedOrderQuantities() {
 		return allowedOrderQuantities;
 	}
@@ -99,6 +120,48 @@ public class Sku implements Cloneable, Serializable {
 
 	protected Double depth;
 
+	public Boolean getDiscontinued() {
+		return discontinued;
+	}
+
+	public void setDiscontinued(Boolean discontinued) {
+		this.discontinued = discontinued;
+	}
+
+	public void setDiscontinued(
+		UnsafeSupplier<Boolean, Exception> discontinuedUnsafeSupplier) {
+
+		try {
+			discontinued = discontinuedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean discontinued;
+
+	public Date getDiscontinuedDate() {
+		return discontinuedDate;
+	}
+
+	public void setDiscontinuedDate(Date discontinuedDate) {
+		this.discontinuedDate = discontinuedDate;
+	}
+
+	public void setDiscontinuedDate(
+		UnsafeSupplier<Date, Exception> discontinuedDateUnsafeSupplier) {
+
+		try {
+			discontinuedDate = discontinuedDateUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date discontinuedDate;
+
 	public Date getDisplayDate() {
 		return displayDate;
 	}
@@ -119,6 +182,28 @@ public class Sku implements Cloneable, Serializable {
 	}
 
 	protected Date displayDate;
+
+	public Boolean getDisplayDiscountLevels() {
+		return displayDiscountLevels;
+	}
+
+	public void setDisplayDiscountLevels(Boolean displayDiscountLevels) {
+		this.displayDiscountLevels = displayDiscountLevels;
+	}
+
+	public void setDisplayDiscountLevels(
+		UnsafeSupplier<Boolean, Exception>
+			displayDiscountLevelsUnsafeSupplier) {
+
+		try {
+			displayDiscountLevels = displayDiscountLevelsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean displayDiscountLevels;
 
 	public Date getExpirationDate() {
 		return expirationDate;
@@ -199,6 +284,27 @@ public class Sku implements Cloneable, Serializable {
 	}
 
 	protected Long id;
+
+	public String getIncomingQuantityLabel() {
+		return incomingQuantityLabel;
+	}
+
+	public void setIncomingQuantityLabel(String incomingQuantityLabel) {
+		this.incomingQuantityLabel = incomingQuantityLabel;
+	}
+
+	public void setIncomingQuantityLabel(
+		UnsafeSupplier<String, Exception> incomingQuantityLabelUnsafeSupplier) {
+
+		try {
+			incomingQuantityLabel = incomingQuantityLabelUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String incomingQuantityLabel;
 
 	public String getManufacturerPartNumber() {
 		return manufacturerPartNumber;
@@ -345,6 +451,53 @@ public class Sku implements Cloneable, Serializable {
 	}
 
 	protected Boolean purchasable;
+
+	public String getReplacementSkuExternalReferenceCode() {
+		return replacementSkuExternalReferenceCode;
+	}
+
+	public void setReplacementSkuExternalReferenceCode(
+		String replacementSkuExternalReferenceCode) {
+
+		this.replacementSkuExternalReferenceCode =
+			replacementSkuExternalReferenceCode;
+	}
+
+	public void setReplacementSkuExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			replacementSkuExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			replacementSkuExternalReferenceCode =
+				replacementSkuExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String replacementSkuExternalReferenceCode;
+
+	public Long getReplacementSkuId() {
+		return replacementSkuId;
+	}
+
+	public void setReplacementSkuId(Long replacementSkuId) {
+		this.replacementSkuId = replacementSkuId;
+	}
+
+	public void setReplacementSkuId(
+		UnsafeSupplier<Long, Exception> replacementSkuIdUnsafeSupplier) {
+
+		try {
+			replacementSkuId = replacementSkuIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long replacementSkuId;
 
 	public String getSku() {
 		return sku;

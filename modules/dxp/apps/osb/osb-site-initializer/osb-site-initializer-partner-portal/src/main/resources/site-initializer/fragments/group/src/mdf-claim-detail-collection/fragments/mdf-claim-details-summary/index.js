@@ -32,11 +32,16 @@ const getMDFClaimSummary = async () => {
 		const data = await response.json();
 
 		const amountClaimed = formatCurrency(
-			Liferay.Util.escape(data.amountClaimed)
+			Liferay.Util.escape(data.amountClaimed),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
 		);
-		const check = formatCurrency(Liferay.Util.escape(data.check));
+		const check = formatCurrency(
+			Liferay.Util.escape(data.check),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
+		);
 		const paymentReceived = formatCurrency(
-			Liferay.Util.escape(data.paymentReceived)
+			Liferay.Util.escape(data.paymentReceived),
+			data.currency ? Liferay.Util.escape(data.currency.key) : 'USD'
 		);
 		const type = Liferay.Util.escape(data.partial ? 'Partial' : 'Full');
 
@@ -58,9 +63,9 @@ const getMDFClaimSummary = async () => {
 	});
 };
 
-const formatCurrency = (value) =>
+const formatCurrency = (value, currencyKey) =>
 	new Intl.NumberFormat(Liferay.ThemeDisplay.getBCP47LanguageId(), {
-		currency: 'USD',
+		currency: currencyKey ? currencyKey : 'USD',
 		style: 'currency',
 	}).format(value);
 

@@ -41,7 +41,6 @@ import com.liferay.sharing.service.base.SharingEntryLocalServiceBaseImpl;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -177,18 +176,8 @@ public class SharingEntryLocalServiceImpl
 		sharingEntry.setClassNameId(classNameId);
 		sharingEntry.setClassPK(classPK);
 		sharingEntry.setShareable(shareable);
+		sharingEntry.setActionIds(_getActionIds(sharingEntryActions));
 		sharingEntry.setExpirationDate(expirationDate);
-
-		Stream<SharingEntryAction> sharingEntryActionsStream =
-			sharingEntryActions.stream();
-
-		sharingEntryActionsStream.map(
-			SharingEntryAction::getBitwiseValue
-		).reduce(
-			(bitwiseValue1, bitwiseValue2) -> bitwiseValue1 | bitwiseValue2
-		).ifPresent(
-			actionIds -> sharingEntry.setActionIds(actionIds)
-		);
 
 		SharingEntry newSharingEntry = sharingEntryPersistence.update(
 			sharingEntry);
@@ -706,20 +695,22 @@ public class SharingEntryLocalServiceImpl
 
 		sharingEntry.setUserId(userId);
 		sharingEntry.setShareable(shareable);
+		sharingEntry.setActionIds(_getActionIds(sharingEntryActions));
 		sharingEntry.setExpirationDate(expirationDate);
 
-		Stream<SharingEntryAction> sharingEntryActionsStream =
-			sharingEntryActions.stream();
-
-		sharingEntryActionsStream.map(
-			SharingEntryAction::getBitwiseValue
-		).reduce(
-			(bitwiseValue1, bitwiseValue2) -> bitwiseValue1 | bitwiseValue2
-		).ifPresent(
-			actionIds -> sharingEntry.setActionIds(actionIds)
-		);
-
 		return sharingEntryPersistence.update(sharingEntry);
+	}
+
+	private long _getActionIds(
+		Collection<SharingEntryAction> sharingEntryActions) {
+
+		long actionIds = 0;
+
+		for (SharingEntryAction sharingEntryAction : sharingEntryActions) {
+			actionIds |= sharingEntryAction.getBitwiseValue();
+		}
+
+		return actionIds;
 	}
 
 	private void _validateExpirationDate(Date expirationDate)

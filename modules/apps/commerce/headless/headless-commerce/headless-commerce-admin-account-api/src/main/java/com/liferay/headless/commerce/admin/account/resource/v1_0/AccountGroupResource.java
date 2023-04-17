@@ -26,6 +26,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -61,6 +62,11 @@ public interface AccountGroupResource {
 			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postAccountGroupsPageExportBatch(
+			Filter filter, Sort[] sorts, String callbackURL, String contentType,
+			String fieldNames)
+		throws Exception;
+
 	public AccountGroup postAccountGroup(AccountGroup accountGroup)
 		throws Exception;
 
@@ -81,8 +87,7 @@ public interface AccountGroupResource {
 
 	public Response deleteAccountGroup(Long id) throws Exception;
 
-	public Response deleteAccountGroupBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteAccountGroupBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public AccountGroup getAccountGroup(Long id) throws Exception;
@@ -137,6 +142,10 @@ public interface AccountGroupResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

@@ -22,6 +22,7 @@ import com.liferay.journal.web.internal.asset.model.JournalArticleAssetRenderer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.notifications.BaseModelUserNotificationHandler;
 import com.liferay.portal.kernel.notifications.UserNotificationDefinition;
 import com.liferay.portal.kernel.notifications.UserNotificationHandler;
@@ -29,6 +30,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -50,6 +52,7 @@ public class JournalUserNotificationHandler
 	@Override
 	protected String getTitle(
 		JSONObject jsonObject, AssetRenderer<?> assetRenderer,
+		UserNotificationEvent userNotificationEvent,
 		ServiceContext serviceContext) {
 
 		String title = StringPool.BLANK;
@@ -74,6 +77,20 @@ public class JournalUserNotificationHandler
 			title = _language.format(
 				serviceContext.getLocale(), "x-added-a-new-web-content-article",
 				userFullName);
+		}
+		else if (notificationType ==
+					UserNotificationDefinition.
+						NOTIFICATION_TYPE_EXPIRED_ENTRY) {
+
+			if (Validator.isNotNull(userFullName)) {
+				title = _language.format(
+					serviceContext.getLocale(),
+					"x-expired-a-web-content-article", userFullName);
+			}
+			else {
+				title = _language.get(
+					serviceContext.getLocale(), "a-web-content-has-expired");
+			}
 		}
 		else if (notificationType ==
 					UserNotificationDefinition.NOTIFICATION_TYPE_UPDATE_ENTRY) {

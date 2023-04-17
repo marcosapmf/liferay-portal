@@ -72,11 +72,11 @@ public interface OrderNoteResource {
 	public HttpInvoker.HttpResponse deleteOrderNoteHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteOrderNoteBatch(Long id, String callbackURL, Object object)
+	public void deleteOrderNoteBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteOrderNoteBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public OrderNote getOrderNote(Long id) throws Exception;
@@ -123,12 +123,11 @@ public interface OrderNoteResource {
 			Long id, OrderNote orderNote)
 		throws Exception;
 
-	public void postOrderIdOrderNoteBatch(
-			Long id, String callbackURL, Object object)
+	public void postOrderIdOrderNoteBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postOrderIdOrderNoteBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public static class Builder {
@@ -140,6 +139,10 @@ public interface OrderNoteResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public OrderNoteResource build() {
 			return new OrderNoteResourceImpl(this);
 		}
@@ -148,6 +151,28 @@ public interface OrderNoteResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -508,12 +533,11 @@ public interface OrderNoteResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteOrderNoteBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteOrderNoteBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteOrderNoteBatchHttpResponse(id, callbackURL, object);
+				deleteOrderNoteBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -542,7 +566,7 @@ public interface OrderNoteResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteOrderNoteBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -577,8 +601,6 @@ public interface OrderNoteResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-order/v1.0/orderNotes/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1085,12 +1107,11 @@ public interface OrderNoteResource {
 			return httpInvoker.invoke();
 		}
 
-		public void postOrderIdOrderNoteBatch(
-				Long id, String callbackURL, Object object)
+		public void postOrderIdOrderNoteBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postOrderIdOrderNoteBatchHttpResponse(id, callbackURL, object);
+				postOrderIdOrderNoteBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -1119,7 +1140,7 @@ public interface OrderNoteResource {
 		}
 
 		public HttpInvoker.HttpResponse postOrderIdOrderNoteBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1154,8 +1175,6 @@ public interface OrderNoteResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-order/v1.0/orders/orderNotes/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

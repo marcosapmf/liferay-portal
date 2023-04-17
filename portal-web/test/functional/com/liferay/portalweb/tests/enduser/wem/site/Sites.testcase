@@ -3,8 +3,8 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Site Administration";
-	property testray.main.component.name = "Site Administration";
+	property testray.component.names = "Sites Administration";
+	property testray.main.component.name = "Sites Administration";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -15,7 +15,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -24,7 +24,7 @@ definition {
 	}
 
 	@description = "Inactive and reactive site."
-	@priority = "4"
+	@priority = 4
 	test ActivateSite {
 		property test.name.skip.portal.instance = "Sites#ActivateSite";
 
@@ -42,7 +42,7 @@ definition {
 		}
 
 		task ("Add a site and add a page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -77,45 +77,45 @@ definition {
 	}
 
 	@description = "Add child site in child site."
-	@priority = "4"
+	@priority = 4
 	test AddChildChildSite {
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("Add a child site to the site") {
-			JSONGroup.addChildGroup(
-				groupName = "Child SiteName",
-				parentGroupName = "Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Site Name",
+				siteName = "Child Site Name");
 		}
 
 		task ("Add a child site to the child site") {
-			JSONGroup.addChildGroup(
-				grandParentGroupName = "Site Name",
-				groupName = "Child Child SiteName",
-				parentGroupName = "Child SiteName");
+			HeadlessSite.addSite(
+				grandParentSiteName = "Site Name",
+				parentSiteName = "Child Site Name",
+				siteName = "Grandchild Site Name");
 		}
 
 		task ("View the child site to the site") {
 			Site.openSitesAdmin();
 
 			Site.viewChildCP(
-				childSiteName = "Child SiteName",
+				childSiteName = "Child Site Name",
 				siteName = "Site Name");
 		}
 
 		task ("View the child site to the child site") {
 			Site.viewChildCP(
-				childSiteName = "Child Child SiteName",
-				siteName = "Child SiteName");
+				childSiteName = "Grandchild Site Name",
+				siteName = "Child Site Name");
 		}
 	}
 
 	@description = "View public page via virtual host URL."
-	@priority = "3"
+	@priority = 3
 	test AddPublicVirtualHostsSiteURL {
 		task ("Add a site and a page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -141,10 +141,10 @@ definition {
 	}
 
 	@description = "Able to add a site with comma."
-	@priority = "3"
+	@priority = 3
 	test AddSiteWithCommaInName {
 		task ("Add a site with comma") {
-			JSONGroup.addGroup(groupName = "Site Name,");
+			HeadlessSite.addSite(siteName = "Site Name,");
 		}
 
 		task ("View the site added") {
@@ -155,10 +155,10 @@ definition {
 	}
 
 	@description = "Unable to add same site name."
-	@priority = "3"
+	@priority = 3
 	test AddSiteWithInvalidDuplicateName {
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("Try to add a site with the same name and assert could not add it") {
@@ -171,24 +171,24 @@ definition {
 	}
 
 	@description = "Unable to add site name with blank name, invalid characters * and numeric."
-	@priority = "3"
+	@priority = 3
 	test AddSiteWithInvalidName {
 		for (var siteName : list " ,Site Name*,22222") {
 			Site.openSitesAdmin();
 
 			Site.viewCannotAdd(
-				siteName = "${siteName}",
+				siteName = ${siteName},
 				siteNameInvalid = "Invalid");
 		}
 	}
 
 	@description = "Deleting firiendly URL makes it not able to access page via fridely URL."
-	@priority = "4"
+	@priority = 4
 	test DeleteSiteFriendlyURL {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("Add a public page and private page to the site") {
@@ -239,12 +239,12 @@ definition {
 	}
 
 	@description = "Could edit site name."
-	@priority = "5"
+	@priority = 5
 	test EditSite {
 		property portal.acceptance = "true";
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("Edit site name") {
@@ -263,14 +263,14 @@ definition {
 	}
 
 	@description = "Could edit friendly URL and access by it."
-	@priority = "4"
+	@priority = 4
 	test EditSiteFriendlyURL {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 
 		var portalURL = PropsUtil.get("portal.url");
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 		}
 
 		task ("Add a public page and private page to the site") {
@@ -309,7 +309,7 @@ definition {
 	}
 
 	@description = "Could not add invalid friendly URL and can access by former friendly URL."
-	@priority = "3"
+	@priority = 3
 	test EditSiteFriendlyURLInvalid {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "Sites#EditSiteFriendlyURLInvalid";
@@ -317,7 +317,7 @@ definition {
 		var portalURL = PropsUtil.get("portal.url");
 
 		task ("Add a site and a public page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -345,11 +345,11 @@ definition {
 	}
 
 	@description = "Able to search and find site by site name."
-	@priority = "5"
+	@priority = 5
 	test SearchSite {
 		property portal.acceptance = "true";
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Site.openSitesAdmin();
 
@@ -357,9 +357,9 @@ definition {
 	}
 
 	@description = "Can not choose its own site as parent site."
-	@priority = "3"
+	@priority = 3
 	test SiteCannotBeItsOwnParent {
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		Site.openSiteSettingsAdmin(siteURLKey = "site-name");
 
@@ -369,10 +369,10 @@ definition {
 	}
 
 	@description = "Can not choose its own site as parent site in staging."
-	@priority = "3"
+	@priority = 3
 	test SiteCannotBeItsOwnParentStaging {
 		task ("Add a site and a public page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -401,9 +401,9 @@ definition {
 	}
 
 	@description = "This is a test case for LRQA-5853. Disbale Content Sharing in instance level and view child Sites doesn't display content from parent Sites."
-	@priority = "4"
+	@priority = 4
 	test ViewContentSharingDisabledAcrossSitesViaAP {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Sharing",
@@ -414,15 +414,15 @@ definition {
 
 		PortalSettings.configureContentSharingSubSitesCP(subSites = "enabledByDefault");
 
-		JSONGroup.addGroup(groupName = "Site Name");
+		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Site Name",
 			layoutName = "AP Test Page");
 
-		JSONGroup.addChildGroup(
-			groupName = "Child SiteName",
-			parentGroupName = "Site Name");
+		HeadlessSite.addSite(
+			parentSiteName = "Site Name",
+			siteName = "Child SiteName");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Child SiteName",
@@ -461,7 +461,7 @@ definition {
 		AssetPublisherPortlet.viewConfigureSiteScopeContentSharingPG(
 			childSite = "true",
 			contentSharingAcrossSitesEnabled = "false",
-			liferaySiteName = "${siteName}");
+			liferaySiteName = ${siteName});
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -491,7 +491,7 @@ definition {
 		AssetPublisherPortlet.viewConfigureSiteScopeContentSharingPG(
 			childSite = "true",
 			contentSharingAcrossSitesEnabled = "false",
-			liferaySiteName = "${siteName}");
+			liferaySiteName = ${siteName});
 
 		Navigator.openSiteURL(siteName = "Child SiteName");
 
@@ -503,9 +503,9 @@ definition {
 	}
 
 	@description = "This is a test case for LRQA-6014. Enable Content Sharing in instance level and view child Sites display content from parent Sites."
-	@priority = "4"
+	@priority = 4
 	test ViewContentSharingEnabledAcrossSitesViaAP {
-		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		PortalSettings.gotoConfiguration(
 			configurationCategory = "Sharing",
@@ -537,7 +537,7 @@ definition {
 
 		AssetPublisherPortlet.viewConfigureSiteScopeContentSharingPG(
 			contentSharingAcrossSitesEnabled = "true",
-			liferaySiteName = "${siteName}");
+			liferaySiteName = ${siteName});
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
@@ -562,7 +562,7 @@ definition {
 		AssetPublisherPortlet.viewConfigureSiteScopeContentSharingPG(
 			contentSharingAcrossSitesEnabled = "true",
 			currentSite = "true",
-			liferaySiteName = "${siteName}");
+			liferaySiteName = ${siteName});
 
 		Navigator.gotoPage(pageName = "AP Test Page");
 
@@ -574,13 +574,13 @@ definition {
 			assetContent = "Blogs Entry Content",
 			assetTitle = "Blogs Entry Title",
 			siteScope1 = "Site Name",
-			siteScope2 = "${siteName}");
+			siteScope2 = ${siteName});
 	}
 
 	@description = "View Web Content Admin displayed in global site."
-	@priority = "4"
+	@priority = 4
 	test ViewDefaultGlobalScopeLandingPage {
-		property testray.component.names = "Site Administration";
+		property testray.component.names = "Sites Administration";
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "global");
 
@@ -592,12 +592,12 @@ definition {
 	}
 
 	@description = "View parent site in child site's Sites Directory."
-	@priority = "4"
+	@priority = 4
 	test ViewDisplayParentSiteViaSitesDirectory {
 		Site.openSitesAdmin();
 
 		task ("Add a site and a public page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -605,9 +605,9 @@ definition {
 		}
 
 		task ("Add a child site to the site and a public page in it") {
-			JSONGroup.addChildGroup(
-				groupName = "Child SiteName",
-				parentGroupName = "Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Site Name",
+				siteName = "Child SiteName");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Child SiteName",
@@ -616,10 +616,10 @@ definition {
 		}
 
 		task ("Add a child site to the child site and a public page in it") {
-			JSONGroup.addChildGroup(
-				grandParentGroupName = "Site Name",
-				groupName = "Child ChildSiteName",
-				parentGroupName = "Child SiteName");
+			HeadlessSite.addSite(
+				grandParentSiteName = "Site Name",
+				parentSiteName = "Child SiteName",
+				siteName = "Child ChildSiteName");
 
 			JSONLayout.addPublicLayout(
 				grandParentGroupName = "Site Name",
@@ -668,10 +668,10 @@ definition {
 	}
 
 	@description = "View sites in child site's Sites Directory."
-	@priority = "4"
+	@priority = 4
 	test ViewSiteHierarchiesViaSitesDirectory {
 		task ("Add a site and a public page in it") {
-			JSONGroup.addGroup(groupName = "Site Name");
+			HeadlessSite.addSite(siteName = "Site Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Site Name",
@@ -679,9 +679,9 @@ definition {
 		}
 
 		task ("Add a child site to the site and a public page in it") {
-			JSONGroup.addChildGroup(
-				groupName = "Child Site1Name",
-				parentGroupName = "Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Site Name",
+				siteName = "Child Site1Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Child Site1Name",
@@ -690,10 +690,10 @@ definition {
 		}
 
 		task ("Add a child site to the child site and a public page in it") {
-			JSONGroup.addChildGroup(
-				grandParentGroupName = "Site Name",
-				groupName = "Child ChildSite1Name",
-				parentGroupName = "Child Site1Name");
+			HeadlessSite.addSite(
+				grandParentSiteName = "Site Name",
+				parentSiteName = "Child Site1Name",
+				siteName = "Child ChildSite1Name");
 
 			JSONLayout.addPublicLayout(
 				grandParentGroupName = "Site Name",
@@ -703,10 +703,10 @@ definition {
 		}
 
 		task ("Add another child site to the child site and a public page in it") {
-			JSONGroup.addChildGroup(
-				grandParentGroupName = "Site Name",
-				groupName = "Child ChildSite2Name",
-				parentGroupName = "Child Site1Name");
+			HeadlessSite.addSite(
+				grandParentSiteName = "Site Name",
+				parentSiteName = "Child Site1Name",
+				siteName = "Child ChildSite2Name");
 
 			JSONLayout.addPublicLayout(
 				grandParentGroupName = "Site Name",
@@ -716,9 +716,9 @@ definition {
 		}
 
 		task ("Add another child site to the site and a public page in it") {
-			JSONGroup.addChildGroup(
-				groupName = "Child Site2Name",
-				parentGroupName = "Site Name");
+			HeadlessSite.addSite(
+				parentSiteName = "Site Name",
+				siteName = "Child Site2Name");
 
 			JSONLayout.addPublicLayout(
 				groupName = "Child Site2Name",
@@ -872,7 +872,7 @@ definition {
 		}
 
 		task ("View no site fits this level") {
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#EMPTY_INFO",
 				value1 = "No sites were found.");
 		}

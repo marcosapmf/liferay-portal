@@ -436,6 +436,34 @@ public class ObjectDefinition implements Serializable {
 	protected Map<String, String> label;
 
 	@Schema
+	public Boolean getModifiable() {
+		return modifiable;
+	}
+
+	public void setModifiable(Boolean modifiable) {
+		this.modifiable = modifiable;
+	}
+
+	@JsonIgnore
+	public void setModifiable(
+		UnsafeSupplier<Boolean, Exception> modifiableUnsafeSupplier) {
+
+		try {
+			modifiable = modifiableUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean modifiable;
+
+	@Schema
 	public String getName() {
 		return name;
 	}
@@ -579,6 +607,38 @@ public class ObjectDefinition implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ObjectRelationship[] objectRelationships;
+
+	@Schema
+	@Valid
+	public ObjectValidationRule[] getObjectValidationRules() {
+		return objectValidationRules;
+	}
+
+	public void setObjectValidationRules(
+		ObjectValidationRule[] objectValidationRules) {
+
+		this.objectValidationRules = objectValidationRules;
+	}
+
+	@JsonIgnore
+	public void setObjectValidationRules(
+		UnsafeSupplier<ObjectValidationRule[], Exception>
+			objectValidationRulesUnsafeSupplier) {
+
+		try {
+			objectValidationRules = objectValidationRulesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected ObjectValidationRule[] objectValidationRules;
 
 	@Schema
 	@Valid
@@ -889,7 +949,7 @@ public class ObjectDefinition implements Serializable {
 	}
 
 	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean system;
 
 	@Schema
@@ -1100,6 +1160,16 @@ public class ObjectDefinition implements Serializable {
 			sb.append(_toJSON(label));
 		}
 
+		if (modifiable != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"modifiable\": ");
+
+			sb.append(modifiable);
+		}
+
 		if (name != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -1187,6 +1257,26 @@ public class ObjectDefinition implements Serializable {
 				sb.append(String.valueOf(objectRelationships[i]));
 
 				if ((i + 1) < objectRelationships.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (objectValidationRules != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"objectValidationRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < objectValidationRules.length; i++) {
+				sb.append(String.valueOf(objectValidationRules[i]));
+
+				if ((i + 1) < objectValidationRules.length) {
 					sb.append(", ");
 				}
 			}

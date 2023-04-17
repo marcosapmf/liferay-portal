@@ -15330,7 +15330,8 @@ public class DLFileEntryPersistenceImpl
 				if (ercDLFileEntry != null) {
 					throw new DuplicateDLFileEntryExternalReferenceCodeException(
 						"Duplicate document library file entry with external reference code " +
-							dlFileEntry.getExternalReferenceCode());
+							dlFileEntry.getExternalReferenceCode() +
+								" and group " + dlFileEntry.getGroupId());
 				}
 			}
 			else {
@@ -15340,7 +15341,8 @@ public class DLFileEntryPersistenceImpl
 
 					throw new DuplicateDLFileEntryExternalReferenceCodeException(
 						"Duplicate document library file entry with external reference code " +
-							dlFileEntry.getExternalReferenceCode());
+							dlFileEntry.getExternalReferenceCode() +
+								" and group " + dlFileEntry.getGroupId());
 				}
 			}
 		}

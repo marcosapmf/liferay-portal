@@ -101,6 +101,18 @@ public final class Criteria implements Serializable {
 		return Conjunction.AND;
 	}
 
+	public void mergeCriteria(Criteria criteria, Conjunction conjunction) {
+		Map<String, Criterion> criteriaMap = criteria._criteria;
+
+		for (Map.Entry<String, Criterion> entry : criteriaMap.entrySet()) {
+			Criterion criterion = entry.getValue();
+
+			addCriterion(
+				entry.getKey(), Type.parse(criterion.getTypeValue()),
+				criterion.getFilterString(), conjunction);
+		}
+	}
+
 	public static final class Criterion implements Serializable {
 
 		public Criterion() {
@@ -167,10 +179,14 @@ public final class Criteria implements Serializable {
 
 	public enum Type {
 
-		CONTEXT("context"), MODEL("model"), REFERRED("referred");
+		ANALYTICS("analytics"), CONTEXT("context"), MODEL("model"),
+		REFERRED("referred");
 
 		public static Type parse(String value) {
-			if (Objects.equals(CONTEXT.getValue(), value)) {
+			if (Objects.equals(ANALYTICS.getValue(), value)) {
+				return ANALYTICS;
+			}
+			else if (Objects.equals(CONTEXT.getValue(), value)) {
 				return CONTEXT;
 			}
 			else if (Objects.equals(MODEL.getValue(), value)) {

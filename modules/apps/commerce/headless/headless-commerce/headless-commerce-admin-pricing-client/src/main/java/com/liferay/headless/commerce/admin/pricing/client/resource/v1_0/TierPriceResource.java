@@ -74,11 +74,11 @@ public interface TierPriceResource {
 		throws Exception;
 
 	public void postPriceEntryIdTierPriceBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postPriceEntryIdTierPriceBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public void deleteTierPriceByExternalReferenceCode(
@@ -113,11 +113,11 @@ public interface TierPriceResource {
 	public HttpInvoker.HttpResponse deleteTierPriceHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteTierPriceBatch(Long id, String callbackURL, Object object)
+	public void deleteTierPriceBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteTierPriceBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public TierPrice getTierPrice(Long id) throws Exception;
@@ -140,6 +140,10 @@ public interface TierPriceResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public TierPriceResource build() {
 			return new TierPriceResourceImpl(this);
 		}
@@ -148,6 +152,28 @@ public interface TierPriceResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -561,12 +587,11 @@ public interface TierPriceResource {
 		}
 
 		public void postPriceEntryIdTierPriceBatch(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				postPriceEntryIdTierPriceBatchHttpResponse(
-					id, callbackURL, object);
+				postPriceEntryIdTierPriceBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -596,7 +621,7 @@ public interface TierPriceResource {
 
 		public HttpInvoker.HttpResponse
 				postPriceEntryIdTierPriceBatchHttpResponse(
-					Long id, String callbackURL, Object object)
+					String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -631,8 +656,6 @@ public interface TierPriceResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v1.0/priceEntries/tierPrices/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -939,12 +962,11 @@ public interface TierPriceResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteTierPriceBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteTierPriceBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteTierPriceBatchHttpResponse(id, callbackURL, object);
+				deleteTierPriceBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -973,7 +995,7 @@ public interface TierPriceResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteTierPriceBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1008,8 +1030,6 @@ public interface TierPriceResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-pricing/v1.0/tierPrices/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

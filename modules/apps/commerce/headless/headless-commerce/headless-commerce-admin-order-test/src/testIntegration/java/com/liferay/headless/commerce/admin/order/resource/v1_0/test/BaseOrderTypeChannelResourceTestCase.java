@@ -29,6 +29,7 @@ import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.resource.v1_0.OrderTypeChannelResource;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderTypeChannelSerDes;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -64,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -241,7 +240,10 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantOrderTypeChannel),
 				(List<OrderTypeChannel>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrderTypeByExternalReferenceCodeOrderTypeChannelsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
 		}
 
 		OrderTypeChannel orderTypeChannel1 =
@@ -262,7 +264,20 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(orderTypeChannel1, orderTypeChannel2),
 			(List<OrderTypeChannel>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetOrderTypeByExternalReferenceCodeOrderTypeChannelsPage_getExpectedActions(
+				externalReferenceCode));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderTypeByExternalReferenceCodeOrderTypeChannelsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -391,7 +406,10 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 			assertEquals(
 				Arrays.asList(irrelevantOrderTypeChannel),
 				(List<OrderTypeChannel>)page.getItems());
-			assertValid(page);
+			assertValid(
+				page,
+				testGetOrderTypeIdOrderTypeChannelsPage_getExpectedActions(
+					irrelevantId));
 		}
 
 		OrderTypeChannel orderTypeChannel1 =
@@ -410,7 +428,18 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(orderTypeChannel1, orderTypeChannel2),
 			(List<OrderTypeChannel>)page.getItems());
-		assertValid(page);
+		assertValid(
+			page,
+			testGetOrderTypeIdOrderTypeChannelsPage_getExpectedActions(id));
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetOrderTypeIdOrderTypeChannelsPage_getExpectedActions(Long id)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
 	}
 
 	@Test
@@ -812,6 +841,13 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	}
 
 	protected void assertValid(Page<OrderTypeChannel> page) {
+		assertValid(page, Collections.emptyMap());
+	}
+
+	protected void assertValid(
+		Page<OrderTypeChannel> page,
+		Map<String, Map<String, String>> expectedActions) {
+
 		boolean valid = false;
 
 		java.util.Collection<OrderTypeChannel> orderTypeChannels =
@@ -827,6 +863,20 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		}
 
 		Assert.assertTrue(valid);
+
+		Map<String, Map<String, String>> actions = page.getActions();
+
+		for (String key : expectedActions.keySet()) {
+			Map action = actions.get(key);
+
+			Assert.assertNotNull(key + " does not contain an action", action);
+
+			Map expectedAction = expectedActions.get(key);
+
+			Assert.assertEquals(
+				expectedAction.get("method"), action.get("method"));
+			Assert.assertEquals(expectedAction.get("href"), action.get("href"));
+		}
 	}
 
 	protected String[] getAdditionalAssertFieldNames() {
@@ -1021,14 +1071,16 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
-		Stream<java.lang.reflect.Field> stream = Stream.of(
-			ReflectionUtil.getDeclaredFields(clazz));
+		return TransformUtil.transform(
+			ReflectionUtil.getDeclaredFields(clazz),
+			field -> {
+				if (field.isSynthetic()) {
+					return null;
+				}
 
-		return stream.filter(
-			field -> !field.isSynthetic()
-		).toArray(
-			java.lang.reflect.Field[]::new
-		);
+				return field;
+			},
+			java.lang.reflect.Field.class);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1045,6 +1097,10 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 		EntityModel entityModel = entityModelResource.getEntityModel(
 			new MultivaluedHashMap());
 
+		if (entityModel == null) {
+			return Collections.emptyList();
+		}
+
 		Map<String, EntityField> entityFieldsMap =
 			entityModel.getEntityFieldsMap();
 
@@ -1054,18 +1110,18 @@ public abstract class BaseOrderTypeChannelResourceTestCase {
 	protected List<EntityField> getEntityFields(EntityField.Type type)
 		throws Exception {
 
-		java.util.Collection<EntityField> entityFields = getEntityFields();
+		return TransformUtil.transform(
+			getEntityFields(),
+			entityField -> {
+				if (!Objects.equals(entityField.getType(), type) ||
+					ArrayUtil.contains(
+						getIgnoredEntityFieldNames(), entityField.getName())) {
 
-		Stream<EntityField> stream = entityFields.stream();
+					return null;
+				}
 
-		return stream.filter(
-			entityField ->
-				Objects.equals(entityField.getType(), type) &&
-				!ArrayUtil.contains(
-					getIgnoredEntityFieldNames(), entityField.getName())
-		).collect(
-			Collectors.toList()
-		);
+				return entityField;
+			});
 	}
 
 	protected String getFilterString(

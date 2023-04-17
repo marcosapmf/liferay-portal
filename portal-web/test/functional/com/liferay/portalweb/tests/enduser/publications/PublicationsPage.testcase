@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -17,7 +16,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -25,7 +24,300 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@description = "Create content page template into a Publication and publish"
+	@priority = 3
+	test CanCreateContentPageTemplateAndPublish {
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		task ("Add a content page template") {
+			JSONGroup.addGroup(groupName = "Site Name");
+
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
+
+			PageTemplatesAdmin.addCollection(collectionName = "Page Template Collection");
+
+			PageTemplatesAdmin.addPageTemplate(
+				pageTemplateName = "Content Page Template Name",
+				pageTemplateType = "Content Page Template");
+		}
+
+		task ("Add fragments to content page template") {
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
+
+			Navigator.gotoNavNested(navNested = "Page Template Collection");
+
+			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Content Page Template Name");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
+
+			PageEditor.publish();
+		}
+
+		task ("Add a content page based on content page template") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+
+			ContentPages.addPage(
+				collectionName = "Page Template Collection",
+				pageName = "Test Page Name",
+				pageTemplateName = "Content Page Template Name");
+		}
+
+		task ("View the fragments are shown in content page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Site Name");
+
+			PageEditor.viewFragment(fragmentName = "Button");
+		}
+
+		PublicationsNavigator.gotoPublish(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "Add custom fragments into a publication and publish"
+	@priority = 3
+	test CanCreateCustomFragmentsAndPublish {
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		JSONGroup.addGroup(groupName = "Site Name");
+
+		task ("Add a fragment collection") {
+			JSONFragment.addFragmentCollection(
+				groupName = "Site Name",
+				name = "Collection Name");
+		}
+
+		task ("Add a new fragment") {
+			var htmlSnippet = '''<div class="component-test-fragment-name">%0A%09<h2 data-lfr-editable-id="title1" data-lfr-editable-type="rich-text"></h2>%0A</div>''';
+
+			JSONFragment.addSection(
+				collectionName = "Collection Name",
+				fragmentStatus = "Approved",
+				groupName = "Site Name",
+				html = ${htmlSnippet},
+				name = "Test Fragment Name");
+		}
+
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Site Name",
+				layoutName = "Content Page Name",
+				type = "content");
+		}
+
+		task ("Add a new fragment to the page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Content Page Name",
+				siteName = "Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Collection Name",
+				fragmentName = "Test Fragment Name");
+		}
+
+		task ("Publish the new fragment") {
+			PageEditor.viewFragmentEditableText(
+				editableText = "Example Rich Text",
+				fragmentName = "Test Fragment Name",
+				id = "title1");
+
+			PageEditor.publish();
+		}
+
+		task ("View the new fragment") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Content Page Name",
+				siteName = "Site Name");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "test-fragment-name",
+				id = "title1",
+				text = "Example Rich Text");
+		}
+
+		PublicationsNavigator.gotoPublish(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "Create pages through an existing page template into a publication and publish"
+	@priority = 3
+	test CanCreatePagethroughExistingPageTemplateAndPublish {
+		task ("Add a widget page template") {
+			JSONGroup.addGroup(groupName = "Site Name");
+
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
+
+			PageTemplatesAdmin.addCollection(collectionName = "Widget Page Template Collection");
+
+			PageTemplatesAdmin.addPageTemplate(
+				pageTemplateName = "Widget Page Template Name",
+				pageTemplateType = "Widget Page Template");
+		}
+
+		task ("Add a Blogs widget to widget page template") {
+			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "site-name");
+
+			Navigator.gotoNavNested(navNested = "Widget Page Template Collection");
+
+			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Widget Page Template Name");
+
+			Portlet.addPG(portletName = "Blogs");
+		}
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		task ("Adds a widget page based on template") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
+
+			PagesAdmin.addPage(
+				collectionName = "Widget Page Template Collection",
+				pageName = "Test Page Name",
+				pageTemplateName = "Widget Page Template Name");
+		}
+
+		task ("View Blogs widget in widget page") {
+			Navigator.gotoSitePage(
+				pageName = "Test Page Name",
+				siteName = "Site Name");
+
+			Portlet.viewSpecificPG(portletName = "Blogs");
+		}
+
+		PublicationsNavigator.gotoPublish(
+			gotoPublicationsAdmin = "true",
+			publicationName = "Publication Name");
+
+		Publications.publishPublication(publicationName = "Publication Name");
+	}
+
+	@description = "This is a use cas for LPS-176197. As a publication admin, I would like to preview fragment before publishing"
+	@priority = 3
+	test CanPreviewAfterChangeFragmentBeforePublishing {
+		task ("Add Content Page with paragraph fragment") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page",
+				siteName = "Guest");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Paragraph");
+
+			PageEditor.publish();
+		}
+
+		JSONPublications.addPublication(publicationName = "Test Publication");
+
+		JSONPublications.selectPublication(publicationName = "Test Publication");
+
+		task ("Edit paragraph fragment and assert the preview before and after the change") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page",
+				siteName = "Guest");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Paragraph",
+				id = "element-text",
+				text = "Paragraph text edited.");
+
+			PageEditor.publish();
+
+			PublicationsNavigator.gotoReviewChanges();
+
+			PublicationsChanges.viewChanges(
+				changeCategory = "Page",
+				changeSite = "Guest",
+				changeTitle = "Test Page",
+				changeType = "Modified",
+				changeUser = "Test Test");
+
+			PublicationsNavigator.gotoViewChangeDetails(
+				changeCategory = "Page",
+				changeTitle = "Test Page");
+
+			var ctCollectionId = JSONPublicationsAPI._getCTCollectionId(publicationName = "Test Publication");
+
+			PublicationsChangeDetails.viewFragmentChangePreviewInDisplay(
+				fragmentPreviewInProduction = "previewCTCollectionId=0",
+				fragmentPreviewInPublication = "previewCTCollectionId=${ctCollectionId}");
+		}
+	}
+
+	@description = "This is a use case for LPS-164162 - Styling Content Pages is not properly applied when the user edits a page in a Publication"
+	@priority = 3
+	test CanStyleContentPages {
+		task ("Enable Publications and add Content Page") {
+			ContentPages.addPage(pageName = "Example Page");
+
+			PageEditor.addFragment(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			PageEditor.addElementToContainer(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid",
+				navTab = "Fragments");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Basic Components",
+				columnNumber = 2,
+				fragmentName = "Button",
+				navTab = "Fragments");
+
+			PageEditor.publish();
+		}
+
+		task ("Create new publication and edit Content Page") {
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Example Page",
+				siteName = "Guest");
+
+			PageEditor.gotoStyle(fragmentName = "Button");
+
+			PageEditor.configureFragment(
+				paddingLeft = 2,
+				paddingRight = 2);
+
+			PageEditor.publish();
+		}
+
+		task ("Go to edit Content Page again and assert that 'spacing' is changed") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Example Page",
+				siteName = "Guest");
+
+			PageEditor.gotoStyle(fragmentName = "Button");
+
+			PageEditor.viewFragmentStyle(
+				fragmentName = "Button",
+				paddingLeft = 2,
+				paddingRight = 2);
+		}
+	}
+
+	@priority = 4
 	test ContentPageChangesCanBeAutomaticallyResolved {
 		property test.assert.warning.exceptions = "true";
 
@@ -111,7 +403,7 @@ definition {
 	}
 
 	@description = "This is the use case for LPS-148816. Preview pages when reviewing publication changes"
-	@priority = "4"
+	@priority = 4
 	test PreviewPageWhenReviewingPublicationChanges {
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -156,7 +448,7 @@ definition {
 			locator1 = "PublicationsChangeDetails#PAGE_VIEWPORT_PREVIEW");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishDeletedPageWithTag {
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -213,7 +505,7 @@ definition {
 		Page.viewNoPG(pageName = "Test Page");
 	}
 
-	@priority = "4"
+	@priority = 4
 	test PublishPrivateContentPageWithFragment {
 		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 
@@ -238,8 +530,8 @@ definition {
 
 		FragmentsEditor.autocompleteFragmentHTML(
 			autocompleteField = "lfr-widget-asset-list",
-			fragmentHtml = "${fragmentHtml}",
-			htmlSnippet = "${htmlSnippet}");
+			fragmentHtml = ${fragmentHtml},
+			htmlSnippet = ${htmlSnippet});
 
 		PortletEntry.publish();
 
@@ -277,7 +569,7 @@ definition {
 			webContentTitle = "WC WebContent Title");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test ViewPageFriendlyURLAfterRevertingPublication {
 		JSONGroup.addGroup(groupName = "Site Name");
 

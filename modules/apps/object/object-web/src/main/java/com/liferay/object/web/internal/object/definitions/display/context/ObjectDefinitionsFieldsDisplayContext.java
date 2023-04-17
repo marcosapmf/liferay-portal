@@ -19,33 +19,34 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.list.type.service.ListTypeDefinitionService;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.constants.ObjectFieldConstants;
-import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.web.internal.object.definitions.display.context.util.ObjectCodeEditorUtil;
 import com.liferay.object.web.internal.util.ObjectFieldBusinessTypeUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeFormatter;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -62,12 +63,14 @@ public class ObjectDefinitionsFieldsDisplayContext
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
 		ObjectFieldBusinessTypeRegistry objectFieldBusinessTypeRegistry,
+		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		ObjectRelationshipLocalService objectRelationshipLocalService) {
 
 		super(httpServletRequest, objectDefinitionModelResourcePermission);
 
 		_listTypeDefinitionService = listTypeDefinitionService;
 		_objectFieldBusinessTypeRegistry = objectFieldBusinessTypeRegistry;
+		_objectFieldSettingLocalService = objectFieldSettingLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 	}
 
@@ -137,31 +140,27 @@ public class ObjectDefinitionsFieldsDisplayContext
 	public List<Map<String, String>> getObjectFieldBusinessTypeMaps(
 		boolean includeRelationshipObjectFieldBusinessType, Locale locale) {
 
-		List<ObjectFieldBusinessType> objectFieldBusinessTypes =
-			_objectFieldBusinessTypeRegistry.getObjectFieldBusinessTypes();
-
-		Stream<ObjectFieldBusinessType> stream =
-			objectFieldBusinessTypes.stream();
-
 		return ObjectFieldBusinessTypeUtil.getObjectFieldBusinessTypeMaps(
 			locale,
-			stream.filter(
+			ListUtil.filter(
+				_objectFieldBusinessTypeRegistry.getObjectFieldBusinessTypes(),
 				objectFieldBusinessType ->
 					objectFieldBusinessType.isVisible() &&
 					(!StringUtil.equals(
 						objectFieldBusinessType.getName(),
 						ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP) ||
-					 includeRelationshipObjectFieldBusinessType)
-			).collect(
-				Collectors.toList()
-			));
+					 includeRelationshipObjectFieldBusinessType)));
 	}
 
 	public List<Map<String, Object>> getObjectFieldCodeEditorElements() {
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-164948"))) {
+		if (FeatureFlagManagerUtil.isEnabled("LPS-164948")) {
 			return ObjectCodeEditorUtil.getCodeEditorElements(
-				true, true, false, objectRequestHelper.getLocale(),
-				getObjectDefinitionId());
+				ddmExpressionOperator ->
+					_filterableDDMExpressionOperators.contains(
+						ddmExpressionOperator),
+				objectRequestHelper.getLocale(), getObjectDefinitionId(),
+				objectField -> _filterableObjectFieldBusinessTypes.contains(
+					objectField.getBusinessType()));
 		}
 
 		return null;
@@ -169,7 +168,8 @@ public class ObjectDefinitionsFieldsDisplayContext
 
 	public JSONObject getObjectFieldJSONObject(ObjectField objectField) {
 		return ObjectFieldUtil.toJSONObject(
-			_listTypeDefinitionService, objectField);
+			_listTypeDefinitionService, objectField,
+			_objectFieldSettingLocalService);
 	}
 
 	public Long getObjectRelationshipId(ObjectField objectField) {
@@ -193,9 +193,26 @@ public class ObjectDefinitionsFieldsDisplayContext
 		return "/object-fields";
 	}
 
+	private static final Set<ObjectCodeEditorUtil.DDMExpressionOperator>
+		_filterableDDMExpressionOperators = Collections.unmodifiableSet(
+			SetUtil.fromArray(
+				ObjectCodeEditorUtil.DDMExpressionOperator.DIVIDED_BY,
+				ObjectCodeEditorUtil.DDMExpressionOperator.MINUS,
+				ObjectCodeEditorUtil.DDMExpressionOperator.PLUS,
+				ObjectCodeEditorUtil.DDMExpressionOperator.TIMES));
+	private static final Set<String> _filterableObjectFieldBusinessTypes =
+		Collections.unmodifiableSet(
+			SetUtil.fromArray(
+				ObjectFieldConstants.BUSINESS_TYPE_DECIMAL,
+				ObjectFieldConstants.BUSINESS_TYPE_INTEGER,
+				ObjectFieldConstants.BUSINESS_TYPE_LONG_INTEGER,
+				ObjectFieldConstants.BUSINESS_TYPE_PRECISION_DECIMAL));
+
 	private final ListTypeDefinitionService _listTypeDefinitionService;
 	private final ObjectFieldBusinessTypeRegistry
 		_objectFieldBusinessTypeRegistry;
+	private final ObjectFieldSettingLocalService
+		_objectFieldSettingLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
 

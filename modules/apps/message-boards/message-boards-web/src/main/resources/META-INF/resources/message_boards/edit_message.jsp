@@ -181,7 +181,7 @@ if (portletTitleBasedNavigation) {
 		<liferay-ui:error exception="<%= MessageSubjectException.class %>" message="please-enter-a-valid-subject" />
 
 		<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(UploadServletRequestConfigurationProviderUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 		</liferay-ui:error>
 
 		<liferay-asset:asset-categories-error />
@@ -212,7 +212,7 @@ if (portletTitleBasedNavigation) {
 
 					<aui:model-context bean="<%= message %>" model="<%= MBMessage.class %>" />
 
-					<aui:input autoFocus="<%= windowState.equals(WindowState.MAXIMIZED) %>" name="subject" value="<%= subject %>" />
+					<aui:input name="subject" value="<%= subject %>" />
 
 					<aui:field-wrapper cssClass="message-content">
 						<c:choose>
@@ -451,7 +451,7 @@ if (portletTitleBasedNavigation) {
 						String publishButtonLabel = "publish";
 
 						if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, MBMessage.class.getName())) {
-							publishButtonLabel = "submit-for-publication";
+							publishButtonLabel = "submit-for-workflow";
 						}
 						%>
 

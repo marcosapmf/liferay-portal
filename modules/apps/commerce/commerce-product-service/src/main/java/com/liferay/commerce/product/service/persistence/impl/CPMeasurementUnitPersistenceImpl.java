@@ -4037,7 +4037,9 @@ public class CPMeasurementUnitPersistenceImpl
 				if (ercCPMeasurementUnit != null) {
 					throw new DuplicateCPMeasurementUnitExternalReferenceCodeException(
 						"Duplicate cp measurement unit with external reference code " +
-							cpMeasurementUnit.getExternalReferenceCode());
+							cpMeasurementUnit.getExternalReferenceCode() +
+								" and company " +
+									cpMeasurementUnit.getCompanyId());
 				}
 			}
 			else {
@@ -4047,7 +4049,9 @@ public class CPMeasurementUnitPersistenceImpl
 
 					throw new DuplicateCPMeasurementUnitExternalReferenceCodeException(
 						"Duplicate cp measurement unit with external reference code " +
-							cpMeasurementUnit.getExternalReferenceCode());
+							cpMeasurementUnit.getExternalReferenceCode() +
+								" and company " +
+									cpMeasurementUnit.getCompanyId());
 				}
 			}
 		}

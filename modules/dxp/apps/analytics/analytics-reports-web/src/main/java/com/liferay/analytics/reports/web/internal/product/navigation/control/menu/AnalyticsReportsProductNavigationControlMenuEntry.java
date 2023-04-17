@@ -22,13 +22,17 @@ import com.liferay.analytics.reports.info.item.provider.AnalyticsReportsInfoItem
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.info.item.provider.AnalyticsReportsInfoItemObjectProviderRegistry;
 import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -109,22 +113,10 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		try {
 			bodyBottomTag.doBodyTag(
 				httpServletRequest, httpServletResponse,
-				pageContext -> {
-					try {
-						_processBodyBottomTagBody(pageContext);
-					}
-					catch (Exception exception) {
-						throw new ProcessBodyBottomTagBodyException(exception);
-					}
-				});
+				this::_processBodyBottomTagBody);
 		}
 		catch (JspException jspException) {
 			throw new IOException(jspException);
-		}
-		catch (ProcessBodyBottomTagBodyException
-					processBodyBottomTagBodyException) {
-
-			throw new IOException(processBodyBottomTagBodyException);
 		}
 
 		return true;
@@ -227,8 +219,19 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (!AnalyticsReportsUtil.isShowAnalyticsReportsPanel(
-				themeDisplay.getCompanyId(), httpServletRequest)) {
+		try {
+			if (!AnalyticsReportsUtil.isShowAnalyticsReportsPanel(
+					_analyticsSettingsManager, themeDisplay.getCompanyId(),
+					httpServletRequest)) {
+
+				return false;
+			}
+		}
+		catch (PortalException portalException) {
+			throw portalException;
+		}
+		catch (Exception exception) {
+			_log.error(exception);
 
 			return false;
 		}
@@ -240,15 +243,6 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		HttpServletRequest httpServletRequest, String panelState) {
 
 		SessionClicks.put(httpServletRequest, _SESSION_CLICKS_KEY, panelState);
-	}
-
-	public static class ProcessBodyBottomTagBodyException
-		extends RuntimeException {
-
-		public ProcessBodyBottomTagBodyException(Throwable throwable) {
-			super(throwable);
-		}
-
 	}
 
 	@Activate
@@ -326,9 +320,7 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		return infoItemReference;
 	}
 
-	private void _processBodyBottomTagBody(PageContext pageContext)
-		throws IOException, JspException {
-
+	private void _processBodyBottomTagBody(PageContext pageContext) {
 		try {
 			HttpServletRequest httpServletRequest =
 				(HttpServletRequest)pageContext.getRequest();
@@ -404,7 +396,7 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			jspWriter.write("</div></div></div></div>");
 		}
 		catch (Exception exception) {
-			throw new IOException(exception);
+			ReflectionUtil.throwException(exception);
 		}
 	}
 
@@ -414,12 +406,18 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 	private static final String _SESSION_CLICKS_KEY =
 		"com.liferay.analytics.reports.web_panelState";
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		AnalyticsReportsProductNavigationControlMenuEntry.class);
+
 	@Reference
 	private AnalyticsReportsInfoItemObjectProviderRegistry
 		_analyticsReportsInfoItemObjectProviderRegistry;
 
 	@Reference
 	private AnalyticsReportsInfoItemRegistry _analyticsReportsInfoItemRegistry;
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private Html _html;

@@ -19,9 +19,6 @@ import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.info.pagination.Pagination;
 import com.liferay.info.sort.Sort;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.IndexerRegistryUtil;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Portal;
 
 import org.osgi.service.component.annotations.Reference;
@@ -32,38 +29,35 @@ import org.osgi.service.component.annotations.Reference;
 public abstract class BaseAssetsInfoCollectionProvider {
 
 	protected AssetEntryQuery getAssetEntryQuery(
-		long companyId, long groupId, Pagination pagination, Sort sort) {
+		long companyId, long groupId, Pagination pagination, Sort sort1,
+		Sort sort2) {
 
 		AssetEntryQuery assetEntryQuery = new AssetEntryQuery();
 
 		assetEntryQuery.setClassNameIds(
-			ArrayUtil.filter(
-				AssetRendererFactoryRegistryUtil.getClassNameIds(
-					companyId, true),
-				availableClassNameId -> {
-					Indexer<?> indexer = IndexerRegistryUtil.getIndexer(
-						portal.getClassName(availableClassNameId));
-
-					if (indexer == null) {
-						return false;
-					}
-
-					return true;
-				}));
+			AssetRendererFactoryRegistryUtil.getIndexableClassNameIds(
+				companyId, true));
 		assetEntryQuery.setEnablePermissions(true);
-		assetEntryQuery.setGroupIds(new long[] {groupId});
 
 		if (pagination != null) {
-			assetEntryQuery.setStart(pagination.getStart());
 			assetEntryQuery.setEnd(pagination.getEnd());
 		}
 
+		assetEntryQuery.setGroupIds(new long[] {groupId});
+		assetEntryQuery.setListable(null);
+
 		assetEntryQuery.setOrderByCol1(
-			(sort != null) ? sort.getFieldName() : Field.MODIFIED_DATE);
-		assetEntryQuery.setOrderByCol2(Field.CREATE_DATE);
+			(sort1 != null) ? sort1.getFieldName() : Field.MODIFIED_DATE);
+		assetEntryQuery.setOrderByCol2(
+			(sort2 != null) ? sort2.getFieldName() : Field.CREATE_DATE);
 		assetEntryQuery.setOrderByType1(
-			(sort != null) ? _getOrderByType(sort) : "DESC");
-		assetEntryQuery.setOrderByType2("DESC");
+			(sort1 != null) ? _getOrderByType(sort1) : "DESC");
+		assetEntryQuery.setOrderByType1(
+			(sort2 != null) ? _getOrderByType(sort2) : "DESC");
+
+		if (pagination != null) {
+			assetEntryQuery.setStart(pagination.getStart());
+		}
 
 		return assetEntryQuery;
 	}

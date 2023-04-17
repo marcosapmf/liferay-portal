@@ -58,12 +58,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -117,16 +115,16 @@ public class ContentFieldUtil {
 
 						Map<String, ContentFieldValue> map = new HashMap<>();
 
-						Map<Locale, String> valueValues = Optional.ofNullable(
-							ddmFormFieldValue.getValue()
-						).map(
-							Value::getValues
-						).orElse(
-							Collections.emptyMap()
-						);
+						Value value = ddmFormFieldValue.getValue();
+
+						Map<Locale, String> values = value.getValues();
+
+						if (values == null) {
+							values = Collections.emptyMap();
+						}
 
 						for (Map.Entry<Locale, String> entry :
-								valueValues.entrySet()) {
+								values.entrySet()) {
 
 							Locale locale = entry.getKey();
 
@@ -153,11 +151,10 @@ public class ContentFieldUtil {
 		String valueString) {
 
 		try {
-			Optional<UriInfo> uriInfoOptional =
-				dtoConverterContext.getUriInfoOptional();
+			UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
 			if (Objects.equals(DDMFormFieldType.DATE, ddmFormField.getType()) ||
-				Objects.equals("date", ddmFormField.getType())) {
+				Objects.equals(ddmFormField.getType(), "date")) {
 
 				return new ContentFieldValue() {
 					{
@@ -183,7 +180,7 @@ public class ContentFieldUtil {
 						document = ContentDocumentUtil.toContentDocument(
 							dlURLHelper,
 							"contentFields.contentFieldValue.document",
-							fileEntry, uriInfoOptional);
+							fileEntry, uriInfo);
 					}
 				};
 			}
@@ -242,8 +239,7 @@ public class ContentFieldUtil {
 						image = ContentDocumentUtil.toContentDocument(
 							dlURLHelper,
 							"contentFields.contentFieldValue.image",
-							dlAppService.getFileEntry(fileEntryId),
-							uriInfoOptional);
+							dlAppService.getFileEntry(fileEntryId), uriInfo);
 
 						String alt = jsonObject.getString("alt");
 
@@ -329,21 +325,18 @@ public class ContentFieldUtil {
 						 ddmFormField.getType(),
 						 DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE)) {
 
-				List<String> list = JSONUtil.toStringList(
-					JSONFactoryUtil.createJSONArray(valueString));
-
 				DDMFormFieldOptions ddmFormFieldOptions =
 					ddmFormField.getDDMFormFieldOptions();
 
-				Stream<String> stream = list.stream();
+				List<String> values = TransformUtil.transform(
+					JSONUtil.toStringList(
+						JSONFactoryUtil.createJSONArray(valueString)),
+					value -> {
+						LocalizedValue localizedValue =
+							ddmFormFieldOptions.getOptionLabels(value);
 
-				List<String> values = stream.map(
-					ddmFormFieldOptions::getOptionLabels
-				).map(
-					localizedValue -> localizedValue.getString(locale)
-				).collect(
-					Collectors.toList()
-				);
+						return localizedValue.getString(locale);
+					});
 
 				return new ContentFieldValue() {
 					{
@@ -455,42 +448,40 @@ public class ContentFieldUtil {
 			long classPK, DTOConverterContext dtoConverterContext)
 		throws Exception {
 
-		Optional<UriInfo> uriInfoOptional =
-			dtoConverterContext.getUriInfoOptional();
+		UriInfo uriInfo = dtoConverterContext.getUriInfo();
 
-		if (uriInfoOptional.map(
-				UriInfo::getQueryParameters
-			).map(
-				queryParameters -> queryParameters.getFirst("nestedFields")
-			).map(
-				nestedFields -> nestedFields.contains(
-					"embeddedStructuredContent")
-			).orElse(
-				false
-			)) {
-
-			DTOConverterRegistry dtoConverterRegistry =
-				dtoConverterContext.getDTOConverterRegistry();
-
-			DTOConverter<?, ?> dtoConverter =
-				dtoConverterRegistry.getDTOConverter(
-					JournalArticle.class.getName());
-
-			if (dtoConverter == null) {
-				return null;
-			}
-
-			return (StructuredContent)dtoConverter.toDTO(
-				new DefaultDTOConverterContext(
-					dtoConverterContext.isAcceptAllLanguages(),
-					Collections.emptyMap(), dtoConverterRegistry,
-					dtoConverterContext.getHttpServletRequest(), classPK,
-					dtoConverterContext.getLocale(),
-					uriInfoOptional.orElse(null),
-					dtoConverterContext.getUser()));
+		if (uriInfo == null) {
+			return null;
 		}
 
-		return null;
+		MultivaluedMap<String, String> queryParameters =
+			uriInfo.getQueryParameters();
+
+		String nestedFields = queryParameters.getFirst("nestedFields");
+
+		if ((nestedFields == null) ||
+			!nestedFields.contains("embeddedStructuredContent")) {
+
+			return null;
+		}
+
+		DTOConverterRegistry dtoConverterRegistry =
+			dtoConverterContext.getDTOConverterRegistry();
+
+		DTOConverter<?, ?> dtoConverter = dtoConverterRegistry.getDTOConverter(
+			JournalArticle.class.getName());
+
+		if (dtoConverter == null) {
+			return null;
+		}
+
+		return (StructuredContent)dtoConverter.toDTO(
+			new DefaultDTOConverterContext(
+				dtoConverterContext.isAcceptAllLanguages(),
+				Collections.emptyMap(), dtoConverterRegistry,
+				dtoConverterContext.getHttpServletRequest(), classPK,
+				dtoConverterContext.getLocale(), uriInfo,
+				dtoConverterContext.getUser()));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

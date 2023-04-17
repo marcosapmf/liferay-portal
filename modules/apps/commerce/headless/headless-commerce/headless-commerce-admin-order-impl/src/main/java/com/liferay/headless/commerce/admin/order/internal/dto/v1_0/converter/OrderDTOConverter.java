@@ -32,6 +32,8 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.Status;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.language.LanguageResources;
@@ -55,7 +57,7 @@ import org.osgi.service.component.annotations.Reference;
 		"dto.class.name=com.liferay.commerce.model.CommerceOrder",
 		"version=v1.0"
 	},
-	service = {DTOConverter.class, OrderDTOConverter.class}
+	service = DTOConverter.class
 )
 public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 
@@ -71,47 +73,18 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 		CommerceOrder commerceOrder = _commerceOrderService.getCommerceOrder(
 			(Long)dtoConverterContext.getId());
 
-		CommerceAccount commerceAccount = commerceOrder.getCommerceAccount();
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
+				commerceOrder.getGroupId());
 		CommerceCurrency commerceCurrency = commerceOrder.getCommerceCurrency();
-		CommerceShippingMethod commerceShippingMethod =
-			commerceOrder.getCommerceShippingMethod();
-		ExpandoBridge expandoBridge = commerceOrder.getExpandoBridge();
 
 		Locale locale = dtoConverterContext.getLocale();
 
 		ResourceBundle resourceBundle = LanguageResources.getResourceBundle(
 			locale);
 
-		String commerceOrderStatusLabel = _getCommerceOrderStatusLabel(
-			commerceOrder.getOrderStatus(), locale);
-
-		String commerceOrderStatusLabelI18n = _getCommerceOrderStatusLabelI18n(
-			commerceOrder.getOrderStatus(), locale);
-
-		String commerceOrderWorkflowStatusLabel =
-			WorkflowConstants.getStatusLabel(commerceOrder.getStatus());
-
-		String commerceOrderWorkflowStatusLabelI18n = _language.get(
-			resourceBundle,
-			WorkflowConstants.getStatusLabel(commerceOrder.getStatus()));
-
-		String commerceOrderPaymentStatusLabel =
-			CommerceOrderConstants.getPaymentStatusLabel(
-				commerceOrder.getPaymentStatus());
-
-		String commerceOrderPaymentStatusLabelI18n = _language.get(
-			resourceBundle,
-			CommerceOrderConstants.getPaymentStatusLabel(
-				commerceOrder.getPaymentStatus()));
-
-		CommerceChannel commerceChannel =
-			_commerceChannelLocalService.getCommerceChannelByOrderGroupId(
-				commerceOrder.getGroupId());
-
 		Order order = new Order() {
 			{
-				accountExternalReferenceCode =
-					commerceAccount.getExternalReferenceCode();
 				accountId = commerceOrder.getCommerceAccountId();
 				actions = dtoConverterContext.getActions();
 				advanceStatus = commerceOrder.getAdvanceStatus();
@@ -122,7 +95,6 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 				couponCode = commerceOrder.getCouponCode();
 				createDate = commerceOrder.getCreateDate();
 				currencyCode = commerceCurrency.getCode();
-				customFields = expandoBridge.getAttributes();
 				deliveryTermDescription =
 					commerceOrder.getDeliveryCommerceTermEntryDescription();
 				deliveryTermId = commerceOrder.getDeliveryCommerceTermEntryId();
@@ -136,8 +108,11 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 				orderDate = commerceOrder.getOrderDate();
 				orderStatus = commerceOrder.getOrderStatus();
 				orderStatusInfo = _getOrderStatusInfo(
-					commerceOrder.getOrderStatus(), commerceOrderStatusLabel,
-					commerceOrderStatusLabelI18n);
+					commerceOrder.getOrderStatus(),
+					_getCommerceOrderStatusLabel(
+						commerceOrder.getOrderStatus(), locale),
+					_getCommerceOrderStatusLabelI18n(
+						commerceOrder.getOrderStatus(), locale));
 				orderTypeExternalReferenceCode =
 					_getOrderTypeExternalReferenceCode(
 						commerceOrder.getCommerceOrderTypeId());
@@ -146,8 +121,12 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 				paymentStatus = commerceOrder.getPaymentStatus();
 				paymentStatusInfo = _getPaymentStatusInfo(
 					commerceOrder.getPaymentStatus(),
-					commerceOrderPaymentStatusLabel,
-					commerceOrderPaymentStatusLabelI18n);
+					CommerceOrderConstants.getPaymentStatusLabel(
+						commerceOrder.getPaymentStatus()),
+					_language.get(
+						resourceBundle,
+						CommerceOrderConstants.getPaymentStatusLabel(
+							commerceOrder.getPaymentStatus())));
 				paymentTermDescription =
 					commerceOrder.getPaymentCommerceTermEntryDescription();
 				paymentTermId = commerceOrder.getPaymentCommerceTermEntryId();
@@ -159,12 +138,38 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 					commerceOrder.getRequestedDeliveryDate();
 				shippingAddressId = commerceOrder.getShippingAddressId();
 				shippingMethod = _getShippingMethodEngineKey(
-					commerceShippingMethod);
+					commerceOrder.getCommerceShippingMethod());
 				shippingOption = commerceOrder.getShippingOptionName();
 				transactionId = commerceOrder.getTransactionId();
 				workflowStatusInfo = _toStatus(
-					commerceOrder.getStatus(), commerceOrderWorkflowStatusLabel,
-					commerceOrderWorkflowStatusLabelI18n);
+					commerceOrder.getStatus(),
+					WorkflowConstants.getStatusLabel(commerceOrder.getStatus()),
+					_language.get(
+						resourceBundle,
+						WorkflowConstants.getStatusLabel(
+							commerceOrder.getStatus())));
+
+				setAccountExternalReferenceCode(
+					() -> {
+						CommerceAccount commerceAccount =
+							commerceOrder.getCommerceAccount();
+
+						return commerceAccount.getExternalReferenceCode();
+					});
+				setCreatorEmailAddress(
+					() -> {
+						User user = _userLocalService.getUser(
+							commerceOrder.getUserId());
+
+						return user.getEmailAddress();
+					});
+				setCustomFields(
+					() -> {
+						ExpandoBridge expandoBridge =
+							commerceOrder.getExpandoBridge();
+
+						return expandoBridge.getAttributes();
+					});
 			}
 		};
 
@@ -535,5 +540,8 @@ public class OrderDTOConverter implements DTOConverter<CommerceOrder, Order> {
 
 	@Reference
 	private Language _language;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

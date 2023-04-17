@@ -14,8 +14,9 @@
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
 
-import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountService;
+import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.constants.CommerceAddressConstants;
 import com.liferay.commerce.constants.CommercePaymentConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
@@ -53,9 +54,8 @@ import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Address;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CartItem;
 import com.liferay.headless.commerce.delivery.cart.dto.v1_0.CouponCode;
-import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartDTOConverter;
-import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartItemDTOConverter;
 import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartItemDTOConverterContext;
+import com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.delivery.cart.resource.v1_0.CartResource;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -78,6 +78,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -171,7 +172,8 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 
 	@Override
 	public Page<Cart> getChannelCartsPage(
-			Long accountId, Long channelId, Pagination pagination)
+			Long accountId, Long channelId, String search,
+			Pagination pagination)
 		throws Exception {
 
 		CommerceChannel commerceChannel =
@@ -179,13 +181,13 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 
 		List<CommerceOrder> commerceOrders =
 			_commerceOrderService.getPendingCommerceOrders(
-				commerceChannel.getGroupId(), accountId, null,
+				commerceChannel.getGroupId(), accountId, search,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
 		return Page.of(
 			_toCarts(commerceOrders), pagination,
 			_commerceOrderService.getPendingCommerceOrdersCount(
-				commerceChannel.getGroupId(), accountId, null));
+				commerceChannel.getGroupId(), accountId, search));
 	}
 
 	@Override
@@ -329,11 +331,19 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 			commerceCurrencyId = commerceCurrency.getCommerceCurrencyId();
 		}
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.getCommerceAccount(cart.getAccountId());
+		AccountEntry accountEntry = null;
+
+		if (cart.getAccountId() == AccountConstants.ACCOUNT_ENTRY_ID_GUEST) {
+			accountEntry = _accountEntryLocalService.getGuestAccountEntry(
+				contextCompany.getCompanyId());
+		}
+		else {
+			accountEntry = _accountEntryLocalService.getAccountEntry(
+				cart.getAccountId());
+		}
 
 		return _commerceOrderService.addCommerceOrder(
-			commerceChannelGroupId, commerceAccount.getCommerceAccountId(),
+			commerceChannelGroupId, accountEntry.getAccountEntryId(),
 			commerceCurrencyId, _getCommerceOrderTypeId(cart));
 	}
 
@@ -794,13 +804,15 @@ public class CartResourceImpl extends BaseCartResourceImpl {
 	}
 
 	@Reference
-	private CartDTOConverter _cartDTOConverter;
+	private AccountEntryLocalService _accountEntryLocalService;
 
-	@Reference
-	private CartItemDTOConverter _cartItemDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.delivery.cart.internal.dto.v1_0.CartDTOConverter)"
+	)
+	private DTOConverter<CommerceOrder, Cart> _cartDTOConverter;
 
-	@Reference
-	private CommerceAccountService _commerceAccountService;
+	@Reference(target = DTOConverterConstants.CART_ITEM_DTO_CONVERTER)
+	private DTOConverter<CommerceOrderItem, CartItem> _cartItemDTOConverter;
 
 	@Reference
 	private CommerceAddressService _commerceAddressService;

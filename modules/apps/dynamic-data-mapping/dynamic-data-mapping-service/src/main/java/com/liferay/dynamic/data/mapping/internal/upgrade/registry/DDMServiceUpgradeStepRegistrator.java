@@ -56,6 +56,8 @@ import com.liferay.dynamic.data.mapping.internal.upgrade.v4_3_4.DDMStructureLink
 import com.liferay.dynamic.data.mapping.internal.upgrade.v4_3_4.DLFileEntryTypeDDMFieldAttributeUpgradeProcess;
 import com.liferay.dynamic.data.mapping.internal.upgrade.v4_3_5.DDMTemplateVersionUpgradeProcess;
 import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_0.DDMFacetTemplateUpgradeProcess;
+import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_1.WorkflowDefinitionLinkUpgradeProcess;
+import com.liferay.dynamic.data.mapping.internal.upgrade.v5_2_2.DLFileEntryDDMFormInstanceRecordUpgradeProcess;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
@@ -72,6 +74,7 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -425,7 +428,9 @@ public class DDMServiceUpgradeStepRegistrator
 			"4.0.0", "4.1.0",
 			new DDMFieldUpgradeProcess(
 				_jsonFactory, _jsonDDMFormDeserializer,
-				_jsonDDMFormValuesDeserializer));
+				_jsonDDMFormValuesDeserializer),
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v4_1_0.
+				SchemaUpgradeProcess());
 
 		registry.register(
 			"4.1.0", "4.2.0",
@@ -458,7 +463,8 @@ public class DDMServiceUpgradeStepRegistrator
 			"4.3.3", "4.3.4",
 			new DDMStructureLinkDLFileEntryTypeUpgradeProcess(
 				_dlFileEntryTypeLocalService),
-			new DLFileEntryTypeDDMFieldAttributeUpgradeProcess());
+			new DLFileEntryTypeDDMFieldAttributeUpgradeProcess(
+				_companyLocalService));
 
 		registry.register(
 			"4.3.4", "4.3.5", new DDMTemplateVersionUpgradeProcess());
@@ -504,6 +510,20 @@ public class DDMServiceUpgradeStepRegistrator
 		registry.register(
 			"5.1.5", "5.2.0",
 			new DDMFacetTemplateUpgradeProcess(_classNameLocalService));
+
+		registry.register(
+			"5.2.0", "5.2.1",
+			new WorkflowDefinitionLinkUpgradeProcess(_classNameLocalService));
+
+		registry.register(
+			"5.2.1", "5.2.2",
+			new DLFileEntryDDMFormInstanceRecordUpgradeProcess(
+				_classNameLocalService));
+
+		registry.register(
+			"5.2.2", "5.3.0",
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_3_0.
+				DDMTemplateUpgradeProcess(_classNameLocalService));
 	}
 
 	@Activate
@@ -523,6 +543,9 @@ public class DDMServiceUpgradeStepRegistrator
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private CounterLocalService _counterLocalService;

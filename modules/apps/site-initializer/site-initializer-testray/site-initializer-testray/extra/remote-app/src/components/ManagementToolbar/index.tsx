@@ -15,13 +15,15 @@
 import ClayManagementToolbar from '@clayui/management-toolbar';
 import {ReactNode, useContext} from 'react';
 
-import {ListViewContext, ListViewTypes} from '../../context/ListViewContext';
-import i18n from '../../i18n';
-import {RendererFields} from '../Form/Renderer';
+import {ListViewContext} from '../../context/ListViewContext';
+import {
+	FilterSchemaOption,
+	filterSchema as filterSchemas,
+} from '../../schema/filter';
 import {TableProps} from '../Table';
 import ManagementToolbarLeft from './ManagementToolbarLeft';
 import ManagementToolbarResultsBar from './ManagementToolbarResultsBar';
-import ManagementToolbarRight, {IItem} from './ManagementToolbarRight';
+import ManagementToolbarRight from './ManagementToolbarRight';
 
 export type ManagementToolbarProps = {
 	actions: any;
@@ -30,11 +32,12 @@ export type ManagementToolbarProps = {
 	display?: {
 		columns?: boolean;
 	};
-	filterFields?: RendererFields[];
-	tableProps: Omit<
-		TableProps,
-		'items' | 'mutate' | 'onSelectAllRows' | 'onSort'
-	>;
+
+	/**
+	 * Check out the file {src/schema/filter.ts}
+	 */
+	filterSchema?: FilterSchemaOption;
+	tableProps: Pick<TableProps, 'columns'>;
 	title?: string;
 	totalItems: number;
 };
@@ -44,39 +47,14 @@ const ManagementToolbar: React.FC<ManagementToolbarProps> = ({
 	addButton,
 	buttons,
 	display,
-	filterFields,
+	filterSchema,
 	tableProps,
 	title,
 	totalItems,
 }) => {
-	const [{columns: contextColumns, filters}, dispatch] = useContext(
-		ListViewContext
-	);
+	const [{filters}] = useContext(ListViewContext);
 
 	const disabled = totalItems === 0;
-
-	const columns = [
-		{
-			items: tableProps.columns.map((column) => ({
-				checked: (contextColumns || {})[column.key] ?? true,
-				label: column.value,
-				onChange: (value: boolean) => {
-					dispatch({
-						payload: {
-							columns: {
-								...contextColumns,
-								[column.key]: value,
-							},
-						},
-						type: ListViewTypes.SET_COLUMNS,
-					});
-				},
-				type: 'checkbox',
-			})),
-			label: i18n.translate('columns'),
-			type: 'group',
-		},
-	];
 
 	return (
 		<>
@@ -87,14 +65,14 @@ const ManagementToolbar: React.FC<ManagementToolbarProps> = ({
 					actions={actions}
 					addButton={addButton}
 					buttons={buttons}
-					columns={columns as IItem[]}
+					columns={tableProps.columns}
 					disabled={disabled}
 					display={display}
-					filterFields={filterFields}
+					filterSchema={(filterSchemas as any)[filterSchema ?? '']}
 				/>
 			</ClayManagementToolbar>
 
-			{!!filters.entries?.length && (
+			{!!filters.entries?.filter(({value}) => value).length && (
 				<ManagementToolbarResultsBar totalItems={totalItems} />
 			)}
 		</>

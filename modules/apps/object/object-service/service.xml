@@ -6,6 +6,10 @@
 	<namespace>Object</namespace>
 	<entity local-service="true" name="ObjectAction" remote-service="true" uuid="true">
 
+		<!-- External reference code -->
+
+		<column name="externalReferenceCode" type="String" />
+
 		<!-- PK fields -->
 
 		<column name="objectActionId" primary="true" type="long" />
@@ -40,6 +44,11 @@
 		<finder name="ODI_N" return-type="ObjectAction">
 			<finder-column name="objectDefinitionId" />
 			<finder-column name="name" />
+		</finder>
+		<finder name="ERC_C_ODI" return-type="ObjectEntry" unique="true">
+			<finder-column name="externalReferenceCode" />
+			<finder-column name="companyId" />
+			<finder-column name="objectDefinitionId" />
 		</finder>
 		<finder name="O_A_OATK" return-type="Collection">
 			<finder-column name="objectDefinitionId" />
@@ -80,6 +89,7 @@
 		<column name="enableCategorization" type="boolean" />
 		<column name="enableComments" type="boolean" />
 		<column name="enableObjectEntryHistory" type="boolean" />
+		<column name="modifiable" type="boolean" />
 		<column name="name" type="String" />
 		<column name="panelAppOrder" type="String" />
 		<column name="panelCategoryKey" type="String" />
@@ -227,7 +237,6 @@
 		<column method-name="DBColumnName" name="dbColumnName" type="String" />
 		<column method-name="DBTableName" name="dbTableName" type="String" />
 		<column method-name="DBType" name="dbType" type="String" />
-		<column name="defaultValue" type="String" />
 		<column name="indexed" type="boolean" />
 		<column name="indexedAsKeyword" type="boolean" />
 		<column name="indexedLanguageId" type="String" />
@@ -453,7 +462,7 @@
 			<finder-column name="objectLayoutBoxId" />
 		</finder>
 	</entity>
-	<entity local-service="false" name="ObjectLayoutTab" remote-service="true" uuid="true">
+	<entity local-service="true" name="ObjectLayoutTab" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -829,6 +838,7 @@
 		<exception>ObjectDefinitionEnableComments</exception>
 		<exception>ObjectDefinitionEnableObjectEntryHistory</exception>
 		<exception>ObjectDefinitionLabel</exception>
+		<exception>ObjectDefinitionModifiable</exception>
 		<exception>ObjectDefinitionName</exception>
 		<exception>ObjectDefinitionPluralLabel</exception>
 		<exception>ObjectDefinitionScope</exception>

@@ -9,71 +9,53 @@
  * distribution rights of the Software.
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import classNames from 'classnames';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import Container from '../../common/components/container';
-
-const status = {
-	5: 'bg-accent-1',
-	15: 'bg-warning',
-	30: 'bg-success',
-};
-
-const siteURL = Liferay.ThemeDisplay.getLayoutRelativeURL()
-	.split('/')
-	.slice(0, 3)
-	.join('/');
+import {status} from '../../common/utils/constants/statusColumns';
+import getFilteredRenewals from '../../common/utils/getFilteredRenewalsData';
+import {siteURL} from '../../common/utils/getSiteURL';
 
 export default function () {
 	const [data, setData] = useState();
+	const [isLoading, setIsLoading] = useState(false);
 
-	useEffect(() => {
-		const getRenewalsData = async () => {
-			// eslint-disable-next-line @liferay/portal/no-global-fetch
-			await fetch('/o/c/opportunitysfs?&sort=closeDate:asc', {
+	const getRenewalsData = async () => {
+		setIsLoading(true);
+		// eslint-disable-next-line @liferay/portal/no-global-fetch
+		const response = await fetch(
+			'/o/c/opportunitysfs?pageSize=200&sort=closeDate:asc',
+			{
 				headers: {
 					'accept': 'application/json',
 					'x-csrf-token': Liferay.authToken,
 				},
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					setData(data);
-				})
-				.catch(() => {
-					Liferay.Util.openToast({
-						message: 'An unexpected error occured.',
-						type: 'danger',
-					});
-				});
-		};
+			}
+		);
+		if (response.ok) {
+			const renewalsData = await response.json();
+
+			setData(renewalsData);
+			setIsLoading(false);
+
+			return;
+		}
+
+		Liferay.Util.openToast({
+			message: 'An unexpected error occured.',
+			type: 'danger',
+		});
+	};
+
+	useEffect(() => {
 		getRenewalsData();
 	}, []);
 
-	const filteredArray = useMemo(() => {
-		const newArray = [];
-		const currentDate = new Date();
-		const milisecondsPerDay = 1000 * 3600 * 24;
-
-		data?.items?.map((item) => {
-			const expirationInTime = new Date(item.closeDate) - currentDate;
-			const expirationInDays =
-				Math.floor(expirationInTime / milisecondsPerDay) + 1;
-
-			if (expirationInDays > 0 && expirationInDays <= 30) {
-				newArray.push({
-					closeDate: item.closeDate,
-					expirationDays: expirationInDays,
-					opportunityName: item.opportunityName,
-				});
-			}
-		});
-
-		return newArray.slice(0, 4);
-	}, [data?.items]);
+	const renewalsData = getFilteredRenewals(data);
 
 	const getCurrentStatusColor = (item) => {
 		if (item?.expirationDays <= 5) {
@@ -87,28 +69,26 @@ export default function () {
 		}
 	};
 
-	return (
-		<Container
-			footer={
-				<ClayButton
-					className="border-brand-primary-darken-1 mt-2 text-brand-primary-darken-1"
-					displayType="secondary"
-					onClick={() =>
-						Liferay.Util.navigate(
-							`${siteURL}/sales/renewal-opportunities`
-						)
-					}
-					type="button"
-				>
-					View all Renewals
-				</ClayButton>
-			}
-			title="Renewals"
-		>
-			{!data && <ClayLoadingIndicator className="mb-10 mt-9" size="md" />}
+	const buildChart = () => {
+		if (isLoading) {
+			return <ClayLoadingIndicator className="mb-10 mt-9" size="md" />;
+		}
 
-			<div className="align-items-start d-flex flex-column mt-3">
-				{filteredArray?.map((item, index) => {
+		if (!renewalsData.length && !isLoading) {
+			return (
+				<ClayAlert
+					className="mb-8 mt-8 mx-auto text-center w-50"
+					displayType="info"
+					title="Info:"
+				>
+					No Data Available
+				</ClayAlert>
+			);
+		}
+
+		return (
+			<div className="align-items-start d-flex flex-column justify-content-center mt-3">
+				{renewalsData?.map((item, index) => {
 					getCurrentStatusColor(item);
 
 					return (
@@ -143,6 +123,29 @@ export default function () {
 					);
 				})}
 			</div>
+		);
+	};
+
+	return (
+		<Container
+			className="renewal-chart-card-height"
+			footer={
+				<ClayButton
+					className="border-brand-primary-darken-1 mt-2 text-brand-primary-darken-1"
+					displayType="secondary"
+					onClick={() =>
+						Liferay.Util.navigate(
+							`${siteURL}/sales/renewal-opportunities`
+						)
+					}
+					type="button"
+				>
+					View all Renewals
+				</ClayButton>
+			}
+			title="Renewals"
+		>
+			{buildChart()}
 		</Container>
 	);
 }

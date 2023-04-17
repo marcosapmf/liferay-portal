@@ -16,6 +16,7 @@ import {useForm} from 'react-hook-form';
 
 import Form from '../../../components/Form';
 import Modal from '../../../components/Modal';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {withVisibleContent} from '../../../hoc/withVisibleContent';
 import {useFetch} from '../../../hooks/useFetch';
 import {FormModalOptions} from '../../../hooks/useFormModal';
@@ -26,7 +27,6 @@ import {
 	TestrayTeam,
 	testrayComponentImpl,
 } from '../../../services/rest';
-import {searchUtil} from '../../../util/search';
 
 type ComponentForm = typeof yupSchema.component.__outputType;
 
@@ -58,10 +58,12 @@ const ComponentFormModal: React.FC<ComponentProps> = ({
 	});
 
 	const {data: teamsResponse} = useFetch<APIResponse<TestrayTeam>>(`/teams`, {
-		fields: 'id,name',
-		filter: searchUtil.eq('projectId', projectId),
-		pageSize: 100,
-		sort: 'name:asc',
+		params: {
+			fields: 'id,name',
+			filter: SearchBuilder.eq('projectId', projectId),
+			pageSize: 100,
+			sort: 'name:asc',
+		},
 	});
 
 	const teamId = watch('teamId');

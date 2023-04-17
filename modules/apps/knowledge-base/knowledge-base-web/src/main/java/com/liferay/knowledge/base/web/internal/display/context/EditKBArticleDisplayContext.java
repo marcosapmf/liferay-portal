@@ -236,7 +236,7 @@ public class EditKBArticleDisplayContext {
 				_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId(),
 				KBArticle.class.getName())) {
 
-			return "submit-for-publication";
+			return "submit-for-workflow";
 		}
 
 		return "publish";
@@ -358,12 +358,6 @@ public class EditKBArticleDisplayContext {
 		}
 
 		return false;
-	}
-
-	public boolean isKBArticleDescriptionEnabled() {
-		return GetterUtil.getBoolean(
-			_liferayPortletRequest.getAttribute(
-				"init.jsp-enableKBArticleDescription"));
 	}
 
 	public boolean isKBArticleSectionSelected(String section)

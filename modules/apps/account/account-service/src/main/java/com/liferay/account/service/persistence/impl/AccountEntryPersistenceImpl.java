@@ -5421,7 +5421,8 @@ public class AccountEntryPersistenceImpl
 				if (ercAccountEntry != null) {
 					throw new DuplicateAccountEntryExternalReferenceCodeException(
 						"Duplicate account entry with external reference code " +
-							accountEntry.getExternalReferenceCode());
+							accountEntry.getExternalReferenceCode() +
+								" and company " + accountEntry.getCompanyId());
 				}
 			}
 			else {
@@ -5431,7 +5432,8 @@ public class AccountEntryPersistenceImpl
 
 					throw new DuplicateAccountEntryExternalReferenceCodeException(
 						"Duplicate account entry with external reference code " +
-							accountEntry.getExternalReferenceCode());
+							accountEntry.getExternalReferenceCode() +
+								" and company " + accountEntry.getCompanyId());
 				}
 			}
 		}

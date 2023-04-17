@@ -80,6 +80,7 @@ function appendXMLActions(
 			priority,
 			script,
 			scriptLanguage,
+			status,
 		} = actions;
 
 		const xmlAction = XMLUtil.createObj(actionNodeName || 'action');
@@ -99,16 +100,23 @@ function appendXMLActions(
 				);
 			}
 
-			if (isValidValue(script, index)) {
-				buffer.push(XMLUtil.create('script', cdata(script[index])));
+			if (isValidValue(status, index)) {
+				buffer.push(
+					createTagWithEscapedContent('status', status[index])
+				);
 			}
+			else {
+				if (isValidValue(script, index)) {
+					buffer.push(XMLUtil.create('script', cdata(script[index])));
+				}
 
-			buffer.push(
-				createTagWithEscapedContent(
-					'scriptLanguage',
-					scriptLanguage[index] || DEFAULT_LANGUAGE
-				)
-			);
+				buffer.push(
+					createTagWithEscapedContent(
+						'scriptLanguage',
+						scriptLanguage[index] || DEFAULT_LANGUAGE
+					)
+				);
+			}
 
 			if (isValidValue(priority, index)) {
 				buffer.push(
@@ -213,18 +221,18 @@ function appendXMLAssignments(
 			const xmlRole = XMLUtil.createObj('role');
 
 			dataAssignments.roleType.forEach((item, index) => {
-				const roleName = dataAssignments.roleName[index];
+				const roleKey = dataAssignments.roleKey[index];
 				let roleType = dataAssignments.roleType[index];
 
 				if (item === 'asset library') {
 					roleType = roleTypeName;
 				}
 
-				if (roleName) {
+				if (roleKey) {
 					buffer.push(
 						xmlRole.open,
 						createTagWithEscapedContent('roleType', roleType),
-						createTagWithEscapedContent('name', roleName)
+						createTagWithEscapedContent('name', roleKey)
 					);
 
 					let autoCreate = dataAssignments.autoCreate?.[index];
@@ -361,13 +369,40 @@ function appendXMLAssignments(
 	}
 }
 
+function appendXMLRecipients(buffer, exporting, recipients) {
+	const recipientsAttrs = {};
+	const roleTypeName = exporting ? 'depot' : 'asset library';
+
+	if (
+		recipients?.receptionType &&
+		recipients.receptionType.some((receptionType) => receptionType !== '')
+	) {
+		recipientsAttrs.receptionType = recipients.receptionType;
+	}
+
+	recipients?.roleType?.forEach((item, roleTypeIndex) => {
+		if (item === 'depot' || item === 'asset library') {
+			recipients.roleType[roleTypeIndex] = roleTypeName;
+		}
+	});
+
+	if (isObject(recipients) && !isObjectEmpty(recipients)) {
+		appendXMLAssignments(
+			buffer,
+			recipients,
+			exporting,
+			'recipients',
+			recipientsAttrs
+		);
+	}
+}
+
 function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 	if (notifications && notifications.name && !!notifications.name.length) {
 		const {
 			description,
 			executionType,
 			notificationTypes,
-			receptionType,
 			recipients,
 			template,
 			templateLanguage,
@@ -386,8 +421,6 @@ function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 					XMLUtil.create('description', cdata(description[index]))
 				);
 			}
-
-			const roleTypeName = exporting ? 'depot' : 'asset library';
 
 			if (isValidValue(template, index)) {
 				buffer.push(XMLUtil.create('template', cdata(template[index])));
@@ -413,38 +446,17 @@ function appendXMLNotifications(buffer, notifications, nodeName, exporting) {
 				});
 			}
 
-			const recipientsAttrs = {};
-
-			if (
-				recipients[index]?.receptionType &&
-				recipients[index]?.receptionType.some(
-					(receptionType) => receptionType !== ''
-				)
-			) {
-				recipientsAttrs.receptionType = recipients[index].receptionType;
-			}
-
-			if (!recipientsAttrs.receptionType && receptionType?.[0]) {
-				recipientsAttrs.receptionType = receptionType[0];
-			}
-
-			recipients[index]?.roleType?.forEach((item, roleTypeIndex) => {
-				if (item === 'depot' || item === 'asset library') {
-					recipients[index].roleType[roleTypeIndex] = roleTypeName;
+			if (Array.isArray(recipients) && Array.isArray(recipients[index])) {
+				for (const recipientsIndex in recipients[index]) {
+					appendXMLRecipients(
+						buffer,
+						exporting,
+						recipients[index][recipientsIndex]
+					);
 				}
-			});
-
-			if (
-				isObject(recipients[index]) &&
-				!isObjectEmpty(recipients[index])
-			) {
-				appendXMLAssignments(
-					buffer,
-					recipients[index],
-					exporting,
-					'recipients',
-					recipientsAttrs
-				);
+			}
+			else {
+				appendXMLRecipients(buffer, exporting, recipients[index]);
 			}
 
 			if (executionType) {

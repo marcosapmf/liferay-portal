@@ -76,7 +76,7 @@ const NetworkStatusBar = ({error, status}) => {
 			!autoSaveMessageRef.current
 		) {
 			autoSaveMessageRef.current = Liferay.Language.get(
-				'page-editor-autosaves-your-work'
+				'changes-have-been-saved.-page-editor-will-autosave-new-changes'
 			);
 		}
 	}, [status]);
@@ -89,7 +89,7 @@ const NetworkStatusBar = ({error, status}) => {
 
 	return (
 		<div className="page-editor__status-bar">
-			<span className="sr-only" role="alert">
+			<span aria-live="polite" className="sr-only">
 				{autoSaveMessageRef.current}
 			</span>
 

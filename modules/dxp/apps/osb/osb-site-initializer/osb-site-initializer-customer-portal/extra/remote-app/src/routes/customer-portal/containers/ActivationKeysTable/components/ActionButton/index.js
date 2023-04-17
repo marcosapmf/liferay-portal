@@ -33,6 +33,8 @@ const ActionButton = ({
 	const {provisioningServerAPI} = useAppPropertiesContext();
 	const navigate = useNavigate();
 
+	const allowSelfProvisioning = project.allowSelfProvisioning;
+
 	const handleAlertStatus = useCallback(
 		(hasSuccessfullyDownloadedKeys) =>
 			setStatus((previousStatus) => ({
@@ -107,7 +109,8 @@ const ActionButton = ({
 		handleAlertStatus,
 		handleRedirectPage,
 		handleDeactivatePage,
-		productName
+		productName,
+		allowSelfProvisioning
 	);
 
 	const filteredKeysActionsItems = getFilteredKeysActionsItems(

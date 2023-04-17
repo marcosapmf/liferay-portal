@@ -16,6 +16,7 @@ package com.liferay.analytics.message.sender.internal.model.listener;
 
 import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
 import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
@@ -27,7 +28,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,13 +45,8 @@ public class GroupModelListener extends BaseEntityModelListener<Group> {
 
 	@Override
 	public long[] getMembershipIds(User user) throws Exception {
-		List<Group> groups = user.getSiteGroups();
-
-		Stream<Group> stream = groups.stream();
-
-		return stream.mapToLong(
-			Group::getGroupId
-		).toArray();
+		return TransformUtil.transformToLongArray(
+			user.getSiteGroups(), Group::getGroupId);
 	}
 
 	@Override

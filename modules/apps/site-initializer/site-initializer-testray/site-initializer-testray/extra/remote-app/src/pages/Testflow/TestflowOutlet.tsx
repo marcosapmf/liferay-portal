@@ -15,6 +15,7 @@
 import {useEffect} from 'react';
 import {Outlet, useLocation, useParams} from 'react-router-dom';
 
+import SearchBuilder from '../../core/SearchBuilder';
 import {useFetch} from '../../hooks/useFetch';
 import useHeader from '../../hooks/useHeader';
 import useSearchBuilder from '../../hooks/useSearchBuilder';
@@ -30,8 +31,8 @@ import {
 	testrayTaskUsersImpl,
 } from '../../services/rest';
 import {testrayTaskCaseTypesImpl} from '../../services/rest/TestrayTaskCaseTypes';
-import {searchUtil} from '../../util/search';
-import {SubTaskStatuses} from '../../util/statuses';
+import {SubTaskStatuses, TaskStatuses} from '../../util/statuses';
+import TestflowLoading from './TestflowLoading';
 
 const TestflowNavigationOutlet = () => {
 	const {pathname} = useLocation();
@@ -84,24 +85,22 @@ const TestflowOutlet = () => {
 	const {data: testrayTaskCaseTypes} = useFetch<
 		APIResponse<TestrayTaskCaseTypes>
 	>(testrayTaskCaseTypesImpl.resource, {
-		filter: searchUtil.eq('taskId', taskId),
+		params: {
+			filter: SearchBuilder.eq('taskId', taskId),
+		},
 		transformData: (response) =>
 			testrayTaskCaseTypesImpl.transformDataFromList(response),
 	});
 
 	const {data: testrayTaskUser, revalidate: revalidateTaskUser} = useFetch<
 		APIResponse<TestrayTaskUser>
-	>(
-		`${testrayTaskImpl.getNestedObject(
-			'taskToTasksUsers',
-			Number(taskId)
-		)}`,
-		{
+	>(`${testrayTaskImpl.getNestedObject('taskToTasksUsers', taskId)}`, {
+		params: {
 			nestedFields: 'task,user',
-			transformData: (response) =>
-				testrayTaskUsersImpl.transformDataFromList(response),
-		}
-	);
+		},
+		transformData: (response) =>
+			testrayTaskUsersImpl.transformDataFromList(response),
+	});
 
 	const searchBuilder = useSearchBuilder({useURIEncode: false});
 
@@ -117,14 +116,29 @@ const TestflowOutlet = () => {
 
 	const {data: testraySubtasks, revalidate: revalidateSubtask} = useFetch<
 		APIResponse<TestraySubTask>
-	>(`${testraySubTaskImpl.resource}`, {
-		fields: 'id',
-		filter: subTaskFilter,
-		pageSize: 1,
+	>(testraySubTaskImpl.resource, {
+		params: {
+			fields: 'id',
+			filter: subTaskFilter,
+			pageSize: 1,
+		},
 	});
 
 	if (!testrayTask) {
 		return null;
+	}
+
+	if (
+		[TaskStatuses.PROCESSING, TaskStatuses.OPEN].includes(
+			testrayTask.dueStatus.key as TaskStatuses
+		)
+	) {
+		return (
+			<TestflowLoading
+				mutateTask={mutateTask}
+				testrayTask={testrayTask}
+			/>
+		);
 	}
 
 	return (

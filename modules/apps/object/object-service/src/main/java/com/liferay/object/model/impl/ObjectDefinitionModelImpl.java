@@ -92,7 +92,8 @@ public class ObjectDefinitionModelImpl
 		{"dbTableName", Types.VARCHAR}, {"label", Types.VARCHAR},
 		{"className", Types.VARCHAR}, {"enableCategorization", Types.BOOLEAN},
 		{"enableComments", Types.BOOLEAN},
-		{"enableObjectEntryHistory", Types.BOOLEAN}, {"name", Types.VARCHAR},
+		{"enableObjectEntryHistory", Types.BOOLEAN},
+		{"modifiable", Types.BOOLEAN}, {"name", Types.VARCHAR},
 		{"panelAppOrder", Types.VARCHAR}, {"panelCategoryKey", Types.VARCHAR},
 		{"pkObjectFieldDBColumnName", Types.VARCHAR},
 		{"pkObjectFieldName", Types.VARCHAR}, {"pluralLabel", Types.VARCHAR},
@@ -125,6 +126,7 @@ public class ObjectDefinitionModelImpl
 		TABLE_COLUMNS_MAP.put("enableCategorization", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("enableComments", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("enableObjectEntryHistory", Types.BOOLEAN);
+		TABLE_COLUMNS_MAP.put("modifiable", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("panelAppOrder", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("panelCategoryKey", Types.VARCHAR);
@@ -140,7 +142,7 @@ public class ObjectDefinitionModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table ObjectDefinition (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectDefinitionId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,accountERObjectFieldId LONG,descriptionObjectFieldId LONG,titleObjectFieldId LONG,accountEntryRestricted BOOLEAN,active_ BOOLEAN,dbTableName VARCHAR(75) null,label STRING null,className VARCHAR(255) null,enableCategorization BOOLEAN,enableComments BOOLEAN,enableObjectEntryHistory BOOLEAN,name VARCHAR(75) null,panelAppOrder VARCHAR(75) null,panelCategoryKey VARCHAR(75) null,pkObjectFieldDBColumnName VARCHAR(75) null,pkObjectFieldName VARCHAR(75) null,pluralLabel STRING null,portlet BOOLEAN,scope VARCHAR(75) null,storageType VARCHAR(75) null,system_ BOOLEAN,version INTEGER,status INTEGER)";
+		"create table ObjectDefinition (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,objectDefinitionId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,accountERObjectFieldId LONG,descriptionObjectFieldId LONG,titleObjectFieldId LONG,accountEntryRestricted BOOLEAN,active_ BOOLEAN,dbTableName VARCHAR(75) null,label STRING null,className VARCHAR(255) null,enableCategorization BOOLEAN,enableComments BOOLEAN,enableObjectEntryHistory BOOLEAN,modifiable BOOLEAN,name VARCHAR(75) null,panelAppOrder VARCHAR(75) null,panelCategoryKey VARCHAR(75) null,pkObjectFieldDBColumnName VARCHAR(75) null,pkObjectFieldName VARCHAR(75) null,pluralLabel STRING null,portlet BOOLEAN,scope VARCHAR(75) null,storageType VARCHAR(75) null,system_ BOOLEAN,version INTEGER,status INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table ObjectDefinition";
 
@@ -294,211 +296,246 @@ public class ObjectDefinitionModelImpl
 	public Map<String, Function<ObjectDefinition, Object>>
 		getAttributeGetterFunctions() {
 
-		return _attributeGetterFunctions;
+		return AttributeGetterFunctionsHolder._attributeGetterFunctions;
 	}
 
 	public Map<String, BiConsumer<ObjectDefinition, Object>>
 		getAttributeSetterBiConsumers() {
 
-		return _attributeSetterBiConsumers;
+		return AttributeSetterBiConsumersHolder._attributeSetterBiConsumers;
 	}
 
-	private static final Map<String, Function<ObjectDefinition, Object>>
-		_attributeGetterFunctions;
-	private static final Map<String, BiConsumer<ObjectDefinition, Object>>
-		_attributeSetterBiConsumers;
+	private static class AttributeGetterFunctionsHolder {
 
-	static {
-		Map<String, Function<ObjectDefinition, Object>>
-			attributeGetterFunctions =
-				new LinkedHashMap<String, Function<ObjectDefinition, Object>>();
-		Map<String, BiConsumer<ObjectDefinition, ?>>
-			attributeSetterBiConsumers =
-				new LinkedHashMap<String, BiConsumer<ObjectDefinition, ?>>();
+		private static final Map<String, Function<ObjectDefinition, Object>>
+			_attributeGetterFunctions;
 
-		attributeGetterFunctions.put(
-			"mvccVersion", ObjectDefinition::getMvccVersion);
-		attributeSetterBiConsumers.put(
-			"mvccVersion",
-			(BiConsumer<ObjectDefinition, Long>)
-				ObjectDefinition::setMvccVersion);
-		attributeGetterFunctions.put("uuid", ObjectDefinition::getUuid);
-		attributeSetterBiConsumers.put(
-			"uuid",
-			(BiConsumer<ObjectDefinition, String>)ObjectDefinition::setUuid);
-		attributeGetterFunctions.put(
-			"externalReferenceCode",
-			ObjectDefinition::getExternalReferenceCode);
-		attributeSetterBiConsumers.put(
-			"externalReferenceCode",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setExternalReferenceCode);
-		attributeGetterFunctions.put(
-			"objectDefinitionId", ObjectDefinition::getObjectDefinitionId);
-		attributeSetterBiConsumers.put(
-			"objectDefinitionId",
-			(BiConsumer<ObjectDefinition, Long>)
-				ObjectDefinition::setObjectDefinitionId);
-		attributeGetterFunctions.put(
-			"companyId", ObjectDefinition::getCompanyId);
-		attributeSetterBiConsumers.put(
-			"companyId",
-			(BiConsumer<ObjectDefinition, Long>)ObjectDefinition::setCompanyId);
-		attributeGetterFunctions.put("userId", ObjectDefinition::getUserId);
-		attributeSetterBiConsumers.put(
-			"userId",
-			(BiConsumer<ObjectDefinition, Long>)ObjectDefinition::setUserId);
-		attributeGetterFunctions.put("userName", ObjectDefinition::getUserName);
-		attributeSetterBiConsumers.put(
-			"userName",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setUserName);
-		attributeGetterFunctions.put(
-			"createDate", ObjectDefinition::getCreateDate);
-		attributeSetterBiConsumers.put(
-			"createDate",
-			(BiConsumer<ObjectDefinition, Date>)
-				ObjectDefinition::setCreateDate);
-		attributeGetterFunctions.put(
-			"modifiedDate", ObjectDefinition::getModifiedDate);
-		attributeSetterBiConsumers.put(
-			"modifiedDate",
-			(BiConsumer<ObjectDefinition, Date>)
-				ObjectDefinition::setModifiedDate);
-		attributeGetterFunctions.put(
-			"accountEntryRestrictedObjectFieldId",
-			ObjectDefinition::getAccountEntryRestrictedObjectFieldId);
-		attributeSetterBiConsumers.put(
-			"accountEntryRestrictedObjectFieldId",
-			(BiConsumer<ObjectDefinition, Long>)
-				ObjectDefinition::setAccountEntryRestrictedObjectFieldId);
-		attributeGetterFunctions.put(
-			"descriptionObjectFieldId",
-			ObjectDefinition::getDescriptionObjectFieldId);
-		attributeSetterBiConsumers.put(
-			"descriptionObjectFieldId",
-			(BiConsumer<ObjectDefinition, Long>)
-				ObjectDefinition::setDescriptionObjectFieldId);
-		attributeGetterFunctions.put(
-			"titleObjectFieldId", ObjectDefinition::getTitleObjectFieldId);
-		attributeSetterBiConsumers.put(
-			"titleObjectFieldId",
-			(BiConsumer<ObjectDefinition, Long>)
-				ObjectDefinition::setTitleObjectFieldId);
-		attributeGetterFunctions.put(
-			"accountEntryRestricted",
-			ObjectDefinition::getAccountEntryRestricted);
-		attributeSetterBiConsumers.put(
-			"accountEntryRestricted",
-			(BiConsumer<ObjectDefinition, Boolean>)
-				ObjectDefinition::setAccountEntryRestricted);
-		attributeGetterFunctions.put("active", ObjectDefinition::getActive);
-		attributeSetterBiConsumers.put(
-			"active",
-			(BiConsumer<ObjectDefinition, Boolean>)ObjectDefinition::setActive);
-		attributeGetterFunctions.put(
-			"dbTableName", ObjectDefinition::getDBTableName);
-		attributeSetterBiConsumers.put(
-			"dbTableName",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setDBTableName);
-		attributeGetterFunctions.put("label", ObjectDefinition::getLabel);
-		attributeSetterBiConsumers.put(
-			"label",
-			(BiConsumer<ObjectDefinition, String>)ObjectDefinition::setLabel);
-		attributeGetterFunctions.put(
-			"className", ObjectDefinition::getClassName);
-		attributeSetterBiConsumers.put(
-			"className",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setClassName);
-		attributeGetterFunctions.put(
-			"enableCategorization", ObjectDefinition::getEnableCategorization);
-		attributeSetterBiConsumers.put(
-			"enableCategorization",
-			(BiConsumer<ObjectDefinition, Boolean>)
-				ObjectDefinition::setEnableCategorization);
-		attributeGetterFunctions.put(
-			"enableComments", ObjectDefinition::getEnableComments);
-		attributeSetterBiConsumers.put(
-			"enableComments",
-			(BiConsumer<ObjectDefinition, Boolean>)
-				ObjectDefinition::setEnableComments);
-		attributeGetterFunctions.put(
-			"enableObjectEntryHistory",
-			ObjectDefinition::getEnableObjectEntryHistory);
-		attributeSetterBiConsumers.put(
-			"enableObjectEntryHistory",
-			(BiConsumer<ObjectDefinition, Boolean>)
-				ObjectDefinition::setEnableObjectEntryHistory);
-		attributeGetterFunctions.put("name", ObjectDefinition::getName);
-		attributeSetterBiConsumers.put(
-			"name",
-			(BiConsumer<ObjectDefinition, String>)ObjectDefinition::setName);
-		attributeGetterFunctions.put(
-			"panelAppOrder", ObjectDefinition::getPanelAppOrder);
-		attributeSetterBiConsumers.put(
-			"panelAppOrder",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setPanelAppOrder);
-		attributeGetterFunctions.put(
-			"panelCategoryKey", ObjectDefinition::getPanelCategoryKey);
-		attributeSetterBiConsumers.put(
-			"panelCategoryKey",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setPanelCategoryKey);
-		attributeGetterFunctions.put(
-			"pkObjectFieldDBColumnName",
-			ObjectDefinition::getPKObjectFieldDBColumnName);
-		attributeSetterBiConsumers.put(
-			"pkObjectFieldDBColumnName",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setPKObjectFieldDBColumnName);
-		attributeGetterFunctions.put(
-			"pkObjectFieldName", ObjectDefinition::getPKObjectFieldName);
-		attributeSetterBiConsumers.put(
-			"pkObjectFieldName",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setPKObjectFieldName);
-		attributeGetterFunctions.put(
-			"pluralLabel", ObjectDefinition::getPluralLabel);
-		attributeSetterBiConsumers.put(
-			"pluralLabel",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setPluralLabel);
-		attributeGetterFunctions.put("portlet", ObjectDefinition::getPortlet);
-		attributeSetterBiConsumers.put(
-			"portlet",
-			(BiConsumer<ObjectDefinition, Boolean>)
-				ObjectDefinition::setPortlet);
-		attributeGetterFunctions.put("scope", ObjectDefinition::getScope);
-		attributeSetterBiConsumers.put(
-			"scope",
-			(BiConsumer<ObjectDefinition, String>)ObjectDefinition::setScope);
-		attributeGetterFunctions.put(
-			"storageType", ObjectDefinition::getStorageType);
-		attributeSetterBiConsumers.put(
-			"storageType",
-			(BiConsumer<ObjectDefinition, String>)
-				ObjectDefinition::setStorageType);
-		attributeGetterFunctions.put("system", ObjectDefinition::getSystem);
-		attributeSetterBiConsumers.put(
-			"system",
-			(BiConsumer<ObjectDefinition, Boolean>)ObjectDefinition::setSystem);
-		attributeGetterFunctions.put("version", ObjectDefinition::getVersion);
-		attributeSetterBiConsumers.put(
-			"version",
-			(BiConsumer<ObjectDefinition, Integer>)
-				ObjectDefinition::setVersion);
-		attributeGetterFunctions.put("status", ObjectDefinition::getStatus);
-		attributeSetterBiConsumers.put(
-			"status",
-			(BiConsumer<ObjectDefinition, Integer>)ObjectDefinition::setStatus);
+		static {
+			Map<String, Function<ObjectDefinition, Object>>
+				attributeGetterFunctions =
+					new LinkedHashMap
+						<String, Function<ObjectDefinition, Object>>();
 
-		_attributeGetterFunctions = Collections.unmodifiableMap(
-			attributeGetterFunctions);
-		_attributeSetterBiConsumers = Collections.unmodifiableMap(
-			(Map)attributeSetterBiConsumers);
+			attributeGetterFunctions.put(
+				"mvccVersion", ObjectDefinition::getMvccVersion);
+			attributeGetterFunctions.put("uuid", ObjectDefinition::getUuid);
+			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				ObjectDefinition::getExternalReferenceCode);
+			attributeGetterFunctions.put(
+				"objectDefinitionId", ObjectDefinition::getObjectDefinitionId);
+			attributeGetterFunctions.put(
+				"companyId", ObjectDefinition::getCompanyId);
+			attributeGetterFunctions.put("userId", ObjectDefinition::getUserId);
+			attributeGetterFunctions.put(
+				"userName", ObjectDefinition::getUserName);
+			attributeGetterFunctions.put(
+				"createDate", ObjectDefinition::getCreateDate);
+			attributeGetterFunctions.put(
+				"modifiedDate", ObjectDefinition::getModifiedDate);
+			attributeGetterFunctions.put(
+				"accountEntryRestrictedObjectFieldId",
+				ObjectDefinition::getAccountEntryRestrictedObjectFieldId);
+			attributeGetterFunctions.put(
+				"descriptionObjectFieldId",
+				ObjectDefinition::getDescriptionObjectFieldId);
+			attributeGetterFunctions.put(
+				"titleObjectFieldId", ObjectDefinition::getTitleObjectFieldId);
+			attributeGetterFunctions.put(
+				"accountEntryRestricted",
+				ObjectDefinition::getAccountEntryRestricted);
+			attributeGetterFunctions.put("active", ObjectDefinition::getActive);
+			attributeGetterFunctions.put(
+				"dbTableName", ObjectDefinition::getDBTableName);
+			attributeGetterFunctions.put("label", ObjectDefinition::getLabel);
+			attributeGetterFunctions.put(
+				"className", ObjectDefinition::getClassName);
+			attributeGetterFunctions.put(
+				"enableCategorization",
+				ObjectDefinition::getEnableCategorization);
+			attributeGetterFunctions.put(
+				"enableComments", ObjectDefinition::getEnableComments);
+			attributeGetterFunctions.put(
+				"enableObjectEntryHistory",
+				ObjectDefinition::getEnableObjectEntryHistory);
+			attributeGetterFunctions.put(
+				"modifiable", ObjectDefinition::getModifiable);
+			attributeGetterFunctions.put("name", ObjectDefinition::getName);
+			attributeGetterFunctions.put(
+				"panelAppOrder", ObjectDefinition::getPanelAppOrder);
+			attributeGetterFunctions.put(
+				"panelCategoryKey", ObjectDefinition::getPanelCategoryKey);
+			attributeGetterFunctions.put(
+				"pkObjectFieldDBColumnName",
+				ObjectDefinition::getPKObjectFieldDBColumnName);
+			attributeGetterFunctions.put(
+				"pkObjectFieldName", ObjectDefinition::getPKObjectFieldName);
+			attributeGetterFunctions.put(
+				"pluralLabel", ObjectDefinition::getPluralLabel);
+			attributeGetterFunctions.put(
+				"portlet", ObjectDefinition::getPortlet);
+			attributeGetterFunctions.put("scope", ObjectDefinition::getScope);
+			attributeGetterFunctions.put(
+				"storageType", ObjectDefinition::getStorageType);
+			attributeGetterFunctions.put("system", ObjectDefinition::getSystem);
+			attributeGetterFunctions.put(
+				"version", ObjectDefinition::getVersion);
+			attributeGetterFunctions.put("status", ObjectDefinition::getStatus);
+
+			_attributeGetterFunctions = Collections.unmodifiableMap(
+				attributeGetterFunctions);
+		}
+
+	}
+
+	private static class AttributeSetterBiConsumersHolder {
+
+		private static final Map<String, BiConsumer<ObjectDefinition, Object>>
+			_attributeSetterBiConsumers;
+
+		static {
+			Map<String, BiConsumer<ObjectDefinition, ?>>
+				attributeSetterBiConsumers =
+					new LinkedHashMap
+						<String, BiConsumer<ObjectDefinition, ?>>();
+
+			attributeSetterBiConsumers.put(
+				"mvccVersion",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setMvccVersion);
+			attributeSetterBiConsumers.put(
+				"uuid",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setExternalReferenceCode);
+			attributeSetterBiConsumers.put(
+				"objectDefinitionId",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setObjectDefinitionId);
+			attributeSetterBiConsumers.put(
+				"companyId",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setCompanyId);
+			attributeSetterBiConsumers.put(
+				"userId",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setUserId);
+			attributeSetterBiConsumers.put(
+				"userName",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setUserName);
+			attributeSetterBiConsumers.put(
+				"createDate",
+				(BiConsumer<ObjectDefinition, Date>)
+					ObjectDefinition::setCreateDate);
+			attributeSetterBiConsumers.put(
+				"modifiedDate",
+				(BiConsumer<ObjectDefinition, Date>)
+					ObjectDefinition::setModifiedDate);
+			attributeSetterBiConsumers.put(
+				"accountEntryRestrictedObjectFieldId",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setAccountEntryRestrictedObjectFieldId);
+			attributeSetterBiConsumers.put(
+				"descriptionObjectFieldId",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setDescriptionObjectFieldId);
+			attributeSetterBiConsumers.put(
+				"titleObjectFieldId",
+				(BiConsumer<ObjectDefinition, Long>)
+					ObjectDefinition::setTitleObjectFieldId);
+			attributeSetterBiConsumers.put(
+				"accountEntryRestricted",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setAccountEntryRestricted);
+			attributeSetterBiConsumers.put(
+				"active",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setActive);
+			attributeSetterBiConsumers.put(
+				"dbTableName",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setDBTableName);
+			attributeSetterBiConsumers.put(
+				"label",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setLabel);
+			attributeSetterBiConsumers.put(
+				"className",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setClassName);
+			attributeSetterBiConsumers.put(
+				"enableCategorization",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setEnableCategorization);
+			attributeSetterBiConsumers.put(
+				"enableComments",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setEnableComments);
+			attributeSetterBiConsumers.put(
+				"enableObjectEntryHistory",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setEnableObjectEntryHistory);
+			attributeSetterBiConsumers.put(
+				"modifiable",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setModifiable);
+			attributeSetterBiConsumers.put(
+				"name",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setName);
+			attributeSetterBiConsumers.put(
+				"panelAppOrder",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setPanelAppOrder);
+			attributeSetterBiConsumers.put(
+				"panelCategoryKey",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setPanelCategoryKey);
+			attributeSetterBiConsumers.put(
+				"pkObjectFieldDBColumnName",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setPKObjectFieldDBColumnName);
+			attributeSetterBiConsumers.put(
+				"pkObjectFieldName",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setPKObjectFieldName);
+			attributeSetterBiConsumers.put(
+				"pluralLabel",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setPluralLabel);
+			attributeSetterBiConsumers.put(
+				"portlet",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setPortlet);
+			attributeSetterBiConsumers.put(
+				"scope",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setScope);
+			attributeSetterBiConsumers.put(
+				"storageType",
+				(BiConsumer<ObjectDefinition, String>)
+					ObjectDefinition::setStorageType);
+			attributeSetterBiConsumers.put(
+				"system",
+				(BiConsumer<ObjectDefinition, Boolean>)
+					ObjectDefinition::setSystem);
+			attributeSetterBiConsumers.put(
+				"version",
+				(BiConsumer<ObjectDefinition, Integer>)
+					ObjectDefinition::setVersion);
+			attributeSetterBiConsumers.put(
+				"status",
+				(BiConsumer<ObjectDefinition, Integer>)
+					ObjectDefinition::setStatus);
+
+			_attributeSetterBiConsumers = Collections.unmodifiableMap(
+				(Map)attributeSetterBiConsumers);
+		}
+
 	}
 
 	@JSON
@@ -1020,6 +1057,27 @@ public class ObjectDefinitionModelImpl
 		}
 
 		_enableObjectEntryHistory = enableObjectEntryHistory;
+	}
+
+	@JSON
+	@Override
+	public boolean getModifiable() {
+		return _modifiable;
+	}
+
+	@JSON
+	@Override
+	public boolean isModifiable() {
+		return _modifiable;
+	}
+
+	@Override
+	public void setModifiable(boolean modifiable) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_modifiable = modifiable;
 	}
 
 	@JSON
@@ -1550,6 +1608,7 @@ public class ObjectDefinitionModelImpl
 		objectDefinitionImpl.setEnableComments(isEnableComments());
 		objectDefinitionImpl.setEnableObjectEntryHistory(
 			isEnableObjectEntryHistory());
+		objectDefinitionImpl.setModifiable(isModifiable());
 		objectDefinitionImpl.setName(getName());
 		objectDefinitionImpl.setPanelAppOrder(getPanelAppOrder());
 		objectDefinitionImpl.setPanelCategoryKey(getPanelCategoryKey());
@@ -1613,6 +1672,8 @@ public class ObjectDefinitionModelImpl
 			this.<Boolean>getColumnOriginalValue("enableComments"));
 		objectDefinitionImpl.setEnableObjectEntryHistory(
 			this.<Boolean>getColumnOriginalValue("enableObjectEntryHistory"));
+		objectDefinitionImpl.setModifiable(
+			this.<Boolean>getColumnOriginalValue("modifiable"));
 		objectDefinitionImpl.setName(
 			this.<String>getColumnOriginalValue("name"));
 		objectDefinitionImpl.setPanelAppOrder(
@@ -1812,6 +1873,8 @@ public class ObjectDefinitionModelImpl
 		objectDefinitionCacheModel.enableObjectEntryHistory =
 			isEnableObjectEntryHistory();
 
+		objectDefinitionCacheModel.modifiable = isModifiable();
+
 		objectDefinitionCacheModel.name = getName();
 
 		String name = objectDefinitionCacheModel.name;
@@ -1972,6 +2035,7 @@ public class ObjectDefinitionModelImpl
 	private boolean _enableCategorization;
 	private boolean _enableComments;
 	private boolean _enableObjectEntryHistory;
+	private boolean _modifiable;
 	private String _name;
 	private String _panelAppOrder;
 	private String _panelCategoryKey;
@@ -1990,7 +2054,8 @@ public class ObjectDefinitionModelImpl
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
 
 		Function<ObjectDefinition, Object> function =
-			_attributeGetterFunctions.get(columnName);
+			AttributeGetterFunctionsHolder._attributeGetterFunctions.get(
+				columnName);
 
 		if (function == null) {
 			throw new IllegalArgumentException(
@@ -2041,6 +2106,7 @@ public class ObjectDefinitionModelImpl
 		_columnOriginalValues.put("enableComments", _enableComments);
 		_columnOriginalValues.put(
 			"enableObjectEntryHistory", _enableObjectEntryHistory);
+		_columnOriginalValues.put("modifiable", _modifiable);
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("panelAppOrder", _panelAppOrder);
 		_columnOriginalValues.put("panelCategoryKey", _panelCategoryKey);
@@ -2121,29 +2187,31 @@ public class ObjectDefinitionModelImpl
 
 		columnBitmasks.put("enableObjectEntryHistory", 524288L);
 
-		columnBitmasks.put("name", 1048576L);
+		columnBitmasks.put("modifiable", 1048576L);
 
-		columnBitmasks.put("panelAppOrder", 2097152L);
+		columnBitmasks.put("name", 2097152L);
 
-		columnBitmasks.put("panelCategoryKey", 4194304L);
+		columnBitmasks.put("panelAppOrder", 4194304L);
 
-		columnBitmasks.put("pkObjectFieldDBColumnName", 8388608L);
+		columnBitmasks.put("panelCategoryKey", 8388608L);
 
-		columnBitmasks.put("pkObjectFieldName", 16777216L);
+		columnBitmasks.put("pkObjectFieldDBColumnName", 16777216L);
 
-		columnBitmasks.put("pluralLabel", 33554432L);
+		columnBitmasks.put("pkObjectFieldName", 33554432L);
 
-		columnBitmasks.put("portlet", 67108864L);
+		columnBitmasks.put("pluralLabel", 67108864L);
 
-		columnBitmasks.put("scope", 134217728L);
+		columnBitmasks.put("portlet", 134217728L);
 
-		columnBitmasks.put("storageType", 268435456L);
+		columnBitmasks.put("scope", 268435456L);
 
-		columnBitmasks.put("system_", 536870912L);
+		columnBitmasks.put("storageType", 536870912L);
 
-		columnBitmasks.put("version", 1073741824L);
+		columnBitmasks.put("system_", 1073741824L);
 
-		columnBitmasks.put("status", 2147483648L);
+		columnBitmasks.put("version", 2147483648L);
+
+		columnBitmasks.put("status", 4294967296L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

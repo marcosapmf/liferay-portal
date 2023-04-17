@@ -51,10 +51,9 @@ public class LayoutRevisionAssetRenderer
 
 		try {
 			_layoutBranch = layoutRevision.getLayoutBranch();
-
 			_layoutSetBranch =
 				LayoutSetBranchLocalServiceUtil.getLayoutSetBranch(
-					_layoutRevision.getLayoutSetBranchId());
+					layoutRevision.getLayoutSetBranchId());
 		}
 		catch (Exception exception) {
 			throw new IllegalStateException(exception);

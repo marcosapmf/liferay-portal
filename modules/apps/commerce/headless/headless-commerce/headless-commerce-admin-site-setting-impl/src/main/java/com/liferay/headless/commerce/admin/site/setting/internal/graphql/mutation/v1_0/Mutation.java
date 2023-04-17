@@ -25,9 +25,11 @@ import com.liferay.headless.commerce.admin.site.setting.resource.v1_0.WarehouseR
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
@@ -96,7 +98,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response deleteAvailabilityEstimateBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -106,7 +107,7 @@ public class Mutation {
 			this::_populateResourceContext,
 			availabilityEstimateResource ->
 				availabilityEstimateResource.deleteAvailabilityEstimateBatch(
-					id, callbackURL, object));
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -126,7 +127,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response updateAvailabilityEstimateBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -136,7 +136,7 @@ public class Mutation {
 			this::_populateResourceContext,
 			availabilityEstimateResource ->
 				availabilityEstimateResource.putAvailabilityEstimateBatch(
-					id, callbackURL, object));
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -154,6 +154,27 @@ public class Mutation {
 				availabilityEstimateResource.
 					postCommerceAdminSiteSettingGroupAvailabilityEstimate(
 						groupId, availabilityEstimate));
+	}
+
+	@GraphQLField
+	public Response createMeasurementUnitsPageExportBatch(
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_measurementUnitResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			measurementUnitResource ->
+				measurementUnitResource.postMeasurementUnitsPageExportBatch(
+					_filterBiFunction.apply(
+						measurementUnitResource, filterString),
+					_sortsBiFunction.apply(
+						measurementUnitResource, sortsString),
+					callbackURL, contentType, fieldNames));
 	}
 
 	@GraphQLField
@@ -255,7 +276,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response deleteMeasurementUnitBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -265,7 +285,7 @@ public class Mutation {
 			this::_populateResourceContext,
 			measurementUnitResource ->
 				measurementUnitResource.deleteMeasurementUnitBatch(
-					id, callbackURL, object));
+					callbackURL, object));
 	}
 
 	@GraphQLField
@@ -309,7 +329,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response deleteTaxCategoryBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -318,7 +337,7 @@ public class Mutation {
 			_taxCategoryResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			taxCategoryResource -> taxCategoryResource.deleteTaxCategoryBatch(
-				id, callbackURL, object));
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -336,7 +355,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response updateTaxCategoryBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -345,7 +363,7 @@ public class Mutation {
 			_taxCategoryResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			taxCategoryResource -> taxCategoryResource.putTaxCategoryBatch(
-				id, callbackURL, object));
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -374,7 +392,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response deleteWarehouseBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -383,7 +400,7 @@ public class Mutation {
 			_warehouseResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			warehouseResource -> warehouseResource.deleteWarehouseBatch(
-				id, callbackURL, object));
+				callbackURL, object));
 	}
 
 	@GraphQLField
@@ -400,7 +417,6 @@ public class Mutation {
 
 	@GraphQLField
 	public Response updateWarehouseBatch(
-			@GraphQLName("id") Long id,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("object") Object object)
 		throws Exception {
@@ -409,7 +425,7 @@ public class Mutation {
 			_warehouseResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			warehouseResource -> warehouseResource.putWarehouseBatch(
-				id, callbackURL, object));
+				callbackURL, object));
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -465,6 +481,9 @@ public class Mutation {
 		availabilityEstimateResource.setGroupLocalService(_groupLocalService);
 		availabilityEstimateResource.setRoleLocalService(_roleLocalService);
 
+		availabilityEstimateResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		availabilityEstimateResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -484,6 +503,9 @@ public class Mutation {
 		measurementUnitResource.setGroupLocalService(_groupLocalService);
 		measurementUnitResource.setRoleLocalService(_roleLocalService);
 
+		measurementUnitResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		measurementUnitResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -501,6 +523,9 @@ public class Mutation {
 		taxCategoryResource.setGroupLocalService(_groupLocalService);
 		taxCategoryResource.setRoleLocalService(_roleLocalService);
 
+		taxCategoryResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		taxCategoryResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -517,6 +542,9 @@ public class Mutation {
 		warehouseResource.setGroupLocalService(_groupLocalService);
 		warehouseResource.setRoleLocalService(_roleLocalService);
 
+		warehouseResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
 		warehouseResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
@@ -532,6 +560,7 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
 	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
@@ -539,6 +568,8 @@ public class Mutation {
 	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
 	private com.liferay.portal.kernel.model.User _user;
+	private VulcanBatchEngineExportTaskResource
+		_vulcanBatchEngineExportTaskResource;
 	private VulcanBatchEngineImportTaskResource
 		_vulcanBatchEngineImportTaskResource;
 

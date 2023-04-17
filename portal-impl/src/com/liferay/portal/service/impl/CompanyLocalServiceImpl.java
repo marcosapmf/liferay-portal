@@ -99,7 +99,6 @@ import com.liferay.portal.kernel.service.persistence.PortalPreferencesPersistenc
 import com.liferay.portal.kernel.service.persistence.PortletPersistence;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.VirtualHostPersistence;
-import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -329,7 +328,7 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	public Company checkCompany(String webId) throws PortalException {
 		String mx = webId;
 
-		return companyLocalService.checkCompany(webId, mx);
+		return checkCompany(webId, mx);
 	}
 
 	/**
@@ -343,10 +342,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	 * @return the company with the web domain and mail domain
 	 */
 	@Override
-	@Transactional(
-		isolation = Isolation.PORTAL,
-		rollbackFor = {PortalException.class, SystemException.class}
-	)
 	public Company checkCompany(String webId, String mx)
 		throws PortalException {
 
@@ -393,14 +388,10 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 					companyId);
 		}
 
-		Long companyThreadLocalCompanyId = CompanyThreadLocal.getCompanyId();
-
 		try (SafeCloseable safeCloseable1 =
-				CompanyThreadLocal.setWithSafeCloseable(
-					companyThreadLocalCompanyId);
+				CompanyThreadLocal.setWithSafeCloseable(companyId);
 			SafeCloseable safeCloseable2 =
-				PortalInstances.setCompanyInDeletionProcess(
-					companyThreadLocalCompanyId)) {
+				PortalInstances.setCompanyInDeletionProcess(companyId)) {
 
 			return doDeleteCompany(companyId);
 		}
@@ -1403,16 +1394,6 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 	}
 
 	protected void preregisterCompany(Company company) {
-		try {
-			SearchEngineHelperUtil.initialize(company.getCompanyId());
-		}
-		catch (Exception exception) {
-			_log.error(
-				"Unable to initialize search engine for company " +
-					company.getCompanyId(),
-				exception);
-		}
-
 		PortalInstanceLifecycleManager portalInstanceLifecycleManager =
 			_serviceTracker.getService();
 
@@ -1583,22 +1564,20 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 				throw new CompanyVirtualHostException(
 					"Virtual hostname is invalid");
 			}
-			else {
-				VirtualHost virtualHost =
-					_virtualHostLocalService.fetchVirtualHost(virtualHostname);
 
-				if (virtualHost == null) {
-					return;
-				}
+			VirtualHost virtualHost = _virtualHostLocalService.fetchVirtualHost(
+				virtualHostname);
 
-				Company virtualHostnameCompany =
-					companyPersistence.findByPrimaryKey(
-						virtualHost.getCompanyId());
+			if (virtualHost == null) {
+				return;
+			}
 
-				if (!webId.equals(virtualHostnameCompany.getWebId())) {
-					throw new CompanyVirtualHostException(
-						"Duplicate virtual hostname " + virtualHostname);
-				}
+			Company virtualHostnameCompany =
+				companyPersistence.findByPrimaryKey(virtualHost.getCompanyId());
+
+			if (!webId.equals(virtualHostnameCompany.getWebId())) {
+				throw new CompanyVirtualHostException(
+					"Duplicate virtual hostname " + virtualHostname);
 			}
 		}
 		catch (CompanyVirtualHostException companyVirtualHostException) {
@@ -1835,9 +1814,23 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 		defaultUser.setPassword("password");
 		defaultUser.setScreenName(String.valueOf(defaultUser.getUserId()));
 		defaultUser.setEmailAddress("default@" + company.getMx());
-		defaultUser.setLanguageId(
-			LocaleUtil.toLanguageId(
-				LocaleUtil.fromLanguageId(PropsValues.COMPANY_DEFAULT_LOCALE)));
+
+		Locale locale = null;
+
+		if (Validator.isNotNull(PropsValues.COMPANY_DEFAULT_LOCALE)) {
+			locale = LocaleUtil.fromLanguageId(
+				PropsValues.COMPANY_DEFAULT_LOCALE);
+		}
+		else {
+			User defaultCompanyDefaultUser = _userLocalService.fetchDefaultUser(
+				PortalUtil.getDefaultCompanyId());
+
+			if (defaultCompanyDefaultUser != null) {
+				locale = defaultCompanyDefaultUser.getLocale();
+			}
+		}
+
+		defaultUser.setLanguageId(LocaleUtil.toLanguageId(locale));
 
 		if (Validator.isNotNull(PropsValues.COMPANY_DEFAULT_TIME_ZONE)) {
 			defaultUser.setTimeZoneId(PropsValues.COMPANY_DEFAULT_TIME_ZONE);
@@ -1945,9 +1938,39 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 				company.getCompanyId(), true);
 
 			if (defaultUser != null) {
+				boolean modified = false;
+
 				if (!defaultUser.isAgreedToTermsOfUse()) {
 					defaultUser.setAgreedToTermsOfUse(true);
 
+					modified = true;
+				}
+
+				if (defaultUser.getLocale() != companyDefaultLocale) {
+					defaultUser.setLanguageId(
+						LocaleUtil.toLanguageId(companyDefaultLocale));
+
+					String greeting = LanguageUtil.format(
+						defaultUser.getLocale(), "welcome", null, false);
+
+					defaultUser.setGreeting(greeting + StringPool.EXCLAMATION);
+
+					modified = true;
+				}
+
+				if (Validator.isNotNull(
+						PropsValues.COMPANY_DEFAULT_TIME_ZONE) &&
+					!Objects.equals(
+						defaultUser.getTimeZoneId(),
+						PropsValues.COMPANY_DEFAULT_TIME_ZONE)) {
+
+					defaultUser.setTimeZoneId(
+						PropsValues.COMPANY_DEFAULT_TIME_ZONE);
+
+					modified = true;
+				}
+
+				if (modified) {
 					defaultUser = _userPersistence.update(defaultUser);
 				}
 			}
@@ -2252,8 +2275,9 @@ public class CompanyLocalServiceImpl extends CompanyLocalServiceBaseImpl {
 
 			synchronized (_preregisterPendingCompanies) {
 				forEachCompany(
-					company -> portalInstanceLifecycleManager.registerCompany(
-						company),
+					company ->
+						portalInstanceLifecycleManager.preregisterCompany(
+							company),
 					new ArrayList<Company>(_preregisterPendingCompanies));
 
 				_preregisterPendingCompanies.clear();

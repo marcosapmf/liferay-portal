@@ -16,7 +16,7 @@ definition {
 	}
 
 	@description = "This is a functional test for COMMERCE-8145 - Without an account, add to cart and quantity selector are disabled for admin user"
-	@priority = "4"
+	@priority = 4
 	test AddToCartButtonAndQuantitySelectorAreDisabledForAdminUser {
 		property portal.acceptance = "false";
 
@@ -24,7 +24,7 @@ definition {
 
 		ApplicationsMenu.gotoSite(site = "Minium");
 
-		Pagination.changePagination(itemsPerPage = "60");
+		Pagination.changePagination(itemsPerPage = 60);
 
 		AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
 
@@ -48,9 +48,9 @@ definition {
 	}
 
 	@description = "This is a functional test for COMMERCE-8145 - Without an account, add to cart and quantity selector are disabled for non-admin user"
-	@priority = "4"
+	@priority = 5
 	test AddToCartButtonAndQuantitySelectorAreDisabledForNewUser {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -81,7 +81,7 @@ definition {
 			urlAppend = "web/minium",
 			userEmailAddress = "testuser@liferay.com");
 
-		Pagination.changePagination(itemsPerPage = "60");
+		Pagination.changePagination(itemsPerPage = 60);
 
 		AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
 
@@ -105,7 +105,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5725. New functional test for COMMERCE-5485"
-	@priority = "3"
+	@priority = 3
 	test AssertCheckoutMinicart {
 		property portal.acceptance = "false";
 
@@ -165,10 +165,10 @@ definition {
 		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
 		AssertTextEquals(
-			key_columnNumber = "4",
+			key_columnNumber = 4,
 			key_entryName = "default",
 			locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER",
-			value1 = "0");
+			value1 = 0);
 
 		CommerceEntry.gotoMenuTab(menuTab = "Subscription");
 
@@ -192,7 +192,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Simple T-Shirt",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckout();
 
@@ -203,8 +203,8 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "Simple T-Shirt",
-			productQuantity = "1",
-			productUnitPrice = "0");
+			productQuantity = 1,
+			productUnitPrice = 0);
 
 		AssertTextEquals(
 			locator1 = "CommerceAccelerators#CHECKOUT_SUCCESS_MESSAGE",
@@ -212,9 +212,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-5530. AssertPromoProductPriceTotalIsDifferent"
-	@priority = "3"
+	@priority = 5
 	test AssertPromoProductPriceTotalIsDifferent {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -228,11 +228,11 @@ definition {
 
 		Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
 
-		Pagination.changePagination(itemsPerPage = "60");
+		Pagination.changePagination(itemsPerPage = 60);
 
 		FrontStore.addInitializerProductToCart(
 			productName = "Brake Pads",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Pending Orders");
 
@@ -244,9 +244,173 @@ definition {
 			value1 = "$ 18.90");
 	}
 
+	@description = "This is for COMMERCE-10054. Account users without roles should not be able to add products to cart"
+	@priority = 3
+	test CannotAddToCartAsAccountUserWithoutRoles {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account with a user without any roles") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "testuser@liferay.com",
+				userFirstName = "Test",
+				userLastName = "User",
+				userScreenName = "testuser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("When the user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "testuser@liferay.com");
+		}
+
+		task ("Then the user is not able to add to cart") {
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			CommerceWishList.addProductToWishList(productName = "U-Joint");
+
+			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			Click.clickAtNotVisible(
+				checkboxName = "Compare",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Click(locator1 = "CommerceFrontStore#MINI_COMPARE_COMPARE_BUTTON");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/lists");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+		}
+
+		task ("And is not able to add new orders") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			AssertElementNotPresent(
+				key_text = "Add Order",
+				locator1 = "Button#ANY");
+		}
+	}
+
+	@description = "This is for COMMERCE-10054. Account users without roles should not be able to add products to cart if the accounts has pending orders"
+	@priority = 3
+	test CannotAddToCartWithExistingOrdersAsAccountUserWithoutRoles {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And a business account with a user without any roles") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "testuser@liferay.com",
+				userFirstName = "Test",
+				userLastName = "User",
+				userScreenName = "testuser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And an order is created for the account") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium");
+
+			CommerceAcceleratorsInitializer.createNewOrderFromPendingOrders();
+		}
+
+		task ("When the user logs in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "testuser@liferay.com");
+		}
+
+		task ("Then the user is not able to add to cart") {
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			CommerceWishList.addProductToWishList(productName = "U-Joint");
+
+			CommerceAcceleratorsInitializer.gotoMiniumProductDetailsPage(productName = "U-Joint");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			Click.clickAtNotVisible(
+				checkboxName = "Compare",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+
+			Click(locator1 = "CommerceFrontStore#MINI_COMPARE_COMPARE_BUTTON");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/lists");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#GENERAL_ADD_TO_CART_BUTTON_ENABLED");
+		}
+
+		task ("And is not able to add new orders") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/pending-orders");
+
+			AssertElementNotPresent(
+				key_text = "Add Order",
+				locator1 = "Button#ANY");
+
+			AssertElementNotPresent(locator1 = "CommerceAccelerators#ORDERS_ENTRY_VIEW_BUTTON");
+		}
+	}
+
+	@description = "COMMERCE-9739 Verify that it is not possible to make an XSS attack by injecting malicious script"
+	@priority = 5
+	test CannotInjectScriptInSortWidget {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium and Speedwell sites are created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
+
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("When the user tries to inject a malicious script for the Sort Widget on Speedwell") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/speedwell/catalog?_com_liferay_commerce_product_content_search_web_internal_portlet_CPSortPortlet_orderByCol=<script>alert(123)</script>&p_p_id=com_liferay_commerce_product_content_search_web_internal_portlet_CPSortPortlet");
+		}
+
+		task ("Then the script is not executed") {
+			AssertAlertNotPresent();
+		}
+
+		task ("When the user tries to inject a malicious script for the Sort Widget on Minium") {
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog?_com_liferay_commerce_product_content_search_web_internal_portlet_CPSortPortlet_orderByCol=<script>alert(123)</script>&p_p_id=com_liferay_commerce_product_content_search_web_internal_portlet_CPSortPortlet");
+		}
+
+		task ("Then the script is not executed") {
+			AssertAlertNotPresent();
+		}
+	}
+
 	@description = "This is for COMMERCE-10315. It's not possible to save the Root Category for the Commerce Categories Navigation widget"
-	@priority = "4"
+	@priority = 5
 	test CanSaveCommerceCategoriesNavigationRootCategory {
+		property portal.acceptance = "true";
+
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
 		JSONLayout.addPublicLayout(
@@ -282,6 +446,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-4958."
+	@priority = 5
 	test CheckoutWithDefaultShippingOption {
 		property portal.acceptance = "true";
 
@@ -315,7 +480,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "U-Joint",
-			productQuantity = "1");
+			productQuantity = 1);
 
 		CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -326,14 +491,14 @@ definition {
 			newAddressName = "Address Name",
 			newAddressZipCode = "Test Zip Code",
 			productName = "U-Joint",
-			productQuantity = "1",
-			productUnitPrice = "24",
+			productQuantity = 1,
+			productUnitPrice = 24,
 			shippingMethod = "Standard",
 			singleShippingOption = "true");
 	}
 
 	test DeactivateCommerceAccount {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "false";
 		property portal.release = "quarantine";
 		property portal.upstream = "quarantine";
 
@@ -411,12 +576,13 @@ definition {
 
 		CommerceAcceleratorsInitializer.viewAllAccountsFromAccountSelector();
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No accounts were found.");
 	}
 
 	@description = "This is a workaround for an issue with Minium's sidebar on CI"
+	@priority = 5
 	test DeactivateCommerceAccountAdminLogOut {
 		property portal.acceptance = "true";
 
@@ -492,14 +658,16 @@ definition {
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No accounts were found.");
 	}
 
 	@description = "This is for COMMERCE-2658. Can be Drag and Drop fragments on a Minium site page."
-	@priority = "4"
+	@priority = 5
 	test FragmentsCanBeDragAndDroppedToMiniumSitePage {
+		property portal.acceptance = "true";
+
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
 		ApplicationsMenu.gotoSite(site = "Minium");
@@ -544,9 +712,10 @@ definition {
 			text = "HTML Example A paragraph is a self-contained unit of a discourse in writing dealing with a particular point or idea. Paragraphs are usually an expected part of formal writing, used to organize longer prose.");
 	}
 
+	@priority = 5
 	test InitializeNewMiniumSite {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -600,9 +769,10 @@ definition {
 		CommerceEntry.viewSpecificationGroupsEntries(specificationGroupsEntries = "Warranty,Fit,Dimensions,Quantity,Material");
 	}
 
+	@priority = 5
 	test InitializeNewSpeedwellSite {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Speedwell");
@@ -657,7 +827,7 @@ definition {
 	}
 
 	test MiniumSiteFullFlow {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "false";
 		property portal.release = "quarantine";
 		property portal.upstream = "quarantine";
 
@@ -713,7 +883,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -725,8 +895,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
@@ -739,7 +909,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		CommerceLogin.miniumLogoutPG();
 
@@ -754,7 +924,7 @@ definition {
 			orderAuthor = "Buyer User",
 			productName = "ABS Sensor",
 			productPrice = "100.00",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productUnitPrice = "50.00");
 
@@ -764,7 +934,7 @@ definition {
 			orderAuthor = "Buyer User",
 			productName = "ABS Sensor",
 			productPrice = "100.00",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productUnitPrice = "50.00");
 
@@ -777,7 +947,7 @@ definition {
 		CommerceOrders.viewOrdersEntry(
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 
@@ -794,12 +964,13 @@ definition {
 			paymentMethod = "Money Order",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 	}
 
 	@description = "This is a workaround for an issue with Minium's sidebar on CI"
+	@priority = 5
 	test MiniumSiteFullFlowCheckingOutViaOrderDetails {
 		property portal.acceptance = "true";
 
@@ -853,7 +1024,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		Refresh();
 
@@ -867,8 +1038,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
@@ -881,7 +1052,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		User.logoutPG();
 
@@ -896,7 +1067,7 @@ definition {
 			orderAuthor = "Buyer User",
 			productName = "ABS Sensor",
 			productPrice = "100.00",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productUnitPrice = "50.00");
 
@@ -906,7 +1077,7 @@ definition {
 			orderAuthor = "Buyer User",
 			productName = "ABS Sensor",
 			productPrice = "100.00",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productUnitPrice = "50.00");
 
@@ -919,7 +1090,7 @@ definition {
 		CommerceOrders.viewOrdersEntry(
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 
@@ -936,21 +1107,21 @@ definition {
 			paymentMethod = "Money Order",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "MIN93015",
 			productTotalPrice = "100.00");
 	}
 
 	@description = "COMMERCE-6350. As a buyer, I want to be redirected to Order Details page after clicking 'Review Order' button on mini-cart, if Buyer Order Approval Workflow is active"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test MiniumSiteFullFlowWithBuyerOrderApprovalWorkflow {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6350 MiniumSiteFullFlowWithBuyerOrderApprovalWorkflow pending implementation
 
 	}
 
+	@priority = 5
 	test SpeedwellSiteFullFlow {
 		property portal.acceptance = "true";
 
@@ -1014,7 +1185,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		CommerceCheckout.gotoCheckoutViaMiniCart();
 
@@ -1026,8 +1197,8 @@ definition {
 			newAddressZipCode = "Test Zip Code",
 			paymentMethod = "Money Order",
 			productName = "ABS Sensor",
-			productQuantity = "2",
-			productUnitPrice = "50",
+			productQuantity = 2,
+			productUnitPrice = 50,
 			shippingMethod = "Standard");
 
 		CommerceNavigator.gotoSpeedwellTopbarItem(menuItem = "Catalog");
@@ -1036,7 +1207,7 @@ definition {
 
 		FrontStore.addInitializerProductToCart(
 			productName = "ABS Sensor",
-			productQuantity = "2");
+			productQuantity = 2);
 
 		CommerceLogin.speedwellLogout();
 
@@ -1056,7 +1227,7 @@ definition {
 		CommerceOrders.viewOrdersEntry(
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "SPEED93015",
 			productTotalPrice = "100.00");
 
@@ -1073,7 +1244,7 @@ definition {
 			paymentMethod = "Money Order",
 			productListPrice = "50.00",
 			productName = "ABS Sensor",
-			productQuantity = "2",
+			productQuantity = 2,
 			productSku = "SPEED93015",
 			productTotalPrice = "100.00");
 	}

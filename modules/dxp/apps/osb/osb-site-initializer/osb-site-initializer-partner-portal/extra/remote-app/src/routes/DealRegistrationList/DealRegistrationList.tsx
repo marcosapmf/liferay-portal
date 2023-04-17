@@ -106,20 +106,19 @@ const DealRegistrationList = ({getFilteredItems, sort}: IProps) => {
 					</div>
 				);
 			}
+			const {totalCount: totalPagination} = data;
 
 			return (
 				<div className="mt-3">
 					<Table<DealRegistrationListItem>
-						borderless
 						columns={columns}
 						customClickOnRow={handleCustomClickOnRow}
-						responsive
 						rows={items}
 					/>
 
 					<ClayPaginationBarWithBasicItems
 						{...pagination}
-						totalItems={totalCount}
+						totalItems={totalPagination as number}
 					/>
 				</div>
 			);

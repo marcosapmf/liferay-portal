@@ -194,16 +194,12 @@ public class ContentDashboardItemSubtypeItemSelectorView
 				continue;
 			}
 
-			Optional<ContentDashboardItemSubtypeFactory>
-				contentDashboardItemSubtypeFactoryOptional =
+			ContentDashboardItemSubtypeFactory<?>
+				contentDashboardItemSubtypeFactory =
 					contentDashboardItemFactory.
-						getContentDashboardItemSubtypeFactoryOptional();
+						getContentDashboardItemSubtypeFactory();
 
-			if (contentDashboardItemSubtypeFactoryOptional.isPresent()) {
-				ContentDashboardItemSubtypeFactory
-					contentDashboardItemSubtypeFactory =
-						contentDashboardItemSubtypeFactoryOptional.get();
-
+			if (contentDashboardItemSubtypeFactory != null) {
 				_populateContentDashboardItemTypesJSONArray(
 					className, contentDashboardItemSubtypeFactory,
 					checkedContentDashboardItemSubtypesInfoItemReferences,
@@ -261,7 +257,8 @@ public class ContentDashboardItemSubtypeItemSelectorView
 
 	private void _populateContentDashboardItemTypesJSONArray(
 		String className,
-		ContentDashboardItemSubtypeFactory contentDashboardItemSubtypeFactory,
+		ContentDashboardItemSubtypeFactory<?>
+			contentDashboardItemSubtypeFactory,
 		Set<InfoItemReference>
 			checkedContentDashboardItemSubtypeInfoItemReferences,
 		JSONArray contentDashboardItemTypesJSONArray,
@@ -325,7 +322,7 @@ public class ContentDashboardItemSubtypeItemSelectorView
 				infoItemFormVariations) {
 
 			try {
-				ContentDashboardItemSubtype contentDashboardItemSubtype =
+				ContentDashboardItemSubtype<?> contentDashboardItemSubtype =
 					contentDashboardItemSubtypeFactory.create(
 						Long.valueOf(infoItemFormVariation.getKey()));
 

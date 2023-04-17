@@ -120,7 +120,11 @@ public class VarPoshiElement extends PoshiElement {
 	public void parsePoshiScript(String poshiScript)
 		throws PoshiScriptParserException {
 
-		if (poshiScript.startsWith("static")) {
+		if (!(getParent() instanceof ExecutePoshiElement)) {
+			validateSemicolon(poshiScript);
+		}
+
+		if (poshiScript.startsWith("static var")) {
 			addAttribute("static", "true");
 
 			poshiScript = poshiScript.replaceFirst("static", "");
@@ -180,6 +184,14 @@ public class VarPoshiElement extends PoshiElement {
 		}
 
 		if (value.endsWith("\"") && value.startsWith("\"")) {
+			if (value.contains("\n")) {
+				throw new PoshiScriptParserException(
+					"Invalid variable assignment syntax, please use triple " +
+						"quotes (''') to wrap a multiline string instead of " +
+							"double quotes",
+					value, (PoshiElement)getParent());
+			}
+
 			value = getDoubleQuotedContent(value);
 
 			if (value.endsWith("}") && value.startsWith("${")) {
@@ -441,6 +453,11 @@ public class VarPoshiElement extends PoshiElement {
 		return null;
 	}
 
+	@Override
+	protected Pattern getStatementPattern() {
+		return _statementPattern;
+	}
+
 	protected void initValueAttributeName(Element element) {
 		if (element.attribute("from") != null) {
 			valueAttributeName = "from";
@@ -499,6 +516,16 @@ public class VarPoshiElement extends PoshiElement {
 				methodParameterValue = StringUtil.replace(
 					methodParameterValue, "&quot;", "\"");
 
+				Matcher matcher = _varMacroMethodPattern.matcher(
+					methodParameterValue);
+
+				if (matcher.find()) {
+					sb.append(methodParameterValue);
+					sb.append(", ");
+
+					continue;
+				}
+
 				methodParameterValue = StringUtil.replace(
 					methodParameterValue, "\"", "\\\"");
 
@@ -542,7 +569,8 @@ public class VarPoshiElement extends PoshiElement {
 	protected String valueAttributeName;
 
 	private boolean _isElementType(String poshiScript) {
-		if (isValidPoshiScriptStatement(_statementPattern, poshiScript) ||
+		if (isValidPoshiScriptStatement(
+				_partialStatementPattern, poshiScript) ||
 			isVarAssignedToMacroInvocation(poshiScript)) {
 
 			return true;
@@ -553,7 +581,8 @@ public class VarPoshiElement extends PoshiElement {
 
 	private static final String _ELEMENT_NAME = "var";
 
-	private static final String _VAR_VALUE_INTEGER_REGEX = "\\d+";
+	private static final String _VAR_VALUE_INTEGER_REGEX =
+		"\\d+[\\s]*(?![\\+-\\/\\*])";
 
 	private static final String _VAR_VALUE_MATH_EXPRESSION_REGEX;
 
@@ -567,7 +596,7 @@ public class VarPoshiElement extends PoshiElement {
 
 	private static final String _VAR_VALUE_REGEX;
 
-	private static final String _VAR_VALUE_STRING_REGEX = "\".*\"";
+	private static final String _VAR_VALUE_STRING_REGEX = "\".*?\"";
 
 	private static final String _VAR_VALUE_VARIABLE_REGEX = "\\$\\{[\\w_-]+\\}";
 
@@ -584,7 +613,10 @@ public class VarPoshiElement extends PoshiElement {
 		"MathUtil\\.(\\w+)\\('(.+)', '(.+)'\\)");
 	private static final Pattern _nestedCDATAPattern = Pattern.compile(
 		"(?<cdata1><.+]])(?<cdata2>>.*>?)");
+	private static final Pattern _partialStatementPattern;
 	private static final Pattern _statementPattern;
+	private static final Pattern _varMacroMethodPattern = Pattern.compile(
+		"^.*\\s=\\s(.*)$");
 	private static final Pattern _varValueMathExpressionPattern;
 
 	static {
@@ -599,7 +631,11 @@ public class VarPoshiElement extends PoshiElement {
 
 		_statementPattern = Pattern.compile(
 			"^" + VAR_NAME_REGEX + ASSIGNMENT_REGEX + _VAR_VALUE_REGEX +
-				VAR_STATEMENT_END_REGEX,
+				"(;|)$",
+			Pattern.DOTALL | Pattern.MULTILINE);
+
+		_partialStatementPattern = Pattern.compile(
+			"^" + VAR_NAME_REGEX + ASSIGNMENT_REGEX + _VAR_VALUE_REGEX,
 			Pattern.DOTALL);
 
 		_varValueMathExpressionPattern = Pattern.compile(

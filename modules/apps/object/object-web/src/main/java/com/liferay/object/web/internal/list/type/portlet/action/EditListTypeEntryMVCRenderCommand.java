@@ -19,7 +19,7 @@ import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeDefinitionLocalService;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectPortletKeys;
-import com.liferay.object.web.internal.constants.ObjectWebKeys;
+import com.liferay.object.constants.ObjectWebKeys;
 import com.liferay.object.web.internal.list.type.display.context.ViewListTypeEntriesDisplayContext;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;

@@ -37,9 +37,6 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
@@ -79,7 +76,15 @@ public class DispatchTriggerDisplayContext extends BaseDisplayContext {
 	public CreationMenu getCreationMenu() {
 		CreationMenu creationMenu = new CreationMenu();
 
-		for (String dispatchTaskExecutorType : getDispatchTaskExecutorTypes()) {
+		for (String dispatchTaskExecutorType :
+				_dispatchTaskExecutorRegistry.getDispatchTaskExecutorTypes()) {
+
+			if (_dispatchTaskExecutorRegistry.isHiddenInUI(
+					dispatchTaskExecutorType)) {
+
+				continue;
+			}
+
 			creationMenu.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.setHref(
@@ -111,19 +116,6 @@ public class DispatchTriggerDisplayContext extends BaseDisplayContext {
 			locale,
 			_dispatchTaskExecutorRegistry.fetchDispatchTaskExecutorName(
 				dispatchTaskExecutorType));
-	}
-
-	public Set<String> getDispatchTaskExecutorTypes() {
-		Set<String> dispatchTaskExecutorTypes =
-			_dispatchTaskExecutorRegistry.getDispatchTaskExecutorTypes();
-
-		Stream<String> stream = dispatchTaskExecutorTypes.parallelStream();
-
-		return stream.filter(
-			type -> !_dispatchTaskExecutorRegistry.isHiddenInUI(type)
-		).collect(
-			Collectors.toSet()
-		);
 	}
 
 	public DispatchTrigger getDispatchTrigger() {

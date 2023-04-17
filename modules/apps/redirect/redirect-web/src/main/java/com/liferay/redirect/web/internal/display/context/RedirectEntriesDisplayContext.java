@@ -16,6 +16,7 @@ package com.liferay.redirect.web.internal.display.context;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -60,8 +61,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
@@ -93,7 +92,7 @@ public class RedirectEntriesDisplayContext {
 		_redirectEntryService = redirectEntryService;
 		_stagingGroupHelper = stagingGroupHelper;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_expirationDateFormat = DateFormat.getDateInstance(
@@ -374,16 +373,11 @@ public class RedirectEntriesDisplayContext {
 		List<SearchResult> searchResults = SearchResultUtil.getSearchResults(
 			hits, LocaleUtil.getDefault());
 
-		Stream<SearchResult> stream = searchResults.stream();
-
 		redirectEntrySearch.setResultsAndTotal(
-			() -> stream.map(
-				SearchResult::getClassPK
-			).map(
-				_redirectEntryLocalService::fetchRedirectEntry
-			).collect(
-				Collectors.toList()
-			),
+			() -> TransformUtil.transform(
+				searchResults,
+				searchResult -> _redirectEntryLocalService.fetchRedirectEntry(
+					searchResult.getClassPK())),
 			hits.getLength());
 	}
 

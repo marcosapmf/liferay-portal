@@ -27,7 +27,6 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,7 +36,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "dto.class.name=com.liferay.commerce.account.model.CommerceAccountUserRel",
-	service = {AccountMemberDTOConverter.class, DTOConverter.class}
+	service = DTOConverter.class
 )
 public class AccountMemberDTOConverter
 	implements DTOConverter<CommerceAccountUserRel, AccountMember> {
@@ -86,13 +85,13 @@ public class AccountMemberDTOConverter
 						dtoConverterContext.getLocale())));
 		}
 
-		Stream<AccountRole> stream = accountRoles.stream();
-
-		return stream.toArray(AccountRole[]::new);
+		return accountRoles.toArray(new AccountRole[0]);
 	}
 
-	@Reference
-	private AccountRoleDTOConverter _accountRoleDTOConverter;
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountRoleDTOConverter)"
+	)
+	private DTOConverter<UserGroupRole, AccountRole> _accountRoleDTOConverter;
 
 	@Reference
 	private CommerceAccountUserRelService _commerceAccountUserRelService;

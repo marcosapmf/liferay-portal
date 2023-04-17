@@ -25,7 +25,9 @@ AUI.add(
 
 		const STR_ACTIONS_WILDCARD = '*';
 
-		const STR_CHECKBOX_SELECTOR = 'input[type=checkbox]:enabled';
+		const STR_CHECKBOX_SELECTOR = 'input[type="checkbox"]';
+
+		const STR_CHECKBOX_ENABLED_SELECTOR = `${STR_CHECKBOX_SELECTOR}:enabled`;
 
 		const STR_CHECKED = 'checked';
 
@@ -87,6 +89,11 @@ AUI.add(
 					value:
 						'dd[data-selectable="true"],li[data-selectable="true"],tr[data-selectable="true"]',
 				},
+
+				sessionStorageItemKey: {
+					validator: Lang.isString,
+					value: '',
+				},
 			},
 
 			EXTENDS: A.Plugin.Base,
@@ -140,10 +147,20 @@ AUI.add(
 							selector:
 								instance.get(STR_ROW_SELECTOR) +
 								' ' +
-								STR_CHECKBOX_SELECTOR,
+								STR_CHECKBOX_ENABLED_SELECTOR,
 						},
 						owner: host.get('id'),
 					});
+				},
+
+				_clearSessionStorage() {
+					const instance = this;
+
+					const sessionStorageItemKey = instance.get(
+						'sessionStorageItemKey'
+					);
+
+					sessionStorage.removeItem(sessionStorageItemKey);
 				},
 
 				_getActions(elements) {
@@ -183,7 +200,7 @@ AUI.add(
 					const instance = this;
 
 					return instance._getElements(
-						STR_CHECKBOX_SELECTOR,
+						STR_CHECKBOX_ENABLED_SELECTOR,
 						onlySelected
 					);
 				},
@@ -194,7 +211,7 @@ AUI.add(
 					return instance._getElements(
 						instance.get(STR_ROW_SELECTOR) +
 							' ' +
-							STR_CHECKBOX_SELECTOR,
+							STR_CHECKBOX_ENABLED_SELECTOR,
 						onlySelected
 					);
 				},
@@ -255,6 +272,84 @@ AUI.add(
 					}
 				},
 
+				_restoreFromSessionStorage(host) {
+					const instance = this;
+
+					const sessionStorageItemKey = instance.get(
+						'sessionStorageItemKey'
+					);
+
+					if (sessionStorage.getItem(sessionStorageItemKey)) {
+						const container = A.one(host._getNodeToParse());
+
+						const selections = sessionStorage
+							.getItem(sessionStorageItemKey)
+							.split(',');
+
+						const itemName = host
+							.get('contentBox')
+							.one(STR_CHECKBOX_SELECTOR)
+							?.get('name');
+
+						let offScreenElementsHtml = '';
+
+						selections.map((item) => {
+							const input = container.one(
+								A.Lang.sub(TPL_INPUT_SELECTOR, {value: item})
+							);
+
+							if (input) {
+								input.attr('checked', true);
+								input
+									.ancestor(instance.get(STR_ROW_SELECTOR))
+									.addClass('active');
+							}
+							else {
+								offScreenElementsHtml += A.Lang.sub(
+									TPL_HIDDEN_INPUT_CHECKED,
+									{name: itemName, value: item}
+								);
+							}
+						});
+
+						container.append(offScreenElementsHtml);
+
+						instance._clearSessionStorage();
+					}
+				},
+
+				_updateSessionWithSelections() {
+					const instance = this;
+
+					const sessionStorageItemKey = instance.get(
+						'sessionStorageItemKey'
+					);
+
+					let selectedItems = [];
+
+					if (instance.getAllSelectedElements().size() > 0) {
+						selectedItems = instance.getAllSelectedElements().val();
+					}
+
+					if (sessionStorage.getItem(sessionStorageItemKey)) {
+						if (selectedItems.length) {
+							sessionStorage.setItem(
+								sessionStorageItemKey,
+								selectedItems
+							);
+						}
+						else {
+							instance._clearSessionStorage();
+						}
+					}
+					else if (selectedItems.length) {
+						sessionStorage.setItem(
+							sessionStorageItemKey,
+							selectedItems
+						);
+					}
+				},
+
 				destructor() {
 					const instance = this;
 
@@ -291,6 +386,13 @@ AUI.add(
 						hostContentBox.getData('bulkSelection')
 					);
 
+					instance.set(
+						'sessionStorageItemKey',
+						`${host.get(
+							'id'
+						)}${themeDisplay.getUserId()}_selections`
+					);
+
 					const toggleRowFn = A.bind(
 						'_onClickRowSelector',
 						instance,
@@ -313,7 +415,7 @@ AUI.add(
 								toggleRowCSSFn,
 								instance.get(STR_ROW_SELECTOR) +
 									' ' +
-									STR_CHECKBOX_SELECTOR,
+									STR_CHECKBOX_ENABLED_SELECTOR,
 								instance
 							),
 						host
@@ -332,10 +434,32 @@ AUI.add(
 							instance
 						),
 					];
+
+					if (!Liferay.SPA) {
+						instance._restoreFromSessionStorage(host);
+
+						host.on('clearFilter', () =>
+							instance._updateSessionWithSelections()
+						);
+
+						window.addEventListener('beforeunload', () => {
+							if (
+								document
+									.getElementById(
+										host.get('id') + 'PageIteratorBottom'
+									)
+									.contains(document.activeElement)
+							) {
+								instance._updateSessionWithSelections();
+							}
+						});
+					}
 				},
 
 				isSelected(element) {
-					return element.one(STR_CHECKBOX_SELECTOR).attr(STR_CHECKED);
+					return element
+						.one(STR_CHECKBOX_ENABLED_SELECTOR)
+						.attr(STR_CHECKED);
 				},
 
 				toggleAllRows(selected, bulkSelection) {
@@ -365,7 +489,7 @@ AUI.add(
 					const instance = this;
 
 					if (config && config.toggleCheckbox) {
-						const checkbox = row.one(STR_CHECKBOX_SELECTOR);
+						const checkbox = row.one(STR_CHECKBOX_ENABLED_SELECTOR);
 
 						checkbox.attr(STR_CHECKED, !checkbox.attr(STR_CHECKED));
 					}

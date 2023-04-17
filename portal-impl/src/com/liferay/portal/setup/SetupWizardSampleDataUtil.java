@@ -45,7 +45,6 @@ import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.security.auth.ScreenNameGeneratorFactory;
 import com.liferay.portal.util.PropsValues;
 
@@ -159,7 +158,9 @@ public class SetupWizardSampleDataUtil {
 		}
 
 		User adminUser = UserLocalServiceUtil.fetchUserByEmailAddress(
-			company.getCompanyId(), emailAddress);
+			company.getCompanyId(),
+			PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX + StringPool.AT +
+				company.getMx());
 
 		if (adminUser != null) {
 			FullNameGenerator fullNameGenerator =
@@ -179,6 +180,9 @@ public class SetupWizardSampleDataUtil {
 			int birthdayMonth = birthdayCal.get(Calendar.MONTH);
 			int birthdayDay = birthdayCal.get(Calendar.DAY_OF_MONTH);
 			int birthdayYear = birthdayCal.get(Calendar.YEAR);
+
+			UserLocalServiceUtil.updateEmailAddress(
+				adminUser.getUserId(), null, emailAddress, emailAddress);
 
 			adminUser = UserLocalServiceUtil.updateUser(
 				adminUser.getUserId(), StringPool.BLANK, StringPool.BLANK,
@@ -201,21 +205,6 @@ public class SetupWizardSampleDataUtil {
 
 			adminUser = UserLocalServiceUtil.getUserByEmailAddress(
 				company.getCompanyId(), emailAddress);
-
-			String defaultAdminEmailAddress =
-				PropsValues.DEFAULT_ADMIN_EMAIL_ADDRESS_PREFIX + "@" +
-					PropsValues.COMPANY_DEFAULT_WEB_ID;
-
-			if (!emailAddress.equals(defaultAdminEmailAddress)) {
-				User user = UserLocalServiceUtil.fetchUserByEmailAddress(
-					company.getCompanyId(), defaultAdminEmailAddress);
-
-				if (user != null) {
-					UserLocalServiceUtil.updateStatus(
-						user.getUserId(), WorkflowConstants.STATUS_INACTIVE,
-						new ServiceContext());
-				}
-			}
 		}
 
 		return UserLocalServiceUtil.updatePasswordReset(

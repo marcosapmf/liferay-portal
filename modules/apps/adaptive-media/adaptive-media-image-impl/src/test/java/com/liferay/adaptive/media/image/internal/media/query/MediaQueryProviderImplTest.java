@@ -44,9 +44,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -661,16 +659,14 @@ public class MediaQueryProviderImplTest {
 					amImageQueryBuilderImpl);
 
 				if (!AMImageQueryBuilderImpl.AM_QUERY.equals(amQuery)) {
-					return Stream.empty();
+					return Collections.emptyList();
 				}
 
 				for (AdaptiveMedia<AMImageProcessor> adaptiveMedia :
 						adaptiveMedias) {
 
-					Optional<String> optional = adaptiveMedia.getValueOptional(
+					String configurationUuid = adaptiveMedia.getValue(
 						AMAttribute.getConfigurationUuidAMAttribute());
-
-					String configurationUuid = optional.get();
 
 					if (Objects.equals(
 							fileEntry.getFileVersion(),

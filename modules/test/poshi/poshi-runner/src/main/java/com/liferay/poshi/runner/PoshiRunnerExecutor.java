@@ -16,8 +16,8 @@ package com.liferay.poshi.runner;
 
 import com.liferay.poshi.core.PoshiContext;
 import com.liferay.poshi.core.PoshiGetterUtil;
-import com.liferay.poshi.core.PoshiStackTraceUtil;
-import com.liferay.poshi.core.PoshiVariablesUtil;
+import com.liferay.poshi.core.PoshiStackTrace;
+import com.liferay.poshi.core.PoshiVariablesContext;
 import com.liferay.poshi.core.selenium.LiferaySelenium;
 import com.liferay.poshi.core.selenium.LiferaySeleniumMethod;
 import com.liferay.poshi.core.util.GetterUtil;
@@ -26,9 +26,9 @@ import com.liferay.poshi.core.util.Validator;
 import com.liferay.poshi.runner.exception.PoshiRunnerWarningException;
 import com.liferay.poshi.runner.logger.PoshiLogger;
 import com.liferay.poshi.runner.logger.SummaryLogger;
-import com.liferay.poshi.runner.selenium.SeleniumUtil;
+import com.liferay.poshi.runner.selenium.WebDriverUtil;
 import com.liferay.poshi.runner.util.TableUtil;
-import com.liferay.poshi.runner.var.type.BaseTable;
+import com.liferay.poshi.runner.var.type.DefaultTable;
 import com.liferay.poshi.runner.var.type.TableFactory;
 
 import java.lang.reflect.Method;
@@ -48,6 +48,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import org.dom4j.Element;
 
 import org.openqa.selenium.StaleElementReferenceException;
@@ -59,14 +61,25 @@ import org.openqa.selenium.StaleElementReferenceException;
  */
 public class PoshiRunnerExecutor {
 
-	public PoshiRunnerExecutor(PoshiLogger poshiLogger) {
+	public PoshiRunnerExecutor(
+		PoshiLogger poshiLogger, SummaryLogger summaryLogger) {
+
 		_poshiLogger = poshiLogger;
+		_summaryLogger = summaryLogger;
+
+		_testNamespacedClassCommandName =
+			poshiLogger.getTestNamespacedClassCommandName();
+
+		_poshiStackTrace = PoshiStackTrace.getPoshiStackTrace(
+			_testNamespacedClassCommandName);
+		_poshiVariablesContext = PoshiVariablesContext.getPoshiVariablesContext(
+			_testNamespacedClassCommandName);
 	}
 
 	public boolean evaluateConditionalElement(Element element)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		boolean conditionalValue = false;
 
@@ -100,20 +113,21 @@ public class PoshiRunnerExecutor {
 			}
 		}
 		else if (elementName.equals("contains")) {
-			String string = PoshiVariablesUtil.getReplacedCommandVarsString(
+			String string = _poshiVariablesContext.getReplacedCommandVarsString(
 				element.attributeValue("string"));
-			String substring = PoshiVariablesUtil.getReplacedCommandVarsString(
-				element.attributeValue("substring"));
+			String substring =
+				_poshiVariablesContext.getReplacedCommandVarsString(
+					element.attributeValue("substring"));
 
 			if (string.contains(substring)) {
 				conditionalValue = true;
 			}
 		}
 		else if (elementName.equals("equals")) {
-			String arg1 = PoshiVariablesUtil.getReplacedCommandVarsString(
+			String arg1 = _poshiVariablesContext.getReplacedCommandVarsString(
 				element.attributeValue("arg1"));
 
-			String arg2 = PoshiVariablesUtil.getReplacedCommandVarsString(
+			String arg2 = _poshiVariablesContext.getReplacedCommandVarsString(
 				element.attributeValue("arg2"));
 
 			if (arg1.equals(arg2)) {
@@ -121,7 +135,7 @@ public class PoshiRunnerExecutor {
 			}
 		}
 		else if (elementName.equals("isset")) {
-			if (PoshiVariablesUtil.containsKeyInCommandMap(
+			if (_poshiVariablesContext.containsKeyInCommandMap(
 					element.attributeValue("var"))) {
 
 				conditionalValue = true;
@@ -170,6 +184,10 @@ public class PoshiRunnerExecutor {
 				_hasContinue = true;
 			}
 		}
+	}
+
+	public String getTestNamespacedClassCommandName() {
+		return _testNamespacedClassCommandName;
 	}
 
 	public boolean isOcularFunction(Element functionCommandElement) {
@@ -264,7 +282,7 @@ public class PoshiRunnerExecutor {
 			Element element, boolean updateLoggerStatus)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		Object varValue = null;
 
@@ -276,9 +294,9 @@ public class PoshiRunnerExecutor {
 				if (Validator.isNotNull(element.attributeValue("method"))) {
 					_poshiLogger.startCommand(element);
 
-					SummaryLogger.startSummary(element);
+					_summaryLogger.startSummary(element);
 
-					SummaryLogger.failSummary(
+					_summaryLogger.failSummary(
 						element, exception.getMessage(),
 						_poshiLogger.getDetailsLinkId());
 
@@ -292,7 +310,8 @@ public class PoshiRunnerExecutor {
 		}
 
 		if (varValue instanceof String) {
-			varValue = PoshiVariablesUtil.replaceCommandVars((String)varValue);
+			varValue = _poshiVariablesContext.replaceCommandVars(
+				(String)varValue);
 
 			if (varValue instanceof String) {
 				Matcher matcher = _variablePattern.matcher((String)varValue);
@@ -309,9 +328,9 @@ public class PoshiRunnerExecutor {
 
 		String varName = element.attributeValue("name");
 
-		PoshiVariablesUtil.putIntoCommandMap(varName, varValue);
+		_poshiVariablesContext.putIntoCommandMap(varName, varValue);
 
-		String currentFilePath = PoshiStackTraceUtil.getCurrentFilePath();
+		String currentFilePath = _poshiStackTrace.getCurrentFilePath();
 
 		if (currentFilePath.contains(".macro") ||
 			currentFilePath.contains(".testcase")) {
@@ -319,7 +338,7 @@ public class PoshiRunnerExecutor {
 			String staticValue = element.attributeValue("static");
 
 			if ((staticValue != null) && staticValue.equals("true")) {
-				PoshiVariablesUtil.putIntoStaticMap(varName, varValue);
+				_poshiVariablesContext.putIntoStaticMap(varName, varValue);
 			}
 		}
 
@@ -329,7 +348,7 @@ public class PoshiRunnerExecutor {
 	}
 
 	public void runEchoElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		_poshiLogger.logMessage(element);
 
@@ -339,18 +358,20 @@ public class PoshiRunnerExecutor {
 			message = element.getText();
 		}
 
-		System.out.println(PoshiVariablesUtil.replaceCommandVars(message));
+		message = StringEscapeUtils.unescapeXml(message);
+
+		System.out.println(_poshiVariablesContext.replaceCommandVars(message));
 	}
 
 	public void runExecuteVarElement(
 			Element element, boolean updateLoggerStatus)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		String varName = element.attributeValue("name");
 
-		if (PoshiVariablesUtil.containsKeyInStaticMap(varName)) {
+		if (_poshiVariablesContext.containsKeyInStaticMap(varName)) {
 			if (updateLoggerStatus) {
 				_poshiLogger.updateStatus(element, "fail");
 			}
@@ -375,9 +396,11 @@ public class PoshiRunnerExecutor {
 		}
 
 		if (varValue instanceof String) {
-			varValue = PoshiVariablesUtil.replaceExecuteVars((String)varValue);
+			varValue = _poshiVariablesContext.replaceExecuteVars(
+				(String)varValue);
 
-			varValue = PoshiVariablesUtil.replaceCommandVars((String)varValue);
+			varValue = _poshiVariablesContext.replaceCommandVars(
+				(String)varValue);
 
 			if (varValue instanceof String) {
 				Matcher matcher = _variablePattern.matcher((String)varValue);
@@ -392,7 +415,7 @@ public class PoshiRunnerExecutor {
 			}
 		}
 
-		PoshiVariablesUtil.putIntoExecuteMap(varName, varValue);
+		_poshiVariablesContext.putIntoExecuteMap(varName, varValue);
 
 		if (updateLoggerStatus) {
 			_poshiLogger.updateStatus(element, "pass");
@@ -400,7 +423,7 @@ public class PoshiRunnerExecutor {
 	}
 
 	public void runFailElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		_poshiLogger.logMessage(element);
 
@@ -410,28 +433,28 @@ public class PoshiRunnerExecutor {
 
 		if (Validator.isNotNull(message)) {
 			throw new Exception(
-				PoshiVariablesUtil.getReplacedCommandVarsString(message));
+				_poshiVariablesContext.getReplacedCommandVarsString(message));
 		}
 
 		throw new Exception();
 	}
 
 	public void runForElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		_inLoop = true;
 
-		String paramName = PoshiVariablesUtil.getReplacedCommandVarsString(
+		String paramName = _poshiVariablesContext.getReplacedCommandVarsString(
 			element.attributeValue("param"));
 
 		if (element.attributeValue("list") != null) {
-			String list = PoshiVariablesUtil.getReplacedCommandVarsString(
+			String list = _poshiVariablesContext.getReplacedCommandVarsString(
 				element.attributeValue("list"));
 
 			String[] paramValues = list.split(",");
 
 			for (String paramValue : paramValues) {
-				PoshiVariablesUtil.putIntoCommandMap(paramName, paramValue);
+				_poshiVariablesContext.putIntoCommandMap(paramName, paramValue);
 
 				parseElement(element);
 
@@ -449,14 +472,16 @@ public class PoshiRunnerExecutor {
 			}
 		}
 		else if (element.attributeValue("table") != null) {
-			BaseTable<?> table =
-				(BaseTable<?>)PoshiVariablesUtil.replaceCommandVars(
+			DefaultTable defaultTable =
+				(DefaultTable)_poshiVariablesContext.replaceCommandVars(
 					element.attributeValue("table"));
 
-			Iterator<?> iterator = table.iterator();
+			List<List<String>> rows = defaultTable.getRows();
+
+			Iterator<?> iterator = rows.iterator();
 
 			while (iterator.hasNext()) {
-				PoshiVariablesUtil.putIntoCommandMap(
+				_poshiVariablesContext.putIntoCommandMap(
 					paramName, iterator.next());
 
 				parseElement(element);
@@ -471,9 +496,9 @@ public class PoshiRunnerExecutor {
 	public void runFunctionCommandElement(Element commandElement)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(commandElement);
+		_poshiStackTrace.setCurrentElement(commandElement);
 
-		PoshiVariablesUtil.pushCommandMap();
+		_poshiVariablesContext.pushCommandMap();
 
 		try {
 			parseElement(commandElement);
@@ -482,7 +507,7 @@ public class PoshiRunnerExecutor {
 			throw exception;
 		}
 		finally {
-			PoshiVariablesUtil.popCommandMap();
+			_poshiVariablesContext.popCommandMap();
 		}
 	}
 
@@ -493,7 +518,7 @@ public class PoshiRunnerExecutor {
 			_functionExecuteElement = executeElement;
 		}
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		List<Element> executeVarElements = executeElement.elements("var");
 
@@ -501,7 +526,7 @@ public class PoshiRunnerExecutor {
 			runExecuteVarElement(executeVarElement, false);
 		}
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		String namespacedClassCommandName = executeElement.attributeValue(
 			"function");
@@ -516,7 +541,7 @@ public class PoshiRunnerExecutor {
 			String locator = executeElement.attributeValue("locator" + i);
 
 			if (locator == null) {
-				locator = PoshiVariablesUtil.getStringFromCommandMap(
+				locator = _poshiVariablesContext.getStringFromCommandMap(
 					"locator" + i);
 			}
 
@@ -525,18 +550,18 @@ public class PoshiRunnerExecutor {
 
 				if (matcher.find() && !locator.contains("/")) {
 					String pathClassName =
-						PoshiVariablesUtil.getReplacedCommandVarsString(
+						_poshiVariablesContext.getReplacedCommandVarsString(
 							PoshiGetterUtil.
 								getClassNameFromNamespacedClassCommandName(
 									locator));
 
 					String locatorKey =
-						PoshiVariablesUtil.getReplacedCommandVarsString(
+						_poshiVariablesContext.getReplacedCommandVarsString(
 							PoshiGetterUtil.
 								getCommandNameFromNamespacedClassCommandName(
 									locator));
 
-					PoshiVariablesUtil.putIntoExecuteMap(
+					_poshiVariablesContext.putIntoExecuteMap(
 						"locator-key" + i, locatorKey);
 
 					locator = PoshiContext.getPathLocator(
@@ -551,36 +576,37 @@ public class PoshiRunnerExecutor {
 								locatorKey);
 					}
 
-					locator = (String)PoshiVariablesUtil.replaceExecuteVars(
+					locator = (String)_poshiVariablesContext.replaceExecuteVars(
 						locator);
 				}
 
-				PoshiVariablesUtil.putIntoExecuteMap("locator" + i, locator);
+				_poshiVariablesContext.putIntoExecuteMap(
+					"locator" + i, locator);
 			}
 
 			String value = executeElement.attributeValue("value" + i);
 
 			if (value == null) {
-				value = PoshiVariablesUtil.getStringFromCommandMap("value" + i);
+				value = _poshiVariablesContext.getStringFromCommandMap(
+					"value" + i);
 			}
 
 			if (value != null) {
-				PoshiVariablesUtil.putIntoExecuteMap("value" + i, value);
+				_poshiVariablesContext.putIntoExecuteMap("value" + i, value);
 			}
 		}
 
 		if (_functionExecuteElement == executeElement) {
-			SummaryLogger.startSummary(_functionExecuteElement);
+			_summaryLogger.startSummary(_functionExecuteElement);
 		}
 
 		_poshiLogger.startCommand(executeElement);
 
-		PoshiStackTraceUtil.pushStackTrace(executeElement);
+		_poshiStackTrace.pushStackTrace(executeElement);
 
 		Element commandElement = PoshiContext.getFunctionCommandElement(
 			classCommandName,
-			PoshiStackTraceUtil.getCurrentNamespace(
-				namespacedClassCommandName));
+			_poshiStackTrace.getCurrentNamespace(namespacedClassCommandName));
 
 		try {
 			if (exception != null) {
@@ -596,12 +622,12 @@ public class PoshiRunnerExecutor {
 				_functionWarningMessage = warningMessage;
 			}
 			else {
-				PoshiStackTraceUtil.popStackTrace();
+				_poshiStackTrace.popStackTrace();
 
 				if (_functionExecuteElement == executeElement) {
-					PoshiStackTraceUtil.setCurrentElement(executeElement);
+					_poshiStackTrace.setCurrentElement(executeElement);
 
-					SummaryLogger.failSummary(
+					_summaryLogger.failSummary(
 						_functionExecuteElement, throwable.getMessage(),
 						_poshiLogger.getDetailsLinkId());
 
@@ -620,19 +646,19 @@ public class PoshiRunnerExecutor {
 			}
 		}
 
-		PoshiStackTraceUtil.popStackTrace();
+		_poshiStackTrace.popStackTrace();
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		if (_functionExecuteElement == executeElement) {
 			if (_functionWarningMessage != null) {
-				SummaryLogger.warnSummary(
+				_summaryLogger.warnSummary(
 					_functionExecuteElement, _functionWarningMessage);
 
 				_poshiLogger.warnCommand(_functionExecuteElement);
 			}
 			else {
-				SummaryLogger.passSummary(executeElement);
+				_summaryLogger.passSummary(executeElement);
 
 				_poshiLogger.passCommand(executeElement);
 			}
@@ -643,7 +669,7 @@ public class PoshiRunnerExecutor {
 	}
 
 	public void runIfElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		List<Element> ifChildElements = element.elements();
 
@@ -654,7 +680,7 @@ public class PoshiRunnerExecutor {
 		if (condition) {
 			Element ifThenElement = element.element("then");
 
-			PoshiStackTraceUtil.setCurrentElement(ifThenElement);
+			_poshiStackTrace.setCurrentElement(ifThenElement);
 
 			parseElement(ifThenElement);
 
@@ -671,7 +697,7 @@ public class PoshiRunnerExecutor {
 			List<Element> elseIfElements = element.elements("elseif");
 
 			for (Element elseIfElement : elseIfElements) {
-				PoshiStackTraceUtil.setCurrentElement(elseIfElement);
+				_poshiStackTrace.setCurrentElement(elseIfElement);
 
 				List<Element> elseIfChildElements = elseIfElement.elements();
 
@@ -682,7 +708,7 @@ public class PoshiRunnerExecutor {
 				if (condition) {
 					Element elseIfThenElement = elseIfElement.element("then");
 
-					PoshiStackTraceUtil.setCurrentElement(elseIfThenElement);
+					_poshiStackTrace.setCurrentElement(elseIfThenElement);
 
 					parseElement(elseIfThenElement);
 
@@ -700,7 +726,7 @@ public class PoshiRunnerExecutor {
 		if (element.element("else") != null) {
 			Element elseElement = element.element("else");
 
-			PoshiStackTraceUtil.setCurrentElement(elseElement);
+			_poshiStackTrace.setCurrentElement(elseElement);
 
 			parseElement(elseElement);
 
@@ -712,7 +738,7 @@ public class PoshiRunnerExecutor {
 			Element commandElement, String namespacedClassCommandName)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(commandElement);
+		_poshiStackTrace.setCurrentElement(commandElement);
 
 		String classCommandName =
 			PoshiGetterUtil.getClassCommandNameFromNamespacedClassCommandName(
@@ -722,7 +748,7 @@ public class PoshiRunnerExecutor {
 			PoshiGetterUtil.getClassNameFromNamespacedClassCommandName(
 				classCommandName);
 
-		String namespace = PoshiStackTraceUtil.getCurrentNamespace(
+		String namespace = _poshiStackTrace.getCurrentNamespace(
 			namespacedClassCommandName);
 
 		List<Element> rootVarElements = PoshiContext.getRootVarElements(
@@ -732,17 +758,22 @@ public class PoshiRunnerExecutor {
 			runRootVarElement(rootVarElement, true);
 		}
 
-		PoshiVariablesUtil.pushCommandMap();
+		_poshiVariablesContext.pushCommandMap();
+
+		if (commandElement == null) {
+			throw new RuntimeException(
+				"Nonexistent macro command: " + namespacedClassCommandName);
+		}
 
 		parseElement(commandElement);
 
-		PoshiVariablesUtil.popCommandMap();
+		_poshiVariablesContext.popCommandMap();
 	}
 
 	public void runMacroExecuteElement(Element executeElement, String macroType)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		String namespacedClassCommandName = executeElement.attributeValue(
 			macroType);
@@ -757,12 +788,12 @@ public class PoshiRunnerExecutor {
 			runExecuteVarElement(executeVarElement, false);
 		}
 
-		PoshiStackTraceUtil.pushStackTrace(executeElement);
+		_poshiStackTrace.pushStackTrace(executeElement);
 
-		String namespace = PoshiStackTraceUtil.getCurrentNamespace(
+		String namespace = _poshiStackTrace.getCurrentNamespace(
 			namespacedClassCommandName);
 
-		SummaryLogger.startSummary(executeElement);
+		_summaryLogger.startSummary(executeElement);
 
 		Element commandElement = PoshiContext.getMacroCommandElement(
 			classCommandName, namespace);
@@ -781,28 +812,28 @@ public class PoshiRunnerExecutor {
 
 				String returnName = returnElement.attributeValue("name");
 
-				if (PoshiVariablesUtil.containsKeyInStaticMap(returnName)) {
-					PoshiVariablesUtil.putIntoStaticMap(
+				if (_poshiVariablesContext.containsKeyInStaticMap(returnName)) {
+					_poshiVariablesContext.putIntoStaticMap(
 						returnName, _macroReturnValue);
 				}
 
-				PoshiVariablesUtil.putIntoCommandMap(
+				_poshiVariablesContext.putIntoCommandMap(
 					returnName, _macroReturnValue);
 
 				_macroReturnValue = null;
 			}
 		}
 		catch (Exception exception) {
-			SummaryLogger.failSummary(
+			_summaryLogger.failSummary(
 				executeElement, exception.getMessage(),
 				_poshiLogger.getDetailsLinkId());
 
 			throw exception;
 		}
 
-		SummaryLogger.passSummary(executeElement);
+		_summaryLogger.passSummary(executeElement);
 
-		PoshiStackTraceUtil.popStackTrace();
+		_poshiStackTrace.popStackTrace();
 
 		_poshiLogger.updateStatus(executeElement, "pass");
 	}
@@ -810,7 +841,7 @@ public class PoshiRunnerExecutor {
 	public void runMethodExecuteElement(Element executeElement)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		List<String> args = new ArrayList<>();
 
@@ -825,12 +856,13 @@ public class PoshiRunnerExecutor {
 
 		try {
 			Object returnValue = PoshiGetterUtil.getMethodReturnValue(
-				args, className, methodName, null);
+				getTestNamespacedClassCommandName(), args, className,
+				methodName, null);
 
 			Element returnElement = executeElement.element("return");
 
 			if (returnElement != null) {
-				PoshiVariablesUtil.putIntoCommandMap(
+				_poshiVariablesContext.putIntoCommandMap(
 					returnElement.attributeValue("name"), returnValue);
 			}
 
@@ -840,9 +872,9 @@ public class PoshiRunnerExecutor {
 		catch (Throwable throwable) {
 			_poshiLogger.startCommand(executeElement);
 
-			SummaryLogger.startSummary(executeElement);
+			_summaryLogger.startSummary(executeElement);
 
-			SummaryLogger.failSummary(
+			_summaryLogger.failSummary(
 				executeElement, throwable.getMessage(),
 				_poshiLogger.getDetailsLinkId());
 
@@ -857,12 +889,12 @@ public class PoshiRunnerExecutor {
 	}
 
 	public void runReturnElement(Element returnElement) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(returnElement);
+		_poshiStackTrace.setCurrentElement(returnElement);
 
 		if (returnElement.attributeValue("value") != null) {
 			String returnValue = returnElement.attributeValue("value");
 
-			_macroReturnValue = PoshiVariablesUtil.replaceCommandVars(
+			_macroReturnValue = _poshiVariablesContext.replaceCommandVars(
 				returnValue);
 		}
 
@@ -872,7 +904,7 @@ public class PoshiRunnerExecutor {
 	public void runRootVarElement(Element element, boolean updateLoggerStatus)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		Object varValue = null;
 
@@ -888,9 +920,11 @@ public class PoshiRunnerExecutor {
 		}
 
 		if (varValue instanceof String) {
-			varValue = PoshiVariablesUtil.replaceExecuteVars((String)varValue);
+			varValue = _poshiVariablesContext.replaceExecuteVars(
+				(String)varValue);
 
-			varValue = PoshiVariablesUtil.replaceStaticVars((String)varValue);
+			varValue = _poshiVariablesContext.replaceStaticVars(
+				(String)varValue);
 
 			if (varValue instanceof String) {
 				Matcher matcher = _variablePattern.matcher((String)varValue);
@@ -907,19 +941,19 @@ public class PoshiRunnerExecutor {
 
 		String varName = element.attributeValue("name");
 
-		if (!PoshiVariablesUtil.containsKeyInExecuteMap(varName)) {
-			PoshiVariablesUtil.putIntoExecuteMap(varName, varValue);
+		if (!_poshiVariablesContext.containsKeyInExecuteMap(varName)) {
+			_poshiVariablesContext.putIntoExecuteMap(varName, varValue);
 		}
 
-		String currentFilePath = PoshiStackTraceUtil.getCurrentFilePath();
+		String currentFilePath = _poshiStackTrace.getCurrentFilePath();
 
 		if (currentFilePath.contains(".testcase")) {
 			String staticValue = element.attributeValue("static");
 
 			if ((staticValue != null) && staticValue.equals("true") &&
-				!PoshiVariablesUtil.containsKeyInStaticMap(varName)) {
+				!_poshiVariablesContext.containsKeyInStaticMap(varName)) {
 
-				PoshiVariablesUtil.putIntoStaticMap(varName, varValue);
+				_poshiVariablesContext.putIntoStaticMap(varName, varValue);
 			}
 		}
 
@@ -931,7 +965,7 @@ public class PoshiRunnerExecutor {
 	public void runSeleniumElement(Element executeElement) throws Exception {
 		Properties properties =
 			PoshiContext.getNamespacedClassCommandNameProperties(
-				PoshiContext.getTestCaseNamespacedClassCommandName());
+				getTestNamespacedClassCommandName());
 
 		if (GetterUtil.getBoolean(
 				properties.getProperty("disable-webdriver"))) {
@@ -940,15 +974,15 @@ public class PoshiRunnerExecutor {
 				"Unable to call Selenium method while WebDriver is disabled");
 		}
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
-
-		List<String> arguments = new ArrayList<>();
-		List<Class<?>> parameterClasses = new ArrayList<>();
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		String selenium = executeElement.attributeValue("selenium");
 
 		LiferaySeleniumMethod liferaySeleniumMethod =
 			PoshiContext.getLiferaySeleniumMethod(selenium);
+
+		List<String> arguments = new ArrayList<>();
+		List<Class<?>> parameterClasses = new ArrayList<>();
 
 		int parameterCount = liferaySeleniumMethod.getParameterCount();
 
@@ -962,11 +996,11 @@ public class PoshiRunnerExecutor {
 
 				String parameterName = parameterNames.get(i);
 
-				argument = PoshiVariablesUtil.getStringFromCommandMap(
+				argument = _poshiVariablesContext.getStringFromCommandMap(
 					parameterName);
 			}
 			else {
-				argument = PoshiVariablesUtil.getReplacedCommandVarsString(
+				argument = _poshiVariablesContext.getReplacedCommandVarsString(
 					argument);
 			}
 
@@ -977,7 +1011,8 @@ public class PoshiRunnerExecutor {
 
 		_poshiLogger.logSeleniumCommand(executeElement, arguments);
 
-		LiferaySelenium liferaySelenium = SeleniumUtil.getSelenium();
+		LiferaySelenium liferaySelenium = WebDriverUtil.getLiferaySelenium(
+			getTestNamespacedClassCommandName());
 
 		Class<?> clazz = liferaySelenium.getClass();
 
@@ -988,28 +1023,28 @@ public class PoshiRunnerExecutor {
 	}
 
 	public void runTakeScreenshotElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		_poshiLogger.takeScreenshotCommand(element);
 	}
 
 	public void runTaskElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		try {
-			SummaryLogger.startSummary(element);
+			_summaryLogger.startSummary(element);
 
 			parseElement(element);
 		}
 		catch (Exception exception) {
-			SummaryLogger.failSummary(
+			_summaryLogger.failSummary(
 				element, exception.getMessage(),
 				_poshiLogger.getDetailsLinkId());
 
 			throw exception;
 		}
 
-		SummaryLogger.passSummary(element);
+		_summaryLogger.passSummary(element);
 
 		_poshiLogger.updateStatus(element, "pass");
 	}
@@ -1018,7 +1053,7 @@ public class PoshiRunnerExecutor {
 			Element element, String namespacedClassCommandName)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		String className =
 			PoshiGetterUtil.getClassNameFromNamespacedClassCommandName(
@@ -1035,22 +1070,22 @@ public class PoshiRunnerExecutor {
 			runRootVarElement(rootVarElement, false);
 		}
 
-		PoshiVariablesUtil.pushCommandMap();
+		_poshiVariablesContext.pushCommandMap();
 
 		parseElement(element);
 
-		PoshiVariablesUtil.popCommandMap();
+		_poshiVariablesContext.popCommandMap();
 	}
 
 	public void runTestCaseExecuteElement(Element executeElement)
 		throws Exception {
 
-		PoshiStackTraceUtil.setCurrentElement(executeElement);
+		_poshiStackTrace.setCurrentElement(executeElement);
 
 		String namespacedClassCommandName = executeElement.attributeValue(
 			"test-case");
 
-		PoshiStackTraceUtil.pushStackTrace(executeElement);
+		_poshiStackTrace.pushStackTrace(executeElement);
 
 		String namespace =
 			PoshiGetterUtil.getNamespaceFromNamespacedClassCommandName(
@@ -1061,13 +1096,13 @@ public class PoshiRunnerExecutor {
 
 		runTestCaseCommandElement(commandElement, namespacedClassCommandName);
 
-		PoshiStackTraceUtil.popStackTrace();
+		_poshiStackTrace.popStackTrace();
 
 		_poshiLogger.updateStatus(executeElement, "pass");
 	}
 
 	public void runWhileElement(Element element) throws Exception {
-		PoshiStackTraceUtil.setCurrentElement(element);
+		_poshiStackTrace.setCurrentElement(element);
 
 		_inLoop = true;
 
@@ -1097,7 +1132,7 @@ public class PoshiRunnerExecutor {
 
 			conditionRun = true;
 
-			PoshiStackTraceUtil.setCurrentElement(thenElement);
+			_poshiStackTrace.setCurrentElement(thenElement);
 
 			parseElement(thenElement);
 
@@ -1114,7 +1149,47 @@ public class PoshiRunnerExecutor {
 		}
 	}
 
-	protected static Object getVarMethodValue(
+	protected Object callWithTimeout(
+			Callable<?> callable, String description, long timeoutSeconds)
+		throws Exception {
+
+		ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+		Future<?> future = executorService.submit(callable);
+
+		executorService.shutdown();
+
+		try {
+			return future.get(timeoutSeconds, TimeUnit.SECONDS);
+		}
+		catch (ExecutionException executionException) {
+			if (PropsValues.DEBUG_STACKTRACE) {
+				throw executionException;
+			}
+
+			Throwable throwable = executionException.getCause();
+
+			if (throwable instanceof Error) {
+				throw (Error)throwable;
+			}
+
+			throw (Exception)throwable;
+		}
+		catch (InterruptedException | TimeoutException exception) {
+			future.cancel(true);
+
+			if (exception instanceof TimeoutException) {
+				System.out.println(
+					"Timed out after " + timeoutSeconds +
+						" seconds while executing " + description);
+			}
+
+			throw new Exception(
+				"An error occurred while executing " + description, exception);
+		}
+	}
+
+	protected Object getVarMethodValue(
 			String expression, String defaultNamespace)
 		throws Exception {
 
@@ -1170,57 +1245,20 @@ public class PoshiRunnerExecutor {
 		Object object = null;
 
 		if (className.equals("selenium")) {
-			object = SeleniumUtil.getSelenium();
+			object = WebDriverUtil.getLiferaySelenium(
+				getTestNamespacedClassCommandName());
 		}
 
 		return PoshiGetterUtil.getMethodReturnValue(
-			args, className, methodName, object);
-	}
-
-	protected Object callWithTimeout(
-			Callable<?> callable, String description, long timeoutSeconds)
-		throws Exception {
-
-		ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-		Future<?> future = executorService.submit(callable);
-
-		executorService.shutdown();
-
-		try {
-			return future.get(timeoutSeconds, TimeUnit.SECONDS);
-		}
-		catch (ExecutionException executionException) {
-			if (PropsValues.DEBUG_STACKTRACE) {
-				throw executionException;
-			}
-
-			Throwable throwable = executionException.getCause();
-
-			if (throwable instanceof Error) {
-				throw (Error)throwable;
-			}
-
-			throw (Exception)throwable;
-		}
-		catch (InterruptedException | TimeoutException exception) {
-			future.cancel(true);
-
-			if (exception instanceof TimeoutException) {
-				System.out.println(
-					"Timed out after " + timeoutSeconds +
-						" seconds while executing " + description);
-			}
-
-			throw new Exception(
-				"An error occurred while executing " + description, exception);
-		}
+			getTestNamespacedClassCommandName(), args, className, methodName,
+			object);
 	}
 
 	protected Object invokeLiferaySeleniumMethod(Method method, Object... args)
 		throws Exception {
 
-		LiferaySelenium liferaySelenium = SeleniumUtil.getSelenium();
+		LiferaySelenium liferaySelenium = WebDriverUtil.getLiferaySelenium(
+			getTestNamespacedClassCommandName());
 
 		String methodName = method.getName();
 
@@ -1288,7 +1326,7 @@ public class PoshiRunnerExecutor {
 
 				try {
 					varValue = getVarMethodValue(
-						methodName, PoshiStackTraceUtil.getCurrentNamespace());
+						methodName, _poshiStackTrace.getCurrentNamespace());
 				}
 				catch (Exception exception) {
 					Throwable throwable = exception.getCause();
@@ -1314,7 +1352,7 @@ public class PoshiRunnerExecutor {
 						  varType.equals("RowsHashTable")) &&
 						 (element.attributeValue("from") != null)) {
 
-					Object varFrom = PoshiVariablesUtil.replaceCommandVars(
+					Object varFrom = _poshiVariablesContext.replaceCommandVars(
 						element.attributeValue("from"));
 
 					if (!(varFrom instanceof List)) {
@@ -1332,7 +1370,7 @@ public class PoshiRunnerExecutor {
 				}
 			}
 			else if (element.attributeValue("from") != null) {
-				Object varFrom = PoshiVariablesUtil.replaceCommandVars(
+				Object varFrom = _poshiVariablesContext.replaceCommandVars(
 					element.attributeValue("from"));
 
 				if (element.attributeValue("hash") != null) {
@@ -1384,6 +1422,10 @@ public class PoshiRunnerExecutor {
 	private boolean _inLoop;
 	private Object _macroReturnValue;
 	private final PoshiLogger _poshiLogger;
+	private final PoshiStackTrace _poshiStackTrace;
+	private final PoshiVariablesContext _poshiVariablesContext;
 	private Object _returnObject;
+	private final SummaryLogger _summaryLogger;
+	private final String _testNamespacedClassCommandName;
 
 }

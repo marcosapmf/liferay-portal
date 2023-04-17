@@ -6960,7 +6960,8 @@ public class AddressPersistenceImpl
 				if (ercAddress != null) {
 					throw new DuplicateAddressExternalReferenceCodeException(
 						"Duplicate address with external reference code " +
-							address.getExternalReferenceCode());
+							address.getExternalReferenceCode() +
+								" and company " + address.getCompanyId());
 				}
 			}
 			else {
@@ -6969,7 +6970,8 @@ public class AddressPersistenceImpl
 
 					throw new DuplicateAddressExternalReferenceCodeException(
 						"Duplicate address with external reference code " +
-							address.getExternalReferenceCode());
+							address.getExternalReferenceCode() +
+								" and company " + address.getCompanyId());
 				}
 			}
 		}

@@ -310,13 +310,22 @@ public class ObjectRelationshipLocalServiceWrapper
 
 	@Override
 	public com.liferay.object.model.ObjectRelationship
-			fetchObjectRelationshipByObjectDefinitionId(
-				long objectDefinitionId, String name)
-		throws Exception {
+		fetchObjectRelationshipByObjectDefinitionId(
+			long objectDefinitionId, String name) {
 
 		return _objectRelationshipLocalService.
 			fetchObjectRelationshipByObjectDefinitionId(
 				objectDefinitionId, name);
+	}
+
+	@Override
+	public com.liferay.object.model.ObjectRelationship
+		fetchObjectRelationshipByObjectDefinitionId1(
+			long objectDefinitionId1, String name) {
+
+		return _objectRelationshipLocalService.
+			fetchObjectRelationshipByObjectDefinitionId1(
+				objectDefinitionId1, name);
 	}
 
 	@Override
@@ -413,12 +422,11 @@ public class ObjectRelationshipLocalServiceWrapper
 	@Override
 	public com.liferay.object.model.ObjectRelationship
 			getObjectRelationshipByObjectDefinitionId(
-				long objectDefinitionId, String objectRelationshipName)
+				long objectDefinitionId, String name)
 		throws Exception {
 
 		return _objectRelationshipLocalService.
-			getObjectRelationshipByObjectDefinitionId(
-				objectDefinitionId, objectRelationshipName);
+			getObjectRelationshipByObjectDefinitionId(objectDefinitionId, name);
 	}
 
 	/**
@@ -528,6 +536,16 @@ public class ObjectRelationshipLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectRelationshipLocalService.getPersistedModel(primaryKeyObj);
+	}
+
+	@Override
+	public void registerObjectRelationshipsRelatedInfoCollectionProviders(
+		com.liferay.object.model.ObjectDefinition objectDefinition1,
+		ObjectDefinitionLocalService objectDefinitionLocalService) {
+
+		_objectRelationshipLocalService.
+			registerObjectRelationshipsRelatedInfoCollectionProviders(
+				objectDefinition1, objectDefinitionLocalService);
 	}
 
 	@Override

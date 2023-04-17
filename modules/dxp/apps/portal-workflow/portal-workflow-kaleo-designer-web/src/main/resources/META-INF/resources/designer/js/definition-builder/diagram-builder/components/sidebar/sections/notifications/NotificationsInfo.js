@@ -324,6 +324,16 @@ const NotificationsInfo = ({
 
 				if (recipientType === 'assetCreator') {
 					recipientDetails = {assignmentType: ['user']};
+
+					if (
+						selectedItem.data.notifications.recipients[
+							notificationIndex
+						]
+					) {
+						delete selectedItem.data.notifications?.recipients?.[
+							notificationIndex
+						].emailAddress;
+					}
 				}
 				else if (recipientType === 'taskAssignees') {
 					recipientDetails = {assignmentType: ['taskAssignees']};
@@ -368,11 +378,12 @@ const NotificationsInfo = ({
 			selectedItem.data.notifications.recipients[notificationIndex];
 
 		if (recipients && recipientType === 'roleType') {
-			for (let i = 0; i < recipients.roleName.length; i++) {
+			for (let i = 0; i < recipients.roleType.length; i++) {
 				sectionsData.push({
 					autoCreate: recipients.autoCreate?.[i],
 					identifier: `${Date.now()}-${i}`,
-					roleName: recipients.roleName[i],
+					roleKey: recipients.roleKey[i],
+					roleName: recipients.roleName?.[i],
 					roleType: recipients.roleType[i],
 				});
 			}
@@ -580,7 +591,6 @@ const NotificationsInfo = ({
 									notificationIndex={notificationIndex}
 									sectionsLength={internalSections.length}
 									setSections={setInternalSections}
-									showSelectScriptLanguage
 									updateSelectedItem={
 										scriptedRecipientUpdateSelectedItem
 									}

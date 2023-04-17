@@ -22,6 +22,7 @@ import React, {useContext, useEffect, useState} from 'react';
 
 import {addToCart} from '../add_to_cart/data';
 import MiniCartContext from './MiniCartContext';
+import {getCorrectedQuantity} from './util/index';
 
 const CHANNEL_RESOURCE_ENDPOINT =
 	'/o/headless-commerce-delivery-catalog/v1.0/channels';
@@ -54,9 +55,10 @@ export default function CartQuickAdd() {
 
 	const [formattedProducts, setFormattedProducts] = useState([]);
 	const [productsQuery, setProductsQuery] = useState('');
+	const [quantityError, setQuantityError] = useState(false);
 	const [quickAddToCartError, setQuickAddToCartError] = useState(false);
 	const [selectedProducts, setSelectedProducts] = useState([]);
-	const [products, setProducts] = useState();
+	const [productsWithOptions, setProductsWithOptions] = useState([]);
 
 	const {cartItems = [], channel} = cartState;
 	const accountId = cartState.accountId;
@@ -71,59 +73,115 @@ export default function CartQuickAdd() {
 		fetch(productsApiURL.toString())
 			.then((response) => response.json())
 			.then((availableProducts) => {
-				setFormattedProducts(
-					availableProducts.items.map((product) => {
-						const {name, skus} = product;
+				const formattedProducts = [];
 
-						return {
+				availableProducts.items.forEach((product) => {
+					const {name, skus} = product;
+
+					if (product.skus.length > 1) {
+						product.skus.forEach((sku) =>
+							formattedProducts.push({
+								...sku,
+								chipLabel: sku.sku,
+								label: name,
+								value: sku.sku,
+							})
+						);
+					}
+					else {
+						formattedProducts.push({
 							...product,
+							chipLabel: skus[0].sku,
 							label: name,
 							value: skus[0].sku,
-						};
-					})
-				);
+						});
+					}
+				});
 
-				setProducts(availableProducts.items);
+				setFormattedProducts(formattedProducts);
+
+				setProductsWithOptions(
+					availableProducts.items.filter(
+						(product) => product.skus.length > 1
+					)
+				);
 			});
 	}, [accountId, channelId]);
 
 	const handleAddToCartClick = () => {
-		const itemSKUs = selectedProducts.map((item) => item.value);
-		const readyProducts = [];
+		const readyProducts = selectedProducts.map((product) => {
+			if (product.sku) {
+				const parentProduct = productsWithOptions.find((item) =>
+					item.skus.find((childSku) => childSku.sku === product.sku)
+				);
 
-		products.forEach((product) => {
-			if (
-				product.skus.length &&
-				product.skus[0] &&
-				itemSKUs.includes(product.skus[0].sku)
-			) {
+				const {name, productConfiguration, urls} = parentProduct;
+
+				const adjustedQuantity = getCorrectedQuantity(
+					product,
+					product.sku,
+					cartItems,
+					parentProduct
+				);
+
+				return {
+					...product,
+					name,
+					price: product.price,
+					productURLs: urls,
+					quantity: adjustedQuantity,
+					settings: productConfiguration,
+					sku: product.sku,
+					skuId: product.id,
+					skuOptions: product.DDMOptions,
+				};
+			}
+			else {
 				const {productConfiguration, skus, urls} = product;
 
-				readyProducts.push({
+				const adjustedQuantity = getCorrectedQuantity(
+					product,
+					skus[0].sku,
+					cartItems,
+					false
+				);
+
+				return {
 					...product,
 					price: skus[0].price,
 					productURLs: urls,
-					quantity: productConfiguration.minOrderQuantity,
+					quantity: adjustedQuantity,
 					settings: productConfiguration,
 					sku: skus[0].sku,
 					skuId: skus[0].id,
-				});
+				};
 			}
 		});
 
-		setCartState((cartState) => ({
-			...cartState,
-			cartItems: cartItems.concat(readyProducts),
-		}));
-
-		addToCart(
-			readyProducts,
-			cartState.id,
-			channel.channel.id,
-			cartState.accountId
+		const productWithoutQuantity = readyProducts.find(
+			(product) => product.quantity === 0
 		);
 
-		setSelectedProducts([]);
+		if (!productWithoutQuantity) {
+			setCartState((cartState) => ({
+				...cartState,
+				cartItems: cartItems.concat(readyProducts),
+			}));
+
+			addToCart(
+				readyProducts,
+				cartState.id,
+				channel.channel.id,
+				cartState.accountId
+			);
+
+			setSelectedProducts([]);
+		}
+		else {
+			setQuickAddToCartError(true);
+
+			setQuantityError(true);
+		}
 	};
 
 	return (
@@ -133,13 +191,20 @@ export default function CartQuickAdd() {
 			<ClayInput.Group>
 				<ClayInput.GroupItem>
 					<ClayMultiSelect
+						allowsCustomLabel={false}
 						className="p3"
 						inputName="searchProducts"
 						items={selectedProducts}
+						locator={{
+							label: 'chipLabel',
+							value: 'value',
+						}}
 						menuRenderer={ProductAutocompleteList}
 						onChange={setProductsQuery}
 						onItemsChange={(newItems) => {
 							setQuickAddToCartError(false);
+
+							setQuantityError(false);
 
 							newItems = newItems.filter((item) => {
 								if (item.id) {
@@ -157,11 +222,21 @@ export default function CartQuickAdd() {
 						sourceItems={formattedProducts.filter((product) => {
 							const {label, value} = product;
 							const lowerCaseValue = productsQuery.toLowerCase();
+							const purchasableProduct = product.sku
+								? product.purchasable
+								: product.skus[0].purchasable;
 
-							return (
-								label.toLowerCase().match(lowerCaseValue) ||
-								value.toLowerCase().match(lowerCaseValue)
-							);
+							if (
+								!selectedProducts.includes(product) &&
+								purchasableProduct
+							) {
+								return (
+									label
+										.toLowerCase()
+										.includes(lowerCaseValue) ||
+									value.toLowerCase().includes(lowerCaseValue)
+								);
+							}
 						})}
 						value={productsQuery}
 					/>
@@ -171,7 +246,13 @@ export default function CartQuickAdd() {
 							<ClayForm.FeedbackItem>
 								<ClayForm.FeedbackIndicator symbol="info-circle" />
 
-								{Liferay.Language.get('select-from-list')}
+								{`${Liferay.Language.get('error-colon')} `}
+
+								{quantityError
+									? Liferay.Language.get(
+											'please-enter-a-valid-quantity'
+									  )
+									: Liferay.Language.get('select-from-list')}
 							</ClayForm.FeedbackItem>
 						</ClayForm.FeedbackGroup>
 					)}
@@ -179,7 +260,9 @@ export default function CartQuickAdd() {
 
 				<ClayInput.GroupItem shrink>
 					<ClayButtonWithIcon
-						disabled={!selectedProducts.length}
+						disabled={
+							!selectedProducts.length || quickAddToCartError
+						}
 						onClick={handleAddToCartClick}
 						symbol="shopping-cart"
 					/>

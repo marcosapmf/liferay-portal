@@ -17,28 +17,11 @@ definition {
 			User.firstLoginPG();
 		}
 
-		task ("Add a new user") {
-			JSONUser.addUser(
-				userEmailAddress = "partner@liferay.com",
-				userFirstName = "partner",
-				userLastName = "partner",
-				userScreenName = "partner");
-
-			JSONUser.setFirstPassword(
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "partner@liferay.com");
-		}
-
 		task ("Create a new Partner Portal Site") {
 			PRMUtils.addPRMSite();
 		}
 
-		task ("Go to Partner Portal and login with the created user") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "partner@liferay.com",
-				userLoginFullName = "partner");
-
+		task ("Go to Partner Portal ") {
 			PRMUtils.gotoPRM();
 		}
 
@@ -50,7 +33,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -59,7 +42,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-164164. Verify if a banner is displayed when user access Marketing page and will appear again after dismissed"
-	@priority = "5"
+	@priority = 5
 	test BannerIsDisplayed {
 		task ("Given that the welcome banner is displayed on marketing page") {
 			AssertVisible(locator1 = "PRMPages#WELCOME_BANNER");
@@ -101,7 +84,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-164166. Verify if a 'Get Tour Partner Marketing Guide' button is displayed on banner and a file will be downloaded when click on this button"
-	@priority = "4"
+	@priority = 4
 	test CanDownloadBannerGuide {
 		var fileName = "partner-marketing-program-guide.pdf";
 
@@ -112,17 +95,17 @@ definition {
 		}
 
 		task ("Then the guide will be downloaded") {
-			PRMUtils.downloadFileViaCurl(fileName = "${fileName}");
+			PRMUtils.downloadFileViaCurl(fileName = ${fileName});
 
-			ImportExport.assertDownloadedFileName(downloadedFile = "${fileName}");
+			ImportExport.assertDownloadedFileName(downloadedFile = ${fileName});
 		}
 	}
 
 	@description = "This is a test for LPS-164165. Verify if a 'Watch a Video Tour' button is displayed on banner and a Video will be opened in a popup when click on this button"
-	@priority = "4"
+	@priority = 4
 	test CanWatchBannerVideo {
 		task ("Given that the user clicks on 'Watch a Video Tour' button on Welcome Banner") {
-			PRMPages.clickBannerButton(buttonText = "Watch a Video Tour");
+			PRMPages.clickBannerButton();
 		}
 
 		task ("Then a modal will be opened and the user can watch the video") {

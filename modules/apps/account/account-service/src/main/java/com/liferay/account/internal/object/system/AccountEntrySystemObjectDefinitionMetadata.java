@@ -17,6 +17,8 @@ package com.liferay.account.internal.object.system;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryTable;
 import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.headless.admin.user.dto.v1_0.Account;
+import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionMetadata;
@@ -26,6 +28,9 @@ import com.liferay.petra.sql.dsl.Column;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +46,19 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = SystemObjectDefinitionMetadata.class)
 public class AccountEntrySystemObjectDefinitionMetadata
 	extends BaseSystemObjectDefinitionMetadata {
+
+	@Override
+	public long addBaseModel(User user, Map<String, Object> values)
+		throws Exception {
+
+		AccountResource accountResource = _buildAccountResource(user);
+
+		Account account = accountResource.postAccount(_toAccount(values));
+
+		setExtendedProperties(Account.class.getName(), account, user, values);
+
+		return account.getId();
+	}
 
 	@Override
 	public BaseModel<?> deleteBaseModel(BaseModel<?> baseModel)
@@ -125,7 +143,49 @@ public class AccountEntrySystemObjectDefinitionMetadata
 		return 1;
 	}
 
+	@Override
+	public void updateBaseModel(
+			long primaryKey, User user, Map<String, Object> values)
+		throws Exception {
+
+		AccountResource accountResource = _buildAccountResource(user);
+
+		Account account = accountResource.patchAccount(
+			primaryKey, _toAccount(values));
+
+		setExtendedProperties(Account.class.getName(), account, user, values);
+	}
+
+	private AccountResource _buildAccountResource(User user) {
+		AccountResource.Builder builder = _accountResourceFactory.create();
+
+		return builder.checkPermissions(
+			false
+		).preferredLocale(
+			user.getLocale()
+		).user(
+			user
+		).build();
+	}
+
+	private Account _toAccount(Map<String, Object> values) {
+		return new Account() {
+			{
+				description = GetterUtil.getString(values.get("description"));
+				externalReferenceCode = GetterUtil.getString(
+					values.get("externalReferenceCode"));
+				name = GetterUtil.getString(values.get("name"));
+				type = Account.Type.create(
+					StringUtil.toLowerCase(
+						GetterUtil.getString(values.get("type"))));
+			}
+		};
+	}
+
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
+
+	@Reference
+	private AccountResource.Factory _accountResourceFactory;
 
 }

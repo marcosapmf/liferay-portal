@@ -59,6 +59,7 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 			</p>
 
 			<clay:alert
+				cssClass="mb-4"
 				displayType="info"
 				message='<%= LanguageUtil.get(request, "add-multiple-fields-to-define-how-the-meta-tags-will-be-filled") %>'
 			/>
@@ -102,33 +103,50 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 				<c:otherwise>
 					<aui:model-context bean="<%= selLayout %>" model="<%= Layout.class %>" />
 
-					<div class="form-group">
-						<label class="control-label"><liferay-ui:message key="image" /> <liferay-ui:icon-help message="open-graph-image-help" /></label>
-
-						<aui:input label="<%= StringPool.BLANK %>" name="openGraphImageTitle" placeholder="image" readonly="<%= true %>" title="image" type="text" value="<%= layoutsSEODisplayContext.getOpenGraphImageTitle() %>" wrapperCssClass="mb-3" />
-
-						<aui:button-row cssClass="mt-0">
-							<aui:button name="openGraphImageButton" value="select" />
-							<aui:button name="openGraphClearImageButton" value="clear" />
-						</aui:button-row>
-					</div>
-
 					<%
 					LayoutSEOEntry selLayoutSEOEntry = layoutsSEODisplayContext.getSelLayoutSEOEntry();
 					%>
+
+					<div class="form-group mb-2">
+						<label class="control-label"><liferay-ui:message key="image" /> <liferay-ui:icon-help message="open-graph-image-help" /></label>
+
+						<div class="align-items-center d-flex">
+							<aui:input id="openGraphImageInput" label="<%= StringPool.BLANK %>" name="openGraphImageTitle" placeholder="no-image-is-loaded" readonly="<%= true %>" title="image" type="text" value="<%= layoutsSEODisplayContext.getOpenGraphImageTitle() %>" wrapperCssClass="flex-grow-1 mb-0 mr-2" />
+
+							<clay:button
+								aria-label='<%= LanguageUtil.format(locale, "select-x", "image") %>'
+								cssClass="mr-2"
+								displayType="secondary"
+								icon="plus"
+								id='<%= liferayPortletResponse.getNamespace() + "openGraphImageButton" %>'
+							/>
+
+							<clay:button
+								aria-label='<%= LanguageUtil.format(locale, "clear-x", "image") %>'
+								disabled="<%= (selLayoutSEOEntry != null) ? Validator.isNull(layoutsSEODisplayContext.getOpenGraphImageTitle()) : true %>"
+								displayType="secondary"
+								icon="times-circle"
+								id='<%= liferayPortletResponse.getNamespace() + "openGraphClearImageButton" %>'
+							/>
+						</div>
+					</div>
 
 					<div id="<portlet:namespace />openGraphSettings">
 						<aui:model-context bean="<%= selLayoutSEOEntry %>" model="<%= LayoutSEOEntry.class %>" />
 
 						<aui:input disabled="<%= (selLayoutSEOEntry != null) ? Validator.isNull(layoutsSEODisplayContext.getOpenGraphImageTitle()) : true %>" helpMessage="open-graph-image-alt-description-help" label="open-graph-image-alt-description" name="openGraphImageAlt" placeholder="open-graph-alt-description" />
 
-						<aui:input checked="<%= (selLayoutSEOEntry != null) ? selLayoutSEOEntry.isOpenGraphTitleEnabled() : false %>" helpMessage="use-custom-open-graph-title-help" label="use-custom-open-graph-title" name="openGraphTitleEnabled" type="checkbox" wrapperCssClass="mb-1" />
+						<aui:input checked="<%= (selLayoutSEOEntry != null) ? selLayoutSEOEntry.isOpenGraphTitleEnabled() : false %>" helpMessage="use-custom-open-graph-title-help" label="use-custom-open-graph-title" name="openGraphTitleEnabled" type="checkbox" wrapperCssClass="mb-2" />
 
-						<aui:input disabled="<%= (selLayoutSEOEntry != null) ? !selLayoutSEOEntry.isOpenGraphTitleEnabled() : true %>" label="<%= StringPool.BLANK %>" name="openGraphTitle" placeholder="title" />
+						<div id="<portlet:namespace />openGraphTitleWrapper">
+							<aui:input disabled="<%= (selLayoutSEOEntry != null) ? !selLayoutSEOEntry.isOpenGraphTitleEnabled() : true %>" label="custom-title" name="openGraphTitle" placeholder="title" />
+						</div>
 
-						<aui:input checked="<%= (selLayoutSEOEntry != null) ? selLayoutSEOEntry.isOpenGraphDescriptionEnabled() : false %>" helpMessage="use-custom-open-graph-description-help" label="use-custom-open-graph-description" name="openGraphDescriptionEnabled" type="checkbox" wrapperCssClass="mb-1" />
+						<aui:input checked="<%= (selLayoutSEOEntry != null) ? selLayoutSEOEntry.isOpenGraphDescriptionEnabled() : false %>" helpMessage="use-custom-open-graph-description-help" label="use-custom-open-graph-description" name="openGraphDescriptionEnabled" type="checkbox" wrapperCssClass="mb-2" />
 
-						<aui:input disabled="<%= (selLayoutSEOEntry != null) ? !selLayoutSEOEntry.isOpenGraphDescriptionEnabled() : true %>" label="<%= StringPool.BLANK %>" name="openGraphDescription" placeholder="description" />
+						<div id="<portlet:namespace />openGraphDescriptionWrapper">
+							<aui:input disabled="<%= (selLayoutSEOEntry != null) ? !selLayoutSEOEntry.isOpenGraphDescriptionEnabled() : true %>" label="custom-description" name="openGraphDescription" placeholder="description" />
+						</div>
 
 						<aui:input id="openGraphImageFileEntryId" name="openGraphImageFileEntryId" type="hidden" />
 					</div>
@@ -191,9 +209,19 @@ Layout selLayout = layoutsSEODisplayContext.getSelLayout();
 		</clay:sheet-section>
 
 		<clay:sheet-footer>
-			<aui:button primary="<%= true %>" type="submit" />
+			<clay:button
+				cssClass="mr-3"
+				displayType="primary"
+				label='<%= LanguageUtil.get(request, "save") %>'
+				type="submit"
+			/>
 
-			<aui:button href="<%= backURL %>" type="cancel" />
+			<clay:link
+				displayType="secondary"
+				href="<%= HtmlUtil.escape(backURL) %>"
+				label='<%= LanguageUtil.get(request, "cancel") %>'
+				type="button"
+			/>
 		</clay:sheet-footer>
 	</clay:sheet>
 </aui:form>

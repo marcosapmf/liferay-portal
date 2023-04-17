@@ -12,19 +12,17 @@
  * details.
  */
 
-import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import {ClayButtonWithIcon} from '@clayui/button';
 import ClayCard from '@clayui/card';
-import {ClayCheckbox, ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
-import ClayModal, {useModal} from '@clayui/modal';
-import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import {fetch, objectToFormData, openToast, sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 
+import {DELETION_TYPES} from '../constants/deletionTypes';
 import {NESTING_MARGIN} from '../constants/nestingMargin';
 import {SIDEBAR_PANEL_IDS} from '../constants/sidebarPanelIds';
 import {useConstants} from '../contexts/ConstantsContext';
@@ -36,14 +34,18 @@ import {
 import {useSetSidebarPanelId} from '../contexts/SidebarPanelIdContext';
 import getFlatItems from '../utils/getFlatItems';
 import getItemPath from '../utils/getItemPath';
+import getOrder from '../utils/getOrder';
 import {useDragItem, useDropTarget} from '../utils/useDragAndDrop';
+import useKeyboardNavigation from '../utils/useKeyboardNavigation';
+import DeletionModal from './DeletionModal';
 
-const DELETION_TYPES = {
-	bulk: 0,
-	single: 1,
-};
-
-export function MenuItem({item}) {
+export function MenuItem({
+	isMovementEnabled,
+	item,
+	onMenuItemRemoved,
+	setIsMovementEnabled,
+	setMovementText,
+}) {
 	const setItems = useSetItems();
 	const setSelectedMenuItemId = useSetSelectedMenuItemId();
 	const setSidebarPanelId = useSetSidebarPanelId();
@@ -78,6 +80,7 @@ export function MenuItem({item}) {
 				setItems(newItems);
 
 				setSidebarPanelId(null);
+				onMenuItemRemoved();
 			})
 			.catch(({error}) => {
 				openToast({
@@ -93,20 +96,36 @@ export function MenuItem({item}) {
 			});
 	};
 
-	const updateMenuItemParent = (itemId, parentId) => {
-		const order = items
-			.filter((item) => item.parentSiteNavigationMenuItemId === parentId)
-			.findIndex((item) => item.siteNavigationMenuItemId === itemId);
+	const order = useMemo(
+		() =>
+			items
+				.filter(
+					(siteNavigationMenuItem) =>
+						siteNavigationMenuItem.parentSiteNavigationMenuItemId ===
+						item.parentSiteNavigationMenuItemId
+				)
+				.findIndex(
+					(siteNavigationMenuItem) =>
+						siteNavigationMenuItem.siteNavigationMenuItemId ===
+						item.siteNavigationMenuItemId
+				),
+		[items, item]
+	);
 
-		fetch(editSiteNavigationMenuItemParentURL, {
-			body: objectToFormData({
-				[`${portletNamespace}siteNavigationMenuItemId`]: itemId,
-				[`${portletNamespace}parentSiteNavigationMenuItemId`]: parentId,
-				[`${portletNamespace}order`]: order,
-			}),
-			method: 'POST',
+	const updateMenuItemParent = (itemId, parentId) => {
+		const order = getOrder({
+			items,
+			parentSiteNavigationMenuItemId: parentId,
+			siteNavigationMenuItemId: itemId,
+		});
+
+		updateMenuItem({
+			editSiteNavigationMenuItemParentURL,
+			itemId,
+			order,
+			parentId,
+			portletNamespace,
 		})
-			.then((response) => response.json())
 			.then(({siteNavigationMenuItems}) => {
 				const newItems = getFlatItems(siteNavigationMenuItems);
 
@@ -137,44 +156,177 @@ export function MenuItem({item}) {
 	const parentItemId =
 		itemPath.length > 1 ? itemPath[itemPath.length - 2] : '0';
 
+	const {
+		isTarget,
+		onBlur,
+		onFocus,
+		onKeyDown,
+		setElement,
+	} = useKeyboardNavigation();
+
 	return (
 		<>
 			<div
+				aria-description={
+					item.icon
+						? sub(
+								Liferay.Language.get(
+									'x-does-not-have-a-display-page-available'
+								),
+								`${title} (${type})`
+						  )
+						: null
+				}
 				aria-label={`${title} (${type})`}
 				aria-level={itemPath.length}
+				className={classNames(
+					'focusable-menu-item site_navigation_menu_editor_MenuItem',
+					{
+						active: selected,
+						dragging: isDragging,
+					}
+				)}
 				data-item-id={item.siteNavigationMenuItemId}
 				data-parent-item-id={parentItemId}
-				ref={targetRef}
-				role="listitem"
+				onBlur={onBlur}
+				onClick={() => {
+					if (!isMovementEnabled) {
+						setSelectedMenuItemId(siteNavigationMenuItemId);
+						setSidebarPanelId(SIDEBAR_PANEL_IDS.menuItemSettings);
+					}
+				}}
+				onFocus={onFocus}
+				onKeyDown={(event) => {
+					if (
+						(event.key === ' ' || event.key === 'Enter') &&
+						!isMovementEnabled
+					) {
+						setSelectedMenuItemId(siteNavigationMenuItemId);
+						setSidebarPanelId(SIDEBAR_PANEL_IDS.menuItemSettings);
+					}
+
+					onKeyDown(event);
+				}}
+				ref={(ref) => {
+					targetRef(ref);
+					setElement(ref);
+				}}
+				role="menuitem"
+				style={itemStyle}
+				tabIndex={isTarget ? '0' : '-1'}
 			>
-				<ClayCard
-					className={classNames(
-						'site_navigation_menu_editor_MenuItem',
-						{
-							'dragging': isDragging,
-							'site_navigation_menu_editor_MenuItem--selected': selected,
-						}
-					)}
-					selectable
-					style={itemStyle}
-				>
-					<ClayCheckbox
-						aria-label={sub(
-							Liferay.Language.get('select-x'),
-							`${title} (${type})`
-						)}
-						checked={selected}
-						onChange={() => {
-							setSelectedMenuItemId(siteNavigationMenuItemId);
-							setSidebarPanelId(
-								SIDEBAR_PANEL_IDS.menuItemSettings
-							);
-						}}
-					>
-						<ClayCard.Body className="px-0">
+				<ClayCard className="mb-3">
+					<ClayCard.Body className="px-0">
+						<div ref={handlerRef}>
 							<ClayCard.Row>
-								<ClayLayout.ContentCol gutters ref={handlerRef}>
-									<ClayIcon symbol="drag" />
+								<ClayLayout.ContentCol gutters>
+									<ClayButtonWithIcon
+										aria-label={sub(
+											Liferay.Language.get('move-x'),
+											`${title} (${type})`
+										)}
+										displayType="unstyled"
+										monospaced={false}
+										onBlur={() =>
+											setIsMovementEnabled(false)
+										}
+										onKeyDown={(event) => {
+											if (
+												!Liferay.FeatureFlags[
+													'LPS-134527'
+												]
+											) {
+												return;
+											}
+
+											if (event.key === 'Enter') {
+												event.preventDefault();
+												event.stopPropagation();
+
+												setIsMovementEnabled(
+													(
+														previousIsMovementEnabled
+													) =>
+														!previousIsMovementEnabled
+												);
+											}
+
+											if (event.key === 'Escape') {
+												setIsMovementEnabled(false);
+											}
+
+											if (!isMovementEnabled) {
+												return;
+											}
+
+											event.stopPropagation();
+
+											const eventKey = event.key;
+
+											if (
+												eventKey === 'ArrowDown' ||
+												eventKey === 'ArrowUp'
+											) {
+												const computeFunction =
+													eventKey === 'ArrowDown'
+														? getDownPosition
+														: getUpPosition;
+
+												const result = computeFunction({
+													items,
+													order,
+													parentSiteNavigationMenuItemId:
+														item.parentSiteNavigationMenuItemId,
+												});
+
+												if (!result) {
+													return;
+												}
+
+												updateMenuItem({
+													editSiteNavigationMenuItemParentURL,
+													itemId:
+														item.siteNavigationMenuItemId,
+													order: result.order,
+													parentId:
+														result.parentSiteNavigationMenuItemId,
+													portletNamespace,
+												}).then(
+													({
+														siteNavigationMenuItems,
+													}) => {
+														const newItems = getFlatItems(
+															siteNavigationMenuItems
+														);
+
+														setItems(newItems);
+
+														setMovementText(
+															sub(
+																eventKey ===
+																	'ArrowDown'
+																	? Liferay.Language.get(
+																			'x-moved-down'
+																	  )
+																	: Liferay.Language.get(
+																			'x-moved-up'
+																	  ),
+																`${title} (${type})`
+															)
+														);
+													}
+												);
+											}
+										}}
+										size="sm"
+										symbol="drag"
+										tabIndex={
+											isTarget &&
+											Liferay.FeatureFlags['LPS-134527']
+												? '0'
+												: '-1'
+										}
+									/>
 								</ClayLayout.ContentCol>
 
 								<ClayLayout.ContentCol expand>
@@ -219,6 +371,7 @@ export function MenuItem({item}) {
 											Liferay.Language.get('delete-x'),
 											`${title} (${type})`
 										)}
+										className="delete-item-button"
 										displayType="unstyled"
 										onClick={() =>
 											item.children.length
@@ -227,11 +380,12 @@ export function MenuItem({item}) {
 										}
 										size="sm"
 										symbol="times-circle"
+										tabIndex={isTarget ? '0' : '-1'}
 									/>
 								</ClayLayout.ContentCol>
 							</ClayCard.Row>
-						</ClayCard.Body>
-					</ClayCheckbox>
+						</div>
+					</ClayCard.Body>
 				</ClayCard>
 			</div>
 
@@ -256,75 +410,150 @@ MenuItem.propTypes = {
 	}),
 };
 
-function DeletionModal({
-	deletionType,
-	onCloseModal,
-	onDeleteItem,
-	setDeletionType,
+function updateMenuItem({
+	editSiteNavigationMenuItemParentURL,
+	itemId,
+	order,
+	parentId,
+	portletNamespace,
 }) {
-	const isMounted = useIsMounted();
+	return fetch(editSiteNavigationMenuItemParentURL, {
+		body: objectToFormData({
+			[`${portletNamespace}siteNavigationMenuItemId`]: itemId,
+			[`${portletNamespace}parentSiteNavigationMenuItemId`]: parentId,
+			[`${portletNamespace}order`]: order,
+		}),
+		method: 'POST',
+	})
+		.then((response) => response.json())
+		.catch(({error}) => {
+			openToast({
+				message: Liferay.Language.get('an-unexpected-error-occurred'),
+				type: 'danger',
+			});
 
-	const {observer, onClose} = useModal({
-		onClose: () => {
-			if (isMounted()) {
-				onCloseModal();
+			if (process.env.NODE_ENV === 'development') {
+				console.error(error);
 			}
-		},
-	});
+		});
+}
 
-	return (
-		<ClayModal
-			containerProps={{className: 'cadmin'}}
-			observer={observer}
-			size="lg"
-		>
-			<ClayModal.Header>
-				{Liferay.Language.get('delete-item')}
-			</ClayModal.Header>
-
-			<ClayModal.Body>
-				<p className="font-weight-semi-bold">
-					{Liferay.Language.get(
-						'the-item-you-want-to-delete-has-children-that-also-can-be-removed'
-					)}
-				</p>
-
-				<p className="text-secondary">
-					{Liferay.Language.get('what-action-do-you-want-to-take')}
-				</p>
-
-				<ClayRadioGroup
-					onChange={(type) => setDeletionType(type)}
-					value={deletionType}
-				>
-					<ClayRadio
-						label={Liferay.Language.get('only-delete-this-item')}
-						value={DELETION_TYPES.single}
-					/>
-
-					<ClayRadio
-						label={Liferay.Language.get('delete-item-and-children')}
-						value={DELETION_TYPES.bulk}
-					/>
-				</ClayRadioGroup>
-			</ClayModal.Body>
-
-			<ClayModal.Footer
-				last={
-					<ClayButton.Group spaced>
-						<ClayButton displayType="secondary" onClick={onClose}>
-							{Liferay.Language.get('cancel')}
-						</ClayButton>
-
-						<ClayButton
-							displayType="primary"
-							onClick={onDeleteItem}
-						>
-							{Liferay.Language.get('delete')}
-						</ClayButton>
-					</ClayButton.Group>
-				}
-			/>
-		</ClayModal>
+function getDownPosition({items, order, parentSiteNavigationMenuItemId}) {
+	const parent = items.find(
+		(item) =>
+			item.siteNavigationMenuItemId === parentSiteNavigationMenuItemId
 	);
+
+	const siblings = parent
+		? parent.children
+		: items.filter(
+				(item) =>
+					item.parentSiteNavigationMenuItemId ===
+					parentSiteNavigationMenuItemId
+		  );
+
+	const sibling = siblings[order + 1];
+
+	// If there aren't any sibling, the menu is placed as the sibling of the parent.
+
+	if (!sibling) {
+
+		// If there aren't any sibling and the parentSiteNavigationMenuItemId is 0,
+		// there is no movement possible.
+
+		if (parentSiteNavigationMenuItemId === '0') {
+			return;
+		}
+
+		const parentOrder = getOrder({
+			items,
+			parentSiteNavigationMenuItemId:
+				parent.parentSiteNavigationMenuItemId,
+			siteNavigationMenuItemId: parent.siteNavigationMenuItemId,
+		});
+
+		return {
+			order: parentOrder + 1,
+			parentSiteNavigationMenuItemId:
+				parent.parentSiteNavigationMenuItemId,
+		};
+	}
+
+	// If there aren't any sibling, the menu is placed as its child.
+
+	return {
+		order: 0,
+		parentSiteNavigationMenuItemId: sibling.siteNavigationMenuItemId,
+	};
+}
+
+function getUpPosition({items, order, parentSiteNavigationMenuItemId}) {
+
+	// The first menu cannot be moved upwards
+
+	if (order === 0 && parentSiteNavigationMenuItemId === '0') {
+		return null;
+	}
+
+	const parent = items.find(
+		(item) =>
+			item.siteNavigationMenuItemId === parentSiteNavigationMenuItemId
+	);
+
+	const siblings = parent
+		? parent.children
+		: items.filter(
+				(item) =>
+					item.parentSiteNavigationMenuItemId ===
+					parentSiteNavigationMenuItemId
+		  );
+
+	// When the menu is the first child, the menu is placed as the sibling of the parent.
+
+	if (order === 0) {
+		const nextOrder = getOrder({
+			items,
+			parentSiteNavigationMenuItemId:
+				parent.parentSiteNavigationMenuItemId,
+			siteNavigationMenuItemId: parent.siteNavigationMenuItemId,
+		});
+
+		return {
+			order: nextOrder,
+			parentSiteNavigationMenuItemId:
+				parent.parentSiteNavigationMenuItemId,
+		};
+	}
+
+	// If the previous sibling doesn't have children, place it inside.
+
+	const sibling = siblings[order - 1];
+
+	// If the previous sibling has children,
+	// get the deeper child and place the menu as a child of it.
+
+	const getDeeperChild = (item) => {
+		if (!item.children.length) {
+			return item;
+		}
+
+		return getDeeperChild(item.children.at(-1));
+	};
+
+	const deeperChild = getDeeperChild(sibling);
+
+	if (deeperChild.children.length) {
+		return {
+			order: deeperChild.children.length,
+			parentSiteNavigationMenuItemId:
+				deeperChild.siteNavigationMenuItemId,
+		};
+	}
+	else {
+		return {
+			order: 0,
+			parentSiteNavigationMenuItemId:
+				deeperChild.siteNavigationMenuItemId,
+		};
+	}
 }

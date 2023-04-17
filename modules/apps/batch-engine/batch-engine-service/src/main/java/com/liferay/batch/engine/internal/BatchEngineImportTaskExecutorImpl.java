@@ -23,7 +23,7 @@ import com.liferay.batch.engine.constants.BatchEngineImportTaskConstants;
 import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecutor;
 import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecutorFactory;
 import com.liferay.batch.engine.internal.reader.BatchEngineImportTaskItemReader;
-import com.liferay.batch.engine.internal.reader.BatchEngineImportTaskItemReaderFactory;
+import com.liferay.batch.engine.internal.reader.BatchEngineImportTaskItemReaderBuilder;
 import com.liferay.batch.engine.internal.reader.BatchEngineImportTaskItemReaderUtil;
 import com.liferay.batch.engine.internal.strategy.BatchEngineImportStrategyFactory;
 import com.liferay.batch.engine.internal.task.progress.BatchEngineTaskProgress;
@@ -33,10 +33,8 @@ import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskErrorLocalService;
 import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -44,11 +42,13 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 
+import java.io.InputStream;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -68,10 +68,10 @@ public class BatchEngineImportTaskExecutorImpl
 
 	@Override
 	public void execute(BatchEngineImportTask batchEngineImportTask) {
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setWithSafeCloseable(
-					batchEngineImportTask.getCompanyId())) {
+		SafeCloseable safeCloseable = CompanyThreadLocal.setWithSafeCloseable(
+			batchEngineImportTask.getCompanyId());
 
+		try {
 			batchEngineImportTask.setExecuteStatus(
 				BatchEngineTaskExecuteStatus.STARTED.toString());
 			batchEngineImportTask.setStartTime(new Date());
@@ -106,6 +106,13 @@ public class BatchEngineImportTaskExecutorImpl
 			_updateBatchEngineImportTask(
 				BatchEngineTaskExecuteStatus.FAILED, batchEngineImportTask,
 				throwable.toString());
+		}
+		finally {
+
+			// LPS-167011 Because of call to _updateBatchEngineImportTask when
+			// catching a Throwable
+
+			safeCloseable.close();
 		}
 	}
 
@@ -145,9 +152,38 @@ public class BatchEngineImportTaskExecutorImpl
 			});
 	}
 
-	private String _getCSVFileColumnDelimiter(long companyId)
-		throws ConfigurationException {
+	private BatchEngineImportTaskItemReader _getBatchEngineImportTaskItemReader(
+			BatchEngineImportTask batchEngineImportTask,
+			InputStream inputStream, Map<String, Serializable> parameters)
+		throws Exception {
 
+		BatchEngineImportTaskItemReaderBuilder
+			batchEngineImportTaskItemReaderBuilder =
+				new BatchEngineImportTaskItemReaderBuilder();
+
+		Map<String, Serializable> fieldNameMapping =
+			batchEngineImportTask.getFieldNameMapping();
+
+		if (fieldNameMapping == null) {
+			fieldNameMapping = Collections.emptyMap();
+		}
+
+		return batchEngineImportTaskItemReaderBuilder.
+			batchEngineTaskContentType(
+				BatchEngineTaskContentType.valueOf(
+					batchEngineImportTask.getContentType())
+			).csvFileColumnDelimiter(
+				_getCSVFileColumnDelimiter(batchEngineImportTask.getCompanyId())
+			).fieldNames(
+				ListUtil.fromCollection(fieldNameMapping.keySet())
+			).inputStream(
+				inputStream
+			).parameters(
+				parameters
+			).build();
+	}
+
+	private String _getCSVFileColumnDelimiter(long companyId) throws Exception {
 		BatchEngineTaskCompanyConfiguration
 			batchEngineTaskCompanyConfiguration =
 				_configurationProvider.getCompanyConfiguration(
@@ -198,13 +234,8 @@ public class BatchEngineImportTaskExecutorImpl
 			batchEngineImportTask);
 
 		try (BatchEngineImportTaskItemReader batchEngineImportTaskItemReader =
-				_batchEngineImportTaskItemReaderFactory.create(
-					BatchEngineTaskContentType.valueOf(
-						batchEngineImportTask.getContentType()),
-					GetterUtil.getString(
-						_getCSVFileColumnDelimiter(
-							batchEngineImportTask.getCompanyId()),
-						StringPool.COMMA),
+				_getBatchEngineImportTaskItemReader(
+					batchEngineImportTask,
 					_batchEngineImportTaskLocalService.openContentInputStream(
 						batchEngineImportTask.getBatchEngineImportTaskId()),
 					parameters);
@@ -323,10 +354,6 @@ public class BatchEngineImportTaskExecutorImpl
 	@Reference
 	private BatchEngineImportTaskErrorLocalService
 		_batchEngineImportTaskErrorLocalService;
-
-	private final BatchEngineImportTaskItemReaderFactory
-		_batchEngineImportTaskItemReaderFactory =
-			new BatchEngineImportTaskItemReaderFactory();
 
 	@Reference
 	private BatchEngineImportTaskLocalService

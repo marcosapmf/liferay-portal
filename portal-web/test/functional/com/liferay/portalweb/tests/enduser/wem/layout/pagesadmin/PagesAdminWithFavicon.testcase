@@ -3,7 +3,7 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Site Pages Administration";
+	property testray.main.component.name = "Page Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -13,14 +13,14 @@ definition {
 		}
 
 		task ("Add a site") {
-			JSONGroup.addGroup(groupName = "Test Site Name");
+			HeadlessSite.addSite(siteName = "Test Site Name");
 		}
 	}
 
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -29,7 +29,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-153903. The site designer could change favicon from the theme for page, page template, and group of pages."
-	@priority = "5"
+	@priority = 5
 	test ChangeFavicons {
 		property portal.acceptance = "true";
 
@@ -61,14 +61,12 @@ definition {
 			Navigator.gotoNavTab(navTab = "Look and Feel");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
 			PagesAdmin.selectFavicon(uploadFileName = "Document_1.jpg");
 
 			AssertTextEquals(
-				faviconName = "Document_1.jpg",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Document_1.jpg");
 
@@ -111,14 +109,12 @@ definition {
 			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
 			PagesAdmin.selectFavicon(uploadFileName = "Document_2.jpg");
 
 			AssertTextEquals(
-				faviconName = "Document_2.jpg",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Document_2.jpg");
 
@@ -145,14 +141,12 @@ definition {
 			DropdownMenuItem.click(menuItem = "Configuration");
 
 			AssertTextEquals(
-				faviconName = "Favicon from Theme",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Favicon from Theme");
 
 			PagesAdmin.selectFavicon(uploadFileName = "Document_3.jpg");
 
 			AssertTextEquals(
-				faviconName = "Document_3.jpg",
 				locator1 = "PagesAdmin#FAVICON_NAME",
 				value1 = "Document_3.jpg");
 

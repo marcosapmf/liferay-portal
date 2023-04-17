@@ -15,11 +15,9 @@
 package com.liferay.frontend.data.set.taglib.servlet.taglib;
 
 import com.liferay.frontend.data.set.model.FDSPaginationEntry;
-import com.liferay.frontend.data.set.taglib.internal.js.loader.modules.extender.npm.NPMResolverProvider;
 import com.liferay.frontend.data.set.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.frontend.data.set.taglib.internal.util.ServicesProvider;
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.js.module.launcher.JSModuleResolver;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.log.Log;
@@ -135,6 +133,10 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		return _selectedItems;
 	}
 
+	public boolean getUniformActionsDisplay() {
+		return _uniformActionsDisplay;
+	}
+
 	public void setAdditionalProps(Map<String, Object> additionalProps) {
 		_additionalProps = additionalProps;
 	}
@@ -181,6 +183,10 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		_selectedItems = selectedItems;
 	}
 
+	public void setUniformActionsDisplay(boolean uniformActionsDisplay) {
+		_uniformActionsDisplay = uniformActionsDisplay;
+	}
+
 	protected void cleanUp() {
 		_additionalProps = null;
 		_fdsPaginationEntries = null;
@@ -193,6 +199,7 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		_propsTransformerServletContext = null;
 		_randomNamespace = null;
 		_selectedItems = null;
+		_uniformActionsDisplay = false;
 	}
 
 	protected void doClearTag() {
@@ -238,6 +245,8 @@ public class BaseDisplayTag extends AttributesTagSupport {
 			).build()
 		).put(
 			"selectedItems", _selectedItems
+		).put(
+			"uniformActionsDisplay", getUniformActionsDisplay()
 		).build();
 	}
 
@@ -248,11 +257,6 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		jspWriter.write(getRandomNamespace());
 		jspWriter.write("table-id\"><span aria-hidden=\"true\" class=\"");
 		jspWriter.write("loading-animation my-7\"></span>");
-
-		NPMResolver npmResolver = NPMResolverProvider.getNPMResolver();
-
-		String moduleName = npmResolver.resolveModuleName(
-			"@liferay/frontend-data-set-web/FrontendDataSet");
 
 		String propsTransformer = null;
 
@@ -281,8 +285,8 @@ public class BaseDisplayTag extends AttributesTagSupport {
 		}
 
 		ComponentDescriptor componentDescriptor = new ComponentDescriptor(
-			moduleName, getId(), new LinkedHashSet<>(), false,
-			propsTransformer);
+			"{FrontendDataSet} from frontend-data-set-web", getId(),
+			new LinkedHashSet<>(), false, propsTransformer);
 
 		ReactRenderer reactRenderer = ServicesProvider.getReactRenderer();
 
@@ -323,5 +327,6 @@ public class BaseDisplayTag extends AttributesTagSupport {
 	private ServletContext _propsTransformerServletContext;
 	private String _randomNamespace;
 	private List<Object> _selectedItems;
+	private boolean _uniformActionsDisplay;
 
 }

@@ -123,6 +123,42 @@ public interface KBGroupServiceConfiguration {
 	public String emailKBArticleUpdatedBody();
 
 	@Meta.AD(
+		deflt = "true", name = "email-kb-article-review-enabled",
+		required = false
+	)
+	public boolean emailKBArticleReviewEnabled();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_review_subject.tmpl}",
+		name = "email-kb-article-review-subject", required = false
+	)
+	public String emailKBArticleReviewSubject();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_review_body.tmpl}",
+		name = "email-kb-article-review-body", required = false
+	)
+	public String emailKBArticleReviewBody();
+
+	@Meta.AD(
+		deflt = "true", name = "email-kb-article-expired-enabled",
+		required = false
+	)
+	public boolean emailKBArticleExpiredEnabled();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_expired_subject.tmpl}",
+		name = "email-kb-article-expired-subject", required = false
+	)
+	public String emailKBArticleExpiredSubject();
+
+	@Meta.AD(
+		deflt = "${resource:com/liferay/knowledge/base/dependencies/email_kb_article_expired_body.tmpl}",
+		name = "email-kb-article-expired-body", required = false
+	)
+	public String emailKBArticleExpiredBody();
+
+	@Meta.AD(
 		deflt = "true",
 		name = "email-kb-article-suggestion-in-progress-enabled",
 		required = false

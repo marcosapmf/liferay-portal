@@ -1330,7 +1330,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 	private Folder _addFolder() throws Exception {
 		return _dlAppService.addFolder(
-			_group.getGroupId(), 0, RandomTestUtil.randomString(),
+			null, _group.getGroupId(), 0, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), _serviceContext);
 	}
 
@@ -1361,7 +1361,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 		return _journalArticleLocalService.addArticle(
 			null, _adminUser.getUserId(), _group.getGroupId(), folderId,
-			titleMap, descriptionMap, content, ddmStructure.getStructureKey(),
+			titleMap, descriptionMap, content, ddmStructure.getStructureId(),
 			ddmTemplate.getTemplateKey(), _serviceContext);
 	}
 

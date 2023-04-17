@@ -236,6 +236,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>CLEAR</td>
+	<td>//button[@title='Clear']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>CLOSE</td>
 	<td>//button[contains(.,'Close')]</td>
 	<td></td>
@@ -468,6 +473,16 @@
 <tr>
 	<td>IGNORE_REDIRECT_URLS</td>
 	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-hidden')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IMAGE_CLEAR</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphClearImageButton')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IMAGE_SELECTOR</td>
+	<td>//label[normalize-space(text())='${key_fieldLabel}']/following-sibling::div//button[contains(@id,'openGraphImageButton')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -936,13 +951,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SUBMIT_FOR_PUBLICATION</td>
-	<td>//button[contains(.,'Submit for Publication')]</td>
+	<td>SUBMIT_FOR_WORKFLOW</td>
+	<td>//button[contains(.,'Submit for Workflow')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>SUBMIT_FOR_PUBLICATION_DISABLED</td>
-	<td>//div[contains(@class,'btn-group-item')]//button[@disabled and contains(.,'Submit for Publication')]</td>
+	<td>SUBMIT_FOR_WORKFLOW_DISABLED</td>
+	<td>//div[contains(@class,'btn-group-item')]//button[@disabled and contains(.,'Submit for Workflow')]</td>
 	<td></td>
 </tr>
 <tr>

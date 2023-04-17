@@ -65,7 +65,7 @@ public class SamlSloContext implements Serializable {
 
 		try {
 			List<SamlIdpSpSession> samlIdpSpSessions =
-				_samlIdpSpSessionLocalService.getSamlIdpSpSessions(
+				samlIdpSpSessionLocalService.getSamlIdpSpSessions(
 					samlIdpSsoSession.getSamlIdpSsoSessionId());
 
 			for (SamlIdpSpSession samlIdpSpSession : samlIdpSpSessions) {
@@ -94,7 +94,7 @@ public class SamlSloContext implements Serializable {
 
 				try {
 					SamlIdpSpConnection samlIdpSpConnection =
-						_samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+						samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
 							samlIdpSpSession.getCompanyId(), samlSpEntityId);
 
 					name = samlIdpSpConnection.getName();
@@ -141,6 +141,10 @@ public class SamlSloContext implements Serializable {
 		return _messageContext;
 	}
 
+	public String getRelayState() {
+		return _relayState;
+	}
+
 	public SamlSloRequestInfo getSamlSloRequestInfo(String entityId) {
 		return _samlRequestInfos.get(entityId);
 	}
@@ -174,6 +178,10 @@ public class SamlSloContext implements Serializable {
 		return _userId;
 	}
 
+	public void setRelayState(String relayState) {
+		_relayState = relayState;
+	}
+
 	public void setSamlSsoSessionId(String samlSsoSessionId) {
 		_samlSsoSessionId = samlSsoSessionId;
 	}
@@ -201,6 +209,7 @@ public class SamlSloContext implements Serializable {
 	private static final Log _log = LogFactoryUtil.getLog(SamlSloContext.class);
 
 	private final MessageContext<?> _messageContext;
+	private String _relayState;
 	private final SamlIdpSpConnectionLocalService
 		_samlIdpSpConnectionLocalService;
 	private final SamlIdpSpSessionLocalService _samlIdpSpSessionLocalService;

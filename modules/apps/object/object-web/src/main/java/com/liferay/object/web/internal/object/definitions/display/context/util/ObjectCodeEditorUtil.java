@@ -15,22 +15,22 @@
 package com.liferay.object.web.internal.object.definitions.display.context.util;
 
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -97,8 +97,107 @@ public class ObjectCodeEditorUtil {
 		return codeEditorElements;
 	}
 
+	public static List<Map<String, Object>> getCodeEditorElements(
+		Predicate<DDMExpressionOperator> ddmExpressionOperatorPredicate,
+		Locale locale, long objectDefinitionId,
+		Predicate<ObjectField> objectFieldPredicate) {
+
+		return ListUtil.fromArray(
+			_createCodeEditorElement(
+				TransformUtil.transform(
+					ListUtil.filter(
+						_objectFieldLocalService.getObjectFields(
+							objectDefinitionId),
+						objectFieldPredicate),
+					objectField -> HashMapBuilder.put(
+						"content", objectField.getName()
+					).put(
+						"helpText", StringPool.BLANK
+					).put(
+						"label", objectField.getLabel(locale)
+					).build()),
+				"fields", locale),
+			_createCodeEditorElement(
+				DDMExpressionOperator.getItems(
+					ddmExpressionOperatorPredicate, locale),
+				"operators", locale));
+	}
+
+	public enum DDMExpressionOperator {
+
+		AND(
+			"AND",
+			"this-is-a-type-of-coordinating-conjunction-that-is-commonly-" +
+				"used-to-indicate-a-dependent-relationship",
+			"and"),
+		DIVIDED_BY(
+			"field_name / field_name2",
+			"divide-one-numeric-field-by-another-to-create-an-expression",
+			"divided-by"),
+		MINUS(
+			"field_name - field_name2",
+			"subtract-numeric-fields-from-one-another-to-create-an-expression",
+			"minus"),
+		OR(
+			"OR",
+			"this-is-a-type-of-coordinating-conjunction-that-indicates-an-" +
+				"independent-relationship",
+			"or"),
+		PLUS(
+			"field_name + field_name2",
+			"add-numeric-fields-to-create-an-expression", "plus"),
+		TIMES(
+			"field_name * field_name2",
+			"multiply-numeric-fields-to-create-an-expression", "times");
+
+		public static List<Map<String, String>> getItems(Locale locale) {
+			return getItems(null, locale);
+		}
+
+		public static List<Map<String, String>> getItems(
+			Predicate<DDMExpressionOperator> ddmExpressionOperatorPredicate,
+			Locale locale) {
+
+			List<Map<String, String>> values = new ArrayList<>();
+
+			for (DDMExpressionOperator ddmExpressionOperator : values()) {
+				if ((ddmExpressionOperatorPredicate == null) ||
+					ddmExpressionOperatorPredicate.test(
+						ddmExpressionOperator)) {
+
+					values.add(
+						HashMapBuilder.put(
+							"content", ddmExpressionOperator._content
+						).put(
+							"helpText",
+							LanguageUtil.get(
+								locale, ddmExpressionOperator._helpTextKey)
+						).put(
+							"label",
+							LanguageUtil.get(locale, ddmExpressionOperator._key)
+						).build());
+				}
+			}
+
+			return values;
+		}
+
+		private DDMExpressionOperator(
+			String content, String helpTextKey, String key) {
+
+			_content = content;
+			_helpTextKey = helpTextKey;
+			_key = key;
+		}
+
+		private String _content;
+		private String _helpTextKey;
+		private String _key;
+
+	}
+
 	private static Map<String, Object> _createCodeEditorElement(
-		List<HashMap<String, String>> items, String key, Locale locale) {
+		List<Map<String, String>> items, String key, Locale locale) {
 
 		return HashMapBuilder.<String, Object>put(
 			"items", items
@@ -199,6 +298,11 @@ public class ObjectCodeEditorUtil {
 			"check-if-a-text-field-matches-a-specific-string-value-or-regex-" +
 				"expression-and-return-a-boolean",
 			"match"),
+		OLD_VALUE(
+			"oldValue(\"field_name\")",
+			"use-the-previous-value-of-a-field-before-its-update-to-create-" +
+				"more-accurate-conditions",
+			"old-value"),
 		PAST_DATES(
 			"pastDates(field_name, parameter)",
 			"check-if-a-date-fields-value-is-in-the-past-and-return-a-boolean",
@@ -218,13 +322,12 @@ public class ObjectCodeEditorUtil {
 				"that-can-be-used-with-other-validation-functions",
 			"sum");
 
-		public static List<HashMap<String, String>> getItems(Locale locale) {
-			List<HashMap<String, String>> values = new ArrayList<>();
+		public static List<Map<String, String>> getItems(Locale locale) {
+			List<Map<String, String>> values = new ArrayList<>();
 
 			for (DDMExpressionFunction ddmExpressionFunction : values()) {
 				if (StringUtil.equals(ddmExpressionFunction._key, "power") &&
-					!GetterUtil.getBoolean(
-						PropsUtil.get("feature.flag.LPS-164948"))) {
+					!FeatureFlagManagerUtil.isEnabled("LPS-164948")) {
 
 					continue;
 				}
@@ -246,67 +349,6 @@ public class ObjectCodeEditorUtil {
 		}
 
 		private DDMExpressionFunction(
-			String content, String helpTextKey, String key) {
-
-			_content = content;
-			_helpTextKey = helpTextKey;
-			_key = key;
-		}
-
-		private String _content;
-		private String _helpTextKey;
-		private String _key;
-
-	}
-
-	private enum DDMExpressionOperator {
-
-		AND(
-			"AND",
-			"this-is-a-type-of-coordinating-conjunction-that-is-commonly-" +
-				"used-to-indicate-a-dependent-relationship",
-			"and"),
-		DIVIDED_BY(
-			"field_name / field_name2",
-			"divide-one-numeric-field-by-another-to-create-an-expression",
-			"divided-by"),
-		MINUS(
-			"field_name - field_name2",
-			"subtract-numeric-fields-from-one-another-to-create-an-expression",
-			"minus"),
-		OR(
-			"OR",
-			"this-is-a-type-of-coordinating-conjunction-that-indicates-an-" +
-				"independent-relationship",
-			"or"),
-		PLUS(
-			"field_name + field_name2",
-			"add-numeric-fields-to-create-an-expression", "plus"),
-		TIMES(
-			"field_name * field_name2",
-			"multiply-numeric-fields-to-create-an-expression", "times");
-
-		public static List<HashMap<String, String>> getItems(Locale locale) {
-			List<HashMap<String, String>> values = new ArrayList<>();
-
-			for (DDMExpressionOperator ddmExpressionOperator : values()) {
-				values.add(
-					HashMapBuilder.put(
-						"content", ddmExpressionOperator._content
-					).put(
-						"helpText",
-						LanguageUtil.get(
-							locale, ddmExpressionOperator._helpTextKey)
-					).put(
-						"label",
-						LanguageUtil.get(locale, ddmExpressionOperator._key)
-					).build());
-			}
-
-			return values;
-		}
-
-		private DDMExpressionOperator(
 			String content, String helpTextKey, String key) {
 
 			_content = content;

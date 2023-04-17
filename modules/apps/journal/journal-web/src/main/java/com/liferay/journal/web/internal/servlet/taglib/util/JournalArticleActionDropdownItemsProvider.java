@@ -99,10 +99,10 @@ public class JournalArticleActionDropdownItemsProvider {
 
 		_ffJournalAutoSaveDraftConfiguration =
 			(FFJournalAutoSaveDraftConfiguration)
-				_liferayPortletRequest.getAttribute(
+				liferayPortletRequest.getAttribute(
 					FFJournalAutoSaveDraftConfiguration.class.getName());
 		_journalWebConfiguration =
-			(JournalWebConfiguration)_liferayPortletRequest.getAttribute(
+			(JournalWebConfiguration)liferayPortletRequest.getAttribute(
 				JournalWebConfiguration.class.getName());
 		_httpServletRequest = PortalUtil.getHttpServletRequest(
 			liferayPortletRequest);
@@ -698,8 +698,7 @@ public class JournalArticleActionDropdownItemsProvider {
 			dropdownItem.putData("action", "preview");
 			dropdownItem.putData("previewURL", previewURL);
 			dropdownItem.putData(
-				"title",
-				HtmlUtil.escape(_article.getTitle(_themeDisplay.getLocale())));
+				"title", _article.getTitle(_themeDisplay.getLocale()));
 
 			String status = "preview";
 

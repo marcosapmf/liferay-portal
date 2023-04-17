@@ -17,11 +17,12 @@ import ClayButton from '@clayui/button';
 import {ClayInput} from '@clayui/form';
 import {useEffect, useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
-import {useOutletContext, useParams} from 'react-router-dom';
+import {useNavigate, useOutletContext, useParams} from 'react-router-dom';
 import {KeyedMutator} from 'swr';
 
 import Form from '../../components/Form';
 import Container from '../../components/Layout/Container';
+import SearchBuilder from '../../core/SearchBuilder';
 import {useHeader} from '../../hooks';
 import {useFetch} from '../../hooks/useFetch';
 import useFormActions from '../../hooks/useFormActions';
@@ -38,7 +39,6 @@ import {
 	testrayTaskImpl,
 	testrayTaskUsersImpl,
 } from '../../services/rest';
-import {searchUtil} from '../../util/search';
 import {TaskStatuses} from '../../util/statuses';
 import {UserListView} from '../Manage/User';
 import useTestFlowAssign from './TestflowFormAssignUserActions';
@@ -61,8 +61,9 @@ type OutletContext = {
 
 const TestflowForm = () => {
 	const {
-		form: {onClose, onError, onSave, onSubmit},
+		form: {onClose, onError, onSubmit, onSuccess},
 	} = useFormActions();
+
 	const [modalType, setModalType] = useState<TestflowAssigUserType>(
 		'select-users'
 	);
@@ -72,18 +73,29 @@ const TestflowForm = () => {
 	});
 	const {buildId, taskId} = useParams();
 	const {actions} = useTestFlowAssign({setUserIds});
+	const navigate = useNavigate();
 
 	const outletContext = useOutletContext<OutletContext>();
 
+	const {setHeading} = useHeader({timeout: 210});
+
 	const {
-		data: {testrayTaskCaseTypes = [], testrayTaskUser, testrayTask},
-		mutate: {mutateTask},
-		revalidate: {revalidateTaskUser},
-	} = outletContext ?? {data: {}, mutate: {}, revalidate: {}};
+		data: {
+			testrayTaskCaseTypes = [],
+			testrayTaskUser = undefined,
+			testrayTask = undefined,
+		} = {},
+		mutate: {mutateTask = () => null} = {mutateTask: undefined},
+		revalidate: {revalidateTaskUser = () => null} = {
+			revalidateTaskUser: undefined,
+		},
+	} = outletContext;
 
 	const {data} = useFetch('/casetypes', {
-		fields: 'id,name',
-		pageSize: 100,
+		params: {
+			fields: 'id,name',
+			pageSize: 100,
+		},
 	});
 
 	const caseTypes = useMemo(() => data?.items || [], [
@@ -109,17 +121,7 @@ const TestflowForm = () => {
 			name: testrayTask?.name,
 			userIds: [],
 		},
-
 		resolver: yupResolver(yupSchema.task),
-	});
-
-	useHeader({
-		heading: [
-			{
-				category: i18n.translate('task'),
-				title: i18n.translate('testflow'),
-			},
-		],
 	});
 
 	const onOpenModal = (option: 'select-users' | 'select-user-groups') => {
@@ -171,7 +173,9 @@ const TestflowForm = () => {
 				revalidateTaskUser();
 			}
 
-			onSave();
+			onSuccess();
+
+			navigate(`/testflow/${response.id}`);
 		}
 		catch (error) {
 			onError(error);
@@ -194,6 +198,18 @@ const TestflowForm = () => {
 
 		setValue('caseTypes', caseTypesFiltered);
 	};
+
+	useEffect(() => {
+		setHeading(
+			[
+				{
+					category: i18n.translate('task'),
+					title: i18n.translate('testflow'),
+				},
+			],
+			true
+		);
+	}, [setHeading]);
 
 	useEffect(() => {
 		if (testrayTaskUser) {
@@ -274,7 +290,7 @@ const TestflowForm = () => {
 						managementToolbarProps: {
 							visible: false,
 						},
-						variables: {filter: searchUtil.in('id', userIds)},
+						variables: {filter: SearchBuilder.in('id', userIds)},
 					}}
 				/>
 			)}

@@ -149,6 +149,19 @@ public class FragmentEntryLinkLocalServiceUtil {
 		getService().deleteFragmentEntryLinks(fragmentEntryLinkIds);
 	}
 
+	public static void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId) {
+
+		getService().deleteFragmentEntryLinksByFragmentEntryId(fragmentEntryId);
+	}
+
+	public static void deleteFragmentEntryLinksByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		getService().deleteFragmentEntryLinksByFragmentEntryId(
+			fragmentEntryId, deleted);
+	}
+
 	public static List<FragmentEntryLink>
 		deleteLayoutPageTemplateEntryFragmentEntryLinks(
 			long groupId, long plid) {
@@ -409,6 +422,18 @@ public class FragmentEntryLinkLocalServiceUtil {
 	}
 
 	public static List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String rendererKey) {
+
+		return getService().getFragmentEntryLinks(companyId, rendererKey);
+	}
+
+	public static List<FragmentEntryLink> getFragmentEntryLinks(
+		long companyId, String[] rendererKeys) {
+
+		return getService().getFragmentEntryLinks(companyId, rendererKeys);
+	}
+
+	public static List<FragmentEntryLink> getFragmentEntryLinks(
 		String rendererKey) {
 
 		return getService().getFragmentEntryLinks(rendererKey);
@@ -419,6 +444,14 @@ public class FragmentEntryLinkLocalServiceUtil {
 
 		return getService().getFragmentEntryLinksByFragmentEntryId(
 			fragmentEntryId);
+	}
+
+	public static List<FragmentEntryLink>
+		getFragmentEntryLinksByFragmentEntryId(
+			long fragmentEntryId, boolean deleted) {
+
+		return getService().getFragmentEntryLinksByFragmentEntryId(
+			fragmentEntryId, deleted);
 	}
 
 	public static List<FragmentEntryLink> getFragmentEntryLinksByPlid(
@@ -499,6 +532,13 @@ public class FragmentEntryLinkLocalServiceUtil {
 
 		return getService().getFragmentEntryLinksCountByFragmentEntryId(
 			fragmentEntryId);
+	}
+
+	public static int getFragmentEntryLinksCountByFragmentEntryId(
+		long fragmentEntryId, boolean deleted) {
+
+		return getService().getFragmentEntryLinksCountByFragmentEntryId(
+			fragmentEntryId, deleted);
 	}
 
 	public static int getFragmentEntryLinksCountByPlid(

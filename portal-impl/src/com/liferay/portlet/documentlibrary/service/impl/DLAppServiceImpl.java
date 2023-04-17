@@ -19,10 +19,12 @@ import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppHelperLocalService;
+import com.liferay.document.library.kernel.util.DLAppHelperThreadLocal;
 import com.liferay.document.library.kernel.util.DLProcessorRegistryUtil;
 import com.liferay.document.library.kernel.util.comparator.FolderNameComparator;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelModifiedDateComparator;
 import com.liferay.document.library.kernel.util.comparator.RepositoryModelTitleComparator;
+import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -416,14 +418,16 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 	 */
 	@Override
 	public Folder addFolder(
-			long repositoryId, long parentFolderId, String name,
-			String description, ServiceContext serviceContext)
+			String externalReferenceCode, long repositoryId,
+			long parentFolderId, String name, String description,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		Repository repository = getRepository(repositoryId);
 
 		Folder folder = repository.addFolder(
-			getUserId(), parentFolderId, name, description, serviceContext);
+			externalReferenceCode, getUserId(), parentFolderId, name,
+			description, serviceContext);
 
 		_dlAppHelperLocalService.addFolder(getUserId(), folder, serviceContext);
 
@@ -733,7 +737,8 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 		Folder srcFolder = repository.getFolder(sourceFolderId);
 
 		Folder destFolder = repository.addFolder(
-			getUserId(), parentFolderId, name, description, serviceContext);
+			null, getUserId(), parentFolderId, name, description,
+			serviceContext);
 
 		_dlAppHelperLocalService.addFolder(
 			getUserId(), destFolder, serviceContext);
@@ -1401,6 +1406,17 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 		Repository repository = getRepository(repositoryId);
 
 		return repository.getFolder(parentFolderId, name);
+	}
+
+	@Override
+	public Folder getFolderByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		Repository repository = getRepository(groupId);
+
+		return repository.getFolderByExternalReferenceCode(
+			externalReferenceCode);
 	}
 
 	/**
@@ -2880,10 +2896,11 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 		Repository repository = repositoryProvider.getFileEntryRepository(
 			fileEntryId);
 
-		repository.updateFileEntry(
-			getUserId(), fileEntryId, sourceFileName, mimeType, title, urlTitle,
-			description, changeLog, dlVersionNumberIncrease, file,
-			expirationDate, reviewDate, serviceContext);
+		_withDLAppHelperDisabled(
+			() -> repository.updateFileEntry(
+				getUserId(), fileEntryId, sourceFileName, mimeType, title,
+				urlTitle, description, changeLog, dlVersionNumberIncrease, file,
+				expirationDate, reviewDate, serviceContext));
 
 		repository.checkInFileEntry(
 			getUserId(), fileEntryId, dlVersionNumberIncrease, changeLog,
@@ -2910,10 +2927,11 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 		Repository repository = repositoryProvider.getFileEntryRepository(
 			fileEntryId);
 
-		repository.updateFileEntry(
-			getUserId(), fileEntryId, sourceFileName, mimeType, title, urlTitle,
-			description, changeLog, dlVersionNumberIncrease, inputStream, size,
-			expirationDate, reviewDate, serviceContext);
+		_withDLAppHelperDisabled(
+			() -> repository.updateFileEntry(
+				getUserId(), fileEntryId, sourceFileName, mimeType, title,
+				urlTitle, description, changeLog, dlVersionNumberIncrease,
+				inputStream, size, expirationDate, reviewDate, serviceContext));
 
 		repository.checkInFileEntry(
 			getUserId(), fileEntryId, dlVersionNumberIncrease, changeLog,
@@ -3118,7 +3136,7 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 			Folder folder = fromRepository.getFolder(folderId);
 
 			newFolder = toRepository.addFolder(
-				getUserId(), parentFolderId, folder.getName(),
+				null, getUserId(), parentFolderId, folder.getName(),
 				folder.getDescription(), serviceContext);
 
 			_dlAppHelperLocalService.addFolder(
@@ -3175,7 +3193,7 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 
 			for (Folder srcSubfolder : srcSubfolders) {
 				Folder destSubfolder = repository.addFolder(
-					getUserId(), curDestFolder.getFolderId(),
+					null, getUserId(), curDestFolder.getFolderId(),
 					srcSubfolder.getName(), srcSubfolder.getDescription(),
 					serviceContext);
 
@@ -3237,7 +3255,7 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 				Folder currentFolder = (Folder)repositoryEntry;
 
 				Folder newFolder = toRepository.addFolder(
-					getUserId(), destinationFolder.getFolderId(),
+					null, getUserId(), destinationFolder.getFolderId(),
 					currentFolder.getName(), currentFolder.getDescription(),
 					serviceContext);
 
@@ -3356,6 +3374,22 @@ public class DLAppServiceImpl extends DLAppServiceBaseImpl {
 
 	@BeanReference(type = RepositoryProvider.class)
 	protected RepositoryProvider repositoryProvider;
+
+	private void _withDLAppHelperDisabled(
+			UnsafeRunnable<PortalException> unsafeRunnable)
+		throws PortalException {
+
+		boolean enabled = DLAppHelperThreadLocal.isEnabled();
+
+		try {
+			DLAppHelperThreadLocal.setEnabled(false);
+
+			unsafeRunnable.run();
+		}
+		finally {
+			DLAppHelperThreadLocal.setEnabled(enabled);
+		}
+	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLAppServiceImpl.class);

@@ -23,6 +23,7 @@ import com.liferay.captcha.simplecaptcha.SimpleCaptchaImpl;
 import com.liferay.headless.admin.user.client.dto.v1_0.EmailAddress;
 import com.liferay.headless.admin.user.client.dto.v1_0.Phone;
 import com.liferay.headless.admin.user.client.dto.v1_0.PostalAddress;
+import com.liferay.headless.admin.user.client.dto.v1_0.RoleBrief;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.client.dto.v1_0.UserAccountContactInformation;
 import com.liferay.headless.admin.user.client.dto.v1_0.WebUrl;
@@ -43,24 +44,33 @@ import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.auth.Authenticator;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.DataGuard;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserGroupTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
+import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
@@ -83,6 +93,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import javax.servlet.http.HttpServletRequest;
@@ -306,6 +318,37 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 			Arrays.asList(userAccount1, userAccount2),
 			(List<UserAccount>)page.getItems());
 		assertValid(page);
+	}
+
+	@Override
+	@Test
+	public void testGetUserAccount() throws Exception {
+		super.testGetUserAccount();
+
+		User user = UserTestUtil.addUser();
+
+		Group group = GroupTestUtil.addGroup();
+
+		_testGetUserAccountWithInheritedRoles(
+			group,
+			() -> _groupLocalService.addUserGroup(user.getUserId(), group),
+			user);
+
+		Organization organization = OrganizationTestUtil.addOrganization();
+
+		_testGetUserAccountWithInheritedRoles(
+			organization.getGroup(),
+			() -> _organizationLocalService.addUserOrganization(
+				user.getUserId(), organization),
+			user);
+
+		UserGroup userGroup = UserGroupTestUtil.addUserGroup();
+
+		_testGetUserAccountWithInheritedRoles(
+			userGroup.getGroup(),
+			() -> _userGroupLocalService.addUserUserGroup(
+				user.getUserId(), userGroup),
+			user);
 	}
 
 	@Override
@@ -781,6 +824,27 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 
 	@Override
 	@Test
+	public void testPostUserAccountImage() throws Exception {
+		UserAccount postUserAccount = userAccountResource.postUserAccount(
+			randomUserAccount());
+
+		Assert.assertNull(postUserAccount.getImage());
+
+		userAccountResource.postUserAccountImage(
+			postUserAccount.getId(), postUserAccount,
+			Collections.singletonMap(
+				"image",
+				FileUtil.createTempFile(
+					FileUtil.getBytes(getClass(), "/images/liferay.png"))));
+
+		postUserAccount = userAccountResource.getUserAccount(
+			postUserAccount.getId());
+
+		Assert.assertNotNull(postUserAccount.getImage());
+	}
+
+	@Override
+	@Test
 	public void testPutUserAccount() throws Exception {
 		super.testPutUserAccount();
 
@@ -1043,6 +1107,14 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	}
 
 	@Override
+	protected Map<String, Map<String, String>>
+			testGetAccountUserAccountsPage_getExpectedActions(Long accountId)
+		throws Exception {
+
+		return Collections.emptyMap();
+	}
+
+	@Override
 	protected UserAccount testGetMyUserAccount_addUserAccount()
 		throws Exception {
 
@@ -1273,6 +1345,19 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		return _accountEntry.getAccountEntryId();
 	}
 
+	private boolean _hasRole(Role role, User user) throws Exception {
+		UserAccount userAccount = userAccountResource.getUserAccount(
+			user.getUserId());
+
+		for (RoleBrief roleBrief : userAccount.getRoleBriefs()) {
+			if (Objects.equals(role.getRoleId(), roleBrief.getId())) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private EmailAddress _randomEmailAddress() throws Exception {
 		return new EmailAddress() {
 			{
@@ -1389,6 +1474,21 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 		}
 	}
 
+	private void _testGetUserAccountWithInheritedRoles(
+			Group group, UnsafeRunnable<Exception> unsafeRunnable, User user)
+		throws Exception {
+
+		Role inheritedRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_roleLocalService.addGroupRole(group.getGroupId(), inheritedRole);
+
+		Assert.assertFalse(_hasRole(inheritedRole, user));
+
+		unsafeRunnable.run();
+
+		Assert.assertTrue(_hasRole(inheritedRole, user));
+	}
+
 	private void _testPostUserAccount(Captcha captcha, boolean enableCaptcha)
 		throws Exception {
 
@@ -1455,17 +1555,30 @@ public class UserAccountResourceTest extends BaseUserAccountResourceTestCase {
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
 	private JSONFactory _jsonFactory;
 
 	private Organization _organization;
+
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
+
 	private UserAccount _regularUserAccount;
 	private String _regularUserAccountCurrentPassword;
 	private UserAccountResource _regularUserAccountResource;
 
 	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
 	private SAPEntryLocalService _sapEntryLocalService;
 
 	private User _testUser;
+
+	@Inject
+	private UserGroupLocalService _userGroupLocalService;
 
 	@Inject
 	private UserLocalService _userLocalService;

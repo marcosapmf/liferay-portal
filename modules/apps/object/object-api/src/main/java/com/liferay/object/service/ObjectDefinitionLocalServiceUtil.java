@@ -94,17 +94,20 @@ public class ObjectDefinitionLocalServiceUtil {
 
 	public static ObjectDefinition addSystemObjectDefinition(
 			long userId, String className, String dbTableName,
-			Map<java.util.Locale, String> labelMap, String name,
-			String pkObjectFieldDBColumnName, String pkObjectFieldName,
+			boolean enableComments, Map<java.util.Locale, String> labelMap,
+			boolean modifiable, String name, String panelAppOrder,
+			String panelCategoryKey, String pkObjectFieldDBColumnName,
+			String pkObjectFieldName,
 			Map<java.util.Locale, String> pluralLabelMap, String scope,
-			String titleObjectFieldName, int version,
+			String titleObjectFieldName, int version, int status,
 			List<com.liferay.object.model.ObjectField> objectFields)
 		throws PortalException {
 
 		return getService().addSystemObjectDefinition(
-			userId, className, dbTableName, labelMap, name,
+			userId, className, dbTableName, enableComments, labelMap,
+			modifiable, name, panelAppOrder, panelCategoryKey,
 			pkObjectFieldDBColumnName, pkObjectFieldName, pluralLabelMap, scope,
-			titleObjectFieldName, version, objectFields);
+			titleObjectFieldName, version, status, objectFields);
 	}
 
 	/**
@@ -270,6 +273,13 @@ public class ObjectDefinitionLocalServiceUtil {
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
+	}
+
+	public static ObjectDefinition enableAccountEntryRestricted(
+			com.liferay.object.model.ObjectRelationship objectRelationship)
+		throws PortalException {
+
+		return getService().enableAccountEntryRestricted(objectRelationship);
 	}
 
 	public static ObjectDefinition fetchObjectDefinition(
@@ -456,6 +466,14 @@ public class ObjectDefinitionLocalServiceUtil {
 		throws PortalException {
 
 		return getService().publishCustomObjectDefinition(
+			userId, objectDefinitionId);
+	}
+
+	public static ObjectDefinition publishSystemObjectDefinition(
+			long userId, long objectDefinitionId)
+		throws PortalException {
+
+		return getService().publishSystemObjectDefinition(
 			userId, objectDefinitionId);
 	}
 

@@ -12,13 +12,13 @@
  * details.
  */
 
+import Rest from '../../core/Rest';
+import SearchBuilder from '../../core/SearchBuilder';
 import yupSchema from '../../schema/yup';
 import {waitTimeout} from '../../util';
-import {searchUtil} from '../../util/search';
-import {SubTaskStatuses} from '../../util/statuses';
+import {CaseResultStatuses, SubTaskStatuses} from '../../util/statuses';
 import {Liferay} from '../liferay';
 import {liferayMessageBoardImpl} from './LiferayMessageBoard';
-import Rest from './Rest';
 import {testrayCaseResultImpl} from './TestrayCaseResult';
 import {testrayIssueImpl} from './TestrayIssues';
 import {testraySubtaskCaseResultImpl} from './TestraySubtaskCaseResults';
@@ -74,7 +74,7 @@ class TestraySubtaskImpl extends Rest<SubtaskForm, TestraySubTask> {
 
 	private async getCaseResultsFromSubtask(subTaskId: number) {
 		const subTaskCaseResultResponse = await testraySubtaskCaseResultImpl.getAll(
-			{filter: searchUtil.eq('subtaskId', subTaskId)}
+			{filter: SearchBuilder.eq('subtaskId', subTaskId)}
 		);
 
 		if (!subTaskCaseResultResponse) {
@@ -104,6 +104,7 @@ class TestraySubtaskImpl extends Rest<SubtaskForm, TestraySubTask> {
 		await testrayCaseResultImpl.updateBatch(
 			caseResultIds,
 			caseResultIds.map(() => ({
+				dueStatus: CaseResultStatuses.IN_PROGRESS,
 				userId,
 			}))
 		);
@@ -167,15 +168,17 @@ class TestraySubtaskImpl extends Rest<SubtaskForm, TestraySubTask> {
 		subTaskId: number
 	) {
 		const subtaskIssuesResponse = await testraySubtaskIssuesImpl.getAll({
-			filter: searchUtil.eq('subtaskId', subTaskId),
+			filter: SearchBuilder.eq('subtaskId', subTaskId),
 		});
 
 		for (const issue of issues) {
-			const testrayIssue = await testrayIssueImpl.createIfNotExist(issue);
+			const testrayIssue = await testrayIssueImpl.createIfNotExist({
+				name: issue,
+			});
 
 			await testraySubtaskIssuesImpl.createIfNotExist({
 				issueId: testrayIssue?.id,
-				name: `${issue}-${subTaskId}`,
+				name: `${issue}${testrayIssueImpl.DELIMITER}${subTaskId}`,
 				subTaskId,
 			});
 		}
@@ -287,7 +290,7 @@ class TestraySubtaskImpl extends Rest<SubtaskForm, TestraySubTask> {
 	) {
 		const [subtaskResponse, currentSubtask] = await Promise.all([
 			this.fetcher(
-				`/${this.uri}?filter=${searchUtil.eq(
+				`/${this.uri}?filter=${SearchBuilder.eq(
 					'taskId',
 					taskId
 				)}&fields=number&pageSize=1&sort=number:desc`

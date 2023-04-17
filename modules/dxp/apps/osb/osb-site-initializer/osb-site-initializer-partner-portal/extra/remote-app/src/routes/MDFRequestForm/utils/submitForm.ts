@@ -15,6 +15,7 @@ import {PRMPageRoute} from '../../../common/enums/prmPageRoute';
 import mdfRequestDTO from '../../../common/interfaces/dto/mdfRequestDTO';
 import LiferayPicklist from '../../../common/interfaces/liferayPicklist';
 import MDFRequest from '../../../common/interfaces/mdfRequest';
+import Role from '../../../common/interfaces/role';
 import {Liferay} from '../../../common/services/liferay';
 import createMDFRequestActivities from '../../../common/services/liferay/object/activity/createMDFRequestActivities';
 import updateMDFRequestActivities from '../../../common/services/liferay/object/activity/updateMDFRequestActivities';
@@ -26,18 +27,18 @@ import updateMDFRequest from '../../../common/services/liferay/object/mdf-reques
 import {Status} from '../../../common/utils/constants/status';
 import createMDFRequestActivitiesProxyAPI from './createMDFRequestActivitiesProxyAPI';
 import createMDFRequestProxyAPI from './createMDFRequestProxyAPI';
+import updateStatus from './updateStatus';
 
 export default async function submitForm(
 	values: MDFRequest,
 	formikHelpers: Omit<FormikHelpers<MDFRequest>, 'setFieldValue'>,
 	siteURL: string,
-	currentRequestStatus?: LiferayPicklist
+	currentRequestStatus?: LiferayPicklist,
+	roles?: Role[]
 ) {
 	formikHelpers.setSubmitting(true);
 
-	if (currentRequestStatus) {
-		values.mdfRequestStatus = currentRequestStatus;
-	}
+	values = updateStatus(values, currentRequestStatus, roles);
 
 	let dtoMDFRequest: mdfRequestDTO | undefined = undefined;
 
@@ -120,5 +121,15 @@ export default async function submitForm(
 		}
 	}
 
-	Liferay.Util.navigate(`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}`);
+	if (values.id) {
+		Liferay.Util.navigate(
+			`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}?edit-success=true`
+		);
+
+		return;
+	}
+
+	Liferay.Util.navigate(
+		`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}/?new-success=true`
+	);
 }

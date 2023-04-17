@@ -18,12 +18,14 @@ import getEntriesByListTypeDefinitions from '../../../../../common/utils/getEntr
 
 export default function useDynamicFieldEntries() {
 	const {data: userAccount} = useGetMyUserAccount();
+
 	const {data: listTypeDefinitions} = useGetListTypeDefinitions([
 		LiferayPicklistName.ADDITIONAL_OPTIONS,
 		LiferayPicklistName.REGIONS,
 		LiferayPicklistName.LIFERAY_BUSINESS_SALES_GOALS,
 		LiferayPicklistName.TARGET_AUDIENCE_ROLES,
 		LiferayPicklistName.TARGET_MARKETS,
+		LiferayPicklistName.CURRENCIES,
 	]);
 
 	const companiesEntries = useMemo(
@@ -43,5 +45,6 @@ export default function useDynamicFieldEntries() {
 	return {
 		companiesEntries,
 		fieldEntries,
+		roleEntries: userAccount?.roleBriefs,
 	};
 }

@@ -2830,7 +2830,9 @@ public class BatchEngineExportTaskPersistenceImpl
 				if (ercBatchEngineExportTask != null) {
 					throw new DuplicateBatchEngineExportTaskExternalReferenceCodeException(
 						"Duplicate batch engine export task with external reference code " +
-							batchEngineExportTask.getExternalReferenceCode());
+							batchEngineExportTask.getExternalReferenceCode() +
+								" and company " +
+									batchEngineExportTask.getCompanyId());
 				}
 			}
 			else {
@@ -2841,7 +2843,9 @@ public class BatchEngineExportTaskPersistenceImpl
 
 					throw new DuplicateBatchEngineExportTaskExternalReferenceCodeException(
 						"Duplicate batch engine export task with external reference code " +
-							batchEngineExportTask.getExternalReferenceCode());
+							batchEngineExportTask.getExternalReferenceCode() +
+								" and company " +
+									batchEngineExportTask.getCompanyId());
 				}
 			}
 		}

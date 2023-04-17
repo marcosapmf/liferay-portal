@@ -12,7 +12,7 @@ dependencies {
 	compileOnly group: "javax.portlet", name: "portlet-api", version: "3.0.1"
 	compileOnly group: "javax.validation", name: "validation-api", version: "2.0.1.Final"
 	compileOnly group: "javax.ws.rs", name: "javax.ws.rs-api", version: "2.1"
-	compileOnly group: "org.apache.cxf", name: "cxf-core", version: "3.4.4"
+	compileOnly group: "org.apache.cxf", name: "cxf-core", version: "3.4.10"
 	compileOnly group: "org.apache.felix", name: "org.apache.felix.http.servlet-api", version: "1.1.2"
 	compileOnly group: "org.osgi", name: "org.osgi.annotation", version: "6.0.0"
 	compileOnly project(":apps:depot:depot-api")
@@ -22,9 +22,10 @@ dependencies {
 	compileOnly project(":apps:portal-search:portal-search-api")
 	compileOnly project(":core:petra:petra-function")
 	compileOnly project(":core:petra:petra-lang")
+	compileOnly project(":core:petra:petra-reflect")
 	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
 
-	testCompile group: "org.glassfish.jersey.core", name: "jersey-common", version: "2.26"
+	testCompile group: "org.apache.cxf", name: "cxf-rt-frontend-jaxrs", version: "3.4.10"
 	testCompile group: "org.hamcrest", name: "hamcrest-all", version: "1.3"
 }

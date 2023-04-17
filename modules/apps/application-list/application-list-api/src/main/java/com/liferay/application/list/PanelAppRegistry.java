@@ -14,12 +14,10 @@
 
 package com.liferay.application.list;
 
-import com.liferay.osgi.service.tracker.collections.ServiceReferenceServiceTuple;
-import com.liferay.osgi.service.tracker.collections.ServiceTrackerMapBuilder;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerBucket;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerBucketFactory;
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceComparator;
+import com.liferay.osgi.service.tracker.collections.map.PropertyServiceReferenceMapper;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
-import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapListener;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -32,15 +30,8 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 
-import java.io.Serializable;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -48,6 +39,10 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * Provides methods for retrieving application instances defined by {@link
@@ -64,20 +59,14 @@ public class PanelAppRegistry {
 		String parentPanelCategoryKey, PermissionChecker permissionChecker,
 		Group group) {
 
-		List<PanelApp> panelApps = getPanelApps(parentPanelCategoryKey);
+		List<PanelApp> panelApps = getPanelApps(
+			parentPanelCategoryKey, permissionChecker, group);
 
-		for (PanelApp panelApp : panelApps) {
-			try {
-				if (panelApp.isShow(permissionChecker, group)) {
-					return panelApp;
-				}
-			}
-			catch (PortalException portalException) {
-				_log.error(portalException);
-			}
+		if (panelApps.isEmpty()) {
+			return null;
 		}
 
-		return null;
+		return panelApps.get(0);
 	}
 
 	public List<PanelApp> getPanelApps(PanelCategory parentPanelCategory) {
@@ -144,7 +133,14 @@ public class PanelAppRegistry {
 			panelApps,
 			panelApp -> {
 				try {
-					return panelApp.isShow(permissionChecker, group);
+					PanelAppShowFilter panelAppShowFilter = _panelAppShowFilter;
+
+					if (panelAppShowFilter == null) {
+						return panelApp.isShow(permissionChecker, group);
+					}
+
+					return panelAppShowFilter.isShow(
+						panelApp, permissionChecker, group);
 				}
 				catch (PortalException portalException) {
 					_log.error(portalException);
@@ -160,19 +156,11 @@ public class PanelAppRegistry {
 
 		int count = 0;
 
-		for (PanelApp panelApp : getPanelApps(parentPanelCategoryKey)) {
-			int notificationsCount = panelApp.getNotificationsCount(user);
+		for (PanelApp panelApp :
+				getPanelApps(
+					parentPanelCategoryKey, permissionChecker, group)) {
 
-			try {
-				if ((notificationsCount > 0) &&
-					panelApp.isShow(permissionChecker, group)) {
-
-					count += notificationsCount;
-				}
-			}
-			catch (PortalException portalException) {
-				_log.error(portalException);
-			}
+			count += panelApp.getNotificationsCount(user);
 		}
 
 		return count;
@@ -180,16 +168,63 @@ public class PanelAppRegistry {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_serviceTrackerMap =
-			ServiceTrackerMapBuilder.SelectorFactory.newSelector(
-				bundleContext, PanelApp.class
-			).map(
-				"panel.category.key"
-			).collect(
-				new PanelAppsServiceTrackerBucketFactory()
-			).newCollector(
-				new PanelAppsServiceTrackerMapListener()
-			).build();
+		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
+			bundleContext, PanelApp.class, "(panel.category.key=*)",
+			new PropertyServiceReferenceMapper<>("panel.category.key"),
+			new ServiceTrackerCustomizer<PanelApp, PanelApp>() {
+
+				@Override
+				public PanelApp addingService(
+					ServiceReference<PanelApp> serviceReference) {
+
+					PanelApp panelApp = bundleContext.getService(
+						serviceReference);
+
+					panelApp.setGroupProvider(_groupProvider);
+
+					Portlet portlet = _portletLocalService.getPortletById(
+						panelApp.getPortletId());
+
+					if (portlet != null) {
+						portlet.setControlPanelEntryCategory(
+							String.valueOf(
+								serviceReference.getProperty(
+									"panel.category.key")));
+
+						panelApp.setPortlet(portlet);
+					}
+					else if (_log.isDebugEnabled()) {
+						_log.debug(
+							"Unable to get portlet " + panelApp.getPortletId());
+					}
+
+					if (panelApp instanceof BasePanelApp) {
+						BasePanelApp basePanelApp = (BasePanelApp)panelApp;
+
+						basePanelApp.setPortletLocalService(
+							_portletLocalService);
+					}
+
+					return panelApp;
+				}
+
+				@Override
+				public void modifiedService(
+					ServiceReference<PanelApp> serviceReference,
+					PanelApp panelApp) {
+				}
+
+				@Override
+				public void removedService(
+					ServiceReference<PanelApp> serviceReference,
+					PanelApp panelApp) {
+
+					bundleContext.ungetService(serviceReference);
+				}
+
+			},
+			Collections.reverseOrder(
+				new PropertyServiceReferenceComparator<>("panel.app.order")));
 	}
 
 	@Deactivate
@@ -203,194 +238,16 @@ public class PanelAppRegistry {
 	@Reference
 	private GroupProvider _groupProvider;
 
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile PanelAppShowFilter _panelAppShowFilter;
+
 	@Reference
 	private PortletLocalService _portletLocalService;
 
 	private ServiceTrackerMap<String, List<PanelApp>> _serviceTrackerMap;
-
-	private class PanelAppOrderComparator
-		implements Comparator<ServiceReference<PanelApp>>, Serializable {
-
-		@Override
-		public int compare(
-			ServiceReference serviceReference1,
-			ServiceReference serviceReference2) {
-
-			if (serviceReference1 == null) {
-				if (serviceReference2 == null) {
-					return 0;
-				}
-
-				return 1;
-			}
-			else if (serviceReference2 == null) {
-				return -1;
-			}
-
-			Object propertyValue1 = serviceReference1.getProperty(
-				"panel.app.order");
-			Object propertyValue2 = serviceReference2.getProperty(
-				"panel.app.order");
-
-			if (propertyValue1 == null) {
-				if (propertyValue2 == null) {
-					return 0;
-				}
-
-				return 1;
-			}
-			else if (propertyValue2 == null) {
-				return -1;
-			}
-
-			if (!(propertyValue2 instanceof Comparable)) {
-				return -serviceReference2.compareTo(serviceReference1);
-			}
-
-			Comparable<Object> propertyValueComparable2 =
-				(Comparable<Object>)propertyValue2;
-
-			return -propertyValueComparable2.compareTo(propertyValue1);
-		}
-
-	}
-
-	private class PanelAppsServiceTrackerBucketFactory
-		implements ServiceTrackerBucketFactory
-			<PanelApp, PanelApp, List<PanelApp>> {
-
-		@Override
-		public ServiceTrackerBucket<PanelApp, PanelApp, List<PanelApp>>
-			create() {
-
-			return new PanelCategoryServiceTrackerBucket();
-		}
-
-		private class PanelCategoryServiceTrackerBucket
-			implements ServiceTrackerBucket
-				<PanelApp, PanelApp, List<PanelApp>> {
-
-			@Override
-			public List<PanelApp> getContent() {
-				return _services;
-			}
-
-			@Override
-			public synchronized boolean isDisposable() {
-				return _serviceReferenceServiceTuples.isEmpty();
-			}
-
-			@Override
-			public synchronized void remove(
-				ServiceReferenceServiceTuple<PanelApp, PanelApp>
-					serviceReferenceServiceTuple) {
-
-				_serviceReferenceServiceTuples.remove(
-					serviceReferenceServiceTuple);
-
-				_rebuild();
-			}
-
-			@Override
-			public synchronized void store(
-				ServiceReferenceServiceTuple<PanelApp, PanelApp>
-					serviceReferenceServiceTuple) {
-
-				int index = Collections.binarySearch(
-					_serviceReferenceServiceTuples,
-					serviceReferenceServiceTuple, _comparator);
-
-				if (index < 0) {
-					index = -index - 1;
-				}
-
-				_serviceReferenceServiceTuples.add(
-					index, serviceReferenceServiceTuple);
-
-				_rebuild();
-			}
-
-			private void _rebuild() {
-				if (_serviceReferenceServiceTuples.isEmpty()) {
-					_services = Collections.emptyList();
-
-					return;
-				}
-
-				if (_serviceReferenceServiceTuples.size() == 1) {
-					ServiceReferenceServiceTuple<PanelApp, PanelApp>
-						serviceReferenceServiceTuple =
-							_serviceReferenceServiceTuples.get(0);
-
-					_services = Arrays.asList(
-						serviceReferenceServiceTuple.getService());
-
-					return;
-				}
-
-				Map<String, PanelApp> panelApps = new LinkedHashMap<>();
-
-				_serviceReferenceServiceTuples.forEach(
-					erviceReferenceServiceTuple -> {
-						PanelApp panelApp =
-							erviceReferenceServiceTuple.getService();
-
-						panelApps.putIfAbsent(panelApp.getKey(), panelApp);
-					});
-
-				_services = new ArrayList<>(panelApps.values());
-			}
-
-			private final Comparator
-				<ServiceReferenceServiceTuple<PanelApp, PanelApp>> _comparator =
-					Comparator.comparing(
-						ServiceReferenceServiceTuple::getServiceReference,
-						new PanelAppOrderComparator());
-			private final List<ServiceReferenceServiceTuple<PanelApp, PanelApp>>
-				_serviceReferenceServiceTuples = new ArrayList<>();
-			private List<PanelApp> _services = new ArrayList<>();
-
-		}
-
-	}
-
-	private class PanelAppsServiceTrackerMapListener
-		implements ServiceTrackerMapListener<String, PanelApp, List<PanelApp>> {
-
-		@Override
-		public void keyEmitted(
-			ServiceTrackerMap<String, List<PanelApp>> serviceTrackerMap,
-			String panelCategoryKey, PanelApp panelApp,
-			List<PanelApp> panelApps) {
-
-			panelApp.setGroupProvider(_groupProvider);
-
-			Portlet portlet = _portletLocalService.getPortletById(
-				panelApp.getPortletId());
-
-			if (portlet != null) {
-				portlet.setControlPanelEntryCategory(panelCategoryKey);
-
-				panelApp.setPortlet(portlet);
-			}
-			else if (_log.isDebugEnabled()) {
-				_log.debug("Unable to get portlet " + panelApp.getPortletId());
-			}
-
-			if (panelApp instanceof BasePanelApp) {
-				BasePanelApp basePanelApp = (BasePanelApp)panelApp;
-
-				basePanelApp.setPortletLocalService(_portletLocalService);
-			}
-		}
-
-		@Override
-		public void keyRemoved(
-			ServiceTrackerMap<String, List<PanelApp>> serviceTrackerMap,
-			String panelCategoryKey, PanelApp panelApp,
-			List<PanelApp> panelApps) {
-		}
-
-	}
 
 }

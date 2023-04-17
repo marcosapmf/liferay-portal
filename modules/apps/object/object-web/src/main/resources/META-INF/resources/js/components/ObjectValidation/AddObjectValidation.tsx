@@ -17,8 +17,15 @@ import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayModal, {ClayModalProvider, useModal} from '@clayui/modal';
 import {Observer} from '@clayui/modal/lib/types';
-import {API, Input, SingleSelect} from '@liferay/object-js-components-web';
+import {
+	API,
+	Input,
+	REQUIRED_MSG,
+	SingleSelect,
+} from '@liferay/object-js-components-web';
 import React, {FormEvent, useEffect, useState} from 'react';
+
+import {defaultLanguageId} from '../../utils/constants';
 
 interface ModalAddObjectValidationProps extends AddObjectValidationProps {
 	observer: Observer;
@@ -39,8 +46,7 @@ interface ObjectValidationErrors {
 	typeError: string;
 }
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-const requiredLabel = Liferay.Language.get('required');
+const requiredLabel = REQUIRED_MSG;
 
 function ModalAddObjectValidation({
 	apiURL,

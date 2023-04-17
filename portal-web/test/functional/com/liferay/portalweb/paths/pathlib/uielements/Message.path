@@ -57,7 +57,7 @@
 </tr>
 <tr>
 	<td>EMPTY_INFO</td>
-	<td>//div[contains(@class,'sheet')]/div[contains(@class,'sheet-text')] | //div[contains(@class,'taglib-empty-result-message')]/div[contains(@class,'text-secondary')]</td>
+	<td>//div[contains(@class,'taglib-empty-result-message')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -67,7 +67,7 @@
 </tr>
 <tr>
 	<td>ROLE_EMPTY_MUTED_INFO</td>
-	<td>//div[h3[*[*[contains(text(),'${key_roleType}')]]]]//div[*[contains(@class,'text-muted')]or contains(@class,'text-muted')]</td>
+	<td>//div[contains(@class,'sheet-subtitle') and contains(.,'${key_roleType}')]//following-sibling::div[contains(@class,'sheet-text')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -476,6 +476,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>WARNING</td>
+	<td>//div[contains(@class,'alert') and contains(@class,'alert-warning')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>WARNING_FEEDBACK</td>
 	<td>//div[contains(@class,'form-feedback-item')]</td>
 	<td></td>
@@ -508,6 +513,11 @@
 <tr>
 	<td>EMPTY_STATE_INFO</td>
 	<td>//div[(@class='c-empty-state-title')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMPTY_STATE_TEXT</td>
+	<td>//div[contains(@class,'c-empty-state-text')]</td>
 	<td></td>
 </tr>
 </tbody>

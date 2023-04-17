@@ -29,6 +29,7 @@ import React, {
 	useState,
 } from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {toCamelCase} from '../../utils/string';
 import {AggregationFormBase} from './AggregationFormBase';
 import {AttachmentFormBase} from './AttachmentFormBase';
@@ -38,7 +39,7 @@ import './ObjectFieldFormBase.scss';
 
 interface IProps {
 	children?: ReactNode;
-	creationLanguageId?: Locale;
+	creationLanguageId2?: Liferay.Language.Locale;
 	disabled?: boolean;
 	editingField?: boolean;
 	errors: ObjectFieldErrors;
@@ -67,11 +68,113 @@ export type ObjectFieldErrors = FormError<
 	ObjectField & {[key in ObjectFieldSettingName]: unknown}
 >;
 
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+const fieldSettingsMap = new Map<string, ObjectFieldSetting[]>([
+	[
+		'Aggregation',
+		[
+			{
+				name: 'filters',
+				objectFieldId: 0,
+				value: Array(0),
+			},
+		],
+	],
+	[
+		'Attachment',
+		[
+			{
+				name: 'acceptedFileExtensions',
+				value: 'jpeg, jpg, pdf, png',
+			},
+			{
+				name: 'maximumFileSize',
+				value: 100,
+			},
+		],
+	],
+	[
+		'LongText' || 'Text',
+		[
+			{
+				name: 'showCounter',
+				value: false,
+			},
+		],
+	],
+]);
+
+async function getFieldSettingsByBusinessType(
+	objectRelationshipId: number,
+	setOneToManyRelationship: (value: TObjectRelationship) => void,
+	setPickListItems: (value: PickListItem[]) => void,
+	setPickLists: (value: PickList[]) => void,
+	setSelectedOutput: (value: string) => void,
+	setValues: (values: Partial<ObjectField>) => void,
+	values: Partial<ObjectField>
+) {
+	const {
+		businessType,
+		defaultValue,
+		listTypeDefinitionExternalReferenceCode,
+		listTypeDefinitionId,
+		objectFieldSettings,
+		state,
+	} = values;
+
+	if (businessType === 'Picklist' || businessType === 'MultiselectPicklist') {
+		const picklistData = await API.getPickLists();
+
+		setPickLists(picklistData);
+
+		if (state && listTypeDefinitionExternalReferenceCode) {
+			const picklistItemsData = await API.getPickListItems(
+				listTypeDefinitionId!
+			);
+
+			setPickListItems(picklistItemsData);
+		}
+
+		if (businessType === 'Picklist' && objectFieldSettings?.length) {
+			const [{value}] = objectFieldSettings;
+			const {objectStates} = value as ObjectFieldPicklistSetting;
+			const defaultPicklistValue = objectStates.find(
+				({key}) => key === defaultValue
+			);
+
+			if (!defaultPicklistValue && defaultValue) {
+				setValues({defaultValue: undefined});
+			}
+		}
+	}
+
+	if (businessType === 'Formula') {
+		const output = objectFieldSettings?.find(
+			(fieldSetting) => fieldSetting.name === 'output'
+		);
+
+		if (output) {
+			setSelectedOutput(
+				FORMULA_OUTPUT_OPTIONS.find(
+					(formulaOption) => formulaOption.value === output?.value
+				)?.label as string
+			);
+		}
+	}
+
+	if (businessType === 'Relationship' && objectRelationshipId) {
+		const relationshipData = await API.getRelationship<TObjectRelationship>(
+			objectRelationshipId!
+		);
+
+		if (relationshipData.id) {
+			setOneToManyRelationship(relationshipData);
+		}
+	}
+}
 
 export default function ObjectFieldFormBase({
 	children,
-	creationLanguageId,
+	creationLanguageId2,
 	disabled,
 	editingField,
 	errors,
@@ -105,58 +208,13 @@ export default function ObjectFieldFormBase({
 		TObjectRelationship
 	>();
 	const [selectedOutput, setSelectedOutput] = useState<string>('');
-
-	useEffect(() => {
-		const {businessType, defaultValue, objectFieldSettings} = values;
-
-		if (businessType === 'Picklist' && objectFieldSettings?.length) {
-			const [{value}] = objectFieldSettings;
-			const {objectStates} = value as ObjectFieldPicklistSetting;
-			const defaultPicklistValue = objectStates.find(
-				({key}) => key === defaultValue
-			);
-
-			if (!defaultPicklistValue && defaultValue) {
-				setValues({defaultValue: undefined});
-			}
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [values.defaultValue]);
+	const [objectDefinition, setObjectDefinition] = useState<
+		ObjectDefinition
+	>();
 
 	const validListTypeDefinitionId =
 		values.listTypeDefinitionId !== undefined &&
 		values.listTypeDefinitionId !== 0;
-
-	useEffect(() => {
-		if (
-			values.businessType === 'Picklist' ||
-			values.businessType === 'MultiselectPicklist'
-		) {
-			API.getPickLists().then(setPickLists);
-
-			if (values.state && values.listTypeDefinitionId) {
-				API.getPickListItems(values.listTypeDefinitionId).then(
-					setPickListItems
-				);
-			}
-		}
-
-		if (values.businessType === 'Formula') {
-			const output = values.objectFieldSettings?.find(
-				(fieldSetting) => fieldSetting.name === 'output'
-			);
-
-			if (output) {
-				setSelectedOutput(
-					FORMULA_OUTPUT_OPTIONS.find(
-						(formulaOption) => formulaOption.value === output?.value
-					)?.label as string
-				);
-			}
-		}
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [values.businessType, values.listTypeDefinitionId]);
 
 	const filteredPicklistItems = useMemo(() => {
 		return pickListItems.filter(({name}) => {
@@ -175,45 +233,13 @@ export default function ObjectFieldFormBase({
 	}, [pickLists, values.listTypeDefinitionId]);
 
 	const handleTypeChange = async (option: ObjectFieldType) => {
-		if (
-			option.businessType === 'Picklist' ||
-			values.businessType === 'MultiselectPicklist'
-		) {
-			setPickLists(await API.getPickLists());
-		}
-
-		let objectFieldSettings: ObjectFieldSetting[] | undefined;
-
-		switch (option.businessType) {
-			case 'Attachment':
-				objectFieldSettings = [
-					{
-						name: 'acceptedFileExtensions',
-						value: 'jpeg, jpg, pdf, png',
-					},
-					{
-						name: 'maximumFileSize',
-						value: 100,
-					},
-				];
-				break;
-
-			case 'LongText':
-			case 'Text':
-				objectFieldSettings = [
-					{
-						name: 'showCounter',
-						value: false,
-					},
-				];
-				break;
-
-			default:
-				break;
-		}
+		const objectFieldSettings: ObjectFieldSetting[] =
+			fieldSettingsMap.get(option.businessType) || [];
 
 		const isSearchableByText =
-			option.businessType === 'Attachment' || option.dbType === 'String';
+			option.businessType === 'Attachment' ||
+			option.dbType === 'Clob' ||
+			option.dbType === 'String';
 
 		const indexedAsKeyword = isSearchableByText && values.indexedAsKeyword;
 
@@ -235,23 +261,15 @@ export default function ObjectFieldFormBase({
 		});
 	};
 
-	useEffect(() => {
-		if (objectRelationshipId) {
-			const makeFetch = async () => {
-				const relationshipData = await API.getRelationship<
-					TObjectRelationship
-				>(objectRelationshipId!);
-
-				if (relationshipData.id) {
-					setOneToManyRelationship(relationshipData);
-				}
-			};
-
-			makeFetch();
-		}
-	}, [objectRelationshipId]);
-
 	const getMandatoryToggleDisabledState = () => {
+		if (
+			objectDefinition?.accountEntryRestricted &&
+			objectDefinition?.accountEntryRestrictedObjectFieldName ===
+				values.name
+		) {
+			return true;
+		}
+
 		if (
 			oneToManyRelationship &&
 			oneToManyRelationship.deletionType !== 'disassociate'
@@ -272,6 +290,29 @@ export default function ObjectFieldFormBase({
 
 		return disabled || values.state;
 	};
+
+	useEffect(() => {
+		const makeFetch = async () => {
+			const objectDefinitionResponse = await API.getObjectDefinitionByExternalReferenceCode(
+				objectDefinitionExternalReferenceCode
+			);
+
+			setObjectDefinition(objectDefinitionResponse);
+
+			await getFieldSettingsByBusinessType(
+				objectRelationshipId as number,
+				setOneToManyRelationship,
+				setPickListItems,
+				setPickLists,
+				setSelectedOutput,
+				setValues,
+				values
+			);
+		};
+
+		makeFetch();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [objectDefinitionExternalReferenceCode, values.businessType]);
 
 	return (
 		<>
@@ -312,7 +353,9 @@ export default function ObjectFieldFormBase({
 
 			{values.businessType === 'Aggregation' && (
 				<AggregationFormBase
-					creationLanguageId={creationLanguageId!}
+					creationLanguageId2={
+						creationLanguageId2 as Liferay.Language.Locale
+					}
 					editingField={editingField}
 					errors={errors}
 					objectDefinitionExternalReferenceCode={
@@ -353,7 +396,11 @@ export default function ObjectFieldFormBase({
 
 						setSelectedOutput(label);
 					}}
-					options={FORMULA_OUTPUT_OPTIONS}
+					options={FORMULA_OUTPUT_OPTIONS.filter(
+						(formulaOutput) =>
+							formulaOutput.value === 'Decimal' ||
+							formulaOutput.value === 'Integer'
+					)}
 					required
 					value={selectedOutput}
 				/>
@@ -362,6 +409,9 @@ export default function ObjectFieldFormBase({
 			{(values.businessType === 'Picklist' ||
 				values.businessType === 'MultiselectPicklist') && (
 				<AutoComplete<Partial<PickList>>
+					creationLanguageId={
+						creationLanguageId2 as Liferay.Language.Locale
+					}
 					disabled={disabled}
 					emptyStateMessage={Liferay.Language.get('option-not-found')}
 					error={errors.listTypeDefinitionId}
@@ -405,7 +455,7 @@ export default function ObjectFieldFormBase({
 				{values.businessType === 'Picklist' &&
 					validListTypeDefinitionId && (
 						<ClayToggle
-							disabled={disabled}
+							disabled={disabled || objectDefinition?.system}
 							label={Liferay.Language.get('mark-as-state')}
 							name="state"
 							onToggle={async (state) => {
@@ -432,6 +482,9 @@ export default function ObjectFieldFormBase({
 
 			{values.state && (
 				<AutoComplete<PickListItem>
+					creationLanguageId={
+						creationLanguageId2 as Liferay.Language.Locale
+					}
 					emptyStateMessage={Liferay.Language.get('option-not-found')}
 					error={errors.defaultValue}
 					items={filteredPicklistItems}

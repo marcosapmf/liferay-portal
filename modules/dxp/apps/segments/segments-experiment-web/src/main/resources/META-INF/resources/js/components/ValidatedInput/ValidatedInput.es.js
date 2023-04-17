@@ -9,47 +9,61 @@
  * distribution rights of the Software.
  */
 
+import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
-import getCN from 'classnames';
+import {useId} from '@liferay/layout-content-page-editor-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useRef, useState} from 'react';
 
-function _isValueValid(value) {
-	const noSpacesValue = value.replace(/\s/g, '');
-
-	return !!noSpacesValue;
-}
-
-function ValidatedInput(props) {
-	const {
-		autofocus = false,
-		errorMessage,
-		label,
-		onBlur = () => {},
-		onChange = () => {},
-		onFocus = () => {},
-		onValidationChange = () => {},
-		value = '',
-	} = props;
-
+function ValidatedInput({
+	autofocus = false,
+	errorMessage,
+	label,
+	onBlur = () => {},
+	onChange = () => {},
+	onFocus = () => {},
+	onValidationChange = () => {},
+	required = false,
+	value = '',
+}) {
+	const inputId = useId();
 	const [invalid, setInvalid] = useState(false);
-
 	const nodeRef = useRef();
+
+	const updateInvalid = (newInvalid) => {
+		setInvalid((previousInvalid) => {
+			if (newInvalid !== previousInvalid) {
+				onValidationChange(newInvalid);
+			}
+
+			return newInvalid;
+		});
+	};
+
+	const onNameInputBlur = (event) => {
+		if (!value.trim().length) {
+			updateInvalid(true);
+		}
+
+		onBlur(event);
+	};
+
+	const onNameInputFocus = (event) => {
+		updateInvalid(false);
+		onFocus(event);
+	};
+
 	useEffect(() => {
 		if (nodeRef.current && autofocus) {
 			nodeRef.current.focus();
 		}
 	}, [autofocus]);
 
-	const formGroupClasses = getCN('form-group w-100', {
-		'has-error': invalid,
-	});
-
 	return (
-		<label className={formGroupClasses}>
+		<ClayForm.Group className={invalid ? 'has-error' : ''}>
 			{label && (
 				<>
-					{label}
+					<label htmlFor={inputId}>{label}</label>
 					<ClayIcon
 						className="lexicon-icon-sm ml-1 reference-mark text-warning"
 						style={{verticalAlign: 'super'}}
@@ -58,49 +72,29 @@ function ValidatedInput(props) {
 				</>
 			)}
 
-			<input
-				className="form-control mt-1"
+			<ClayInput
+				id={inputId}
 				maxLength="75"
-				onBlur={_handleNameInputBlur}
+				onBlur={onNameInputBlur}
 				onChange={onChange}
-				onFocus={_handleNameInputFocus}
+				onFocus={onNameInputFocus}
 				ref={nodeRef}
+				required={required}
 				type="text"
 				value={value}
 			/>
 
 			{invalid && errorMessage && (
-				<div className="form-feedback-group">
-					<div className="form-feedback-item">
-						<ClayIcon
-							className="mr-1 text-danger"
-							symbol="info-circle"
-						/>
+				<ClayForm.FeedbackGroup>
+					<ClayForm.FeedbackItem>
+						<ClayForm.FeedbackIndicator symbol="exclamation-full" />
 
 						{errorMessage}
-					</div>
-				</div>
+					</ClayForm.FeedbackItem>
+				</ClayForm.FeedbackGroup>
 			)}
-		</label>
+		</ClayForm.Group>
 	);
-
-	function _handleNameInputBlur(event) {
-		if (!_isValueValid(value)) {
-			_setInvalid(true);
-		}
-		onBlur(event);
-	}
-	function _handleNameInputFocus(event) {
-		_setInvalid(false);
-		onFocus(event);
-	}
-
-	function _setInvalid(newInvalid) {
-		setInvalid(newInvalid);
-		if (newInvalid !== invalid) {
-			onValidationChange(newInvalid);
-		}
-	}
 }
 
 ValidatedInput.propTypes = {

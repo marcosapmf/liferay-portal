@@ -22,7 +22,7 @@ import {
 	EVENT_TYPES as CORE_EVENT_TYPES,
 	FieldFeedback,
 	Layout,
-	getRepeatedIndex,
+	PagesVisitor,
 	useForm,
 	useFormState,
 } from 'data-engine-js-components-web';
@@ -95,7 +95,7 @@ const getFieldDetails = ({
 		}
 	}
 
-	return fieldDetails.join('<br>');
+	return fieldDetails.length ? fieldDetails.join('<br>') : false;
 };
 
 const HideFieldProperty = () => {
@@ -196,7 +196,7 @@ export function FieldBase({
 	visible,
 	warningMessage,
 }) {
-	const {editingLanguageId} = useFormState();
+	const {editingLanguageId, pages} = useFormState();
 	const dispatch = useForm();
 
 	const hasError = displayErrors && errorMessage && !valid;
@@ -236,7 +236,6 @@ export function FieldBase({
 
 	const renderLabel =
 		(label && showLabel) || hideField || repeatable || required || tooltip;
-	const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
 	const showLegend =
 		type === 'checkbox_multiple' ||
 		type === 'grid' ||
@@ -249,15 +248,38 @@ export function FieldBase({
 		type === 'image' ||
 		type === 'search_location' ||
 		type === 'select';
+	const readFieldDetails = !showFor || type === 'select';
+	const hasFieldDetails = accessible && fieldDetails && readFieldDetails;
 
 	const accessibleProps = {
-		...(accessible && fieldDetails && {'aria-labelledby': fieldDetailsId}),
-		...(showFor ? {htmlFor: id ?? name} : {tabIndex: 0}),
+		...(hasFieldDetails && {'aria-labelledby': fieldDetailsId}),
+		...(showFor && {htmlFor: id ?? name}),
+		...(readFieldDetails && {tabIndex: 0}),
 	};
 
 	const defaultRows = nestedFields?.map((field) => ({
 		columns: [{fields: [field], size: 12}],
 	}));
+
+	const checkRepetitions = () => {
+		let repetitionsCounter = 0;
+
+		const visitor = new PagesVisitor(pages);
+
+		const newFieldName = fieldName ?? fieldReference;
+
+		visitor.mapFields(
+			(field) => {
+				if (newFieldName === field.fieldName) {
+					repetitionsCounter++;
+				}
+			},
+			true,
+			true
+		);
+
+		return repetitionsCounter;
+	};
 
 	return (
 		<ClayForm.Group
@@ -275,7 +297,7 @@ export function FieldBase({
 		>
 			{repeatable && (
 				<div className="lfr-ddm-form-field-repeatable-toolbar">
-					{repeatedIndex > 0 && (
+					{checkRepetitions() > 1 && (
 						<ClayButton
 							aria-label={sub(
 								Liferay.Language.get('remove-duplicate-field'),
@@ -401,13 +423,14 @@ export function FieldBase({
 			)}
 
 			<FieldFeedback
-				aria-hidden
+				aria-hidden={readFieldDetails}
 				errorMessage={hasError ? errorMessage : undefined}
 				helpMessage={typeof tip === 'string' ? tip : undefined}
+				name={id ?? name}
 				warningMessage={warningMessage}
 			/>
 
-			{accessible && fieldDetails && (
+			{hasFieldDetails && (
 				<span
 					className="sr-only"
 					dangerouslySetInnerHTML={{

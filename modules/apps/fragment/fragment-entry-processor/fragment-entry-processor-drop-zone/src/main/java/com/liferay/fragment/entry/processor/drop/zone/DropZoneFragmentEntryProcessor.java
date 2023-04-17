@@ -14,12 +14,12 @@
 
 package com.liferay.fragment.entry.processor.drop.zone;
 
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.exception.FragmentEntryContentException;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessor;
 import com.liferay.fragment.processor.FragmentEntryProcessorContext;
 import com.liferay.fragment.renderer.FragmentDropZoneRenderer;
+import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.layout.constants.LayoutWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -40,7 +40,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -125,12 +124,15 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 			return html;
 		}
 
+		if (httpServletRequest != null) {
+			httpServletRequest.setAttribute(
+				InfoDisplayWebKeys.INFO_FORM,
+				fragmentEntryProcessorContext.getInfoForm());
+		}
+
 		List<String> dropZoneItemIds = layoutStructureItem.getChildrenItemIds();
 
-		if (Objects.equals(
-				fragmentEntryProcessorContext.getMode(),
-				FragmentEntryLinkConstants.EDIT)) {
-
+		if (fragmentEntryProcessorContext.isEditMode()) {
 			boolean idsAvailable = true;
 
 			for (Element element : elements) {
@@ -222,6 +224,10 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 			dropZoneElement.html(dropZoneHTML);
 
 			element.replaceWith(dropZoneElement);
+		}
+
+		if (httpServletRequest != null) {
+			httpServletRequest.removeAttribute(InfoDisplayWebKeys.INFO_FORM);
 		}
 
 		Element bodyElement = document.body();

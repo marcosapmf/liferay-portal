@@ -29,9 +29,9 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -89,32 +89,18 @@ public class CalendarBookingIndexerLocalizedContentTest
 			"title_ja_JP", japaneseName
 		).build();
 
-		String word1 = "新規";
-		String word2 = "作成";
-		String prefix1 = "新";
-		String prefix2 = "作";
-
-		Stream.of(
-			word1, word2, prefix1, prefix2
-		).forEach(
-			keywords -> assertFieldValues(
-				"title", LocaleUtil.JAPAN, titleMap, keywords)
-		);
+		for (String keyword : Arrays.asList("新規", "作成", "新", "作")) {
+			assertFieldValues("title", LocaleUtil.JAPAN, titleMap, keyword);
+		}
 	}
 
 	@Test
 	public void testJapaneseTitleFullWordOnly() throws Exception {
-		String full = "新規作成";
-		String partial1 = "新大阪";
-		String partial2 = "作戦大成功";
-
 		String description = StringUtil.toLowerCase(
 			RandomTestUtil.randomString());
 
-		Stream.of(
-			full, partial1, partial2
-		).forEach(
-			title -> addCalendarBooking(
+		for (String title : Arrays.asList("新規作成", "新大阪", "作戦大成功")) {
+			addCalendarBooking(
 				new LocalizedValuesMap() {
 					{
 						put(LocaleUtil.JAPAN, title);
@@ -131,22 +117,16 @@ public class CalendarBookingIndexerLocalizedContentTest
 						put(LocaleUtil.US, description);
 						put(LocaleUtil.HUNGARY, description);
 					}
-				})
-		);
+				});
+		}
 
 		Map<String, String> titleMap = HashMapBuilder.put(
 			"title_ja_JP", "新規作成"
 		).build();
 
-		String word1 = "新規";
-		String word2 = "作成";
-
-		Stream.of(
-			word1, word2
-		).forEach(
-			keywords -> assertFieldValues(
-				"title", LocaleUtil.JAPAN, titleMap, keywords)
-		);
+		for (String keyword : Arrays.asList("新規", "作成")) {
+			assertFieldValues("title", LocaleUtil.JAPAN, titleMap, keyword);
+		}
 	}
 
 	protected CalendarBooking addCalendarBooking(

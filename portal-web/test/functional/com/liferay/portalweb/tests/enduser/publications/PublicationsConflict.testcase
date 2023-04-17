@@ -1,7 +1,6 @@
 @component-name = "portal-publications"
 definition {
 
-	property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 	property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
@@ -17,7 +16,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -26,7 +25,7 @@ definition {
 	}
 
 	@description = "Assert modification conflict displays when modify the same document in two Publications"
-	@priority = "5"
+	@priority = 5
 	test AssertModificationConflictDisplays {
 		property portal.acceptance = "true";
 
@@ -94,7 +93,7 @@ definition {
 	}
 
 	@description = "Assert the conflict changes disply when modifying and deleting the same document in two Publications"
-	@priority = "4"
+	@priority = 4
 	test AssertModificationDeletionConflictDisplays {
 		property portal.acceptance = "true";
 
@@ -158,7 +157,7 @@ definition {
 	}
 
 	@description = "Assert there are no conflict changes when deleting the same document in two Publications"
-	@priority = "4"
+	@priority = 4
 	test AssertNoConflictForDeletionsCombinationPublications {
 		property portal.acceptance = "true";
 
@@ -214,13 +213,111 @@ definition {
 		Publications.viewPublicationPublished(publicationName = "Publication Name 2");
 	}
 
-	@priority = "5"
+	@description = "This is a use case for LPS-172496. Deleting a portlet with a modified configuration from a Publication incorrectly leads to a Deletion Modification Conflict"
+	@priority = 3
+	test CanDeletePortletModifiedConfigurationWithoutDeletionModificationConflict {
+		task ("Add a Widget Page with Asset Publisher") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page",
+				widgetName = "Asset Publisher");
+		}
+
+		JSONPublications.addPublication(publicationName = "Test Publication");
+
+		JSONPublications.selectPublication(publicationName = "Test Publication");
+
+		task ("Go to the Widget Page and edit Asset Publisher") {
+			Navigator.gotoPage(pageName = "Test Page");
+
+			AssetPublisherPortlet.gotoConfigurationPG();
+
+			Click(locator1 = "APConfiguration#ASSET_SELECTION_MANUAL");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Remove Asset Publisher from the Page and publish the Publication") {
+			Navigator.gotoPage(pageName = "Test Page");
+
+			Portlet.deletePG(portletName = "Asset Publisher");
+
+			PublicationsNavigator.gotoPublish(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			Publications.publishPublication(publicationName = "Test Publication");
+		}
+	}
+
+	@description = "This is a use case for LPS-175305. As a publication admin, I would like to know log the conflicts that happened."
+	@priority = 4
+	test CanSeeConflictsInTheLog {
+		property test.name.skip.portal.instance = "PublicationsConflict#CanSeeConflictsInTheLog";
+
+		task ("Add Log level and Web Content") {
+			ServerAdministration.openServerAdmin();
+
+			ServerAdministration.addCategoryLogLevels(
+				categoryLevel = "INFO",
+				categoryName = "com.liferay.change.tracking.web.internal.display.context");
+
+			JSONWebcontent.addWebContent(
+				content = "Web Content content",
+				groupName = "Guest",
+				title = "Web Content Title");
+		}
+
+		task ("Create Publication 1, delete WC, create Publication 2 and Modify WC") {
+			JSONPublications.addPublication(publicationName = "Publication 1");
+
+			JSONPublications.selectPublication(publicationName = "Publication 1");
+
+			JSONWebcontent.deleteWebContent(
+				groupName = "Guest",
+				title = "Web Content Title");
+
+			JSONPublications.addPublication(publicationName = "Publication 2");
+
+			JSONPublications.selectPublication(publicationName = "Publication 2");
+
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
+
+			WebContent.editCP(
+				webContentContentEdit = "Web Content Content Edit",
+				webContentTitle = "Web Content Title",
+				webContentTitleEdit = "Web Content Title Edit");
+		}
+
+		task ("Publish Publication 1 and attempt to publish Publication 2") {
+			JSONPublications.selectPublication(publicationName = "Publication 1");
+
+			JSONPublications.publishPublication(publicationName = "Publication 1");
+
+			Publications.viewPublicationPublished(publicationName = "Publication 1");
+
+			JSONPublications.selectPublication(publicationName = "Publication 2");
+
+			Refresh();
+
+			PublicationsNavigator.gotoPublish(publicationName = "Publication 2");
+
+			Click(locator1 = "Publications#PUBLISH_BUTTON");
+
+			Alert.viewWarningSpecificNotPresent(warningMessage = "Your request completed successfully.");
+
+			AssertConsoleTextPresent(value1 = "Unresolved conflict with change tracking entry ID");
+		}
+	}
+
+	@priority = 5
 	test ConflictingPublicationsAutomaticallyResolved {
-
-		// Workaround LPS-140997
-
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
-
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
 			groupName = "Guest",
@@ -287,7 +384,7 @@ definition {
 	}
 
 	@description = "Assert explanation of addition conflict displays"
-	@priority = "4"
+	@priority = 4
 	test ExplainAdditionConflict {
 		JSONWebcontent.addFolder(
 			folderName = "WC Folder Name",
@@ -341,7 +438,7 @@ definition {
 	}
 
 	@description = "Assert explanation of duplicate conflict displays"
-	@priority = "4"
+	@priority = 4
 	test ExplainDuplicationConflict {
 		JSONPublications.addPublication(publicationName = "Publication 1 Name");
 
@@ -393,7 +490,7 @@ definition {
 	}
 
 	@description = "Assert explanation of missing requirements conflict displays"
-	@priority = "4"
+	@priority = 4
 	test ExplainMissingRequirementConflict {
 		JSONWebcontent.addFolder(
 			folderName = "WC Folder Name",
@@ -444,12 +541,8 @@ definition {
 	}
 
 	@description = "Assert the conflict changes disply when modifying and deleting the same document in two Publications and discard the changes"
-	@priority = "5"
+	@priority = 5
 	test ResolveDeletionModificationConflictPublicationsByDiscarding {
-
-		// Workaround LPS-140997
-
-		property database.types = "hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 
 		JSONWebcontent.addWebContent(
@@ -559,13 +652,13 @@ definition {
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
 
-		AssertTextEquals(
+		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "No web content was found.");
 	}
 
 	@description = "Assert the conflict changes disply when adding the same folder Name in two Publications and resolve by editing"
-	@priority = "5"
+	@priority = 5
 	test ResolveDuplicateNameConflictPublicationsByEditing {
 		property portal.acceptance = "true";
 

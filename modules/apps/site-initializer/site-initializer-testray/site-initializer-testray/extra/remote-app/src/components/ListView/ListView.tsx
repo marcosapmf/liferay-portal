@@ -30,12 +30,16 @@ import ListViewContextProvider, {
 	ListViewContextProviderProps,
 	ListViewTypes,
 } from '../../context/ListViewContext';
+import SearchBuilder from '../../core/SearchBuilder';
 import {useFetch} from '../../hooks/useFetch';
 import i18n from '../../i18n';
+import {
+	FilterSchema as FilterSchemaType,
+	filterSchema as filterSchemas,
+} from '../../schema/filter';
 import {APIResponse} from '../../services/rest';
 import {SortDirection} from '../../types';
 import {PAGINATION} from '../../util/constants';
-import {SearchBuilder} from '../../util/search';
 import EmptyState from '../EmptyState';
 import Loading from '../Loading';
 import ManagementToolbar, {ManagementToolbarProps} from '../ManagementToolbar';
@@ -84,7 +88,7 @@ const ListView: React.FC<ListViewProps> = ({
 	resource,
 	tableProps,
 	transformData,
-	variables: _variables,
+	variables,
 	pagination = {displayTop: true},
 }) => {
 	const [listViewContext, dispatch] = useContext(ListViewContext);
@@ -96,32 +100,49 @@ const ListView: React.FC<ListViewProps> = ({
 		sort,
 	} = listViewContext;
 
+	const filterSchemaName = managementToolbarProps.filterSchema ?? '';
+	const filterSchema = (filterSchemas as any)[
+		filterSchemaName
+	] as FilterSchemaType;
+
+	const onApplyFilterMemo = useMemo(
+		() => filterSchema?.onApply?.bind(filterSchema),
+		[filterSchema]
+	);
+
+	const filterVariables = useMemo(
+		() => ({
+			appliedFilter: filters.filter,
+			defaultFilter: variables?.filter,
+			filterSchema,
+		}),
+		[filters.filter, variables?.filter, filterSchema]
+	);
+
 	const getURLSearchParams = useCallback(
 		() => ({
-			filter:
-				SearchBuilder.createFilter(
-					filters.filter,
-					_variables?.filter
-				) || '',
+			filter: onApplyFilterMemo
+				? onApplyFilterMemo(filterVariables)
+				: SearchBuilder.createFilter(filterVariables) || '',
 			forceRefetch,
 			page: listViewContext.page,
 			pageSize: listViewContext.pageSize,
 			sort: sort.key ? `${sort.key}:${sort.direction.toLowerCase()}` : '',
 		}),
 		[
+			onApplyFilterMemo,
+			filterVariables,
 			forceRefetch,
-			_variables?.filter,
-			filters.filter,
 			listViewContext.page,
 			listViewContext.pageSize,
-			sort.direction,
 			sort.key,
+			sort.direction,
 		]
 	);
 
 	const {data: response, error, loading, mutate} = useFetch(resource, {
+		params: getURLSearchParams(),
 		transformData,
-		...getURLSearchParams(),
 	});
 
 	const {actions = {}, items = [], page, pageSize, totalCount = 0} =
@@ -183,10 +204,6 @@ const ListView: React.FC<ListViewProps> = ({
 		}
 	}, [items, tableProps, selectedRows, dispatch]);
 
-	if (error) {
-		return <span>{error.message}</span>;
-	}
-
 	if (loading) {
 		return <Loading />;
 	}
@@ -224,7 +241,12 @@ const ListView: React.FC<ListViewProps> = ({
 				/>
 			)}
 
-			{!items.length && <EmptyState />}
+			{!items.length && (
+				<EmptyState
+					description={error?.message}
+					type={error ? 'EMPTY_SEARCH' : 'EMPTY_STATE'}
+				/>
+			)}
 
 			{children &&
 				children(response as APIResponse, {
@@ -266,7 +288,7 @@ const ListViewWithContext: React.FC<
 		initialContext?: ListViewContextProviderProps;
 	}
 > = ({initialContext, ...otherProps}) => (
-	<ListViewContextProvider {...initialContext}>
+	<ListViewContextProvider {...initialContext} id={otherProps.resource}>
 		<ListViewMemoized {...otherProps} />
 	</ListViewContextProvider>
 );

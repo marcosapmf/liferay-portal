@@ -20,6 +20,7 @@ import {Observer} from '@clayui/modal/lib/types';
 import {API, Input} from '@liferay/object-js-components-web';
 import React, {useEffect, useState} from 'react';
 
+import {defaultLanguageId} from '../../utils/constants';
 import {toCamelCase} from '../../utils/string';
 import {
 	ObjectRelationshipFormBase,
@@ -27,8 +28,6 @@ import {
 	useObjectRelationshipForm,
 } from './ObjectRelationshipFormBase';
 import SelectRelationship from './SelectRelationship';
-
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
 function ModalAddObjectRelationship({
 	ffOneToOneRelationshipConfigurationEnabled,
@@ -58,8 +57,10 @@ function ModalAddObjectRelationship({
 			onClose();
 			window.location.reload();
 		}
-		catch ({message}) {
-			setError(message as string);
+		catch (error: unknown) {
+			const {message} = error as Error;
+
+			setError(message);
 		}
 	};
 

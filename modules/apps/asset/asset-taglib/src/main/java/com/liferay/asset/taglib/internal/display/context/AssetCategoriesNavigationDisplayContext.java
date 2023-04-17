@@ -59,14 +59,13 @@ public class AssetCategoriesNavigationDisplayContext {
 		_httpServletRequest = httpServletRequest;
 		_renderResponse = renderResponse;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		_hidePortletWhenEmpty = GetterUtil.getBoolean(
-			(String)_httpServletRequest.getAttribute(
+			(String)httpServletRequest.getAttribute(
 				"liferay-asset:asset-tags-navigation:hidePortletWhenEmpty"));
 		_vocabularyIds = (long[])httpServletRequest.getAttribute(
 			"liferay-asset:asset-tags-navigation:vocabularyIds");
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 	}
 
 	public long getCategoryId() {
@@ -184,8 +183,7 @@ public class AssetCategoriesNavigationDisplayContext {
 		).put(
 			"id", category.getCategoryId()
 		).put(
-			"name",
-			HtmlUtil.escape(category.getTitle(_themeDisplay.getLocale()))
+			"name", category.getTitle(_themeDisplay.getLocale())
 		).put(
 			"url", _getPortletURL(category.getCategoryId())
 		).put(
@@ -246,9 +244,7 @@ public class AssetCategoriesNavigationDisplayContext {
 				).put(
 					"id", vocabulary.getVocabularyId()
 				).put(
-					"name",
-					HtmlUtil.escape(
-						vocabulary.getTitle(_themeDisplay.getLocale()))
+					"name", vocabulary.getTitle(_themeDisplay.getLocale())
 				));
 		}
 

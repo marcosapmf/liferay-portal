@@ -127,6 +127,17 @@ components:
                 - name
                 - type
             type: object
+        DDMOption:
+            properties:
+                key:
+                    type: string
+                required:
+                    type: boolean
+                value:
+                    items:
+                        type: string
+                    type: array
+            type: object
         Error:
             properties:
                 errorCode:
@@ -156,6 +167,23 @@ components:
                 - errorDescription
                 - message
                 - status
+            type: object
+        LinkedProduct:
+            properties:
+                productExternalReferenceCode:
+                    example: exampleERC
+                    readOnly: true
+                    type: string
+                productId:
+                    example: 33131
+                    format: int64
+                    minimum: 0
+                    readOnly: true
+                    type: integer
+                type:
+                    example: exampleERC
+                    readOnly: true
+                    type: string
             type: object
         MappedProduct:
             properties:
@@ -324,6 +352,8 @@ components:
                 expando:
                     additionalProperties: true
                     type: object
+                externalReferenceCode:
+                    type: string
                 id:
                     example: 30130
                     format: int64
@@ -333,6 +363,10 @@ components:
                 images:
                     items:
                         $ref: "#/components/schemas/Attachment"
+                    type: array
+                linkedProducts:
+                    items:
+                        $ref: "#/components/schemas/LinkedProduct"
                     type: array
                 metaDescription:
                     type: string
@@ -515,6 +549,10 @@ components:
                     format: int64
                     minimum: 0
                     type: integer
+                specificationGroupKey:
+                    type: string
+                specificationGroupTitle:
+                    type: string
                 specificationId:
                     example: 30129
                     format: int64
@@ -522,6 +560,8 @@ components:
                     type: integer
                 specificationKey:
                     example: specification-key
+                    type: string
+                specificationTitle:
                     type: string
                 value:
                     type: string
@@ -549,6 +589,11 @@ components:
             type: object
         Sku:
             properties:
+                DDMOptions:
+                    items:
+                        $ref: "#/components/schemas/DDMOption"
+                    readOnly: true
+                    type: array
                 allowedOrderQuantities:
                     example:
                         - 10
@@ -565,10 +610,20 @@ components:
                     format: double
                     minimum: 0
                     type: number
+                discontinued:
+                    example: false
+                    type: boolean
+                discontinuedDate:
+                    example: 2017-07-21
+                    format: date
+                    type: string
                 displayDate:
                     example: 2017-07-21
                     format: date
                     type: string
+                displayDiscountLevels:
+                    example: true
+                    type: boolean
                 expirationDate:
                     example: 2017-08-21
                     format: date
@@ -587,6 +642,8 @@ components:
                     minimum: 0
                     readOnly: true
                     type: integer
+                incomingQuantityLabel:
+                    type: string
                 manufacturerPartNumber:
                     example: "12341234"
                     type: string
@@ -607,6 +664,14 @@ components:
                 purchasable:
                     example: true
                     type: boolean
+                replacementSkuExternalReferenceCode:
+                    example: SKU0111
+                    type: string
+                replacementSkuId:
+                    example: 33135
+                    format: int64
+                    minimum: 0
+                    type: integer
                 sku:
                     type: string
                 skuOptions:
@@ -675,7 +740,7 @@ components:
 info:
     description:
         "Headless Commerce Delivery Catalog API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.delivery.catalog.client', and version '4.0.24'."
+        artifact ID 'com.liferay.headless.commerce.delivery.catalog.client', and version '4.0.31'."
     license:
         name: Apache 2.0
         url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -1216,6 +1281,114 @@ paths:
                         Unexpected error
             summary: Gets a list of Images related to a Product.
             tags: ["Attachment"]
+    /channels/{channelId}/products/{productId}/linked-products:
+        get:
+            operationId: getChannelProductLinkedProductsPage
+            parameters:
+                - in: path
+                  explode: false
+                  name: channelId
+                  required: true
+                  schema:
+                      description:
+                          The Channel Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+                - in: path
+                  explode: false
+                  name: productId
+                  required: true
+                  schema:
+                      description:
+                          The resource Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+                - in: query
+                  name: accountId
+                  required: false
+                  schema:
+                      description:
+                          Account Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                - in: query
+                  explode: true
+                  name: page
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+                - in: query
+                  explode: true
+                  name: pageSize
+                  required: false
+                  schema:
+                      type: integer
+                  style: form
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/LinkedProduct"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/LinkedProduct"
+                                type: array
+                    description:
+                        Successful operation
+                400:
+                    description:
+                        Invalid input
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            security:
+                - BasicAuth: []
+                - BearerAuth: []
+                - OAuth2:
+                      - HeadlessCommerceAdminCatalog.read
+            summary: Gets a list of grouped product.
+            tags:
+                - LinkedProduct
     /channels/{channelId}/products/{productId}/mapped-products:
         get:
             operationId: getChannelProductMappedProductsPage
@@ -1766,6 +1939,110 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/Sku"
                                 type: array
+                401:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Authentication information is missing or invalid
+                404:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        The specified resource was not found
+                500:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+                    description:
+                        Unexpected error
+            tags: ["Sku"]
+        post:
+            description:
+                Retrieves a SKU from selected channel and product ID.
+            operationId: postChannelProductSku
+            parameters:
+                - in: path
+                  explode: false
+                  name: channelId
+                  required: true
+                  schema:
+                      description:
+                          Channel Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+                - in: path
+                  explode: false
+                  name: productId
+                  required: true
+                  schema:
+                      description:
+                          Product Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                  style: simple
+                - in: query
+                  name: accountId
+                  required: false
+                  schema:
+                      description:
+                          Account Id
+                      example: 30130
+                      format: int64
+                      minimum: 0
+                      type: integer
+                - in: query
+                  name: quantity
+                  required: false
+                  schema:
+                      description:
+                          Quantity
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            items:
+                                $ref: "#/components/schemas/DDMOption"
+                            type: array
+                    application/xml:
+                        schema:
+                            items:
+                                $ref: "#/components/schemas/DDMOption"
+                            type: array
+                required: true
+            responses:
+                201:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Sku"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/Sku"
+                    description:
+                        Created
+                400:
+                    description:
+                        Invalid input
                 401:
                     content:
                         application/json:

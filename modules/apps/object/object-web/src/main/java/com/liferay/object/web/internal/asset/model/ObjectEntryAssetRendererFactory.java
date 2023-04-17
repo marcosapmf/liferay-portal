@@ -14,6 +14,7 @@
 
 package com.liferay.object.web.internal.asset.model;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
 import com.liferay.object.model.ObjectDefinition;
@@ -35,13 +36,17 @@ public class ObjectEntryAssetRendererFactory
 	extends BaseAssetRendererFactory<ObjectEntry> {
 
 	public ObjectEntryAssetRendererFactory(
+		AssetDisplayPageFriendlyURLProvider assetDisplayPageFriendlyURLProvider,
 		ObjectDefinition objectDefinition,
 		ObjectEntryDisplayContextFactory objectEntryDisplayContextFactory,
 		ObjectEntryService objectEntryService, ServletContext servletContext) {
 
 		setClassName(objectDefinition.getClassName());
+		setSearchable(true);
 		setPortletId(objectDefinition.getPortletId());
 
+		_assetDisplayPageFriendlyURLProvider =
+			assetDisplayPageFriendlyURLProvider;
 		_objectDefinition = objectDefinition;
 		_objectEntryDisplayContextFactory = objectEntryDisplayContextFactory;
 		_objectEntryService = objectEntryService;
@@ -54,7 +59,8 @@ public class ObjectEntryAssetRendererFactory
 
 		ObjectEntryAssetRenderer objectEntryAssetRenderer =
 			new ObjectEntryAssetRenderer(
-				_objectDefinition, _objectEntryService.getObjectEntry(classPK),
+				_assetDisplayPageFriendlyURLProvider, _objectDefinition,
+				_objectEntryService.getObjectEntry(classPK),
 				_objectEntryDisplayContextFactory, _objectEntryService);
 
 		objectEntryAssetRenderer.setServletContext(_servletContext);
@@ -86,9 +92,20 @@ public class ObjectEntryAssetRendererFactory
 		}
 	}
 
+	@Override
+	public boolean isActive(long companyId) {
+		if (_objectDefinition.getCompanyId() == companyId) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryAssetRendererFactory.class);
 
+	private final AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntryDisplayContextFactory
 		_objectEntryDisplayContextFactory;

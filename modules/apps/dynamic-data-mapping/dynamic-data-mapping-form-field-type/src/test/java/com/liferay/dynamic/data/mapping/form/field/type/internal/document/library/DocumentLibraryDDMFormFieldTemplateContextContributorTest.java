@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.form.field.type.internal.document.library;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.dynamic.data.mapping.constants.DDMFormConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
@@ -33,8 +34,8 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
-import com.liferay.portal.kernel.portlet.PortletURLFactory;
-import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -59,18 +60,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletRequest;
+import javax.portlet.MutableResourceParameters;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.hamcrest.CoreMatchers;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -92,6 +95,7 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		super.setUp();
 
 		_setUpCompanyLocalService();
+		_setUpDLAppLocalService();
 		_setUpDLAppService();
 		_setUpFileEntry();
 		_setUpGroupLocalService();
@@ -103,8 +107,13 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		_setUpParamUtil();
 		_setUpPortal();
 		_setUpPortletFileRepository();
-		_setUpPortletURLFactoryUtil();
+		_setUpRequestBackedPortletURLFactory();
 		_setUpUserLocalService();
+	}
+
+	@After
+	public void tearDown() {
+		_requestBackedPortletURLFactoryUtilMockedStatic.close();
 	}
 
 	@Test
@@ -564,17 +573,23 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 			"_companyLocalService", companyLocalService);
 	}
 
-	private void _setUpDLAppService() throws Exception {
+	private void _setUpDLAppLocalService() throws Exception {
 		ReflectionTestUtil.setFieldValue(
 			_documentLibraryDDMFormFieldTemplateContextContributor,
-			"_dlAppService", _dlAppService);
+			"_dlAppLocalService", _dlAppLocalService);
 
 		Mockito.when(
-			_dlAppService.getFileEntryByUuidAndGroupId(
+			_dlAppLocalService.getFileEntryByUuidAndGroupId(
 				_FILE_ENTRY_UUID, _GROUP_ID)
 		).thenReturn(
 			_fileEntry
 		);
+	}
+
+	private void _setUpDLAppService() throws Exception {
+		ReflectionTestUtil.setFieldValue(
+			_documentLibraryDDMFormFieldTemplateContextContributor,
+			"_dlAppService", _dlAppService);
 
 		Folder folder = _mockFolder(_PRIVATE_FOLDER_ID);
 
@@ -703,36 +718,34 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 		);
 	}
 
-	private void _setUpPortletURLFactoryUtil() {
-		PortletURLFactoryUtil portletURLFactoryUtil =
-			new PortletURLFactoryUtil();
+	private void _setUpRequestBackedPortletURLFactory() {
+		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
+			Mockito.mock(RequestBackedPortletURLFactory.class);
 
-		PortletURLFactory portletURLFactory = Mockito.mock(
-			PortletURLFactory.class);
+		Mockito.when(
+			RequestBackedPortletURLFactoryUtil.create(
+				Mockito.any(HttpServletRequest.class))
+		).thenReturn(
+			requestBackedPortletURLFactory
+		);
 
-		LiferayPortletURL mockLiferayPortletURL = new MockLiferayPortletURL();
+		LiferayPortletURL liferayPortletURL = new TestMockLiferayPortletURL();
 
 		Mockito.doReturn(
-			mockLiferayPortletURL
+			liferayPortletURL
 		).when(
-			portletURLFactory
-		).create(
-			Mockito.nullable(PortletRequest.class),
-			Mockito.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
-			Mockito.anyString()
+			requestBackedPortletURLFactory
+		).createActionURL(
+			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM
 		);
 
 		Mockito.doReturn(
-			mockLiferayPortletURL
+			liferayPortletURL
 		).when(
-			portletURLFactory
-		).create(
-			Mockito.nullable(HttpServletRequest.class),
-			Mockito.eq(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM),
-			Mockito.anyLong(), Mockito.anyString()
+			requestBackedPortletURLFactory
+		).createResourceURL(
+			DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM
 		);
-
-		portletURLFactoryUtil.setPortletURLFactory(portletURLFactory);
 	}
 
 	private void _setUpUserLocalService() throws Exception {
@@ -773,6 +786,8 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 
 	private static final long _REPOSITORY_ID = RandomTestUtil.randomLong();
 
+	private final DLAppLocalService _dlAppLocalService = Mockito.mock(
+		DLAppLocalService.class);
 	private final DLAppService _dlAppService = Mockito.mock(DLAppService.class);
 	private final DocumentLibraryDDMFormFieldTemplateContextContributor
 		_documentLibraryDDMFormFieldTemplateContextContributor =
@@ -789,10 +804,22 @@ public class DocumentLibraryDDMFormFieldTemplateContextContributorTest
 	private final Portal _portal = Mockito.mock(Portal.class);
 	private final PortletFileRepository _portletFileRepository = Mockito.mock(
 		PortletFileRepository.class);
+	private final MockedStatic<RequestBackedPortletURLFactoryUtil>
+		_requestBackedPortletURLFactoryUtilMockedStatic = Mockito.mockStatic(
+			RequestBackedPortletURLFactoryUtil.class);
 	private final ResourceBundle _resourceBundle = Mockito.mock(
 		ResourceBundle.class);
 	private final Group _scopeGroup = Mockito.mock(Group.class);
 	private final UserLocalService _userLocalService = Mockito.mock(
 		UserLocalService.class);
+
+	private class TestMockLiferayPortletURL extends MockLiferayPortletURL {
+
+		@Override
+		public MutableResourceParameters getResourceParameters() {
+			return Mockito.mock(MutableResourceParameters.class);
+		}
+
+	}
 
 }

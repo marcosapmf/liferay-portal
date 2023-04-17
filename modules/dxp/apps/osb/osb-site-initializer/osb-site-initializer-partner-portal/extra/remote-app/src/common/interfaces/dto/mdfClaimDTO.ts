@@ -10,13 +10,16 @@
  */
 
 import AccountEntry from '../accountEntry';
+import LiferayPicklist from '../liferayPicklist';
 import MDFClaim from '../mdfClaim';
 
 export default interface MDFClaimDTO
 	extends Omit<MDFClaim, 'activities' | 'reimbursementInvoice'> {
 	amountClaimed?: number;
 	companyName?: string;
+	currency: LiferayPicklist;
 	externalReferenceCodeSF?: string;
+	mdfClaimStatus: LiferayPicklist;
 	mdfRequestExternalReferenceCodeSF?: string;
 	mdfRequestTotalCostOfExpense?: number;
 	mdfRequestedAmount?: number;

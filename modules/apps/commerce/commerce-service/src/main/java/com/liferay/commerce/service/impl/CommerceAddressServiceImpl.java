@@ -14,9 +14,10 @@
 
 package com.liferay.commerce.service.impl;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.account.model.CommerceAccount;
-import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.service.CommerceOrderService;
@@ -153,6 +154,17 @@ public class CommerceAddressServiceImpl extends CommerceAddressServiceBaseImpl {
 
 	@Override
 	public List<CommerceAddress> getBillingCommerceAddresses(
+			long channelId, String className, long classPK, int start, int end)
+		throws PortalException {
+
+		_checkPermission(className, classPK);
+
+		return commerceAddressLocalService.getBillingCommerceAddresses(
+			channelId, className, classPK, start, end);
+	}
+
+	@Override
+	public List<CommerceAddress> getBillingCommerceAddresses(
 			long companyId, String className, long classPK, String keywords,
 			int start, int end, Sort sort)
 		throws PortalException {
@@ -161,6 +173,17 @@ public class CommerceAddressServiceImpl extends CommerceAddressServiceBaseImpl {
 
 		return commerceAddressLocalService.getBillingCommerceAddresses(
 			companyId, className, classPK, keywords, start, end, sort);
+	}
+
+	@Override
+	public List<CommerceAddress> getBillingCommerceAddressesCount(
+			long channelId, String className, long classPK, int start, int end)
+		throws PortalException {
+
+		_checkPermission(className, classPK);
+
+		return commerceAddressLocalService.getBillingCommerceAddresses(
+			channelId, className, classPK, start, end);
 	}
 
 	@Override
@@ -301,6 +324,17 @@ public class CommerceAddressServiceImpl extends CommerceAddressServiceBaseImpl {
 
 	@Override
 	public List<CommerceAddress> getShippingCommerceAddresses(
+			long channelId, String className, long classPK, int start, int end)
+		throws PortalException {
+
+		_checkPermission(className, classPK);
+
+		return commerceAddressLocalService.getShippingCommerceAddresses(
+			channelId, className, classPK, start, end);
+	}
+
+	@Override
+	public List<CommerceAddress> getShippingCommerceAddresses(
 			long companyId, String className, long classPK, String keywords,
 			int start, int end, Sort sort)
 		throws PortalException {
@@ -309,6 +343,17 @@ public class CommerceAddressServiceImpl extends CommerceAddressServiceBaseImpl {
 
 		return commerceAddressLocalService.getShippingCommerceAddresses(
 			companyId, className, classPK, keywords, start, end, sort);
+	}
+
+	@Override
+	public List<CommerceAddress> getShippingCommerceAddressesCount(
+			long channelId, String className, long classPK, int start, int end)
+		throws PortalException {
+
+		_checkPermission(className, classPK);
+
+		return commerceAddressLocalService.getShippingCommerceAddresses(
+			channelId, className, classPK, start, end);
 	}
 
 	@Override
@@ -409,12 +454,17 @@ public class CommerceAddressServiceImpl extends CommerceAddressServiceBaseImpl {
 		else if (className.equals(AccountEntry.class.getName()) ||
 				 className.equals(CommerceAccount.class.getName())) {
 
-			_commerceAccountService.getCommerceAccount(classPK);
+			if (classPK == AccountConstants.ACCOUNT_ENTRY_ID_GUEST) {
+				_accountEntryLocalService.fetchAccountEntry(classPK);
+			}
+			else {
+				_accountEntryLocalService.getAccountEntry(classPK);
+			}
 		}
 	}
 
 	@Reference
-	private CommerceAccountService _commerceAccountService;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
 	private CommerceOrderService _commerceOrderService;

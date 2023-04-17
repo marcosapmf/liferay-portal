@@ -18,11 +18,11 @@ import {Dispatch, SetStateAction, useState} from 'react';
 import {useParams} from 'react-router-dom';
 
 import Form from '../../../../../components/Form';
+import SearchBuilder from '../../../../../core/SearchBuilder';
 import {useFetch} from '../../../../../hooks/useFetch';
 import useFormModal from '../../../../../hooks/useFormModal';
 import i18n from '../../../../../i18n';
 import {APIResponse, TestrayCase} from '../../../../../services/rest';
-import {searchUtil} from '../../../../../util/search';
 import {CaseListView} from '../../../Cases';
 import SuiteFormSelectModal from '../../../Suites/modal';
 import BuildSelectSuitesModal from '../BuildSelectSuitesModal';
@@ -45,9 +45,11 @@ const BuildFormCases: React.FC<BuildFormCasesProps> = ({
 	const {projectId} = useParams();
 
 	const {data: casesResponse} = useFetch<APIResponse<TestrayCase>>('/cases', {
-		fields: 'id',
-		filter: searchUtil.eq('projectId', projectId as string),
-		pageSize: 1,
+		params: {
+			fields: 'id',
+			filter: SearchBuilder.eq('projectId', projectId as string),
+			pageSize: 1,
+		},
 	});
 
 	const [modalType, setModalType] = useState<ModalType>({
@@ -140,7 +142,7 @@ const BuildFormCases: React.FC<BuildFormCasesProps> = ({
 							],
 						},
 						variables: {
-							filter: searchUtil.in('id', caseIds),
+							filter: SearchBuilder.in('id', caseIds),
 						},
 					}}
 				/>

@@ -25,7 +25,6 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
-import com.liferay.object.util.LocalizedMapUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -45,6 +44,7 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.io.Serializable;
 
@@ -81,7 +81,8 @@ public class ObjectDefinitionGraphQLTest {
 		ListTypeDefinition listTypeDefinition =
 			ListTypeDefinitionLocalServiceUtil.addListTypeDefinition(
 				null, TestPropsValues.getUserId(),
-				LocalizedMapUtil.getLocalizedMap(_listFieldName));
+				LocalizedMapUtil.getLocalizedMap(_listFieldName),
+				Collections.emptyList());
 
 		_addListTypeEntry(listTypeDefinition, StringUtil.randomId());
 		_addListTypeEntry(listTypeDefinition, StringUtil.randomId());
@@ -104,7 +105,7 @@ public class ObjectDefinitionGraphQLTest {
 			null, TestPropsValues.getUserId(), 0,
 			_objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_TEXT,
-			ObjectFieldConstants.DB_TYPE_STRING, null, true, true, "",
+			ObjectFieldConstants.DB_TYPE_STRING, true, true, "",
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			_objectFieldName, false, false, Collections.emptyList());
 
@@ -113,7 +114,7 @@ public class ObjectDefinitionGraphQLTest {
 			listTypeDefinition.getListTypeDefinitionId(),
 			_objectDefinition.getObjectDefinitionId(),
 			ObjectFieldConstants.BUSINESS_TYPE_PICKLIST,
-			ObjectFieldConstants.DB_TYPE_STRING, null, false, true, "",
+			ObjectFieldConstants.DB_TYPE_STRING, false, true, "",
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			_listFieldName, true, false, Collections.emptyList());
 
@@ -408,7 +409,7 @@ public class ObjectDefinitionGraphQLTest {
 		throws Exception {
 
 		ListTypeEntryLocalServiceUtil.addListTypeEntry(
-			TestPropsValues.getUserId(),
+			null, TestPropsValues.getUserId(),
 			listTypeDefinition.getListTypeDefinitionId(), key,
 			LocalizedMapUtil.getLocalizedMap(key));
 	}

@@ -58,11 +58,7 @@ const transformData = (isSmartSuite: boolean) => (
 				  }
 				: undefined,
 			id: suiteCase.id,
-			suite: suiteCase.r_suiteToSuitesCases_c_suite
-				? {
-						...suiteCase.r_suiteToSuitesCases_c_suite,
-				  }
-				: undefined,
+			suite: suiteCase.r_suiteToSuitesCases_c_suite,
 		}));
 	}
 

@@ -14,12 +14,13 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
+import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.account.constants.CommerceAccountConstants;
 import com.liferay.commerce.account.exception.NoSuchAccountGroupException;
-import com.liferay.commerce.account.model.CommerceAccount;
 import com.liferay.commerce.account.model.CommerceAccountGroup;
 import com.liferay.commerce.account.model.CommerceAccountGroupCommerceAccountRel;
 import com.liferay.commerce.account.model.CommerceAccountOrganizationRel;
@@ -27,7 +28,6 @@ import com.liferay.commerce.account.model.CommerceAccountUserRel;
 import com.liferay.commerce.account.service.CommerceAccountGroupCommerceAccountRelService;
 import com.liferay.commerce.account.service.CommerceAccountGroupService;
 import com.liferay.commerce.account.service.CommerceAccountOrganizationRelService;
-import com.liferay.commerce.account.service.CommerceAccountService;
 import com.liferay.commerce.account.service.CommerceAccountUserRelService;
 import com.liferay.commerce.account.service.persistence.CommerceAccountOrganizationRelPK;
 import com.liferay.commerce.account.service.persistence.CommerceAccountUserRelPK;
@@ -38,7 +38,6 @@ import com.liferay.headless.commerce.admin.account.dto.v1_0.Account;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountAddress;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountMember;
 import com.liferay.headless.commerce.admin.account.dto.v1_0.AccountOrganization;
-import com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountDTOConverter;
 import com.liferay.headless.commerce.admin.account.internal.odata.entity.v1_0.AccountEntityModel;
 import com.liferay.headless.commerce.admin.account.internal.util.v1_0.AccountMemberUtil;
 import com.liferay.headless.commerce.admin.account.internal.util.v1_0.AccountOrganizationUtil;
@@ -61,8 +60,11 @@ import com.liferay.portal.kernel.service.RegionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -92,7 +94,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	@Override
 	public Response deleteAccount(Long id) throws Exception {
-		_commerceAccountService.deleteCommerceAccount(id);
+		_accountEntryService.deleteAccountEntry(id);
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -104,18 +106,18 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			String externalReferenceCode)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		_commerceAccountService.deleteCommerceAccount(
-			commerceAccount.getCommerceAccountId());
+		_accountEntryService.deleteAccountEntry(
+			accountEntry.getAccountEntryId());
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -137,11 +139,11 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					externalReferenceCode);
 		}
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), accountExternalReferenceCode);
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new NoSuchEntryException(
 				"Unable to find Account with external reference code: " +
 					accountExternalReferenceCode);
@@ -152,7 +154,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				_commerceAccountGroupCommerceAccountRelService.
 					getCommerceAccountGroupCommerceAccountRel(
 						commerceAccountGroup.getCommerceAccountGroupId(),
-						commerceAccount.getCommerceAccountId());
+						accountEntry.getAccountEntryId());
 
 		_commerceAccountGroupCommerceAccountRelService.
 			deleteCommerceAccountGroupCommerceAccountRel(
@@ -177,11 +179,11 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			String externalReferenceCode)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
@@ -189,7 +191,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 		return _accountDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceAccount.getCommerceAccountId(),
+				accountEntry.getAccountEntryId(),
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
@@ -208,7 +210,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				contextCompany.getCompanyId()),
 			sorts,
 			document -> _toAccount(
-				_accountEntryService.getAccountEntry(
+				_accountEntryLocalService.getAccountEntry(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
@@ -233,17 +235,17 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			String externalReferenceCode, Account account)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		_updateAccount(commerceAccount.getCommerceAccountId(), account);
+		_updateAccount(accountEntry.getAccountEntryId(), account);
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -252,27 +254,28 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	@Override
 	public Account postAccount(Account account) throws Exception {
-		CommerceAccount commerceAccount =
-			_commerceAccountService.addOrUpdateCommerceAccount(
-				account.getName(),
-				CommerceAccountConstants.DEFAULT_PARENT_ACCOUNT_ID, true, null,
-				_getEmailAddress(account, null), account.getTaxId(),
+		AccountEntry accountEntry =
+			_accountEntryService.addOrUpdateAccountEntry(
+				account.getExternalReferenceCode(), contextUser.getUserId(),
+				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, account.getName(),
+				null, null, _getEmailAddress(account, null), null,
+				account.getTaxId(),
 				GetterUtil.get(
-					account.getType(),
-					CommerceAccountConstants.ACCOUNT_TYPE_PERSONAL),
-				GetterUtil.getBoolean(account.getActive(), true),
-				account.getExternalReferenceCode(),
+					_toAccountEntryType(account.getType()),
+					AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON),
+				_toAccountEntryStatus(
+					GetterUtil.getBoolean(account.getActive(), true)),
 				_serviceContextHelper.getServiceContext());
 
 		if (_isValidId(account.getDefaultBillingAccountAddressId())) {
-			_commerceAccountService.updateDefaultBillingAddress(
-				commerceAccount.getCommerceAccountId(),
+			_accountEntryLocalService.updateDefaultBillingAddressId(
+				accountEntry.getAccountEntryId(),
 				account.getDefaultBillingAccountAddressId());
 		}
 
 		if (_isValidId(account.getDefaultShippingAccountAddressId())) {
-			_commerceAccountService.updateDefaultShippingAddress(
-				commerceAccount.getCommerceAccountId(),
+			_accountEntryLocalService.updateDefaultShippingAddressId(
+				accountEntry.getAccountEntryId(),
 				account.getDefaultShippingAccountAddressId());
 		}
 
@@ -283,18 +286,17 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		if ((customFields != null) && !customFields.isEmpty()) {
 			ExpandoUtil.updateExpando(
 				contextCompany.getCompanyId(), AccountEntry.class,
-				commerceAccount.getPrimaryKey(), customFields);
+				accountEntry.getPrimaryKey(), customFields);
 		}
 
 		// Update nested resources
 
 		_updateNestedResources(
-			account, commerceAccount,
-			_serviceContextHelper.getServiceContext());
+			account, accountEntry, _serviceContextHelper.getServiceContext());
 
 		return _accountDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				commerceAccount.getCommerceAccountId(),
+				accountEntry.getAccountEntryId(),
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
@@ -303,17 +305,17 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			String externalReferenceCode, MultipartBody multipartBody)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.fetchByExternalReferenceCode(
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 				contextCompany.getCompanyId(), externalReferenceCode);
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new NoSuchEntryException(
 				"Unable to find account with external reference code " +
 					externalReferenceCode);
 		}
 
-		updateAccountLogo(commerceAccount, multipartBody);
+		updateAccountLogo(accountEntry, multipartBody);
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -335,20 +337,20 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					externalReferenceCode);
 		}
 
-		CommerceAccount commerceAccount = null;
+		AccountEntry accountEntry = null;
 
 		if (account.getId() != null) {
-			commerceAccount = _commerceAccountService.fetchCommerceAccount(
+			accountEntry = _accountEntryService.fetchAccountEntry(
 				account.getId());
 		}
 		else if (account.getExternalReferenceCode() != null) {
-			commerceAccount =
-				_commerceAccountService.fetchByExternalReferenceCode(
+			accountEntry =
+				_accountEntryService.fetchAccountEntryByExternalReferenceCode(
 					contextCompany.getCompanyId(),
 					account.getExternalReferenceCode());
 		}
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			throw new NoSuchEntryException(
 				"Unable to find Account with external reference code: " +
 					account.getExternalReferenceCode());
@@ -357,7 +359,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		_commerceAccountGroupCommerceAccountRelService.
 			addCommerceAccountGroupCommerceAccountRel(
 				commerceAccountGroup.getCommerceAccountGroupId(),
-				commerceAccount.getCommerceAccountId(),
+				accountEntry.getAccountEntryId(),
 				_serviceContextHelper.getServiceContext());
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
@@ -370,7 +372,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		throws Exception {
 
 		updateAccountLogo(
-			_commerceAccountService.getCommerceAccount(id), multipartBody);
+			_accountEntryLocalService.getAccountEntry(id), multipartBody);
 
 		Response.ResponseBuilder responseBuilder = Response.noContent();
 
@@ -378,20 +380,23 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	public void updateAccountLogo(
-			CommerceAccount commerceAccount, MultipartBody multipartBody)
+			AccountEntry accountEntry, MultipartBody multipartBody)
 		throws IOException, PortalException {
 
-		_commerceAccountService.updateCommerceAccount(
-			commerceAccount.getCommerceAccountId(), commerceAccount.getName(),
-			true, multipartBody.getBinaryFileAsBytes("logo"),
-			commerceAccount.getEmail(), commerceAccount.getTaxId(),
-			commerceAccount.isActive(),
+		_accountEntryService.updateAccountEntry(
+			accountEntry.getAccountEntryId(),
+			accountEntry.getParentAccountEntryId(), accountEntry.getName(),
+			accountEntry.getDescription(), true,
+			StringUtil.split(accountEntry.getDomains()),
+			accountEntry.getEmailAddress(),
+			multipartBody.getBinaryFileAsBytes("logo"),
+			accountEntry.getTaxIdNumber(), accountEntry.getStatus(),
 			_serviceContextHelper.getServiceContext(
-				commerceAccount.getCommerceAccountGroupId()));
+				accountEntry.getAccountEntryGroupId()));
 	}
 
 	private String _getEmailAddress(
-		Account account, CommerceAccount commerceAccount) {
+		Account account, AccountEntry accountEntry) {
 
 		String[] emailAddresses = new String[0];
 
@@ -403,11 +408,11 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			return emailAddresses[0];
 		}
 
-		if (commerceAccount == null) {
+		if (accountEntry == null) {
 			return "";
 		}
 
-		return commerceAccount.getEmail();
+		return accountEntry.getEmailAddress();
 	}
 
 	private long _getRegionId(Country country, AccountAddress accountAddress)
@@ -456,41 +461,64 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				contextAcceptLanguage.getPreferredLocale()));
 	}
 
-	private Account _toAccount(CommerceAccount commerceAccount)
-		throws Exception {
-
-		if (commerceAccount == null) {
-			return null;
+	private Integer _toAccountEntryStatus(Boolean active) {
+		if (active == null) {
+			return WorkflowConstants.STATUS_ANY;
 		}
 
-		return _accountDTOConverter.toDTO(
-			new DefaultDTOConverterContext(
-				commerceAccount.getCommerceAccountId(),
-				contextAcceptLanguage.getPreferredLocale()));
+		if (active) {
+			return WorkflowConstants.STATUS_APPROVED;
+		}
+
+		return WorkflowConstants.STATUS_INACTIVE;
 	}
 
-	private CommerceAccount _updateAccount(Long id, Account account)
+	private String _toAccountEntryType(int commerceAccountType) {
+		if (commerceAccountType ==
+				CommerceAccountConstants.ACCOUNT_TYPE_BUSINESS) {
+
+			return AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS;
+		}
+		else if (commerceAccountType ==
+					CommerceAccountConstants.ACCOUNT_TYPE_GUEST) {
+
+			return AccountConstants.ACCOUNT_ENTRY_TYPE_GUEST;
+		}
+		else if (commerceAccountType ==
+					CommerceAccountConstants.ACCOUNT_TYPE_PERSONAL) {
+
+			return AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON;
+		}
+
+		return null;
+	}
+
+	private AccountEntry _updateAccount(Long id, Account account)
 		throws Exception {
 
-		CommerceAccount commerceAccount =
-			_commerceAccountService.getCommerceAccount(id);
+		AccountEntry accountEntry = _accountEntryLocalService.getAccountEntry(
+			id);
 
 		ServiceContext serviceContext = _serviceContextHelper.getServiceContext(
-			commerceAccount.getCommerceAccountGroupId());
+			accountEntry.getAccountEntryGroupId());
 
-		commerceAccount = _commerceAccountService.updateCommerceAccount(
-			commerceAccount.getCommerceAccountId(), account.getName(), true,
-			null, _getEmailAddress(account, commerceAccount),
-			GetterUtil.get(account.getTaxId(), commerceAccount.getTaxId()),
-			GetterUtil.getBoolean(
-				account.getActive(), commerceAccount.isActive()),
+		accountEntry.setDefaultBillingAddressId(
 			GetterUtil.getLong(
 				account.getDefaultBillingAccountAddressId(),
-				commerceAccount.getDefaultBillingAddressId()),
+				accountEntry.getDefaultBillingAddressId()));
+		accountEntry.setDefaultShippingAddressId(
 			GetterUtil.getLong(
 				account.getDefaultShippingAccountAddressId(),
-				commerceAccount.getDefaultShippingAddressId()),
-			account.getExternalReferenceCode(), serviceContext);
+				accountEntry.getDefaultShippingAddressId()));
+		accountEntry.setEmailAddress(_getEmailAddress(account, accountEntry));
+		accountEntry.setName(account.getName());
+		accountEntry.setTaxIdNumber(
+			GetterUtil.get(account.getTaxId(), accountEntry.getTaxIdNumber()));
+		accountEntry.setStatus(
+			_toAccountEntryStatus(
+				GetterUtil.getBoolean(account.getActive(), true)));
+
+		_accountEntryService.updateAccountEntry(accountEntry);
 
 		// Expando
 
@@ -499,18 +527,18 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		if ((customFields != null) && !customFields.isEmpty()) {
 			ExpandoUtil.updateExpando(
 				serviceContext.getCompanyId(), AccountEntry.class,
-				commerceAccount.getPrimaryKey(), customFields);
+				accountEntry.getPrimaryKey(), customFields);
 		}
 
 		// Update nested resources
 
-		_updateNestedResources(account, commerceAccount, serviceContext);
+		_updateNestedResources(account, accountEntry, serviceContext);
 
-		return commerceAccount;
+		return accountEntry;
 	}
 
-	private CommerceAccount _updateNestedResources(
-			Account account, CommerceAccount commerceAccount,
+	private AccountEntry _updateNestedResources(
+			Account account, AccountEntry accountEntry,
 			ServiceContext serviceContext)
 		throws Exception {
 
@@ -521,7 +549,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		if (accountAddresses != null) {
 			for (AccountAddress accountAddress : accountAddresses) {
 				Country country = _countryService.fetchCountryByA2(
-					commerceAccount.getCompanyId(),
+					accountEntry.getCompanyId(),
 					accountAddress.getCountryISOCode());
 
 				if (country == null) {
@@ -564,17 +592,19 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					if (GetterUtil.get(
 							accountAddress.getDefaultBilling(), false)) {
 
-						_commerceAccountService.updateDefaultBillingAddress(
-							commerceAccount.getCommerceAccountId(),
+						_accountEntryLocalService.updateDefaultBillingAddressId(
+							accountEntry.getAccountEntryId(),
 							exisitingCommerceAddress.getCommerceAddressId());
 					}
 
 					if (GetterUtil.get(
 							accountAddress.getDefaultShipping(), false)) {
 
-						_commerceAccountService.updateDefaultShippingAddress(
-							commerceAccount.getCommerceAccountId(),
-							exisitingCommerceAddress.getCommerceAddressId());
+						_accountEntryLocalService.
+							updateDefaultShippingAddressId(
+								accountEntry.getAccountEntryId(),
+								exisitingCommerceAddress.
+									getCommerceAddressId());
 					}
 
 					continue;
@@ -585,7 +615,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 						GetterUtil.getString(
 							accountAddress.getExternalReferenceCode(), null),
 						AccountEntry.class.getName(),
-						commerceAccount.getCommerceAccountId(),
+						accountEntry.getAccountEntryId(),
 						accountAddress.getName(),
 						accountAddress.getDescription(),
 						accountAddress.getStreet1(),
@@ -601,16 +631,16 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 						serviceContext);
 
 				if (GetterUtil.get(accountAddress.getDefaultBilling(), false)) {
-					_commerceAccountService.updateDefaultBillingAddress(
-						commerceAccount.getCommerceAccountId(),
+					_accountEntryLocalService.updateDefaultBillingAddressId(
+						accountEntry.getAccountEntryId(),
 						commerceAddress.getCommerceAddressId());
 				}
 
 				if (GetterUtil.get(
 						accountAddress.getDefaultShipping(), false)) {
 
-					_commerceAccountService.updateDefaultShippingAddress(
-						commerceAccount.getCommerceAccountId(),
+					_accountEntryLocalService.updateDefaultShippingAddressId(
+						accountEntry.getAccountEntryId(),
 						commerceAddress.getCommerceAddressId());
 				}
 			}
@@ -629,7 +659,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				CommerceAccountUserRel commerceAccountUserRel =
 					_commerceAccountUserRelService.fetchCommerceAccountUserRel(
 						new CommerceAccountUserRelPK(
-							commerceAccount.getCommerceAccountId(),
+							accountEntry.getAccountEntryId(),
 							user.getUserId()));
 
 				if (commerceAccountUserRel != null) {
@@ -637,8 +667,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				}
 
 				AccountMemberUtil.addCommerceAccountUserRel(
-					_commerceAccountUserRelService, accountMember,
-					commerceAccount, user, serviceContext);
+					_commerceAccountUserRelService, accountMember, accountEntry,
+					user, serviceContext);
 			}
 		}
 
@@ -659,7 +689,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					_commerceAccountOrganizationRelService.
 						fetchCommerceAccountOrganizationRel(
 							new CommerceAccountOrganizationRelPK(
-								commerceAccount.getCommerceAccountId(),
+								accountEntry.getAccountEntryId(),
 								organizationId));
 
 				if (commerceAccountOrganizationRel != null) {
@@ -668,12 +698,12 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 				_commerceAccountOrganizationRelService.
 					addCommerceAccountOrganizationRel(
-						commerceAccount.getCommerceAccountId(), organizationId,
+						accountEntry.getAccountEntryId(), organizationId,
 						serviceContext);
 			}
 		}
 
-		return commerceAccount;
+		return accountEntry;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -681,8 +711,13 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	private static final EntityModel _entityModel = new AccountEntityModel();
 
+	@Reference(
+		target = "(component.name=com.liferay.headless.commerce.admin.account.internal.dto.v1_0.converter.AccountDTOConverter)"
+	)
+	private DTOConverter<AccountEntry, Account> _accountDTOConverter;
+
 	@Reference
-	private AccountDTOConverter _accountDTOConverter;
+	private AccountEntryLocalService _accountEntryLocalService;
 
 	@Reference
 	private AccountEntryService _accountEntryService;
@@ -697,9 +732,6 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	@Reference
 	private CommerceAccountOrganizationRelService
 		_commerceAccountOrganizationRelService;
-
-	@Reference
-	private CommerceAccountService _commerceAccountService;
 
 	@Reference
 	private CommerceAccountUserRelService _commerceAccountUserRelService;

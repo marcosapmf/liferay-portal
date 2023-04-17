@@ -13,8 +13,8 @@
  */
 
 import {BoxItem} from '../../../components/Form/DualListBox';
+import SearchBuilder from '../../../core/SearchBuilder';
 import {TestraySuite} from '../../../services/rest';
-import {SearchBuilder, searchUtil} from '../../../util/search';
 import {
 	State as CaseParameter,
 	initialState as CaseParameterInitialState,
@@ -34,7 +34,7 @@ const getCaseValues = (caseParameter: BoxItem[]) =>
 
 const useSuiteCaseFilter = (testraySuite: TestraySuite) => {
 	if (!testraySuite.caseParameters) {
-		return searchUtil.eq('suiteId', testraySuite.id);
+		return SearchBuilder.eq('suiteId', testraySuite.id);
 	}
 
 	const caseParameters = getCaseParameters(testraySuite);

@@ -344,13 +344,14 @@ public class ObjectEntryLocalServiceWrapper
 
 	@Override
 	public java.util.Map<Object, Long> getAggregationCounts(
-			long objectDefinitionId, String aggregationTerm,
+			long groupId, long objectDefinitionId, String aggregationTerm,
 			com.liferay.petra.sql.dsl.expression.Predicate predicate, int start,
 			int end)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _objectEntryLocalService.getAggregationCounts(
-			objectDefinitionId, aggregationTerm, predicate, start, end);
+			groupId, objectDefinitionId, aggregationTerm, predicate, start,
+			end);
 	}
 
 	@Override
@@ -424,9 +425,8 @@ public class ObjectEntryLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.object.model.ObjectEntry>
-			getObjectEntries(
-				long groupId, long objectDefinitionId, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		getObjectEntries(
+			long groupId, long objectDefinitionId, int start, int end) {
 
 		return _objectEntryLocalService.getObjectEntries(
 			groupId, objectDefinitionId, start, end);
@@ -434,10 +434,9 @@ public class ObjectEntryLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.object.model.ObjectEntry>
-			getObjectEntries(
-				long groupId, long objectDefinitionId, int status, int start,
-				int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
+		getObjectEntries(
+			long groupId, long objectDefinitionId, int status, int start,
+			int end) {
 
 		return _objectEntryLocalService.getObjectEntries(
 			groupId, objectDefinitionId, status, start, end);

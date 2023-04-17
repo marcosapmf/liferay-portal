@@ -18,8 +18,8 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
-import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -30,9 +30,7 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.List;
 import java.util.Locale;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -56,45 +54,30 @@ public class ProductHelper {
 			CPDefinition.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			new UnsafeConsumer() {
+			object -> {
+				SearchContext searchContext = (SearchContext)object;
 
-				public void accept(Object object) throws Exception {
-					SearchContext searchContext = (SearchContext)object;
+				searchContext.setCompanyId(companyId);
 
-					searchContext.setCompanyId(companyId);
+				long[] commerceCatalogGroupIds =
+					TransformUtil.transformToLongArray(
+						_commerceCatalogLocalService.search(companyId),
+						CommerceCatalog::getGroupId);
 
-					long[] commerceCatalogGroupIds =
-						_getCommerceCatalogGroupIds(companyId);
+				if ((commerceCatalogGroupIds != null) &&
+					(commerceCatalogGroupIds.length > 0)) {
 
-					if ((commerceCatalogGroupIds != null) &&
-						(commerceCatalogGroupIds.length > 0)) {
-
-						searchContext.setGroupIds(commerceCatalogGroupIds);
-					}
-
-					searchContext.setAttribute(
-						Field.STATUS, WorkflowConstants.STATUS_ANY);
-
-					if (preferredLocale != null) {
-						searchContext.setLocale(preferredLocale);
-					}
+					searchContext.setGroupIds(commerceCatalogGroupIds);
 				}
 
+				searchContext.setAttribute(
+					Field.STATUS, WorkflowConstants.STATUS_ANY);
+
+				if (preferredLocale != null) {
+					searchContext.setLocale(preferredLocale);
+				}
 			},
 			sorts, transformUnsafeFunction);
-	}
-
-	private long[] _getCommerceCatalogGroupIds(long companyId)
-		throws Exception {
-
-		List<CommerceCatalog> commerceCatalogs =
-			_commerceCatalogLocalService.search(companyId);
-
-		Stream<CommerceCatalog> stream = commerceCatalogs.stream();
-
-		return stream.mapToLong(
-			CommerceCatalog::getGroupId
-		).toArray();
 	}
 
 	@Reference

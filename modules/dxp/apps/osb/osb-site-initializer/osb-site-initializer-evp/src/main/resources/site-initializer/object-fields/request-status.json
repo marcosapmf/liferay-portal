@@ -1,0 +1,150 @@
+{
+	"object-fields": [
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"defaultValue": "awaitingPaymentConfirmation",
+			"externalReferenceCode": "EVP-REQUEST-STATUS-DEFAULT",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"indexedLanguageId": "en_US",
+			"label": {
+				"en_US": "EVP Request Status"
+			},
+			"listTypeDefinitionExternalReferenceCode": "EVP-REQUEST-STATUS-PICKLIST",
+			"name": "requestStatus",
+			"objectFieldSettings": [
+				{
+					"name": "stateFlow",
+					"value": {
+						"objectStates": [
+							{
+								"key": "rejected",
+								"objectStateTransitions": [
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									}
+								]
+							},
+							{
+								"key": "closed",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									}
+								]
+							},
+							{
+								"key": "awaitingApprovalOnEvp",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									}
+								]
+							},
+							{
+								"key": "awaitCompanyVerification",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									}
+								]
+							},
+							{
+								"key": "awaitingFinanceReview",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingPaymentConfirmation"
+									}
+								]
+							},
+							{
+								"key": "awaitingPaymentConfirmation",
+								"objectStateTransitions": [
+									{
+										"key": "rejected"
+									},
+									{
+										"key": "closed"
+									},
+									{
+										"key": "awaitingApprovalOnEvp"
+									},
+									{
+										"key": "awaitCompanyVerification"
+									},
+									{
+										"key": "awaitingFinanceReview"
+									}
+								]
+							}
+						]
+					}
+				}
+			],
+			"required": true,
+			"state": true
+		}
+	],
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:EVPRequest$]"
+}

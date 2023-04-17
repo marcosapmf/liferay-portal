@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <liferay-layout:render-layout-utility-page-entry
-	type="<%= LayoutUtilityPageEntryTypesConstants.TERMS_OF_USE %>"
+	type="<%= LayoutUtilityPageEntryConstants.TYPE_TERMS_OF_USE %>"
 >
 
 	<%
@@ -98,7 +98,7 @@
 						<%
 						String disagreeMessage = UnicodeLanguageUtil.get(request, "you-must-agree-with-the-terms-of-use-to-continue");
 
-						String taglibOnClick = String.format("Liferay.FeatureFlags['LPS-148659'] ? Liferay.Util.openAlertModal({message: '%s'}) : alert('%s');", disagreeMessage, disagreeMessage);
+						String taglibOnClick = String.format("Liferay.Util.openAlertModal({message: '%s'})", disagreeMessage, disagreeMessage);
 						%>
 
 						<aui:button onClick="<%= taglibOnClick %>" type="cancel" value="i-disagree" />

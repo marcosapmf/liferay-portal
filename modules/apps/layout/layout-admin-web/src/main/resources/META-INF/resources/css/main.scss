@@ -1,5 +1,7 @@
 @import 'atlas-variables';
 
+@import 'LayoutPageTemplateEntryCard';
+
 @import 'miller_columns/DragPreview';
 @import 'miller_columns/MillerColumns';
 
@@ -17,5 +19,9 @@
 	.customization-settings #main-content .portlet-column {
 		border: 1px solid #0b5fff;
 		text-align: center;
+	}
+
+	.add-layout-form .sheet-footer {
+		position: absolute;
 	}
 }

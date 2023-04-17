@@ -347,7 +347,8 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 					SegmentsWebKeys.SEGMENTS_ANONYMOUS_USER_ID));
 
 			return _assetListAssetEntryProvider.getAssetEntries(
-				assetListEntry, segmentsEntryIds, acClientUserId);
+				assetListEntry, segmentsEntryIds, null, null, StringPool.BLANK,
+				acClientUserId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 		}
 
 		List<AssetEntry> assetEntries = getAssetEntries(
@@ -817,9 +818,8 @@ public class AssetPublisherHelperImpl implements AssetPublisherHelper {
 
 			return parentGroupId;
 		}
-		else {
-			throw new IllegalArgumentException("Invalid scope ID " + scopeId);
-		}
+
+		throw new IllegalArgumentException("Invalid scope ID " + scopeId);
 	}
 
 	@Override

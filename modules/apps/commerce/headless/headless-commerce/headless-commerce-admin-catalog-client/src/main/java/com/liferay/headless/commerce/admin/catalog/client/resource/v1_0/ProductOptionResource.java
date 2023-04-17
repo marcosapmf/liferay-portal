@@ -21,13 +21,13 @@ import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.catalog.client.problem.Problem;
 import com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0.ProductOptionSerDes;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -47,12 +47,11 @@ public interface ProductOptionResource {
 	public HttpInvoker.HttpResponse deleteProductOptionHttpResponse(Long id)
 		throws Exception;
 
-	public void deleteProductOptionBatch(
-			Long id, String callbackURL, Object object)
+	public void deleteProductOptionBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse deleteProductOptionBatchHttpResponse(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public ProductOption getProductOption(Long id) throws Exception;
@@ -114,6 +113,10 @@ public interface ProductOptionResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public ProductOptionResource build() {
 			return new ProductOptionResourceImpl(this);
 		}
@@ -122,6 +125,28 @@ public interface ProductOptionResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -251,12 +276,11 @@ public interface ProductOptionResource {
 			return httpInvoker.invoke();
 		}
 
-		public void deleteProductOptionBatch(
-				Long id, String callbackURL, Object object)
+		public void deleteProductOptionBatch(String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
-				deleteProductOptionBatchHttpResponse(id, callbackURL, object);
+				deleteProductOptionBatchHttpResponse(callbackURL, object);
 
 			String content = httpResponse.getContent();
 
@@ -285,7 +309,7 @@ public interface ProductOptionResource {
 		}
 
 		public HttpInvoker.HttpResponse deleteProductOptionBatchHttpResponse(
-				Long id, String callbackURL, Object object)
+				String callbackURL, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -320,8 +344,6 @@ public interface ProductOptionResource {
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
 						"/o/headless-commerce-admin-catalog/v1.0/productOptions/batch");
-
-			httpInvoker.path("id", id);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -636,15 +658,13 @@ public interface ProductOptionResource {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
 
-			httpInvoker.body(
-				Stream.of(
-					productOptions
-				).map(
-					value -> String.valueOf(value)
-				).collect(
-					Collectors.toList()
-				).toString(),
-				"application/json");
+			List<String> values = new ArrayList<>();
+
+			for (ProductOption productOptionValue : productOptions) {
+				values.add(String.valueOf(productOptionValue));
+			}
+
+			httpInvoker.body(values.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -830,15 +850,13 @@ public interface ProductOptionResource {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
 
-			httpInvoker.body(
-				Stream.of(
-					productOptions
-				).map(
-					value -> String.valueOf(value)
-				).collect(
-					Collectors.toList()
-				).toString(),
-				"application/json");
+			List<String> values = new ArrayList<>();
+
+			for (ProductOption productOptionValue : productOptions) {
+				values.add(String.valueOf(productOptionValue));
+			}
+
+			httpInvoker.body(values.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(

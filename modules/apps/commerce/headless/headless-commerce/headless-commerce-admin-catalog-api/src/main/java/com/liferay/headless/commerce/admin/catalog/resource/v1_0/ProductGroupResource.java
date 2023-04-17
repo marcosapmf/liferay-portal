@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -60,6 +61,11 @@ public interface ProductGroupResource {
 			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
+	public Response postProductGroupsPageExportBatch(
+			String search, Filter filter, Sort[] sorts, String callbackURL,
+			String contentType, String fieldNames)
+		throws Exception;
+
 	public ProductGroup postProductGroup(ProductGroup productGroup)
 		throws Exception;
 
@@ -80,8 +86,7 @@ public interface ProductGroupResource {
 
 	public void deleteProductGroup(Long id) throws Exception;
 
-	public Response deleteProductGroupBatch(
-			Long id, String callbackURL, Object object)
+	public Response deleteProductGroupBatch(String callbackURL, Object object)
 		throws Exception;
 
 	public ProductGroup getProductGroup(Long id) throws Exception;
@@ -127,6 +132,10 @@ public interface ProductGroupResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

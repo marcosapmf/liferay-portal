@@ -19,6 +19,7 @@ import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReports
 import com.liferay.analytics.reports.web.internal.model.ReferringURL;
 import com.liferay.analytics.reports.web.internal.model.TimeRange;
 import com.liferay.analytics.reports.web.internal.model.TimeSpan;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
@@ -72,7 +72,9 @@ public class GetReferralTrafficSourcesMVCResourceCommand
 
 		try {
 			AnalyticsReportsDataProvider analyticsReportsDataProvider =
-				new AnalyticsReportsDataProvider(_http);
+				new AnalyticsReportsDataProvider(
+					_analyticsSettingsManager, _http);
+
 			String canonicalURL = ParamUtil.getString(
 				resourceRequest, "canonicalURL");
 
@@ -119,7 +121,7 @@ public class GetReferralTrafficSourcesMVCResourceCommand
 	private List<ReferringURL> _getDomainReferringURLs(
 			AnalyticsReportsDataProvider analyticsReportsDataProvider,
 			String canonicalURL, long companyId, TimeRange timeRange)
-		throws PortalException {
+		throws Exception {
 
 		if (!analyticsReportsDataProvider.isValidAnalyticsConnection(
 				companyId)) {
@@ -134,7 +136,7 @@ public class GetReferralTrafficSourcesMVCResourceCommand
 	private List<ReferringURL> _getPageReferringURLs(
 			AnalyticsReportsDataProvider analyticsReportsDataProvider,
 			String canonicalURL, long companyId, TimeRange timeRange)
-		throws PortalException {
+		throws Exception {
 
 		if (!analyticsReportsDataProvider.isValidAnalyticsConnection(
 				companyId)) {
@@ -160,20 +162,18 @@ public class GetReferralTrafficSourcesMVCResourceCommand
 			return _jsonFactory.createJSONArray();
 		}
 
-		Stream<ReferringURL> stream = referringURLS.stream();
-
-		return JSONUtil.putAll(
-			stream.limit(
-				10
-			).sorted(
-				_getReferringURLComparator()
-			).map(
-				ReferringURL::toJSONObject
-			).toArray());
+		return JSONUtil.toJSONArray(
+			ListUtil.sort(
+				ListUtil.subList(referringURLS, 0, 10),
+				_getReferringURLComparator()),
+			ReferringURL::toJSONObject, _log);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		GetReferralTrafficSourcesMVCResourceCommand.class);
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference
 	private Http _http;

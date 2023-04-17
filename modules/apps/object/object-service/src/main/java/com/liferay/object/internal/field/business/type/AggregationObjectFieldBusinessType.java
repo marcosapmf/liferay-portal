@@ -41,14 +41,13 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,9 +57,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "object.field.business.type.key=" + ObjectFieldConstants.BUSINESS_TYPE_AGGREGATION,
-	service = {
-		AggregationObjectFieldBusinessType.class, ObjectFieldBusinessType.class
-	}
+	service = ObjectFieldBusinessType.class
 )
 public class AggregationObjectFieldBusinessType
 	implements ObjectFieldBusinessType {
@@ -120,41 +117,44 @@ public class AggregationObjectFieldBusinessType
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray(
 			"function", "objectFieldName", "objectRelationshipName");
 	}
 
 	@Override
 	public void validateObjectFieldSettings(
-			long objectDefinitionId, String objectFieldName,
+			ObjectField objectField,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
 
-		Stream<ObjectFieldSetting> stream = objectFieldSettings.stream();
+		Map<String, Object> objectFieldSettingsValuesMap = new HashMap<>();
 
-		Map<String, Object> objectFieldSettingsValuesMap = stream.collect(
-			Collectors.toMap(
-				ObjectFieldSetting::getName,
-				objectFieldSetting -> {
-					if (Objects.equals(
-							objectFieldSetting.getName(), "filters")) {
+		for (ObjectFieldSetting objectFieldSetting : objectFieldSettings) {
+			String name = objectFieldSetting.getName();
 
-						return objectFieldSetting.getObjectFilters();
-					}
+			if (Objects.equals(name, "filters")) {
+				objectFieldSettingsValuesMap.put(
+					name, objectFieldSetting.getObjectFilters());
 
-					return objectFieldSetting.getValue();
-				}));
+				continue;
+			}
+
+			objectFieldSettingsValuesMap.put(
+				name, objectFieldSetting.getValue());
+		}
 
 		String function = GetterUtil.getString(
 			objectFieldSettingsValuesMap.get("function"));
 
 		Set<String> requiredObjectFieldSettingsNames =
-			getRequiredObjectFieldSettingsNames();
+			getRequiredObjectFieldSettingsNames(objectField);
 
 		if (!ArrayUtil.contains(_FUNCTION, function)) {
 			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "function", function);
+				objectField.getName(), "function", function);
 		}
 		else if (Objects.equals(function, "COUNT")) {
 			requiredObjectFieldSettingsNames.remove("objectFieldName");
@@ -176,7 +176,7 @@ public class AggregationObjectFieldBusinessType
 
 		if (!missingRequiredObjectFieldSettingsNames.isEmpty()) {
 			throw new ObjectFieldSettingValueException.MissingRequiredValues(
-				objectFieldName, missingRequiredObjectFieldSettingsNames);
+				objectField.getName(), missingRequiredObjectFieldSettingsNames);
 		}
 
 		Set<String> notAllowedObjectFieldSettingsNames = new HashSet<>(
@@ -189,13 +189,13 @@ public class AggregationObjectFieldBusinessType
 
 		if (!notAllowedObjectFieldSettingsNames.isEmpty()) {
 			throw new ObjectFieldSettingNameException.NotAllowedNames(
-				objectFieldName, notAllowedObjectFieldSettingsNames);
+				objectField.getName(), notAllowedObjectFieldSettingsNames);
 		}
 
 		try {
 			ObjectRelationship objectRelationship =
 				_objectRelationshipLocalService.getObjectRelationship(
-					objectDefinitionId,
+					objectField.getObjectDefinitionId(),
 					GetterUtil.getString(
 						objectFieldSettingsValuesMap.get(
 							"objectRelationshipName")));
@@ -205,7 +205,7 @@ public class AggregationObjectFieldBusinessType
 					objectRelationship.getObjectDefinitionId2());
 
 			if (!Objects.equals(function, "COUNT")) {
-				ObjectField objectField =
+				ObjectField objectField1 =
 					_objectFieldLocalService.getObjectField(
 						objectDefinition.getObjectDefinitionId(),
 						GetterUtil.getString(
@@ -214,10 +214,10 @@ public class AggregationObjectFieldBusinessType
 
 				if (!ArrayUtil.contains(
 						_NUMERIC_BUSINESS_TYPES,
-						objectField.getBusinessType())) {
+						objectField1.getBusinessType())) {
 
 					throw new ObjectFieldSettingValueException.InvalidValue(
-						objectFieldName, "objectFieldName",
+						objectField.getName(), "objectFieldName",
 						GetterUtil.getString(
 							objectFieldSettingsValuesMap.get(
 								"objectFieldName")));
@@ -225,13 +225,13 @@ public class AggregationObjectFieldBusinessType
 			}
 
 			_validateObjectFilters(
-				objectDefinition, objectFieldName,
+				objectDefinition, objectField.getName(),
 				(List<ObjectFilter>)objectFieldSettingsValuesMap.get(
 					"filters"));
 		}
 		catch (NoSuchObjectFieldException noSuchObjectFieldException) {
 			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "objectFieldName",
+				objectField.getName(), "objectFieldName",
 				GetterUtil.getString(
 					objectFieldSettingsValuesMap.get("objectFieldName")),
 				noSuchObjectFieldException);
@@ -240,7 +240,7 @@ public class AggregationObjectFieldBusinessType
 					noSuchObjectRelationshipException) {
 
 			throw new ObjectFieldSettingValueException.InvalidValue(
-				objectFieldName, "objectRelationshipName",
+				objectField.getName(), "objectRelationshipName",
 				GetterUtil.getString(
 					objectFieldSettingsValuesMap.get("objectRelationshipName")),
 				noSuchObjectRelationshipException);

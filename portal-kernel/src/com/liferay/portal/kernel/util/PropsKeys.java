@@ -151,9 +151,6 @@ public interface PropsKeys {
 	public static final String ASSET_BROWSER_SEARCH_WITH_DATABASE =
 		"asset.browser.search.with.database";
 
-	public static final String ASSET_CATEGORIES_SEARCH_HIERARCHICAL =
-		"asset.categories.search.hierarchical";
-
 	public static final String ASSET_CATEGORIES_SELECTOR_MAX_ENTRIES =
 		"asset.categories.selector.max.entries";
 
@@ -1773,9 +1770,6 @@ public interface PropsKeys {
 	public static final String NOTIFICATIONS_MAX_EVENTS =
 		"notifications.max.events";
 
-	public static final String OBJECT_ENTRY_SCRIPT_VARIABLES_VERSION =
-		"object.entry.script.variables.version";
-
 	public static final String OBJECT_NESTED_FIELDS_MAX_QUERY_DEPTH =
 		"object.nested.fields.max.query.depth";
 
@@ -2629,12 +2623,6 @@ public interface PropsKeys {
 
 	public static final String TERMS_OF_USE_REQUIRED = "terms.of.use.required";
 
-	public static final String TEXT_EXTRACTION_FORK_PROCESS_ENABLED =
-		"text.extraction.fork.process.enabled";
-
-	public static final String TEXT_EXTRACTION_FORK_PROCESS_MIME_TYPES =
-		"text.extraction.fork.process.mime.types";
-
 	public static final String THEME_CSS_FAST_LOAD = "theme.css.fast.load";
 
 	public static final String THEME_CSS_FAST_LOAD_CHECK_REQUEST_PARAMETER =
@@ -2727,9 +2715,6 @@ public interface PropsKeys {
 
 	public static final String UPGRADE_LOG_CONTEXT_ENABLED =
 		"upgrade.log.context.enabled";
-
-	public static final String UPGRADE_LOG_CONTEXT_NAME =
-		"upgrade.log.context.name";
 
 	public static final String UPGRADE_REPORT_ENABLED =
 		"upgrade.report.enabled";

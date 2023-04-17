@@ -143,6 +143,9 @@
 								"objectStateTransitions": [
 									{
 										"key": "inFinanceReview"
+									},
+									{
+										"key": "canceled"
 									}
 								]
 							},
@@ -224,6 +227,9 @@
 									},
 									{
 										"key": "rejected"
+									},
+									{
+										"key": "moreInfoRequested"
 									}
 								]
 							},
@@ -243,8 +249,22 @@
 			"state": true,
 			"system": false,
 			"type": "String"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"indexed": true,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Currency"
+			},
+			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Currencies$]",
+			"name": "currency",
+			"required": false,
+			"type": "String"
 		}
 	],
+	"panelCategoryKey": "control_panel.object",
 	"pluralLabel": {
 		"en_US": "MDF Claims"
 	},

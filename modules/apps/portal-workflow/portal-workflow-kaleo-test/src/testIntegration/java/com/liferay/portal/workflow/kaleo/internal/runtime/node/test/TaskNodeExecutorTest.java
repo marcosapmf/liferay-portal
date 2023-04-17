@@ -68,7 +68,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -179,6 +178,8 @@ public class TaskNodeExecutorTest {
 	public void testExecuteTimerNotifications() throws Exception {
 		KaleoTask kaleoTask = _getKaleoTask("Timer Notification");
 
+		Assert.assertNotNull(kaleoTask);
+
 		KaleoInstanceToken kaleoInstanceToken = _addKaleoInstanceToken(
 			kaleoTask);
 
@@ -205,6 +206,8 @@ public class TaskNodeExecutorTest {
 	@Test
 	public void testExecuteTimerReassignments() throws Exception {
 		KaleoTask kaleoTask = _getKaleoTask("Timer Reassignment");
+
+		Assert.assertNotNull(kaleoTask);
 
 		KaleoInstanceToken kaleoInstanceToken = _addKaleoInstanceToken(
 			kaleoTask);
@@ -292,29 +295,31 @@ public class TaskNodeExecutorTest {
 			});
 	}
 
-	private KaleoTask _getKaleoTask(String taskName) throws Exception {
-		return Stream.of(
-			_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
-				_kaleoDefinitionVersion.getKaleoDefinitionVersionId())
-		).flatMap(
-			List::stream
-		).filter(
-			kaleoNode -> Objects.equals(kaleoNode.getName(), taskName)
-		).map(
-			kaleoNode -> {
-				try {
-					return _kaleoTaskLocalService.getKaleoNodeKaleoTask(
-						kaleoNode.getKaleoNodeId());
-				}
-				catch (PortalException portalException) {
-				}
+	private KaleoTask _getKaleoTask(String taskName) {
+		for (KaleoNode kaleoNode :
+				_kaleoNodeLocalService.getKaleoDefinitionVersionKaleoNodes(
+					_kaleoDefinitionVersion.getKaleoDefinitionVersionId())) {
 
-				return null;
+			if (!Objects.equals(taskName, kaleoNode.getName())) {
+				continue;
 			}
-		).filter(
-			Objects::nonNull
-		).findFirst(
-		).get();
+
+			KaleoTask kaleoNodeKaleoTask = null;
+
+			try {
+				kaleoNodeKaleoTask =
+					_kaleoTaskLocalService.getKaleoNodeKaleoTask(
+						kaleoNode.getKaleoNodeId());
+			}
+			catch (PortalException portalException) {
+			}
+
+			if (Objects.nonNull(kaleoNodeKaleoTask)) {
+				return kaleoNodeKaleoTask;
+			}
+		}
+
+		return null;
 	}
 
 	private long _getKaleoTimerId(KaleoTask kaleoTask) {

@@ -1,13 +1,33 @@
 @import 'atlas-variables';
 
 .site_navigation_menu_editor_MenuItem {
-	margin-bottom: 1.5rem;
 	width: 40ch;
 
-	&--selected {
-		& .card,
-		& .label.label-secondary {
-			background: $primary-l3;
+	&:focus,
+	&:focus-within {
+		outline: none;
+
+		.card {
+			box-shadow: 0 0 0 2px $primary-l1;
+		}
+
+		.delete-item-button {
+			opacity: 1;
+		}
+	}
+
+	.delete-item-button {
+		opacity: 0;
+
+		&:focus {
+			opacity: 1;
+		}
+	}
+
+	&:hover,
+	&.active {
+		.delete-item-button {
+			opacity: 1;
 		}
 	}
 

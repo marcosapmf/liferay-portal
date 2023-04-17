@@ -15,27 +15,33 @@
 import {useParams} from 'react-router-dom';
 
 import Container from '../../../../../../components/Layout/Container';
-import ListViewRest from '../../../../../../components/ListView';
-import useRuns from '../../../../../../hooks/useRuns';
+import ListView from '../../../../../../components/ListView';
+import SearchBuilder from '../../../../../../core/SearchBuilder';
 import i18n from '../../../../../../i18n';
-import {filters} from '../../../../../../schema/filter';
 import {testrayRunImpl} from '../../../../../../services/rest';
-import {searchUtil} from '../../../../../../util/search';
 import RunFormModal from './RunFormModal';
 import useRunActions from './useRunActions';
 
 const Runs = () => {
 	const {actions, formModal} = useRunActions();
 	const {buildId} = useParams();
-	const {setRunId} = useRuns();
 
 	return (
 		<Container className="mt-4">
-			<ListViewRest
+			<ListView
 				forceRefetch={formModal.forceRefetch}
+				initialContext={{
+					columns: {
+						inprogress: false,
+						passed: false,
+						total: false,
+						untested: false,
+					},
+					columnsFixed: ['number'],
+				}}
 				managementToolbarProps={{
 					addButton: () => formModal.modal.open(),
-					filterFields: filters.build.runs,
+					filterSchema: 'buildRuns',
 					title: i18n.translate('runs'),
 				}}
 				resource="/runs"
@@ -76,16 +82,14 @@ const Runs = () => {
 						},
 					],
 					navigateTo: (run) => {
-						setRunId(run.id);
-
-						return '..';
+						return `..?runId=${run.id}`;
 					},
 				}}
 				transformData={(response) =>
 					testrayRunImpl.transformDataFromList(response)
 				}
 				variables={{
-					filter: searchUtil.eq('buildId', buildId as string),
+					filter: SearchBuilder.eq('buildId', buildId as string),
 				}}
 			/>
 

@@ -14,7 +14,16 @@
 
 package com.liferay.commerce.frontend.js.internal.servlet.taglib;
 
+import com.liferay.commerce.account.model.CommerceAccount;
+import com.liferay.commerce.constants.CommerceWebKeys;
+import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.util.Portal;
@@ -43,14 +52,23 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 			HttpServletResponse httpServletResponse, String key)
 		throws IOException {
 
-		PrintWriter printWriter = httpServletResponse.getWriter();
+		CommerceContext commerceContext =
+			(CommerceContext)httpServletRequest.getAttribute(
+				CommerceWebKeys.COMMERCE_CONTEXT);
 
-		printWriter.print(
-			StringBundler.concat(
-				"<link href=\"",
-				_portal.getPathProxy() + httpServletRequest.getContextPath(),
-				"/o/commerce-frontend-js/styles/main.css\" rel=\"stylesheet\" ",
-				"type=\"text/css\" />"));
+		if (commerceContext == null) {
+			return;
+		}
+
+		try {
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			printWriter.println(
+				_getContent(commerceContext, httpServletRequest));
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
 	}
 
 	@Override
@@ -58,6 +76,82 @@ public class CommerceFrontendJsDynamicInclude extends BaseDynamicInclude {
 		dynamicIncludeRegistry.register(
 			"/html/common/themes/top_head.jsp#post");
 	}
+
+	private String _getContent(
+			CommerceContext commerceContext,
+			HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		return StringBundler.concat(
+			"<script data-senna-track=\"temporary\">var Liferay = ",
+			"window.Liferay || {}; Liferay.CommerceContext = ",
+			JSONUtil.put(
+				"account",
+				() -> {
+					CommerceAccount commerceAccount =
+						commerceContext.getCommerceAccount();
+
+					if (commerceAccount == null) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"accountId", commerceAccount.getCommerceAccountId()
+					).put(
+						"accountName", commerceAccount.getName()
+					);
+				}
+			).put(
+				"accountEntryAllowedTypes",
+				commerceContext.getAccountEntryAllowedTypes()
+			).put(
+				"commerceAccountGroupIds",
+				commerceContext.getCommerceAccountGroupIds()
+			).put(
+				"commerceChannelId", commerceContext.getCommerceChannelId()
+			).put(
+				"commerceSiteType", commerceContext.getCommerceSiteType()
+			).put(
+				"currency",
+				() -> {
+					CommerceCurrency commerceCurrency =
+						commerceContext.getCommerceCurrency();
+
+					if (commerceCurrency == null) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"currencyCode", commerceCurrency.getCode()
+					).put(
+						"currencyId", commerceCurrency.getCommerceCurrencyId()
+					);
+				}
+			).put(
+				"order",
+				() -> {
+					CommerceOrder commerceOrder =
+						commerceContext.getCommerceOrder();
+
+					if (commerceOrder == null) {
+						return null;
+					}
+
+					return JSONUtil.put(
+						"orderId", commerceOrder.getCommerceOrderId()
+					).put(
+						"orderType", commerceOrder.getCommerceOrderTypeId()
+					);
+				}
+			),
+			";</script><link href=\"",
+			_portal.getPathProxy() + httpServletRequest.getContextPath(),
+			"/o/commerce-frontend-js/styles/main.css\" rel=\"stylesheet\" ",
+			"type=\"text/css\" />");
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CommerceFrontendJsDynamicInclude.class);
 
 	@Reference
 	private Portal _portal;

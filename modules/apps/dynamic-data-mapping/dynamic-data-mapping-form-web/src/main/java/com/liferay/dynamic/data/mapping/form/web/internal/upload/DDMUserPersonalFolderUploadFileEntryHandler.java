@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.upload.UniqueFileNameProvider;
 import com.liferay.upload.UploadFileEntryHandler;
@@ -71,12 +72,57 @@ public class DDMUserPersonalFolderUploadFileEntryHandler
 			_folderModelResourcePermission, themeDisplay.getPermissionChecker(),
 			themeDisplay.getScopeGroupId(), folderId, ActionKeys.ADD_DOCUMENT);
 
-		String fileName = uploadPortletRequest.getFileName(_PARAMETER_NAME);
-		long size = uploadPortletRequest.getSize(_PARAMETER_NAME);
+		FileEntry fileEntry = null;
+
+		long fileEntryId = GetterUtil.getLong(
+			uploadPortletRequest.getParameter("fileEntryId"));
+
+		if (fileEntryId > 0) {
+			try {
+				fileEntry = _dlAppService.getFileEntry(fileEntryId);
+			}
+			catch (NoSuchFileEntryException noSuchFileEntryException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(noSuchFileEntryException);
+				}
+			}
+		}
+
+		String fileName = uploadPortletRequest.getFileName(
+			"imageSelectorFileName");
+
+		if (Validator.isNotNull(fileName)) {
+			try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
+					"imageSelectorFileName")) {
+
+				return _addFileEntry(
+					fileEntry, fileName, folderId, inputStream,
+					"imageSelectorFileName", themeDisplay,
+					uploadPortletRequest);
+			}
+		}
+
+		try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
+				"imageBlob")) {
+
+			return _addFileEntry(
+				fileEntry, fileEntry.getFileName(), folderId, inputStream,
+				"imageBlob", themeDisplay, uploadPortletRequest);
+		}
+	}
+
+	private FileEntry _addFileEntry(
+			FileEntry fileEntry, String fileName, long folderId,
+			InputStream inputStream, String parameterName,
+			ThemeDisplay themeDisplay,
+			UploadPortletRequest uploadPortletRequest)
+		throws PortalException {
+
+		long size = uploadPortletRequest.getSize(parameterName);
 
 		_dlValidator.validateFileSize(
 			themeDisplay.getScopeGroupId(), fileName,
-			uploadPortletRequest.getContentType(_PARAMETER_NAME), size);
+			uploadPortletRequest.getContentType(parameterName), size);
 
 		long objectFieldId = ParamUtil.getLong(
 			uploadPortletRequest, "objectFieldId");
@@ -85,24 +131,36 @@ public class DDMUserPersonalFolderUploadFileEntryHandler
 			_validateAttachmentObjectField(fileName, objectFieldId);
 		}
 
-		try (InputStream inputStream = uploadPortletRequest.getFileAsStream(
-				_PARAMETER_NAME)) {
+		long repositoryId = ParamUtil.getLong(
+			uploadPortletRequest, "repositoryId");
 
-			long repositoryId = ParamUtil.getLong(
-				uploadPortletRequest, "repositoryId");
+		String uniqueFileName = _uniqueFileNameProvider.provide(
+			fileName,
+			curFileName -> _exists(repositoryId, folderId, curFileName));
 
-			String uniqueFileName = _uniqueFileNameProvider.provide(
-				fileName,
-				curFileName -> _exists(repositoryId, folderId, curFileName));
+		String description = StringPool.BLANK;
 
-			return _dlAppService.addFileEntry(
-				null, repositoryId, folderId, uniqueFileName,
-				uploadPortletRequest.getContentType(_PARAMETER_NAME),
-				uniqueFileName, uniqueFileName,
-				_getDescription(uploadPortletRequest), StringPool.BLANK,
-				inputStream, size, null, null,
-				_getServiceContext(uploadPortletRequest));
+		if (fileEntry != null) {
+			description = fileEntry.getDescription();
 		}
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			DLFileEntry.class.getName(), uploadPortletRequest);
+
+		if ((fileEntry != null) &&
+			(fileEntry.getModel() instanceof DLFileEntry)) {
+
+			ExpandoBridge expandoBridge = fileEntry.getExpandoBridge();
+
+			serviceContext.setExpandoBridgeAttributes(
+				expandoBridge.getAttributes());
+		}
+
+		return _dlAppService.addFileEntry(
+			null, repositoryId, folderId, uniqueFileName,
+			uploadPortletRequest.getContentType(parameterName), uniqueFileName,
+			uniqueFileName, description, StringPool.BLANK, inputStream, size,
+			null, null, serviceContext);
 	}
 
 	private boolean _exists(long repositoryId, long folderId, String fileName) {
@@ -124,64 +182,6 @@ public class DDMUserPersonalFolderUploadFileEntryHandler
 		}
 	}
 
-	private FileEntry _fetchFileEntry(UploadPortletRequest uploadPortletRequest)
-		throws PortalException {
-
-		try {
-			long fileEntryId = GetterUtil.getLong(
-				uploadPortletRequest.getParameter("fileEntryId"));
-
-			if (fileEntryId == 0) {
-				return null;
-			}
-
-			return _dlAppService.getFileEntry(fileEntryId);
-		}
-		catch (NoSuchFileEntryException noSuchFileEntryException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchFileEntryException);
-			}
-
-			return null;
-		}
-	}
-
-	private String _getDescription(UploadPortletRequest uploadPortletRequest)
-		throws PortalException {
-
-		FileEntry fileEntry = _fetchFileEntry(uploadPortletRequest);
-
-		if (fileEntry == null) {
-			return StringPool.BLANK;
-		}
-
-		return fileEntry.getDescription();
-	}
-
-	private ServiceContext _getServiceContext(
-			UploadPortletRequest uploadPortletRequest)
-		throws PortalException {
-
-		FileEntry fileEntry = _fetchFileEntry(uploadPortletRequest);
-
-		if ((fileEntry == null) ||
-			!(fileEntry.getModel() instanceof DLFileEntry)) {
-
-			return ServiceContextFactory.getInstance(
-				DLFileEntry.class.getName(), uploadPortletRequest);
-		}
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			DLFileEntry.class.getName(), uploadPortletRequest);
-
-		ExpandoBridge expandoBridge = fileEntry.getExpandoBridge();
-
-		serviceContext.setExpandoBridgeAttributes(
-			expandoBridge.getAttributes());
-
-		return serviceContext;
-	}
-
 	private void _validateAttachmentObjectField(
 			String fileName, long objectFieldId)
 		throws PortalException {
@@ -200,8 +200,6 @@ public class DDMUserPersonalFolderUploadFileEntryHandler
 				FileUtil.getExtension(fileName), fileName);
 		}
 	}
-
-	private static final String _PARAMETER_NAME = "imageSelectorFileName";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMUserPersonalFolderUploadFileEntryHandler.class);

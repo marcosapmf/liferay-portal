@@ -1,0 +1,3 @@
+liferay-sample-global-css:
+    name: Liferay Sample Frontend Data Set Cell Renderer
+    type: fdsCellRenderer

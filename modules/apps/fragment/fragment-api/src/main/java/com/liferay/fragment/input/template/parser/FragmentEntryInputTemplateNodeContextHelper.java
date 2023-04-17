@@ -15,6 +15,7 @@
 package com.liferay.fragment.input.template.parser;
 
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.fragment.constants.FragmentConfigurationFieldDataType;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
@@ -22,16 +23,20 @@ import com.liferay.info.exception.InfoFormValidationException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.type.FileInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
+import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.form.InfoForm;
+import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -41,6 +46,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -52,6 +58,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -120,12 +127,9 @@ public class FragmentEntryInputTemplateNodeContextHelper {
 			defaultInputLabel = infoField.getLabel(locale);
 		}
 
-		String inputLabel = GetterUtil.getString(
-			_fragmentEntryConfigurationParser.getFieldValue(
-				fragmentEntryLink.getEditableValues(),
-				new FragmentConfigurationField(
-					"inputLabel", "string", defaultInputLabel, true, "text"),
-				locale));
+		String inputLabel = _getInputLabel(
+			defaultInputLabel, fragmentEntryLink.getEditableValues(), infoField,
+			locale);
 
 		String name = "name";
 
@@ -300,6 +304,31 @@ public class FragmentEntryInputTemplateNodeContextHelper {
 				}
 			}
 		}
+		else if (infoField.getInfoFieldType() instanceof
+					MultiselectInfoFieldType) {
+
+			List<InputTemplateNode.Option> options = new ArrayList<>();
+
+			List<MultiselectInfoFieldType.Option>
+				multiselectInfoFieldTypeOptions =
+					(List<MultiselectInfoFieldType.Option>)
+						infoField.getAttribute(
+							MultiselectInfoFieldType.OPTIONS);
+
+			if (multiselectInfoFieldTypeOptions == null) {
+				multiselectInfoFieldTypeOptions = Collections.emptyList();
+			}
+
+			for (MultiselectInfoFieldType.Option option :
+					multiselectInfoFieldTypeOptions) {
+
+				options.add(
+					new InputTemplateNode.Option(
+						option.getLabel(locale), option.getValue()));
+			}
+
+			inputTemplateNode.addAttribute("options", options);
+		}
 		else if (infoField.getInfoFieldType() instanceof NumberInfoFieldType) {
 			String dataType = "integer";
 
@@ -380,6 +409,11 @@ public class FragmentEntryInputTemplateNodeContextHelper {
 
 			inputTemplateNode.addAttribute("options", options);
 		}
+		else if (infoField.getInfoFieldType() instanceof TextInfoFieldType) {
+			inputTemplateNode.addAttribute(
+				"maxLength",
+				infoField.getAttribute(TextInfoFieldType.MAX_LENGTH));
+		}
 
 		return inputTemplateNode;
 	}
@@ -396,6 +430,50 @@ public class FragmentEntryInputTemplateNodeContextHelper {
 
 			return null;
 		}
+	}
+
+	private String _getInputLabel(
+		String defaultInputLabel, String editableValues, InfoField<?> infoField,
+		Locale locale) {
+
+		String inputLabel = null;
+
+		JSONObject inputLabelJSONObject =
+			(JSONObject)
+				_fragmentEntryConfigurationParser.getConfigurationFieldValue(
+					editableValues, "inputLabel",
+					FragmentConfigurationFieldDataType.OBJECT);
+
+		if (inputLabelJSONObject != null) {
+			inputLabel = inputLabelJSONObject.getString(
+				LocaleUtil.toLanguageId(locale));
+		}
+
+		if (Validator.isNull(inputLabel) && (infoField != null)) {
+			InfoLocalizedValue<String> labelInfoLocalizedValue =
+				infoField.getLabelInfoLocalizedValue();
+
+			Set<Locale> availableLocales =
+				labelInfoLocalizedValue.getAvailableLocales();
+
+			if (availableLocales.contains(locale)) {
+				inputLabel = labelInfoLocalizedValue.getValue(locale);
+			}
+			else {
+				inputLabel = inputLabelJSONObject.getString(
+					LanguageUtil.getLanguageId(LocaleUtil.getSiteDefault()));
+			}
+		}
+
+		if (Validator.isNull(inputLabel) && (infoField != null)) {
+			inputLabel = infoField.getLabel(locale);
+		}
+
+		if (Validator.isNotNull(inputLabel)) {
+			return inputLabel;
+		}
+
+		return defaultInputLabel;
 	}
 
 	private String _getStep(Integer decimalPartMaxLength) {

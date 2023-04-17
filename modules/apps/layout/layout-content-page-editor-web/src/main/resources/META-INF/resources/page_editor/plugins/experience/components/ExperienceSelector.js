@@ -24,7 +24,7 @@ import {
 	useEventListener,
 	useIsMounted,
 } from '@liferay/frontend-js-react-web';
-import {navigate, openToast} from 'frontend-js-web';
+import {COOKIE_TYPES, navigate, openToast} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import {config} from '../../../app/config/index';
@@ -32,8 +32,8 @@ import {useDispatch, useSelector} from '../../../app/contexts/StoreContext';
 import selectCanUpdateExperiences from '../../../app/selectors/selectCanUpdateExperiences';
 import selectCanUpdateSegments from '../../../app/selectors/selectCanUpdateSegments';
 import getKeyboardFocusableElements from '../../../app/utils/getKeyboardFocusableElements';
-import {useId} from '../../../core/hooks/useId';
-import {useSessionState} from '../../../core/hooks/useSessionState';
+import {useId} from '../../../common/hooks/useId';
+import {useSessionState} from '../../../common/hooks/useSessionState';
 import createExperience from '../thunks/createExperience';
 import duplicateExperience from '../thunks/duplicateExperience';
 import removeExperience from '../thunks/removeExperience';
@@ -111,7 +111,9 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 	const [editingExperience, setEditingExperience] = useState({});
 
 	const [modalExperienceState, setModalExperienceState] = useSessionState(
-		'modalExperienceState'
+		'modalExperienceState',
+		undefined,
+		COOKIE_TYPES.NECESSARY
 	);
 	const modalExperienceStateRef = useRef(modalExperienceState);
 	modalExperienceStateRef.current = modalExperienceState;
@@ -147,11 +149,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 	);
 	useOnClickOutside(selectorRef, memoizedDebouncedSetOpen);
 
-	const handleNewSegmentClick = ({
-		experienceId,
-		experienceName,
-		segmentId,
-	}) => {
+	const onNewSegmentClick = ({experienceId, experienceName, segmentId}) => {
 		setModalExperienceState({
 			experienceId,
 			experienceName,
@@ -225,7 +223,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 		window
 	);
 
-	const handleExperienceCreation = ({
+	const onExperienceCreation = ({
 		name,
 		segmentsEntryId,
 		segmentsExperienceId,
@@ -291,12 +289,12 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 		}
 	};
 
-	const handleOnNewExperienceClick = () => {
+	const onNewExperience = () => {
 		setOpenModal(true);
 		debouncedSetOpen(false);
 	};
 
-	const handleEditExperienceClick = (experienceData) => {
+	const onEditExperience = (experienceData) => {
 		const {name, segmentsEntryId, segmentsExperienceId} = experienceData;
 
 		setOpenModal(true);
@@ -309,7 +307,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 		});
 	};
 
-	const handleDropdownKeydown = (event) => {
+	const onDropdownKeyDown = (event) => {
 		if (event.key === 'Escape') {
 			buttonRef.current?.focus();
 		}
@@ -341,7 +339,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 		}
 	};
 
-	const deleteExperience = (id) => {
+	const onDeleteExperience = (id) => {
 		dispatch(
 			removeExperience({
 				segmentsExperienceId: id,
@@ -366,7 +364,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 			});
 	};
 
-	const handleExperienceDuplication = (id) => {
+	const onDuplicateExperience = (id) => {
 		dispatch(
 			duplicateExperience({
 				segmentsExperienceId: id,
@@ -390,7 +388,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 			});
 	};
 
-	const decreasePriority = (id) => {
+	const onPriorityDecrease = (id) => {
 		const target = getUpdateExperiencePriorityTargets(
 			experiences,
 			id,
@@ -400,7 +398,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 		dispatch(updateExperiencePriority(target));
 	};
 
-	const increasePriority = (id) => {
+	const onPriorityIncrease = (id) => {
 		const target = getUpdateExperiencePriorityTargets(
 			experiences,
 			id,
@@ -472,7 +470,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 					<div
 						className="dropdown-menu p-4 page-editor__toolbar-experience__dropdown-menu toggled"
 						id={experienceSelectorContentId}
-						onKeyDown={handleDropdownKeydown}
+						onKeyDown={onDropdownKeyDown}
 						ref={selectorRef}
 						style={{
 							left: buttonBoundingClientRect.left,
@@ -482,7 +480,7 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 					>
 						<ExperiencesSelectorHeader
 							canCreateExperiences={canUpdateExperiences}
-							onNewExperience={handleOnNewExperienceClick}
+							onNewExperience={onNewExperience}
 						/>
 
 						{experiences.length > 1 && (
@@ -495,13 +493,11 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 									config.defaultSegmentsExperienceId
 								}
 								experiences={experiences}
-								onDeleteExperience={deleteExperience}
-								onDuplicateExperience={
-									handleExperienceDuplication
-								}
-								onEditExperience={handleEditExperienceClick}
-								onPriorityDecrease={decreasePriority}
-								onPriorityIncrease={increasePriority}
+								onDeleteExperience={onDeleteExperience}
+								onDuplicateExperience={onDuplicateExperience}
+								onEditExperience={onEditExperience}
+								onPriorityDecrease={onPriorityDecrease}
+								onPriorityIncrease={onPriorityIncrease}
 							/>
 						)}
 					</div>
@@ -517,8 +513,8 @@ const ExperienceSelector = ({experiences, segments, selectedExperience}) => {
 					observer={modalObserver}
 					onClose={onModalClose}
 					onErrorDismiss={() => setEditingExperience({error: null})}
-					onNewSegmentClick={handleNewSegmentClick}
-					onSubmit={handleExperienceCreation}
+					onNewSegmentClick={onNewSegmentClick}
+					onSubmit={onExperienceCreation}
 					segmentId={editingExperience.segmentsEntryId}
 					segments={segments}
 				/>

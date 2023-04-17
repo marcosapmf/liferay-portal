@@ -4,6 +4,7 @@
 	<model name="com.liferay.object.model.ObjectAction">
 		<field name="mvccVersion" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="objectActionId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -53,6 +54,7 @@
 		<field name="enableCategorization" type="boolean" />
 		<field name="enableComments" type="boolean" />
 		<field name="enableObjectEntryHistory" type="boolean" />
+		<field name="modifiable" type="boolean" />
 		<field name="name" type="String" />
 		<field name="panelAppOrder" type="String" />
 		<field name="panelCategoryKey" type="String" />
@@ -102,7 +104,6 @@
 		<field name="DBColumnName" type="String" />
 		<field name="DBTableName" type="String" />
 		<field name="DBType" type="String" />
-		<field name="defaultValue" type="String" />
 		<field name="indexed" type="boolean" />
 		<field name="indexedAsKeyword" type="boolean" />
 		<field name="indexedLanguageId" type="String" />

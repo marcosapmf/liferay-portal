@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -56,6 +57,19 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ProductSpecificationResource {
 
+	public void deleteProductSpecification(Long id) throws Exception;
+
+	public Response deleteProductSpecificationBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public ProductSpecification getProductSpecification(Long id)
+		throws Exception;
+
+	public ProductSpecification patchProductSpecification(
+			Long id, ProductSpecification productSpecification)
+		throws Exception;
+
 	public Page<ProductSpecification> getProductIdProductSpecificationsPage(
 			Long id, Pagination pagination)
 		throws Exception;
@@ -65,7 +79,7 @@ public interface ProductSpecificationResource {
 		throws Exception;
 
 	public Response postProductIdProductSpecificationBatch(
-			Long id, String callbackURL, Object object)
+			String callbackURL, Object object)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -106,6 +120,10 @@ public interface ProductSpecificationResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

@@ -1,0 +1,159 @@
+definition {
+
+	macro addCurrency {
+		if (!(isSet(currency))) {
+			var currency = "USD";
+		}
+
+		if (!(isSet(country))) {
+			var country = "global";
+		}
+
+		if (!(isSet(accountEntryName))) {
+			var accountEntryName = "Company Name 1";
+		}
+
+		JSONPRMAPI.addCurrency(
+			accountEntryName = ${accountEntryName},
+			country = ${country},
+			currency = ${currency});
+	}
+
+	macro changeMDFStatus {
+		var statusKey = StringUtil.lowerCase(${mdfStatus});
+
+		JSONPRMAPI.changeMDFStatus(
+			mdfStatus = ${mdfStatus},
+			requestId = ${requestId},
+			statusKey = ${statusKey});
+	}
+
+	macro createMDFRequest {
+		var totalCostOfExpense = 0;
+
+		if (!(isSet(userEmailAddress))) {
+			var userEmailAddress = "test@liferay.com";
+		}
+
+		if (!(isSet(accountEntryName))) {
+			var accountEntryName = "Company Name 1";
+		}
+
+		if (!(isSet(startDate))) {
+			var startDate = DateUtil.getFormattedDate("+1", "yyyy-MM-dd");
+		}
+
+		if (!(isSet(endDate))) {
+			var endDate = DateUtil.getFormattedDate("+2", "yyyy-MM-dd");
+		}
+
+		if (!(isSet(campaignName))) {
+			var campaignName = "Campaign Name";
+		}
+
+		if (!(isSet(campaignDescription))) {
+			var campaignDescription = "Campaign Description";
+		}
+
+		if (!(isSet(goalsOptions))) {
+			var goalsOptions = "Thought leadership";
+		}
+
+		if (!(isSet(targetMarketOptions))) {
+			var targetMarketOptions = "Professional Services (Technical/Web/IT)";
+		}
+
+		if (!(isSet(targetRolesOptions))) {
+			var targetRolesOptions = "Director/Manager";
+		}
+
+		if (!(isSet(activityName))) {
+			var activityName = "Activity Name";
+		}
+
+		if (!(isSet(activityDescription))) {
+			var activityDescription = "Activity Description";
+		}
+
+		if (!(isSet(expenseOption))) {
+			var expenseOption = "Content Creation";
+		}
+
+		if (!(isSet(budgetValueList))) {
+			var budgetValueList = 1000;
+		}
+
+		for (var budget : list ${budgetValueList}) {
+			var totalCostOfExpense = ${totalCostOfExpense} + ${budget};
+
+			if (isSet(secondBudgetValueList)) {
+				for (var budget : list ${secondBudgetValueList}) {
+					var totalCostOfExpense = ${totalCostOfExpense} + ${budget};
+				}
+			}
+		}
+
+		var totalMDFRequestAmount = ${totalCostOfExpense} / 2;
+
+		var requestId = JSONPRMAPI.addMDF(
+			accountEntryName = ${accountEntryName},
+			campaignDescription = ${campaignDescription},
+			campaignName = ${campaignName},
+			endDate = ${endDate},
+			goalsOptions = ${goalsOptions},
+			startDate = ${startDate},
+			targetMarketOptions = ${targetMarketOptions},
+			targetRolesOptions = ${targetRolesOptions},
+			totalCostOfExpense = ${totalCostOfExpense},
+			totalMDFRequestAmount = ${totalMDFRequestAmount},
+			userEmailAddress = ${userEmailAddress});
+
+		var activityId = JSONPRMAPI.addActivity(
+			accountEntryName = ${accountEntryName},
+			activityDescription = ${activityDescription},
+			activityName = ${activityName},
+			budgetValue = ${totalCostOfExpense},
+			endDate = ${endDate},
+			expenseOption = ${expenseOption},
+			requestId = ${requestId},
+			startDate = ${startDate},
+			totalMDFRequestAmount = ${totalMDFRequestAmount});
+
+		for (var budgetValue : list ${budgetValueList}) {
+			JSONPRMAPI.addBudget(
+				activityId = ${activityId},
+				budgetValue = ${budgetValue},
+				expenseOption = ${expenseOption});
+		}
+
+		if (isSet(secondActivityName)) {
+			var secondTotalCostOfExpense = 0;
+
+			for (var budget : list ${secondBudgetValueList}) {
+				var secondTotalCostOfExpense = ${secondTotalCostOfExpense} + ${budget};
+			}
+
+			var secondTotalMDFRequestAmount = ${secondTotalCostOfExpense} / 2;
+
+			var secondActivityId = JSONPRMAPI.addActivity(
+				activityDescription = ${activityDescription},
+				activityName = ${secondActivityName},
+				budgetValue = ${secondTotalCostOfExpense},
+				endDate = ${endDate},
+				expenseOption = ${expenseOption},
+				requestId = ${requestId},
+				startDate = ${startDate},
+				totalMDFRequestAmount = ${secondTotalMDFRequestAmount});
+
+			for (var secondBudgetValue : list ${secondBudgetValueList}) {
+				JSONPRMAPI.addBudget(
+					activityId = ${secondActivityId},
+					budgetValue = ${secondBudgetValue},
+					expenseOption = ${expenseOption});
+			}
+		}
+
+		return ${requestId};
+	}
+
+}

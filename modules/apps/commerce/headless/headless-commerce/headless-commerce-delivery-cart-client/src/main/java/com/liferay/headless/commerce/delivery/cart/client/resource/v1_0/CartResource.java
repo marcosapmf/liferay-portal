@@ -96,11 +96,13 @@ public interface CartResource {
 		throws Exception;
 
 	public Page<Cart> getChannelCartsPage(
-			Long accountId, Long channelId, Pagination pagination)
+			Long accountId, Long channelId, String search,
+			Pagination pagination)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getChannelCartsPageHttpResponse(
-			Long accountId, Long channelId, Pagination pagination)
+			Long accountId, Long channelId, String search,
+			Pagination pagination)
 		throws Exception;
 
 	public Cart postChannelCart(Long channelId, Cart cart) throws Exception;
@@ -118,6 +120,10 @@ public interface CartResource {
 			return this;
 		}
 
+		public Builder bearerToken(String token) {
+			return header("Authorization", "Bearer " + token);
+		}
+
 		public CartResource build() {
 			return new CartResourceImpl(this);
 		}
@@ -126,6 +132,28 @@ public interface CartResource {
 			_contextPath = contextPath;
 
 			return this;
+		}
+
+		public Builder endpoint(String address, String scheme) {
+			String[] addressParts = address.split(":");
+
+			String host = addressParts[0];
+
+			int port = 443;
+
+			if (addressParts.length > 1) {
+				String portString = addressParts[1];
+
+				try {
+					port = Integer.parseInt(portString);
+				}
+				catch (NumberFormatException numberFormatException) {
+					throw new IllegalArgumentException(
+						"Unable to parse port from " + portString);
+				}
+			}
+
+			return endpoint(host, port, scheme);
 		}
 
 		public Builder endpoint(String host, int port, String scheme) {
@@ -892,12 +920,13 @@ public interface CartResource {
 		}
 
 		public Page<Cart> getChannelCartsPage(
-				Long accountId, Long channelId, Pagination pagination)
+				Long accountId, Long channelId, String search,
+				Pagination pagination)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getChannelCartsPageHttpResponse(
-					accountId, channelId, pagination);
+					accountId, channelId, search, pagination);
 
 			String content = httpResponse.getContent();
 
@@ -937,7 +966,8 @@ public interface CartResource {
 		}
 
 		public HttpInvoker.HttpResponse getChannelCartsPageHttpResponse(
-				Long accountId, Long channelId, Pagination pagination)
+				Long accountId, Long channelId, String search,
+				Pagination pagination)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -960,6 +990,10 @@ public interface CartResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
 
 			if (pagination != null) {
 				httpInvoker.parameter(

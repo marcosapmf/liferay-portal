@@ -14,6 +14,10 @@
 
 package com.liferay.object.rest.internal.odata.filter.expression;
 
+import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRelTable;
+import com.liferay.asset.kernel.model.AssetEntries_AssetTagsTable;
+import com.liferay.asset.kernel.model.AssetEntryTable;
+import com.liferay.asset.kernel.model.AssetTagTable;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.business.type.ObjectFieldBusinessTypeRegistry;
@@ -26,8 +30,10 @@ import com.liferay.object.rest.internal.odata.entity.v1_0.ObjectEntryEntityModel
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalServiceUtil;
+import com.liferay.petra.function.UnsafeBiFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.Column;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.spi.expression.DefaultPredicate;
 import com.liferay.petra.sql.dsl.spi.expression.Operand;
@@ -37,13 +43,15 @@ import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.filter.expression.BinaryExpression;
@@ -66,13 +74,15 @@ import java.text.DateFormat;
 import java.text.Format;
 import java.text.ParseException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+
+import javax.ws.rs.ServerErrorException;
 
 /**
  * @author Marco Leo
@@ -97,13 +107,27 @@ public class PredicateExpressionVisitorImpl
 	public Predicate visitBinaryExpressionOperation(
 		BinaryExpression.Operation operation, Object left, Object right) {
 
-		Optional<Predicate> predicateOptional = _getPredicateOptional(
-			operation, left, right);
+		Predicate predicate = null;
 
-		return predicateOptional.orElseThrow(
-			() -> new UnsupportedOperationException(
-				"Unsupported method visitBinaryExpressionOperation with " +
-					"operation " + operation));
+		if (_isComplexProperExpression(left)) {
+			predicate = _getObjectRelationshipPredicate(
+				left,
+				(objectFieldName, relatedObjectDefinitionId) -> _getPredicate(
+					objectFieldName, relatedObjectDefinitionId, operation,
+					right));
+		}
+		else {
+			predicate = _getPredicate(
+				left, _objectDefinitionId, operation, right);
+		}
+
+		if (predicate != null) {
+			return predicate;
+		}
+
+		throw new UnsupportedOperationException(
+			"Unsupported method visitBinaryExpressionOperation with " +
+				"operation " + operation);
 	}
 
 	@Override
@@ -111,18 +135,8 @@ public class PredicateExpressionVisitorImpl
 			CollectionPropertyExpression collectionPropertyExpression)
 		throws ExpressionVisitException {
 
-		LambdaFunctionExpression lambdaFunctionExpression =
-			collectionPropertyExpression.getLambdaFunctionExpression();
-
-		return (Predicate)lambdaFunctionExpression.accept(
-			new PredicateExpressionVisitorImpl(
-				_getObjectDefinitionEntityModel(_objectDefinitionId),
-				Collections.singletonMap(
-					lambdaFunctionExpression.getVariableName(),
-					collectionPropertyExpression.getName()),
-				_objectDefinitionId, _objectFieldBusinessTypeRegistry,
-				_objectFieldLocalService,
-				_objectRelatedModelsPredicateProviderRegistry));
+		return _visitCollectionPropertyExpression(
+			collectionPropertyExpression, _objectDefinitionId);
 	}
 
 	@Override
@@ -130,31 +144,19 @@ public class PredicateExpressionVisitorImpl
 			ComplexPropertyExpression complexPropertyExpression)
 		throws ExpressionVisitException {
 
-		_objectRelationship = _fetchObjectRelationship(
-			complexPropertyExpression.getName());
-
-		EntityModel entityModel = _getObjectDefinitionEntityModel(
-			_objectDefinitionId);
-
-		Map<String, EntityField> entityFieldsMap =
-			entityModel.getEntityFieldsMap();
-
-		ComplexEntityField complexEntityField =
-			(ComplexEntityField)entityFieldsMap.get(
-				complexPropertyExpression.getName());
-
-		Map<String, EntityField> complexEntityFieldEntityFieldsMap =
-			complexEntityField.getEntityFieldsMap();
-
 		PropertyExpression propertyExpression =
 			complexPropertyExpression.getPropertyExpression();
 
-		EntityField entityField = complexEntityFieldEntityFieldsMap.get(
-			propertyExpression.getName());
+		if (propertyExpression instanceof CollectionPropertyExpression) {
+			return _getObjectRelationshipPredicate(
+				complexPropertyExpression.toString(),
+				(objectFieldName, relatedObjectDefinitionId) ->
+					_visitCollectionPropertyExpression(
+						(CollectionPropertyExpression)propertyExpression,
+						relatedObjectDefinitionId));
+		}
 
-		_relatedFieldName = entityField.getName();
-
-		return entityField.getName();
+		return complexPropertyExpression.toString();
 	}
 
 	@Override
@@ -181,13 +183,21 @@ public class PredicateExpressionVisitorImpl
 		throws ExpressionVisitException {
 
 		if (Objects.equals(ListExpression.Operation.IN, operation)) {
-			Column<?, Object> column = _getColumn(left, _objectDefinitionId);
+			Predicate predicate = null;
 
-			return column.in(
-				TransformUtil.transformToArray(
-					rights,
-					right -> _getValue(left, _objectDefinitionId, right),
-					Object.class));
+			if (_isComplexProperExpression(left)) {
+				predicate = _getObjectRelationshipPredicate(
+					left,
+					(objectFieldName, relatedObjectDefinitionId) ->
+						_getInPredicate(
+							objectFieldName, relatedObjectDefinitionId,
+							rights));
+			}
+			else {
+				predicate = _getInPredicate(left, _objectDefinitionId, rights);
+			}
+
+			return predicate;
 		}
 
 		throw new UnsupportedOperationException(
@@ -251,31 +261,54 @@ public class PredicateExpressionVisitorImpl
 	public Object visitMethodExpression(
 		List<Object> expressions, MethodExpression.Type type) {
 
-		if (type == MethodExpression.Type.CONTAINS) {
-			if (expressions.size() != 2) {
-				throw new UnsupportedOperationException(
-					StringBundler.concat(
-						"Unsupported method visitMethodExpression with method ",
-						"type ", type, " and ", expressions.size(), "params"));
+		if (expressions.size() == 2) {
+			String left = (String)expressions.get(0);
+			Object fieldValue = expressions.get(1);
+
+			Predicate predicate = null;
+
+			if (type == MethodExpression.Type.CONTAINS) {
+				if (_isComplexProperExpression(left)) {
+					predicate = _getObjectRelationshipPredicate(
+						left,
+						(objectFieldName, relatedObjectDefinitionId) ->
+							_contains(
+								objectFieldName, fieldValue,
+								relatedObjectDefinitionId));
+				}
+				else {
+					predicate = _contains(
+						left, fieldValue, _objectDefinitionId);
+				}
+
+				if (predicate != null) {
+					return predicate;
+				}
 			}
+			else if (type == MethodExpression.Type.STARTS_WITH) {
+				if (_isComplexProperExpression(left)) {
+					predicate = _getObjectRelationshipPredicate(
+						left,
+						(objectFieldName, relatedObjectDefinitionId) ->
+							_startsWith(
+								objectFieldName, fieldValue,
+								relatedObjectDefinitionId));
+				}
+				else {
+					predicate = _startsWith(
+						left, fieldValue, _objectDefinitionId);
+				}
 
-			return _contains(expressions.get(0), expressions.get(1));
-		}
-
-		if (type == MethodExpression.Type.STARTS_WITH) {
-			if (expressions.size() != 2) {
-				throw new UnsupportedOperationException(
-					StringBundler.concat(
-						"Unsupported method visitMethodExpression with method",
-						"type ", type, " and ", expressions.size(), "params"));
+				if (predicate != null) {
+					return predicate;
+				}
 			}
-
-			return _startsWith(expressions.get(0), expressions.get(1));
 		}
 
 		throw new UnsupportedOperationException(
-			"Unsupported method visitMethodExpression with method type " +
-				type);
+			StringBundler.concat(
+				"Unsupported method visitMethodExpression with method type ",
+				type, " and ", expressions.size(), " parameters"));
 	}
 
 	@Override
@@ -325,20 +358,28 @@ public class PredicateExpressionVisitorImpl
 			objectRelatedModelsPredicateProviderRegistry;
 	}
 
-	private Predicate _contains(Object fieldName, Object fieldValue) {
-		Column<?, Object> column = _getColumn(fieldName, _objectDefinitionId);
+	private Predicate _contains(Column<?, ?> column, Object value) {
+		return column.like(StringPool.PERCENT + value + StringPool.PERCENT);
+	}
 
-		return column.like(
-			StringPool.PERCENT +
-				_getValue(fieldName, _objectDefinitionId, fieldValue) +
-					StringPool.PERCENT);
+	private Predicate _contains(
+		Object fieldName, Object fieldValue, long objectDefinitionId) {
+
+		if (_isKeywords(fieldName)) {
+			return _getKeywordsPredicate(
+				objectDefinitionId,
+				_contains(AssetTagTable.INSTANCE.name, fieldValue));
+		}
+
+		return _contains(
+			_getColumn(fieldName, objectDefinitionId),
+			_getValue(fieldName, objectDefinitionId, fieldValue));
 	}
 
 	private EntityModel _createEntityModel(long objectDefinitionId) {
 		try {
 			return new ObjectEntryEntityModel(
-				ObjectDefinitionLocalServiceUtil.getObjectDefinition(
-					objectDefinitionId),
+				objectDefinitionId,
 				_objectFieldLocalService.getObjectFields(objectDefinitionId));
 		}
 		catch (Exception exception) {
@@ -351,13 +392,12 @@ public class PredicateExpressionVisitorImpl
 	}
 
 	private ObjectRelationship _fetchObjectRelationship(
-		String relationshipName) {
+		long objectDefinitionId, String objectRelationshipName) {
 
 		try {
 			return ObjectRelationshipLocalServiceUtil.
 				getObjectRelationshipByObjectDefinitionId(
-					_objectDefinitionId,
-					GetterUtil.getString(relationshipName));
+					objectDefinitionId, objectRelationshipName);
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -396,9 +436,8 @@ public class PredicateExpressionVisitorImpl
 		return entityModel.getEntityFieldsMap();
 	}
 
-	private Predicate _getExpressionPredicate(
-		Column<?, Object> column, BinaryExpression.Operation operation,
-		Object value) {
+	private <T> Predicate _getExpressionPredicate(
+		Column<?, T> column, BinaryExpression.Operation operation, T value) {
 
 		if (Objects.equals(BinaryExpression.Operation.EQ, operation)) {
 			return column.eq(value);
@@ -422,6 +461,62 @@ public class PredicateExpressionVisitorImpl
 		return null;
 	}
 
+	private Predicate _getInPredicate(
+		Object left, long objectDefinitionId, List<Object> rights) {
+
+		if (_isKeywords(left)) {
+			return _getKeywordsPredicate(
+				objectDefinitionId,
+				AssetTagTable.INSTANCE.name.in(
+					TransformUtil.transformToArray(
+						rights, String::valueOf, Object.class)));
+		}
+
+		if (_isTaxonomyCategoryIds(left)) {
+			return _getTaxonomyCategoryIdsPredicate(
+				objectDefinitionId,
+				AssetEntryAssetCategoryRelTable.INSTANCE.assetCategoryId.in(
+					TransformUtil.transformToArray(
+						rights, assetCategoryId -> (Long)assetCategoryId,
+						Long.class)));
+		}
+
+		return _getColumn(
+			left, objectDefinitionId
+		).in(
+			TransformUtil.transformToArray(
+				rights, right -> _getValue(left, objectDefinitionId, right),
+				Object.class)
+		);
+	}
+
+	private Predicate _getKeywordsPredicate(
+		long objectDefinitionId,
+		com.liferay.petra.sql.dsl.expression.Expression<Boolean>
+			valueExpression) {
+
+		return _getColumn(
+			"id", objectDefinitionId
+		).in(
+			DSLQueryFactoryUtil.select(
+				AssetEntryTable.INSTANCE.classPK
+			).from(
+				AssetEntryTable.INSTANCE
+			).innerJoinON(
+				AssetEntries_AssetTagsTable.INSTANCE,
+				AssetEntryTable.INSTANCE.entryId.eq(
+					AssetEntries_AssetTagsTable.INSTANCE.entryId)
+			).innerJoinON(
+				AssetTagTable.INSTANCE,
+				AssetTagTable.INSTANCE.tagId.eq(
+					AssetEntries_AssetTagsTable.INSTANCE.tagId
+				).and(
+					valueExpression
+				)
+			)
+		);
+	}
+
 	private EntityModel _getObjectDefinitionEntityModel(
 		long objectDefinitionId) {
 
@@ -436,77 +531,155 @@ public class PredicateExpressionVisitorImpl
 		return entityModel;
 	}
 
-	private Predicate _getPredicateForRelationships(
-			BinaryExpression.Operation operation, Object left, Object right)
+	private Predicate _getObjectRelationshipPredicate(
+			long objectDefinitionId,
+			List<ObjectValuePair<ObjectRelationship, Long>> objectValuePairs,
+			ObjectRelationship objectRelationship, Predicate predicate)
 		throws Exception {
 
-		ObjectDefinition objectDefinition1 =
+		ObjectDefinition objectDefinition =
 			ObjectDefinitionLocalServiceUtil.getObjectDefinition(
-				_objectDefinitionId);
+				objectDefinitionId);
 
 		ObjectRelatedModelsPredicateProvider
 			objectRelatedModelsPredicateProvider =
 				_objectRelatedModelsPredicateProviderRegistry.
 					getObjectRelatedModelsPredicateProvider(
-						objectDefinition1.getClassName(),
-						_objectRelationship.getType());
+						objectDefinition.getClassName(),
+						objectRelationship.getType());
 
-		long relatedObjectDefinitionId = _getRelatedObjectDefinitionId(
-			_objectDefinitionId, _objectRelationship);
+		if (objectValuePairs.isEmpty()) {
+			return objectRelatedModelsPredicateProvider.getPredicate(
+				objectRelationship, predicate);
+		}
 
-		return objectRelatedModelsPredicateProvider.getPredicate(
-			_objectRelationship,
-			_getExpressionPredicate(
-				_getColumn(_relatedFieldName, relatedObjectDefinitionId),
-				operation, _getValue(left, relatedObjectDefinitionId, right)));
+		ObjectValuePair<ObjectRelationship, Long> objectValuePair =
+			objectValuePairs.remove(0);
+
+		return _getObjectRelationshipPredicate(
+			objectValuePair.getValue(), objectValuePairs,
+			objectValuePair.getKey(),
+			objectRelatedModelsPredicateProvider.getPredicate(
+				objectRelationship, predicate));
 	}
 
-	private Optional<Predicate> _getPredicateOptional(
-		BinaryExpression.Operation operation, Object left, Object right) {
+	private Predicate _getObjectRelationshipPredicate(
+		Object left,
+		UnsafeBiFunction<String, Long, Predicate, Exception> unsafeBiFunction) {
+
+		List<String> leftParts = ListUtil.fromString(
+			(String)left, StringPool.SLASH);
+
+		List<String> objectRelationshipNames = new ArrayList<>(
+			leftParts.subList(0, leftParts.size() - 1));
+
+		List<ObjectValuePair<ObjectRelationship, Long>> objectValuePairs =
+			_getObjectValuePairs(_objectDefinitionId, objectRelationshipNames);
+
+		ObjectValuePair<ObjectRelationship, Long> objectValuePair =
+			objectValuePairs.remove(0);
+
+		try {
+			return _getObjectRelationshipPredicate(
+				objectValuePair.getValue(), objectValuePairs,
+				objectValuePair.getKey(),
+				unsafeBiFunction.apply(
+					leftParts.get(leftParts.size() - 1),
+					_getRelatedObjectDefinitionId(
+						objectValuePair.getValue(), objectValuePair.getKey())));
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	private List<ObjectValuePair<ObjectRelationship, Long>>
+		_getObjectValuePairs(
+			long objectDefinitionId, List<String> objectRelationshipNames) {
+
+		List<ObjectValuePair<ObjectRelationship, Long>> objectValuePairs =
+			new ArrayList<>();
+
+		for (String objectRelationshipName : objectRelationshipNames) {
+			ObjectRelationship objectRelationship = _fetchObjectRelationship(
+				objectDefinitionId, objectRelationshipName);
+
+			if (objectRelationship == null) {
+				continue;
+			}
+
+			objectValuePairs.add(
+				new ObjectValuePair<>(objectRelationship, objectDefinitionId));
+
+			objectDefinitionId = _getRelatedObjectDefinitionId(
+				objectDefinitionId, objectRelationship);
+		}
+
+		if (objectValuePairs.isEmpty()) {
+			throw new ServerErrorException(
+				500,
+				new Exception(
+					StringBundler.concat(
+						"Unable to get object value pairs for object ",
+						"definition ", objectDefinitionId,
+						" and object relationship: ",
+						StringUtil.merge(objectRelationshipNames))));
+		}
+
+		Collections.reverse(objectValuePairs);
+
+		return objectValuePairs;
+	}
+
+	private Predicate _getPredicate(
+		Object left, long objectDefinitionId,
+		BinaryExpression.Operation operation, Object right) {
 
 		Predicate predicate = null;
 
 		if (Objects.equals(BinaryExpression.Operation.AND, operation)) {
-			predicate = Predicate.and((Predicate)left, (Predicate)right);
+			predicate = Predicate.and(
+				Predicate.withParentheses((Predicate)left),
+				Predicate.withParentheses((Predicate)right));
 		}
 		else if (Objects.equals(BinaryExpression.Operation.OR, operation)) {
-			predicate = Predicate.or((Predicate)left, (Predicate)right);
+			predicate = Predicate.or(
+				Predicate.withParentheses((Predicate)left),
+				Predicate.withParentheses((Predicate)right));
+		}
+		else if (_isKeywords(left)) {
+			predicate = _getKeywordsPredicate(
+				objectDefinitionId,
+				_getExpressionPredicate(
+					AssetTagTable.INSTANCE.name, operation, (String)right));
+		}
+		else if (_isTaxonomyCategoryIds(left)) {
+			predicate = _getTaxonomyCategoryIdsPredicate(
+				objectDefinitionId,
+				_getExpressionPredicate(
+					AssetEntryAssetCategoryRelTable.INSTANCE.assetCategoryId,
+					operation, (Long)right));
 		}
 		else {
 			ObjectField objectField = _objectFieldLocalService.fetchObjectField(
-				_objectDefinitionId, String.valueOf(left));
+				objectDefinitionId, String.valueOf(left));
 
 			if ((objectField != null) &&
 				StringUtil.equals(
 					objectField.getBusinessType(),
 					ObjectFieldConstants.BUSINESS_TYPE_MULTISELECT_PICKLIST)) {
 
-				predicate = _contains(left, right);
+				predicate = _contains(left, right, objectDefinitionId);
 			}
 		}
 
 		if (predicate != null) {
-			return Optional.of(predicate);
+			return predicate;
 		}
 
-		if (_objectRelationship != null) {
-			try {
-				return Optional.ofNullable(
-					_getPredicateForRelationships(operation, left, right));
-			}
-			catch (Exception exception) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(exception);
-				}
-
-				return Optional.empty();
-			}
-		}
-
-		return Optional.ofNullable(
-			_getExpressionPredicate(
-				_getColumn(left, _objectDefinitionId), operation,
-				_getValue(left, _objectDefinitionId, right)));
+		return _getExpressionPredicate(
+			_getColumn(left, objectDefinitionId), operation,
+			_getValue(left, objectDefinitionId, right));
 	}
 
 	private long _getRelatedObjectDefinitionId(
@@ -517,6 +690,29 @@ public class PredicateExpressionVisitorImpl
 		}
 
 		return objectRelationship.getObjectDefinitionId2();
+	}
+
+	private Predicate _getTaxonomyCategoryIdsPredicate(
+		long objectDefinitionId,
+		com.liferay.petra.sql.dsl.expression.Expression<Boolean>
+			valueExpression) {
+
+		return _getColumn(
+			"id", objectDefinitionId
+		).in(
+			DSLQueryFactoryUtil.select(
+				AssetEntryTable.INSTANCE.classPK
+			).from(
+				AssetEntryTable.INSTANCE
+			).innerJoinON(
+				AssetEntryAssetCategoryRelTable.INSTANCE,
+				AssetEntryTable.INSTANCE.entryId.eq(
+					AssetEntryAssetCategoryRelTable.INSTANCE.assetEntryId
+				).and(
+					valueExpression
+				)
+			)
+		);
 	}
 
 	private Object _getValue(
@@ -551,10 +747,6 @@ public class PredicateExpressionVisitorImpl
 		String entityFieldFilterableName = entityField.getFilterableName(null);
 		String entityFieldName = entityField.getName();
 
-		if (Objects.equals(entityFieldFilterableName, entityFieldName)) {
-			return right;
-		}
-
 		try {
 			ObjectField objectField = _objectFieldLocalService.getObjectField(
 				_objectDefinitionId, entityFieldFilterableName);
@@ -570,6 +762,13 @@ public class PredicateExpressionVisitorImpl
 				return right;
 			}
 
+			if (Objects.equals(
+					objectFieldBusinessType.getDBType(),
+					ObjectFieldConstants.DB_TYPE_LONG)) {
+
+				return GetterUtil.getLong(value);
+			}
+
 			return value;
 		}
 		catch (PortalException portalException) {
@@ -581,12 +780,71 @@ public class PredicateExpressionVisitorImpl
 		}
 	}
 
-	private Predicate _startsWith(Object fieldName, Object fieldValue) {
-		Column<?, Object> column = _getColumn(fieldName, _objectDefinitionId);
+	private boolean _isComplexProperExpression(Object object) {
+		if (object instanceof String) {
+			String string = (String)object;
 
-		return column.like(
-			_getValue(fieldName, _objectDefinitionId, fieldValue) +
-				StringPool.PERCENT);
+			return string.contains(StringPool.SLASH);
+		}
+
+		return false;
+	}
+
+	private boolean _isKeywords(Object fieldName) {
+		if (fieldName.equals("keywords") &&
+			FeatureFlagManagerUtil.isEnabled("LPS-176651")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isTaxonomyCategoryIds(Object fieldName) {
+		if (fieldName.equals("taxonomyCategoryIds") &&
+			FeatureFlagManagerUtil.isEnabled("LPS-176651")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private Predicate _startsWith(Column<?, ?> column, Object value) {
+		return column.like(value + StringPool.PERCENT);
+	}
+
+	private Predicate _startsWith(
+		Object fieldName, Object fieldValue, long objectDefinitionId) {
+
+		if (_isKeywords(fieldName)) {
+			return _getKeywordsPredicate(
+				objectDefinitionId,
+				_startsWith(AssetTagTable.INSTANCE.name, fieldValue));
+		}
+
+		return _startsWith(
+			_getColumn(fieldName, objectDefinitionId),
+			_getValue(fieldName, objectDefinitionId, fieldValue));
+	}
+
+	private Predicate _visitCollectionPropertyExpression(
+			CollectionPropertyExpression collectionPropertyExpression,
+			long objectDefinitionId)
+		throws ExpressionVisitException {
+
+		LambdaFunctionExpression lambdaFunctionExpression =
+			collectionPropertyExpression.getLambdaFunctionExpression();
+
+		return (Predicate)lambdaFunctionExpression.accept(
+			new PredicateExpressionVisitorImpl(
+				_getObjectDefinitionEntityModel(objectDefinitionId),
+				Collections.singletonMap(
+					lambdaFunctionExpression.getVariableName(),
+					collectionPropertyExpression.getName()),
+				objectDefinitionId, _objectFieldBusinessTypeRegistry,
+				_objectFieldLocalService,
+				_objectRelatedModelsPredicateProviderRegistry));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -600,7 +858,5 @@ public class PredicateExpressionVisitorImpl
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectRelatedModelsPredicateProviderRegistry
 		_objectRelatedModelsPredicateProviderRegistry;
-	private ObjectRelationship _objectRelationship;
-	private String _relatedFieldName;
 
 }

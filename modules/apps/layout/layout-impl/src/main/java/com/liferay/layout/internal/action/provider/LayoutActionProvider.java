@@ -15,7 +15,6 @@
 package com.liferay.layout.internal.action.provider;
 
 import com.liferay.application.list.GroupProvider;
-import com.liferay.application.list.constants.ApplicationListWebKeys;
 import com.liferay.asset.list.constants.AssetListPortletKeys;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
@@ -27,7 +26,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
@@ -40,10 +38,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
-import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -69,21 +65,15 @@ import javax.servlet.http.HttpServletRequest;
 public class LayoutActionProvider {
 
 	public LayoutActionProvider(
-		HttpServletRequest httpServletRequest, Language language,
+		GroupProvider groupProvider, HttpServletRequest httpServletRequest,
+		Language language,
 		SiteNavigationMenuLocalService siteNavigationMenuLocalService) {
 
+		_groupProvider = groupProvider;
 		_httpServletRequest = httpServletRequest;
 		_language = language;
 		_siteNavigationMenuLocalService = siteNavigationMenuLocalService;
 
-		_groupProvider = (GroupProvider)httpServletRequest.getAttribute(
-			ApplicationListWebKeys.GROUP_PROVIDER);
-		_liferayPortletRequest = PortalUtil.getLiferayPortletRequest(
-			(PortletRequest)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_REQUEST));
-		_namespace = PortalUtil.getPortletNamespace(
-			ProductNavigationProductMenuPortletKeys.
-				PRODUCT_NAVIGATION_PRODUCT_MENU);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -162,68 +152,49 @@ public class LayoutActionProvider {
 				));
 		}
 
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-119382"))) {
-			itemsJSONArray.put(
-				JSONUtil.put("type", "divider")
-			).put(
+		itemsJSONArray.put(
+			JSONUtil.put("type", "divider")
+		).put(
+			JSONUtil.put(
+				"data",
 				JSONUtil.put(
-					"data",
-					JSONUtil.put(
-						"id", "copy-page"
-					).put(
-						"modalTitle",
-						_language.get(_themeDisplay.getLocale(), "copy-page")
-					).put(
-						"url", _getCopyLayoutRenderURL(layout)
-					)
-				).put(
-					"href", StringPool.POUND
-				).put(
 					"id", "copy-page"
 				).put(
-					"label",
+					"modalTitle",
 					_language.get(_themeDisplay.getLocale(), "copy-page")
 				).put(
-					"symbolLeft", "copy"
-				).put(
-					"type", "item"
+					"url", _getCopyLayoutRenderURL(layout)
 				)
 			).put(
-				JSONUtil.put("type", "divider")
+				"href", StringPool.POUND
 			).put(
-				JSONUtil.put(
-					"href",
-					StringUtil.replace(
-						_getConfigureLayoutURLTemplate(),
-						StringPool.OPEN_CURLY_BRACE,
-						StringPool.CLOSE_CURLY_BRACE, valuesMap)
-				).put(
-					"id", "configure"
-				).put(
-					"label",
-					_language.get(_themeDisplay.getLocale(), "configure")
-				).put(
-					"symbolLeft", "cog"
-				).put(
-					"type", "item"
-				)
-			);
-		}
-		else {
-			itemsJSONArray.put(
-				JSONUtil.put(
-					"href", ""
-				).put(
-					"id", "configure"
-				).put(
-					"label",
-					_language.get(_themeDisplay.getLocale(), "configure")
-				).put(
-					"symbolLeft", "cog"
-				).put(
-					"type", "item"
-				));
-		}
+				"id", "copy-page"
+			).put(
+				"label", _language.get(_themeDisplay.getLocale(), "copy-page")
+			).put(
+				"symbolLeft", "copy"
+			).put(
+				"type", "item"
+			)
+		).put(
+			JSONUtil.put("type", "divider")
+		).put(
+			JSONUtil.put(
+				"href",
+				StringUtil.replace(
+					_getConfigureLayoutURLTemplate(),
+					StringPool.OPEN_CURLY_BRACE, StringPool.CLOSE_CURLY_BRACE,
+					valuesMap)
+			).put(
+				"id", "configure"
+			).put(
+				"label", _language.get(_themeDisplay.getLocale(), "configure")
+			).put(
+				"symbolLeft", "cog"
+			).put(
+				"type", "item"
+			)
+		);
 
 		if (layout.isTypeCollection() &&
 			Validator.isNotNull(_getViewCollectionItemsURL())) {
@@ -258,86 +229,80 @@ public class LayoutActionProvider {
 				));
 		}
 
-		if (GetterUtil.getBoolean(PropsUtil.get("feature.flag.LPS-119382"))) {
-			itemsJSONArray.put(
+		itemsJSONArray.put(
+			JSONUtil.put(
+				"data",
 				JSONUtil.put(
-					"data",
-					JSONUtil.put(
-						"id", "permissions"
-					).put(
-						"modalTitle",
-						_language.get(_themeDisplay.getLocale(), "permissions")
-					).put(
-						"url", _getPermissionsURL(layout)
-					)
-				).put(
-					"href", StringPool.POUND
-				).put(
 					"id", "permissions"
 				).put(
-					"label",
+					"modalTitle",
 					_language.get(_themeDisplay.getLocale(), "permissions")
 				).put(
-					"symbolLeft", "password-policies"
-				).put(
-					"type", "item"
+					"url", _getPermissionsURL(layout)
 				)
 			).put(
-				JSONUtil.put("type", "divider")
+				"href", StringPool.POUND
 			).put(
-				JSONUtil.put(
-					"data",
-					HashMapBuilder.put(
-						"message",
-						() -> {
-							String messageKey =
-								"are-you-sure-you-want-to-delete-the-page-x.-" +
-									"it-will-be-removed-immediately";
+				"id", "permissions"
+			).put(
+				"label", _language.get(_themeDisplay.getLocale(), "permissions")
+			).put(
+				"symbolLeft", "password-policies"
+			).put(
+				"type", "item"
+			)
+		).put(
+			JSONUtil.put("type", "divider")
+		).put(
+			JSONUtil.put(
+				"data",
+				HashMapBuilder.put(
+					"message",
+					() -> {
+						String messageKey =
+							"are-you-sure-you-want-to-delete-the-page-x.-it-" +
+								"will-be-removed-immediately";
 
-							if (layout.hasChildren() &&
-								_hasScopeGroup(layout)) {
-
-								messageKey = StringBundler.concat(
-									"are-you-sure-you-want-to-delete-the-page-",
-									"x.-this-page-serves-as-a-scope-for-",
-									"content-and-also-contains-child-pages");
-							}
-							else if (layout.hasChildren()) {
-								messageKey = StringBundler.concat(
-									"are-you-sure-you-want-to-delete-the-page-",
-									"x.-this-page-contains-child-pages-that-",
-									"will-also-be-removed");
-							}
-							else if (_hasScopeGroup(layout)) {
-								messageKey = StringBundler.concat(
-									"are-you-sure-you-want-to-delete-the-page-",
-									"x.-this-page-serves-as-a-scope-for-",
-									"content");
-							}
-
-							return _language.format(
-								_httpServletRequest, messageKey,
-								HtmlUtil.escape(
-									layout.getName(_themeDisplay.getLocale())));
+						if (layout.hasChildren() && _hasScopeGroup(layout)) {
+							messageKey = StringBundler.concat(
+								"are-you-sure-you-want-to-delete-the-page-x.-",
+								"this-page-serves-as-a-scope-for-content-and-",
+								"also-contains-child-pages");
 						}
-					).put(
-						"modalTitle",
-						_language.get(_themeDisplay.getLocale(), "delete-page")
-					).put(
-						"url",
-						_getDeleteLayoutURL(layout, afterDeleteSelectedLayout)
-					).build()
+						else if (layout.hasChildren()) {
+							messageKey = StringBundler.concat(
+								"are-you-sure-you-want-to-delete-the-page-x.-",
+								"this-page-contains-child-pages-that-will-",
+								"also-be-removed");
+						}
+						else if (_hasScopeGroup(layout)) {
+							messageKey =
+								"are-you-sure-you-want-to-delete-the-page-x.-" +
+									"this-page-serves-as-a-scope-for-content";
+						}
+
+						return _language.format(
+							_httpServletRequest, messageKey,
+							HtmlUtil.escape(
+								layout.getName(_themeDisplay.getLocale())));
+					}
 				).put(
-					"id", "delete"
+					"modalTitle",
+					_language.get(_themeDisplay.getLocale(), "delete-page")
 				).put(
-					"label", _language.get(_themeDisplay.getLocale(), "delete")
-				).put(
-					"symbolLeft", "trash"
-				).put(
-					"type", "item"
-				)
-			);
-		}
+					"url",
+					_getDeleteLayoutURL(layout, afterDeleteSelectedLayout)
+				).build()
+			).put(
+				"id", "delete"
+			).put(
+				"label", _language.get(_themeDisplay.getLocale(), "delete")
+			).put(
+				"symbolLeft", "trash"
+			).put(
+				"type", "item"
+			)
+		);
 
 		return JSONUtil.putAll(
 			JSONUtil.put(
@@ -380,7 +345,7 @@ public class LayoutActionProvider {
 
 		return PortletURLBuilder.create(
 			PortalUtil.getControlPanelPortletURL(
-				_liferayPortletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 				PortletRequest.RENDER_PHASE)
 		).setMVCPath(
 			"/select_layout_collections.jsp"
@@ -404,7 +369,7 @@ public class LayoutActionProvider {
 
 		return PortletURLBuilder.create(
 			PortalUtil.getControlPanelPortletURL(
-				_liferayPortletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 				PortletRequest.RENDER_PHASE)
 		).setMVCPath(
 			"/select_layout_page_template_entry.jsp"
@@ -440,7 +405,7 @@ public class LayoutActionProvider {
 	private String _getConfigureLayoutURL() throws Exception {
 		PortletURL configureLayoutURL = PortletURLBuilder.create(
 			PortalUtil.getControlPanelPortletURL(
-				_liferayPortletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 				PortletRequest.RENDER_PHASE)
 		).setMVCRenderCommandName(
 			"/layout_admin/edit_layout"
@@ -450,8 +415,7 @@ public class LayoutActionProvider {
 
 		if (layout.isTypeAssetDisplay() || layout.isTypeControlPanel()) {
 			String redirect = ParamUtil.getString(
-				_liferayPortletRequest, "redirect",
-				_themeDisplay.getURLCurrent());
+				_httpServletRequest, "redirect", _themeDisplay.getURLCurrent());
 
 			configureLayoutURL.setParameter("redirect", redirect);
 			configureLayoutURL.setParameter("backURL", redirect);
@@ -486,8 +450,7 @@ public class LayoutActionProvider {
 			"/layout_admin/add_layout"
 		).setRedirect(
 			ParamUtil.getString(
-				_liferayPortletRequest, "redirect",
-				_themeDisplay.getURLCurrent())
+				_httpServletRequest, "redirect", _themeDisplay.getURLCurrent())
 		).setParameter(
 			"privateLayout", layout.isPrivateLayout()
 		).setParameter(
@@ -508,7 +471,7 @@ public class LayoutActionProvider {
 		}
 
 		String redirect = ParamUtil.getString(
-			_liferayPortletRequest, "redirect", _themeDisplay.getURLCurrent());
+			_httpServletRequest, "redirect", _themeDisplay.getURLCurrent());
 
 		Layout curLayout = _themeDisplay.getLayout();
 
@@ -532,12 +495,14 @@ public class LayoutActionProvider {
 
 		return ActionURLBuilder.createActionURL(
 			(ActionURL)PortalUtil.getControlPanelPortletURL(
-				_liferayPortletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 				PortletRequest.ACTION_PHASE)
 		).setActionName(
 			"/layout_admin/delete_layout"
 		).setRedirect(
 			redirect
+		).setParameter(
+			"hideDefaultSuccessMessage", true
 		).setParameter(
 			"selPlid", String.valueOf(layout.getPlid())
 		).buildString();
@@ -568,9 +533,13 @@ public class LayoutActionProvider {
 		String pageTypeSelectedOption =
 			ProductNavigationProductMenuWebKeys.PUBLIC_LAYOUT;
 
+		String namespace = PortalUtil.getPortletNamespace(
+			ProductNavigationProductMenuPortletKeys.
+				PRODUCT_NAVIGATION_PRODUCT_MENU);
+
 		String pageTypeSelectedOptionSessionValue = SessionClicks.get(
 			_httpServletRequest,
-			_namespace +
+			namespace +
 				ProductNavigationProductMenuWebKeys.PAGE_TYPE_SELECTED_OPTION,
 			ProductNavigationProductMenuWebKeys.PUBLIC_LAYOUT);
 
@@ -612,7 +581,7 @@ public class LayoutActionProvider {
 
 	private String _getViewCollectionItemsURL() throws Exception {
 		PortletURL portletURL = PortletProviderUtil.getPortletURL(
-			_liferayPortletRequest, AssetListEntry.class.getName(),
+			_httpServletRequest, AssetListEntry.class.getName(),
 			PortletProvider.Action.BROWSE);
 
 		if (portletURL == null) {
@@ -626,7 +595,7 @@ public class LayoutActionProvider {
 
 		if (layout.isTypeAssetDisplay() || layout.isTypeControlPanel()) {
 			redirect = ParamUtil.getString(
-				_liferayPortletRequest, "redirect", redirect);
+				_httpServletRequest, "redirect", redirect);
 		}
 
 		portletURL.setParameter("redirect", redirect);
@@ -725,8 +694,6 @@ public class LayoutActionProvider {
 	private final GroupProvider _groupProvider;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
-	private final LiferayPortletRequest _liferayPortletRequest;
-	private final String _namespace;
 	private String _pageTypeSelectedOption;
 	private String _redirect;
 	private final SiteNavigationMenuLocalService

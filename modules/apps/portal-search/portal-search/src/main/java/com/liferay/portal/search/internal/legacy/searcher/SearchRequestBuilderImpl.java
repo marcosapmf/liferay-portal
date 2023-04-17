@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.internal.legacy.searcher;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.aggregation.Aggregation;
@@ -40,10 +41,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * @author André de Oliveira
@@ -388,17 +387,10 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 
 	@Override
 	public SearchRequestBuilder modelIndexerClasses(Class<?>... classes) {
-		String[] classNames = Stream.of(
-			classes
-		).map(
-			clazz -> clazz.getCanonicalName()
-		).toArray(
-			String[]::new
-		);
-
 		_withSearchRequestImpl(
 			searchRequestImpl -> searchRequestImpl.setModelIndexerClassNames(
-				classNames));
+				TransformUtil.transform(
+					classes, Class::getCanonicalName, String.class)));
 
 		return this;
 	}
@@ -532,12 +524,11 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	public SearchRequestBuilder withSearchRequestBuilder(
 		Consumer<SearchRequestBuilder>... searchRequestBuilderConsumers) {
 
-		Stream.of(
-			searchRequestBuilderConsumers
-		).forEach(
-			searchRequestBuilderConsumer -> searchRequestBuilderConsumer.accept(
-				this)
-		);
+		for (Consumer<SearchRequestBuilder> searchRequestBuilderConsumer :
+				searchRequestBuilderConsumers) {
+
+			searchRequestBuilderConsumer.accept(this);
+		}
 
 		return this;
 	}
@@ -577,14 +568,17 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	private SearchRequestImpl _getSearchRequestImpl(
 		SearchContext searchContext) {
 
-		return Optional.ofNullable(
+		SearchRequestImpl searchRequestImpl =
 			(SearchRequestImpl)searchContext.getAttribute(
-				_SEARCH_CONTEXT_KEY_SEARCH_REQUEST)
-		).orElseGet(
-			() -> setAttribute(
-				searchContext, _SEARCH_CONTEXT_KEY_SEARCH_REQUEST,
-				new SearchRequestImpl(searchContext))
-		);
+				_SEARCH_CONTEXT_KEY_SEARCH_REQUEST);
+
+		if (searchRequestImpl != null) {
+			return searchRequestImpl;
+		}
+
+		return setAttribute(
+			searchContext, _SEARCH_CONTEXT_KEY_SEARCH_REQUEST,
+			new SearchRequestImpl(searchContext));
 	}
 
 	private SearchRequestBuilder _newFederatedSearchRequestBuilder(

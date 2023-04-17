@@ -76,7 +76,7 @@ public class EditInGoogleDocsMVCActionCommand extends BaseMVCActionCommand {
 				long fileEntryId = ParamUtil.getLong(
 					actionRequest, "fileEntryId");
 
-				_executeCommand(actionRequest, fileEntryId);
+				_executeCommand(actionRequest, actionResponse, fileEntryId);
 			}
 			else {
 				_googleDrivePortletRequestAuthorizationHelper.
@@ -123,8 +123,10 @@ public class EditInGoogleDocsMVCActionCommand extends BaseMVCActionCommand {
 			_dlAppService.getFileEntry(fileEntryId));
 	}
 
-	private void _executeCommand(ActionRequest actionRequest, long fileEntryId)
-		throws PortalException {
+	private void _executeCommand(
+			ActionRequest actionRequest, ActionResponse actionResponse,
+			long fileEntryId)
+		throws Exception {
 
 		String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
 
@@ -171,9 +173,27 @@ public class EditInGoogleDocsMVCActionCommand extends BaseMVCActionCommand {
 			ServiceContext serviceContext = ServiceContextFactory.getInstance(
 				actionRequest);
 
+			boolean hasGoogleDriveFile =
+				_dlOpenerGoogleDriveManager.hasGoogleDriveFile(
+					serviceContext.getUserId(),
+					_dlAppService.getFileEntry(fileEntryId));
+
 			_dlAppService.checkInFileEntry(
 				fileEntryId, dlVersionNumberIncrease, changeLog,
 				serviceContext);
+
+			if (!hasGoogleDriveFile) {
+				hideDefaultSuccessMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, "googleDriveFileMissing");
+
+				hideDefaultErrorMessage(actionRequest);
+
+				String redirect = ParamUtil.getString(
+					actionRequest, "redirect");
+
+				sendRedirect(actionRequest, actionResponse, redirect);
+			}
 		}
 		else if (cmd.equals(Constants.CHECKOUT)) {
 			try {

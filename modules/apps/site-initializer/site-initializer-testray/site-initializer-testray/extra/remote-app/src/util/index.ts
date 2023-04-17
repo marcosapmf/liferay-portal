@@ -20,6 +20,22 @@ export function getUniqueList(items: number[]) {
 	return [...new Set([...items])];
 }
 
+export function safeJSONParse(
+	value: string | null,
+	defaultValue: unknown = null
+) {
+	if (defaultValue && typeof value !== 'string') {
+		return defaultValue;
+	}
+
+	try {
+		return JSON.parse(value as string);
+	}
+	catch (error) {
+		return defaultValue;
+	}
+}
+
 export function waitTimeout(timer: number) {
 	return new Promise((resolve) => setTimeout(resolve, timer));
 }

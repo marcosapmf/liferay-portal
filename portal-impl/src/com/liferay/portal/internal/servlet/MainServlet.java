@@ -18,6 +18,7 @@ import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.portal.events.ShutdownHelperUtil;
 import com.liferay.portal.events.StartupAction;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
@@ -135,9 +136,7 @@ public class MainServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		if (_log.isDebugEnabled()) {
-			_log.debug("Destroy plugins");
-		}
+		ShutdownHelperUtil.setShutdown(true);
 
 		ListIterator<ServiceRegistration<?>> listIterator =
 			_serviceRegistrations.listIterator(_serviceRegistrations.size());
@@ -242,8 +241,8 @@ public class MainServlet extends HttpServlet {
 
 			String timeZoneID = timeZone.getID();
 
-			if (!Objects.equals("UTC", timeZoneID) &&
-				!Objects.equals("GMT", timeZoneID)) {
+			if (!Objects.equals(timeZoneID, "UTC") &&
+				!Objects.equals(timeZoneID, "GMT")) {
 
 				_log.warn(
 					StringBundler.concat(
@@ -1149,7 +1148,10 @@ public class MainServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		if ((userId > 0) ||
+		boolean blockLoginPrompt = GetterUtil.getBoolean(
+			httpServletRequest.getAttribute(WebKeys.BLOCK_LOGIN_PROMPT));
+
+		if (blockLoginPrompt || (userId > 0) ||
 			(ParamUtil.getInteger(httpServletRequest, "p_p_lifecycle") == 2)) {
 
 			PortalUtil.sendError(

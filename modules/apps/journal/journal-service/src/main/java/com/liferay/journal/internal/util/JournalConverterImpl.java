@@ -29,7 +29,6 @@ import com.liferay.journal.exception.ArticleContentException;
 import com.liferay.journal.util.JournalConverter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.petra.xml.Dom4jUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
@@ -54,7 +53,6 @@ import com.liferay.portal.kernel.xml.XMLUtil;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -105,9 +103,7 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 
 		try {
-			String content = XMLUtil.stripInvalidChars(document.asXML());
-
-			return Dom4jUtil.toString(content);
+			return XMLUtil.stripInvalidChars(document.formattedString());
 		}
 		catch (Exception exception) {
 			throw new ArticleContentException(
@@ -138,13 +134,10 @@ public class JournalConverterImpl implements JournalConverter {
 			String defaultLanguageId = rootElement.attributeValue(
 				"default-locale");
 
-			Map<String, List<Element>> dynamicElementElementsMap =
-				_getDynamicElements(rootElement);
-
 			for (DDMFormField ddmFormField : ddmForm.getDDMFormFields()) {
 				_addDDMFields(
 					availableLanguageIds, defaultLanguageId, ddmFields,
-					ddmFormField, ddmStructure, dynamicElementElementsMap);
+					ddmFormField, ddmStructure, rootElement);
 			}
 
 			return ddmFields;
@@ -157,12 +150,11 @@ public class JournalConverterImpl implements JournalConverter {
 	private void _addDDMFields(
 			String[] availableLanguageIds, String defaultLanguageId,
 			Fields ddmFields, DDMFormField ddmFormField,
-			DDMStructure ddmStructure,
-			Map<String, List<Element>> dynamicElementElementsMap)
+			DDMStructure ddmStructure, Element element)
 		throws PortalException {
 
-		List<Element> dynamicElementElements = dynamicElementElementsMap.get(
-			ddmFormField.getName());
+		List<Element> dynamicElementElements = _getDynamicElementElements(
+			element, ddmFormField.getName());
 
 		if (dynamicElementElements == null) {
 			if (Objects.equals(
@@ -176,7 +168,7 @@ public class JournalConverterImpl implements JournalConverter {
 
 			_addNestedDDMFields(
 				availableLanguageIds, defaultLanguageId, ddmFields,
-				ddmFormField, ddmStructure, dynamicElementElementsMap);
+				ddmFormField, ddmStructure, element);
 
 			return;
 		}
@@ -208,8 +200,7 @@ public class JournalConverterImpl implements JournalConverter {
 
 			_addNestedDDMFields(
 				availableLanguageIds, defaultLanguageId, ddmFields,
-				ddmFormField, ddmStructure,
-				_getDynamicElements(dynamicElementElement));
+				ddmFormField, ddmStructure, dynamicElementElement);
 		}
 	}
 
@@ -235,8 +226,7 @@ public class JournalConverterImpl implements JournalConverter {
 	private void _addNestedDDMFields(
 			String[] availableLanguageIds, String defaultLanguageId,
 			Fields ddmFields, DDMFormField ddmFormField,
-			DDMStructure ddmStructure,
-			Map<String, List<Element>> dynamicElementElementsMap)
+			DDMStructure ddmStructure, Element element)
 		throws PortalException {
 
 		for (DDMFormField nestedDDMFormField :
@@ -244,7 +234,7 @@ public class JournalConverterImpl implements JournalConverter {
 
 			_addDDMFields(
 				availableLanguageIds, defaultLanguageId, ddmFields,
-				nestedDDMFormField, ddmStructure, dynamicElementElementsMap);
+				nestedDDMFormField, ddmStructure, element);
 		}
 	}
 
@@ -349,21 +339,32 @@ public class JournalConverterImpl implements JournalConverter {
 		}
 	}
 
-	private Map<String, List<Element>> _getDynamicElements(
-		Element rootElement) {
+	private List<Element> _getDynamicElementElements(
+		Element element, String name) {
 
-		Map<String, List<Element>> dynamicElementElementsMap = new HashMap<>();
+		Element parentElement = _getParentElement(element, name);
 
-		for (Element dynamicElement : rootElement.elements("dynamic-element")) {
-			List<Element> dynamicElementElements =
-				dynamicElementElementsMap.computeIfAbsent(
-					dynamicElement.attributeValue("name"),
-					key -> new ArrayList<>());
+		if (parentElement == null) {
+			return null;
+		}
+
+		List<Element> dynamicElementElements = null;
+
+		for (Element dynamicElement :
+				parentElement.elements("dynamic-element")) {
+
+			if (!Objects.equals(dynamicElement.attributeValue("name"), name)) {
+				continue;
+			}
+
+			if (dynamicElementElements == null) {
+				dynamicElementElements = new ArrayList<>();
+			}
 
 			dynamicElementElements.add(dynamicElement);
 		}
 
-		return dynamicElementElementsMap;
+		return dynamicElementElements;
 	}
 
 	private Field _getField(
@@ -481,6 +482,22 @@ public class JournalConverterImpl implements JournalConverter {
 			LocaleUtil.fromLanguageId(
 				dynamicContentElement.attributeValue("language-id")),
 			ddmFormField.getDataType(), value.trim());
+	}
+
+	private Element _getParentElement(Element element, String name) {
+		for (Element dynamicElement : element.elements("dynamic-element")) {
+			if (Objects.equals(dynamicElement.attributeValue("name"), name)) {
+				return element;
+			}
+
+			Element parentElement = _getParentElement(dynamicElement, name);
+
+			if (parentElement != null) {
+				return parentElement;
+			}
+		}
+
+		return null;
 	}
 
 	private String _getSelectValue(Element dynamicContentElement) {

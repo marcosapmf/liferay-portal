@@ -15,7 +15,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -32,7 +32,7 @@ definition {
 	}
 
 	@description = "Verify users can download the original import file in the executions list after a completed import"
-	@priority = "3"
+	@priority = 3
 	test CanDownloadOriginalImportFile {
 		property portal.acceptance = "true";
 
@@ -68,12 +68,12 @@ definition {
 
 			ImportExport.assertFileContent(
 				comparisonFileName = "csv_account_import.csv",
-				fileName = "${originalFileDownloadName}");
+				fileName = ${originalFileDownloadName});
 		}
 	}
 
 	@description = "Verify users can download a sample file for a selected entity so that they can fill it with data and import it"
-	@priority = "3"
+	@priority = 3
 	test CanDownloadSampleImportFile {
 		property portal.acceptance = "true";
 
@@ -96,13 +96,14 @@ definition {
 
 			ImportExport.assertFileContent(
 				comparisonFileName = "csv_account_import_sample.csv",
-				fileName = "${sampleFileName}");
+				fileName = ${sampleFileName});
 		}
 	}
 
 	@description = "Verify users can exclude fields from being exported in CSV format"
-	@priority = "3"
+	@priority = 3
 	test CanExcludeCSVFieldsFromExport {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given several channels") {
@@ -110,13 +111,13 @@ definition {
 				channelName = "Test Channel 1",
 				channelType = "site",
 				currencyCode = "USD",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			CommerceJSONChannelsAPI._addChannel(
 				channelName = "Test Channel 2",
 				channelType = "site",
 				currencyCode = "CAD",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 		}
 
 		task ("When the user selects specific channel fields for export and exports the channels in CSV format") {
@@ -136,7 +137,7 @@ definition {
 	}
 
 	@description = "Verify users can exclude fields from being imported"
-	@priority = "3"
+	@priority = 3
 	test CanExcludeFieldsFromImport {
 		property portal.acceptance = "true";
 
@@ -167,7 +168,7 @@ definition {
 				accountDescription = "",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -175,7 +176,7 @@ definition {
 				accountDescription = "",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -183,12 +184,12 @@ definition {
 				accountDescription = "",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify users can exclude fields from being exported in JSON format"
-	@priority = "3"
+	@priority = 3
 	test CanExcludeJSONFieldsFromExport {
 		property portal.acceptance = "true";
 
@@ -197,13 +198,13 @@ definition {
 				channelName = "Test Channel 1",
 				channelType = "site",
 				currencyCode = "USD",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			CommerceJSONChannelsAPI._addChannel(
 				channelName = "Test Channel 2",
 				channelType = "site",
 				currencyCode = "CAD",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 		}
 
 		task ("When the user selects specific channel fields for export and exports the channels in JSON format") {
@@ -223,7 +224,7 @@ definition {
 	}
 
 	@description = "Verify users can exclude fields from being exported in JSONL format"
-	@priority = "3"
+	@priority = 3
 	test CanExcludeJSONLFieldsFromExport {
 		property portal.acceptance = "true";
 
@@ -232,13 +233,13 @@ definition {
 				channelName = "Test Channel 1",
 				channelType = "site",
 				currencyCode = "USD",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			CommerceJSONChannelsAPI._addChannel(
 				channelName = "Test Channel 2",
 				channelType = "site",
 				currencyCode = "CAD",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 		}
 
 		task ("When the user selects specific channel fields for export and exports the channels in JSONL format") {
@@ -258,8 +259,9 @@ definition {
 	}
 
 	@description = "Verify users can export entity data via CSV files"
-	@priority = "3"
+	@priority = 3
 	test CanExportCSVFiles {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given several accounts") {
@@ -267,19 +269,19 @@ definition {
 				accountEntryDescription = "Test Business Account Description",
 				accountEntryName = "Test Business Account",
 				accountEntryType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Guest Account Description",
 				accountEntryName = "Test Guest Account",
 				accountEntryType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Person Account Description",
 				accountEntryName = "Test Person Account",
 				accountEntryType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 
 		task ("When the user selects CSV as Export File Format and exports the accounts") {
@@ -299,8 +301,9 @@ definition {
 	}
 
 	@description = "Verify users can export entity data via CSV files without headers"
-	@priority = "3"
+	@priority = 3
 	test CanExportCSVFileWithoutHeaders {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given several accounts") {
@@ -308,19 +311,19 @@ definition {
 				accountEntryDescription = "Test Business Account Description",
 				accountEntryName = "Test Business Account",
 				accountEntryType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Guest Account Description",
 				accountEntryName = "Test Guest Account",
 				accountEntryType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Person Account Description",
 				accountEntryName = "Test Person Account",
 				accountEntryType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 
 		task ("When the user exports the accounts in CSV format with Contains Headers not checked") {
@@ -341,7 +344,7 @@ definition {
 	}
 
 	@description = "Verify users can export entity data via JSON files"
-	@priority = "3"
+	@priority = 3
 	test CanExportJSONFiles {
 		property portal.acceptance = "true";
 
@@ -350,19 +353,19 @@ definition {
 				accountEntryDescription = "Test Business Account Description",
 				accountEntryName = "Test Business Account",
 				accountEntryType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Guest Account Description",
 				accountEntryName = "Test Guest Account",
 				accountEntryType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Person Account Description",
 				accountEntryName = "Test Person Account",
 				accountEntryType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 
 		task ("When the user selects JSON as Export File Format and exports the accounts") {
@@ -382,7 +385,7 @@ definition {
 	}
 
 	@description = "Verify users can export entity data via JSONL files"
-	@priority = "3"
+	@priority = 3
 	test CanExportJSONLFiles {
 		property portal.acceptance = "true";
 
@@ -391,19 +394,19 @@ definition {
 				accountEntryDescription = "Test Business Account Description",
 				accountEntryName = "Test Business Account",
 				accountEntryType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Guest Account Description",
 				accountEntryName = "Test Guest Account",
 				accountEntryType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			JSONAccountEntry.addAccountEntry(
 				accountEntryDescription = "Test Person Account Description",
 				accountEntryName = "Test Person Account",
 				accountEntryType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 
 		task ("When the user selects JSONL as Export File Format and exports the accounts") {
@@ -423,8 +426,9 @@ definition {
 	}
 
 	@description = "Verify users can filter Import/Export executions by Action."
-	@priority = "3"
+	@priority = 3
 	test CanFilterExecutionsByAction {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given an account import and export") {
@@ -501,7 +505,7 @@ definition {
 	}
 
 	@description = "Verify users can filter Import/Export templates by Action."
-	@priority = "3"
+	@priority = 3
 	test CanFilterTemplatesByAction {
 		property portal.acceptance = "true";
 
@@ -563,7 +567,7 @@ definition {
 	}
 
 	@description = "Verify users can import entities via CSV files"
-	@priority = "3"
+	@priority = 3
 	test CanImportCSVFiles {
 		property portal.acceptance = "true";
 
@@ -593,7 +597,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -601,7 +605,7 @@ definition {
 				accountDescription = "Test Guest Account Description",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -609,12 +613,12 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify users can import entities via a CSV file without headers"
-	@priority = "3"
+	@priority = 3
 	test CanImportCSVFileWithoutHeaders {
 		property portal.acceptance = "true";
 
@@ -653,7 +657,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -661,7 +665,7 @@ definition {
 				accountDescription = "Test Guest Account Description",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -669,12 +673,12 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify users can import entities via JSON files"
-	@priority = "3"
+	@priority = 3
 	test CanImportJSONFiles {
 		property portal.acceptance = "true";
 
@@ -704,7 +708,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -712,7 +716,7 @@ definition {
 				accountDescription = "Test Guest Account Description",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -720,12 +724,64 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
+		}
+	}
+
+	@description = "Verify users can import JSON file with create strategy create only"
+	@priority = 3
+	test CanImportJSONFileWithCreateStrategyCreateOnly {
+		property portal.acceptance = "true";
+
+		task ("Given the user is importing a JSON file") {
+			ImportExport.openImportExportAdmin();
+
+			ImportExport.gotoImport();
+
+			UploadDependencyFile.uploadFile(fileName = "json_account_import.json");
+
+			ImportExport.selectEntity(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+		}
+
+		task ("When choosing Only Add New Records as Import Strategy and importing the file") {
+			ImportExport.selectImportStrategy(strategyType = "Only Add New Records");
+
+			Button.click(button = "Next");
+
+			Button.click(button = "Start Import");
+		}
+
+		task ("Then the import process should complete successfully") {
+			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
+
+			Account.openAccountsAdmin();
+
+			Account.viewAccountDetails(
+				accountDescription = "Test Business Account Description",
+				accountName = "Test Business Account",
+				accountType = "Business",
+				externalReferenceCode = 101);
+
+			Navigator.gotoBack();
+
+			Account.viewAccountDetails(
+				accountDescription = "Test Guest Account Description",
+				accountName = "Test Guest Account",
+				accountType = "Guest",
+				externalReferenceCode = 102);
+
+			Navigator.gotoBack();
+
+			Account.viewAccountDetails(
+				accountDescription = "Test Person Account Description",
+				accountName = "Test Person Account",
+				accountType = "Person",
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify users can import entities via JSONL files"
-	@priority = "3"
+	@priority = 3
 	test CanImportJSONLFiles {
 		property portal.acceptance = "true";
 
@@ -755,7 +811,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -763,7 +819,7 @@ definition {
 				accountDescription = "Test Guest Account Description",
 				accountName = "Test Guest Account",
 				accountType = "Guest",
-				externalReferenceCode = "102");
+				externalReferenceCode = 102);
 
 			Navigator.gotoBack();
 
@@ -771,11 +827,11 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanImportObjectDefinitionWithApprovedStatus {
 		property portal.acceptance = "true";
 
@@ -808,17 +864,15 @@ definition {
 		}
 
 		task ("And Then the status of the imported objectDefinition is approved") {
-			var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "Coupon");
-
-			var objectDefinitionStatus = ObjectDefinitionAPI._getObjectDefinitionStatusById(objectDefinitionId = "${objectDefinitionId}");
+			var objectDefinitionStatus = ObjectDefinitionAPI.getObjectDefinitionStatusByName(name = "Coupon");
 
 			TestUtils.assertEquals(
-				actual = "${objectDefinitionStatus}",
+				actual = ${objectDefinitionStatus},
 				expected = "true");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test CanImportObjectDefinitionWithDraftStatus {
 		property portal.acceptance = "true";
 
@@ -851,18 +905,17 @@ definition {
 		}
 
 		task ("And Then the status of the imported objectDefinition is Draft") {
-			var objectDefinitionId = ObjectDefinitionAPI.getObjectDefinitionIdByName(name = "Coupon");
-
-			var objectDefinitionStatus = ObjectDefinitionAPI._getObjectDefinitionStatusById(objectDefinitionId = "${objectDefinitionId}");
+			var objectDefinitionStatus = ObjectDefinitionAPI.getObjectDefinitionStatusByName(name = "Coupon");
 
 			TestUtils.assertEquals(
-				actual = "${objectDefinitionStatus}",
+				actual = ${objectDefinitionStatus},
 				expected = "false");
 		}
 	}
 
-	@description = "Verify users cannot import an entity without mapping the required fields."
-	@priority = "3"
+	@description = "Ignored due to LPS-171830"
+	@ignore = "true"
+	@priority = 3
 	test CannotImportWithoutRequiredFields {
 		property portal.acceptance = "true";
 
@@ -904,7 +957,7 @@ definition {
 		task ("Then the file should be imported successfully") {
 			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
 
-			Button.click(button = "Back to the List");
+			Click(locator1 = "Button#CLOSE");
 
 			CommerceChannels.openChannelsAdmin();
 
@@ -927,8 +980,9 @@ definition {
 	}
 
 	@description = "Verify users can order Import/Export executions by Create Date."
-	@priority = "3"
+	@priority = 3
 	test CanOrderExecutionsByCreateDate {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given an account import and export") {
@@ -955,12 +1009,12 @@ definition {
 
 		task ("Then the executions should be ordered by create date in descending order") {
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
 				value1 = "Export Account");
 
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "2",
+				key_rowNumber = 2,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
 				value1 = "Import Account");
 		}
@@ -971,19 +1025,19 @@ definition {
 
 		task ("Then the executions should be ordered by create date in descending order") {
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "1",
+				key_rowNumber = 1,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
 				value1 = "Import Account");
 
 			AssertTextEquals.assertPartialText(
-				key_rowNumber = "2",
+				key_rowNumber = 2,
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
 				value1 = "Export Account");
 		}
 	}
 
 	@description = "Verify users can recall a template during an export."
-	@priority = "3"
+	@priority = 3
 	test CanRecallExportTemplate {
 		property portal.acceptance = "true";
 
@@ -1020,7 +1074,7 @@ definition {
 	}
 
 	@description = "Verify users can recall a template during an import."
-	@priority = "3"
+	@priority = 3
 	test CanRecallImportTemplate {
 		property portal.acceptance = "true";
 
@@ -1055,7 +1109,7 @@ definition {
 	}
 
 	@description = "Verify users can save export configuration as a template during the export process"
-	@priority = "3"
+	@priority = 3
 	test CanSaveTemplateDuringExport {
 		property portal.acceptance = "true";
 
@@ -1084,7 +1138,7 @@ definition {
 	}
 
 	@description = "Verify users can save import configuration as a template during the import process"
-	@priority = "3"
+	@priority = 3
 	test CanSaveTemplateDuringImport {
 		property portal.acceptance = "true";
 
@@ -1113,7 +1167,7 @@ definition {
 	}
 
 	@description = "Verify users can schedule an import"
-	@priority = "3"
+	@priority = 3
 	test CanScheduleImport {
 		property test.name.skip.portal.instance = "ImportExport#CanScheduleImport";
 
@@ -1190,11 +1244,10 @@ definition {
 		}
 	}
 
-	@description = "Verify users can search Import/Exports executions by name and action."
-	@priority = "3"
+	@description = "Ignored due to LPS-171830"
+	@ignore = "true"
+	@priority = 3
 	test CanSearchExecutions {
-		property portal.acceptance = "true";
-
 		task ("Given an account import and export") {
 			ImportExport.openImportExportAdmin();
 
@@ -1323,8 +1376,9 @@ definition {
 	}
 
 	@description = "Verify users can search Import/Exports templates by name and action."
-	@priority = "3"
+	@priority = 3
 	test CanSearchTemplates {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given account import and export templates") {
@@ -1421,7 +1475,7 @@ definition {
 	}
 
 	@description = "Verify certain users can be granted permission to view specific templates."
-	@priority = "3"
+	@priority = 3
 	test CanShareTemplates {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "true";
@@ -1438,7 +1492,7 @@ definition {
 		task ("And given the power user can view the templates list") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = "VIEW_CONTROL_PANEL",
-				resourceName = "90",
+				resourceName = 90,
 				roleTitle = "Power User");
 
 			Permissions.definePermissionViaJSONAPI(
@@ -1506,8 +1560,9 @@ definition {
 	}
 
 	@description = "Verify users receive a notification when an export is triggered."
-	@priority = "3"
+	@priority = 3
 	test CanViewExportNotifications {
+		property custom.properties = "feature.flag.LPS-173135=true";
 		property portal.acceptance = "true";
 
 		task ("Given a failed export") {
@@ -1552,7 +1607,7 @@ definition {
 		}
 
 		task ("Then the the user should receive a notification for the failed and successful exports") {
-			Notifications.viewBadgeCount(notificationCount = "2");
+			Notifications.viewBadgeCount(notificationCount = 2);
 
 			Notifications.gotoNotifications();
 
@@ -1573,7 +1628,7 @@ definition {
 	}
 
 	@description = "Verify users can download a report of the rows that had warnings or were not imported."
-	@priority = "3"
+	@priority = 3
 	test CanViewImportErrorReport {
 		property portal.acceptance = "true";
 
@@ -1614,12 +1669,12 @@ definition {
 
 			ImportExport.assertFileContent(
 				comparisonFileName = "account_import_error_report.csv",
-				fileName = "${errorReportDownloadName}");
+				fileName = ${errorReportDownloadName});
 		}
 	}
 
 	@description = "Verify users receive a notification when an import is triggered."
-	@priority = "3"
+	@priority = 3
 	test CanViewImportNotifications {
 		property portal.acceptance = "true";
 
@@ -1669,7 +1724,7 @@ definition {
 		}
 
 		task ("Then the the user should receive a notification for the failed and successful imports") {
-			Notifications.viewBadgeCount(notificationCount = "2");
+			Notifications.viewBadgeCount(notificationCount = 2);
 
 			Notifications.gotoNotifications();
 
@@ -1690,7 +1745,7 @@ definition {
 	}
 
 	@description = "Verify import rows with errors are skipped during an import if 'Stop the Import on Error' is no checked."
-	@priority = "3"
+	@priority = 3
 	test ContinueImportOnError {
 		property portal.acceptance = "true";
 
@@ -1719,7 +1774,7 @@ definition {
 		task ("Then the only the rows without error should be imported") {
 			WaitForElementPresent(locator1 = "ImportExport#EXECUTION_SUCCESS");
 
-			Button.click(button = "Back to the List");
+			Click(locator1 = "Button#CLOSE");
 
 			Account.openAccountsAdmin();
 
@@ -1729,7 +1784,7 @@ definition {
 				accountDescription = "Test Business Account Description",
 				accountName = "Test Business Account",
 				accountType = "Business",
-				externalReferenceCode = "101");
+				externalReferenceCode = 101);
 
 			Navigator.gotoBack();
 
@@ -1737,12 +1792,12 @@ definition {
 				accountDescription = "Test Person Account Description",
 				accountName = "Test Person Account",
 				accountType = "Person",
-				externalReferenceCode = "103");
+				externalReferenceCode = 103);
 		}
 	}
 
 	@description = "Verify CSV fields are automatically mapped to fields in Liferay when the names are the same"
-	@priority = "3"
+	@priority = 3
 	test CSVFieldsAreAutoMapped {
 		property portal.acceptance = "true";
 
@@ -1763,7 +1818,7 @@ definition {
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test GetExportFileAvailableEntityTypes {
 		property portal.acceptance = "true";
 
@@ -1776,11 +1831,11 @@ definition {
 		}
 
 		task ("Then I can see all available entity types to export") {
-			ImportExport.assertAvailabelEntityTypes(entityTypes = "Account (v1_0 - Liferay Headless Admin User) Account (v1_0 - Liferay Headless Commerce Admin Account) AccountGroup (v1_0 - Liferay Headless Commerce Admin Account) AccountRole (v1_0 - Liferay Headless Admin User) BlogPosting (v1_0 - Liferay Headless Delivery) BlogPostingImage (v1_0 - Liferay Headless Delivery) Calendar (v1_0 - Liferay Portal Workflow Metrics REST) Catalog (v1_0 - Liferay Headless Commerce Admin Catalog) Channel (v1_0 - Liferay Headless Commerce Admin Channel) Channel (v1_0 - Liferay Headless Commerce Delivery Catalog) Comment (v1_0 - Liferay Headless Delivery) ContentElement (v1_0 - Liferay Headless Delivery) ContentStructure (v1_0 - Liferay Headless Delivery) ContentTemplate (v1_0 - Liferay Headless Delivery) DSEnvelope (v1_0 - Liferay Digital Signature REST) DataDefinitionFieldLink (v2_0 - Liferay Data Engine REST) DataLayout (v2_0 - Liferay Data Engine REST) DataListView (v2_0 - Liferay Data Engine REST) DataRecord (v2_0 - Liferay Data Engine REST) DataRecordCollection (v2_0 - Liferay Data Engine REST) Discount (v1_0 - Liferay Headless Commerce Admin Pricing) Discount (v2_0 - Liferay Headless Commerce Admin Pricing) DispatchTrigger (v1_0 - Liferay Dispatch REST) Document (v1_0 - Liferay Headless Delivery) DocumentFolder (v1_0 - Liferay Headless Delivery) FieldMappingInfo (v1_0 - Liferay Search Experiences REST) Form (v1_0 - Liferay Headless Form) FormRecord (v1_0 - Liferay Headless Form) FormStructure (v1_0 - Liferay Headless Form) Instance (v1_0 - Liferay Portal Workflow Metrics REST) Keyword (v1_0 - Liferay Headless Admin Taxonomy) KeywordQueryContributor (v1_0 - Liferay Search Experiences REST) KnowledgeBaseArticle (v1_0 - Liferay Headless Delivery) KnowledgeBaseAttachment (v1_0 - Liferay Headless Delivery) KnowledgeBaseFolder (v1_0 - Liferay Headless Delivery) Language (v1_0 - Liferay Headless Delivery) ListTypeDefinition (v1_0 - Liferay Headless Admin List Type) MeasurementUnit (v1_0 - Liferay Headless Commerce Admin Site Setting) MessageBoardAttachment (v1_0 - Liferay Headless Delivery) MessageBoardMessage (v1_0 - Liferay Headless Delivery) MessageBoardSection (v1_0 - Liferay Headless Delivery) MessageBoardThread (v1_0 - Liferay Headless Delivery) ModelPrefilterContributor (v1_0 - Liferay Search Experiences REST) NavigationMenu (v1_0 - Liferay Headless Delivery) Node (v1_0 - Liferay Portal Workflow Metrics REST) NotificationTemplate (v1_0 - Liferay Notification REST) ObjectAction (v1_0 - Liferay Object Admin REST) ObjectDefinition (v1_0 - Liferay Object Admin REST) ObjectField (v1_0 - Liferay Object Admin REST) ObjectLayout (v1_0 - Liferay Object Admin REST) ObjectRelationship (v1_0 - Liferay Object Admin REST) ObjectValidationRule (v1_0 - Liferay Object Admin REST) ObjectView (v1_0 - Liferay Object Admin REST) Option (v1_0 - Liferay Headless Commerce Admin Catalog) Order (v1_0 - Liferay Headless Commerce Admin Order) OrderItem (v1_0 - Liferay Headless Commerce Admin Order) OrderRule (v1_0 - Liferay Headless Commerce Admin Order) OrderType (v1_0 - Liferay Headless Commerce Admin Order) Organization (v1_0 - Liferay Headless Admin User) PaymentMethod (v1_0 - Liferay Headless Commerce Delivery Cart) Phone (v1_0 - Liferay Headless Admin User) PlacedOrderComment (v1_0 - Liferay Headless Commerce Delivery Order) PlacedOrderItem (v1_0 - Liferay Headless Commerce Delivery Order) PlacedOrderItemShipment (v1_0 - Liferay Headless Commerce Delivery Order) PriceList (v1_0 - Liferay Headless Commerce Admin Pricing) PriceList (v2_0 - Liferay Headless Commerce Admin Pricing) ProcessMetric (v1_0 - Liferay Portal Workflow Metrics REST) ProcessVersion (v1_0 - Liferay Portal Workflow Metrics REST) Product (v1_0 - Liferay Headless Commerce Admin Catalog) ProductGroup (v1_0 - Liferay Headless Commerce Admin Catalog) QueryPrefilterContributor (v1_0 - Liferay Search Experiences REST) Region (v1_0 - Liferay Headless Admin Address) ReplenishmentItem (v1_0 - Liferay Headless Commerce Admin Inventory) Role (v1_0 - Liferay Headless Admin User) Role (v1_0 - Liferay Portal Workflow Metrics REST) SLA (v1_0 - Liferay Portal Workflow Metrics REST) SXPBlueprint (v1_0 - Liferay Search Experiences REST) SXPElement (v1_0 - Liferay Search Experiences REST) SXPParameterContributorDefinition (v1_0 - Liferay Search Experiences REST) SearchableAssetName (v1_0 - Liferay Search Experiences REST) Segment (v1_0 - Liferay Headless Admin User) Shipment (v1_0 - Liferay Headless Commerce Admin Shipment) ShippingMethod (v1_0 - Liferay Headless Commerce Admin Channel) ShippingMethod (v1_0 - Liferay Headless Commerce Delivery Cart) SitePage (v1_0 - Liferay Headless Delivery) Sku (v1_0 - Liferay Headless Commerce Admin Catalog) Specification (v1_0 - Liferay Headless Commerce Admin Catalog) StructuredContent (v1_0 - Liferay Headless Delivery) StructuredContentFolder (v1_0 - Liferay Headless Delivery) Task (v1_0 - Liferay Portal Workflow Metrics REST) Term (v1_0 - Liferay Headless Commerce Admin Order) TimeRange (v1_0 - Liferay Portal Workflow Metrics REST) UserAccount (v1_0 - Liferay Headless Admin User) UserGroup (v1_0 - Liferay Headless Admin User) Warehouse (v1_0 - Liferay Headless Commerce Admin Inventory) WebUrl (v1_0 - Liferay Headless Admin User) WikiNode (v1_0 - Liferay Headless Delivery) WikiPage (v1_0 - Liferay Headless Delivery) WikiPageAttachment (v1_0 - Liferay Headless Delivery) WorkflowDefinition (v1_0 - Liferay Headless Admin Workflow) WorkflowInstance (v1_0 - Liferay Headless Admin Workflow) WorkflowLog (v1_0 - Liferay Headless Admin Workflow) WorkflowTask (v1_0 - Liferay Headless Admin Workflow)");
+			ImportExport.assertAvailabelEntityTypes(entityTypes = "Account (v1_0 - Liferay Headless Admin User) Account (v1_0 - Liferay Headless Commerce Admin Account) AccountGroup (v1_0 - Liferay Headless Commerce Admin Account) AccountRole (v1_0 - Liferay Headless Admin User) BlogPosting (v1_0 - Liferay Headless Delivery) BlogPostingImage (v1_0 - Liferay Headless Delivery) Calendar (v1_0 - Liferay Portal Workflow Metrics REST) Catalog (v1_0 - Liferay Headless Commerce Admin Catalog) Channel (v1_0 - Liferay Headless Commerce Admin Channel) Channel (v1_0 - Liferay Headless Commerce Delivery Catalog) Comment (v1_0 - Liferay Headless Delivery) ContentElement (v1_0 - Liferay Headless Delivery) ContentStructure (v1_0 - Liferay Headless Delivery) ContentTemplate (v1_0 - Liferay Headless Delivery) DSEnvelope (v1_0 - Liferay Digital Signature REST) DataDefinitionFieldLink (v2_0 - Liferay Data Engine REST) DataLayout (v2_0 - Liferay Data Engine REST) DataListView (v2_0 - Liferay Data Engine REST) DataRecord (v2_0 - Liferay Data Engine REST) DataRecordCollection (v2_0 - Liferay Data Engine REST) Discount (v1_0 - Liferay Headless Commerce Admin Pricing) Discount (v2_0 - Liferay Headless Commerce Admin Pricing) DispatchTrigger (v1_0 - Liferay Dispatch REST) Document (v1_0 - Liferay Headless Delivery) DocumentFolder (v1_0 - Liferay Headless Delivery) FieldMappingInfo (v1_0 - Liferay Search Experiences REST) Form (v1_0 - Liferay Headless Form) FormRecord (v1_0 - Liferay Headless Form) FormStructure (v1_0 - Liferay Headless Form) Instance (v1_0 - Liferay Portal Workflow Metrics REST) Keyword (v1_0 - Liferay Headless Admin Taxonomy) KeywordQueryContributor (v1_0 - Liferay Search Experiences REST) KnowledgeBaseArticle (v1_0 - Liferay Headless Delivery) KnowledgeBaseAttachment (v1_0 - Liferay Headless Delivery) KnowledgeBaseFolder (v1_0 - Liferay Headless Delivery) Language (v1_0 - Liferay Headless Delivery) ListTypeDefinition (v1_0 - Liferay Headless Admin List Type) LowStockAction (v1_0 - Liferay Headless Commerce Admin Catalog) MeasurementUnit (v1_0 - Liferay Headless Commerce Admin Site Setting) MessageBoardAttachment (v1_0 - Liferay Headless Delivery) MessageBoardMessage (v1_0 - Liferay Headless Delivery) MessageBoardSection (v1_0 - Liferay Headless Delivery) MessageBoardThread (v1_0 - Liferay Headless Delivery) ModelPrefilterContributor (v1_0 - Liferay Search Experiences REST) NavigationMenu (v1_0 - Liferay Headless Delivery) Node (v1_0 - Liferay Portal Workflow Metrics REST) NotificationTemplate (v1_0 - Liferay Notification REST) ObjectAction (v1_0 - Liferay Object Admin REST) ObjectDefinition (v1_0 - Liferay Object Admin REST) ObjectField (v1_0 - Liferay Object Admin REST) ObjectLayout (v1_0 - Liferay Object Admin REST) ObjectRelationship (v1_0 - Liferay Object Admin REST) ObjectValidationRule (v1_0 - Liferay Object Admin REST) ObjectView (v1_0 - Liferay Object Admin REST) Option (v1_0 - Liferay Headless Commerce Admin Catalog) Order (v1_0 - Liferay Headless Commerce Admin Order) OrderItem (v1_0 - Liferay Headless Commerce Admin Order) OrderRule (v1_0 - Liferay Headless Commerce Admin Order) OrderType (v1_0 - Liferay Headless Commerce Admin Order) Organization (v1_0 - Liferay Headless Admin User) PaymentMethod (v1_0 - Liferay Headless Commerce Delivery Cart) Phone (v1_0 - Liferay Headless Admin User) PlacedOrderComment (v1_0 - Liferay Headless Commerce Delivery Order) PlacedOrderItem (v1_0 - Liferay Headless Commerce Delivery Order) PlacedOrderItemShipment (v1_0 - Liferay Headless Commerce Delivery Order) PriceList (v1_0 - Liferay Headless Commerce Admin Pricing) PriceList (v2_0 - Liferay Headless Commerce Admin Pricing) ProcessMetric (v1_0 - Liferay Portal Workflow Metrics REST) ProcessVersion (v1_0 - Liferay Portal Workflow Metrics REST) Product (v1_0 - Liferay Headless Commerce Admin Catalog) ProductGroup (v1_0 - Liferay Headless Commerce Admin Catalog) QueryPrefilterContributor (v1_0 - Liferay Search Experiences REST) Region (v1_0 - Liferay Headless Admin Address) ReplenishmentItem (v1_0 - Liferay Headless Commerce Admin Inventory) Role (v1_0 - Liferay Headless Admin User) Role (v1_0 - Liferay Portal Workflow Metrics REST) SLA (v1_0 - Liferay Portal Workflow Metrics REST) SXPBlueprint (v1_0 - Liferay Search Experiences REST) SXPElement (v1_0 - Liferay Search Experiences REST) SXPParameterContributorDefinition (v1_0 - Liferay Search Experiences REST) SearchableAssetName (v1_0 - Liferay Search Experiences REST) Segment (v1_0 - Liferay Headless Admin User) Shipment (v1_0 - Liferay Headless Commerce Admin Shipment) ShippingMethod (v1_0 - Liferay Headless Commerce Admin Channel) ShippingMethod (v1_0 - Liferay Headless Commerce Delivery Cart) SitePage (v1_0 - Liferay Headless Delivery) Sku (v1_0 - Liferay Headless Commerce Admin Catalog) Specification (v1_0 - Liferay Headless Commerce Admin Catalog) StructuredContent (v1_0 - Liferay Headless Delivery) StructuredContentFolder (v1_0 - Liferay Headless Delivery) Task (v1_0 - Liferay Portal Workflow Metrics REST) Term (v1_0 - Liferay Headless Commerce Admin Order) TimeRange (v1_0 - Liferay Portal Workflow Metrics REST) UserAccount (v1_0 - Liferay Headless Admin User) UserGroup (v1_0 - Liferay Headless Admin User) Warehouse (v1_0 - Liferay Headless Commerce Admin Inventory) WebUrl (v1_0 - Liferay Headless Admin User) WikiNode (v1_0 - Liferay Headless Delivery) WikiPage (v1_0 - Liferay Headless Delivery) WikiPageAttachment (v1_0 - Liferay Headless Delivery) WorkflowDefinition (v1_0 - Liferay Headless Admin Workflow) WorkflowInstance (v1_0 - Liferay Headless Admin Workflow) WorkflowLog (v1_0 - Liferay Headless Admin Workflow) WorkflowTask (v1_0 - Liferay Headless Admin Workflow)");
 		}
 	}
 
-	@priority = "4"
+	@priority = 4
 	test GetImportFileAvailableEntityTypes {
 		property portal.acceptance = "true";
 
@@ -1798,7 +1853,7 @@ definition {
 	}
 
 	@description = "Verify JSON fields are automatically mapped to fields in Liferay when the names are the same"
-	@priority = "3"
+	@priority = 3
 	test JSONFieldsAreAutoMapped {
 		property portal.acceptance = "true";
 
@@ -1820,7 +1875,7 @@ definition {
 	}
 
 	@description = "Verify JSONL fields are automatically mapped to fields in Liferay when the names are the same"
-	@priority = "3"
+	@priority = 3
 	test JSONLFieldsAreAutoMapped {
 		property portal.acceptance = "true";
 
@@ -1842,7 +1897,7 @@ definition {
 	}
 
 	@description = "Verify imports are stopped if 'Stop the Import on Error' is checked when importing a file with an error in any of the rows."
-	@priority = "3"
+	@priority = 3
 	test StopImportOnError {
 		property portal.acceptance = "true";
 
@@ -1882,7 +1937,7 @@ definition {
 	}
 
 	@description = "Verify users are shown a preview for the first row being imported in a CSV file."
-	@priority = "3"
+	@priority = 3
 	test ViewCSVFirstRowPreview {
 		property portal.acceptance = "true";
 
@@ -1906,7 +1961,7 @@ definition {
 	}
 
 	@description = "Verify users can view a preview of the CSV file being imported."
-	@priority = "3"
+	@priority = 3
 	test ViewCSVImportPreview {
 		property portal.acceptance = "true";
 
@@ -1943,7 +1998,7 @@ definition {
 	}
 
 	@description = "Verify users can view how many rows were successfully imported, how many rows were not imported, and the total number of rows for an import."
-	@priority = "3"
+	@priority = 3
 	test ViewImportedRows {
 		property portal.acceptance = "true";
 
@@ -1967,14 +2022,14 @@ definition {
 				executionAction = "Import",
 				executionName = "csv_account_import_error",
 				executionStatus = "Partially Completed",
-				failedRows = "1",
-				successfulRows = "2",
-				totalRows = "3");
+				failedRows = 1,
+				successfulRows = 2,
+				totalRows = 3);
 		}
 	}
 
 	@description = "Verify users are shown a preview for the first row being imported in a JSON file."
-	@priority = "3"
+	@priority = 3
 	test ViewJSONFirstRowPreview {
 		property portal.acceptance = "true";
 
@@ -1998,7 +2053,7 @@ definition {
 	}
 
 	@description = "Verify users can view a preview of the JSON file being imported."
-	@priority = "3"
+	@priority = 3
 	test ViewJSONImportPreview {
 		property portal.acceptance = "true";
 
@@ -2031,7 +2086,7 @@ definition {
 	}
 
 	@description = "Verify users are shown a preview for the first row being imported in a JSONL file."
-	@priority = "3"
+	@priority = 3
 	test ViewJSONLFirstRowPreview {
 		property portal.acceptance = "true";
 
@@ -2055,7 +2110,7 @@ definition {
 	}
 
 	@description = "Verify users can view a preview of the JSONL file being imported."
-	@priority = "3"
+	@priority = 3
 	test ViewJSONLImportPreview {
 		property portal.acceptance = "true";
 
@@ -2088,7 +2143,7 @@ definition {
 	}
 
 	@description = "Verify users are shown which fields are required for an import."
-	@priority = "3"
+	@priority = 3
 	test ViewRequiredImportFields {
 		property portal.acceptance = "true";
 

@@ -15,7 +15,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6269. AddAnOptionAndVerifyIfIsPresent"
-	@priority = "3"
+	@priority = 3
 	test AddAnOptionAndVerifyIfIsPresent {
 		property portal.acceptance = "false";
 
@@ -54,16 +54,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-6021. AddASKU"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test AddASKU {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6021 AddASKU
 
 	}
 
 	@description = "This is a test for COMMERCE-6287. AddASpecificationAndVerifyIfIsPresent"
-	@priority = "3"
+	@priority = 3
 	test AddASpecificationAndVerifyIfIsPresent {
 		property portal.acceptance = "false";
 
@@ -124,7 +123,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6302. AddGroupedProduct"
-	@priority = "3"
+	@priority = 5
 	test AddGroupedProduct {
 		property portal.acceptance = "true";
 
@@ -147,41 +146,11 @@ definition {
 
 		AssertElementPresent(
 			key_tableEntryURL = "Grouped",
-			locator1 = "RemoteApps#TABLE_ENTRY_URL_REMOTE_TABLE");
-	}
-
-	@description = "This is a test for COMMERCE-6301. AddVirtualProduct"
-	@priority = "3"
-	test AddVirtualProduct {
-		property portal.acceptance = "false";
-
-		// TODO Review
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
-
-		CPCommerceCatalog.newProductsEntry(
-			productCatalog = "Master",
-			productName = "Virtual Book",
-			productType = "Virtual");
-
-		Alert.viewSuccessMessage();
-
-		Click(locator1 = "Icon#BACK");
-
-		AssertElementPresent(
-			key_productName = "Virtual Book",
-			locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
-
-		AssertElementPresent(
-			key_productName = "Virtual Book",
-			key_value = "Virtual",
-			locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_CONTENT");
+			locator1 = "ClientExtension#TABLE_ENTRY_URL_REMOTE_TABLE");
 	}
 
 	@description = "This is a test for COMMERCE-6020. AssertProductBundleCanBeCreatedWithPriceTypeStaticAndDynamic"
-	@priority = "3"
+	@priority = 5
 	test AssertProductBundleCanBeCreatedWithPriceTypeStaticAndDynamic {
 		property portal.acceptance = "true";
 
@@ -343,7 +312,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6912. Bulk delete Products"
-	@priority = "3"
+	@priority = 5
 	test BulkDeleteProducts {
 		property portal.acceptance = "true";
 
@@ -392,14 +361,64 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-6301. AddVirtualProduct"
+	@priority = 3
+	test CanAddVirtualProductAndCheckNoShippingOverride {
+		property portal.acceptance = "false";
+
+		// TODO Review
+
+		task ("Given a new virtual product is added") {
+			CommerceNavigator.gotoPortlet(
+				category = "Product Management",
+				portlet = "Products");
+
+			CPCommerceCatalog.newProductsEntry(
+				productCatalog = "Master",
+				productName = "Virtual Book",
+				productType = "Virtual");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("And the new product is successful created") {
+			Click(locator1 = "Icon#BACK");
+
+			AssertElementPresent(
+				key_productName = "Virtual Book",
+				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
+
+			AssertElementPresent(
+				key_productName = "Virtual Book",
+				key_value = "Virtual",
+				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_CONTENT");
+		}
+
+		task ("When the details page is open") {
+			CommerceNavigator.gotoEntry(entryName = "Virtual Book");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			Click(
+				key_entryName = "default",
+				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
+		}
+
+		task ("Then the Shipping Override is not shown") {
+			AssertElementNotPresent(
+				key_cardName = "Shipping Override",
+				locator1 = "CommerceEntry#PRODUCT_DETAIL_CARD_HEADER");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-9251. CanCheckAnyProductStatusWorkflow"
-	@priority = "3"
+	@priority = 3
 	test CanCheckAnyProductWorkflowStatus {
 		property portal.acceptance = "false";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "9",
+			productStatusCode = 9,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -416,9 +435,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9189. CanCheckApprovedProductDuplication"
-	@priority = "3"
+	@priority = 5
 	test CanCheckApprovedProductDuplication {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
@@ -442,7 +461,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9183. CanCheckApprovedProductSaveAsDraft"
-	@priority = "3"
+	@priority = 3
 	test CanCheckApprovedProductSaveAsDraft {
 		property portal.acceptance = "false";
 
@@ -487,13 +506,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckApprovedProductStatusWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckApprovedProductWorkflowStatus {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "0",
+			productStatusCode = 0,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -510,10 +529,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9253. CanCheckTheApprovedStatusForSingleApproverWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckApprovedProductWorkflowStatusWithSingleApproverWorkflow {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -558,7 +577,7 @@ definition {
 			productType = "Simple",
 			publishProduct = "false");
 
-		Button.click(button = "Submit for Publication");
+		Button.click(button = "Submit for Workflow");
 
 		AssertElementPresent(
 			key_status = "Pending (Created)",
@@ -610,13 +629,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckDeniedProductStatusWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckDeniedProductWorkflowStatus {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "4",
+			productStatusCode = 4,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -633,7 +652,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9190. CanCheckDraftProductDuplication"
-	@priority = "3"
+	@priority = 3
 	test CanCheckDraftProductDuplication {
 		property portal.acceptance = "false";
 
@@ -661,7 +680,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9181. CanCheckDraftProductSaveAsDraft"
-	@priority = "3"
+	@priority = 3
 	test CanCheckDraftProductSaveAsDraft {
 		property portal.acceptance = "false";
 
@@ -694,7 +713,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9179. CanCheckDraftProductStatus"
-	@priority = "3"
+	@priority = 5
 	test CanCheckDraftProductStatus {
 		property portal.acceptance = "true";
 
@@ -719,7 +738,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9191. CanCheckDraftProductStatusWithWorkflow"
-	@priority = "3"
+	@priority = 3
 	test CanCheckDraftProductStatusWithWorkflow {
 		property portal.acceptance = "false";
 
@@ -760,10 +779,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9182. VerifyDraftProductNotAppearOnMiniumCatalogPage"
-	@priority = "3"
+	@priority = 5
 	test CanCheckDraftProductVisibilityOnMiniumCatalogPage {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -858,13 +877,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckDraftProductStatusWorkflow"
-	@priority = "3"
+	@priority = 3
 	test CanCheckDraftProductWorkflowStatus {
 		property portal.acceptance = "false";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "2",
+			productStatusCode = 2,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -881,10 +900,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9290. CanCheckTheDraftStatusForSingleApproverWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckDraftProductWorkflowStatusWithSingleApproverWorkflow {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -947,13 +966,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckExpiredProductStatusWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckExpiredProductWorkflowStatus {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "3",
+			productStatusCode = 3,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -970,13 +989,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckInactiveProductStatusWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckInactiveProductWorkflowStatus {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "5",
+			productStatusCode = 5,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -993,13 +1012,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckIncompleteProductStatusWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckIncompleteProductWorkflowStatus {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "6",
+			productStatusCode = 6,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -1016,13 +1035,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckInRecycleBinProductStatusWorkflow"
-	@priority = "3"
+	@priority = 3
 	test CanCheckInRecycleBinProductWorkflowStatus {
 		property portal.acceptance = "false";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "8",
+			productStatusCode = 8,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -1039,13 +1058,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckPendingProductStatusWorkflow"
-	@priority = "3"
+	@priority = 3
 	test CanCheckPendingProductWorkflowStatus {
 		property portal.acceptance = "false";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "1",
+			productStatusCode = 1,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -1062,10 +1081,10 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9292. CanCheckThePendingReviewStatusForSingleApproverWorkflow"
-	@priority = "3"
+	@priority = 5
 	test CanCheckPendingProductWorkflowStatusWithSingleApproverWorkflow {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
 
@@ -1110,7 +1129,7 @@ definition {
 			productType = "Simple",
 			publishProduct = "false");
 
-		Button.click(button = "Submit for Publication");
+		Button.click(button = "Submit for Workflow");
 
 		AssertElementPresent(
 			key_status = "Pending (Created)",
@@ -1165,7 +1184,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9180. CanCheckProductPublication"
-	@priority = "3"
+	@priority = 3
 	test CanCheckProductPublication {
 		property portal.acceptance = "false";
 
@@ -1180,13 +1199,13 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-9251. CanCheckScheduledProductStatusWorkflow"
-	@priority = "3"
+	@priority = 3
 	test CanCheckScheduledProductWorkflowStatus {
 		property portal.acceptance = "false";
 
 		CommerceProducts.addProductWithStatusViaAPI(
 			catalogName = "Master",
-			productStatusCode = "7",
+			productStatusCode = 7,
 			productType = "simple");
 
 		CommerceNavigator.gotoPortlet(
@@ -1202,8 +1221,276 @@ definition {
 			status = "Scheduled");
 	}
 
+	@description = "This is a test for the COMMERCE-10763, to verify that a buyer user can download the virtual product by the URL retrieved using API"
+	@priority = 4
+	test CanDownloadConfiguredVirtualProduct {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "false";
+
+		var baseURL = PropsUtil.get("portal.url");
+
+		task ("Given a Minium Site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("Given a buyer is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a virtual product with Activation Status and Max Download is created") {
+			CommerceProducts.openProductsAdmin();
+
+			CPCommerceCatalog.newProductsEntry(
+				productCatalog = "Minium",
+				productName = "Virtual T-Shirt",
+				productType = "Virtual");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			CommerceProducts.configureVirtualProduct(
+				activationStatus = "Pending",
+				assertUploaded = "true",
+				attachment = "Commerce_Black.jpg",
+				maxDownloads = 3);
+		}
+
+		task ("When the buyer log in") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+		}
+
+		task ("And add something to the cart") {
+			FrontStore.addInitializerProductToCart(
+				productName = "Virtual T-Shirt",
+				productQuantity = 1);
+
+			var orderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+		}
+
+		task ("Then the GET order API is called") {
+			var virtualItemURLs = CommerceJSONOrdersAPI.getOrderField(
+				email = "buyer@liferay.com",
+				jsonPath = "$..virtualItemURLs[:1]",
+				orderId = ${orderId},
+				parameter = "nestedFields",
+				parameterValue = "orderItems",
+				password = "test");
+		}
+
+		task ("And the virtualItemURLs field is empty") {
+			if (${virtualItemURLs} != "") {
+				fail("The Order Activation Status is not respected");
+			}
+		}
+
+		task ("When the checkout is completed") {
+			CommerceCheckout.gotoCheckoutViaMiniCart();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productName = "Virtual T-Shirt",
+				productQuantity = 1);
+		}
+
+		task ("And the GET order API is called") {
+			var virtualItemURLs = CommerceJSONOrdersAPI.getOrderField(
+				email = "buyer@liferay.com",
+				jsonPath = "$..virtualItemURLs[:1]",
+				orderId = ${orderId},
+				parameter = "nestedFields",
+				parameterValue = "orderItems",
+				password = "test");
+		}
+
+		task ("And the GET order item API is called") {
+			var tempVirtualItemURLs = CommerceJSONOrdersAPI.getOrderItemField(
+				email = "buyer@liferay.com",
+				jsonPath = "$..virtualItemURLs[:1]",
+				orderId = ${orderId},
+				password = "test");
+		}
+
+		task ("Then the URL into the response is the same for both the API calls") {
+			if (${virtualItemURLs} == "") {
+				fail("The URL is not present");
+			}
+
+			if (${tempVirtualItemURLs} == ${virtualItemURLs}) {
+				echo("The URL is the same");
+			}
+			else {
+				fail("The URL is not the same");
+			}
+		}
+
+		task ("When the Max Number of Downloads is reached") {
+			var destinationPath = PropsUtil.get("output.dir.name");
+
+			for (var list : list "1,2,3") {
+				Navigator.openSpecificURL(url = "${baseURL}${virtualItemURLs}");
+
+				ImportExport.assertDownloadedFileName(downloadedFile = "Commerce_Black.jpg");
+
+				FileUtil.delete(${destinationPath});
+			}
+		}
+
+		task ("Then is not possible to download the file anymore") {
+			Navigator.openSpecificURL(url = "${baseURL}${virtualItemURLs}");
+
+			AssertElementPresent(
+				key_parameterValue = "You do not have permission to access the requested resource",
+				locator1 = "JSFShowcase#PARAMETER_VALUE");
+
+			var file = CommerceUtilities.assertDownloadedFile(downloadedFileName = "Commerce_Black.jpg");
+
+			if (${file} == "true") {
+				fail("Exceeded the Max Number of Downloads set");
+			}
+		}
+	}
+
+	@description = "This is a test for the COMMERCE-10763, to verify that a buyer user can not download the virtual product by the URL retrieved using API without permissions"
+	@priority = 4
+	test CanDownloadConfiguredVirtualProductWithoutPermissions {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
+		property portal.acceptance = "false";
+
+		var baseURL = PropsUtil.get("portal.url");
+
+		task ("Given a Minium Site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("Given two accounts are created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Commerce Account 2",
+				accountEntryType = "Business");
+		}
+
+		task ("And a virtual product is created") {
+			CommerceProducts.openProductsAdmin();
+
+			CPCommerceCatalog.newProductsEntry(
+				productCatalog = "Minium",
+				productName = "Virtual T-Shirt",
+				productType = "Virtual");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Virtual");
+
+			CommerceProducts.configureVirtualProduct(
+				activationStatus = "Pending",
+				assertUploaded = "true",
+				attachment = "Commerce_Black.jpg");
+		}
+
+		task ("When the admin changes the active account on Minium") {
+			ApplicationsMenu.gotoSite(site = "Minium");
+
+			CommerceAcceleratorsInitializer.selectAccountFromAccountSelector(accountName = "Commerce Account 2");
+		}
+
+		task ("And add something to the cart and complete the checkout") {
+			FrontStore.addInitializerProductToCart(
+				productName = "Virtual T-Shirt",
+				productQuantity = 1);
+
+			var orderId = selenium.getText("CommerceEntry#ACTIVE_ORDER_ID");
+
+			CommerceCheckout.gotoCheckoutViaMiniCart();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productName = "Virtual T-Shirt",
+				productQuantity = 1);
+		}
+
+		task ("When the buyer call the Order API to retrieve the URL") {
+			var virtualItemURLs = CommerceJSONOrdersAPI.getOrderField(
+				email = "buyer@liferay.com",
+				jsonPath = "$..virtualItemURLs[:1]",
+				orderId = ${orderId},
+				parameter = "nestedFields",
+				parameterValue = "orderItems",
+				password = "test");
+		}
+
+		task ("Then the buyer can't receive the URL") {
+			if (${virtualItemURLs} != "") {
+				fail("The buyer even without permissions can still receive the URL");
+			}
+		}
+
+		task ("When the buyer tries to use the URL directly") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = "test",
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			var virtualItemURLs = CommerceJSONOrdersAPI.getOrderField(
+				email = "test@liferay.com",
+				jsonPath = "$..virtualItemURLs[:1]",
+				orderId = ${orderId},
+				parameter = "nestedFields",
+				parameterValue = "orderItems",
+				password = "test");
+		}
+
+		task ("Then the buyer will not be able to download the resource") {
+			Navigator.openSpecificURL(url = "${baseURL}${virtualItemURLs}");
+
+			AssertElementPresent(
+				key_parameterValue = "You do not have permission to access the requested resource",
+				locator1 = "JSFShowcase#PARAMETER_VALUE");
+
+			var file = CommerceUtilities.assertDownloadedFile(downloadedFileName = "Commerce_Black.jpg");
+
+			if (${file} == "true") {
+				fail("The buyer can still download the file even without permissions");
+			}
+		}
+	}
+
 	@description = "This is a test for bug COMMERCE-9546. Verify a product image converted in base64 can be uploaded via headless API with the extension setted"
-	@priority = "4"
+	@priority = 4
 	test CanUploadProductBase64ImageViaAPI {
 		property portal.acceptance = "false";
 
@@ -1215,7 +1502,7 @@ definition {
 			var attachment = CommerceUtilities.getConvertedBase64File(file = "Commerce_Black.jpg");
 
 			CommerceJSONProductsAPI._patchCommerceProductImageUsingERC(
-				attachment = "${attachment}",
+				attachment = ${attachment},
 				contentType = "image/png",
 				imageTitle = "Black T-Shirt",
 				productERC = "MIN93015minium-initializer");
@@ -1237,7 +1524,7 @@ definition {
 				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
 
 			AssertElementPresent(
-				key_columnNumber = "1",
+				key_columnNumber = 1,
 				key_productName = "Black T-Shirt",
 				key_value = "png",
 				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
@@ -1255,7 +1542,7 @@ definition {
 				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
 
 			CommerceJSONProductsAPI._patchCommerceProductImageUsingERC(
-				attachment = "${attachment}",
+				attachment = ${attachment},
 				imageTitle = "Black T-Shirt.test",
 				productERC = "MIN93015minium-initializer");
 
@@ -1268,15 +1555,64 @@ definition {
 				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
 
 			AssertElementPresent(
-				key_columnNumber = "1",
+				key_columnNumber = 1,
 				key_productName = "Black T-Shirt",
 				key_value = "jpg",
 				locator1 = "CommerceEntry#TABLE_SEARCH_BY_NAME_AND_COLUMN_CONTENT");
 		}
 	}
 
+	@description = "This is a test for bug COMMERCE-10711. Verify a product image linked to an option value can be uploaded via headless API."
+	@priority = 3
+	test CanUploadProductImageLinkedToAnOptionValueViaAPI {
+		property portal.acceptance = "false";
+
+		task ("Given a Minium Site is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("When an image linked to an option value for the product Brake Fluid is uploaded via API") {
+			var responseBody = CommerceJSONProductsAPI._addCommerceProductImageLinkedToOptionValue(
+				optionName = "package-quantity",
+				optionValue = 112,
+				productERC = "MIN93016minium-initializer");
+
+			var status = JSONUtil.getWithJSONPath(${responseBody}, "$..['status']");
+
+			if (${status} != "") {
+				fail("Something went wrong with the API call");
+			}
+		}
+
+		task ("Then the image is uploaded successfully") {
+			CommerceProducts.openProductsAdmin();
+
+			AppBuilderAdmin.searchByItem(itemName = "Brake Fluid");
+
+			CommerceNavigator.gotoEntry(entryName = "Brake Fluid");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Media");
+
+			AssertElementPresent(
+				key_entryName = "Simple Image Title API",
+				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
+		}
+
+		task ("And the option value is linked to the image") {
+			Click(
+				key_entryName = "Simple Image Title API",
+				locator1 = "CommerceEntry#TABLE_LIST_TITLE");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			AssertTextEquals(
+				locator1 = "Dropdown#SELECTED_VALUE",
+				value1 = 112);
+		}
+	}
+
 	@description = "This is a test for bug COMMERCE-9448. Verify a product image can be uploaded via headless API."
-	@priority = "3"
+	@priority = 3
 	test CanUploadProductImageViaAPI {
 		property portal.acceptance = "false";
 
@@ -1307,11 +1643,11 @@ definition {
 					}'
 			''';
 
-			var responseBody = JSONCurlUtil.post("${curl}");
+			var responseBody = JSONCurlUtil.post(${curl});
 
-			var productName = JSONUtil.getWithJSONPath("${responseBody}", "$..['name'].['en_US']");
+			var productName = JSONUtil.getWithJSONPath(${responseBody}, "$..['name'].['en_US']");
 
-			if ("${productName}" != "Simple Product") {
+			if (${productName} != "Simple Product") {
 				fail("Something went wrong with the API call");
 			}
 		}
@@ -1338,7 +1674,7 @@ definition {
 	}
 
 	@description = "This is a test for bug COMMERCE-9999. Verify a product image can be uploaded via headless API with CDN."
-	@priority = "3"
+	@priority = 3
 	test CanUploadProductImageViaAPIUsingCDN {
 		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}company.security.strangers.verify=false";
 		property portal.acceptance = "false";
@@ -1369,9 +1705,9 @@ definition {
 				imageTitle = "title2",
 				productERC = "MIN93015minium-initializer");
 
-			var status = JSONUtil.getWithJSONPath("${responseBody}", "$..['status']");
+			var status = JSONUtil.getWithJSONPath(${responseBody}, "$..['status']");
 
-			if ("${status}" != "") {
+			if (${status} != "") {
 				fail("Something went wrong with the API call");
 			}
 		}
@@ -1417,12 +1753,12 @@ definition {
 			var miniumImage = CommerceProductImages.getProductMediaSrc(imagePath = "//a[contains(@href,'abs-sensor')]//img[contains(@class,'card-picture')]");
 
 			TestUtils.assertEquals(
-				actual = "${adminImage}",
-				expected = "${miniumImage}");
+				actual = ${adminImage},
+				expected = ${miniumImage});
 
 			FrontStore.addInitializerProductToCart(
 				productName = "ABS Sensor",
-				productQuantity = "1");
+				productQuantity = 1);
 
 			Click(
 				key_productName = "abs-sensor",
@@ -1440,7 +1776,7 @@ definition {
 	}
 
 	@description = "This is a test for bug COMMERCE-9503. Verify a product image can be uploaded via headless API with default workflow enabled"
-	@priority = "3"
+	@priority = 3
 	test CanUploadProductImageViaAPIWithWorkflowEnabled {
 		property portal.acceptance = "false";
 
@@ -1452,7 +1788,7 @@ definition {
 			CommerceJSONProductsAPI._addCommerceProductImage(
 				catalogName = "Master",
 				imageTitle = "Image Title",
-				productStatus = "2",
+				productStatus = 2,
 				productTitle = "Simple Product",
 				productType = "simple");
 		}
@@ -1485,9 +1821,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8850. Verify that the list of filters is reduced to only show matching results"
-	@priority = "3"
+	@priority = 5
 	test CanVerifyFiltersListShowsOnlyMatchingResults {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a Minium site is created") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -1504,7 +1840,7 @@ definition {
 		task ("Then all filters are shown in the dropdown list") {
 			for (var filterItemName : list "Category,Catalog,Channel,Product Type") {
 				AssertElementPresent(
-					key_filter = "${filterItemName}",
+					key_filter = ${filterItemName},
 					locator1 = "FrontendDataSet#FILTER_OPTION");
 			}
 		}
@@ -1520,7 +1856,7 @@ definition {
 
 			for (var filterItemName : list "Category,Catalog,Channel") {
 				AssertElementNotPresent(
-					key_filter = "${filterItemName}",
+					key_filter = ${filterItemName},
 					locator1 = "FrontendDataSet#FILTER_OPTION");
 			}
 		}
@@ -1528,16 +1864,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-6747. ConfigureGroupedProduct"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test ConfigureGroupedProduct {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6747 ConfigureGroupedProduct
 
 	}
 
 	@description = "This is a test for COMMERCE-6751. ConfigureVirtualProduct"
-	@priority = "3"
+	@priority = 5
 	test ConfigureVirtualProduct {
 		property portal.acceptance = "true";
 
@@ -1583,7 +1918,7 @@ definition {
 		Type(
 			key_fieldLabel = "Max Number of Downloads",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
+			value1 = 10);
 
 		if (IsElementPresent(key_contentType = "Sample", locator1 = "CommerceEntry#NOTIFICATION_DELIVERY_PANEL_CLOSED")) {
 			Click(
@@ -1630,11 +1965,12 @@ definition {
 		AssertTextEquals(
 			key_fieldLabel = "Max Number of Downloads",
 			locator1 = "TextInput#GENERIC_TEXT_INPUT",
-			value1 = "10");
+			value1 = 10);
 	}
 
+	@priority = 5
 	test CreateProductBundleWithPriceTypeDynamic {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
@@ -1719,9 +2055,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6018. CreateProductBundleWithPriceTypeStatic"
-	@priority = "3"
+	@priority = 5
 	test CreateProductBundleWithPriceTypeStatic {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Product Management",
@@ -1873,9 +2209,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-8425. DuplicateAProductAndVerifyIfSkuPriceIsUnique"
-	@priority = "3"
+	@priority = 5
 	test DuplicateAProductAndVerifyIfSkuPriceIsUnique {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		task ("Given a minium site") {
 			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -1940,7 +2276,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-5808. EditAProduct"
-	@priority = "3"
+	@priority = 5
 	test EditAProduct {
 		property portal.acceptance = "true";
 
@@ -1967,16 +2303,15 @@ definition {
 
 	@description = "This is a test for COMMERCE-6022. EditASKU"
 	@ignore = "true"
-	@priority = "3"
+	@priority = 3
 	test EditASKU {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-6022 EditASKU
 
 	}
 
 	@description = "This is a test for COMMERCE-5807. EditSkuAndDelete"
-	@priority = "3"
+	@priority = 5
 	test EditSkuAndDelete {
 		property portal.acceptance = "true";
 
@@ -2017,7 +2352,7 @@ definition {
 
 	test ProductPublishing {
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "false";
 
 		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
@@ -2125,7 +2460,7 @@ definition {
 	}
 
 	@description = "COMMERCE-5802. Use a filter always check that the results are correct"
-	@priority = "3"
+	@priority = 5
 	test UseFilters {
 		property portal.acceptance = "true";
 
@@ -2229,9 +2564,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6304. UseFriendlyURL"
-	@priority = "3"
+	@priority = 5
 	test UseFriendlyURL {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		CommerceNavigator.gotoPortlet(
 			category = "Store Management",
@@ -2240,9 +2575,9 @@ definition {
 		CommerceNavigator.gotoEntry(entryName = "Test Channel");
 
 		for (var fixIssueButtonName : list "Product Detail") {
-			if (IsElementPresent(key_fixIssueButtonName = "${fixIssueButtonName}", locator1 = "CommerceEntry#FIX_ISSUE_BUTTON")) {
+			if (IsElementPresent(key_fixIssueButtonName = ${fixIssueButtonName}, locator1 = "CommerceEntry#FIX_ISSUE_BUTTON")) {
 				Click(
-					key_fixIssueButtonName = "${fixIssueButtonName}",
+					key_fixIssueButtonName = ${fixIssueButtonName},
 					locator1 = "CommerceEntry#FIX_ISSUE_BUTTON");
 
 				Alert.viewSuccessMessage();
@@ -2268,9 +2603,9 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-6303. UseSchedule"
-	@priority = "3"
+	@priority = 5
 	test UseSchedule {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 
 		// TODO Review
 
@@ -2302,7 +2637,7 @@ definition {
 
 		Type(
 			locator1 = "CommerceEntry#EXPIRATION_DATE_FIELD",
-			value1 = "${displayDate}");
+			value1 = ${displayDate});
 
 		Button.clickPublish();
 
@@ -2310,7 +2645,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-5805. UseSearchBarAndPagination"
-	@priority = "3"
+	@priority = 3
 	test UseSearchBarAndPagination {
 		property portal.acceptance = "false";
 
@@ -2340,7 +2675,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-5801. UseSkuSearchBarAndPagination"
-	@priority = "3"
+	@priority = 3
 	test UseSkuSearchBarAndPagination {
 		property portal.acceptance = "false";
 
@@ -2364,7 +2699,7 @@ definition {
 	}
 
 	@description = "This is a test for COMMERCE-5803. UseSortingByNameAndDate"
-	@priority = "3"
+	@priority = 3
 	test UseSortingByNameAndDate {
 		property portal.acceptance = "false";
 
@@ -2393,9 +2728,8 @@ definition {
 
 	@description = "[Please Update]"
 	@ignore = "true"
-	@priority = "4"
+	@priority = 4
 	test VerifyIfCategorizationIsWorking {
-		property portal.acceptance = "false";
 
 		// TODO COMMERCE-7075 VerifyIfCategorizationIsWorking
 

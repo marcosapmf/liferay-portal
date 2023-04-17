@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.scripting.ScriptingException;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
 import java.util.HashMap;
@@ -45,9 +46,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = "object.field.business.type.key=" + ObjectFieldConstants.BUSINESS_TYPE_FORMULA,
-	service = {
-		FormulaObjectFieldBusinessType.class, ObjectFieldBusinessType.class
-	}
+	service = ObjectFieldBusinessType.class
 )
 public class FormulaObjectFieldBusinessType implements ObjectFieldBusinessType {
 
@@ -106,18 +105,20 @@ public class FormulaObjectFieldBusinessType implements ObjectFieldBusinessType {
 	}
 
 	@Override
-	public Set<String> getRequiredObjectFieldSettingsNames() {
+	public Set<String> getRequiredObjectFieldSettingsNames(
+		ObjectField objectField) {
+
 		return SetUtil.fromArray("output");
 	}
 
 	@Override
 	public void validateObjectFieldSettings(
-			long objectDefinitionId, String objectFieldName,
+			ObjectField objectField,
 			List<ObjectFieldSetting> objectFieldSettings)
 		throws PortalException {
 
 		ObjectFieldBusinessType.super.validateObjectFieldSettings(
-			objectDefinitionId, objectFieldName, objectFieldSettings);
+			objectField, objectFieldSettings);
 
 		Map<String, String> objectFieldSettingsValues = new HashMap<>();
 
@@ -127,7 +128,7 @@ public class FormulaObjectFieldBusinessType implements ObjectFieldBusinessType {
 
 		String script = objectFieldSettingsValues.get("script");
 
-		if (script == null) {
+		if (Validator.isNull(script)) {
 			return;
 		}
 

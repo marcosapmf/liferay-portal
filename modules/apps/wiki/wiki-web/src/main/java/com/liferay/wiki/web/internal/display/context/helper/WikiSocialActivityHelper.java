@@ -30,13 +30,16 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.social.kernel.model.SocialActivity;
 import com.liferay.social.kernel.model.SocialActivityConstants;
+import com.liferay.social.kernel.service.SocialActivityLocalServiceUtil;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageLocalServiceUtil;
 import com.liferay.wiki.social.WikiActivityKeys;
 
+import java.util.List;
 import java.util.ResourceBundle;
 
 /**
@@ -46,6 +49,23 @@ public class WikiSocialActivityHelper {
 
 	public WikiSocialActivityHelper(WikiRequestHelper wikiRequestHelper) {
 		_wikiRequestHelper = wikiRequestHelper;
+	}
+
+	public List<SocialActivity> getApprovedSocialActivities(
+			WikiPage wikiPage, int start, int end)
+		throws PortalException {
+
+		WikiPage latestWikiPage = WikiPageLocalServiceUtil.getLatestPage(
+			wikiPage.getResourcePrimKey(), WorkflowConstants.STATUS_ANY, false);
+
+		if (latestWikiPage.getPageId() == wikiPage.getPageId()) {
+			return SocialActivityLocalServiceUtil.getActivities(
+				0, WikiPage.class.getName(), wikiPage.getResourcePrimKey(),
+				start, end);
+		}
+
+		return SocialActivityLocalServiceUtil.getApprovedActivities(
+			wikiPage.getResourcePrimKey(), wikiPage.getVersion());
 	}
 
 	public String getSocialActivityActionJSP(

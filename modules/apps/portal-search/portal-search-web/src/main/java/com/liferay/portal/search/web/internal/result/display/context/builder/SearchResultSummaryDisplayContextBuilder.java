@@ -57,8 +57,6 @@ import com.liferay.portal.search.web.internal.result.display.context.SearchResul
 import com.liferay.portal.search.web.internal.result.display.context.SearchResultSummaryDisplayContext;
 import com.liferay.portal.search.web.internal.util.SearchStringUtil;
 import com.liferay.portal.search.web.internal.util.SearchUtil;
-import com.liferay.portal.search.web.search.result.SearchResultImage;
-import com.liferay.portal.search.web.search.result.SearchResultImageContributor;
 
 import java.text.DateFormat;
 import java.text.Format;
@@ -267,17 +265,6 @@ public class SearchResultSummaryDisplayContextBuilder {
 		ResourceActions resourceActions) {
 
 		_resourceActions = resourceActions;
-
-		return this;
-	}
-
-	public SearchResultSummaryDisplayContextBuilder
-		setSearchResultImageContributorsStream(
-			Stream<SearchResultImageContributor>
-				searchResultImageContributorsStream) {
-
-		_searchResultImageContributorsStream =
-			searchResultImageContributorsStream;
 
 		return this;
 	}
@@ -765,39 +752,6 @@ public class SearchResultSummaryDisplayContextBuilder {
 				_log.debug(exception);
 			}
 		}
-
-		SearchResultImage searchResultImage = new SearchResultImage() {
-
-			@Override
-			public String getClassName() {
-				return assetRenderer.getClassName();
-			}
-
-			@Override
-			public long getClassPK() {
-				return assetRenderer.getClassPK();
-			}
-
-			@Override
-			public void setIcon(String iconName) {
-				searchResultSummaryDisplayContext.setIconId(iconName);
-				searchResultSummaryDisplayContext.setIconVisible(true);
-				searchResultSummaryDisplayContext.setPathThemeImages(
-					_themeDisplay.getPathThemeImages());
-			}
-
-			@Override
-			public void setThumbnail(String thumbnailURLString) {
-				searchResultSummaryDisplayContext.setThumbnailURLString(
-					thumbnailURLString);
-				searchResultSummaryDisplayContext.setThumbnailVisible(true);
-			}
-
-		};
-
-		_searchResultImageContributorsStream.forEach(
-			searchResultImageContributor ->
-				searchResultImageContributor.contribute(searchResultImage));
 	}
 
 	private void _buildLocaleReminder(
@@ -1135,8 +1089,6 @@ public class SearchResultSummaryDisplayContextBuilder {
 	private RenderRequest _renderRequest;
 	private RenderResponse _renderResponse;
 	private ResourceActions _resourceActions;
-	private Stream<SearchResultImageContributor>
-		_searchResultImageContributorsStream = Stream.empty();
 	private SearchResultPreferences _searchResultPreferences;
 	private SearchResultViewURLSupplier _searchResultViewURLSupplier;
 	private SummaryBuilderFactory _summaryBuilderFactory;

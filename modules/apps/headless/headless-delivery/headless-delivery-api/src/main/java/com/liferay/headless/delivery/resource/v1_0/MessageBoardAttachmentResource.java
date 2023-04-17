@@ -25,6 +25,7 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -72,6 +73,12 @@ public interface MessageBoardAttachmentResource {
 				Long messageBoardMessageId)
 		throws Exception;
 
+	public Response
+			postMessageBoardMessageMessageBoardAttachmentsPageExportBatch(
+				Long messageBoardMessageId, String callbackURL,
+				String contentType, String fieldNames)
+		throws Exception;
+
 	public MessageBoardAttachment postMessageBoardMessageMessageBoardAttachment(
 			Long messageBoardMessageId, MultipartBody multipartBody)
 		throws Exception;
@@ -86,6 +93,12 @@ public interface MessageBoardAttachmentResource {
 				Long messageBoardThreadId)
 		throws Exception;
 
+	public Response
+			postMessageBoardThreadMessageBoardAttachmentsPageExportBatch(
+				Long messageBoardThreadId, String callbackURL,
+				String contentType, String fieldNames)
+		throws Exception;
+
 	public MessageBoardAttachment postMessageBoardThreadMessageBoardAttachment(
 			Long messageBoardThreadId, MultipartBody multipartBody)
 		throws Exception;
@@ -93,6 +106,18 @@ public interface MessageBoardAttachmentResource {
 	public Response postMessageBoardThreadMessageBoardAttachmentBatch(
 			Long messageBoardThreadId, MultipartBody multipartBody,
 			String callbackURL, Object object)
+		throws Exception;
+
+	public void
+			deleteSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode(
+				Long siteId, String messageBoardMessageExternalReferenceCode,
+				String externalReferenceCode)
+		throws Exception;
+
+	public MessageBoardAttachment
+			getSiteMessageBoardMessageByExternalReferenceCodeMessageBoardMessageExternalReferenceCodeMessageBoardAttachmentByExternalReferenceCode(
+				Long siteId, String messageBoardMessageExternalReferenceCode,
+				String externalReferenceCode)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(
@@ -133,6 +158,10 @@ public interface MessageBoardAttachmentResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
 
 	public void setVulcanBatchEngineImportTaskResource(
 		VulcanBatchEngineImportTaskResource

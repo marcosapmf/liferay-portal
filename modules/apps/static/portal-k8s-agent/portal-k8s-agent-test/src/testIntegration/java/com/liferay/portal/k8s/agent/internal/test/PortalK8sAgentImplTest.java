@@ -15,6 +15,8 @@
 package com.liferay.portal.k8s.agent.internal.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.osgi.util.StringPlus;
+import com.liferay.osgi.util.configuration.ConfigurationFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
@@ -46,12 +48,19 @@ import io.fabric8.mockwebserver.ServerResponse;
 
 import java.net.InetAddress;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -67,6 +76,7 @@ import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -305,6 +315,8 @@ public class PortalK8sAgentImplTest {
 		Assert.assertNotNull(configuration);
 
 		try {
+			_assertNotInDatabase(configuration.getPid());
+
 			Dictionary<String, Object> properties =
 				configuration.getProcessedProperties(null);
 
@@ -315,6 +327,81 @@ public class PortalK8sAgentImplTest {
 				TestPropsValues.getCompanyId(),
 				(long)properties.get("companyId"));
 			Assert.assertEquals("test.value", properties.get("test.key"));
+		}
+		finally {
+			ConfigurationTestUtil.deleteConfiguration(configuration);
+		}
+	}
+
+	@Test
+	public void testListenForExtProvisionMetadataWithFactoryPid()
+		throws Exception {
+
+		String serviceId = RandomTestUtil.randomString();
+
+		String mainDomain = serviceId.concat("-extproject.lfr.sh");
+
+		Configuration configuration =
+			ConfigurationTestUtil.updateFactoryConfiguration(
+				"test.pid~foo/" + TestPropsValues.COMPANY_WEB_ID,
+				() -> {
+					ConfigMapBuilder configMapBuilder = new ConfigMapBuilder();
+
+					_kubernetesMockClient.configMaps(
+					).createOrReplace(
+						configMapBuilder.withNewMetadata(
+						).withName(
+							StringBundler.concat(
+								serviceId, "-", TestPropsValues.COMPANY_WEB_ID,
+								"-lxc-ext-provision-metadata")
+						).addToLabels(
+							"dxp.lxc.liferay.com/virtualInstanceId",
+							TestPropsValues.COMPANY_WEB_ID
+						).addToAnnotations(
+							"ext.lxc.liferay.com/domains",
+							serviceId.concat("-extproject.lfr.sh")
+						).addToAnnotations(
+							"ext.lxc.liferay.com/mainDomain", mainDomain
+						).addToLabels(
+							"ext.lxc.liferay.com/projectId",
+							RandomTestUtil.randomString()
+						).addToLabels(
+							"ext.lxc.liferay.com/serviceId", serviceId
+						).addToLabels(
+							"lxc.liferay.com/metadataType", "ext-provision"
+						).endMetadata(
+						).addToData(
+							"foo.client-extension-config.json",
+							"{\"test.pid~foo\": {\"test.key\": \"test.value\"}}"
+						).build()
+					);
+				});
+
+		Assert.assertNotNull(configuration);
+
+		try {
+			_assertNotInDatabase(configuration.getPid());
+
+			Dictionary<String, Object> properties =
+				configuration.getProcessedProperties(null);
+
+			Assert.assertEquals(
+				Http.HTTPS_WITH_SLASH.concat(mainDomain),
+				properties.get("baseURL"));
+			Assert.assertEquals(
+				TestPropsValues.getCompanyId(),
+				(long)properties.get("companyId"));
+			Assert.assertEquals("test.value", properties.get("test.key"));
+
+			String factoryPid = (String)properties.get("service.factoryPid");
+
+			List<String> servicePids = StringPlus.asList(
+				properties.get(Constants.SERVICE_PID));
+
+			Assert.assertEquals(
+				"foo",
+				ConfigurationFactoryUtil.getExternalReferenceCode(
+					factoryPid, servicePids));
 		}
 		finally {
 			ConfigurationTestUtil.deleteConfiguration(configuration);
@@ -356,6 +443,22 @@ public class PortalK8sAgentImplTest {
 			PortalK8sConfigMapModifier.Result.UNCHANGED, result);
 	}
 
+	private void _assertNotInDatabase(String pid) throws Exception {
+		try (Connection connection = _dataSource.getConnection();
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				"select configurationId, dictionary from Configuration_ " +
+					"where configurationId = ?")) {
+
+			preparedStatement.setString(1, pid);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				boolean stored = resultSet.next();
+
+				Assert.assertFalse(stored);
+			}
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortalK8sAgentImplTest.class);
 
@@ -368,6 +471,9 @@ public class PortalK8sAgentImplTest {
 
 	@Inject
 	private static ConfigurationAdmin _configurationAdmin;
+
+	@Inject
+	private static DataSource _dataSource;
 
 	private static NamespacedKubernetesClient _kubernetesMockClient;
 	private static KubernetesMockServer _kubernetesMockServer;

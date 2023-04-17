@@ -19,6 +19,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIconMenu;
@@ -312,6 +313,10 @@ public class PortletDisplay implements Cloneable, Serializable {
 		return _urlBack;
 	}
 
+	public String getURLBackTitle() {
+		return _urlBackTitle;
+	}
+
 	public String getURLClose() {
 		return _urlClose;
 	}
@@ -482,7 +487,15 @@ public class PortletDisplay implements Cloneable, Serializable {
 
 		Layout layout = _themeDisplay.getLayout();
 
-		if (Validator.isNull(portletSetupPortletDecoratorId) &&
+		LayoutTypePortlet layoutTypePortlet =
+			_themeDisplay.getLayoutTypePortlet();
+
+		HttpServletRequest httpServletRequest = _themeDisplay.getRequest();
+
+		String ppid = ParamUtil.getString(httpServletRequest, "p_p_id");
+
+		if ((!layoutTypePortlet.hasStateMax() || Validator.isNull(ppid)) &&
+			Validator.isNull(portletSetupPortletDecoratorId) &&
 			(layout.isTypeAssetDisplay() || layout.isTypeContent())) {
 
 			return false;
@@ -851,6 +864,10 @@ public class PortletDisplay implements Cloneable, Serializable {
 		}
 	}
 
+	public void setURLBackTitle(String urlBackTitle) {
+		_urlBackTitle = urlBackTitle;
+	}
+
 	public void setURLClose(String urlClose) {
 		_urlClose = urlClose;
 	}
@@ -976,6 +993,7 @@ public class PortletDisplay implements Cloneable, Serializable {
 	private ThemeDisplay _themeDisplay;
 	private String _title = StringPool.BLANK;
 	private String _urlBack = StringPool.BLANK;
+	private String _urlBackTitle = StringPool.BLANK;
 	private String _urlClose = StringPool.BLANK;
 	private String _urlConfiguration = StringPool.BLANK;
 	private String _urlConfigurationJS = StringPool.BLANK;

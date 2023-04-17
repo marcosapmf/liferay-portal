@@ -14,6 +14,8 @@
 
 package com.liferay.layout.internal.exportimport.data.handler;
 
+import com.liferay.client.extension.model.ClientExtensionEntryRel;
+import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.exportimport.content.processor.ExportImportContentProcessor;
@@ -34,6 +36,7 @@ import com.liferay.exportimport.lar.ThemeExporter;
 import com.liferay.exportimport.lar.ThemeImporter;
 import com.liferay.layout.internal.exportimport.staged.model.repository.StagedLayoutSetStagedModelRepository;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -64,6 +67,7 @@ import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.DateRange;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ThemeFactory;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -83,8 +87,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -110,6 +112,7 @@ public class StagedLayoutSetStagedModelDataHandler
 			StagedLayoutSet stagedLayoutSet)
 		throws Exception {
 
+		_exportClientExtensionEntryRels(portletDataContext, stagedLayoutSet);
 		_exportLayouts(portletDataContext, stagedLayoutSet);
 		_exportLogo(portletDataContext, stagedLayoutSet);
 		_exportTheme(portletDataContext, stagedLayoutSet);
@@ -223,6 +226,7 @@ public class StagedLayoutSetStagedModelDataHandler
 					portletDataContext, importedStagedLayoutSet);
 		}
 
+		_importClientExtensionEntryRels(portletDataContext, stagedLayoutSet);
 		_importLogo(portletDataContext);
 		_importTheme(portletDataContext, stagedLayoutSet);
 
@@ -291,11 +295,11 @@ public class StagedLayoutSetStagedModelDataHandler
 					portletDataContext.getLayoutSetPrototypeUuid(),
 					portletDataContext.getCompanyId());
 
-		List<Layout> layoutSetLayouts = _layoutLocalService.getLayouts(
-			portletDataContext.getGroupId(),
-			portletDataContext.isPrivateLayout());
+		for (Layout layout :
+				_layoutLocalService.getLayouts(
+					portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout())) {
 
-		for (Layout layout : layoutSetLayouts) {
 			if (Validator.isNull(layout.getSourcePrototypeLayoutUuid())) {
 				continue;
 			}
@@ -333,17 +337,9 @@ public class StagedLayoutSetStagedModelDataHandler
 			return;
 		}
 
-		List<Layout> previousLayouts = _layoutLocalService.getLayouts(
-			portletDataContext.getGroupId(),
-			portletDataContext.isPrivateLayout());
-
-		Stream<Element> layoutElementsStream = layoutElements.stream();
-
-		List<String> sourceLayoutUuids = layoutElementsStream.map(
-			layoutElement -> layoutElement.attributeValue("uuid")
-		).collect(
-			Collectors.toList()
-		);
+		List<String> sourceLayoutUuids = TransformUtil.transform(
+			layoutElements,
+			layoutElement -> layoutElement.attributeValue("uuid"));
 
 		if (_log.isDebugEnabled() && !sourceLayoutUuids.isEmpty()) {
 			_log.debug("Delete missing layouts");
@@ -355,7 +351,11 @@ public class StagedLayoutSetStagedModelDataHandler
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		for (Layout layout : previousLayouts) {
+		for (Layout layout :
+				_layoutLocalService.getLayouts(
+					portletDataContext.getGroupId(),
+					portletDataContext.isPrivateLayout())) {
+
 			if (!sourceLayoutUuids.contains(layout.getUuid()) &&
 				!layoutPlids.containsValue(layout.getPlid())) {
 
@@ -391,6 +391,25 @@ public class StagedLayoutSetStagedModelDataHandler
 					}
 				}
 			}
+		}
+	}
+
+	private void _exportClientExtensionEntryRels(
+			PortletDataContext portletDataContext,
+			StagedLayoutSet stagedLayoutSet)
+		throws Exception {
+
+		LayoutSet layoutSet = stagedLayoutSet.getLayoutSet();
+
+		for (ClientExtensionEntryRel clientExtensionEntryRel :
+				_clientExtensionEntryRelLocalService.
+					getClientExtensionEntryRels(
+						_portal.getClassNameId(LayoutSet.class),
+						layoutSet.getLayoutSetId())) {
+
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, stagedLayoutSet, clientExtensionEntryRel,
+				PortletDataContext.REFERENCE_TYPE_STRONG);
 		}
 	}
 
@@ -462,11 +481,10 @@ public class StagedLayoutSetStagedModelDataHandler
 				group.getGroupId(), portletDataContext.isPrivateLayout());
 		}
 
-		List<StagedModel> stagedModels =
-			_stagedLayoutSetStagedModelRepository.fetchChildrenStagedModels(
-				portletDataContext, stagedLayoutSet);
+		for (StagedModel stagedModel :
+				_stagedLayoutSetStagedModelRepository.fetchChildrenStagedModels(
+					portletDataContext, stagedLayoutSet)) {
 
-		for (StagedModel stagedModel : stagedModels) {
 			Layout layout = (Layout)stagedModel;
 
 			if (!ArrayUtil.contains(layoutIds, layout.getLayoutId())) {
@@ -653,16 +671,32 @@ public class StagedLayoutSetStagedModelDataHandler
 	private boolean _hasSkippedSiblingLayout(
 		Element layoutElement, Map<Long, List<String>> siblingActionsMap) {
 
-		long parentLayoutId = GetterUtil.getLong(
-			layoutElement.attributeValue("layout-parent-layout-id"));
-
-		List<String> actions = siblingActionsMap.get(parentLayoutId);
+		List<String> actions = siblingActionsMap.get(
+			GetterUtil.getLong(
+				layoutElement.attributeValue("layout-parent-layout-id")));
 
 		if (actions.contains(Constants.SKIP)) {
 			return true;
 		}
 
 		return false;
+	}
+
+	private void _importClientExtensionEntryRels(
+			PortletDataContext portletDataContext,
+			StagedLayoutSet stagedLayoutSet)
+		throws Exception {
+
+		List<Element> clientExtensionEntryRelsElements =
+			portletDataContext.getReferenceDataElements(
+				stagedLayoutSet, ClientExtensionEntryRel.class);
+
+		for (Element clientExtensionEntryRelsElement :
+				clientExtensionEntryRelsElements) {
+
+			StagedModelDataHandlerUtil.importStagedModel(
+				portletDataContext, clientExtensionEntryRelsElement);
+		}
 	}
 
 	private void _importFaviconFileEntry(
@@ -1018,22 +1052,18 @@ public class StagedLayoutSetStagedModelDataHandler
 			Map<String, ThemeSetting> themeSettings =
 				importedTheme.getConfigurableSettings();
 
-			Set<Map.Entry<String, ThemeSetting>> themeSettingsEntries =
-				themeSettings.entrySet();
+			Map<String, String> defaultsMap = new HashMap<>();
 
-			Stream<Map.Entry<String, ThemeSetting>> themeSettingsEntriesStream =
-				themeSettingsEntries.stream();
+			for (Map.Entry<String, ThemeSetting> entry :
+					themeSettings.entrySet()) {
 
-			Map<String, String> defaultsMap =
-				themeSettingsEntriesStream.collect(
-					Collectors.toMap(
-						entry -> ThemeSettingImpl.namespaceProperty(
-							"regular", entry.getKey()),
-						entry -> {
-							ThemeSetting themeSetting = entry.getValue();
+				ThemeSetting themeSetting = entry.getValue();
 
-							return themeSetting.getValue();
-						}));
+				defaultsMap.put(
+					ThemeSettingImpl.namespaceProperty(
+						"regular", entry.getKey()),
+					themeSetting.getValue());
+			}
 
 			defaultsMap.put(Sites.SHOW_SITE_NAME, Boolean.TRUE.toString());
 			defaultsMap.put("javascript", null);
@@ -1072,6 +1102,10 @@ public class StagedLayoutSetStagedModelDataHandler
 		StagedLayoutSetStagedModelDataHandler.class);
 
 	@Reference
+	private ClientExtensionEntryRelLocalService
+		_clientExtensionEntryRelLocalService;
+
+	@Reference
 	private ColorSchemeFactory _colorSchemeFactory;
 
 	@Reference
@@ -1108,6 +1142,9 @@ public class StagedLayoutSetStagedModelDataHandler
 
 	@Reference
 	private LayoutSetPrototypeLocalService _layoutSetPrototypeLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference
 	private Sites _sites;

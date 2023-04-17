@@ -8572,7 +8572,8 @@ public class UserPersistenceImpl
 				if (ercUser != null) {
 					throw new DuplicateUserExternalReferenceCodeException(
 						"Duplicate user with external reference code " +
-							user.getExternalReferenceCode());
+							user.getExternalReferenceCode() + " and company " +
+								user.getCompanyId());
 				}
 			}
 			else {
@@ -8581,7 +8582,8 @@ public class UserPersistenceImpl
 
 					throw new DuplicateUserExternalReferenceCodeException(
 						"Duplicate user with external reference code " +
-							user.getExternalReferenceCode());
+							user.getExternalReferenceCode() + " and company " +
+								user.getCompanyId());
 				}
 			}
 		}

@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.web.internal.helper.PortletPreferencesHelper;
+import com.liferay.portal.search.web.internal.user.facet.portlet.UserFacetPortletPreferences;
 
 import java.util.Optional;
 
@@ -39,6 +40,20 @@ public class ModifiedFacetPortletPreferencesImpl
 
 		_portletPreferencesHelper = new PortletPreferencesHelper(
 			portletPreferencesOptional);
+	}
+
+	@Override
+	public int getFrequencyThreshold() {
+		return _portletPreferencesHelper.getInteger(
+			ModifiedFacetPortletPreferences.PREFERENCE_KEY_FREQUENCY_THRESHOLD,
+			0);
+	}
+
+	@Override
+	public String getOrder() {
+		return _portletPreferencesHelper.getString(
+			ModifiedFacetPortletPreferences.PREFERENCE_KEY_ORDER,
+			"OrderHitsDesc");
 	}
 
 	@Override
@@ -73,6 +88,13 @@ public class ModifiedFacetPortletPreferencesImpl
 		return _portletPreferencesHelper.getString(
 			ModifiedFacetPortletPreferences.PREFERENCE_KEY_RANGES,
 			StringPool.BLANK);
+	}
+
+	@Override
+	public boolean isFrequenciesVisible() {
+		return _portletPreferencesHelper.getBoolean(
+			UserFacetPortletPreferences.PREFERENCE_KEY_FREQUENCIES_VISIBLE,
+			true);
 	}
 
 	private JSONArray _getDefaultRangesJSONArray() {

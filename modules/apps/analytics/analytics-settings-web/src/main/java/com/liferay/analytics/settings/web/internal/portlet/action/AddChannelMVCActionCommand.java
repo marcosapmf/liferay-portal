@@ -16,9 +16,9 @@ package com.liferay.analytics.settings.web.internal.portlet.action;
 
 import com.liferay.analytics.settings.web.internal.util.AnalyticsSettingsUtil;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -41,15 +41,10 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import javax.portlet.ActionRequest;
 
@@ -153,8 +148,6 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 			return;
 		}
 
-		Stream<String> stream = Arrays.stream(selectedGroupIds);
-
 		HttpResponse httpResponse = AnalyticsSettingsUtil.doPost(
 			JSONUtil.put(
 				"channelType", channelType
@@ -165,15 +158,10 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 			).put(
 				"groups",
 				JSONUtil.toJSONArray(
-					stream.map(
-						Long::valueOf
-					).map(
-						groupLocalService::fetchGroup
-					).filter(
-						Objects::nonNull
-					).collect(
-						Collectors.toList()
-					),
+					TransformUtil.transformToList(
+						selectedGroupIds,
+						selectedGroupId -> groupLocalService.fetchGroup(
+							Long.valueOf(selectedGroupId))),
 					group -> _buildGroupJSONObject(group, themeDisplay))
 			),
 			themeDisplay.getCompanyId(), "api/1.0/channels");
@@ -258,46 +246,33 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 	}
 
 	private void _updateTypeSettingsProperties(String json) throws Exception {
-		JSONArray channelsJSONArray = _jsonFactory.createJSONArray(json);
+		for (Object channelObject : _jsonFactory.createJSONArray(json)) {
+			JSONObject channelJSONObject = (JSONObject)channelObject;
 
-		for (int i = 0; i < channelsJSONArray.length(); i++) {
-			JSONObject channelJSONObject = channelsJSONArray.getJSONObject(i);
+			for (Object dataSourceObject :
+					channelJSONObject.getJSONArray("dataSources")) {
 
-			String channelId = channelJSONObject.getString("id");
+				JSONObject dataSourceJSONObject = (JSONObject)dataSourceObject;
 
-			JSONArray dataSourcesJSONArray = channelJSONObject.getJSONArray(
-				"dataSources");
+				for (Object groupIdObject :
+						dataSourceJSONObject.getJSONArray("groupIds")) {
 
-			Stream<JSONObject> dataSourcesStream = StreamSupport.stream(
-				dataSourcesJSONArray.spliterator(), false);
-
-			dataSourcesStream.flatMap(
-				dataSourceJSONObject -> {
-					JSONArray groupIdsJSONArray =
-						dataSourceJSONObject.getJSONArray("groupIds");
-
-					return StreamSupport.stream(
-						groupIdsJSONArray.spliterator(), false);
-				}
-			).map(
-				String::valueOf
-			).forEach(
-				groupId -> {
 					Group group = groupLocalService.fetchGroup(
-						GetterUtil.getLong(groupId));
+						GetterUtil.getLong(groupIdObject));
 
 					UnicodeProperties typeSettingsUnicodeProperties =
 						group.getTypeSettingsProperties();
 
 					typeSettingsUnicodeProperties.put(
-						"analyticsChannelId", channelId);
+						"analyticsChannelId",
+						channelJSONObject.getString("id"));
 
 					group.setTypeSettingsProperties(
 						typeSettingsUnicodeProperties);
 
 					groupLocalService.updateGroup(group);
 				}
-			);
+			}
 		}
 	}
 

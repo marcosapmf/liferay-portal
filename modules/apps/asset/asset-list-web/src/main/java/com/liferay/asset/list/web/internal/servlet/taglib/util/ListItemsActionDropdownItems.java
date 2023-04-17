@@ -64,10 +64,9 @@ public class ListItemsActionDropdownItems {
 		_infoEditURLProviderRegistry = infoEditURLProviderRegistry;
 		_infoItemServiceRegistry = infoItemServiceRegistry;
 		_infoSearchClassMapperRegistry = infoSearchClassMapperRegistry;
-
 		_httpServletRequest = httpServletRequest;
 
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 

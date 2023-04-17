@@ -14,6 +14,7 @@
 
 package com.liferay.commerce.discount.service.impl;
 
+import com.liferay.commerce.discount.exception.DuplicateCommerceDiscountAccountRelException;
 import com.liferay.commerce.discount.model.CommerceDiscount;
 import com.liferay.commerce.discount.model.CommerceDiscountAccountRel;
 import com.liferay.commerce.discount.service.base.CommerceDiscountAccountRelLocalServiceBaseImpl;
@@ -51,17 +52,26 @@ public class CommerceDiscountAccountRelLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
+		CommerceDiscountAccountRel commerceDiscountAccountRel =
+			commerceDiscountAccountRelPersistence.fetchByCAI_CDI(
+				commerceAccountId, commerceDiscountId);
+
+		if (commerceDiscountAccountRel != null) {
+			throw new DuplicateCommerceDiscountAccountRelException();
+		}
 
 		long commerceDiscountAccountRelId = counterLocalService.increment();
 
-		CommerceDiscountAccountRel commerceDiscountAccountRel =
+		commerceDiscountAccountRel =
 			commerceDiscountAccountRelPersistence.create(
 				commerceDiscountAccountRelId);
+
+		User user = _userLocalService.getUser(userId);
 
 		commerceDiscountAccountRel.setCompanyId(user.getCompanyId());
 		commerceDiscountAccountRel.setUserId(user.getUserId());
 		commerceDiscountAccountRel.setUserName(user.getFullName());
+
 		commerceDiscountAccountRel.setCommerceAccountId(commerceAccountId);
 		commerceDiscountAccountRel.setCommerceDiscountId(commerceDiscountId);
 

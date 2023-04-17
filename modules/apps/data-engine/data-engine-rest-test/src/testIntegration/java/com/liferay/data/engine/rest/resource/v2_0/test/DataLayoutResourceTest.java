@@ -42,7 +42,9 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.hamcrest.CoreMatchers;
 
@@ -224,6 +226,8 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 						dataDefinitionFields = new DataDefinitionField[] {
 							new DataDefinitionField() {
 								{
+									customProperties = Collections.singletonMap(
+										"fieldReference", "fieldReference1");
 									fieldType = "text";
 									label = HashMapBuilder.<String, Object>put(
 										"en_US", RandomTestUtil.randomString()
@@ -235,6 +239,8 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 							},
 							new DataDefinitionField() {
 								{
+									customProperties = Collections.singletonMap(
+										"fieldReference", "fieldReference2");
 									fieldType = "text";
 									label = HashMapBuilder.<String, Object>put(
 										"en_US", RandomTestUtil.randomString()
@@ -307,7 +313,7 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertNull(problem.getDetail());
+			Assert.assertEquals("text1", problem.getDetail());
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustNotDuplicateFieldName", problem.getType());
 		}
@@ -430,6 +436,15 @@ public class DataLayoutResourceTest extends BaseDataLayoutResourceTestCase {
 		throws Exception {
 
 		return _dataDefinition.getId();
+	}
+
+	@Override
+	protected Map<String, Map<String, String>>
+			testGetDataDefinitionDataLayoutsPage_getExpectedActions(
+				Long dataDefinitionId)
+		throws Exception {
+
+		return Collections.emptyMap();
 	}
 
 	@Override

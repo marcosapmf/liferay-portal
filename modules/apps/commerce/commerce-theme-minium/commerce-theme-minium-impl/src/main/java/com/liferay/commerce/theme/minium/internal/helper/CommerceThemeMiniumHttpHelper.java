@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
 
@@ -114,8 +113,15 @@ public class CommerceThemeMiniumHttpHelper {
 		if (!Validator.isBlank(portletURL) &&
 			portletURL.contains(StringPool.QUESTION)) {
 
-			return portletURL.substring(
+			portletURL = portletURL.substring(
 				0, portletURL.lastIndexOf(StringPool.QUESTION));
+		}
+
+		if (!Validator.isBlank(portletURL) &&
+			Validator.isNotNull(themeDisplay.getDoAsUserId())) {
+
+			portletURL = _portal.addPreservedParameters(
+				themeDisplay, portletURL, false, true);
 		}
 
 		return portletURL;
@@ -128,34 +134,31 @@ public class CommerceThemeMiniumHttpHelper {
 
 		List<Layout> layouts = themeDisplay.getLayouts();
 
-		if (ListUtil.isNotEmpty(layouts)) {
-			Stream<Layout> layoutsStream = layouts.stream();
+		if (ListUtil.isEmpty(layouts)) {
+			return StringPool.BLANK;
+		}
 
-			Layout friendlyURLLayout = layoutsStream.filter(
-				layout -> Objects.equals(layout.getFriendlyURL(), friendlyURL)
-			).findFirst(
-			).orElse(
-				null
-			);
-
-			if (friendlyURLLayout != null) {
-				return _portal.getLayoutURL(friendlyURLLayout, themeDisplay);
-			}
-
-			long plid = _portal.getPlidFromPortletId(
-				themeDisplay.getScopeGroupId(), portletId);
-
-			if (plid != 0) {
-				PortletURL portletURL = PortletProviderUtil.getPortletURL(
-					httpServletRequest, portletId, PortletProvider.Action.VIEW);
-
-				if (portletURL != null) {
-					return String.valueOf(portletURL);
-				}
+		for (Layout layout : layouts) {
+			if (Objects.equals(friendlyURL, layout.getFriendlyURL())) {
+				return _portal.getLayoutURL(layout, themeDisplay);
 			}
 		}
 
-		return StringPool.BLANK;
+		long plid = _portal.getPlidFromPortletId(
+			themeDisplay.getScopeGroupId(), portletId);
+
+		if (plid == 0) {
+			return StringPool.BLANK;
+		}
+
+		PortletURL portletURL = PortletProviderUtil.getPortletURL(
+			httpServletRequest, portletId, PortletProvider.Action.VIEW);
+
+		if (portletURL == null) {
+			return StringPool.BLANK;
+		}
+
+		return String.valueOf(portletURL);
 	}
 
 	@Reference

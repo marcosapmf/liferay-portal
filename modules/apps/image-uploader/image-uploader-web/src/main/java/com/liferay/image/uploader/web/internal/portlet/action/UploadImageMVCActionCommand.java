@@ -46,7 +46,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
-import com.liferay.portal.kernel.upload.UploadServletRequestConfigurationHelper;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProvider;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -75,7 +75,6 @@ import javax.portlet.PortletRequest;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
@@ -88,7 +87,6 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.document.library.configuration.DLConfiguration",
 		"com.liferay.users.admin.configuration.UserFileUploadsConfiguration"
 	},
-	configurationPolicy = ConfigurationPolicy.OPTIONAL,
 	property = {
 		"javax.portlet.name=" + ImageUploaderPortletKeys.IMAGE_UPLOADER,
 		"mvc.command.name=/image_uploader/upload_image"
@@ -269,7 +267,7 @@ public class UploadImageMVCActionCommand extends BaseMVCActionCommand {
 				else if (exception instanceof FileSizeException) {
 					if (maxFileSize == 0) {
 						maxFileSize =
-							_uploadServletRequestConfigurationHelper.
+							_uploadServletRequestConfigurationProvider.
 								getMaxSize();
 					}
 
@@ -299,7 +297,7 @@ public class UploadImageMVCActionCommand extends BaseMVCActionCommand {
 					errorMessage = themeDisplay.translate(
 						"request-is-larger-than-x-and-could-not-be-processed",
 						_language.formatStorageSize(
-							_uploadServletRequestConfigurationHelper.
+							_uploadServletRequestConfigurationProvider.
 								getMaxSize(),
 							themeDisplay.getLocale()));
 				}
@@ -423,8 +421,8 @@ public class UploadImageMVCActionCommand extends BaseMVCActionCommand {
 	private Portal _portal;
 
 	@Reference
-	private UploadServletRequestConfigurationHelper
-		_uploadServletRequestConfigurationHelper;
+	private UploadServletRequestConfigurationProvider
+		_uploadServletRequestConfigurationProvider;
 
 	private volatile UserFileUploadsConfiguration _userFileUploadsConfiguration;
 

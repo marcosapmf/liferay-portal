@@ -47,8 +47,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -76,7 +74,9 @@ public class FieldResourceImpl extends BaseFieldResourceImpl {
 			FieldAccountConstants.FIELD_ACCOUNT_EXAMPLES,
 			FieldAccountConstants.FIELD_ACCOUNT_NAMES,
 			FieldAccountConstants.FIELD_ACCOUNT_REQUIRED_NAMES, "account",
-			analyticsConfiguration.syncedAccountFieldNames(),
+			_getOrDefault(
+				FieldAccountConstants.FIELD_ACCOUNT_DEFAULTS,
+				analyticsConfiguration.syncedAccountFieldNames()),
 			FieldAccountConstants.FIELD_ACCOUNT_TYPES);
 
 		fields.addAll(
@@ -321,17 +321,13 @@ public class FieldResourceImpl extends BaseFieldResourceImpl {
 			return fields;
 		}
 
-		Stream<Field> stream = fields.stream();
-
-		return stream.filter(
+		return ListUtil.filter(
+			fields,
 			field -> {
 				String name = field.getName();
 
 				return name.matches("(?i).*" + keywords + ".*");
-			}
-		).collect(
-			Collectors.toList()
-		);
+			});
 	}
 
 	private String _getDataType(int type) {
@@ -436,6 +432,16 @@ public class FieldResourceImpl extends BaseFieldResourceImpl {
 		}
 
 		return fields;
+	}
+
+	private String[] _getOrDefault(
+		String[] defaultFieldNames, String[] fieldNames) {
+
+		if ((fieldNames != null) && (fieldNames.length > 0)) {
+			return fieldNames;
+		}
+
+		return defaultFieldNames;
 	}
 
 	private List<Field> _sort(List<Field> fields, Sort[] sorts) {

@@ -14,11 +14,12 @@
 
 package com.liferay.wiki.internal.upgrade.registry;
 
-import com.liferay.comment.upgrade.UpgradeDiscussionSubscriptionClassName;
+import com.liferay.comment.upgrade.DiscussionSubscriptionClassNameUpgradeProcess;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
@@ -63,10 +64,11 @@ public class WikiServiceUpgradeStepRegistrator
 
 		registry.register(
 			"1.1.0", "1.1.1",
-			new UpgradeDiscussionSubscriptionClassName(
+			new DiscussionSubscriptionClassNameUpgradeProcess(
 				_classNameLocalService, _subscriptionLocalService,
 				WikiPage.class.getName(),
-				UpgradeDiscussionSubscriptionClassName.DeletionMode.ADD_NEW));
+				DiscussionSubscriptionClassNameUpgradeProcess.DeletionMode.
+					ADD_NEW));
 
 		registry.register(
 			"1.1.1", "2.0.0",
@@ -102,6 +104,11 @@ public class WikiServiceUpgradeStepRegistrator
 				}
 
 			});
+
+		registry.register(
+			"2.3.0", "2.4.0",
+			new CTModelUpgradeProcess(
+				"WikiNode", "WikiPage", "WikiPageResource"));
 	}
 
 	@Reference

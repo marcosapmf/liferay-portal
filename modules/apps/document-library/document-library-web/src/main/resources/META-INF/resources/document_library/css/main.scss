@@ -3,6 +3,8 @@
 
 @import 'image_editor_modal';
 
+@import 'data_engine_info_panel';
+
 @mixin file-icon($colorIndex, $color) {
 	[data-file-icon-color='#{$colorIndex}'] .lexicon-icon {
 		color: $color;
@@ -775,11 +777,6 @@ $productMenuWidth: 320px;
 				.card-type-directory .card {
 					box-shadow: 0 0 0 2px $primary-l2;
 				}
-			}
-
-			.taglib-empty-result-message {
-				background-color: $primary-l3;
-				border-color: transparent;
 			}
 		}
 	}

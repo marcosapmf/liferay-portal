@@ -1,0 +1,632 @@
+@component-name = "portal-solutions"
+definition {
+
+	property custom.properties = "feature.flag.LPS-163118=true";
+	property osgi.modules.includes = "site-initializer-testray";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "Site Initializer Testray";
+
+	var buildName = "Build 1";
+	var caseName = "Case 1";
+	var caseType = "Case Type 1";
+	var componentName = "Component 1";
+	var environmentFactorsName = "Environment Factors 1";
+	var productVersion = "1.2";
+	var projectName = "Project 1";
+	var routineName = "Routine 1";
+	var suiteName = "Suite 1";
+	var teamName = "Team 1";
+	var runName = "Option 1";
+	var taskName = "Task_1";
+	var caseResultName = "case result 1";
+	var testSiteName = "Testray 2";
+
+	setUp {
+		task ("Login and create a Testray Site") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+
+			Testray.addTR2Site(siteName = ${testSiteName});
+
+			JSONUser.addUser(
+				userEmailAddress = "user@liferay.com",
+				userFirstName = "userfn",
+				userLastName = "userln",
+				userScreenName = "usersn");
+		}
+
+		task ("Setup for SubtaskAPI") {
+			JSONTestray.addProject(
+				projectDescription = "Project Description 1",
+				projectName = ${projectName});
+
+			JSONTestray.addTeam(
+				projectName = ${projectName},
+				teamName = ${teamName});
+
+			JSONTestray.addComponent(
+				componentName = ${componentName},
+				projectName = ${projectName},
+				teamName = ${teamName});
+
+			JSONTestray.addRoutine(
+				projectName = ${projectName},
+				routineName = ${routineName});
+
+			JSONTestray.addCaseType(caseType = ${caseType});
+
+			JSONTestray.addCases(
+				caseName = ${caseName},
+				caseType = ${caseType},
+				componentName = ${componentName},
+				projectName = ${projectName});
+
+			JSONTestray.addEnvironmentFactors(environmentFactorsName = ${environmentFactorsName});
+
+			JSONTestray.addProductVersion(
+				productVersion = ${productVersion},
+				projectName = ${projectName});
+
+			JSONTestray.addBuild(
+				buildName = ${buildName},
+				productVersion = ${productVersion},
+				projectName = ${projectName},
+				routineName = ${routineName});
+
+			JSONTestray.addRun(
+				buildName = ${buildName},
+				runName = ${runName});
+
+			JSONTestray.addCaseResult(
+				buildName = ${buildName},
+				caseName = ${caseName},
+				caseResultName = ${caseResultName},
+				componentName = ${componentName},
+				runName = ${runName});
+
+			JSONTestray.addTask(
+				buildName = ${buildName},
+				key = "INANALYSIS",
+				statusTask = "In Analysis",
+				taskName = ${taskName});
+
+			JSONTestray.addSubtask(
+				key = "OPEN",
+				score = 3,
+				statusSubtask = "Open",
+				subtaskName = "Subtask_1",
+				subtaskNumber = 1,
+				taskName = ${taskName});
+
+			JSONTestray.addSubtask(
+				key = "OPEN",
+				score = 3,
+				statusSubtask = "Open",
+				subtaskName = "Subtask_2",
+				subtaskNumber = 2,
+				taskName = ${taskName});
+		}
+
+		task ("Go to Testray Site") {
+			ApplicationsMenu.gotoSite(site = ${testSiteName});
+		}
+
+		task ("Go to Task") {
+			TestrayTestflow.goToTestflow();
+
+			TestrayTestflow.goToTask(taskName = "Task_1");
+
+			Refresh();
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "subtasks",
+			objectName = "Subtask_1");
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "subtasks",
+			objectName = "Subtask_2");
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "tasks",
+			objectName = ${taskName});
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "routines",
+			objectName = ${routineName});
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "teams",
+			objectName = ${teamName});
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "casetypes",
+			objectName = ${caseType});
+
+		JSONTestrayAPI.deleteObjectViaAPI(
+			object = "factorcategories",
+			objectName = "Category 1");
+
+		JSONTestrayAPI.deleteProject(projectName = ${projectName});
+
+		Testray.testrayApisTearDown();
+
+		if (${testPortalInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify that, as the Administrator, should be able to assign me a subtask that has been assigned to an offline user from the context menu"
+	@priority = 5
+	test AdminCanAssignToMeSubtaskAssignedToTheOfflineUser {
+		task ("Given that the user different assign a subtask") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			Button.click(button = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "userfn userln");
+
+			TestrayTestflow.userAvatarPresent(
+				label = "Subtask Details",
+				status = "userfn userln");
+		}
+
+		task ("When the user logged in assign the subtask") {
+			Button.click(button = "Assign");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+		}
+
+		task ("Then the user logged in should appear on the list") {
+			TestrayTestflow.userAvatarPresent(
+				label = "Subtask Details",
+				status = "Test Test");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify if, as an Administrator, can cancel merge subtasks"
+	@priority = 3
+	test AdminCanCancelMergeSubtask {
+		task ("Given that the user trying merge subtasks") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			Testray.selectUsers(listUserName = "Test Test");
+		}
+
+		task ("When can clear the merge") {
+			TestraySubtask.mergeSubtasks(
+				buttonClear = "true",
+				wcsubtaskName = "Subtask_1,Subtask_2");
+
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+		}
+
+		task ("Then can not see the merged subtask") {
+			TestraySubtask.assertNotMergedSubtasks(subtask = "Subtask_2");
+		}
+	}
+
+	@description = "Story ID: LPS-164984 | Test Summary: Verify if as an Administrator I should be able to complete a subtask as Blocked"
+	@priority = 5
+	test AdminCanCompleteSubtaskAsBlocked {
+		task ("Given the user edit a Subtask as Blocked") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Complete");
+
+			TestrayTestflow.editStatus(
+				comment = "button does not work",
+				issues = "LPS-166191",
+				selectStatus = "Blocked");
+
+			WaitForPageLoad();
+		}
+
+		task ("Then the complete status appears of the subtask with details") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			TestraySubtask.verifySubtaskDetails(
+				comment = "button does not work",
+				issues = "LPS-166191",
+				score = 3,
+				status = "Complete",
+				updated = "a few seconds ago",
+				userName = "Test Test");
+		}
+	}
+
+	@description = "Story ID: LPS-164984 | Test Summary: Verify if as an Administrator I should be able to complete a subtask as failing"
+	@priority = 5
+	test AdminCanCompleteSubtaskAsFailing {
+		task ("Given the user edit a Subtask as Failed") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Complete");
+
+			TestrayTestflow.editStatus(
+				comment = "button does not work",
+				issues = "LPS-166191",
+				selectStatus = "Failed");
+
+			WaitForPageLoad();
+		}
+
+		task ("Then the complete status appears of the subtask with details") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			TestraySubtask.verifySubtaskDetails(
+				comment = "button does not work",
+				issues = "LPS-166191",
+				score = 3,
+				status = "Complete",
+				updated = "a few seconds ago",
+				userName = "Test Test");
+		}
+	}
+
+	@description = "Story ID: LPS-164984 | Test Summary: Verify if as an Administrator I should be able to complete a subtask as passing"
+	@priority = 5
+	test AdminCanCompleteSubtaskAsPassing {
+		task ("Given the user edit a Subtask as passed") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign to Me and Begin Analysis");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Complete");
+
+			TestrayTestflow.editStatus(selectStatus = "Passed");
+
+			WaitForPageLoad();
+		}
+
+		task ("Then the complete status appears of the subtask") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Complete");
+		}
+	}
+
+	@description = "Story ID: LPS-164984 | Test Summary: Verify if as an Administrator I should be able to complete a subtask as Test Fix"
+	@priority = 5
+	test AdminCanCompleteSubtaskAsTestFix {
+		task ("Given the user edit a Subtask as Test Fix") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			Button.click(button = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			Button.click(button = "Complete");
+
+			TestrayTestflow.editStatus(
+				comment = "button does not work",
+				issues = "LPS-166191",
+				selectStatus = "Test Fix");
+
+			WaitForPageLoad();
+		}
+
+		task ("Then the complete status appears of the subtask with details") {
+			TestraySubtask.verifySubtaskDetails(
+				comment = "button does not work",
+				issues = "LPS-166191",
+				score = 3,
+				status = "Complete",
+				updated = "a few seconds ago",
+				userName = "Test Test");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify that can complete a subtask after have merged it"
+	@priority = 5
+	test AdminCanCompleteSubtaskThatBeenMerged {
+		task ("Given that the user logged in assign a subtask") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+		}
+
+		task ("When the user merging the subtask") {
+			TestraySubtask.mergeSubtasks(wcsubtaskName = "Subtask_1,Subtask_2");
+		}
+
+		task ("Then the alert message is displayed") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			Button.click(button = "Complete");
+
+			TestrayTestflow.editStatus(selectStatus = "Passed");
+		}
+
+		task ("Then the alert message is displayed") {
+			TestrayTestflow.assertStatus(
+				label = "Subtask Details",
+				status = "Complete");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify if as  an Administrator I should be able to merge an Complete subtask with a Open subtask"
+	@priority = 5
+	test AdminCanMergeCompleteSubtaskWithOpenSubtask {
+		task ("Given that the user complete a Subtask") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Complete");
+
+			TestrayTestflow.editStatus(selectStatus = "Passed");
+
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Complete");
+		}
+
+		task ("When the user merged a subtask with status complete with other open Subtask") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestraySubtask.mergeSubtasks(wcsubtaskName = "Subtask_1,Subtask_2");
+		}
+
+		task ("Then the user can see a merged subtask in subtask details") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			TestraySubtask.assertMergedSubtasks(listSubtaskMerged = "Subtask_2");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify if as  an Administrator I should be able to merge an in analysis subtask with a completed subtask"
+	@priority = 5
+	test AdminCanMergeInAnalysisSubtaskWithCompletedSubtask {
+		task ("Given that the user complete a Subtask") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Complete");
+
+			TestrayTestflow.editStatus(
+				comment = "button does not work",
+				issues = "LPS-166193",
+				selectStatus = "Blocked");
+
+			WaitForPageLoad();
+
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Complete");
+		}
+
+		task ("When that the user leave in analysis the other Subtask") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_2");
+
+			Button.click(button = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			TestrayTestflow.assertStatus(
+				label = "Subtask Details",
+				status = "In Analysis");
+		}
+
+		task ("Then the user merged subtask with status complete") {
+			TestrayTestflow.goToTestflow();
+
+			TestrayTestflow.goToTask(taskName = "Task_1");
+
+			TestraySubtask.mergeSubtasks(wcsubtaskName = "Subtask_1,Subtask_2");
+		}
+
+		TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+		TestraySubtask.assertMergedSubtasks(listSubtaskMerged = "Subtask_2");
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify that, as Administrator, should not be able to edit subtask with user logged off"
+	@priority = 5
+	test AdminCanNotEditSubtaskWithUserOffline {
+		task ("Given that the user different assign a subtask") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			Button.click(button = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "userfn userln");
+		}
+
+		task ("When the user different trying complete a subtask") {
+			Button.click(button = "Complete");
+		}
+
+		task ("Then the alert message is displayed") {
+			Testray.viewAlert(alertText = "You are not the assigned user.");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify that, as an Administrator, should not be able to merge only one subtask"
+	@priority = 5
+	test AdminCanNotMergeOnlyOneSubtask {
+		task ("When the user trying merging a single subtask") {
+			TestraySubtask.mergeSubtasks(wcsubtaskName = "Subtask_1");
+		}
+
+		task ("Then the alert message is displayed") {
+			AssertElementPresent(
+				key_alertMessage = "Please select at least two subtasks to merge.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify that, as an Administrator, should not be able to merge subtasks with different users"
+	@priority = 5
+	test AdminCanNotMergeSubtasksWithDifferentUsers {
+		task ("Given that the user different assign a subtask") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_1");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "userfn userln");
+		}
+
+		task ("And the user logged in assign a subtask") {
+			TestrayContextMenu.clickContextMenuProjects(name = "Subtask_2");
+
+			TestrayContextMenu.selectItemFromProjectsContextMenu(item = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+		}
+
+		task ("When the user trying merging the subtask assigned to different users") {
+			TestraySubtask.mergeSubtasks(wcsubtaskName = "Subtask_1,Subtask_2");
+		}
+
+		task ("Then the alert message is displayed") {
+			AssertElementPresent(
+				key_alertMessage = "Subtask Subtask_1 must be assigned to you to be used in a merge.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify that can reanalyze a subtask"
+	@priority = 5
+	test AdminCanReanalyzeSubtask {
+		task ("Given that the user assign a subtask") {
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			Button.click(button = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+		}
+
+		task ("And the user complete the subtask") {
+			Button.click(button = "Complete");
+
+			TestrayTestflow.editStatus(selectStatus = "Passed");
+
+			TestrayTestflow.assertStatus(
+				label = "Subtask Details",
+				status = "Complete");
+		}
+
+		task ("When the user reanalyze the subtask") {
+			Button.click(button = "Assign and Reanalyze");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+		}
+
+		task ("Then the status in analysis should appear on the list") {
+			TestrayTestflow.assertStatus(
+				label = "Subtask Details",
+				status = "In Analysis");
+		}
+	}
+
+	@description = "Story ID: LPS-164984 | Test Summary: Verify if as an Administrator I should be able a subtask return to open"
+	@priority = 5
+	test AdminCanReturnToOpenSubtask {
+		task ("When that the user Assign and Begin Analysis of the subtask") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+
+			Button.click(button = "Assign and Begin Analysis");
+
+			TestrayTestflow.assignUsers(userName = "Test Test");
+
+			TestrayTestflow.assertStatus(
+				label = "Subtask Details",
+				status = "In Analysis");
+		}
+
+		task ("Then can return to open the subtask") {
+			Button.click(button = "Return to open");
+
+			TestrayTestflow.assertStatus(
+				label = "Subtask Details",
+				status = "Open");
+		}
+	}
+
+	@description = "Story ID: LPS-166230 | Test Summary: Verify if as an Administrator I should be able to merge multiple unassigned subtasks"
+	@priority = 5
+	test AdminShouldBeAbleToMergeMultipleUnassignedSubtasks {
+		task ("When the user merged a subtask with status open") {
+			TestrayTestflow.assertStatus(
+				label = "Subtasks",
+				status = "Open");
+
+			TestraySubtask.mergeSubtasks(wcsubtaskName = "Subtask_1,Subtask_2");
+
+			TestraySubtask.goToSubtask(subtaskName = "Subtask_1");
+		}
+
+		task ("Then can see the merged subtask") {
+			TestraySubtask.assertMergedSubtasks(listSubtaskMerged = "Subtask_2");
+		}
+	}
+
+}

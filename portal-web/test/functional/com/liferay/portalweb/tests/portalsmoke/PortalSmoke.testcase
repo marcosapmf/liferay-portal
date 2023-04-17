@@ -15,7 +15,7 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
-		if ("${testPortalInstance}" == "true") {
+		if (${testPortalInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
@@ -28,13 +28,13 @@ definition {
 	}
 
 	@description = "Ensure that the super admin can add pages, add portlets, navigate to the product menu, use the WYSIWYG editor, and view alert messages."
-	@priority = "5"
+	@priority = 5
 	test Smoke {
 		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
 		property database.bare.enabled = "true";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
 		property environment.acceptance = "true";
-		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,solaris,suse,ubuntu,windows";
+		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "false";
 		property testray.component.names = "Training";
 
@@ -57,7 +57,7 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "log4j:ERROR");
 	}
 
-	@priority = "5"
+	@priority = 5
 	test SmokeWithDeveloperProperties {
 		property custom.properties = "include-and-override=portal-developer.properties";
 		property osgi.module.configuration.file.names = "com.liferay.document.library.document.conversion.configuration.OpenOfficeConfiguration";
@@ -71,9 +71,10 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SmokeWithEmbeddedHypersonic {
 		property app.server.types = "jboss,tomcat,weblogic,websphere,wildfly";
+		property ci.retries.disabled = "true";
 		property custom.properties = "passwords.default.policy.change.required=true";
 		property database.hypersonic.embedded = "true";
 		property database.types = "hypersonic";
@@ -91,9 +92,10 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "4"
+	@priority = 4
 	test SmokeWithJNDI {
 		property app.server.types = "tomcat,wildfly,weblogic,websphere";
+		property ci.retries.disabled = "true";
 		property database.jndi.enabled = "true";
 		property database.types = "mariadb,mysql";
 		property portal.smoke = "false";
@@ -111,58 +113,23 @@ definition {
 			value1 = "wait-for-server-shutdown -Dapp.server.port.number=8080");
 	}
 
-	@priority = "3"
-	test SmokeWithReadWriteDatabaseConfigurationJDBC {
-		property app.server.types = "tomcat";
-		property configure.read.write.database = "jdbc";
-		property database.types = "mysql";
+	@priority = 5
+	test SmokeWithRewriteBatchedStatements {
+		property ci.retries.disabled = "true";
+		property database.types = "mariadb,mysql,postgresql,sqlserver";
 		property portal.smoke = "false";
-		property test.assert.warning.exceptions = "true";
+		property rewrite.batch.statements = "true";
 
 		SignIn.signInTestSetup();
 
 		Smoke.viewWelcomeContentPage();
 
-		ServerAdministration.openServerAdmin();
-
-		ServerAdministration.addCategoryLogLevels(
-			categoryLevel = "ALL",
-			categoryName = "com.liferay.portal.dao.jdbc.aop.DefaultDynamicDataSourceTargetSource");
-
 		Smoke.runSmoke();
-
-		AssertConsoleTextPresent(value1 = "Returning write data source");
-
-		AssertConsoleTextPresent(value1 = "Returning read data source");
 	}
 
-	@priority = "3"
-	test SmokeWithReadWriteDatabaseConfigurationJNDI {
-		property app.server.types = "tomcat";
-		property configure.read.write.database = "jndi";
-		property database.types = "mysql";
-		property portal.smoke = "false";
-		property test.assert.warning.exceptions = "true";
-
-		SignIn.signInTestSetup();
-
-		Smoke.viewWelcomeContentPage();
-
-		ServerAdministration.openServerAdmin();
-
-		ServerAdministration.addCategoryLogLevels(
-			categoryLevel = "ALL",
-			categoryName = "com.liferay.portal.dao.jdbc.aop.DefaultDynamicDataSourceTargetSource");
-
-		Smoke.runSmoke();
-
-		AssertConsoleTextPresent(value1 = "Returning write data source");
-
-		AssertConsoleTextPresent(value1 = "Returning read data source");
-	}
-
-	@priority = "5"
+	@priority = 5
 	test SmokeWithRuntimeJSPCompile {
+		property ci.retries.disabled = "true";
 		property delete.precompiled.jsps = "true";
 		property portal.smoke = "false";
 
@@ -173,8 +140,9 @@ definition {
 		Smoke.runSmoke();
 	}
 
-	@priority = "5"
+	@priority = 5
 	test SmokeWithSPADisabled {
+		property ci.retries.disabled = "true";
 		property custom.properties = "javascript.single.page.application.enabled=false";
 		property portal.smoke = "false";
 

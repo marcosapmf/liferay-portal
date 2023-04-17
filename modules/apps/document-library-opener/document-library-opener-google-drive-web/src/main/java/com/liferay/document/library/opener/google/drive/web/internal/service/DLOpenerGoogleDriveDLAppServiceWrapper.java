@@ -153,10 +153,14 @@ public class DLOpenerGoogleDriveDLAppServiceWrapper
 		throws PortalException {
 
 		DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference =
-			_dlOpenerGoogleDriveManager.requestEditAccess(
+			_dlOpenerGoogleDriveManager.getDLOpenerGoogleDriveFileReference(
 				serviceContext.getUserId(), fileEntry);
 
 		File file = dlOpenerGoogleDriveFileReference.getContentFile();
+
+		if (file == null) {
+			return;
+		}
 
 		String title = fileEntry.getTitle();
 

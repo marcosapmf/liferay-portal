@@ -23,8 +23,8 @@ import React, {useCallback} from 'react';
 import {config} from '../../app/config/index';
 import {useSelectorCallback} from '../../app/contexts/StoreContext';
 import {selectPageContentDropdownItems} from '../../app/selectors/selectPageContentDropdownItems';
-import {useId} from '../../core/hooks/useId';
-import {openItemSelector} from '../../core/openItemSelector';
+import {useId} from '../hooks/useId';
+import {openItemSelector} from '../openItemSelector';
 
 const DEFAULT_BEFORE_ITEM_SELECT = () => {};
 
@@ -309,8 +309,9 @@ ItemSelector.propTypes = {
 	onItemSelect: PropTypes.func.isRequired,
 	optionsMenuItems: PropTypes.arrayOf(
 		PropTypes.shape({
+			href: PropTypes.string,
 			label: PropTypes.string.isRequired,
-			onClick: PropTypes.func.isRequired,
+			onClick: PropTypes.func,
 		})
 	),
 	quickMappedInfoItems: PropTypes.arrayOf(

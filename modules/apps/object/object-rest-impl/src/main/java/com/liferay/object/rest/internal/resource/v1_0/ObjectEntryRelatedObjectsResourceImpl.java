@@ -25,8 +25,6 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectRelationshipService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -34,7 +32,6 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Map;
 
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Context;
 
 /**
@@ -81,12 +78,6 @@ public class ObjectEntryRelatedObjectsResourceImpl
 				objectRelationship.getObjectDefinitionId2());
 
 		if (relatedObjectDefinition.isSystem()) {
-			if (!GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-162966"))) {
-
-				throw new NotFoundException();
-			}
-
 			_checkSystemObjectEntry(
 				relatedObjectEntryId, relatedObjectDefinition);
 		}
@@ -99,6 +90,7 @@ public class ObjectEntryRelatedObjectsResourceImpl
 		ObjectRelatedModelsProvider objectRelatedModelsProvider =
 			_objectRelatedModelsProviderRegistry.getObjectRelatedModelsProvider(
 				relatedObjectDefinition.getClassName(),
+				relatedObjectDefinition.getCompanyId(),
 				objectRelationship.getType());
 
 		objectRelatedModelsProvider.disassociateRelatedModels(
@@ -127,12 +119,6 @@ public class ObjectEntryRelatedObjectsResourceImpl
 				objectRelationship.getObjectDefinitionId2());
 
 		if (relatedObjectDefinition.isSystem()) {
-			if (!GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-162966"))) {
-
-				throw new NotFoundException();
-			}
-
 			return objectEntryManager.getRelatedSystemObjectEntries(
 				_objectDefinition, currentObjectEntryId, objectRelationshipName,
 				pagination);
@@ -172,12 +158,6 @@ public class ObjectEntryRelatedObjectsResourceImpl
 				objectRelationship.getObjectDefinitionId2());
 
 		if (relatedObjectDefinition.isSystem()) {
-			if (!GetterUtil.getBoolean(
-					PropsUtil.get("feature.flag.LPS-162966"))) {
-
-				throw new NotFoundException();
-			}
-
 			return objectEntryManager.
 				addSystemObjectRelationshipMappingTableValues(
 					relatedObjectDefinition, objectRelationship,

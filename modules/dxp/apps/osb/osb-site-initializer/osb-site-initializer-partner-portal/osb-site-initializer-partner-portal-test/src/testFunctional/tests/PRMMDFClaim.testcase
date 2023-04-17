@@ -1,0 +1,461 @@
+@component-name = "OSB Site Initializer Partner Portal"
+definition {
+
+	property custom.properties = "feature.flag.LPS-135430=true";
+	property osgi.modules.includes = "osb-site-initializer-partner-portal";
+	property portal.release = "false";
+	property portal.upstream = "true";
+	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+	property testray.main.component.name = "OSB Site Initializer Partner Portal";
+
+	setUp {
+		task ("Set up instance and sign in") {
+			TestCase.setUpPortalInstance();
+
+			User.firstLoginPG();
+		}
+
+		task ("Create a new Partner Portal Site") {
+			PRMUtils.addPRMSite();
+		}
+
+		task ("Add a Partner user") {
+			JSONUser.addUser(
+				userEmailAddress = "partner@liferay.com",
+				userFirstName = "partner",
+				userLastName = "partner",
+				userScreenName = "partner");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "partner@liferay.com");
+		}
+
+		task ("Add a Manager user") {
+			JSONUser.addUserWithRole(
+				roleTitle = "Channel General Manager",
+				userEmailAddress = "manager@liferay.com",
+				userFirstName = "manager",
+				userLastName = "manager",
+				userScreenName = "manager");
+
+			JSONUser.setFirstPassword(
+				agreeToTermsAndAnswerReminderQuery = "true",
+				requireReset = "false",
+				userEmailAddress = "manager@liferay.com");
+		}
+
+		task ("Add a new account and assign the created users to the account") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Company Name 1",
+				accountEntryType = "Business");
+
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Company Name 1",
+				userEmailAddress = "partner@liferay.com");
+
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Company Name 1",
+				userEmailAddress = "manager@liferay.com");
+		}
+
+		task ("Add a currency to the created account") {
+			JSONPRM.addCurrency();
+		}
+
+		task ("Login with the Partner user and go to Partner Portal") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "partner@liferay.com",
+				userLoginFullName = "partner");
+
+			PRMUtils.gotoPRM();
+		}
+
+		task ("Add a new MDF Request") {
+			JSONPRM.createMDFRequest(
+				accountEntryName = "Company Name 1",
+				secondActivityName = "Activity Name 2",
+				secondBudgetValueList = 1000,
+				userEmailAddress = "partner@liferay.com");
+		}
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if (${testPortalInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+		else {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+
+			JSONGroup.deleteGroupByName(groupName = "Partner Portal");
+
+			Account.tearDownCP();
+		}
+	}
+
+	@description = "This is a test for LPS-175292. Verify that is possible to export all visible Claims"
+	@priority = 4
+	test CanExportAllVisibleClaims {
+		task ("Given that the Manager user is logged in and goes to MDF listing page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the manager approves the MDF") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFRequest.changeMDFStatus(statusButton = "Approve");
+		}
+
+		task ("And the partner logs in and go to Partner Portal") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "partner@liferay.com",
+				userLoginFullName = "partner");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the partner user makes two claims") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFClaim.createNewClaim(
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+
+			PRMMDFClaim.createNewClaim(
+				activityIndex = 1,
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+		}
+
+		task ("When the manager logs in and go to Partner Portal") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Claim");
+		}
+
+		task ("And export all visible Claims") {
+			Button.click(button = "Export MDF Claim");
+		}
+
+		task ("Then the information about the visible MDF's will be inside the exported file") {
+			var firstID = PRMMDFClaim.getClaimID(claimIndex = 1);
+			var secondID = PRMMDFClaim.getClaimID(claimIndex = 2);
+
+			PRMMDFRequest.viewExportedMDF(
+				fileContentList = "${firstID},${secondID}",
+				fileName = "MDF Claim.csv");
+		}
+	}
+
+	@description = "This is a test for LPS-178119. Verify that is possible to export all visible Claims"
+	@priority = 4
+	test CanExportFilteredClaims {
+		task ("Given a new account is created") {
+			JSONAccountEntry.addAccountEntry(
+				accountEntryName = "Company Name 2",
+				accountEntryType = "Business");
+
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Company Name 2",
+				userEmailAddress = "partner@liferay.com");
+
+			JSONAccountEntryUser.addExistUsertoAccount(
+				accountEntryName = "Company Name 2",
+				userEmailAddress = "manager@liferay.com");
+		}
+
+		task ("And a new MDF is created with a different account") {
+			JSONPRM.createMDFRequest(
+				accountEntryName = "Company Name 2",
+				activityName = "Activity Name 3",
+				campaignName = "Campaign Name 1",
+				secondActivityName = "Activity Name 4",
+				secondBudgetValueList = 1000);
+		}
+
+		task ("And the Manager user is logged in and goes to MDF listing page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the manager approves the MDF's") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFRequest.changeMDFStatus(key_statusButton = "Approve");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name 1");
+
+			PRMMDFRequest.changeMDFStatus(key_statusButton = "Approve");
+		}
+
+		task ("And the partner logs in and go to Partner Portal") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "partner@liferay.com",
+				userLoginFullName = "partner");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the partner user makes two Claims for 'Campaign Name' MDF") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFClaim.createNewClaim(
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+
+			PRMMDFClaim.createNewClaim(
+				activityIndex = 1,
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+		}
+
+		task ("And the Partner goes to MDF listing page") {
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the partner user makes two Claims for 'Campaign Name 1' MDF") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name 1");
+
+			PRMMDFClaim.createNewClaim(
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+
+			PRMMDFClaim.createNewClaim(
+				activityIndex = 1,
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+		}
+
+		task ("And the Manager user is logged in and goes to Claim listing page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Claim");
+		}
+
+		task ("When the manager filters the Claims by account 'Company Name 1'") {
+			PRMMDFClaim.filterClaimID(
+				buttonOption = "Filter",
+				checkboxName = "Company Name 1",
+				optionDropdown = "Partner");
+		}
+
+		task ("And export the filter results") {
+			Button.click(button = "Export MDF Claim");
+		}
+
+		task ("Then the information about the filtered Claims will be inside the file") {
+			PRMMDFRequest.viewExportedMDF(
+				fileContentList = "Company Name 1",
+				fileName = "MDF Claim.csv");
+		}
+
+		task ("When the manager filters the Claims by account 'Company Name 2'") {
+			Refresh();
+
+			PRMMDFClaim.filterClaimID(
+				buttonOption = "Filter",
+				checkboxName = "Company Name 2",
+				optionDropdown = "Partner");
+		}
+
+		task ("And export the filter results") {
+			Button.click(button = "Export MDF Claim");
+		}
+
+		task ("Then the information about the filtered Claims will be inside the file") {
+			PRMMDFRequest.viewExportedMDF(
+				fileContentList = "Company Name 2",
+				fileName = "MDF Claim.csv");
+		}
+	}
+
+	@description = "This is a test for LPS-178117. Verify that is possible to export all Claims searched."
+	@priority = 4
+	test CanExportSearchedClaims {
+		task ("Given that the Manager user is logged in and goes to MDF listing page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the manager approves the MDF") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFRequest.changeMDFStatus(statusButton = "Approve");
+		}
+
+		task ("And the partner logs in and go to Partner Portal") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "partner@liferay.com",
+				userLoginFullName = "partner");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the partner user makes two claims") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFClaim.createNewClaim(
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+
+			PRMMDFClaim.createNewClaim(
+				activityIndex = 1,
+				listLeads = "Document_1.xlsx",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.png");
+		}
+
+		task ("When the manager logs in and go to Partner Portal") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Claim");
+		}
+
+		task ("And get the Claim IDs") {
+			var firstID = PRMMDFClaim.getClaimID(claimIndex = 1);
+			var secondID = PRMMDFClaim.getClaimID(claimIndex = 2);
+		}
+
+		task ("When the manager search for the first ID") {
+			PRMMDFClaim.searchClaim(claimID = ${firstID});
+		}
+
+		task ("And export the results") {
+			Button.click(button = "Export MDF Claim");
+		}
+
+		task ("Then the information about the searched Claim should be inside the downloaded file") {
+			PRMMDFRequest.viewExportedMDF(
+				fileContentList = ${firstID},
+				fileName = "MDF Claim.csv");
+		}
+
+		task ("When the manager search for the second ID") {
+			PRMMDFClaim.searchClaim(claimID = ${secondID});
+		}
+
+		task ("And export the results") {
+			Button.click(button = "Export MDF Claim");
+		}
+
+		task ("Then the information about the searched Claim should be inside the downloaded file") {
+			PRMMDFRequest.viewExportedMDF(
+				fileContentList = ${secondID},
+				fileName = "MDF Claim.csv");
+		}
+	}
+
+	@description = "This is a test for LPS-175611. Verify that is possible to submit a full claim"
+	@priority = 5
+	test CanSubmitFullClaim {
+		task ("Given that the manager user is logged in and goes to MDF listing page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the manager approves the MDF") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFRequest.changeMDFStatus(statusButton = "Approve");
+		}
+
+		task ("And the partner logs in") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+		}
+
+		task ("And go to the approved MDF") {
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+		}
+
+		task ("When the partner claim all MDF Activities") {
+			PRMMDFClaim.createNewClaim(
+				activityIndex = "0,1",
+				listLeads = "Document_1.xls",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.pdf");
+		}
+
+		task ("Then the Claim Type is Full") {
+			PRMMDFClaim.viewClaimType(claimType = "Full");
+		}
+	}
+
+	@description = "This is a test for LPS-173720. Verify that is possible to submit a partial claim"
+	@priority = 5
+	test CanSubmitPartialClaim {
+		task ("Given that the manager user is logged in and goes to MDF listing page") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "manager@liferay.com",
+				userLoginFullName = "manager");
+
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+		}
+
+		task ("And the manager approves the MDF") {
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+
+			PRMMDFRequest.changeMDFStatus(statusButton = "Approve");
+		}
+
+		task ("And the partner logs in") {
+			User.logoutAndLoginPG(
+				userLoginEmailAddress = "test@liferay.com",
+				userLoginFullName = "Test Test");
+		}
+
+		task ("And go to the approved MDF") {
+			PRMNavigator.openSitePage(pageName = "MDF Requests");
+
+			PRMMDFRequest.goToMDF(campaignName = "Campaign Name");
+		}
+
+		task ("When the partner claim just one MDF Activity") {
+			PRMMDFClaim.createNewClaim(
+				listLeads = "Document_1.xls",
+				reimbursementInvoice = "Document_1.png",
+				thirdInvoice = "Document_1.pdf");
+		}
+
+		task ("Then the Claim Type is Partial") {
+			PRMMDFClaim.viewClaimType(claimType = "Partial");
+		}
+	}
+
+}

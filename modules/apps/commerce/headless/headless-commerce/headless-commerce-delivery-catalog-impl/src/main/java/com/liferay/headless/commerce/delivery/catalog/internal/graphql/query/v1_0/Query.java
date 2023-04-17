@@ -17,6 +17,7 @@ package com.liferay.headless.commerce.delivery.catalog.internal.graphql.query.v1
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Category;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Channel;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.LinkedProduct;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Pin;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
@@ -29,6 +30,7 @@ import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.WishListItem;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.AttachmentResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.CategoryResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ChannelResource;
+import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.LinkedProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.MappedProductResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.PinResource;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductOptionResource;
@@ -92,6 +94,14 @@ public class Query {
 
 		_channelResourceComponentServiceObjects =
 			channelResourceComponentServiceObjects;
+	}
+
+	public static void setLinkedProductResourceComponentServiceObjects(
+		ComponentServiceObjects<LinkedProductResource>
+			linkedProductResourceComponentServiceObjects) {
+
+		_linkedProductResourceComponentServiceObjects =
+			linkedProductResourceComponentServiceObjects;
 	}
 
 	public static void setMappedProductResourceComponentServiceObjects(
@@ -261,6 +271,29 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProductLinkedProducts(accountId: ___, channelId: ___, page: ___, pageSize: ___, productId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public LinkedProductPage channelProductLinkedProducts(
+			@GraphQLName("channelId") Long channelId,
+			@GraphQLName("productId") Long productId,
+			@GraphQLName("accountId") Long accountId,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_linkedProductResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			linkedProductResource -> new LinkedProductPage(
+				linkedProductResource.getChannelProductLinkedProductsPage(
+					channelId, productId, accountId,
+					Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProductMappedProducts(accountId: ___, channelId: ___, page: ___, pageSize: ___, productId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
@@ -340,7 +373,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProduct(accountId: ___, channelId: ___, productId: ___){attachments, categories, createDate, description, expando, id, images, metaDescription, metaKeyword, metaTitle, modifiedDate, multipleOrderQuantity, name, productConfiguration, productId, productOptions, productSpecifications, productType, relatedProducts, shortDescription, skus, slug, tags, urlImage, urls}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {channelProduct(accountId: ___, channelId: ___, productId: ___){attachments, categories, createDate, description, expando, externalReferenceCode, id, images, linkedProducts, metaDescription, metaKeyword, metaTitle, modifiedDate, multipleOrderQuantity, name, productConfiguration, productId, productOptions, productSpecifications, productType, relatedProducts, shortDescription, skus, slug, tags, urlImage, urls}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves products from selected channel.")
 	public Product channelProduct(
@@ -566,7 +599,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Attachment> items;
@@ -599,7 +632,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Category> items;
@@ -632,10 +665,43 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Channel> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("LinkedProductPage")
+	public class LinkedProductPage {
+
+		public LinkedProductPage(Page linkedProductPage) {
+			actions = linkedProductPage.getActions();
+
+			items = linkedProductPage.getItems();
+			lastPage = linkedProductPage.getLastPage();
+			page = linkedProductPage.getPage();
+			pageSize = linkedProductPage.getPageSize();
+			totalCount = linkedProductPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map<String, String>> actions;
+
+		@GraphQLField
+		protected java.util.Collection<LinkedProduct> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -665,7 +731,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<MappedProduct> items;
@@ -698,7 +764,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Pin> items;
@@ -731,7 +797,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Product> items;
@@ -764,7 +830,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<ProductOption> items;
@@ -797,7 +863,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<ProductSpecification> items;
@@ -830,7 +896,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<RelatedProduct> items;
@@ -863,7 +929,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<Sku> items;
@@ -896,7 +962,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<WishList> items;
@@ -929,7 +995,7 @@ public class Query {
 		}
 
 		@GraphQLField
-		protected Map<String, Map> actions;
+		protected Map<String, Map<String, String>> actions;
 
 		@GraphQLField
 		protected java.util.Collection<WishListItem> items;
@@ -1004,6 +1070,21 @@ public class Query {
 		channelResource.setContextUser(_user);
 		channelResource.setGroupLocalService(_groupLocalService);
 		channelResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(
+			LinkedProductResource linkedProductResource)
+		throws Exception {
+
+		linkedProductResource.setContextAcceptLanguage(_acceptLanguage);
+		linkedProductResource.setContextCompany(_company);
+		linkedProductResource.setContextHttpServletRequest(_httpServletRequest);
+		linkedProductResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		linkedProductResource.setContextUriInfo(_uriInfo);
+		linkedProductResource.setContextUser(_user);
+		linkedProductResource.setGroupLocalService(_groupLocalService);
+		linkedProductResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -1141,6 +1222,8 @@ public class Query {
 		_categoryResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ChannelResource>
 		_channelResourceComponentServiceObjects;
+	private static ComponentServiceObjects<LinkedProductResource>
+		_linkedProductResourceComponentServiceObjects;
 	private static ComponentServiceObjects<MappedProductResource>
 		_mappedProductResourceComponentServiceObjects;
 	private static ComponentServiceObjects<PinResource>

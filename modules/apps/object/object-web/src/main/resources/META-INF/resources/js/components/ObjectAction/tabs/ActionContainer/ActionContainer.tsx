@@ -62,15 +62,18 @@ export function ActionContainer({
 	validateExpressionURL,
 	values,
 }: ActionContainerProps) {
-	const [relationships, setRelationships] = useState<
-		ObjectDefinitionsRelationship[]
+	const [addObjectEntryDefinitions, setAddObjectEntryDefinitions] = useState<
+		AddObjectEntryDefinitions[]
 	>([]);
 
-	const isValidField = ({
-		businessType,
-		objectFieldSettings,
-		system,
-	}: ObjectField) => {
+	const [creationLanguageId, setCreationLanguageId] = useState<
+		Liferay.Language.Locale
+	>();
+
+	const isValidField = (
+		{businessType, name, objectFieldSettings, system}: ObjectField,
+		isObjectActionSystem?: boolean
+	) => {
 		const userRelationship = !!objectFieldSettings?.find(
 			({name, value}) =>
 				name === 'objectDefinition1ShortName' && value === 'User'
@@ -80,29 +83,43 @@ export function ActionContainer({
 			return true;
 		}
 
-		return (
-			businessType !== 'Aggregation' &&
-			businessType !== 'Formula' &&
-			businessType !== 'Relationship' &&
-			!system
-		);
+		return Liferay.FeatureFlags['LPS-173537'] && isObjectActionSystem
+			? businessType !== 'Aggregation' &&
+					businessType !== 'Formula' &&
+					businessType !== 'Relationship' &&
+					name !== 'creator' &&
+					name !== 'createDate' &&
+					name !== 'id' &&
+					name !== 'modifiedDate' &&
+					name !== 'status'
+			: businessType !== 'Aggregation' &&
+					businessType !== 'Formula' &&
+					businessType !== 'Relationship' &&
+					!system;
 	};
 
 	const updateParameters = useCallback(
 		async (value: string) => {
-			const [externalReferenceCode, definitionIdValue] = value.split(',');
+			const [
+				externalReferenceCode,
+				definitionIdValue,
+				isObjectSystem,
+			] = value.split(',');
 
 			const definitionId = Number(definitionIdValue);
 
-			const object = relationships.find(
-				(relationship) =>
-					relationship.externalReferenceCode === externalReferenceCode
+			const isSystem = isObjectSystem === 'true';
+
+			const object = addObjectEntryDefinitions.find(
+				(definition) =>
+					definition.externalReferenceCode === externalReferenceCode
 			);
 
 			const parameters: ObjectActionParameters = {
 				objectDefinitionExternalReferenceCode: externalReferenceCode,
 				objectDefinitionId: definitionId,
 				predefinedValues: [],
+				system: isSystem,
 			};
 
 			if (object?.related) {
@@ -115,7 +132,7 @@ export function ActionContainer({
 			const validFields: ObjectField[] = [];
 
 			items.forEach((field) => {
-				if (isValidField(field)) {
+				if (isValidField(field, isSystem)) {
 					validFields.push(field);
 
 					if (
@@ -160,15 +177,22 @@ export function ActionContainer({
 			}));
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[relationships, values.objectActionExecutorKey, values.parameters]
+		[
+			addObjectEntryDefinitions,
+			values.objectActionExecutorKey,
+			values.parameters,
+		]
 	);
 
 	useEffect(() => {
 		if (values.objectActionExecutorKey === 'update-object-entry') {
-			updateParameters(objectDefinitionExternalReferenceCode);
+			updateParameters(
+				`${objectDefinitionExternalReferenceCode},${objectDefinitionId},${systemObject}`
+			);
 			fetchObjectDefinitionFields(
 				objectDefinitionId,
 				objectDefinitionExternalReferenceCode,
+				systemObject,
 				values,
 				isValidField,
 				setCurrentObjectDefinitionFields,
@@ -184,6 +208,18 @@ export function ActionContainer({
 		values.objectActionExecutorKey,
 	]);
 
+	useEffect(() => {
+		const makeFetch = async () => {
+			const objectDefinition = await API.getObjectDefinitionByExternalReferenceCode(
+				objectDefinitionExternalReferenceCode
+			);
+
+			setCreationLanguageId(objectDefinition.defaultLanguageId);
+		};
+
+		makeFetch();
+	}, [objectDefinitionExternalReferenceCode]);
+
 	return (
 		<Card title={Liferay.Language.get('action')}>
 			<ThenContainer
@@ -198,10 +234,10 @@ export function ActionContainer({
 				objectDefinitionsRelationshipsURL={
 					objectDefinitionsRelationshipsURL
 				}
+				setAddObjectEntryDefinitions={setAddObjectEntryDefinitions}
 				setCurrentObjectDefinitionFields={
 					setCurrentObjectDefinitionFields
 				}
-				setRelationships={setRelationships}
 				setValues={setValues}
 				systemObject={systemObject}
 				updateParameters={updateParameters}
@@ -212,6 +248,9 @@ export function ActionContainer({
 				values.objectActionExecutorKey === 'update-object-entry') &&
 				values.parameters?.objectDefinitionExternalReferenceCode && (
 					<PredefinedValuesTable
+						creationLanguageId={
+							creationLanguageId as Liferay.Language.Locale
+						}
 						currentObjectDefinitionFields={
 							currentObjectDefinitionFields
 						}

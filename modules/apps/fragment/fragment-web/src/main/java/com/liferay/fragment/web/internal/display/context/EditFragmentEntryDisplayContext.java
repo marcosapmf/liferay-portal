@@ -28,7 +28,9 @@ import com.liferay.fragment.web.internal.info.field.type.CaptchaInfoFieldType;
 import com.liferay.info.field.type.BooleanInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
 import com.liferay.info.field.type.FileInfoFieldType;
+import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.InfoFieldType;
+import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.RelationshipInfoFieldType;
 import com.liferay.info.field.type.SelectInfoFieldType;
@@ -43,6 +45,7 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
@@ -87,12 +90,12 @@ public class EditFragmentEntryDisplayContext {
 
 		_fragmentCollectionContributorRegistry =
 			(FragmentCollectionContributorRegistry)
-				_httpServletRequest.getAttribute(
+				httpServletRequest.getAttribute(
 					FragmentWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER);
 		_fragmentEntryProcessorRegistry =
-			(FragmentEntryProcessorRegistry)_httpServletRequest.getAttribute(
+			(FragmentEntryProcessorRegistry)httpServletRequest.getAttribute(
 				FragmentWebKeys.FRAGMENT_ENTRY_PROCESSOR_REGISTRY);
-		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		_setViewAttributes();
@@ -536,7 +539,25 @@ public class EditFragmentEntryDisplayContext {
 				"redirect", getRedirect()
 			).put(
 				"render",
-				_getFragmentEntryRenderURL("/fragment/render_fragment_entry")
+				() -> {
+					FragmentEntry fragmentEntry = getFragmentEntry();
+
+					LiferayPortletURL renderFragmentEntryURL =
+						(LiferayPortletURL)_renderResponse.createResourceURL();
+
+					renderFragmentEntryURL.setResourceID(
+						"/fragment/render_fragment_entry");
+					renderFragmentEntryURL.setParameter(
+						"fragmentEntryId",
+						String.valueOf(fragmentEntry.getFragmentEntryId()));
+					renderFragmentEntryURL.setParameter(
+						"fragmentEntryKey",
+						fragmentEntry.getFragmentEntryKey());
+					renderFragmentEntryURL.setWindowState(
+						LiferayWindowState.POP_UP);
+
+					return renderFragmentEntryURL.toString();
+				}
 			).build()
 		).build();
 	}
@@ -644,6 +665,7 @@ public class EditFragmentEntryDisplayContext {
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
 		DateInfoFieldType.INSTANCE, FileInfoFieldType.INSTANCE,
+		HTMLInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
 		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
 		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
 	};

@@ -206,6 +206,34 @@ public class Product implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, ?> expando;
 
+	@Schema
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
+
 	@DecimalMin("0")
 	@Schema(example = "30130")
 	public Long getId() {
@@ -261,6 +289,36 @@ public class Product implements Serializable {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Attachment[] images;
+
+	@Schema
+	@Valid
+	public LinkedProduct[] getLinkedProducts() {
+		return linkedProducts;
+	}
+
+	public void setLinkedProducts(LinkedProduct[] linkedProducts) {
+		this.linkedProducts = linkedProducts;
+	}
+
+	@JsonIgnore
+	public void setLinkedProducts(
+		UnsafeSupplier<LinkedProduct[], Exception>
+			linkedProductsUnsafeSupplier) {
+
+		try {
+			linkedProducts = linkedProductsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected LinkedProduct[] linkedProducts;
 
 	@Schema
 	public String getMetaDescription() {
@@ -885,6 +943,20 @@ public class Product implements Serializable {
 			sb.append(_toJSON(expando));
 		}
 
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		if (id != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -908,6 +980,26 @@ public class Product implements Serializable {
 				sb.append(String.valueOf(images[i]));
 
 				if ((i + 1) < images.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (linkedProducts != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"linkedProducts\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < linkedProducts.length; i++) {
+				sb.append(String.valueOf(linkedProducts[i]));
+
+				if ((i + 1) < linkedProducts.length) {
 					sb.append(", ");
 				}
 			}

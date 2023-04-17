@@ -32,8 +32,8 @@ export default async function createMDFRequestActivities(
 			mdfRequestActivity,
 			company,
 			mdfRequestId,
-			mdfRequestExternalReferenceCodeSF,
-			externalReferenceCodeSF
+			externalReferenceCodeSF,
+			mdfRequestExternalReferenceCodeSF
 		)
 	);
 }

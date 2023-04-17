@@ -17,9 +17,11 @@ import ClayForm from '@clayui/form';
 import {useEffect, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {useOutletContext, useParams} from 'react-router-dom';
+import {BuildStatuses} from '~/util/statuses';
 
 import Form from '../../../../../components/Form';
 import Container from '../../../../../components/Layout/Container';
+import SearchBuilder from '../../../../../core/SearchBuilder';
 import {useHeader} from '../../../../../hooks';
 import {useFetch} from '../../../../../hooks/useFetch';
 import useFormActions from '../../../../../hooks/useFormActions';
@@ -34,7 +36,6 @@ import {
 	TestrayRoutine,
 	testrayBuildImpl,
 } from '../../../../../services/rest';
-import {searchUtil} from '../../../../../util/search';
 import ProductVersionFormModal from '../../../../Standalone/ProductVersions/ProductVersionFormModal';
 import BuildFormCases from './BuildFormCases';
 import BuildFormRun, {BuildFormType} from './BuildFormRun';
@@ -76,14 +77,14 @@ const BuildForm = () => {
 	const {data: productVersionsData, mutate} = useFetch<
 		APIResponse<TestrayProductVersion>
 	>(
-		`/productversions?fields=id,name&filter=${searchUtil.eq(
+		`/productversions?fields=id,name&filter=${SearchBuilder.eq(
 			'projectId',
 			projectId as string
 		)}`
 	);
 
 	const {data: routinesData} = useFetch<APIResponse<TestrayRoutine>>(
-		`/routines?fields=id,name&filter=${searchUtil.eq(
+		`/routines?fields=id,name&filter=${SearchBuilder.eq(
 			'projectId',
 			projectId as string
 		)}`
@@ -131,7 +132,7 @@ const BuildForm = () => {
 					templateTestrayBuildId: buildTemplateId ?? '',
 			  }
 			: {
-					active: true,
+					dueStatus: BuildStatuses.ACTIVATED,
 					factorStacks: [{}],
 					projectId: Number(projectId),
 					routineId,

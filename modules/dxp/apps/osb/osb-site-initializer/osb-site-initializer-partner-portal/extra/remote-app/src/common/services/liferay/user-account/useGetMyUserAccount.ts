@@ -12,6 +12,7 @@
 import {Liferay} from '..';
 import useSWR from 'swr';
 
+import Role from '../../../interfaces/role';
 import {LiferayAPIs} from '../common/enums/apis';
 import liferayFetcher from '../common/utils/fetcher';
 
@@ -35,6 +36,7 @@ interface UserAccount {
 	familyName: string;
 	givenName: string;
 	id: number;
+	roleBriefs: Role[];
 	userAccountContactInformation: UserAccountContactInformation;
 }
 

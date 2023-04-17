@@ -41,6 +41,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -133,6 +135,11 @@ public class PoshiValidation {
 
 		executorService.shutdown();
 
+		if (!executorService.awaitTermination(2, TimeUnit.MINUTES)) {
+			throw new TimeoutException(
+				"Timed out while validating Poshi files");
+		}
+
 		if (!_exceptions.isEmpty()) {
 			_throwExceptions();
 		}
@@ -144,6 +151,10 @@ public class PoshiValidation {
 
 	public static void validate(String testName) throws Exception {
 		validateTestName(testName);
+
+		if (!_exceptions.isEmpty()) {
+			_throwExceptions();
+		}
 	}
 
 	protected static String getPrimaryAttributeName(
@@ -659,8 +670,19 @@ public class PoshiValidation {
 				"argument1", "argument2", "argument3", "line-number",
 				"selenium");
 
-			validateDeprecatedFunction(
-				poshiElement, poshiElement.attributeValue("selenium"));
+			String seleniumAttributeValue = poshiElement.attributeValue(
+				"selenium");
+
+			LiferaySeleniumMethod liferaySeleniumMethod =
+				PoshiContext.getLiferaySeleniumMethod(seleniumAttributeValue);
+
+			if (liferaySeleniumMethod == null) {
+				_exceptions.add(
+					new PoshiElementException(
+						poshiElement, "Nonexistent Selenium method"));
+			}
+
+			validateDeprecatedFunction(poshiElement, seleniumAttributeValue);
 
 			validatePossibleAttributeNames(
 				poshiElement, possibleAttributeNames);

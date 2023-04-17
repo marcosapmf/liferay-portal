@@ -12,18 +12,52 @@
  * details.
  */
 
-import React from 'react';
+import React, {useRef, useState} from 'react';
 
 import {useItems} from '../contexts/ItemsContext';
+import KeyboardMovementText from './KeyboardMovementText';
 import {MenuItem} from './MenuItem';
 
 export function Menu() {
+	const [movementText, setMovementText] = useState('');
+	const [isMovementEnabled, setIsMovementEnabled] = useState(false);
+
 	const items = useItems();
+	const menuRef = useRef();
+
+	const onMenuItemRemoved = (itemIndex) => {
+		const items = menuRef.current?.querySelectorAll('.focusable-menu-item');
+
+		if (!items) {
+			return;
+		}
+
+		const index = Math.min(itemIndex, items.length - 1);
+
+		items[index]?.focus();
+	};
 
 	return (
-		<div className="container ml-lg-auto ml-sm-0 p-3 pt-4" role="list">
-			{items.map((item) => (
-				<MenuItem item={item} key={item.siteNavigationMenuItemId} />
+		<div
+			aria-orientation="vertical"
+			className="container ml-lg-auto ml-sm-0 p-3 pt-4"
+			ref={menuRef}
+			role="menubar"
+		>
+			<KeyboardMovementText
+				setText={setMovementText}
+				text={movementText}
+			/>
+
+			{items.map((item, index) => (
+				<MenuItem
+					isMovementEnabled={isMovementEnabled}
+					item={item}
+					key={item.siteNavigationMenuItemId}
+					onMenuItemRemoved={() => onMenuItemRemoved(index)}
+					setIsMovementEnabled={setIsMovementEnabled}
+					setMovementText={setMovementText}
+				/>
 			))}
 		</div>
 	);
