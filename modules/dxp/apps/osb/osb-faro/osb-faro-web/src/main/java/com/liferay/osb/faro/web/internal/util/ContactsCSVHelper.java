@@ -31,7 +31,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
-import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -330,9 +329,8 @@ public class ContactsCSVHelper {
 				dlFileEntry.getReviewDate(), serviceContext);
 		}
 		else {
-			Repository repository =
-				_portletFileRepository.addPortletRepository(
-					groupId, ContactsConstants.SERVICE_NAME, serviceContext);
+			Repository repository = _portletFileRepository.addPortletRepository(
+				groupId, ContactsConstants.SERVICE_NAME, serviceContext);
 
 			dlFileEntry = _dlFileEntryLocalService.addFileEntry(
 				null, userId, groupId, repository.getRepositoryId(),
